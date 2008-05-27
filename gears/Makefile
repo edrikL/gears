@@ -968,6 +968,26 @@ $(BROWSER)_IDLSRCS	+= \
 $(BROWSER)_CPPSRCS	+= \
 		$(NULL)
 endif		
+
+#-----------------------------------------------------------------------------
+# database2
+$(BROWSER)_VPATH += \
+                database2 \
+                $(NULL)
+
+$(BROWSER)_CPPSRCS += \
+                connection.cc \
+                commands.cc \
+                database2.cc \
+                database2_common.cc \
+                database2_metadata.cc \
+                interpreter.cc \
+                manager.cc \
+                result_set2.cc \
+                statement.cc \
+                transaction.cc \
+                $(NULL)
+
 #-----------------------------------------------------------------------------
 # desktop
 

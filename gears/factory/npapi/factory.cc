@@ -34,25 +34,20 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/console/console.h"
 #include "gears/database/npapi/database.h"
+#include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
-
-#ifdef OFFICIAL_BUILD
-// The Geolocation and Media API have not been finalized for official builds.
-#else
 #include "gears/geolocation/geolocation.h"
-#include "gears/media/audio.h"
-#include "gears/media/audio_recorder.h"
-#endif  // OFFICIAL_BUILD
-
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/npapi/localserver_np.h"
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
 #include "gears/timer/timer.h"
+#include "gears/workerpool/npapi/workerpool.h"
 #ifdef WIN32
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/ui/ie/string_table.h"
 #endif
-#include "gears/workerpool/npapi/workerpool.h"
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -146,8 +141,11 @@ void GearsFactory::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-// The Geolocation and Media API have not been finalized for official builds.
+  // The Database2, Geolocation and Media API have not been finalized for
+  // official builds.
 #else
+  } else if (module_name == STRING16(L"beta.databasemanager")) {
+    CreateModule<Database2Manager>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.audio")) {

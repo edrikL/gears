@@ -33,27 +33,24 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/console.h"
 #include "gears/database/ie/database.h"
+#include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
-#ifdef OFFICIAL_BUILD
-// The Geolocation, Canvas, Image and Media API have not been finalized for official builds.
-#else
 #include "gears/geolocation/geolocation.h"
-#ifdef WINCE
-// The Image, Canvas and Media API are not yet available for WinCE.
-#else
-#include "gears/media/audio.h"
-#include "gears/media/audio_recorder.h"
-#include "gears/image/image_loader.h"
-#include "gears/canvas/canvas.h"
-#endif  // WINCE
-#endif  // OFFICIAL_BUILD
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/ie/string_table.h"
 #include "gears/workerpool/ie/workerpool.h"
+#ifdef WINCE
+// The Image, Canvas and Media API are not yet available for WinCE.
+#else
+#include "gears/canvas/canvas.h"
+#include "gears/image/image_loader.h"
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
+#endif  // WINCE
 
 #ifdef USING_CCTESTS
 #include "gears/cctests/test.h"
@@ -176,9 +173,11 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Geolocation, Media and Image APIs have not been finalized
-  // for official builds.
+  // The Canvas, Console, Database2, Geolocation, Media and Image APIs have not
+  // been finalized for official builds.
 #else
+  } else if (object_name == STRING16(L"beta.databasemanager")) {
+    CreateModule<Database2Manager>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
 #ifdef WINCE
