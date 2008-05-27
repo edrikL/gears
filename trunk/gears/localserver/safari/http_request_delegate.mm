@@ -137,7 +137,12 @@
 // In some cases (e.g. loading content who's mimetype is 
 // multipart/x-mixed-replace) this method may be called multiple times.
 - (void)connection:(NSURLConnection *)connection 
-  didReceiveResponse:(NSURLResponse *)response {  
+  didReceiveResponse:(NSURLResponse *)response {
+  
+  // Owner may be deleted by ReadyStateChange JS callback.
+  owner_->Ref();
+  owner_->SetReadyState(HttpRequest::SENT);
+  
   [receivedData_ setLength:0];
   
   // Save string encoding, for use in GetResponseAsString.
@@ -155,6 +160,7 @@
   statusCode_ = (NSInteger)[(NSHTTPURLResponse *)response statusCode];
   [mimeType_ autorelease];
   mimeType_ = [[response MIMEType] retain];
+  owner_->Unref();
 }
 
 // Called when connection receives data.
@@ -172,7 +178,9 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+  owner_->Ref();
   owner_->SetReadyState(HttpRequest::COMPLETE);
+  owner_->Unref();
 }
 
 // Delegate method called on redirects and URL canonicalization.
