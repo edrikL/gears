@@ -250,7 +250,7 @@ TextMetrics class {
 };
 }}}
 
-= Differences from HTML5 =
+= Differences from HTML Canvas =
 Unlike the HTML5 canvas, which can be onscreen (part of the DOM) or not (instantiated using Javascript), we are purely an offscreen canvas as of v1, with export to a URL for display as an image. Also, the Gears canvas can be used from worker threads. Here are the other changes:
   *  Added Text support (for annotation support)
   * Added primitives for color transformation, convolution and lookup tables.
