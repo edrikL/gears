@@ -250,15 +250,22 @@ TextMetrics class {
 };
 }}}
 
-= Deviations from HTML5 =
+= Differences from HTML5 =
 Unlike the HTML5 canvas, which can be onscreen (part of the DOM) or not (instantiated using Javascript), we are purely an offscreen canvas as of v1, with export to a URL for display as an image. Also, the Gears canvas can be used from worker threads. Here are the other changes:
-
   *  Added Text support (for annotation support)
   * Added primitives for color transformation, convolution and lookup tables.
   * Drawing of arbitrary paths not supported yet.
   * No support for clipping regions, gradients, patterns, shadows, strokes and line styles.
   * We export to blobs, which can be uploaded to http servers or exported as a URL on the LocalServer; we do not export to data URIs. This is because exporting to a data URI involves base64-encoding the image, which makes it bigger.
   * We do not support the drawImage functions that take in either a HTMLImageElement or a HTMLCanvasElement as a parameter. It is hard to get efficient access to the underlying image data. (We can work around by fetching the source again, or getting a handle to the data URI but all of this is going to be inefficient).
+
+We don't have these:
+  # Drawing arbitrary paths
+  # Gradients
+  # Patterns
+  # Stroke and line styles
+  # Shadows
+
 
 = Sample Code =
 *_Example 1: Downloads an image from a server, crops and resizes it, displays the result and uploads it_*:
@@ -341,14 +348,12 @@ function process(var srcBlob) {
 }
 }}}
 
-= Things in HTML Canvas That We Omit =
-  # Drawing arbitrary paths
-  # Gradients
-  # Patterns
-  # Stroke and line styles
-  # Shadows
 
 = Beyond V1 =
+We may add these in a future version:
+  # Arbitrary color lookup tables
+  # Write EXIF
+Clip Regions:
 *_CanvasRenderingContext2D:_*
 {{{
   // TODO: add EXIF stuff here.
