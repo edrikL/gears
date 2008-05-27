@@ -51,7 +51,6 @@ typedef Deletable MessageData;
 // Message type identifiers are listed here to avoid collisions
 enum ThreadMessageTypes {
   kMessageService_Notify = 1,
-  kIpcMessageQueue_Send,
   kAsyncRouter_Call,
 };
 

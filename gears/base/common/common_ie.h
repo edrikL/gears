@@ -34,30 +34,6 @@
 
 
 #ifdef WINCE
-// WinCE does not support the Appartment threading model (the use of multiple
-// Single Threaded Apartments). Instead, we must use the Free threading model
-// and run all threads in the Multi Threaded Appartment. To do this, we define
-// the preprocessor symbol _ATL_FREE_THREADED and initialise new threads with
-// COINIT_MULTITHREADED.
-#define GEARS_COINIT_THREAD_MODEL COINIT_MULTITHREADED
-#else
-// For Win32 we use the Apartment threading model. To do this, we define the
-// preprocessor symbol _ATL_APARTMENT_THREADED and initialise new threads with
-// COINIT_APARTMENTTHREADED.
-#define GEARS_COINIT_THREAD_MODEL COINIT_APARTMENTTHREADED
-#endif
-
-#ifdef WINCE
-// WinCE doesn't allow message-only windows (HWND_MESSAGE). Instead, create a
-// pop-up window (doesn't require a parent) and don't make visible (default).
-const HWND  kMessageOnlyWindowParent = NULL;
-const DWORD kMessageOnlyWindowStyle  = WS_POPUP;
-#else
-const HWND  kMessageOnlyWindowParent = HWND_MESSAGE;
-const DWORD kMessageOnlyWindowStyle  = NULL;
-#endif
-
-#ifdef WINCE
 // Use of ATLTRACE (which is used by LOG and LOG16) may cause a stack fault on
 // WinCE. See http://code.google.com/p/google-gears/issues/detail?id=342 for
 // details. So we disable logging by default on WinCE.

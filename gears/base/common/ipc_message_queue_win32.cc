@@ -25,9 +25,10 @@
 
 #if defined(WIN32) && !defined(WINCE)
 
-#include <atlsync.h>
-#include <windows.h>
 #include <deque>
+#include <map>
+#include <set>
+#include <vector>
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/circular_buffer.h"
 #include "gears/base/common/ipc_message_queue.h"
@@ -40,6 +41,9 @@
 #endif
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
+
+#include <atlsync.h>
+#include <windows.h>
 
 #ifdef USING_CCTESTS
 // For testing
@@ -657,7 +661,7 @@ bool IpcProcessRegistry::Verify(bool check_for_current_process) {
 
 
 //-----------------------------------------------------------------------------
-// IpcThreadMessageEnvelope and ShareableIpcMessage
+// ShareableIpcMessage
 //-----------------------------------------------------------------------------
 
 class ShareableIpcMessage : public RefCounted {
@@ -688,33 +692,6 @@ class ShareableIpcMessage : public RefCounted {
   int ipc_message_type_;
   scoped_ptr<IpcMessageData> ipc_message_data_;
   scoped_ptr< std::vector<uint8> > serialized_message_data_;
-};
-
-
-class IpcThreadMessageEnvelope : public MessageData {
- public:
-  IpcThreadMessageEnvelope(int ipc_message_type,
-                           IpcMessageData *ipc_message_data,
-                           bool include_self) 
-      : send_to_all_(true),
-        include_self_(include_self) {
-    shareable_message_ = new ShareableIpcMessage(ipc_message_type,
-                                                 ipc_message_data);
-  }
-
-  IpcThreadMessageEnvelope(int ipc_message_type,
-                           IpcMessageData *ipc_message_data,
-                           IpcProcessId dest_process_id) 
-      : send_to_all_(false),
-        destination_process_id_(dest_process_id) {
-    shareable_message_ = new ShareableIpcMessage(ipc_message_type,
-                                                 ipc_message_data);
-  }
-
-  bool send_to_all_;
-  bool include_self_;
-  IpcProcessId destination_process_id_;
-  scoped_refptr<ShareableIpcMessage> shareable_message_;
 };
 
 
@@ -827,13 +804,11 @@ class InboundQueue : public QueueBase {
 //-----------------------------------------------------------------------------
 // Win32IpcMessageQueue
 //-----------------------------------------------------------------------------
-class Win32IpcMessageQueue : public IpcMessageQueue,
-                             public ThreadMessageQueue::HandlerInterface {
+class Win32IpcMessageQueue : public IpcMessageQueue {
  public:
   Win32IpcMessageQueue(bool as_peer)
     : as_peer_(as_peer), die_(false),
-      current_process_id_(::GetCurrentProcessId()),
-      thread_id_(0), thread_message_queue_(NULL) {} 
+      current_process_id_(::GetCurrentProcessId()) {} 
 
   bool Init();
 
@@ -849,16 +824,10 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
   // Our worker thread's entry point and message loop
   static unsigned int __stdcall StaticThreadProc(void *start_data);
   void InstanceThreadProc(struct ThreadStartData *start_data);
-  void RunMessageLoop();
+  void Run();
 
   // Wait completion handling
   void WaitComplete(HANDLE handle, OutboundQueue *queue, bool abandoned);
-
-  // ThreadMessage handling
-  virtual void HandleThreadMessage(int message_type,
-                                   MessageData *message_data);
-  void HandleSendToAll(IpcThreadMessageEnvelope *message_envelope);
-  void HandleSendToOne(IpcThreadMessageEnvelope *message_envelope);
 
   // OutboundQueue management
   OutboundQueue *GetOutboundQueue(IpcProcessId process_id);
@@ -870,11 +839,11 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
   bool die_;
   IpcProcessRegistry process_registry_;
   IpcProcessId current_process_id_;
-  ThreadMessageQueue *thread_message_queue_;
   ATL::CHandle thread_;
-  ThreadId thread_id_;
   scoped_ptr<InboundQueue> inbound_queue_;
   std::map<IpcProcessId, linked_ptr<OutboundQueue> > outbound_queues_;
+  Mutex thread_sync_mutex_;
+  IpcEvent send_data_event_;
 };
 
 
@@ -1299,17 +1268,40 @@ IpcProcessId Win32IpcMessageQueue::GetCurrentIpcProcessId() {
 void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
                                      IpcMessageData *ipc_message_data,
                                      bool including_self) {
+  // SendToAll is not supported for the system queue.
+  assert(as_peer_);
+
+  MutexLock thread_sync_lock(&thread_sync_mutex_);
+
   if (die_) {
     delete ipc_message_data;
     return;
   }
-  IpcThreadMessageEnvelope *envelope = new IpcThreadMessageEnvelope(
-                                               ipc_message_type,
-                                               ipc_message_data,
-                                               including_self);
-  thread_message_queue_->Send(thread_id_,
-                              kIpcMessageQueue_Send,
-                              envelope);
+
+  scoped_refptr<ShareableIpcMessage> shareable_message;
+  shareable_message = new ShareableIpcMessage(ipc_message_type,
+                                              ipc_message_data);
+
+  std::vector<IpcProcessId> processes;
+  process_registry_.GetAll(&processes);
+  bool added_to_queue = false;
+  for (std::vector<IpcProcessId>::iterator iter = processes.begin();
+       iter != processes.end(); iter++) {
+    if (including_self || *iter != current_process_id_) {
+      OutboundQueue *outbound_queue = GetOutboundQueue(*iter);
+      if (outbound_queue) {
+        outbound_queue->AddMessageToQueue(shareable_message.get());
+        added_to_queue = true;
+      } else if (current_process_id_ != *iter) {
+        process_registry_.Remove(*iter);
+        LOG(("Removing dead processes from registry, %d\n", *iter));
+      }
+    }
+  }
+
+  if (added_to_queue)
+    send_data_event_.Set();
+
 #ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
@@ -1321,17 +1313,23 @@ void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
 void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
                                 int ipc_message_type,
                                 IpcMessageData *ipc_message_data) {
+  MutexLock thread_sync_lock(&thread_sync_mutex_);
+
   if (die_) {
     delete ipc_message_data;
     return;
   }
-  IpcThreadMessageEnvelope *envelope = new IpcThreadMessageEnvelope(
-                                               ipc_message_type,
-                                               ipc_message_data,
-                                               dest_process_id);
-  thread_message_queue_->Send(thread_id_,
-                              kIpcMessageQueue_Send,
-                              envelope);
+
+  scoped_refptr<ShareableIpcMessage> shareable_message;
+  shareable_message = new ShareableIpcMessage(ipc_message_type,
+    ipc_message_data);
+
+  OutboundQueue *outbound_queue = GetOutboundQueue(dest_process_id);
+  if (outbound_queue) {
+    outbound_queue->AddMessageToQueue(shareable_message.get());
+    send_data_event_.Set();
+  }
+
 #ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
@@ -1385,78 +1383,96 @@ void Win32IpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
   {
     MutexLock locker(&start_data->started_mutex_);
     inbound_queue_.reset(new InboundQueue(this));
-    thread_message_queue_ = ThreadMessageQueue::GetInstance();
-    if (!thread_message_queue_ ||
-        !thread_message_queue_->InitThreadMessageQueue() ||
-        !inbound_queue_->Create(current_process_id_, as_peer_) ||
+    if (!inbound_queue_->Create(current_process_id_, as_peer_) ||
         !process_registry_.Open(as_peer_) ||
-        !process_registry_.Add(current_process_id_)) {
+        !process_registry_.Add(current_process_id_) ||
+        !send_data_event_.Create(NULL)) {
       start_data->started_signal_ = true;
       start_data->started_successfully_ = false;
       return;
     }
-    thread_message_queue_->RegisterHandler(kIpcMessageQueue_Send, this);
     start_data->started_signal_ = true;
     start_data->started_successfully_ = true;
-    thread_id_ = thread_message_queue_->GetCurrentThreadId();
   }
 
-  RunMessageLoop();
+  Run();
 
+  MutexLock lock(&thread_sync_mutex_);
+  assert(die_);
   outbound_queues_.clear();
   inbound_queue_.reset(NULL);
   process_registry_.Remove(current_process_id_);
 }
 
 
-void Win32IpcMessageQueue::RunMessageLoop() {
+void Win32IpcMessageQueue::Run() {
   std::vector<HANDLE> wait_handles;
   std::vector<OutboundQueue*> waiting_queues;
 
+  bool reset_send_data_event = false;
   while (!die_) {
-    // Build up the array of handles we need to wait on
-    wait_handles.clear();
-    waiting_queues.clear();
-    int64 now = ::GetCurrentTimeMillis();
+    {
+      MutexLock lock(&thread_sync_mutex_);
+      
+      if (reset_send_data_event) {
+        reset_send_data_event = false;
+        send_data_event_.Reset();
+      }
 
-    // The inbound queue perpetually waits for data available.
-    inbound_queue_->AddWaitHandles(now, &wait_handles);
-    assert(wait_handles.size() == 1);
-    waiting_queues.push_back(NULL);  // NULL indicates the inbound queue
+      // Build up the array of handles we need to wait on
+      wait_handles.clear();
+      waiting_queues.clear();
+      int64 now = ::GetCurrentTimeMillis();
 
-    // Each outbound queue perpetually waits on the process handle, and
-    // when messages are pending, either the write mutex or space available.
-    std::map<IpcProcessId, linked_ptr<OutboundQueue> >::iterator iter;
-    iter = outbound_queues_.begin();
-    while(iter != outbound_queues_.end()) {
-      OutboundQueue *queue = iter->second.get();
-      ++iter;  // advance the iterator prior to removal from the set
-      if (queue->AddWaitHandles(now, &wait_handles)) {
-        while (waiting_queues.size() < wait_handles.size()) {
-          waiting_queues.push_back(queue);
+      // Need to wait for the event to signal the rebuilding of the wait handles
+      // due to something to be sent.
+      wait_handles.push_back(send_data_event_.m_h);
+      waiting_queues.push_back(NULL);
+
+      // The inbound queue perpetually waits for data available.
+      inbound_queue_->AddWaitHandles(now, &wait_handles);
+      assert(wait_handles.size() == 2);
+      waiting_queues.push_back(NULL);  // NULL indicates the inbound queue
+
+      // Each outbound queue perpetually waits on the process handle, and
+      // when messages are pending, either the write mutex or space available.
+      std::map<IpcProcessId, linked_ptr<OutboundQueue> >::iterator iter;
+      iter = outbound_queues_.begin();
+      while(iter != outbound_queues_.end()) {
+        OutboundQueue *queue = iter->second.get();
+        ++iter;  // advance the iterator prior to removal from the set
+        if (queue->AddWaitHandles(now, &wait_handles)) {
+          while (waiting_queues.size() < wait_handles.size()) {
+            waiting_queues.push_back(queue);
+          }
+        } else {
+          // Remove any handles added above, then remove the queue
+          wait_handles.resize(waiting_queues.size());
+          RemoveOutboundQueue(queue);
         }
-      } else {
-        // Remove any handles added above, then remove the queue
-        wait_handles.resize(waiting_queues.size());
-        RemoveOutboundQueue(queue);
       }
     }
 
-    const DWORD kMaxWaitHandles = MAXIMUM_WAIT_OBJECTS - 1;
-    assert(kMaxWaitHandles == 63);
+    const DWORD kMaxWaitHandles = MAXIMUM_WAIT_OBJECTS;
+    assert(kMaxWaitHandles == 64);
     DWORD num_wait_handles = wait_handles.size();
     if (num_wait_handles > kMaxWaitHandles)
       num_wait_handles = kMaxWaitHandles;
 
     LOG(("MsgWaitForMultipleObjectsEx %d handles\n", num_wait_handles));
-    DWORD rv = MsgWaitForMultipleObjectsEx(
+    DWORD rv = WaitForMultipleObjectsEx(
                    num_wait_handles, &wait_handles[0],
-                   kTimeoutMs, QS_ALLINPUT,
-                   MWMO_INPUTAVAILABLE | MWMO_ALERTABLE);
+                   FALSE, kTimeoutMs, TRUE);
 
     if ((rv >= WAIT_OBJECT_0) &&
         (rv < WAIT_OBJECT_0 + num_wait_handles)) {
       int index = rv - WAIT_OBJECT_0;
+      // If it is signalled due to something to be sent, continue the loop to
+      // rebuild the wait handles.
+      if (index == 0) {
+        reset_send_data_event = true;
+        continue;
+      }
       WaitComplete(wait_handles[index], 
                    waiting_queues[index],
                    false);
@@ -1466,14 +1482,6 @@ void Win32IpcMessageQueue::RunMessageLoop() {
       WaitComplete(wait_handles[index], 
                    waiting_queues[index],
                    true);
-    } else if (rv == WAIT_OBJECT_0 + num_wait_handles) {
-      // We have message queue input to pump. We pump the queue dry
-      // prior to looping and calling MsgWaitForMultipleObjects
-      MSG msg;
-      while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
     } else if (rv == WAIT_TIMEOUT) {
       LOG(("WAIT_TIMEOUT\n"));
     } else if (rv == WAIT_IO_COMPLETION) {
@@ -1500,64 +1508,9 @@ void Win32IpcMessageQueue::WaitComplete(HANDLE handle,
     // NULL indicates the inbound queue
     inbound_queue_->WaitComplete(handle, abandoned);
   } else {
+    MutexLock lock(&thread_sync_mutex_);
     queue->WaitComplete(handle, abandoned);
   }
-}
-
-
-void Win32IpcMessageQueue::HandleThreadMessage(int message_type,
-                                               MessageData *message_data) {
-  assert(message_type == kIpcMessageQueue_Send);
-  IpcThreadMessageEnvelope *envelope =
-      reinterpret_cast<IpcThreadMessageEnvelope*>(message_data);
-  if (envelope->shareable_message_->serialized_message_data()) {
-    if (envelope->send_to_all_) {
-      HandleSendToAll(envelope);
-    } else {
-      HandleSendToOne(envelope);
-    }
-  }
-}
-
-
-void Win32IpcMessageQueue::HandleSendToAll(
-                               IpcThreadMessageEnvelope *envelope) {
-  LOG(("HandleSendToAll\n"));
-  std::vector<IpcProcessId> processes;
-  process_registry_.GetAll(&processes);
-  for (std::vector<IpcProcessId>::iterator iter = processes.begin();
-       iter != processes.end(); iter++) {
-    if (envelope->include_self_ || *iter != current_process_id_) {
-      OutboundQueue *outbound_queue = GetOutboundQueue(*iter);
-      if (outbound_queue) {
-        outbound_queue->AddMessageToQueue(envelope->shareable_message_.get());
-      } else if (current_process_id_ != *iter) {
-        process_registry_.Remove(*iter);
-        LOG(("Removing dead processes from registry, %d\n", *iter));
-      }
-    } 
-  }
-#ifdef USING_CCTESTS
-  // For testing
-  MutexLock lock(&g_counters_mutex);
-  ++(g_counters.handle_send_to_all);
-#endif
-}
-
-
-void Win32IpcMessageQueue::HandleSendToOne(
-                               IpcThreadMessageEnvelope *envelope) {
-  LOG(("HandleSendToOne\n"));
-  OutboundQueue *outbound_queue =
-      GetOutboundQueue(envelope->destination_process_id_);
-  if (outbound_queue)
-    outbound_queue->AddMessageToQueue(envelope->shareable_message_.get());
-
-#ifdef USING_CCTESTS
-  // For testing
-  MutexLock lock(&g_counters_mutex);
-  ++(g_counters.handle_send_to_one);
-#endif
 }
 
 
@@ -1596,8 +1549,8 @@ void TestingIpcMessageQueueWin32_GetAllProcesses(
 }
 
 void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock() {
+  // Must be called on the IPC IO thread.
   assert(g_peer_queue_instance);
-  assert(::GetCurrentThreadId() == g_peer_queue_instance->thread_id_);
   g_peer_queue_instance->process_registry_.SleepWhileHoldingRegistryLock();
 }
 
@@ -1607,8 +1560,8 @@ void IpcProcessRegistry::SleepWhileHoldingRegistryLock() {
 }
 
 void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock() {
+  // Must be called on the IPC IO thread.
   assert(g_peer_queue_instance);
-  assert(::GetCurrentThreadId() == g_peer_queue_instance->thread_id_);
   g_peer_queue_instance->process_registry_.DieWhileHoldingRegistryLock();
 }
 
@@ -1620,8 +1573,8 @@ void IpcProcessRegistry::DieWhileHoldingRegistryLock() {
 
 
 void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(IpcProcessId id) {
+  // Must be called on the IPC IO thread.
   assert(g_peer_queue_instance);
-  assert(::GetCurrentThreadId() == g_peer_queue_instance->thread_id_);
   OutboundQueue *queue = g_peer_queue_instance->GetOutboundQueue(id);
   assert(queue);
   queue->DieWhileHoldingWriteLock();

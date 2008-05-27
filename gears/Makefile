@@ -672,6 +672,8 @@ FF3_CPPSRCS	+= \
 		file_win32.cc \
 		html_event_monitor_ff.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_win32.cc \
+		ipc_message_queue_win32_test.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		message_queue_ff.cc \
@@ -704,6 +706,9 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
 		detect_version_collision.cc \
+		ipc_message_queue_null.cc \
+		ipc_message_queue_win32.cc \
+		ipc_message_queue_win32_test.cc \
 		js_runner_ie.cc \
 		message_queue_ie.cc \
 		module.cc \
@@ -716,8 +721,6 @@ ifeq ($(OS),win32)
 IE_CPPSRCS	+= \
 		file_win32.cc \
 		html_event_monitor_ie.cc \
-		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		ie_version.cc \
 		$(NULL)
 endif
@@ -725,7 +728,6 @@ ifeq ($(OS),wince)
 IE_CPPSRCS	+= \
 		common_ie.cc \
 		file_wince.cc \
-		ipc_message_queue_null.cc \
 		wince_compatibility.cc \
 		$(NULL)
 endif
@@ -753,6 +755,8 @@ NPAPI_CPPSRCS	+= \
 		browser_utils.cc \
 		html_event_monitor_np.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_win32.cc \
+		ipc_message_queue_win32_test.cc \
 		js_runner_np.cc \
 		module.cc \
 		np_utils.cc \
@@ -1033,9 +1037,8 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_CPPSRCS += \
+		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
-		message_queue.cc \
-		message_queue_ie.cc \
 		mutex.cc \
 		notification_manager.cc \
 		notification_manager_test.cc \
