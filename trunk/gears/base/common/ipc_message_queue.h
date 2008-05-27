@@ -127,8 +127,6 @@ class IpcMessageQueue {
 struct IpcMessageQueueCounters {
   int send_to_all;
   int send_to_one;
-  int handle_send_to_all;
-  int handle_send_to_one;
   int queued_outbound;
   int sent_outbound;
   int read_inbound;

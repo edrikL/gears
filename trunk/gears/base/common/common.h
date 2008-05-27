@@ -55,6 +55,11 @@
 #define JS_INT_MIN (-JS_INT_MAX)  // -2^53
 
 
+#ifdef WIN32
+#include "gears/base/common/common_win32.h"
+#endif
+
+
 // Macros for returning success/failure from scripted objects.
 //
 // TODO(cprince): Move these to base_class.h when IE has such a file.

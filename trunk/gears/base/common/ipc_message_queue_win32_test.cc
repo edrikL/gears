@@ -23,7 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(WINCE)
+// TODO: Add tests for other build targets, like FF browser.
+#if defined(WIN32) && !defined(WINCE) && BROWSER_IE
 
 #ifdef USING_CCTESTS
 
@@ -743,4 +744,4 @@ void SlaveMessageHandler::HandleIpcMessage(
 
 #endif
 
-#endif  // defined(WIN32) && !defined(WINCE)
+#endif  // defined(WIN32) && !defined(WINCE) && BROWSER_IE
