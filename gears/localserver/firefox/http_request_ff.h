@@ -36,6 +36,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/localserver/common/progress_event.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifndef OFFICIAL_BUILD
@@ -54,7 +55,8 @@ class FFHttpRequest : public HttpRequest,
                       public nsIStreamListener,
                       public nsIChannelEventSink,
                       public nsIInterfaceRequestor,
-                      public SpecialHttpRequestInterface {
+                      public SpecialHttpRequestInterface,
+                      public ProgressEvent::Listener {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
@@ -118,13 +120,13 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
-  // Should only be used by ProgressInputStream.
-  void OnUploadProgress(int64 position, int64 total);
-
   // events
   virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
  private:
+  // ProgressEvent::Listener implementation
+  virtual void OnUploadProgress(int64 position, int64 total);
+
   friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
 
   FFHttpRequest();

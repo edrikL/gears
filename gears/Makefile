@@ -1349,6 +1349,7 @@ FF3_CPPSRCS	+= \
 		http_request_ff.cc \
 		localserver_ff.cc \
 		managed_resource_store_ff.cc \
+		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ff.cc \
 		safe_http_request.cc \
@@ -1428,6 +1429,7 @@ SF_CPPSRCS	+= \
 		localserver_db_proxy.mm \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
+		progress_event.cc \
 		progress_input_stream.mm \
 		resource_store_np.cc \
 		$(NULL)		
