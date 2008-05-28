@@ -152,7 +152,6 @@ $(BROWSER)_M4FILES_I18N = \
 COMMON_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
 
-
 $(BROWSER)_VPATH += $($(BROWSER)_OUTDIR)/genfiles
 COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
@@ -656,7 +655,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # For $(FFMERGED_INSTALLER_XPI):
 #   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
 # For $(SF_PLUGIN_BUNDLE):
-#   $(SF_MODULE_DLL)
+#   $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # In order to make sure the Installer is always up to date despite these missing
 # dependencies, we list it as a phony target, so it's always rebuilt.
 .PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER)
@@ -734,7 +733,7 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
 	  $(OUTDIR)/$(OS)-i386/safari/gears \
 	  $(OUTDIR)/$(OS)-ppc/safari/gears 
 # Copy localized UI.
-	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
+	cp -R $(SF_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
 # Copy over all resources.
 # Todo(playmobil): Handle localization correctly - currently we copy all
 # resources to the en-US directory.

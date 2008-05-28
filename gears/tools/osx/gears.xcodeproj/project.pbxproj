@@ -91,7 +91,6 @@
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
-		B54D50AD0DD8FEB7009BFB67 /* js_standalone_engine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B54D50AB0DD8FEB7009BFB67 /* js_standalone_engine.h */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55F235A0DB3D87E00AF44E2 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F234F0DB3D87E00AF44E2 /* uncompr.c */; };
 		B55F235B0DB3D87E00AF44E2 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F23500DB3D87E00AF44E2 /* trees.c */; };
@@ -318,20 +317,15 @@
 		B57F3BCA0DA11D250088FE52 /* database_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3BC80DA11D250088FE52 /* database_utils_test.cc */; };
 		B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3BDC0DA11D860088FE52 /* file_test.cc */; };
 		B58727B20DD4EDDE001E4E0B /* test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727B00DD4EDDE001E4E0B /* test.cc */; };
-		B58727B30DD4EDDE001E4E0B /* test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58727B10DD4EDDE001E4E0B /* test.h */; };
 		B58727B50DD4EE08001E4E0B /* circular_buffer_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727B40DD4EE08001E4E0B /* circular_buffer_test.cc */; };
 		B58727B70DD4EE12001E4E0B /* message_service_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727B60DD4EE12001E4E0B /* message_service_test.cc */; };
-		B58727BA0DD4EE1F001E4E0B /* name_value_table_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58727B80DD4EE1F001E4E0B /* name_value_table_test.h */; };
 		B58727BB0DD4EE1F001E4E0B /* name_value_table_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727B90DD4EE1F001E4E0B /* name_value_table_test.cc */; };
-		B58727BE0DD4EE2A001E4E0B /* permissions_db_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58727BC0DD4EE2A001E4E0B /* permissions_db_test.h */; };
 		B58727BF0DD4EE2A001E4E0B /* permissions_db_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727BD0DD4EE2A001E4E0B /* permissions_db_test.cc */; };
 		B58727C10DD4EE35001E4E0B /* scoped_refptr_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C00DD4EE35001E4E0B /* scoped_refptr_test.cc */; };
 		B58727C30DD4EE41001E4E0B /* security_model_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C20DD4EE41001E4E0B /* security_model_test.cc */; };
 		B58727C50DD4EE49001E4E0B /* serialization_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C40DD4EE49001E4E0B /* serialization_test.cc */; };
-		B58727C80DD4EE54001E4E0B /* sqlite_wrapper_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58727C60DD4EE53001E4E0B /* sqlite_wrapper_test.h */; };
 		B58727C90DD4EE54001E4E0B /* sqlite_wrapper_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C70DD4EE54001E4E0B /* sqlite_wrapper_test.cc */; };
 		B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */; };
-		B58727CF0DD4EE84001E4E0B /* geolocation_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58727CD0DD4EE84001E4E0B /* geolocation_test.h */; };
 		B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */; };
 		B58939380DB66FA900BD56A0 /* launch_url_in_browser.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */; };
 		B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
@@ -360,30 +354,19 @@
 		B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */; };
 		B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */; };
 		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
-		B5924A570DDA0A2900F9CD2B /* notification.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5924A500DDA0A2900F9CD2B /* notification.h */; };
 		B5924A580DDA0A2900F9CD2B /* notifier_process_win32.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */; };
-		B5924A590DDA0A2900F9CD2B /* notifier_process.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5924A520DDA0A2900F9CD2B /* notifier_process.h */; };
 		B5924A5A0DDA0A2900F9CD2B /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */; };
 		B5924A5D0DDA0A2900F9CD2B /* notifier_process_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */; };
-		B5924A640DDA0A4100F9CD2B /* event.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5924A610DDA0A4100F9CD2B /* event.h */; };
 		B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A620DDA0A4100F9CD2B /* event_test.cc */; };
 		B5924A660DDA0A4100F9CD2B /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A630DDA0A4100F9CD2B /* event.cc */; };
-		B5950B540DDE014100D54424 /* device_data_provider.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B4C0DDE014100D54424 /* device_data_provider.h */; };
 		B5950B550DDE014100D54424 /* device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B4D0DDE014100D54424 /* device_data_provider.cc */; };
-		B5950B560DDE014100D54424 /* empty_device_data_provider.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B4E0DDE014100D54424 /* empty_device_data_provider.h */; };
 		B5950B570DDE014100D54424 /* empty_device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */; };
-		B5950B580DDE014100D54424 /* network_location_request.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B500DDE014100D54424 /* network_location_request.h */; };
 		B5950B590DDE014100D54424 /* network_location_request.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B510DDE014100D54424 /* network_location_request.cc */; };
-		B5950B5A0DDE014100D54424 /* network_location_provider.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B520DDE014100D54424 /* network_location_provider.h */; };
 		B5950B5B0DDE014100D54424 /* network_location_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B530DDE014100D54424 /* network_location_provider.cc */; };
 		B5950B6A0DDE015D00D54424 /* canvas_rendering_context_2d.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B660DDE015D00D54424 /* canvas_rendering_context_2d.cc */; };
-		B5950B6B0DDE015D00D54424 /* canvas_rendering_context_2d.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B670DDE015D00D54424 /* canvas_rendering_context_2d.h */; };
 		B5950B6C0DDE015D00D54424 /* canvas.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B680DDE015D00D54424 /* canvas.cc */; };
-		B5950B6D0DDE015D00D54424 /* canvas.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B690DDE015D00D54424 /* canvas.h */; };
-		B5950BA00DDE033500D54424 /* blob_input_stream_sf.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5950B9E0DDE033500D54424 /* blob_input_stream_sf.h */; };
 		B5950BA10DDE033500D54424 /* blob_input_stream_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */; };
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
-		B59CE65E0DD8EC24000B31AE /* httprequest.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B59CE65C0DD8EC24000B31AE /* httprequest.h */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
 		B5AC85E00DCBBA5F00C62010 /* pldhash.c in Sources */ = {isa = PBXBuildFile; fileRef = B5AC85DE0DCBBA5F00C62010 /* pldhash.c */; };
@@ -411,20 +394,12 @@
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584020DA0AF0D00B8FD50 /* url_utils_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584010DA0AF0D00B8FD50 /* url_utils_np.cc */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
-		B5FEB24A0DDBA35A001DBEE5 /* unit_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB2430DDBA35A001DBEE5 /* unit_test.h */; };
-		B5FEB24B0DDBA35A001DBEE5 /* notification_manager_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB2440DDBA35A001DBEE5 /* notification_manager_test.h */; };
 		B5FEB24C0DDBA35A001DBEE5 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */; };
-		B5FEB24D0DDBA35A001DBEE5 /* user_activity.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB2460DDBA35A001DBEE5 /* user_activity.h */; };
-		B5FEB24E0DDBA35A001DBEE5 /* notification_manager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB2470DDBA35A001DBEE5 /* notification_manager.h */; };
 		B5FEB24F0DDBA35A001DBEE5 /* unit_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */; };
 		B5FEB2500DDBA35A001DBEE5 /* notification_manager_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */; };
 		B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */; };
-		B5FEB9BC0DDCE58C001DBEE5 /* mozjs_npapi_storage.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB9B60DDCE58C001DBEE5 /* mozjs_npapi_storage.h */; };
 		B5FEB9BE0DDCE58C001DBEE5 /* mozjs_npruntime.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B80DDCE58C001DBEE5 /* mozjs_npruntime.cc */; };
-		B5FEB9BF0DDCE58C001DBEE5 /* mozjs_npruntime.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB9B90DDCE58C001DBEE5 /* mozjs_npruntime.h */; };
-		B5FEB9C00DDCE58C001DBEE5 /* mozjs_npruntime_utils.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FEB9BA0DDCE58C001DBEE5 /* mozjs_npruntime_utils.h */; };
 		B5FF55DA0DDB75DA0058E403 /* update_task_single_process.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FF55D80DDB75DA0058E403 /* update_task_single_process.cc */; };
-		B5FF55DB0DDB75DA0058E403 /* update_task_single_process.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5FF55D90DDB75DA0058E403 /* update_task_single_process.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -528,31 +503,6 @@
 				B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */,
 				B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */,
 				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
-				B58727B30DD4EDDE001E4E0B /* test.h in CopyFiles */,
-				B58727BA0DD4EE1F001E4E0B /* name_value_table_test.h in CopyFiles */,
-				B58727BE0DD4EE2A001E4E0B /* permissions_db_test.h in CopyFiles */,
-				B58727C80DD4EE54001E4E0B /* sqlite_wrapper_test.h in CopyFiles */,
-				B58727CF0DD4EE84001E4E0B /* geolocation_test.h in CopyFiles */,
-				B59CE65E0DD8EC24000B31AE /* httprequest.h in CopyFiles */,
-				B54D50AD0DD8FEB7009BFB67 /* js_standalone_engine.h in CopyFiles */,
-				B5924A570DDA0A2900F9CD2B /* notification.h in CopyFiles */,
-				B5924A590DDA0A2900F9CD2B /* notifier_process.h in CopyFiles */,
-				B5924A640DDA0A4100F9CD2B /* event.h in CopyFiles */,
-				B5FF55DB0DDB75DA0058E403 /* update_task_single_process.h in CopyFiles */,
-				B5FEB24A0DDBA35A001DBEE5 /* unit_test.h in CopyFiles */,
-				B5FEB24B0DDBA35A001DBEE5 /* notification_manager_test.h in CopyFiles */,
-				B5FEB24D0DDBA35A001DBEE5 /* user_activity.h in CopyFiles */,
-				B5FEB24E0DDBA35A001DBEE5 /* notification_manager.h in CopyFiles */,
-				B5FEB9BC0DDCE58C001DBEE5 /* mozjs_npapi_storage.h in CopyFiles */,
-				B5FEB9BF0DDCE58C001DBEE5 /* mozjs_npruntime.h in CopyFiles */,
-				B5FEB9C00DDCE58C001DBEE5 /* mozjs_npruntime_utils.h in CopyFiles */,
-				B5950B540DDE014100D54424 /* device_data_provider.h in CopyFiles */,
-				B5950B560DDE014100D54424 /* empty_device_data_provider.h in CopyFiles */,
-				B5950B580DDE014100D54424 /* network_location_request.h in CopyFiles */,
-				B5950B5A0DDE014100D54424 /* network_location_provider.h in CopyFiles */,
-				B5950B6B0DDE015D00D54424 /* canvas_rendering_context_2d.h in CopyFiles */,
-				B5950B6D0DDE015D00D54424 /* canvas.h in CopyFiles */,
-				B5950BA00DDE033500D54424 /* blob_input_stream_sf.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
