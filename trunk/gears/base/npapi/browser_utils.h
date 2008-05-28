@@ -60,7 +60,6 @@ class BrowserUtils {
                                     SecurityOrigin *security_origin);
 
   // Get the current browser's user agent string.
-  // TODO(playmobil): Make this work correctly with workers. 
   static bool GetUserAgentString(std::string16 *user_agent);
 
   // Returns true if the browser is not in "offline" mode and there is access
