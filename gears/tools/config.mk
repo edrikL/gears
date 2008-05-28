@@ -47,12 +47,9 @@ ifneq ($(findstring $(BROWSER), SF|NPAPI),)
   USING_NPAPI = 1
 endif
 
-# Build third_party ICU on SF, NPAPI and Firefox platforms, unless specifically
-# disabled.
+# Build third_party ICU unless specifically disabled.
 ifeq ($(USING_ICU),)
-  ifneq ($(findstring $(BROWSER), SF|NPAPI|FF2|FF3),)
-    USING_ICU = 1
-  endif
+  USING_ICU = 1
 endif
 
 # Store value of unmodified command line parameters.
