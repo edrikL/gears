@@ -34,6 +34,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/localserver/common/progress_event.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifndef OFFICIAL_BUILD
@@ -43,7 +44,7 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 // SFHttpRequest
 //------------------------------------------------------------------------------
-class SFHttpRequest : public HttpRequest {
+class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
  public:
  
   // refcounting
@@ -102,9 +103,6 @@ class SFHttpRequest : public HttpRequest {
   // events
   virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
-  // Should only be used by ProgressInputStream.
-  void OnUploadProgress(int64 position, int64 total);
-
  // Methods used to communicate between Obj C delegate and C++ class.
  // You can't make an objc-c selector a friend of a C++ class, so these
  // need to be declared public.
@@ -123,6 +121,9 @@ class SFHttpRequest : public HttpRequest {
   typedef HttpHeaderVector::const_iterator HttpHeaderVectorConstIterator;
 
  private:
+  // ProgressEvent::Listener implementation
+  virtual void OnUploadProgress(int64 position, int64 total);
+
   friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
  
   SFHttpRequest();

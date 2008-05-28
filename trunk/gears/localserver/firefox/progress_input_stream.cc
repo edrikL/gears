@@ -26,34 +26,9 @@
 #include "gears/localserver/firefox/progress_input_stream.h"
 
 #include "gears/base/common/async_router.h"
+#include "gears/localserver/common/progress_event.h"
 #include "gears/localserver/firefox/http_request_ff.h"
 #include "gears/localserver/firefox/ui_thread.h"
-
-//------------------------------------------------------------------------------
-// ProgressEvent
-//------------------------------------------------------------------------------
-
-namespace {
-  class ProgressEvent : public AsyncFunctor {
-   public:
-    ProgressEvent(FFHttpRequest *request, int64 position, int64 total);
-    virtual void Run();
-   private:
-    scoped_refptr<FFHttpRequest> request_;
-    int64 position_;
-    int64 total_;
-  };
-}
-
-ProgressEvent::ProgressEvent(FFHttpRequest *request,
-                             int64 position, int64 total)
-    : request_(request), position_(position), total_(total) {
-}
-
-void ProgressEvent::Run() {
-  assert(request_.get());
-  request_->OnUploadProgress(position_, total_);
-}
 
 //------------------------------------------------------------------------------
 // ProgressInputStream implementation
@@ -108,8 +83,7 @@ NS_IMETHODIMP ProgressInputStream::ReadSegments(nsWriteSegmentFun writer,
                                                 out_num_bytes_read);
   if (result == NS_OK && *out_num_bytes_read > 0) {
     position_ += *out_num_bytes_read;
-    ProgressEvent *event(new ProgressEvent(request_.get(), position_, total_));
-    AsyncRouter::GetInstance()->CallAsync(GetUiThread(), event);
+    ProgressEvent::Update(request_.get(), request_.get(), position_, total_);
   }
   return result;
 }
