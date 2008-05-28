@@ -464,7 +464,7 @@ bool CanonicalizePartialPath(const UTF16Char* spec,
                              int path_begin_in_output,
                              CanonOutput* output);
 
-#ifndef WIN32
+#if !defined(WIN32) || defined(WINCE)
 
 // Implementations of Windows' int-to-string conversions
 int _itoa_s(int value, char* buffer, size_t size_in_chars, int radix);
@@ -481,11 +481,13 @@ inline int _itow_s(int value, UTF16Char (&buffer)[N], int radix) {
   return _itow_s(value, buffer, N, radix);
 }
 
+#ifndef WINCE
 // _strtoui64 and strtoull behave the same
 inline unsigned long long _strtoui64(const char* nptr,
                                      char** endptr, int base) {
   return strtoull(nptr, endptr, base);
 }
+#endif
 
 #endif  // WIN32
 

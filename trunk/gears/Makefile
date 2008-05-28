@@ -680,7 +680,6 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
-		url_utils_np.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -714,7 +713,6 @@ IE_CPPSRCS	+= \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
-		url_utils_ie.cc \
 		vista_utils.cc \
 		$(NULL)
 ifeq ($(OS),win32)
@@ -763,7 +761,6 @@ NPAPI_CPPSRCS	+= \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		plugin.cc \
-		url_utils_np.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -815,7 +812,6 @@ SF_CPPSRCS	+= \
 		paths_sf_more.mm \
 		plugin.cc \
 		safari_workaround.m \
-		url_utils_np.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
