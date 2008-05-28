@@ -186,6 +186,17 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
 STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
                                     const VARIANT *arg_array,
                                     GearsResultSetInterface **rs_retval) {
+#ifdef WINCE
+  // Sleep() is used as a poor-man's yield() here to improve concurrency
+  // and prevent possible thread starvation on Windows Mobile,
+  // especially for cases when one thread is using the database very 
+  // actively, and other threads only use it occasionally.
+  // The root problem is in SQLite lock implementation which
+  // uses a busy wait.
+  // TODO(shess): more efficient locking implementation on SQLite level.
+  Sleep(0);  
+#endif  // WINCE
+
   const BSTR expression = ActiveXUtils::SafeBSTR(expression_in);
 
 #ifdef DEBUG
