@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2006, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -22,80 +22,40 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Adds worker threads to JavaScript. Each thread runs in its own context; no
+// state is shared between threads. Threads can only send strings to each other.
+// By using this model, we give developers parallel execution without exposing
+// them to the normal pitfalls of synchronizing data access.
+//
+// TODO(cprince): in the IE and FF code
+// - [P2] Measure performance of JS engine instancing; consider caching.
 
-#ifndef GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
-#define GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
+#ifndef GEARS_WORKERPOOL_IE_POOL_THREADS_MANAGER_H__
+#define GEARS_WORKERPOOL_IE_POOL_THREADS_MANAGER_H__
+
 
 #include <vector>
-
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
+#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/base/common/security_model.h"
+#include "gears/base/common/string16.h"
+#include "genfiles/interfaces.h"
 
-class PoolThreadsManager;
-struct Message;
-struct ThreadsEvent;
+const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
+const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
+
+struct WorkerPoolMessage;
 struct JavaScriptWorkerInfo;
-
-class GearsWorkerPool
-    : public ModuleImplBaseClassVirtual,
-      public JsEventHandlerInterface {
- public:
-  // Need a default constructor to instance objects from the Factory.
-  GearsWorkerPool();
-  ~GearsWorkerPool();
-
-  // IN: string full_script
-  // OUT: int retval
-  void CreateWorker(JsCallContext *context);
-
-  // IN: string url
-  // OUT: int retval
-  void CreateWorkerFromUrl(JsCallContext *context);
-
-  void AllowCrossOrigin(JsCallContext *context);
-
-  // IN: string message
-  // IN: int dest_worker_id
-  void SendMessage(JsCallContext *context);
-
-  // IN: function_ptr handler
-  void SetOnmessage(JsCallContext *context);
-
-  // OUT: function_ptr handler
-  void GetOnmessage(JsCallContext *context);
-
-  // IN: function_ptr handler
-  void SetOnerror(JsCallContext *context);
-
-  // OUT: function_ptr handler
-  void GetOnerror(JsCallContext *context);
-
-#ifdef DEBUG
-  void ForceGC(JsCallContext *context);
-#endif
-
-  void HandleEvent(JsEventType event_type);
-
- private:
-  friend class PoolThreadsManager; // for SetThreadsManager
-
-  void Initialize(); // okay to call this multiple times
-  void SetThreadsManager(PoolThreadsManager *manager);
-
-  PoolThreadsManager *threads_manager_;
-  bool owns_threads_manager_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
-};
+class GearsWorkerPool;
 
 
 class PoolThreadsManager
     : JsErrorHandlerInterface {
  public:
-  friend struct ThreadsEvent; // for OnReceiveThreadsEvent
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner,
                      GearsWorkerPool *owner);
@@ -109,12 +69,11 @@ class PoolThreadsManager
   bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
   bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
   bool CreateThread(const std::string16 &url_or_full_script,
-                    bool is_param_script,
-                    int *worker_id);
+                    bool is_param_script, int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &error_info);
-  bool PutPoolMessage(const char16 *text, int dest_worker_id,
-                      const SecurityOrigin &src_origin);
+  bool PutPoolMessage(MarshaledJsToken *mjt, const std::string16 &text,
+                      int dest_worker_id, const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
   bool InitWorkerThread(JavaScriptWorkerInfo *wi);
@@ -133,34 +92,31 @@ class PoolThreadsManager
   // Gets the id of the worker associated with the current thread. Caller must
   // acquire the mutex.
   int GetCurrentPoolWorkerId();
-  bool GetPoolMessage(Message *msg);
+  WorkerPoolMessage *GetPoolMessage();
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
+  static unsigned __stdcall JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,
                             JavaScriptWorkerInfo *wi);
-#ifdef WIN32
-  static unsigned __stdcall JavaScriptThreadEntry(void *args); 
-#elif OS_MACOSX
-  static void *JavaScriptThreadEntry(void *args);
-#else
-#error "ThreadProc only implemented for Mac & Windows at the moment.
-#endif
-  
-  static void OnReceiveThreadsEvent(ThreadsEvent *event);
-  
+  static LRESULT CALLBACK ThreadWndProc(HWND hwnd, UINT message,
+                                        WPARAM wparam, LPARAM lparam);
+
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
-                      const Message &msg);
+                      const WorkerPoolMessage &msg);
   void ProcessError(JavaScriptWorkerInfo *wi,
-                    const Message &msg);
+                    const WorkerPoolMessage &msg);
 
-  int num_workers_;  // used by Add/ReleaseWorkerRef()
+  // This is used by Add/ReleaseWorkerRef(). Note that it is not equal to the
+  // total number of threads, as each worker thread (not the main thread)
+  // increments the count twice.
+  int ref_count_;
   bool is_shutting_down_;
   GearsWorkerPool *unrefed_owner_;
   scoped_refptr<GearsWorkerPool> refed_owner_;
 
-  std::vector<ThreadId> worker_id_to_os_thread_id_;
+  std::vector<DWORD> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
   // JavaScriptWorkerInfo, but STL vector realloc can move its elements.
   std::vector<JavaScriptWorkerInfo*> worker_info_;
@@ -173,4 +129,4 @@ class PoolThreadsManager
 };
 
 
-#endif // GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
+#endif  // GEARS_WORKERPOOL_IE_POOL_THREADS_MANAGER_H__

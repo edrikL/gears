@@ -103,10 +103,13 @@ class JsRunnerBase : public JsRunnerInterface {
   }
   
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    ModuleImplBaseClass *module = static_cast<ModuleImplBaseClass*>(object);
+    return AddGlobal(name, static_cast<ModuleImplBaseClass*>(object));
+  }
+
+  bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
     NPVariant np_window;
     OBJECT_TO_NPVARIANT(GetGlobalObject(), np_window);
-    return SetProperty(np_window, name.c_str(), module->GetWrapperToken());
+    return SetProperty(np_window, name.c_str(), object->GetWrapperToken());
   }
 
   JsObject *NewObject(bool dump_on_error = false) {

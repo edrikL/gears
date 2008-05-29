@@ -82,47 +82,28 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIJSRuntimeService.h>
 #include <gecko_internal/nsIScriptContext.h>
-#include "third_party/scoped_ptr/scoped_ptr.h"
 
-#include "gears/workerpool/firefox/workerpool.h"
+#include "gears/workerpool/firefox/pool_threads_manager.h"
 
-#include "genfiles/database.h"
-#include "genfiles/localserver.h"
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/factory/firefox/factory.h"
 #include "gears/localserver/common/critical_section.h"
-#include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"
+#include "gears/workerpool/workerpool.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF2
 #define RECYCLE_JS_RUNTIME 1
 #endif
-
-// Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
-NS_IMPL_ADDREF(GearsWorkerPool)
-NS_IMPL_RELEASE(GearsWorkerPool)
-NS_INTERFACE_MAP_BEGIN(GearsWorkerPool)
-  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
-  NS_INTERFACE_MAP_ENTRY(GearsWorkerPoolInterface)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsWorkerPoolInterface)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsWorkerPool)
-NS_INTERFACE_MAP_END
-
-
-// Object identifiers
-const char *kGearsWorkerPoolClassName = "GearsWorkerPool";
-const nsCID kGearsWorkerPoolClassId = {0x0a15a787, 0x9aef, 0x4a5e, {0x92, 0x7d,
-                                       0xdb, 0x55, 0x5b, 0x48, 0x49, 0x09}};
-                                      // {0A15A787-9AEF-4a5e-927D-DB555B484909}
 
 
 //
@@ -213,293 +194,6 @@ struct JavaScriptWorkerInfo {
 
 
 //
-// GearsWorkerPool -- handles the browser glue.
-//
-
-GearsWorkerPool::GearsWorkerPool()
-    : threads_manager_(NULL),
-      owns_threads_manager_(false) {
-}
-
-GearsWorkerPool::~GearsWorkerPool() {
-  if (owns_threads_manager_) {
-    assert(threads_manager_);
-    threads_manager_->ShutDown();
-  }
-
-  if (threads_manager_) {
-    threads_manager_->UninitWorkerThread();
-    threads_manager_->ReleaseWorkerRef();
-  }
-}
-
-void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
-  assert(!threads_manager_);
-  threads_manager_ = manager;
-  threads_manager_->AddWorkerRef();
-
-  // Leave owns_threads_manager_ set to false.
-  assert(!owns_threads_manager_);
-}
-
-NS_IMETHODIMP GearsWorkerPool::SetOnmessage(nsIVariant *in_value) {
-  Initialize();
-
-  JsParamFetcher js_params(this);
-
-  if (js_params.GetCount(false) < 1) {
-    RETURN_EXCEPTION(STRING16(L"Value is required."));
-  }
-
-  // Once we aquire the callback, we're responsible for its lifetime until it's
-  // passed into SetCurrentThreadMessageHandler.
-  JsRootedCallback *onmessage_handler;
-  if (!js_params.GetAsNewRootedCallback(0, &onmessage_handler)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid value for onmesssage property."));
-  }
-
-  if (!threads_manager_->SetCurrentThreadMessageHandler(onmessage_handler)) {
-    RETURN_EXCEPTION(STRING16(L"Error setting onmessage handler."));
-  }
-
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::GetOnmessage(nsIVariant **out_value) {
-  *out_value = NULL; // TODO(cprince): implement this (requires some changes)
-                     // See code in nsXMLHttpRequest for NS_IF_ADDREF usage.
-                     // May be able to return a raw JsToken for main and worker?
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::SetOnerror(nsIVariant *in_value) {
-  Initialize();
-
-  JsRootedCallback *onerror_handler;
-  JsParamFetcher js_params(this);
-
-  if (js_params.GetCount(false) < 1) {
-    RETURN_EXCEPTION(STRING16(L"Value is required."));
-  }
-
-  // Once we aquire the callback, we're responsible for its lifetime until it's
-  // passed into SetCurrentThreadErrorHandler.
-  if (!js_params.GetAsNewRootedCallback(0, &onerror_handler)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid value for onerror property."));
-  }
-
-  if (!threads_manager_->SetCurrentThreadErrorHandler(onerror_handler)) {
-    // Currently, the only reason this can fail is because of this one
-    // particular error.
-    // TODO(aa): We need a system throughout Gears for being able to handle
-    // exceptions from deep inside the stack better.
-    RETURN_EXCEPTION(STRING16(L"The onerror property cannot be set on a "
-                              L"parent worker"));
-  }
-
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::GetOnerror(nsIVariant **out_value) {
-  // TODO(cprince): Implement this. See comment in GetOnmessage.
-  *out_value = NULL; 
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
-                                            PRInt32 *retval) {
-  Initialize();
-  
-  JsParamFetcher js_params(this);
-  std::string16 full_script;
-
-  if (js_params.GetCount(false) < 1) {
-    RETURN_EXCEPTION(STRING16(L"The full_script parameter is required."));
-  } else if (!js_params.GetAsString(0, &full_script)) {
-    RETURN_EXCEPTION(STRING16(L"The full_script parameter must be a string."));
-  }
-
-  int worker_id_temp;  // protects against modifying output param on failure
-  bool succeeded = threads_manager_->CreateThread(full_script.c_str(),
-                                                  true,  // is_param_script
-                                                  &worker_id_temp);
-  if (!succeeded) {
-    RETURN_EXCEPTION(STRING16(L"Internal error."));
-  }
-
-  *retval = worker_id_temp;
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::CreateWorkerFromUrl(//const nsAString &url
-                                                   PRInt32 *retval) {
-  Initialize();
-
-  // Make sure URLs are only fetched from the main thread.
-  // TODO(michaeln): This HttpRequest limitation has been removed.
-  //                 Add unit tests and remove the test below.
-  if (EnvIsWorker()) {
-    RETURN_EXCEPTION(STRING16(L"createWorkerFromUrl() cannot be called from a"
-                              L" worker."));
-  }
-  
-  JsParamFetcher js_params(this);
-  std::string16 url;
-
-  if (js_params.GetCount(false) < 1) {
-    RETURN_EXCEPTION(STRING16(L"The url parameter is required."));
-  } else if (!js_params.GetAsString(0, &url)) {
-    RETURN_EXCEPTION(STRING16(L"The url parameter must be a string."));
-  }
-
-  std::string16 absolute_url;
-  ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(), &absolute_url);
-
-  SecurityOrigin script_origin;
-  if (!script_origin.InitFromUrl(absolute_url.c_str())) {
-    RETURN_EXCEPTION(STRING16(L"Internal error."));
-  }
-
-  // We do not currently support file:// URLs. See bug:
-  // http://code.google.com/p/google-gears/issues/detail?id=239.
-  if (!HttpRequest::IsSchemeSupported(script_origin.scheme().c_str())) {
-    std::string16 message(STRING16(L"URL scheme '"));
-    message += script_origin.scheme();
-    message += STRING16(L"' is not supported.");
-    RETURN_EXCEPTION(message.c_str());
-  }
-  
-  // Enable the worker's origin for gears access if it isn't explicitly
-  // disabled.
-  // NOTE: It is OK to do this here, even though there is a race with starting
-  // the background thread. Even if permission is revoked before after this
-  // happens that is no different than what happens if permission is revoked
-  // after the thread starts.
-  if (!script_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
-    PermissionsDB *db = PermissionsDB::GetDB();
-    if (!db) {
-      RETURN_EXCEPTION(STRING16(L"Internal error."));
-    }
-
-    if (!db->EnableGearsForWorker(script_origin)) {
-      std::string16 message(STRING16(L"Gears access is denied for url: "));
-      message += absolute_url;
-      message += STRING16(L".");
-      RETURN_EXCEPTION(message.c_str());
-    }
-  }
-
-  int worker_id_temp;  // protects against modifying output param on failure
-  bool succeeded = threads_manager_->CreateThread(absolute_url.c_str(),
-                                                  false,  // is_param_script
-                                                  &worker_id_temp);
-  if (!succeeded) {
-    RETURN_EXCEPTION(STRING16(L"Internal error."));
-  }
-
-  *retval = worker_id_temp;
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::AllowCrossOrigin() {
-  Initialize();
-
-  if (owns_threads_manager_) {
-    RETURN_EXCEPTION(STRING16(L"Method is only used by child workers."));
-  }
-
-  threads_manager_->AllowCrossOrigin();
-  RETURN_NORMAL();
-}
-
-NS_IMETHODIMP GearsWorkerPool::SendMessage(//const variant &message_body,
-                                           //PRInt32 dest_worker_id
-                                          ) {
-  Initialize();
-
-  JsParamFetcher js_params(this);
-  std::string16 text;
-  int dest_worker_id;
-
-  if (js_params.GetCount(false) < 1) {
-    RETURN_EXCEPTION(STRING16(L"The message parameter is required."));
-  }
-
-  if (js_params.GetCount(false) < 2) {
-    RETURN_EXCEPTION(STRING16(L"The destId parameter is required."));
-  } else if (!js_params.GetAsInt(1, &dest_worker_id)) {
-    RETURN_EXCEPTION(STRING16(L"The destId parameter must be an int."));
-  }
-
-  std::string16 error;
-
-  // Here, we marshal the first argument, with the extra caveat that you can't
-  // send a JavaScript null or undefined as a message (although you can send an
-  // array containing nulls and undefineds).
-  MarshaledJsToken *mjt = NULL;
-  JsParamType first_arg_type = js_params.GetType(0);
-  if (first_arg_type == JSPARAM_NULL ||
-      first_arg_type == JSPARAM_UNDEFINED ||
-      !js_params.GetAsMarshaledJsToken(0, GetJsRunner(), &mjt, &error)) {
-    RETURN_EXCEPTION(error.empty()
-        ? STRING16(L"The message parameter has an invalid type.")
-        : error.c_str());
-  }
-  if (js_params.GetType(0) != JSPARAM_STRING16 ||
-      !js_params.GetAsString(0, &text)) {
-    text = STRING16(L"");
-  }
-
-  bool succeeded = threads_manager_->PutPoolMessage(mjt,
-                                                    text.c_str(),
-                                                    dest_worker_id,
-                                                    EnvPageSecurityOrigin());
-  if (!succeeded) {
-    error = STRING16(L"Worker ");
-    error += IntegerToString16(dest_worker_id);
-    error += STRING16(L" does not exist.");
-    RETURN_EXCEPTION(error.c_str());
-  }
-  RETURN_NORMAL();
-}
-
-#ifdef DEBUG
-NS_IMETHODIMP GearsWorkerPool::ForceGC() {
-  threads_manager_->ForceGCCurrentThread();
-  RETURN_NORMAL();
-}
-#endif // DEBUG
-
-void GearsWorkerPool::HandleEvent(JsEventType event_type) {
-  assert(event_type == JSEVENT_UNLOAD);
-
-  if (owns_threads_manager_ && threads_manager_) {
-    // Note: the following line can cause us to be deleted
-    threads_manager_->ShutDown();
-  }
-}
-
-void GearsWorkerPool::Initialize() {
-  if (!threads_manager_) {
-    assert(EnvPageSecurityOrigin().full_url() == EnvPageLocationUrl());
-    SetThreadsManager(new PoolThreadsManager(EnvPageSecurityOrigin(),
-                                             GetJsRunner(), this));
-    owns_threads_manager_ = true;
-  }
-
-  // Monitor 'onunload' to shutdown threads when the page goes away.
-  //
-  // A thread that keeps running after the page changes can cause odd problems,
-  // if it continues to send messages. (This can happen if it busy-loops.)  On
-  // Firefox, such a thread triggered the Print dialog after the page changed!
-  if (unload_monitor_ == NULL) {
-    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
-                                             this));
-  }
-}
-
-
-//
 // ThreadsEvent -- used for Firefox cross-thread communication.
 //
 
@@ -530,6 +224,10 @@ void ThreadsEvent::Run() {
 }
 
 
+//
+// PoolThreadsManager -- handles threading and JS engine setup.
+//
+
 // Called when the event is received.
 void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
   JavaScriptWorkerInfo *wi = event->wi;
@@ -547,7 +245,7 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
     return NULL;
   }
 
-  nsCOMPtr<GearsWorkerPool> scoped_reference;
+  scoped_refptr<GearsWorkerPool> scoped_reference;
   if (wi->is_owning_worker)
     scoped_reference = wi->threads_manager->refed_owner_;
 
@@ -635,10 +333,6 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   wi->js_runner->ThrowGlobalError(msg.text_);
 }
 
-
-//
-// PoolThreadsManager -- handles threading and JS engine setup.
-//
 
 PoolThreadsManager::PoolThreadsManager(
                         const SecurityOrigin &page_security_origin,
@@ -807,7 +501,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
 
 bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
-                                        const char16 *text,
+                                        const std::string16 &text,
                                         int dest_worker_id,
                                         const SecurityOrigin &src_origin) {
   scoped_ptr<MarshaledJsToken> scoped_mjt(mjt);
@@ -1123,7 +817,7 @@ bool StartJsThread(JavaScriptWorkerInfo *wi) {
 #endif
 }
 
-bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
+bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
                                       bool is_param_script, int *worker_id) {
   int new_worker_id = -1;
   JavaScriptWorkerInfo *wi = NULL;
@@ -1183,9 +877,11 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
+    // TODO(nigeltao) - investigate why the FF version calls
+    // ResolveAndNormalize but the IE and NPAPI versions do not.
     std::string16 url;
     ResolveAndNormalize(page_security_origin_.full_url().c_str(),
-                  url_or_full_script, &url);
+                        url_or_full_script.c_str(), &url);
 
     bool is_async = true;
     if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
@@ -1344,8 +1040,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
     return false;
   }
 
-  scoped_ptr<GearsWorkerPool> workerpool(new GearsWorkerPool());
-  if (!workerpool.get()) { return false; }
+  scoped_refptr<GearsWorkerPool> workerpool;
+  if (!CreateModule<GearsWorkerPool>(js_runner, &workerpool)) { return false; }
 
   if (!workerpool->InitBaseManually(wi->module_environment.get())) {
     return false;
@@ -1379,10 +1075,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
     return false;
   }
 
-  const nsIID workerpool_iface_id = GEARSWORKERPOOLINTERFACE_IID;
-  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName,
-                            workerpool.release(), // nsISupports
-                            workerpool_iface_id)) {
+  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName, workerpool.get())) {
     return false;
   }
 

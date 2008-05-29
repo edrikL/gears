@@ -23,14 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_WORKERPOOL_FIREFOX_WORKERPOOL_H__
-#define GEARS_WORKERPOOL_FIREFOX_WORKERPOOL_H__
+#ifndef GEARS_WORKERPOOL_FIREFOX_POOL_THREADS_MANAGER_H__
+#define GEARS_WORKERPOOL_FIREFOX_POOL_THREADS_MANAGER_H__
 
 #include <vector>
 #include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_internal/nsIVariant.h>
 
-#include "genfiles/workerpool.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_marshal.h"
@@ -40,59 +39,10 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 
-// Object identifiers
-extern const char *kGearsWorkerPoolClassName;
-extern const nsCID kGearsWorkerPoolClassId;
-
-class PoolThreadsManager;
 struct WorkerPoolMessage;
 struct JavaScriptWorkerInfo;
 struct ThreadsEvent;
-
-
-class GearsWorkerPool
-    : public ModuleImplBaseClass,
-      public GearsWorkerPoolInterface,
-      public JsEventHandlerInterface {
- public:
-  NS_DECL_ISUPPORTS
-  GEARS_IMPL_BASECLASS
-  // End boilerplate code. Begin interface.
-
-  // Need a default constructor to instance objects from the Factory.
-  GearsWorkerPool();
-  ~GearsWorkerPool();
-
-  NS_IMETHOD CreateWorker(//const nsAString &full_script
-                          PRInt32 *retval);
-  NS_IMETHOD CreateWorkerFromUrl(//const nsAString &url
-                                 PRInt32 *retval);
-  NS_IMETHOD AllowCrossOrigin();
-  NS_IMETHOD SendMessage(//const variant &message_body
-                         //PRInt32 dest_worker_id
-                        );
-  NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
-  NS_IMETHOD GetOnmessage(nsIVariant **out_handler);
-  NS_IMETHOD SetOnerror(nsIVariant *in_handler);
-  NS_IMETHOD GetOnerror(nsIVariant **out_handler);
-#ifdef DEBUG
-  NS_IMETHOD ForceGC();
-#endif
-
-  friend class PoolThreadsManager; // for SetThreadsManager()
-
- private:
-  void Initialize(); // okay to call this multiple times
-  void SetThreadsManager(PoolThreadsManager *manager);
-
-  void HandleEvent(JsEventType event_type);
-
-  PoolThreadsManager *threads_manager_;
-  bool owns_threads_manager_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
-};
+class GearsWorkerPool;
 
 
 class PoolThreadsManager
@@ -111,11 +61,11 @@ class PoolThreadsManager
 
   bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
   bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
-  bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
-                    int *worker_id);
+  bool CreateThread(const std::string16 &url_or_full_script,
+                    bool is_param_script, int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &message);
-  bool PutPoolMessage(MarshaledJsToken *mjt, const char16 *text,
+  bool PutPoolMessage(MarshaledJsToken *mjt, const std::string16 &text,
                       int dest_worker_id, const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
@@ -154,8 +104,7 @@ class PoolThreadsManager
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
   GearsWorkerPool *unrefed_owner_;
-  nsCOMPtr<GearsWorkerPool> refed_owner_;
-  // TODO(michaeln): use scoped_refptr when GearsWorkerPool is Dispatcher based
+  scoped_refptr<GearsWorkerPool> refed_owner_;
 
   std::vector<ThreadId> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
@@ -170,4 +119,4 @@ class PoolThreadsManager
 };
 
 
-#endif // GEARS_WORKERPOOL_FIREFOX_WORKERPOOL_H__
+#endif // GEARS_WORKERPOOL_FIREFOX_POOL_THREADS_MANAGER_H__
