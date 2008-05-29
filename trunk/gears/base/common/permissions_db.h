@@ -56,6 +56,10 @@ enum PermissionState {
 // shortcut info here too. (But be careful to preserve the on-disk filename.)
 class PermissionsDB {
  public:
+  // When shortcuts are added or removed, this topic is broadcast
+  // thru MessageService.NotifyObservers with a NULL data object.
+  static const char16 *kShortcutsChangedTopic;
+
   // The allowable values of a permission.
   enum PermissionValue {
     PERMISSION_NOT_SET = 0,  // origin has no persisted value
