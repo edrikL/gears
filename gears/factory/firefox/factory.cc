@@ -50,7 +50,7 @@
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
-#include "gears/workerpool/firefox/workerpool.h"
+#include "gears/workerpool/workerpool.h"
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_ADDREF(GearsFactory)
@@ -161,6 +161,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.workerpool")) {
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media, and Image APIs have not been
   // finalized for official builds.
@@ -210,8 +212,6 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
   } else if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-  } else if (object_name == STRING16(L"beta.workerpool")) {
-    isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
   }  else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();

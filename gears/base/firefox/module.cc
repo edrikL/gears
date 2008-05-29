@@ -52,14 +52,13 @@
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/ui/firefox/ui_utils.h"
-#include "gears/workerpool/firefox/workerpool.h"
 
 #if BROWSER_FF2
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
 #endif
 
 #if BROWSER_FF2
-// From gears/workerpool/firefox/workerpool.h
+// From gears/workerpool/firefox/pool_threads_manager.h
 void DestroyThreadRecycler();
 #endif
 //-----------------------------------------------------------------------------
@@ -141,12 +140,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
                                              &kGearsResultSetClassId)
 
-  // workerpool
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsWorkerPool)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsWorkerPoolInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsWorkerPool, PR_TRUE,
-                                             &kGearsWorkerPoolClassId)
-
   // localserver
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsLocalServer)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsLocalServerInterface)
@@ -201,9 +194,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSDATABASEINTERFACE_IID_STR },
     { kGearsResultSetClassName, "GearsResultSetInterface",
       GEARSRESULTSETINTERFACE_IID_STR },
-    // workerpool
-    { kGearsWorkerPoolClassName, "GearsWorkerPoolInterface",
-      GEARSWORKERPOOLINTERFACE_IID_STR },
     // localserver
     { kGearsLocalServerClassName, "GearsLocalServerInterface",
       GEARSLOCALSERVERINTERFACE_IID_STR },
@@ -244,8 +234,6 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // database
 NS_DECL_DOM_CLASSINFO(GearsDatabase)
 NS_DECL_DOM_CLASSINFO(GearsResultSet)
-// workerpool
-NS_DECL_DOM_CLASSINFO(GearsWorkerPool)
 // localserver
 NS_DECL_DOM_CLASSINFO(GearsLocalServer)
 NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
@@ -270,8 +258,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   // database
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
-  // workerpool
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsWorkerPool));
   // localserver
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));

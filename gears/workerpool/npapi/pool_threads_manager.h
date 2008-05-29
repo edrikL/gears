@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -22,104 +22,29 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Adds worker threads to JavaScript. Each thread runs in its own context; no
-// state is shared between threads. Threads can only send strings to each other.
-// By using this model, we give developers parallel execution without exposing
-// them to the normal pitfalls of synchronizing data access.
-//
-// TODO(cprince): in the IE and FF code
-// - [P2] Measure performance of JS engine instancing; consider caching.
 
-#ifndef GEARS_WORKERPOOL_IE_WORKERPOOL_H__
-#define GEARS_WORKERPOOL_IE_WORKERPOOL_H__
-
+#ifndef GEARS_WORKERPOOL_NPAPI_POOL_THREADS_MANAGER_H__
+#define GEARS_WORKERPOOL_NPAPI_POOL_THREADS_MANAGER_H__
 
 #include <vector>
+
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/common.h"
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
-#include "gears/base/common/security_model.h"
-#include "gears/base/common/string16.h"
-#include "genfiles/interfaces.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
-const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
-const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
-
-class PoolThreadsManager;
-struct WorkerPoolMessage;
+class GearsWorkerPool;
 struct JavaScriptWorkerInfo;
-
-
-class ATL_NO_VTABLE GearsWorkerPool
-    : public ModuleImplBaseClass,
-      public CComObjectRootEx<CComMultiThreadModel>,
-      public CComCoClass<GearsWorkerPool>,
-      public IDispatchImpl<GearsWorkerPoolInterface>,
-      public JsEventHandlerInterface {
- public:
-  BEGIN_COM_MAP(GearsWorkerPool)
-    COM_INTERFACE_ENTRY(GearsWorkerPoolInterface)
-    COM_INTERFACE_ENTRY(IDispatch)
-  END_COM_MAP()
-
-  DECLARE_NOT_AGGREGATABLE(GearsWorkerPool)
-  DECLARE_PROTECT_FINAL_CONSTRUCT()
-  // End boilerplate code. Begin interface.
-
-  // Need a default constructor to CreateInstance objects in IE.
-  GearsWorkerPool();
-  ~GearsWorkerPool();
-
-  // Creates a new worker.
-  // 'full_script' is the entire body of JavaScript the worker will know about.
-  // 'url' is a file to fetch to use as the full body of JavaScript.
-  // Returns, with the ID of the created worker, as soon as the worker finishes
-  // message queue initialization, possibly before any script has been executed.
-  STDMETHOD(createWorker)(const BSTR *full_script, int *retval);
-  STDMETHOD(createWorkerFromUrl)(const BSTR *url, int *retval);
-
-  // Lets a worker opt-in to being created from another origin.
-  STDMETHOD(allowCrossOrigin)();
-
-  // Sends message to a given worker_id.
-  STDMETHOD(sendMessage)(const VARIANT *message_body, int dest_worker_id);
-
-  // Sets the onmessage handler for the current worker.
-  // The handler has the prototype Handler(message_string, src_worker_id).
-  STDMETHOD(put_onmessage)(const VARIANT *in_value);
-
-  // Sets the onerror handler for the current worker. This can only be set on
-  // the owning worker (the one that created the PoolThreadsManager). Calls
-  // from other workers will fail.
-  // The handler has the prototype Handler(error_message, src_worker_id).
-  STDMETHOD(put_onerror)(const VARIANT *in_value);
-
-  void HandleEvent(JsEventType event_type);
-
-#ifdef DEBUG
-  STDMETHOD(forceGC)();
-#endif
-
- private:
-  friend class PoolThreadsManager; // for SetThreadsManager
-
-  void Initialize(); // okay to call this multiple times
-  void SetThreadsManager(PoolThreadsManager *manager);
-
-  PoolThreadsManager *threads_manager_;
-  bool owns_threads_manager_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
-};
+struct ThreadsEvent;
+struct WorkerPoolMessage;
 
 
 class PoolThreadsManager
     : JsErrorHandlerInterface {
  public:
+  friend struct ThreadsEvent; // for OnReceiveThreadsEvent
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner,
                      GearsWorkerPool *owner);
@@ -132,11 +57,12 @@ class PoolThreadsManager
 
   bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
   bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
-  bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
+  bool CreateThread(const std::string16 &url_or_full_script,
+                    bool is_param_script,
                     int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &error_info);
-  bool PutPoolMessage(MarshaledJsToken *mjt, const char16 *text,
+  bool PutPoolMessage(MarshaledJsToken *mjt, const std::string16 &text,
                       int dest_worker_id, const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
@@ -160,11 +86,17 @@ class PoolThreadsManager
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
-  static unsigned __stdcall JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,
                             JavaScriptWorkerInfo *wi);
-  static LRESULT CALLBACK ThreadWndProc(HWND hwnd, UINT message,
-                                        WPARAM wparam, LPARAM lparam);
+#ifdef WIN32
+  static unsigned __stdcall JavaScriptThreadEntry(void *args); 
+#elif OS_MACOSX
+  static void *JavaScriptThreadEntry(void *args);
+#else
+#error "ThreadProc only implemented for Mac & Windows at the moment."
+#endif
+  
+  static void OnReceiveThreadsEvent(ThreadsEvent *event);
 
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
@@ -172,16 +104,12 @@ class PoolThreadsManager
   void ProcessError(JavaScriptWorkerInfo *wi,
                     const WorkerPoolMessage &msg);
 
-  // This is used by Add/ReleaseWorkerRef(). Note that it is not equal to the
-  // total number of threads, as each worker thread (not the main thread)
-  // increments the count twice.
-  int ref_count_;
+  int num_workers_;  // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
   GearsWorkerPool *unrefed_owner_;
-  CComPtr<IUnknown> refed_owner_;
-  // TODO(michaeln): use scoped_refptr when GearsWorkerPool is Dispatcher based
+  scoped_refptr<GearsWorkerPool> refed_owner_;
 
-  std::vector<DWORD> worker_id_to_os_thread_id_;
+  std::vector<ThreadId> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
   // JavaScriptWorkerInfo, but STL vector realloc can move its elements.
   std::vector<JavaScriptWorkerInfo*> worker_info_;
@@ -194,4 +122,4 @@ class PoolThreadsManager
 };
 
 
-#endif  // GEARS_WORKERPOOL_IE_WORKERPOOL_H__
+#endif // GEARS_WORKERPOOL_NPAPI_POOL_THREADS_MANAGER_H__

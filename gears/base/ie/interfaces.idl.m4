@@ -56,7 +56,6 @@ import "database/ie/database.idl";
 import "factory/ie/factory.idl";
 
 import "localserver/ie/localserver.idl";
-import "workerpool/ie/workerpool.idl";
 
 // The ModuleWrapper C++ class implements GearsModuleProviderInterface in
 // order to let us distinguish VARIANTs that are ModuleWrappers from other
@@ -157,14 +156,6 @@ library GearsTypelib
     [default] interface GearsDatabaseInterface;
   };
   
-  [
-    uuid(B76AFB62-9BA2-43e8-B27F-9F1CAC8148B7)
-  ]
-  coclass GearsWorkerPool
-  {
-    [default] interface GearsWorkerPoolInterface;
-  };
-
   [
     uuid(3A826505-92E3-486a-9FB5-37FE89E971F9)
   ]

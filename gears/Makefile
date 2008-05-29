@@ -1240,36 +1240,28 @@ SF_CPPSRCS	+= \
 # workerpool/firefox
 
 FF3_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/firefox \
 		$(NULL)
 
-FF3_M4SRCS	+= \
-		workerpool.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		workerpool.idl \
-		$(NULL)
-
 FF3_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# workerpool/f
+# workerpool/ie
 
 IE_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/ie \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		workerpool.idl \
-		$(NULL)
-
 IE_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
@@ -1279,11 +1271,13 @@ IE_CPPSRCS	+= \
 
 ifeq ($(USING_NPAPI),1)
 $(BROWSER)_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/npapi \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)

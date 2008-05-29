@@ -50,7 +50,6 @@
 
 #include "genfiles/database.h"
 #include "genfiles/localserver.h"
-#include "genfiles/workerpool.h"
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
@@ -328,6 +327,7 @@ class JsRunner : public JsRunnerBase {
   ~JsRunner();
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
+  bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object);
   bool Start(const std::string16 &full_script);
   bool Stop();
   virtual bool Eval(const std::string16 &full_script, jsval *return_value);
@@ -538,8 +538,6 @@ bool JsRunner::InitJavaScriptEngine() {
     // TODO(cprince): Unify the interface lists here and in GearsFactory.
     // Could share code, or could query GearsFactory.
     {GEARSFACTORYINTERFACE_IID, NULL},
-    // workerpool
-    {GEARSWORKERPOOLINTERFACE_IID, NULL},
     // database
     {GEARSDATABASEINTERFACE_IID, NULL},
     {GEARSRESULTSETINTERFACE_IID, NULL},
@@ -582,6 +580,17 @@ bool JsRunner::AddGlobal(const std::string16 &name,
   NS_ADDREF(globals_.back());
 
   return true; // succeeded
+}
+
+bool JsRunner::AddGlobal(const std::string16 &name,
+                         ModuleImplBaseClass *object) {
+  return JS_TRUE == JS_DefineUCProperty(
+      js_engine_context_, global_obj_,
+      reinterpret_cast<const jschar *>(name.c_str()),
+      name.length(),
+      object->GetWrapperToken(),
+      NULL, NULL, // getter, setter
+      JSPROP_ENUMERATE);
 }
 
 bool JsRunner::Start(const std::string16 &full_script) {
@@ -678,6 +687,10 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
+    // TODO(zork): Add this functionality to DocumentJsRunner.
+    return false;
+  }
+  bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
     // TODO(zork): Add this functionality to DocumentJsRunner.
     return false;
   }

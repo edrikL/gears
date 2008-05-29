@@ -42,7 +42,7 @@
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/ie/string_table.h"
-#include "gears/workerpool/ie/workerpool.h"
+#include "gears/workerpool/workerpool.h"
 #ifdef WINCE
 // The Image, Canvas and Media API are not yet available for WinCE.
 #else
@@ -172,6 +172,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.workerpool")) {
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media and Image APIs have not
   // been finalized for official builds.
@@ -233,11 +235,6 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.workerpool")) {
-    CComObject<GearsWorkerPool> *obj;
-    hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else {

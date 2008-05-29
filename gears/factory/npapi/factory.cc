@@ -43,7 +43,7 @@
 #include "gears/media/audio.h"
 #include "gears/media/audio_recorder.h"
 #include "gears/timer/timer.h"
-#include "gears/workerpool/npapi/workerpool.h"
+#include "gears/workerpool/workerpool.h"
 #ifdef WIN32
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/ui/ie/string_table.h"

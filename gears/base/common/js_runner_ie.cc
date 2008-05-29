@@ -324,7 +324,7 @@ class ATL_NO_VTABLE JsRunnerImpl
   }
 
   // JsRunner implementation
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
+  bool AddGlobal(const std::string16 &name, IGeneric *object);
   bool Start(const std::string16 &full_script);
   bool Stop();
   bool Eval(const std::string16 &script);
@@ -376,8 +376,7 @@ JsRunnerImpl::~JsRunnerImpl() {
 
 
 bool JsRunnerImpl::AddGlobal(const std::string16 &name,
-                             IGeneric *object,
-                             gIID iface_id) {
+                             IGeneric *object) {
   if (!object) { return false; }
 
   // We AddRef() to make sure the object lives as long as the JS engine.
@@ -605,7 +604,12 @@ class JsRunner : public JsRunnerBase {
     return com_obj_->GetGlobalObject(dump_on_error);
   }
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    return com_obj_->AddGlobal(name, object, iface_id);
+    return com_obj_->AddGlobal(name, object);
+  }
+  bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
+    VARIANT &variant = object->GetWrapperToken();
+    assert(variant.vt == VT_DISPATCH);
+    return com_obj_->AddGlobal(name, variant.pdispVal);
   }
   bool Start(const std::string16 &full_script) {
     return com_obj_->Start(full_script);
@@ -654,6 +658,11 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
+    // TODO(zork): Add this functionality to DocumentJsRunner.
+    return false;
+  }
+
+  bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
     // TODO(zork): Add this functionality to DocumentJsRunner.
     return false;
   }
