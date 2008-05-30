@@ -69,16 +69,16 @@ Canvas class
   void crop(int x, int y, int width, int height);
  
   // This method ignores the state of the 2d context.
-  // Note: Scales up or down the contents of the canvas using interpolation, as opposed to creating blank pixels or cropping.
+  // This method creates new pixel values using interpolation, as opposed to creating blank pixels or cropping.
   void resize(int width, int height);
 
 
-  // Properties. Assigning to any of these throws away the existing contents of the canvas.
+  // Properties. Assigning to any of these resets all pixels to transparent black.
   attribute unsigned long width;
   attribute unsigned long height;
   attribute string colorMode;  // one of the strings "RGBA32" and "RGB24".
 
-  // returns a context
+  // Returns a context.
   CanvasRenderingContext2D getContext(string contextId);
 };
 }}}
