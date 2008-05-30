@@ -53,6 +53,7 @@ Canvas class
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
 
+  // Returns a new Canvas object with the same state (width, height, color mode and pixels).
   Canvas clone();
 
   // The palette of the image, if the canvas was load()ed from an indexed mode image.
