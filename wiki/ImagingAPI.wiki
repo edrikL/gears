@@ -136,6 +136,7 @@ CanvasRenderingContext2D class
   void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
  
   // pixel manipulation
+  // An ImageData object created with this method should be substitutable for one created from a HTML Canvas.
   ImageData createImageData(int sw, int sh);
   ImageData getImageData(int sx, int sy, int sw, int sh);
   void putImageData(ImageData imagedata, int dx, int dy);
