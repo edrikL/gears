@@ -1,0 +1,24 @@
+#summary Create Your Own Dispatcher-based Module in Gears
+#labels WorkInProgress
+
+While developing your own module, one of your hardest task will be making sure that your code runs and interacts properly across all supported browsers and platforms. This is why the Gears team created an abstraction that hides browsers-specific implementation details, allowing you to concentrate on the actual purpose of your module. At the core of the abstraction is the Dispatcher class template, which provides a way to specify methods and properties that are part of the JavaScript interface and wire them to the methods in your module. As the methods or property accessors are invoked, the dispatcher in turn invokes (dispatches the invocations to) the methods in your module. A consistent argument retrieval and return scheme is also provided. With this model, it is fairly easy to create a new module in Gears. The following is a simple set of instructions to get you going.
+
+==Setting Up Development Environment==
+
+First, you'll need to get the code and get it to compile. Follow the instructions [BuildingGearsForWindows posted on this wiki], if you are on Windows, or just go to the root of your working copy and run `make` on Mac or Linux.
+
+==Creating a Module==
+
+In the gears project, there is a blank module template, which can be used as a starting point for any new module. This template is located under [http://code.google.com/p/google-gears/source/browse/trunk/gears/tools/module_template/ tools/module_template] directory.
+
+Create a new directory for your module at the root of your working copy, copy the template files there and rename them accordingly. Make sure that the filenames are unique across all .cc files in the project.
+
+Modify the body of `Dispatcher<T>::Init` method to register JavaScript-facing properties and methods for your module.
+
+`TODO(dimitri.glazkov): continue here`
+
+==Modifying the Makefile==
+
+==Adding New Module To The Factory==
+
+==Adding Unit Tests==
