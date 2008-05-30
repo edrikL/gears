@@ -176,8 +176,8 @@ Client identification is not explicitly included in the protocol. Cookies can be
   "request_address": true,
   "address_language": "en_GB",
   "location": {
-    latitude": 51.0,
-    longitude": -0.1
+    "latitude": 51.0,
+    "longitude": -0.1
   },
   "cell_towers": [
     {
@@ -262,21 +262,21 @@ The response format is also JSON. An example response is:
 
 {{{
 {
-  location: {
-    latitude: 51.0,
-    longitude: -0.1,
-    altitude: 30,
-    horizontal_accuracy: 1200,
-    vertical_accuracy: 10,
-    address:{
-      street_number: "100",
-      street: "Amphibian Walkway",
-      postal_code: "94043",
-      city: "Mountain View",
-      county: "Mountain View County",
-      region: "California",
-      country: "United States of America",
-      country_code: "US"
+  "location": {
+    "latitude": 51.0,
+    "longitude": -0.1,
+    "altitude": 30,
+    "horizontal_accuracy": 1200,
+    "vertical_accuracy": 10,
+    "address": {
+      "street_number": "100",
+      "street": "Amphibian Walkway",
+      "postal_code": "94043",
+      "city": "Mountain View",
+      "county": "Mountain View County",
+      "region": "California",
+      "country": "United States of America",
+      "country_code": "US"
     }
   }
 }
