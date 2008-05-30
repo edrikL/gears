@@ -22,12 +22,18 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file implements mock device data providers and the static methods used
+// to access the singleton instance of the device data provider.
 
 #ifdef OFFICIAL_BUILD
 // The Geolocation API has not been finalized for official builds.
 #else
 
 #include "gears/geolocation/device_data_provider.h"
+
+typedef DeviceDataProviderBase<RadioData> RadioDataProviderBase;
+typedef DeviceDataProviderBase<WifiData> WifiDataProviderBase;
 
 #if USING_MOCK_DEVICE_DATA_PROVIDERS
 
@@ -37,7 +43,6 @@
 
 // A mock implementation of DeviceDataProviderBase for testing. It simply calls
 // back once every second with constant data.
-
 template<typename DataType>
 class MockDeviceDataProvider
     : public DeviceDataProviderBase<DataType>,
@@ -46,6 +51,7 @@ class MockDeviceDataProvider
   // Allow DeviceDataProviderBase<DataType>::Create() to access our private
   // constructor.
   friend DeviceDataProviderBase<DataType>;
+
  protected:
   // Protected constructor and destructor, callers access singleton through
   // Register and Unregister.
@@ -56,13 +62,11 @@ class MockDeviceDataProvider
     stop_event_.Signal();
     Join();
   }
+
  private:
   // Thread implementation.
   virtual void Run() {
-    while (true) {
-      if (stop_event_.WaitWithTimeout(1000)) {
-        break;
-      }
+    while (!stop_event_.WaitWithTimeout(1000)) {
       NotifyListeners();
     }
   }
@@ -73,6 +77,9 @@ class MockDeviceDataProvider
 
 class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
  private:
+  MockRadioDataProvider() {}
+  virtual ~MockRadioDataProvider() {}
+
   // DeviceDataProviderBase<RadioData> implementation.
   virtual bool GetData(RadioData *data) {
     assert(data);
@@ -89,10 +96,14 @@ class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
     // We always have all the data we can get, so return true.
     return true;
   }
+  DISALLOW_EVIL_CONSTRUCTORS(MockRadioDataProvider);
 };
 
 class MockWifiDataProvider : public MockDeviceDataProvider<WifiData> {
  private:
+  MockWifiDataProvider() {}
+  virtual ~MockWifiDataProvider() {}
+
   // DeviceDataProviderBase<WifiData> implementation.
   virtual bool GetData(WifiData *data) {
     assert(data);
@@ -103,17 +114,18 @@ class MockWifiDataProvider : public MockDeviceDataProvider<WifiData> {
     // We always have all the data we can get, so return true.
     return true;
   }
+  DISALLOW_EVIL_CONSTRUCTORS(MockWifiDataProvider);
 };
 
 // static
 template <>
-DeviceDataProviderBase<RadioData>* DeviceDataProviderBase<RadioData>::Create() {
+RadioDataProviderBase *RadioDataProviderBase::Create() {
   return new MockRadioDataProvider();
 }
 
 // static
 template <>
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+WifiDataProviderBase *WifiDataProviderBase::Create() {
   return new MockWifiDataProvider();
 }
 
@@ -124,10 +136,9 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
 #else
 // static
 template <>
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+WifiDataProviderBase* WifiDataProviderBase::Create() {
   // Temporarily implement this method here to avoid link errors.
-  // TODO(steveblock): Implement DeviceDataProviderBase<WifiData> for other
-  // platforms.
+  // TODO(steveblock): Implement WifiDataProviderBase for other platforms.
   assert(false);
   return NULL;
 }

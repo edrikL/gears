@@ -185,11 +185,11 @@ bool WinceRadioDataProvider::Init() {
 // Private methods.
 bool WinceRadioDataProvider::IsAllDataAvailable() {
   return radio_data_.cell_data.size() == 1 &&
-      -1 != radio_data_.cell_data[0].cid &&
-      -1 != radio_data_.cell_data[0].lac &&
-      -1 != radio_data_.cell_data[0].mnc &&
-      -1 != radio_data_.cell_data[0].mcc &&
-      -1 != radio_data_.cell_data[0].rss &&
+      -1 != radio_data_.cell_data[0].cell_id &&
+      -1 != radio_data_.cell_data[0].location_area_code &&
+      -1 != radio_data_.cell_data[0].mobile_network_code &&
+      -1 != radio_data_.cell_data[0].mobile_country_code &&
+      -1 != radio_data_.cell_data[0].radio_signal_strength &&
       !radio_data_.carrier.empty();
 }
 
@@ -269,20 +269,20 @@ void WinceRadioDataProvider::RILResult(DWORD dwCode,
     const RILCELLTOWERINFO* cell_tower_info =
         static_cast<const RILCELLTOWERINFO*>(lpData);
     if (cell_tower_info->dwParams & RIL_PARAM_CTI_CELLID) {
-      radio_data_.cell_data[0].cid =
+      radio_data_.cell_data[0].cell_id =
           FromDeviceDataFormat(cell_tower_info->dwCellID);
-      radio_data_.cell_data[0].lac =
+      radio_data_.cell_data[0].location_area_code =
           FromDeviceDataFormat(cell_tower_info->dwLocationAreaCode);
-      radio_data_.cell_data[0].mnc =
+      radio_data_.cell_data[0].mobile_network_code =
           FromDeviceDataFormat(cell_tower_info->dwMobileNetworkCode);
-      radio_data_.cell_data[0].mcc =
+      radio_data_.cell_data[0].mobile_country_code =
           FromDeviceDataFormat(cell_tower_info->dwMobileCountryCode);
     }
   } else if (hrCmdID == ril_get_signal_quality_command_id_) {
     ril_get_signal_quality_command_id_ = 0;
     const RILSIGNALQUALITY* ril_signal_quality =
         static_cast<const RILSIGNALQUALITY*>(lpData);
-    radio_data_.cell_data[0].rss =
+    radio_data_.cell_data[0].radio_signal_strength =
         FromDeviceDataFormat(ril_signal_quality->nSignalStrength);
   } else if (hrCmdID == ril_get_current_system_type_command_id_) {
     ril_get_current_system_type_command_id_ = 0;

@@ -176,8 +176,8 @@ static bool ConvertToGearsFormat(const NDIS_WLAN_BSSID_EX &data,
                mac_as_int[1], mac_as_int[2], mac_as_int[3], mac_as_int[4],
                mac_as_int[5]);
   assert(num_characters == 17);
-  access_point_data->mac = mac;
-  access_point_data->rss = data.Rssi;
+  access_point_data->mac_address = mac;
+  access_point_data->radio_signal_strength = data.Rssi;
   // It appears that we can not get the age of the scan. The only way to get
   // this information would be to perform the scan ourselves, which is not
   // possible.
