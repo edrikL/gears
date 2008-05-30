@@ -179,10 +179,6 @@ CanvasRenderingContext2D class
   // of R, G and B components separately.
   // After the filter finishes, all pixels have alpha 1.0.
   void medianFilter(float radius);
- 
-  // Similar to putImageData except that it respects the current state.
-  // Useful for drawing custom shapes into an ImageData and then compositing that into the canvas.
-  void drawImageData(ImageData imagedata, int sx, int sy, int sw, int sh, int dx, int dy);
 
 
 
