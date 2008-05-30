@@ -13,7 +13,8 @@ First, you'll need to get the code and get it to compile. Follow the instruction
 
  # In the gears project, there is a blank module template, which can be used as a starting point for any new module. This template is located under [http://code.google.com/p/google-gears/source/browse/trunk/gears/tools/module_template/ tools/module_template] directory.
  # Create a new directory for your module at the root of your working copy, copy the template files there and rename them accordingly. Make sure that the filenames are unique across all .cc files in the project.
- # Modify the body of `Dispatcher<T>::Init` method to register JavaScript-facing properties and methods for your module, following the same convention as show in the sample.
+ # Change the name of the module to reflect its purpose. Don't forget to also change the `kModuleName` member.
+ # Modify the body of `Dispatcher<T>::Init` method to register !JavaScript-facing properties and methods for your module, following the same convention as show in the sample.
  # Write module code :)
 
 ==Modify the Makefile==
