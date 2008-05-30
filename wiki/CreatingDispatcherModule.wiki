@@ -1,7 +1,7 @@
 #summary Create Your Own Dispatcher-based Module in Gears
 #labels WorkInProgress
 
-While developing your own module, one of your hardest task will be making sure that your code runs and interacts properly across all supported browsers and platforms. This is why the Gears team created an abstraction that hides browsers-specific implementation details, allowing you to concentrate on the actual purpose of your module.
+While developing your own module, one of your hardest task will be making sure that your code runs and interacts properly across all supported browsers and platforms. This is why the Gears team created an abstraction around the browsers-specific implementation details, allowing you to concentrate on the actual purpose of your module.
 
 At the core of the abstraction is the Dispatcher class template, which provides a way to specify methods and properties that are part of the !JavaScript interface and wire them to the methods in your module. As the methods or property accessors are invoked, the dispatcher in turn invokes (dispatches the invocations to) the methods in your module. A consistent argument retrieval and return scheme is also provided. With this model, it is fairly easy to create a new module in Gears. The following is a simple set of instructions to get you going.
 
