@@ -24,6 +24,7 @@ Append to module directory to `$(BROWSER)_VPATH` and module filename `$(BROWSER)
 {{{
 #-----------------------------------------------------------------------------
 # tools/module_template
+
 $(BROWSER)_VPATH += \
 		tools/module_template \
 		$(NULL)
