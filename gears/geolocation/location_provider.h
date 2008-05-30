@@ -22,6 +22,14 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// A location provider provides position information from a particular source
+// (GPS, network etc). The GearsGeolocation object uses a set of location
+// providers to obtain a position fix.
+//
+// This file declares a base class to be used by all location providers.
+// Primarily, this class declares interface methods to be implemented by derived
+// classes. It also provides ref-counting.
 
 #ifndef GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 #define GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
@@ -31,16 +39,18 @@
 
 struct Position;
 
-// Interface to be implemented by each location provider.
-class LocationProviderInterface : public RefCounted {
+// The base class used by all location providers.
+class LocationProviderBase : public RefCounted {
  public:
   class ListenerInterface {
    public:
-    virtual bool LocationUpdateAvailable(LocationProviderInterface *provider,
+    virtual bool LocationUpdateAvailable(LocationProviderBase *provider,
                                          const Position &position) = 0;
     virtual ~ListenerInterface() {}
   };
-  virtual ~LocationProviderInterface() {};
+
+  virtual ~LocationProviderBase() {}
+
   // Interface methods.
   virtual void SetListener(ListenerInterface *listener) = 0;
   // This should call back to ListenerInterface::LocationUpdateAvailable.
@@ -50,10 +60,10 @@ class LocationProviderInterface : public RefCounted {
 // Factory functions for the various types of location provider to abstract over
 // the platform-dependent implementations.
 #ifdef USING_CCTESTS
-LocationProviderInterface* NewMockLocationProvider();
+LocationProviderBase *NewMockLocationProvider();
 #endif
-LocationProviderInterface* NewGpsLocationProvider();
-LocationProviderInterface* NewNetworkLocationProvider(
+LocationProviderBase *NewGpsLocationProvider();
+LocationProviderBase *NewNetworkLocationProvider(
     const std::string16 &url, const std::string16 &host_name);
 
 #endif  // GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
