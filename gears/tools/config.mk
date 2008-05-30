@@ -335,7 +335,7 @@ COMPILE_FLAGS += -Werror
 endif
 
 CFLAGS = $(COMPILE_FLAGS)
-CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
+CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
 THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
