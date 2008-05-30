@@ -52,7 +52,7 @@
   if ([urlStr string16:&url16]) {
     WebCacheDB *db = WebCacheDB::GetDB();
     
-    if (db && db->CanService(url16.c_str()))
+    if (db && db->CanService(url16.c_str(), NULL))
       return YES;
   }
   
@@ -77,7 +77,7 @@
   WebCacheDB *db = WebCacheDB::GetDB();
   WebCacheDB::PayloadInfo payload;
   
-  if (!db->Service(url16.c_str(), false, &payload))
+  if (!db->Service(url16.c_str(), NULL, false, &payload))
     return nil;
 
   // The requested url may redirect to another location
@@ -90,7 +90,7 @@
         return nil;
 
       // Fetch a response for redirect_url from our DB
-      if (!db->Service(redirect_url.c_str(), false, &payload))
+      if (!db->Service(redirect_url.c_str(), NULL, false, &payload))
         return nil;
     }
     

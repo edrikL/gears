@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <vector>
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -113,7 +114,8 @@ class HttpRequest {
   virtual bool GetInitialUrl(std::string16 *full_url) = 0;
 
   // methods
-  virtual bool Open(const char16 *method, const char16* url, bool async) = 0;
+  virtual bool Open(const char16 *method, const char16* url, bool async,
+                    BrowsingContext *browsing_context) = 0;
   virtual bool SetRequestHeader(const char16 *name, const char16 *value) = 0;
   virtual bool Send() = 0;
   virtual bool SendString(const char16 *name) = 0;

@@ -46,6 +46,7 @@
 
 extern const std::string16 kNegatedRequiredCookieValue;
 
+class BrowsingContext;
 class CookieMap;
 
 // Retrieves the cookies for the specified URL. Cookies are represented as
@@ -58,7 +59,8 @@ class CookieMap;
 // method call to the main thread and blocks the calling thread until
 // that proxied method call returns. It is best to arrange for this
 // function to be called on the main thread in Firefox.
-bool GetCookieString(const char16 *url, std::string16 *cookies_out);
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out);
 
 // Parses a cookie string, as returned by GetCookieString, populating
 // map with an entry for each value. If a cookie in the string does not
@@ -87,7 +89,7 @@ class CookieMap : public std::map<std::string16, std::string16> {
   // map with an entry for each value. Previous values in the map
   // are cleared prior to loading the new values. If the cookie string
   // cannot be retrieved, returns false and the map is not modified.
-  bool LoadMapForUrl(const char16 *url);
+  bool LoadMapForUrl(const char16 *url, BrowsingContext *context);
 
   // Retrieves the value of the cookie named 'cookie_name'. If the cookie
   // is present but does not have a value, the value string will be empty.

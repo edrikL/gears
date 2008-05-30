@@ -69,7 +69,8 @@ void GearsLocalServer::CanServeLocally(JsCallContext *context) {
     return;
   }
 
-  bool can = LocalServer::CanServeLocally(full_url.c_str());
+  bool can = LocalServer::CanServeLocally(full_url.c_str(),
+                                          EnvPageBrowsingContext());
 // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
 #ifdef DEBUG
   std::string url_ascii;

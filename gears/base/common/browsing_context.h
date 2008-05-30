@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -22,22 +22,21 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
-#ifndef GEARS_LOCALSERVER_IE_UPDATE_TASK_IE_H__
-#define GEARS_LOCALSERVER_IE_UPDATE_TASK_IE_H__
+#ifndef GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__
+#define GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__
 
-#include "gears/localserver/common/update_task.h"
+#include "gears/base/common/scoped_refptr.h"
 
-//------------------------------------------------------------------------------
-// IEUpdateTask
-//------------------------------------------------------------------------------
-class IEUpdateTask : public UpdateTask {
+// This class represents a browsing context that can be used by browsers to
+// distinguish which page a network request originated from.  Script objects
+// are associated with a context, and workers inherit the context of the
+// object that created them.
+class BrowsingContext : virtual public RefCounted {
  public:
-  IEUpdateTask(BrowsingContext *context) : UpdateTask(context) { }
- protected:
-  // Overriden to ensure only one task per application runs at a time
-  virtual void Run();
+  BrowsingContext() { }
+  virtual ~BrowsingContext() { }
 };
 
-
-#endif  // GEARS_LOCALSERVER_IE_UPDATE_TASK_IE_H__
+#endif  // GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__

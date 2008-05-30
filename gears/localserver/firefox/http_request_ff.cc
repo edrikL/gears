@@ -220,7 +220,8 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
 //------------------------------------------------------------------------------
 // Open
 //------------------------------------------------------------------------------
-bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
+bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async,
+                         BrowsingContext *browsing_context) {
   assert(!IsRelativeUrl(url));
   // TODO(michaeln): Add some of the sanity checks the IE implementation has.
 

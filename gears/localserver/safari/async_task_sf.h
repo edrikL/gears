@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <vector>
 
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/localserver/common/critical_section.h"
@@ -65,7 +66,7 @@ class AsyncTask {
 
   static const char16 *kCookieRequiredErrorMessage;
 
-  AsyncTask();
+  AsyncTask(BrowsingContext *browsing_context);
   virtual ~AsyncTask();
 
   bool Init();
@@ -128,6 +129,7 @@ class AsyncTask {
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
+  scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
   // Implementation of HttpGet and HttpPost.

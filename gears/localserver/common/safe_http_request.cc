@@ -49,7 +49,8 @@ SafeHttpRequest::~SafeHttpRequest() {
 
 bool SafeHttpRequest::Open(const char16 *method,
                            const char16 *url,
-                           bool async) {
+                           bool async,
+                           BrowsingContext *browsing_context) {
   assert(IsApartmentThread());
   // TODO(michaeln): support sync requests
   if (!async)
@@ -59,6 +60,7 @@ bool SafeHttpRequest::Open(const char16 *method,
   request_info_.upcoming_ready_state = OPEN;
   request_info_.method = MakeUpperString(std::string16(method));
   request_info_.full_url = url;
+  request_info_.browsing_context.reset(browsing_context);
   OnReadyStateChangedCall();
   return true;
 }
@@ -354,7 +356,8 @@ void SafeHttpRequest::OnSendCall() {
   native_http_request_->SetRedirectBehavior(request_info_.redirect_behavior);
   bool ok = native_http_request_->Open(request_info_.method.c_str(),
                                        request_info_.full_url.c_str(),
-                                       true);  // async
+                                       true,  // async
+                                       request_info_.browsing_context.get());
   if (!ok) {
     RemoveNativeRequest();
     request_info_.upcoming_ready_state = COMPLETE;
@@ -394,7 +397,7 @@ void SafeHttpRequest::OnSendCall() {
     // Relock so the MutexLock on the stack is balanced
     request_info_lock_.Lock();  
   }
-  
+
   if (!ok) {
     RemoveNativeRequest();
     request_info_.upcoming_ready_state = COMPLETE;

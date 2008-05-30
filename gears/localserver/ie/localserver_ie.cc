@@ -56,7 +56,8 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
     RETURN_EXCEPTION(STRING16(L"Url is not from the same origin"));
   }
 
-  *can = LocalServer::CanServeLocally(full_url.c_str())
+  *can = LocalServer::CanServeLocally(full_url.c_str(),
+                                      EnvPageBrowsingContext())
             ? VARIANT_TRUE : VARIANT_FALSE;
   LOG16((L"LocalServer::CanServeLocally( %s ) %s\n",
          url, *can ? L"TRUE" : L"FALSE"));

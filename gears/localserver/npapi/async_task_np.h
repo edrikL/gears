@@ -32,6 +32,7 @@
 
 #include <atlsync.h>
 #include <vector>
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
@@ -80,7 +81,7 @@ class AsyncTask : protected HttpRequest::HttpListener,
 
   static const int kAbortMessageCode = -1;
 
-  AsyncTask();
+  AsyncTask(BrowsingContext *browsing_context);
   virtual ~AsyncTask();
 
   bool Init();
@@ -143,6 +144,7 @@ class AsyncTask : protected HttpRequest::HttpListener,
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
+  scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
   // Implementation of HttpGet and HttpPost.

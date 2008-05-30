@@ -135,7 +135,8 @@ void GearsHttpRequest::Open(JsCallContext *context) {
   InitUnloadMonitor();
   content_type_header_was_set_ = false;
   has_fired_completion_event_ = false;
-  if (!request_->Open(method.c_str(), full_url.c_str(), true)) {
+  if (!request_->Open(method.c_str(), full_url.c_str(), true,
+                      EnvPageBrowsingContext())) {
     ReleaseRequest();
     context->SetException(kInternalError);
     return;

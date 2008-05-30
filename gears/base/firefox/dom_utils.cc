@@ -49,6 +49,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIWebNavigation.h>
 #include <gecko_internal/nsIXPConnect.h>
 #include <gecko_internal/nsIXULWindow.h>
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/firefox/dom_utils.h"
@@ -363,6 +364,11 @@ bool DOMUtils::GetPageOrigin(SecurityOrigin *security_origin) {
   return security_origin->InitFromUrl(location.c_str());
 }
 
+bool DOMUtils::GetPageBrowsingContext(
+    scoped_refptr<BrowsingContext> *browsing_context) {
+  browsing_context->reset();
+  return true;
+}
 
 bool DOMUtils::IsOnline() {
   nsCOMPtr<nsIIOService> ios = do_GetService(

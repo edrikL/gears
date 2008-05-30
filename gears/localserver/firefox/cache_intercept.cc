@@ -276,7 +276,7 @@ bool ReplayCacheEntry::LoadFromCache() {
     return false;
   }
 
-  if (!db->Service(url.c_str(), false, &payload_)) {
+  if (!db->Service(url.c_str(), NULL, false, &payload_)) {
     return false;  // we have no response for this url
   }
 
@@ -770,7 +770,7 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
 
   // TODO(aa): It would be nice to not have to hit the database twice for these
   // requests. Perhaps cache the result of this query somewhere?
-  if (db->CanService(NS_ConvertUTF8toUTF16(spec).get())) {
+  if (db->CanService(NS_ConvertUTF8toUTF16(spec).get(), NULL)) {
     LOG(("CacheIntercept: Caught ctrl+refresh, removing LOAD_BYPASS_CACHE"));
     request->SetLoadFlags(flags & ~nsIRequest::LOAD_BYPASS_CACHE);
   }

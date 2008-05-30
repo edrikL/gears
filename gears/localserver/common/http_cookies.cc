@@ -53,9 +53,9 @@ void ParseCookieString(const std::string16 &cookies, CookieMap *map) {
   }
 }
 
-bool CookieMap::LoadMapForUrl(const char16 *url) {
+bool CookieMap::LoadMapForUrl(const char16 *url, BrowsingContext *context) {
   std::string16 cookies_string;
-  if (!GetCookieString(url, &cookies_string))
+  if (!GetCookieString(url, context, &cookies_string))
     return false;
   ParseCookieString(cookies_string, this);
   return true;
@@ -164,7 +164,8 @@ static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
 #include <wininet.h>
 #include "gears/base/ie/atl_headers.h"
 
-bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
 #ifdef USING_CCTESTS
@@ -246,7 +247,8 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #include <gecko_internal/nsIProxyObjectManager.h>
 #include "gears/base/common/common.h"
 
-bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
 #ifdef USING_CCTESTS
@@ -330,7 +332,8 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #include "gears/base/safari/cf_string_utils.h"
 #include "gears/localserver/safari/http_cookies_sf.h"
 
-bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
 #ifdef USING_CCTESTS
@@ -347,7 +350,8 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 
 #elif BROWSER_NPAPI
 
-bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out) {
   // TODO(mpcomplete): Uh oh... how do we get cookies in NPAPI?
   return false;
 }

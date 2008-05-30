@@ -109,7 +109,8 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
-  virtual bool Open(const char16 *method, const char16 *url, bool async);
+  virtual bool Open(const char16 *method, const char16 *url, bool async,
+                    BrowsingContext *browsing_context);
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send();
   virtual bool SendString(const char16 *data);

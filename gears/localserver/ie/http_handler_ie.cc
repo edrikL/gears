@@ -260,7 +260,7 @@ STDMETHODIMP PassthruSink::ReportProgress(
   if (status_code == BINDSTATUS_REDIRECTING) {
     // status_text contains the redirect url in this case
     WebCacheDB* db = WebCacheDB::GetDB();
-    if (db && db->CanService(status_text)) {
+    if (db && db->CanService(status_text, NULL)) {
       // Here we detect 302s into our cache here and intervene to hijack
       // handling of the request. Reporting a result of INET_E_REDIRECT_FAILED
       // causes URMLON to abandon this handler instance an create a new one
@@ -878,7 +878,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   if (!db) {
     return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
   }
-  bool is_captured = db->Service(url, is_head_request_, &payload_);
+  bool is_captured = db->Service(url, NULL, is_head_request_, &payload_);
 
   if (!is_captured) {
     LOG16((L"  cache miss - passing thru to default protocol handler\n"));
@@ -908,7 +908,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
       }
       // Fetch a response for redirect_url from our DB
-      if (!db->Service(redirect_url.c_str(), is_head_request_, &payload_)) {
+      if (!db->Service(redirect_url.c_str(), NULL, is_head_request_, &payload_)) {
         // We don't have a response for redirect_url. So report
         // INET_E_REDIRECT_FAILED which causes the aggregating outer
         // object (URLMON) to create a new inner APP and release us.
@@ -1353,7 +1353,7 @@ STDMETHODIMP HttpHandlerFactory::QueryInfo(LPCWSTR pwzUrl,
   // Determine if we would serve this url from our cache at this time. If
   // not, defer to the default handling.
   WebCacheDB* db = WebCacheDB::GetDB();
-  if (!db || !db->CanService(pwzUrl)) {
+  if (!db || !db->CanService(pwzUrl, NULL)) {
     return INET_E_DEFAULT_ACTION;
   }
 

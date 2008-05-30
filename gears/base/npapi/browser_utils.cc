@@ -27,6 +27,7 @@
 
 #include <stack>
 
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
@@ -118,6 +119,13 @@ bool BrowserUtils::GetPageSecurityOrigin(JsContextPtr context,
   if (!GetPageLocationUrl(context, &location))
     return false;
   return security_origin->InitFromUrl(location.c_str());
+}
+
+bool BrowserUtils::GetPageBrowsingContext(
+   JsContextPtr context, scoped_refptr<BrowsingContext> *browsing_context) {
+  // TODO(mpcomplete): implement me.
+  browsing_context->reset();
+  return true;
 }
 
 bool BrowserUtils::IsOnline() {

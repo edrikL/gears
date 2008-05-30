@@ -28,6 +28,7 @@
 
 #include <atlsync.h>
 #include <vector>
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
@@ -60,7 +61,7 @@ class AsyncTask : protected HttpRequest::HttpListener {
 
   static const char16 *kCookieRequiredErrorMessage;
 
-  AsyncTask();
+  AsyncTask(BrowsingContext *browsing_context);
   virtual ~AsyncTask();
 
   bool Init();
@@ -123,6 +124,7 @@ class AsyncTask : protected HttpRequest::HttpListener {
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
+  scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
   // Implementation of HttpGet and HttpPost.

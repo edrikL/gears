@@ -495,22 +495,22 @@ bool WebCacheDB::ExecuteSqlCommands(const char *commands[], int count) {
 //------------------------------------------------------------------------------
 // CanService
 //------------------------------------------------------------------------------
-bool WebCacheDB::CanService(const char16 *url) {
+bool WebCacheDB::CanService(const char16 *url, BrowsingContext *context) {
   ASSERT_SINGLE_THREAD();
   int64 payload_id = kInvalidID;
   std::string16 redirect_url;
   // TODO(aa): Clean up this hook at some point. Use gears:// scheme? Other
   // options?
   return ServiceGearsInspectorUrl(url, NULL) ||  // Hook for Gears inspector
-         Service(url, &payload_id, &redirect_url);
+         Service(url, context, &payload_id, &redirect_url);
 }
 
 
 //------------------------------------------------------------------------------
 // Service
 //------------------------------------------------------------------------------
-bool WebCacheDB::Service(const char16 *url, bool head_only,
-                         PayloadInfo *payload) {
+bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
+                         bool head_only, PayloadInfo *payload) {
   ASSERT_SINGLE_THREAD();
   assert(url);
   assert(payload);
@@ -523,7 +523,7 @@ bool WebCacheDB::Service(const char16 *url, bool head_only,
 
   int64 payload_id = kInvalidID;
   std::string16 redirect_url;
-  if (!Service(url, &payload_id, &redirect_url)) {
+  if (!Service(url, context, &payload_id, &redirect_url)) {
     return false;
   }
 
@@ -545,6 +545,7 @@ bool WebCacheDB::Service(const char16 *url, bool head_only,
 // Service
 //------------------------------------------------------------------------------
 bool WebCacheDB::Service(const char16 *url,
+                         BrowsingContext *context,
                          int64 *payload_id_out,
                          std::string16 *redirect_url_out) {
   ASSERT_SINGLE_THREAD();
@@ -654,7 +655,7 @@ bool WebCacheDB::Service(const char16 *url,
     if (is_cookie_required) {
       if (!loaded_cookie_map) {
         loaded_cookie_map = true;
-        loaded_cookie_map_ok = cookie_map.LoadMapForUrl(url);
+        loaded_cookie_map_ok = cookie_map.LoadMapForUrl(url, context);
       }
 
       if (!loaded_cookie_map_ok) {
@@ -671,7 +672,7 @@ bool WebCacheDB::Service(const char16 *url,
       if (server_type == MANAGED_RESOURCE_STORE) {
         // We found a match from a managed store, try to update it
         // Note that a failure does not prevent servicing the request
-        MaybeInitiateUpdateTask(server_id);
+        MaybeInitiateUpdateTask(server_id, context);
       }
 
       if (ignore_query) {
@@ -814,8 +815,9 @@ bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
 // MaybeInitiateUpdateTask
 //------------------------------------------------------------------------------
 
-void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id) {
-  scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask());
+void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id,
+                                         BrowsingContext *context) {
+  scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask(context));
   if (!task.get()->MaybeAutoUpdate(server_id)) return;
   task.release()->DeleteWhenDone();
 }

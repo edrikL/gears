@@ -87,7 +87,8 @@ NS_IMETHODIMP GearsLocalServer::CanServeLocally(//const nsAString &url,
     RETURN_EXCEPTION(STRING16(L"Url is not from the same origin"));
   }
 
-  *retval = LocalServer::CanServeLocally(full_url.c_str())
+  *retval = LocalServer::CanServeLocally(full_url.c_str(),
+                                         EnvPageBrowsingContext())
                 ? PR_TRUE : PR_FALSE;
   RETURN_NORMAL();
 }

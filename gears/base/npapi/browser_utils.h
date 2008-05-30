@@ -27,8 +27,10 @@
 #define GEARS_BASE_NPAPI_BROWSER_UTILS_H__
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 
+class BrowsingContext;
 class JsCallContext;
 
 class BrowserUtils {
@@ -58,6 +60,11 @@ class BrowserUtils {
   // Returns true on success.
   static bool GetPageSecurityOrigin(JsContextPtr context,
                                     SecurityOrigin *security_origin);
+
+  // Returns the page's browsing context.
+  // Returns true on success.
+  static bool GetPageBrowsingContext(
+      JsContextPtr context, scoped_refptr<BrowsingContext> *browsing_context);
 
   // Get the current browser's user agent string.
   static bool GetUserAgentString(std::string16 *user_agent);

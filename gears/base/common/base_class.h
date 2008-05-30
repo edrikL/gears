@@ -33,6 +33,7 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
+#include "gears/base/common/browsing_context.h"
 
 #if BROWSER_FF
 
@@ -85,7 +86,8 @@ struct ModuleEnvironment : public RefCounted {
                     IUnknown *iunknown_site,
 #endif
                     bool is_worker,
-                    JsRunnerInterface *js_runner)
+                    JsRunnerInterface *js_runner,
+                    BrowsingContext *browsing_context)
       : security_origin_(security_origin),
 #if BROWSER_FF || BROWSER_NPAPI
         js_context_(js_context),
@@ -93,7 +95,8 @@ struct ModuleEnvironment : public RefCounted {
         iunknown_site_(iunknown_site),
 #endif
         is_worker_(is_worker),
-        js_runner_(js_runner) {}
+        js_runner_(js_runner),
+        browsing_context_(browsing_context) {}
 
   // Note that the SecurityOrigin may not necessarily be the same as the
   // originating page, e.g. in the case of a cross-origin worker, it would be
@@ -114,6 +117,7 @@ struct ModuleEnvironment : public RefCounted {
 
   bool is_worker_;
   JsRunnerInterface *js_runner_;
+  scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
   // This struct is ref-counted and hence has a private destructor (which
@@ -179,6 +183,8 @@ class ModuleImplBaseClass {
   IUnknown* EnvPageIUnknownSite() const;
 #endif
   const SecurityOrigin& EnvPageSecurityOrigin() const;
+
+  BrowsingContext *EnvPageBrowsingContext() const;
 
   JsRunnerInterface *GetJsRunner() const;
 

@@ -78,7 +78,7 @@ const int32 kGracePeriod = (1000 * 30);  // 30 seconds
 // A simple task that visits the upgrade url and stops after the first redirect.
 class VersionFetchTask : public AsyncTask {
  public:
-  VersionFetchTask() {}
+  VersionFetchTask() : AsyncTask(NULL) {}
   bool Init();
 
   enum {

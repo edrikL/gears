@@ -33,6 +33,7 @@
 #endif
 #include <shlguid.h>      // for SID_SWebBrowserApp (except on WINCE)
 #include <wininet.h>
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/security_model.h"
@@ -78,6 +79,12 @@ bool ActiveXUtils::GetPageOrigin(IUnknown *site,
   return security_origin->InitFromUrl(location.c_str());
 }
 
+bool ActiveXUtils::GetPageBrowsingContext(
+   IUnknown *site, scoped_refptr<BrowsingContext> *browsing_context) {
+  // TODO(mpcomplete): implement me.
+  browsing_context->reset();
+  return true;
+}
 
 #ifdef WINCE
 // We can't get IWebBrowser2 for WinCE.

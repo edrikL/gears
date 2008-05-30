@@ -196,7 +196,8 @@ void GearsManagedResourceStore::GetLastErrorMessage(JsCallContext *context) {
 // CheckForUpdate
 //------------------------------------------------------------------------------
 void GearsManagedResourceStore::CheckForUpdate(JsCallContext *context) {
-  scoped_ptr<UpdateTask> update_task(UpdateTask::CreateUpdateTask());
+  scoped_ptr<UpdateTask> update_task(
+      UpdateTask::CreateUpdateTask(EnvPageBrowsingContext()));
   if (!update_task->Init(&store_)) {
     context->SetException(STRING16(L"Failed to initialize update task."));
     return;
