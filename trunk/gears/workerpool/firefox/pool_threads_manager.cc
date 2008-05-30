@@ -341,8 +341,8 @@ PoolThreadsManager::PoolThreadsManager(
     : num_workers_(0), 
       is_shutting_down_(false),
       unrefed_owner_(owner),
-      browsing_context_(owner->EnvPageBrowsingContext()),
-      page_security_origin_(page_security_origin) {
+      page_security_origin_(page_security_origin),
+      browsing_context_(owner->EnvPageBrowsingContext()) {
   // Make sure we have a ThreadId for this thread.
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
