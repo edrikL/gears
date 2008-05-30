@@ -1433,6 +1433,7 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		httprequest.cc \
+		httprequest_upload.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

@@ -35,6 +35,8 @@
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+class GearsHttpRequestUpload;
+
 class GearsHttpRequest
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface,
@@ -86,6 +88,10 @@ class GearsHttpRequest
   // OUT: string
   void GetStatusText(JsCallContext *context);
 
+  // IN: -
+  // OUT: GearsHttpRequestUpload
+  void GetUpload(JsCallContext *context);
+
   // IN: optional string|GearsBlob postData
   // OUT: -
   void Send(JsCallContext *context);
@@ -104,7 +110,7 @@ class GearsHttpRequest
   bool has_fired_completion_event_;
   scoped_ptr<JsRootedCallback> onreadystatechangehandler_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
-
+  scoped_refptr<GearsHttpRequestUpload> upload_;
   scoped_ptr<std::string16> response_text_;
 #ifndef OFFICIAL_BUILD
   scoped_refptr<GearsBlob> response_blob_;

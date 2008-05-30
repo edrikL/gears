@@ -28,6 +28,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/url_utils.h"
 #ifndef OFFICIAL_BUILD
@@ -35,6 +36,7 @@
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #endif  // not OFFICIAL_BUILD
+#include "gears/httprequest/httprequest_upload.h"
 
 // Error messages.
 static const char16 *kRequestFailedError = STRING16(L"The request failed.");
@@ -73,6 +75,7 @@ void Dispatcher<GearsHttpRequest>::Init() {
   RegisterProperty("responseText", &GearsHttpRequest::GetResponseText, NULL);
   RegisterProperty("status", &GearsHttpRequest::GetStatus, NULL);
   RegisterProperty("statusText", &GearsHttpRequest::GetStatusText, NULL);
+  RegisterProperty("upload", &GearsHttpRequest::GetUpload, NULL);
 }
 
 const std::string GearsHttpRequest::kModuleName("GearsHttpRequest");
@@ -90,8 +93,12 @@ GearsHttpRequest::~GearsHttpRequest() {
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
-  onreadystatechangehandler_.reset(NULL);
-  unload_monitor_.reset(NULL);
+  onreadystatechangehandler_.reset();
+  if (upload_ != NULL) {
+    upload_->Reset();
+    upload_.reset();
+  }
+  unload_monitor_.reset();
   AbortRequest();
 }
 
@@ -286,6 +293,10 @@ void GearsHttpRequest::Send(JsCallContext *context) {
       // complete without having called our callback. We're being defensive.
       if (request_ == request_being_sent) {
         onreadystatechangehandler_.reset();
+        if (upload_ != NULL) {
+          upload_->Reset();
+          upload_.reset();
+        }
         context->SetException(kInternalError);
         return;
       }
@@ -339,6 +350,16 @@ void GearsHttpRequest::GetAllResponseHeaders(JsCallContext *context) {
     return;
   }
   context->SetReturnValue(JSPARAM_STRING16, &all_headers);
+}
+
+void GearsHttpRequest::GetUpload(JsCallContext *context) {
+  if (upload_.get() == NULL) {
+    bool result = CreateModule<GearsHttpRequestUpload>(GetJsRunner(), &upload_);
+    assert(result);
+    result = upload_->InitBaseFromSibling(this);
+    assert(result);
+  }
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, upload_.get());
 }
 
 void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
@@ -500,11 +521,11 @@ void GearsHttpRequest::CreateRequest() {
 void GearsHttpRequest::ReleaseRequest() {
   if (request_.get()) {
     request_->SetListener(NULL, false);
-    request_.reset(NULL);
+    request_.reset();
   }
-  response_text_.reset(NULL);
+  response_text_.reset();
 #ifndef OFFICIAL_BUILD
-  response_blob_.reset(NULL);
+  response_blob_.reset();
 #endif
 }
 
@@ -595,5 +616,8 @@ void GearsHttpRequest::InitUnloadMonitor() {
 
 void GearsHttpRequest::UploadProgress(HttpRequest *source,
                                       int64 position, int64 total) {
-  // TODO(bgarcia): implement
+  assert(source == request_.get());
+  if (upload_.get()) {
+    upload_->ReportProgress(position, total);
+  }
 }
