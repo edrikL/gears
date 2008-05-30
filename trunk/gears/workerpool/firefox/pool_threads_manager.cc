@@ -341,6 +341,7 @@ PoolThreadsManager::PoolThreadsManager(
     : num_workers_(0), 
       is_shutting_down_(false),
       unrefed_owner_(owner),
+      browsing_context_(owner->EnvPageBrowsingContext()),
       page_security_origin_(page_security_origin) {
   // Make sure we have a ThreadId for this thread.
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
@@ -885,7 +886,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 
     bool is_async = true;
     if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
-                                is_async) ||
+                                is_async, browsing_context()) ||
         !wi->http_request->Send()) {
       wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
@@ -1023,7 +1024,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
   assert(!wi->module_environment.get());
   wi->module_environment.reset(
-      new ModuleEnvironment(wi->script_origin, cx, true, js_runner));
+      new ModuleEnvironment(wi->script_origin, cx, true, js_runner,
+                            wi->threads_manager->browsing_context()));
 
   // Add global Factory and WorkerPool objects into the namespace.
   //

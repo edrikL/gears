@@ -40,6 +40,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 
 #include "gears/base/common/common_ff.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 
 class nsIDOMDocument;
@@ -50,6 +51,7 @@ class nsIJSContextStack;
 class nsIScriptContext;
 class nsIURI;
 
+class BrowsingContext;
 class SecurityOrigin;
 
 // Various DOM utilities.
@@ -100,6 +102,11 @@ class DOMUtils {
   // Returns the page's security origin which is based on the location url.
   // Returns true on success
   static bool GetPageOrigin(SecurityOrigin *security_origin);
+
+  // Returns the page's browsing context.
+  // Returns true on success.
+  static bool GetPageBrowsingContext(
+      scoped_refptr<BrowsingContext> *browsing_context);
 
   // Returns true if there the browser is in 'online' mode
   static bool IsOnline();

@@ -70,7 +70,8 @@ class CaptureTask : public AsyncTask {
     CAPTURE_URL_FAILED = 2
   };
 
-  CaptureTask() : capture_request_(NULL) {}
+  CaptureTask(BrowsingContext *context)
+      : AsyncTask(context), capture_request_(NULL) {}
 
   bool Init(ResourceStore *store, CaptureRequest *request);
 

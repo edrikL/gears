@@ -44,9 +44,10 @@ const char16 *kIsOfflineErrorMessage =
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-AsyncTask::AsyncTask() :
+AsyncTask::AsyncTask(BrowsingContext *browsing_context) :
     is_aborted_(false),
     is_initialized_(false),
+    browsing_context_(browsing_context),
     delete_when_done_(false),
     listener_(NULL),
     thread_running_(false),
@@ -396,7 +397,7 @@ bool AsyncTask::OnStartHttpGet() {
     ParseCookieNameAndValue(required_cookie_str, &name, &value);
     if (value != kNegatedRequiredCookieValue) {
       CookieMap cookie_map;
-      cookie_map.LoadMapForUrl(params_->full_url);
+      cookie_map.LoadMapForUrl(params_->full_url, browsing_context_.get());
       if (!cookie_map.HasLocalServerRequiredCookie(required_cookie_str)) {
         if (params_->error_message) {
           *(params_->error_message) = kCookieRequiredErrorMessage;
@@ -413,7 +414,8 @@ bool AsyncTask::OnStartHttpGet() {
 
   http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
-  if (!http_request->Open(params_->method, params_->full_url, true)) {
+  if (!http_request->Open(params_->method, params_->full_url, true,
+                          browsing_context_.get())) {
     return false;
   }
 

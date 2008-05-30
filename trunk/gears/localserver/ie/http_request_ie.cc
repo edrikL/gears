@@ -201,7 +201,8 @@ bool IEHttpRequest::GetResponseHeader(const char16* name,
 //------------------------------------------------------------------------------
 // Open
 //------------------------------------------------------------------------------
-bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
+bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async,
+                    BrowsingContext *browsing_context) {
   assert(!IsRelativeUrl(url));
   if (!IsUninitialized())
     return false;

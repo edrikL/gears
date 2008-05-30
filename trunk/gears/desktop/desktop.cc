@@ -96,13 +96,17 @@ GearsDesktop::GearsDesktop()
 }
 
 #ifdef OS_ANDROID
-Desktop::Desktop(const SecurityOrigin &security_origin, NPP context)
-    : security_origin_(security_origin) {
-  js_call_context_ = context;
+Desktop::Desktop(const SecurityOrigin &security_origin,
+                 BrowsingContext *context, NPP js_context)
+    : security_origin_(security_origin),
+      js_call_context_(js_context),
+      browsing_context_(context) {
 }
 #else
-Desktop::Desktop(const SecurityOrigin &security_origin)
-    : security_origin_(security_origin) {
+Desktop::Desktop(const SecurityOrigin &security_origin,
+                 BrowsingContext *context)
+    : security_origin_(security_origin),
+      browsing_context_(context) {
 }
 #endif
 
@@ -297,9 +301,10 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 
   // Prepare the shortcut.
 #ifdef OS_ANDROID
-  Desktop desktop(EnvPageSecurityOrigin(), EnvPageJsContext());
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext(),
+                  EnvPageJsContext());
 #else
-  Desktop desktop(EnvPageSecurityOrigin());
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
 #endif
   if (!desktop.ValidateShortcutInfo(&shortcut_info)) {
     if (desktop.has_error())
@@ -616,7 +621,8 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
     request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     int status = 0;
-    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), async) ||
+    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), 
+                       async, browsing_context_.get()) ||
         !request->Send() ||
         (!async && (!request->GetStatus(&status) ||
                     status != HTTPResponse::RC_REQUEST_OK))) {

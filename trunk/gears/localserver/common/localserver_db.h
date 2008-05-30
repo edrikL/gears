@@ -48,6 +48,7 @@
 #undef USE_FILE_STORE
 #endif
 
+class BrowsingContext;
 class SecurityOrigin;
 
 //------------------------------------------------------------------------------
@@ -191,12 +192,12 @@ class WebCacheDB : SQLTransactionListener {
   }
 
   // Returns if the database has a response for the url at this time
-  bool CanService(const char16 *url);
+  bool CanService(const char16 *url, BrowsingContext *browsing_context);
 
   // Returns a response for the url at this time, if head_only is requested
   // the payload's data will not be populated
-  bool Service(const char16 *url, bool head_only, PayloadInfo *payload);
-
+  bool Service(const char16 *url, BrowsingContext *browsing_context,
+               bool head_only, PayloadInfo *payload);
 
   // Returns server info for the given server_id
   bool FindServer(int64 server_id, ServerInfo *server);
@@ -351,6 +352,7 @@ class WebCacheDB : SQLTransactionListener {
 
   // Helpers used by our public Service and CanService methods
   bool Service(const char16 *url,
+               BrowsingContext *browsing_context,
                int64 *payload_id,
                std::string16 *redirect_url);
 
@@ -360,7 +362,7 @@ class WebCacheDB : SQLTransactionListener {
                          PayloadInfo *payload);
 
   // Starts an update task for the specified managed store
-  void MaybeInitiateUpdateTask(int64 server_id);
+  void MaybeInitiateUpdateTask(int64 server_id, BrowsingContext *context);
 
   // Reads a server record from a row in result set
   void ReadServerInfo(SQLStatement &stmt, ServerInfo *server);

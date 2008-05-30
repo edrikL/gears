@@ -31,6 +31,7 @@
 #include <gecko_internal/nsIVariant.h>
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
@@ -77,7 +78,8 @@ class PoolThreadsManager
   void ForceGCCurrentThread();
 #endif
 
-  const SecurityOrigin& page_security_origin() { return page_security_origin_; }
+  const SecurityOrigin &page_security_origin() { return page_security_origin_; }
+  BrowsingContext *browsing_context() { return browsing_context_.get(); }
 
   static void JavaScriptThreadEntry(void *args);
 
@@ -114,6 +116,9 @@ class PoolThreadsManager
   Mutex mutex_;  // for exclusive access to all class methods and data
 
   SecurityOrigin page_security_origin_;
+
+  // BrowsingContext of the owning workerpool, propagated to created workers.
+  scoped_refptr<BrowsingContext> browsing_context_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
 };

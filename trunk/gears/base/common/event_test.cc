@@ -31,7 +31,7 @@
 
 class AsyncTaskImpl : public AsyncTask {
  public:
-   AsyncTaskImpl() : result_(false) {
+   AsyncTaskImpl() : AsyncTask(NULL), result_(false) {
     if (!Init()) {
       assert(false);
     }

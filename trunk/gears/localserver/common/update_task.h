@@ -144,7 +144,9 @@ class UpdateTask : public AsyncTask {
     UPDATE_TASK_COMPLETE = 0
   };
 
-  UpdateTask() : startup_signal_(false), task_503_failure_(false) {}
+  UpdateTask(BrowsingContext *browsing_context)
+      : AsyncTask(browsing_context), startup_signal_(false),
+        task_503_failure_(false) {}
 
   // Initializes and starts an auto update task within rate limits.
   // Returns true if a task was started.
@@ -175,7 +177,7 @@ class UpdateTask : public AsyncTask {
 
   // Creates the right type of update task for the current platform.
   // See ff_update_task.cc, ie_update_task.cc, etc for implementation.
-  static UpdateTask *CreateUpdateTask();
+  static UpdateTask *CreateUpdateTask(BrowsingContext *context);
 
  protected:
   // Runs the update task

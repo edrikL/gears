@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
@@ -76,9 +77,10 @@ class Desktop {
   };
 
 #ifdef OS_ANDROID
-  Desktop(const SecurityOrigin &security_origin, NPP context);
+  Desktop(const SecurityOrigin &security_origin, BrowsingContext *context,
+          NPP js_context);
 #else
-  Desktop(const SecurityOrigin &security_origin);
+  Desktop(const SecurityOrigin &security_origin, BrowsingContext *context);
 #endif
 
   // Call this after setting up the ShortcutInfo to validate it and check if
@@ -133,6 +135,9 @@ class Desktop {
   SecurityOrigin security_origin_;
 
   std::string16 error_;
+
+  // The context to use when fetching the icons.
+  scoped_refptr<BrowsingContext> browsing_context_;
 
 #ifdef OS_ANDROID
   NPP js_call_context_;

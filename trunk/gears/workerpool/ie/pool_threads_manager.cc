@@ -155,6 +155,7 @@ PoolThreadsManager::PoolThreadsManager(
     : ref_count_(0),
       is_shutting_down_(false),
       unrefed_owner_(owner),
+      browsing_context_(owner->EnvPageBrowsingContext()),
       page_security_origin_(page_security_origin) {
 
   // Add a JavaScriptWorkerInfo entry for the owning worker.
@@ -575,7 +576,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     bool is_async = true;
     if (!wi->http_request->Open(HttpConstants::kHttpGET,
                                 url_or_full_script.c_str(),
-                                is_async) ||
+                                is_async, browsing_context()) ||
         !wi->http_request->Send()) {
       wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
@@ -689,7 +690,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
   assert(!wi->module_environment.get());
   wi->module_environment.reset(
-      new ModuleEnvironment(wi->script_origin, NULL, true, js_runner));
+      new ModuleEnvironment(wi->script_origin, NULL, true, js_runner,
+                            wi->threads_manager->browsing_context()));
 
   // Add global Factory and WorkerPool objects into the namespace.
   //

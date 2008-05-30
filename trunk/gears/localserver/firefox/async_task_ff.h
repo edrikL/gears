@@ -28,6 +28,7 @@
 
 #include <vector>
 #include "gears/base/common/async_router.h"
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/localserver/common/critical_section.h"
@@ -69,7 +70,7 @@ class AsyncTask : protected HttpRequest::HttpListener,
 
   static const char16 *kCookieRequiredErrorMessage;
 
-  AsyncTask();
+  AsyncTask(BrowsingContext *browsing_context);
   virtual ~AsyncTask();
 
   bool Init();
@@ -132,6 +133,7 @@ class AsyncTask : protected HttpRequest::HttpListener,
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
+  scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
   bool MakeHttpRequest(const char16 *method,

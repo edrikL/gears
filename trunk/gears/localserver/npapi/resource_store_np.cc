@@ -502,7 +502,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   current_request_.reset(pending_requests_.front());
   pending_requests_.pop_front();
 
-  capture_task_.reset(new CaptureTask());
+  capture_task_.reset(new CaptureTask(EnvPageBrowsingContext()));
   if (!capture_task_->Init(&store_, current_request_.get())) {
     scoped_ptr<NPCaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);

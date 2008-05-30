@@ -35,10 +35,11 @@ const char16 *AsyncTask::kCookieRequiredErrorMessage =
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-AsyncTask::AsyncTask() :
+AsyncTask::AsyncTask(BrowsingContext *browsing_context) :
     is_aborted_(false),
     is_initialized_(false),
     is_destructing_(false),
+    browsing_context_(browsing_context),
     delete_when_done_(false),
     thread_(NULL),
     listener_(NULL),
@@ -298,7 +299,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     ParseCookieNameAndValue(required_cookie_str, &name, &value);
     if (value != kNegatedRequiredCookieValue) {
       CookieMap cookie_map;
-      cookie_map.LoadMapForUrl(full_url);
+      cookie_map.LoadMapForUrl(full_url, browsing_context_.get());
       if (!cookie_map.HasLocalServerRequiredCookie(required_cookie_str)) {
         if (error_message) {
           *(error_message) = kCookieRequiredErrorMessage;
@@ -314,7 +315,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     
   http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
-  if (!http_request->Open(method, full_url, true)) {
+  if (!http_request->Open(method, full_url, true, browsing_context_.get())) {
     return false;
   }
 

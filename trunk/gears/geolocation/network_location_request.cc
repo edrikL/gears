@@ -63,7 +63,7 @@ NetworkLocationRequest* NetworkLocationRequest::Create(
 NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
                                                const std::string16 &host_name,
                                                ListenerInterface *listener)
-    : listener_(listener), url_(url), host_name_(host_name) {
+    : AsyncTask(NULL), listener_(listener), url_(url), host_name_(host_name) {
   if (!Init()) {
     assert(false);
   }

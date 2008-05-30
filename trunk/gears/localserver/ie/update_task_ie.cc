@@ -75,6 +75,6 @@ bool UpdateTask::IsUpdateTaskForStoreRunning(int64 store_server_id) {
 }
 
 // Platform-specific implementation. See declaration in update_task.h.
-UpdateTask *UpdateTask::CreateUpdateTask() {
-  return new IEUpdateTask();
+UpdateTask *UpdateTask::CreateUpdateTask(BrowsingContext *browsing_context) {
+  return new IEUpdateTask(browsing_context);
 }

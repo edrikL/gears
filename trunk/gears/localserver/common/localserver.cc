@@ -30,12 +30,12 @@
 // CanServeLocally
 //------------------------------------------------------------------------------
 // static
-bool LocalServer::CanServeLocally(const char16 *url) {
+bool LocalServer::CanServeLocally(const char16 *url, BrowsingContext *context) {
   WebCacheDB *db = WebCacheDB::GetDB();
   if (!db) {
     return false;
   }
-  return db->CanService(url);
+  return db->CanService(url, context);
 }
 
 //------------------------------------------------------------------------------
