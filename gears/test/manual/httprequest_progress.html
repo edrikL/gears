@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>HttpRequest progress</title>
+    <script type="text/javascript" src="gears_init.js"></script>
+    <script type="text/javascript" language="javascript">
+var current_position = 0;
+
+function handleProgress(event) {
+  document.getElementById("output").innerHTML =
+      document.getElementById("output").innerHTML +
+      event.loaded + ' of ' + event.total + ' bytes uploaded.<br>\n';
+}
+
+function testProgress() {
+  document.getElementById("output").innerHTML = "0 of 0 bytes uploaded.<br>\n";
+
+  current_position = 0;
+  var data = 'hello';
+  do {
+    data = data + data;
+  } while (data.length < 30000000);
+
+  var request = google.gears.factory.create('beta.httprequest');
+  request.upload.onprogress = handleProgress;
+  request.open('POST', 'testcases/cgi/send_response_of_size.py?size=5');
+  request.send(data);
+}
+    </script>
+  </head>
+  <body>
+    <h1>HttpRequest progress</h1>
+    <form action="">
+      <input type="button" value="RunProgressTest" onclick="testProgress()">
+    </form>
+    <div id="output">Ready.<br></div>
+  </body>
+</html>
