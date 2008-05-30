@@ -658,7 +658,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 #   $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # In order to make sure the Installer is always up to date despite these missing
 # dependencies, we list it as a phony target, so it's always rebuilt.
-.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER)
+.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 
 $(SF_INSTALLER): $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 	@echo "TODO(playmobil): Create Safari Installer pkg"
