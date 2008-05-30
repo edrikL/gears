@@ -331,7 +331,7 @@ ifeq ($(BROWSER),SF)
 # SAFARI-TEMP
 # Need to re-enable -Werror for Safari port.
 else
-COMMON_COMPILE_FLAGS += -Werror
+COMPILE_FLAGS += -Werror
 endif
 
 CFLAGS = $(COMPILE_FLAGS)
