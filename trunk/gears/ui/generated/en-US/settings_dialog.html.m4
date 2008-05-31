@@ -234,6 +234,7 @@ m4_include(ui/common/html_dialog.js)
 m4_include(ui/common/button.js)
 </script>
 <script>
+  var debug = false;
   var g_dialogResult = {"removeSites": []};
   var allowedSites;
   var deniedSites;
@@ -275,14 +276,18 @@ m4_include(ui/common/button.js)
   }
 
   function initSettings() {
-    var args = getArguments();
-    
-    // Handy for debugging layout:
-    // var args = {
-    //   allowed: ["http://www.google.com", "http://aaronboodman.com"],
-    //   denied: ["http://www.evil.org"]
-    // };
-    
+    var args;
+
+    if (debug) {
+      // Handy for debugging layout:
+      var args = {
+        allowed: ["http://www.google.com", "http://aaronboodman.com"],
+        denied: ["http://www.evil.org"]
+      };
+    } else {
+      args = getArguments();
+    }
+
     allowedSites = args.allowed;
     deniedSites = args.denied;
     initList("div-allowed", args.allowed, ALLOWED);

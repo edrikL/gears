@@ -321,6 +321,7 @@ m4_include(ui/common/button.js)
 </script>
 
 <script>
+  var debug = false;
   initDialog();
 
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
@@ -376,16 +377,19 @@ m4_include(ui/common/button.js)
   }
 
   function initWarning() {
-    // The arguments to this dialog are a single string, see PermissionsDialog
-    var args = getArguments();
-    
-    // Handy for debugging layout:
-    // var args = {
-    //   origin: "http://www.google.com",
-    //   customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-    //   customName: "My Application",
-    //   customMessage: "Press the button to enable my application to run offline!"
-    // };
+    var args;
+    if (debug) {
+      // Handy for debugging layout:
+      args = {
+        origin: "http://www.google.com",
+        customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+        customName: "My Application",
+        customMessage: "Press the button to enable my application to run offline!"
+      };
+    } else {
+      // The arguments to this dialog are a single string, see PermissionsDialog
+      args = getArguments();
+    }
 
     var origin = args['origin'];  // required parameter
     var customIcon = args['customIcon'];
