@@ -1,0 +1,19 @@
+#summary This API enables a script to trigger the camera viewfinder and allow a picture or video to be captured using the device's onboard camera.
+
+= Introduction =
+
+The goal of this API is to allow a Web application to launch the native camera application and obtain the resulting media file. 
+
+On devices with built-in camera, all of the UI interaction is left to the corresponding native camera application, not Gears. 
+
+On devices that do not have a built-in camera (e.g. laptop or desktop computers),  Gears will scan for attached Web cameras and will provide a basic viewport that allows the users to grab a picture or record a movie.
+
+This API is based on the "action-driven permission model" - the user is involved in the action and hence a separate permission prompt is not required.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
