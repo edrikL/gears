@@ -1,9 +1,17 @@
-#labels Deprecated
+#summary Index used by http://code.google.com/docreader/#p(google-gears)
+
   * General Interest
     * [GearsHistory]
     * [GearsRoadmap]
     * [Slogans]
-  * API Design Documents
+  * Pages For Contributors
+    * [BuildingGearsForSafari]
+    * [BuildingGearsForWindows]
+    * [ContributingToGears]
+    * [GearsCodingGuidelines]
+    * [HackingGears]
+    * [GearsTutorialsAndSampleCode]
+  * API Proposals
     * [AudioAPI]
     * [BlobAPI]
     * [BlobWebAPIPropsal]
@@ -17,10 +25,3 @@
     * [LoggingModule]
     * [NotificationAPI]
     * [GearsHttpRequestProposal]
-  * For Contributors
-    * [BuildingGearsForSafari]
-    * [BuildingGearsForWindows]
-    * [ContributingToGears]
-    * [GearsCodingGuidelines]
-    * [HackingGears]
-    * [GearsTutorialsAndSampleCode]
