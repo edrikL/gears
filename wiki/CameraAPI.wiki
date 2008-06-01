@@ -19,23 +19,26 @@ interface Camera {
 
   // Triggers the camera viewfinder and invokes the callback after the user
   // has either captured the image or canceled the operation.
-  MediaData captureImage(CameraCallback callback, optional double width, optional double height);
+  Media captureImage(CaptureCallback callback, optional CaptureOptions options);
   // Triggers the camera viewfinder and invokes the callback after the user
   // has either captured the video, canceled the operation or maxDuration milliseconds
   // have elapsed.
-  MediaData captureVideo(CameraCallback callback, double maxDuration, optional double width, optional double height);
+  Media captureVideo(CaptureCallback callback, double maxDuration, optional CaptureOptions options);
+};
+
+interface CaptureOptions {
+  string format;  // MIME type
+  double width;   // desired image or video frame width
+  double height;  // desired image or video frame height
+};
+
+interface Media {
+  String format;  // MIME type
+  double width;   
+  double height;
+  Blob content;   // reference to captured media
 }
 
-interface MediaData {
-  String format;              // MIME type
-  Resolution resolution;    // resolution
-  Blob content;               // reference to media file
-}
-
-interface Resolution {
-  Number width;    // width in pixels
-  Number height;   // height in pixels
-}
 }}}
 
 = Example =
