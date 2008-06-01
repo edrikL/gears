@@ -24,6 +24,11 @@ interface Camera {
   // has either captured the video, canceled the operation or maxDuration milliseconds
   // have elapsed.
   void captureVideo(CaptureCallback callback, double maxDuration, optional CaptureOptions options);
+
+  // Query methods
+
+  Array availableImageFormats();   
+  Array availableVideoFormats();   
 };
 
 void CaptureCallback(Media media);
@@ -49,20 +54,21 @@ interface Media {
 // Create a camera object
 var camera = google.gears.factory.create("beta.camera");
 
-// Capture an image, specifying a desired resolution.
-// Depending on the device capabilities, Gears will return
-// the best possible match for the desired resolution.
+// Capture an image.
 var image = camera.captureImage(function(media) {
     uploadImage(media.content);
     });
 
 // Capture of a video, specifying a desired resolution and duration.
 var video = camera.captureVideo(function(media) {
-    upload(media.content);
+    uploadVideo(media.content);
     }, 5000);
 }}}
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+= Implementation details =
+
+The format parameter in Camera.captureImage(), Camera.captureVideo(), and MediaData.format refers to a MIME type in lower case. The following types are supported video/mp4, video/3gpp, video/3gp2, image/jpeg, image/png. The bucket codec parameter (RFC 4281) may be used to specify a particular codec to use.
+
+The arguments passed to the Camera object to specify the resolution or the format of the image or video are only hints to set defaults - the final result may be different (i.e., the resolution or the format can be constrained by the device capabilities or the user may change the default settings). If the developer specifies an unsupported resolution or format, fallback resolutions or formats will be used.
+
+To avoid situations where the content that was produced by the camera cannot be used by an application due to media format incompatibilities, this API provides two methods that allow the developer to query the device encoding capabilities.
