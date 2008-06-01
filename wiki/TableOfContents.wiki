@@ -1,4 +1,26 @@
 #labels Deprecated
+  * General Interest
+    * [GearsHistory]
+    * [GearsRoadmap]
+    * [Slogans]
   * API Design Documents
+    * [AudioAPI]
     * [BlobAPI]
+    * [BlobWebAPIPropsal]
     * [CameraAPI]
+    * [ConsoleAPI]
+    * [Database2API]
+    * [FileSystemAPI]
+    * [GeolocationAPI]
+    * [HTML5WorkerProposal]
+    * [ImagingAPI]
+    * [LoggingModule]
+    * [NotificationAPI]
+    * [GearsHttpRequestProposal]
+  * For Contributors
+    * [BuildingGearsForSafari]
+    * [BuildingGearsForWindows]
+    * [ContributingToGears]
+    * [GearsCodingGuidelines]
+    * [HackingGears]
+    * [GearsTutorialsAndSampleCode]
