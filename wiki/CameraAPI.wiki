@@ -71,4 +71,4 @@ The format parameter in Camera.captureImage(), Camera.captureVideo(), and MediaD
 
 The arguments passed to the Camera object to specify the resolution or the format of the image or video are only hints to set defaults - the final result may be different (i.e., the resolution or the format can be constrained by the device capabilities or the user may change the default settings). If the developer specifies an unsupported resolution or format, fallback resolutions or formats will be used.
 
-To avoid situations where the content that was produced by the camera cannot be used by an application due to media format incompatibilities, this API provides two methods that allow the developer to query the device encoding capabilities.
+To avoid situations where the content that was produced by the camera cannot be used by an application due to media format incompatibilities, this API provides two methods that allow the developer to query the device encoding capabilities. These functions return an array of strings, denoting the MIME type of the content that can be produced by the camera (TBD: plus the codec required to render the content, as in RFC 4281?).
