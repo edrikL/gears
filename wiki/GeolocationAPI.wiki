@@ -20,11 +20,11 @@ interface Geolocation {
 
   // Get the current position.
   // The callback function will be called with the result.
-  void getCurrentPosition(PositionCallback callback, optional PositionOptions);
+  void getCurrentPosition(PositionCallback callback, optional PositionOptions options);
 
   // Watch the current position over time.
   // The callback function will be called with the result.
-  int watchPosition(PositionCallback callback, optional PositionOptions);
+  int watchPosition(PositionCallback callback, optional PositionOptions options);
 
   // Stop watching the current position.
   void clearWatch(int watchId);
