@@ -1,17 +1,57 @@
 #summary This API enables a script to trigger the camera viewfinder and allow a picture or video to be captured using the device's onboard camera.
+#labels DesignDoc
 
-= Introduction =
+= Summary =
 
 The goal of this API is to allow a Web application to launch the native camera application and obtain the resulting media file. 
 
 On devices with built-in camera, all of the UI interaction is left to the corresponding native camera application, not Gears. 
 
-On devices that do not have a built-in camera (e.g. laptop or desktop computers),  Gears will scan for attached Web cameras and will provide a basic viewport that allows the users to grab a picture or record a movie.
+On devices that do not have a built-in camera (e.g. laptop or desktop computers),  Gears will scan for attached Web cameras and will provide a basic viewport that allows the users to grab a picture or record a movie. If several cameras are attached, Gears will provide a way for the users to select the device they want to use.
 
 This API is based on the "action-driven permission model" - the user is involved in the action and hence a separate permission prompt is not required.
 
+= API Proposal =
 
-= Details =
+{{{
+interface Camera {
+  // Acquisition methods
+
+  // Triggers the camera viewfinder and invokes the callback after the user
+  // has either captured the image or canceled the operation.
+  MediaData captureImage(CameraCallback callback, optional double width, optional double height);
+  // Triggers the camera viewfinder and invokes the callback after the user
+  // has either captured the video, canceled the operation or maxDuration milliseconds
+  // have elapsed.
+  MediaData captureVideo(CameraCallback callback, double maxDuration, optional double width, optional double height);
+}
+
+interface MediaData {
+  String format;              // MIME type
+  Resolution resolution;    // resolution
+  Blob content;               // reference to media file
+}
+
+interface Resolution {
+  Number width;    // width in pixels
+  Number height;   // height in pixels
+}
+}}}
+
+= Example =
+
+{{{
+// Create a camera object
+var camera = google.gears.factory.create("beta.camera");
+
+// Capture an image, specifying a desired resolution.
+// Depending on the device capabilities, Gears will return
+// the best possible match for the desired resolution.
+var img1 = camera.captureImage(640, 480);
+
+// Capture of a video, specifying a desired resolution and duration.
+var video = camera.captureVideo(320, 200, 5000);
+}}}
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
