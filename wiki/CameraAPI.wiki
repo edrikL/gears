@@ -19,12 +19,14 @@ interface Camera {
 
   // Triggers the camera viewfinder and invokes the callback after the user
   // has either captured the image or canceled the operation.
-  Media captureImage(CaptureCallback callback, optional CaptureOptions options);
+  void captureImage(CaptureCallback callback, optional CaptureOptions options);
   // Triggers the camera viewfinder and invokes the callback after the user
   // has either captured the video, canceled the operation or maxDuration milliseconds
   // have elapsed.
-  Media captureVideo(CaptureCallback callback, double maxDuration, optional CaptureOptions options);
+  void captureVideo(CaptureCallback callback, double maxDuration, optional CaptureOptions options);
 };
+
+void CaptureCallback(Media media);
 
 interface CaptureOptions {
   string format;  // MIME type
@@ -33,11 +35,11 @@ interface CaptureOptions {
 };
 
 interface Media {
-  String format;  // MIME type
-  double width;   
-  double height;
-  Blob content;   // reference to captured media
-}
+  readonly string format;  // MIME type
+  readonly double width;   
+  readonly double height;
+  readonly Blob content;   // reference to captured media
+};
 
 }}}
 
@@ -50,10 +52,14 @@ var camera = google.gears.factory.create("beta.camera");
 // Capture an image, specifying a desired resolution.
 // Depending on the device capabilities, Gears will return
 // the best possible match for the desired resolution.
-var img1 = camera.captureImage(640, 480);
+var image = camera.captureImage(function(media) {
+    uploadImage(media.content);
+    });
 
 // Capture of a video, specifying a desired resolution and duration.
-var video = camera.captureVideo(320, 200, 5000);
+var video = camera.captureVideo(function(media) {
+    upload(media.content);
+    }, 5000);
 }}}
 
 Add your content here.  Format your content with:
