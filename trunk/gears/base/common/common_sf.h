@@ -131,7 +131,7 @@ assert(pthread_main_np() != 0)
 #else
 #define DECL_SINGLE_THREAD
 #define ASSERT_SINGLE_THREAD()
-#define ASSERT_IS_RUNNING_ON_MAIN_THREAD
+#define ASSERT_IS_RUNNING_ON_MAIN_THREAD()
 #endif  // DEBUG
 #endif  // C++       
 
