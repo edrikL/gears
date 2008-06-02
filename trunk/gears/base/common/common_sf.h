@@ -89,7 +89,7 @@ void ThrowExceptionKey(NSString *key, ...);
     ThrowExceptionKey(key, ##__VA_ARGS__); \
     return NO; \
   } while(0)
-
+  
 #endif  // __OBJC__
 
 // Throw exception via WebKit's WebScriptObject interface.
@@ -125,10 +125,13 @@ class CurrentThreadID {
 
 #define ASSERT_SINGLE_THREAD() \
 assert(pthread_equal(current_thread_id_.get(), pthread_self()))
-       
+
+#define ASSERT_IS_RUNNING_ON_MAIN_THREAD() \
+assert(pthread_main_np() != 0)
 #else
 #define DECL_SINGLE_THREAD
 #define ASSERT_SINGLE_THREAD()
+#define ASSERT_IS_RUNNING_ON_MAIN_THREAD
 #endif  // DEBUG
 #endif  // C++       
 

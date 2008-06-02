@@ -45,6 +45,12 @@
 //
 // Workaround: Add allHeaderFields & statusCode selectors to all instances of
 // NSURLResponse.
+// -----------------------------------------------------------------------------
+// Attempting to download a URL synchronously from a call that blocks JS wedges
+// the URL loading mechanism in OS X 10.4.
+//
+// Workaround: Use libcurl instead of an NSURLConnection in these cases (see
+// desktop/curl_icon_downloader.h.
 
 // WebKit Bugs affecting Gears:
 

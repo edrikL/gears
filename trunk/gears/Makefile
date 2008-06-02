@@ -1025,6 +1025,9 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_win32.cc \
 		$(NULL)
 
+SF_CPPSRCS += \
+		curl_icon_downloader.mm \
+		$(NULL)  
 #-----------------------------------------------------------------------------
 # desktop_notifier
 

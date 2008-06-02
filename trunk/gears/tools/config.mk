@@ -348,7 +348,7 @@ DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
 ifeq ($(BROWSER),SF)
 DLL_PREFIX = 
 DLL_SUFFIX = 
-DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit
+DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
 else
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
