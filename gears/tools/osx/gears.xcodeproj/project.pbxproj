@@ -329,6 +329,8 @@
 		B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */; };
 		B58939380DB66FA900BD56A0 /* launch_url_in_browser.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */; };
 		B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
+		B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */; };
+		B58D65F40DF45FDD0059CB14 /* httprequest_upload.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58D65F20DF45FDD0059CB14 /* httprequest_upload.cc */; };
 		B58E004B0D5BB19200B0A65D /* libjsoncpp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B58E000B0D53F47B00B0A65D /* libjsoncpp.a */; };
 		B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E00550D5BB28900B0A65D /* name_value_table.cc */; };
 		B58E005B0D5BB2A600B0A65D /* permissions_db.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E005A0D5BB2A600B0A65D /* permissions_db.cc */; };
@@ -381,6 +383,8 @@
 		B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307640DB578D900A206B8 /* icon_32x32.png */; };
 		B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307650DB578D900A206B8 /* icon_48x48.png */; };
 		B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307660DB578D900A206B8 /* icon_merged.ico */; };
+		B5BAFE8B0DF07411001DD3BD /* curl_icon_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */; };
+		B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */; };
 		B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */; };
 		B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8600D8E8223001A4916 /* http_request_sf.mm */; };
 		B5BBD8640D8E822E001A4916 /* http_request_delegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8630D8E822E001A4916 /* http_request_delegate.mm */; };
@@ -505,6 +509,8 @@
 				B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */,
 				B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */,
 				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
+				B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */,
+				B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -881,6 +887,8 @@
 		B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
 		B58939320DB66F4D00BD56A0 /* launch_url_with_browser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = launch_url_with_browser; sourceTree = BUILT_PRODUCTS_DIR; };
 		B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = launch_url_in_browser.cc; path = ../../base/safari/launch_url_in_browser.cc; sourceTree = SOURCE_ROOT; };
+		B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest_upload.h; path = ../../httprequest/httprequest_upload.h; sourceTree = SOURCE_ROOT; };
+		B58D65F20DF45FDD0059CB14 /* httprequest_upload.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = httprequest_upload.cc; path = ../../httprequest/httprequest_upload.cc; sourceTree = SOURCE_ROOT; };
 		B58E000B0D53F47B00B0A65D /* libjsoncpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libjsoncpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B58E00550D5BB28900B0A65D /* name_value_table.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = name_value_table.cc; path = ../../base/common/name_value_table.cc; sourceTree = SOURCE_ROOT; };
 		B58E00560D5BB28900B0A65D /* name_value_table.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = name_value_table.h; path = ../../base/common/name_value_table.h; sourceTree = SOURCE_ROOT; };
@@ -981,6 +989,8 @@
 		B5B307640DB578D900A206B8 /* icon_32x32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_32x32.png; path = ../../ui/common/icon_32x32.png; sourceTree = SOURCE_ROOT; };
 		B5B307650DB578D900A206B8 /* icon_48x48.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_48x48.png; path = ../../ui/common/icon_48x48.png; sourceTree = SOURCE_ROOT; };
 		B5B307660DB578D900A206B8 /* icon_merged.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = icon_merged.ico; path = ../../ui/common/icon_merged.ico; sourceTree = SOURCE_ROOT; };
+		B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = curl_icon_downloader.mm; path = ../../desktop/curl_icon_downloader.mm; sourceTree = SOURCE_ROOT; };
+		B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = curl_icon_downloader.h; path = ../../desktop/curl_icon_downloader.h; sourceTree = SOURCE_ROOT; };
 		B5BB92540D47F9AA00FA9651 /* http_cookies_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_cookies_sf.h; path = ../../localserver/safari/http_cookies_sf.h; sourceTree = SOURCE_ROOT; };
 		B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = http_cookies_sf.mm; path = ../../localserver/safari/http_cookies_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5BB93F30D49255E00FA9651 /* cf_string_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = cf_string_utils.h; path = ../../base/safari/cf_string_utils.h; sourceTree = SOURCE_ROOT; };
@@ -1269,6 +1279,8 @@
 			children = (
 				B59CE65B0DD8EC24000B31AE /* httprequest.cc */,
 				B59CE65C0DD8EC24000B31AE /* httprequest.h */,
+				B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */,
+				B58D65F20DF45FDD0059CB14 /* httprequest_upload.cc */,
 			);
 			name = httprequest;
 			sourceTree = "<group>";
@@ -1900,6 +1912,8 @@
 		B56F66000DAD40DE00A5D6C5 /* desktop */ = {
 			isa = PBXGroup;
 			children = (
+				B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */,
+				B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */,
 				B56F660E0DAD412400A5D6C5 /* file_dialog.h */,
 				B56F660F0DAD412400A5D6C5 /* file_dialog.cc */,
 				B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */,
@@ -2719,6 +2733,8 @@
 				B5D5FC040DEF39A00033ABE2 /* workerpool.cc in Sources */,
 				B5D5FC080DEF3A230033ABE2 /* progress_event.cc in Sources */,
 				B5D5FC0B0DEF3A470033ABE2 /* js_marshal.cc in Sources */,
+				B5BAFE8B0DF07411001DD3BD /* curl_icon_downloader.mm in Sources */,
+				B58D65F40DF45FDD0059CB14 /* httprequest_upload.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3069,7 +3085,7 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-lcurl";
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
@@ -3123,7 +3139,7 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-lcurl";
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";

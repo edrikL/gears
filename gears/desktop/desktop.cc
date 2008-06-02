@@ -38,6 +38,9 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/desktop/curl_icon_downloader.h"
+#endif
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notifier_process.h"
@@ -613,6 +616,16 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       return false;
     }
   } else {
+#ifdef BROWSER_WEBKIT
+  // Workaround for bug in OS X 10.4, see definition of GetURLData() for
+  // details.
+  if (!GetURLData(icon->url, &(icon->png_data))) {
+    *error = STRING16(L"Could not load icon ");
+    *error += icon->url.c_str();
+    *error += STRING16(L".");
+    return false;
+  }
+#else
     // Fetch the png data
     scoped_refptr<HttpRequest> request;
     HttpRequest::Create(&request);
@@ -645,6 +658,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       *error += STRING16(L".");
       return false;
     }
+#endif
   }
 
   return true;
