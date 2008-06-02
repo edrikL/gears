@@ -1634,3 +1634,10 @@ FF2_CPPSRCS += $(FF3_CPPSRCS)
 
 #-----------------------------------------------------------------------------
 include tools/rules.mk
+
+#-----------------------------------------------------------------------------
+# You can add your own site-specific build rules by creating a file called 
+# 'site-build.mk' alongside the Makefile.
+ifneq ($(wildcard site-build.mk),)  # if site-build.mk exists.
+include site-build.mk
+endif
