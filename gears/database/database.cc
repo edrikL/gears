@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/database/database.h"
+
 #include "gears/base/common/common.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_types.h"
@@ -31,15 +33,16 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/database/common/database_utils.h"
-#include "gears/database/npapi/database.h"
-#include "gears/database/npapi/result_set.h"
+#include "gears/database/database_utils.h"
+#include "gears/database/result_set.h"
 
 #ifdef DEBUG
 Stopwatch GearsDatabase::g_stopwatch_;
 #endif // DEBUG
 
 DECLARE_GEARS_WRAPPER(GearsDatabase);
+
+const std::string GearsDatabase::kModuleName("GearsDatabase");
 
 // static
 template<>
@@ -54,7 +57,9 @@ void Dispatcher<GearsDatabase>::Init() {
 #endif
 }
 
-GearsDatabase::GearsDatabase() : db_(NULL) {
+GearsDatabase::GearsDatabase()
+    : ModuleImplBaseClassVirtual(kModuleName),
+      db_(NULL) {
 }
 
 GearsDatabase::~GearsDatabase() {
@@ -106,11 +111,20 @@ void GearsDatabase::Open(JsCallContext *context) {
 }
 
 void GearsDatabase::Execute(JsCallContext *context) {
+#ifdef WINCE
+  // Sleep() is used as a poor-man's yield() here to improve concurrency
+  // and prevent possible thread starvation on Windows Mobile,
+  // especially for cases when one thread is using the database very 
+  // actively, and other threads only use it occasionally.
+  // The root problem is in SQLite lock implementation which
+  // uses a busy wait.
+  // TODO(shess): more efficient locking implementation on SQLite level.
+  Sleep(0);  
+#endif  // WINCE
+
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
-
-  int sql_status;
 
   if (!db_) {
     context->SetException(STRING16(L"Database handle was NULL."));
@@ -128,17 +142,20 @@ void GearsDatabase::Execute(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  // Prepare a statement for execution.
-
-// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef BROWSER_IE
+  LOG16((L"DB Execute: %s\n", expr));
+#else
 #ifdef DEBUG
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
   std::string expr_utf8;
   String16ToUTF8(expr.c_str(), expr.length(), &expr_utf8);
   LOG(("DB Execute: %s\n", expr_utf8.c_str()));
 #endif
+#endif
 
+  // Prepare a statement for execution.
   scoped_sqlite3_stmt_ptr stmt;
-  sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
+  int sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
     sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
 
@@ -159,7 +176,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Wrap a GearsResultSet around the statement and execute it
-  scoped_refptr<GearsResultSet> result_set;  // TODO(bpm)
+  scoped_refptr<GearsResultSet> result_set;
   if (!CreateModule<GearsResultSet>(GetJsRunner(), &result_set))
     return;  // Create function sets an error message.
 
@@ -207,11 +224,14 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
-// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: %s (string)\n", i, arg_str));
+#else
 #ifdef DEBUG
         std::string str_utf8;
         String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
         LOG(("        Parameter %i: %s (string)\n", i, str_utf8.c_str()));
+#endif
 #endif
         sql_status = sqlite3_bind_text16(
             stmt, sql_index, arg_str.c_str(), -1,
@@ -219,14 +239,22 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
         break;
       }
       case JSPARAM_NULL: {
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: null\n", i));
+#else
         LOG(("        Parameter %i: null\n", i));
+#endif
         sql_status = sqlite3_bind_null(stmt, sql_index);
         break;
       }
       case JSPARAM_UNDEFINED: {
         // Insert the string "undefined" to match the firefox implementation.
         // TODO(zork): This should throw an error in beta.database2.
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: undefined\n", i));
+#else
         LOG(("        Parameter %i: undefined\n", i));
+#endif
         sql_status = sqlite3_bind_text16(
             stmt, sql_index, STRING16(L"undefined"), -1,
             SQLITE_TRANSIENT); // so SQLite copies string immediately
@@ -238,7 +266,11 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: %i\n", i, arg_int));
+#else
         LOG(("        Parameter %i: %i\n", i, arg_int));
+#endif
         sql_status = sqlite3_bind_int(stmt, sql_index, arg_int);
         break;
       }
@@ -248,7 +280,11 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: %lf\n", i, arg_double));
+#else
         LOG(("        Parameter %i: %lf\n", i, arg_double));
+#endif
         sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
         break;
       }
@@ -260,12 +296,15 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
         }
         std::string16 arg_str;
         arg_str = arg_bool ? STRING16(L"true") : STRING16(L"false");
-  // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
-  #ifdef DEBUG
+#ifdef BROWSER_IE
+        LOG16((L"        Parameter %i: %s\n", i, arg_str));
+#else
+#ifdef DEBUG
         std::string str_utf8;
         String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
         LOG(("        Parameter %i: %s\n", i, str_utf8.c_str()));
-  #endif
+#endif
+#endif
         sql_status = sqlite3_bind_text16(
             stmt, sql_index, arg_str.c_str(), -1,
             SQLITE_TRANSIENT); // so SQLite copies string immediately
@@ -305,12 +344,12 @@ void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
   }
 
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
+  // TODO(nigeltao): move this check into SetReturnValue.
   if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
     context->SetException(STRING16(L"lastInsertRowId is out of range."));
     return;
   }
-  double retval = static_cast<double>(rowid);
-  context->SetReturnValue(JSPARAM_DOUBLE, &retval);
+  context->SetReturnValue(JSPARAM_INT64, &rowid);
 }
 
 void GearsDatabase::GetRowsAffected(JsCallContext *context) {
@@ -356,6 +395,7 @@ void GearsDatabase::HandleEvent(JsEventType event_type) {
 
   CloseInternal();
 
+  scoped_refptr<GearsDatabase> keep_alive(this);
   // When the page unloads, NPAPI plugins are unloaded.  When that happens,
   // objects are cleaned up and deleted regardless of reference count, so we
   // can't ensure that the ResultSets are deleted first.  So we give them a

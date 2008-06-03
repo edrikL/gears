@@ -23,13 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/database/database_utils.h"
+
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h" // for IsStringValidPathComponent()
-#include "gears/database/common/database_utils.h"
 
 // NOTE(shess) This may interact with various SQLite features.  For
 // instance, VACUUM is implemented in terms of more basic SQLite
@@ -159,7 +160,7 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
                             // Using in-memory temp files gives approximately
                             // 3x speed improvement on Windows Mobile.
                             "PRAGMA temp_store = MEMORY;"
-#endif  // WINCE
+#endif
                             "PRAGMA synchronous = NORMAL;",
                             NULL, NULL, NULL
                             );

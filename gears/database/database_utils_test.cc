@@ -23,13 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/database/database_utils_test.h"
+
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_token.h"
-#include "gears/database/common/database_utils.h"
-
-#include "gears/database/common/database_utils_test.h"
+#include "gears/database/database_utils.h"
 
 // Hack together a scoped sqlite3 * so that TEST_ASSERT() failures
 // dont't leave the database wedged.

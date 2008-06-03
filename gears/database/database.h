@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DATABASE_NPAPI_DATABASE_H__
-#define GEARS_DATABASE_NPAPI_DATABASE_H__
+#ifndef GEARS_DATABASE_DATABASE_H__
+#define GEARS_DATABASE_DATABASE_H__
 
 #include <set>
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -37,29 +37,34 @@
 struct sqlite3;
 struct sqlite3_stmt;
 class GearsResultSet;
-class ModuleWrapperBaseClass;
 
 class GearsDatabase
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
-  GearsDatabase();
-  ~GearsDatabase();
+  static const std::string kModuleName;
 
-  // OPTIONAL IN: string database_name
+  GearsDatabase();
+  virtual ~GearsDatabase();
+
+  // IN: optional string database_name
+  // OUT: -
   void Open(JsCallContext *context);
 
-  // IN: string expression
-  // OPTIONAL IN: array args
-  // OUT: GearsResultSet results
+  // IN: string expression, optional array args
+  // OUT: GearsResultSet
   void Execute(JsCallContext *context);
 
+  // IN: -
+  // OUT: -
   void Close(JsCallContext *context);
 
-  // OUT: int last_insert_row_id
+  // IN: -
+  // OUT: int
   void GetLastInsertRowId(JsCallContext *context);
 
-  // OUT: int rows_affected
+  // IN: -
+  // OUT: int
   void GetRowsAffected(JsCallContext *context);
 
   void HandleEvent(JsEventType event_type);
@@ -69,7 +74,8 @@ class GearsDatabase
 // each database file, not a single stopwatch for the entire process as it does
 // now.
 #ifdef DEBUG
-  // OUT: int execution_time_ms
+  // IN: -
+  // OUT: int
   void GetExecuteMsec(JsCallContext *context);
   static Stopwatch g_stopwatch_;
 #endif // DEBUG
@@ -77,7 +83,6 @@ class GearsDatabase
   friend class GearsResultSet;
 
  private:
-
   void AddResultSet(GearsResultSet *rs);
   void RemoveResultSet(GearsResultSet *rs);
   bool CloseInternal();
@@ -91,4 +96,4 @@ class GearsDatabase
   DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase);
 };
 
-#endif // GEARS_DATABASE_NPAPI_DATABASE_H__
+#endif // GEARS_DATABASE_DATABASE_H__

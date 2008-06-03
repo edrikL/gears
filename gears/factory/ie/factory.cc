@@ -32,7 +32,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/console.h"
-#include "gears/database/ie/database.h"
+#include "gears/database/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
@@ -166,6 +166,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
+  } else if (object_name == STRING16(L"beta.database")) {
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
@@ -227,12 +229,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   CComQIPtr<IDispatch> idispatch;
 
   HRESULT hr = E_FAIL;
-  if (object_name == STRING16(L"beta.database")) {
-    CComObject<GearsDatabase> *obj;
-    hr = CComObject<GearsDatabase>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.localserver")) {
+  if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
     base_class = obj;

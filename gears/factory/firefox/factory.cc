@@ -37,7 +37,7 @@
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/cctests/test.h"
 #include "gears/console/console.h"
-#include "gears/database/firefox/database.h"
+#include "gears/database/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
@@ -155,6 +155,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
+  } else if (object_name == STRING16(L"beta.database")) {
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
@@ -208,9 +210,7 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
   nsCOMPtr<nsISupports> isupports = NULL;
 
   nsresult nr = NS_ERROR_FAILURE;
-  if (object_name == STRING16(L"beta.database")) {
-    isupports = do_QueryInterface(new GearsDatabase(), &nr);
-  } else if (object_name == STRING16(L"beta.localserver")) {
+  if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
   }  else {
     // Don't return an error here. Caller handles reporting unknown modules.

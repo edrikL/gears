@@ -42,8 +42,6 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
-#include "gears/database/firefox/database.h"
-#include "gears/database/firefox/result_set.h"
 #include "gears/factory/firefox/factory.h"
 
 #include "gears/localserver/firefox/cache_intercept.h"
@@ -130,16 +128,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFactory, PR_TRUE,
                                              &kGearsFactoryClassId)
 
-  // database
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsDatabase)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsDatabaseInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsDatabase, PR_TRUE,
-                                             &kGearsDatabaseClassId)
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsResultSet)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsResultSetInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
-                                             &kGearsResultSetClassId)
-
   // localserver
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsLocalServer)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsLocalServerInterface)
@@ -189,11 +177,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     // factory
     { kGearsFactoryClassName, "GearsFactoryInterface",
       GEARSFACTORYINTERFACE_IID_STR },
-    // database
-    { kGearsDatabaseClassName, "GearsDatabaseInterface",
-      GEARSDATABASEINTERFACE_IID_STR },
-    { kGearsResultSetClassName, "GearsResultSetInterface",
-      GEARSRESULTSETINTERFACE_IID_STR },
     // localserver
     { kGearsLocalServerClassName, "GearsLocalServerInterface",
       GEARSLOCALSERVERINTERFACE_IID_STR },
@@ -231,9 +214,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
 
 // factory
 NS_DECL_DOM_CLASSINFO(GearsFactory)
-// database
-NS_DECL_DOM_CLASSINFO(GearsDatabase)
-NS_DECL_DOM_CLASSINFO(GearsResultSet)
 // localserver
 NS_DECL_DOM_CLASSINFO(GearsLocalServer)
 NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
@@ -255,9 +235,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 
   // factory
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFactory));
-  // database
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
   // localserver
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));

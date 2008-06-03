@@ -871,7 +871,7 @@ PERF_TOOL_CPPSRCS += \
 
 
 #-----------------------------------------------------------------------------
-# console/common (built for all browsers)
+# console
 
 $(BROWSER)_VPATH	+= \
 		console \
@@ -910,10 +910,10 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# database/common (built for all browsers)
+# database
 
 $(BROWSER)_VPATH	+= \
-		database/common \
+		database \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
@@ -922,52 +922,6 @@ $(BROWSER)_CPPSRCS	+= \
 		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/firefox
-
-FF3_VPATH	+= \
-		database/firefox \
-		$(NULL)
-
-FF3_M4SRCS	+= \
-		database.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		database.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/ie
-
-IE_VPATH	+= \
-		database/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		database.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/npapi
-ifeq ($(USING_NPAPI),1)
-$(BROWSER)_VPATH	+= \
-		database/npapi \
-		$(NULL)
-
-$(BROWSER)_IDLSRCS	+= \
-		$(NULL)
-
-$(BROWSER)_CPPSRCS	+= \
-		$(NULL)
-endif		
 
 #-----------------------------------------------------------------------------
 # database2

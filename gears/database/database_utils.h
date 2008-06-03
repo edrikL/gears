@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
-#define GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
+#ifndef GEARS_DATABASE_DATABASE_UTILS_H__
+#define GEARS_DATABASE_DATABASE_UTILS_H__
 
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
@@ -48,4 +48,4 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
                         sqlite3 **db);
 
 
-#endif // GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
+#endif // GEARS_DATABASE_DATABASE_UTILS_H__
