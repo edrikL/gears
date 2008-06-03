@@ -143,6 +143,7 @@ bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
+bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
 bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
@@ -260,12 +261,9 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestRefCount(&error);
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
-#if BROWSER_FF || BROWSER_IE
   ok &= TestBufferBlob(&error);
+  ok &= TestJoinBlob(&error);
   ok &= TestSliceBlob(&error);
-#else
-  // Blobs not yet implemented for NPAPI.
-#endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
