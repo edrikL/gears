@@ -47,11 +47,6 @@ template<typename DataType>
 class MockDeviceDataProvider
     : public DeviceDataProviderBase<DataType>,
       public Thread {
- public:
-  // Allow DeviceDataProviderBase<DataType>::Create() to access our private
-  // constructor.
-  friend DeviceDataProviderBase<DataType>;
-
  protected:
   // Protected constructor and destructor, callers access singleton through
   // Register and Unregister.
@@ -77,6 +72,9 @@ class MockDeviceDataProvider
 
 class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
  private:
+  // Allow RadioDataProviderBase::Create() to access our private constructor.
+  friend RadioDataProviderBase;
+
   MockRadioDataProvider() {}
   virtual ~MockRadioDataProvider() {}
 
@@ -85,11 +83,11 @@ class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
     assert(data);
     // The following are real-world values, captured in May 2008.
     CellData cell_data;
-    cell_data.cid = 23874;
-    cell_data.lac = 98;
-    cell_data.mnc = 15;
-    cell_data.mcc = 234;
-    cell_data.rss = -65;
+    cell_data.cell_id = 23874;
+    cell_data.location_area_code = 98;
+    cell_data.mobile_network_code = 15;
+    cell_data.mobile_country_code = 234;
+    cell_data.radio_signal_strength = -65;
     data->cell_data.clear();
     data->cell_data.push_back(cell_data);
     data->radio_type = RADIO_TYPE_GSM;
@@ -101,15 +99,25 @@ class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
 
 class MockWifiDataProvider : public MockDeviceDataProvider<WifiData> {
  private:
+  // Allow WifiDataProviderBase::Create() to access our private constructor.
+  friend WifiDataProviderBase;
+
   MockWifiDataProvider() {}
   virtual ~MockWifiDataProvider() {}
 
   // DeviceDataProviderBase<WifiData> implementation.
   virtual bool GetData(WifiData *data) {
     assert(data);
+    // The following are real-world values, captured in May 2008.
     AccessPointData access_point_data;
-    access_point_data.mac = STRING16(L"test mac");
     data->access_point_data.clear();
+    access_point_data.mac_address = STRING16(L"00-0b-86-ca-bb-c8");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0b-86-ca-bb-c9");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0b-86-ce-51-80");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0d-97-04-85-9d");
     data->access_point_data.push_back(access_point_data);
     // We always have all the data we can get, so return true.
     return true;
