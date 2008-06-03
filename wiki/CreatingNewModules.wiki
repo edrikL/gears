@@ -1,7 +1,7 @@
 #summary Process outline for developing new modules for Gears
 #labels WorkInProgress
 
-This is a process outline for developing new modules for Gears. If you are considering contributing a new module to Gears, this document is for you.
+If you are considering contributing a new module to Gears, this document is for you.
 
 ==Research==
 
@@ -37,14 +37,14 @@ Append to module directory to `$(BROWSER)_VPATH` and module filename `$(BROWSER)
 
 {{{
 #-----------------------------------------------------------------------------
-# tools/module_template
+# your_module_dir
 
 $(BROWSER)_VPATH += \
-		tools/module_template \
+		your_module_dir \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
-		module_template.cc \
+		module_file.cc \
 		$(NULL)
 }}}
 
@@ -54,8 +54,8 @@ Modify `GearsFactory::CreateDispatcherModule` in `factory\ie\factory.cc` and `fa
 
 {{{
   ...
-  } else if (object_name == STRING16(L"beta.moduletemplate")) {
-    CreateModule<SampleModuleTemplate>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.yourmodulename")) {
+    CreateModule<YourModuleName>(GetJsRunner(), &object);
   } else {
   ...
 }}}
