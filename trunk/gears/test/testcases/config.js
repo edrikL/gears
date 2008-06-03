@@ -70,10 +70,12 @@ databaseSuite.addFile('../testcases/database_fts_tests.js',
                       {useWorker: true, useIFrame: true});
 suites.push(databaseSuite);
 
-var database2Suite = new TestSuite('Database2');
-database2Suite.addFile('../testcases/database2_tests.js',
-                       {useWorker: true, useIFrame: true});
-suites.push(database2Suite);
+if (!isOfficial) {
+  var database2Suite = new TestSuite('Database2');
+  database2Suite.addFile('../testcases/database2_tests.js',
+                         {useWorker: true, useIFrame: true});
+  suites.push(database2Suite);
+}
 
 var factorySuite = new TestSuite('Factory');
 factorySuite.addFile('../testcases/factory_tests.js',
