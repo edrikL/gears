@@ -48,7 +48,6 @@
 #endif
 #include "gears/base/common/js_runner.h"
 
-#include "genfiles/database.h"
 #include "genfiles/localserver.h"
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
@@ -538,9 +537,6 @@ bool JsRunner::InitJavaScriptEngine() {
     // TODO(cprince): Unify the interface lists here and in GearsFactory.
     // Could share code, or could query GearsFactory.
     {GEARSFACTORYINTERFACE_IID, NULL},
-    // database
-    {GEARSDATABASEINTERFACE_IID, NULL},
-    {GEARSRESULTSETINTERFACE_IID, NULL},
     // localserver
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
