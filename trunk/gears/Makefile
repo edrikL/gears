@@ -793,12 +793,14 @@ SF_VPATH	+= \
 		$(NULL)
 
 SF_CPPSRCS	+= \
+		browser_load_hook.mm \
 		browser_utils.cc \
 		browser_utils_sf.cc \
 		common_sf.mm \
 		cf_string_utils.cc \
 		file_posix.cc \
 		html_event_monitor_np.cc \
+		http_handler.mm \
 		ipc_message_queue_null.cc \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
@@ -853,7 +855,6 @@ SF_VPATH += \
 
 SF_INPUTMANAGER_CPPSRCS += \
 		enabler.m \
-		http_handler.mm \
 		loader.mm \
 		$(NULL)
 

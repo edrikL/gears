@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,37 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import "gears/base/safari/enabler.h"
-#import "gears/base/safari/loader.h"
-#import "gears/base/safari/browser_load_hook.h"
+#import <Cocoa/Cocoa.h>
 
-@implementation GearsEnabler
-//------------------------------------------------------------------------------
-- (id)init {
-  if ((self = [super init])) {
-    NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    
-    // Setup things if we're running in Safari
-    if ([bundleID isEqualToString:@"com.apple.Safari"]) {
-      BOOL result = NO;
-
-      // Check if Gears can be loaded into this version of Safari
-      if ([GearsLoader canLoadGears]) {
-        if ([GearsLoader loadGearsBundle]) {
-          Class gearsBrowserLoadHook = 
-                     NSClassFromString(@"GearsBrowserLoadHook"); 
-          result = [gearsBrowserLoadHook installHook];
-        }
-      }
-      
-      if (!result) {
-        [self release];
-        self = nil;
-      }
-    }
-  }
-  
-  return self;
-}
-
+// Class that's compiled in as part of the browser plugin and is called by
+// the InputManager to perform the actual Gears init.
+@interface GearsBrowserLoadHook : NSObject
++ (BOOL)installHook;
 @end

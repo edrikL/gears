@@ -71,9 +71,6 @@
 @implementation GearsHTTPHandler
 //------------------------------------------------------------------------------
 + (BOOL)registerHandler {
-  if (![GearsLoader loadGearsBundle])
-    return NO;
-  
   return [NSURLProtocol registerClass:[self class]];
 }
 
