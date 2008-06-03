@@ -54,7 +54,7 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 var TEST_TIMEOUT_SECONDS = 4 * 60 * 1000;
 var suites = [];
 
-if (!isWince) {
+if (!isWince && !isOfficial) {
   var consoleSuite = new TestSuite('Console');
   consoleSuite.addFile('../testcases/console_tests.js',
                         {useWorker: true, useIFrame: true});
