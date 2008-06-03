@@ -30,9 +30,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
-  <link rel="stylesheet" href="button.css">
-  <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
+m4_include(ui/common/button.css)
+m4_include(ui/common/html_dialog.css)
     #icon {
       margin-right:0.5em;
     }

@@ -31,9 +31,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
 <head>
   <title>PRODUCT_FRIENDLY_NAME_UQ Settings</title>
-  <link rel="stylesheet" href="button.css">
-  <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
+m4_include(ui/common/button.css)
+m4_include(ui/common/html_dialog.css)
     h1 {
       font-size:1.2em;
       margin:0;
