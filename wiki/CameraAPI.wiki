@@ -35,8 +35,8 @@ void CaptureCallback(Media media);
 
 interface CaptureOptions {
   string format;  // MIME type
-  double width;   // desired image or video frame width
-  double height;  // desired image or video frame height
+  int width;   // desired image or video frame width
+  int height;  // desired image or video frame height
 };
 
 interface Media {
