@@ -27,12 +27,12 @@
 // The blob API has not been finalized for official builds
 #else
 
-#if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
-
 #ifdef USING_CCTESTS
 
 #include <cstring>
+#include "gears/blob/blob_builder.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/blob/join_blob.h"
 #include "gears/blob/slice_blob.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -181,6 +181,93 @@ bool TestSliceBlob(std::string16 *error) {
   return true;
 }
 
+bool TestJoinBlob(std::string16 *error) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    printf("TestJoinBlob - failed (%d)\n", __LINE__); \
+    assert(error); \
+    *error += STRING16(L"TestJoinBlob - failed. "); \
+    return false; \
+  } \
+}
+  uint8 buffer[64];
+  BlobBuilder builder;
+  scoped_refptr<BlobInterface> blob;
+
+  // JoinBlob with no content.
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 0);
+  TEST_ASSERT(0 == blob->Read(buffer, 0, sizeof(buffer)));
+
+  // JoinBlob containing one BufferBlob.
+  const char data1[] = "nom";
+  scoped_refptr<BlobInterface> blob1(new BufferBlob(data1, strlen(data1)));
+  builder.AddBlob(blob1.get());
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == strlen(data1));
+  TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
+
+  // JoinBlob containing one BufferBlob, one string, and one data buffer.
+  builder.AddBlob(blob1.get());
+  builder.AddString(STRING16(L"burp"));
+  builder.AddData("ahh", 3);
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 10);
+  TEST_ASSERT(10 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "nomburpahh", 10));
+  TEST_ASSERT(0 == blob->Read(buffer, 12, sizeof(buffer)));
+  TEST_ASSERT(3 == blob->Read(buffer, 1, 3));
+  TEST_ASSERT(0 == memcmp(buffer, "omb", 3));
+
+  // JoinBlob containing EmptyBlobs and other empty data.
+  builder.AddBlob(new EmptyBlob);
+  builder.AddBlob(blob1.get());
+  builder.AddString(STRING16(L""));
+  builder.AddData("", 0);
+  builder.AddBlob(new EmptyBlob);
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == strlen(data1));
+  TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
+
+  // JoinBlob containing a string with non-ascii data.
+  builder.AddString(STRING16(L"\xFFFF\x0080"));
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 5);
+  TEST_ASSERT(5 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "\xef\xbf\xbf\xc2\x80", 5));
+
+  // JoinBlob containing the same BufferBlob multiple times.
+  for (unsigned i = 0; i < 3; ++i) {
+    builder.AddBlob(blob1.get());
+  }
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 9);
+  TEST_ASSERT(9 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "nomnomnom", 7));
+
+  // SliceBlob containing a JoinBlob.
+  // NOTE - assumes that blob currently contains "nomnomnom".
+  scoped_refptr<BlobInterface> blob2 = new SliceBlob(blob.get(), 2, 5);
+  TEST_ASSERT(blob2->Length() == 5);
+  TEST_ASSERT(5 == blob2->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "mnomn", 5));
+
+  // JoinBlob containing a SliceBlob.
+  builder.AddBlob(blob1.get());
+  builder.AddBlob(blob2.get());
+  builder.AddString(STRING16(L"burp"));
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 12);
+  TEST_ASSERT(12 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "nommnomnburp", 12));
+
+  // TODO(bgarcia): test with FileBlob
+  return true;
+}
+
 #endif  // USING_CCTESTS
-#endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD

@@ -279,7 +279,7 @@ THIRD_PARTY_VPATH	+= \
 THIRD_PARTY_CPPSRCS	+= \
 		modp_b64.cc \
 		$(NULL)
-		
+
 #-----------------------------------------------------------------------------
 # third_party/spidermonkey
 
@@ -1404,9 +1404,11 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		blob.cc \
+		blob_builder.cc \
 		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		join_blob.cc \
 		slice_blob.cc \
 		$(NULL)
 
