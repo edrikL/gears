@@ -186,15 +186,17 @@ static void AddInteger(const std::string &property_name,
   }
 }
 
-// Adds an angle as a double if it's valid.
-static void AddAngle(const std::string &property_name,
+// Adds an angle as a double if it's valid. Returns true if added.
+static bool AddAngle(const std::string &property_name,
                      const double &value,
                      Json::Value *object) {
   assert(object);
   assert(object->isObject());
   if (value >= -180.0 && value <= 180.0) {
     (*object)[property_name] = Json::Value(value);
+    return true;
   }
+  return false;
 }
 
 static bool FormRequestBody(const std::string16 &host_name,
@@ -214,6 +216,7 @@ static bool FormRequestBody(const std::string16 &host_name,
   }
   body_object["version"] = Json::Value(kGearsNetworkLocationProtocolVersion);
   AddString("host", host_name, &body_object);
+
   AddInteger("home_mobile_country_code", radio_data.home_mobile_country_code,
              &body_object);
   AddInteger("home_mobile_network_code", radio_data.home_mobile_network_code,
@@ -225,13 +228,15 @@ static bool FormRequestBody(const std::string16 &host_name,
   AddString("address_language", address_language, &body_object);
 
   Json::Value location;
-  AddAngle("latitude", latitude, &location);
-  AddAngle("longitude", longitude, &location);
-  body_object["location"] = location;
+  if (AddAngle("latitude", latitude, &location) &&
+      AddAngle("longitude", longitude, &location)) {
+    body_object["location"] = location;
+  }
 
   Json::Value cell_towers;
   assert(cell_towers.isArray());
-  for (int i = 0; i < static_cast<int>(radio_data.cell_data.size()); ++i) {
+  int num_cell_towers = static_cast<int>(radio_data.cell_data.size());
+  for (int i = 0; i < num_cell_towers; ++i) {
     Json::Value cell_tower;
     assert(cell_tower.isObject());
     AddInteger("cell_id", radio_data.cell_data[i].cell_id, &cell_tower);
@@ -248,13 +253,14 @@ static bool FormRequestBody(const std::string16 &host_name,
                &cell_tower);
     cell_towers[i] = cell_tower;
   }
-  body_object["cell_towers"] = cell_towers;
+  if (num_cell_towers > 0) {
+    body_object["cell_towers"] = cell_towers;
+  }
 
   Json::Value wifi_towers;
   assert(wifi_towers.isArray());
-  for (int i = 0;
-       i < static_cast<int>(wifi_data.access_point_data.size());
-       ++i) {
+  int num_wifi_towers = static_cast<int>(wifi_data.access_point_data.size());
+  for (int i = 0; i < num_wifi_towers; ++i) {
     Json::Value wifi_tower;
     assert(wifi_tower.isObject());
     AddString("mac_address", wifi_data.access_point_data[i].mac_address,
@@ -269,7 +275,9 @@ static bool FormRequestBody(const std::string16 &host_name,
     AddString("ssid", wifi_data.access_point_data[i].ssid, &wifi_tower);
     wifi_towers[i] = wifi_tower;
   }
-  body_object["wifi_towers"] = wifi_towers;
+  if (num_wifi_towers > 0) {
+    body_object["wifi_towers"] = wifi_towers;
+  }
 
   Json::FastWriter writer;
   std::string body_string = writer.write(body_object);
