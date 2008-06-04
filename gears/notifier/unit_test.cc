@@ -34,6 +34,7 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
+#include "gears/notifier/balloon_collection_test.h"
 #include "gears/notifier/notification_manager_test.h"
 
 class UnitTest {
@@ -99,6 +100,7 @@ int RunTests(int, char16 **) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
+  TestBalloonCollection();
   if (!DidAllTestsPass()) {
     printf("*** Test failures occurred. ***\n");
     return 1;

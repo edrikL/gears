@@ -55,7 +55,7 @@ void Clear(Notifications *notifications) {
 NotificationManager::NotificationManager(UserActivityInterface *activity)
     : activity_(activity) {
   assert(activity);
-  // TODO(levin): Create the real balloon collection here.
+  balloon_collection_.reset(new BalloonCollection(this));
 }
 
 NotificationManager::~NotificationManager() {
