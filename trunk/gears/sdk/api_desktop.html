@@ -92,6 +92,7 @@ desktop.createShortcut("Test Application",
         <code>"\/:*?&lt;&gt;|</code>
       <br>
       <code>url</code> - The address to launch when the user opens the shortcut.
+      The URL must be in the same origin as the calling page.
       <br>
       <code>icons</code> - An object containing one or more of these named
         properties: <code>128x128</code>, <code>48x48</code>,
@@ -112,8 +113,6 @@ desktop.createShortcut("Test Application",
       If an application wants its icons to look as good as possible on all
       platforms, it should provide all valid sizes.
       <br><br>
-      Only one desktop shortcut can exist for any particular name.
-      <br><br>
       The shortcut will launch the same web browser that created the shortcut.
       <br><br>
       The <code>url</code> and <code>icons</code> values can be relative or
@@ -122,9 +121,12 @@ desktop.createShortcut("Test Application",
       Calling this API will trigger a confirmation dialog.  The dialog will
       use the 32x32 icon if it exists, or else the closest size available.
       <br><br>
-      However, the dialog will not be displayed if an earlier call had exactly
-      the same <code>name</code>, <code>url</code>, and <code>icons</code>
-      parameters, and the user created the shortcut or chose never to create it.
+      Users can choose to never allow a particular named shortcut for a given
+      origin, in which case the dialog will not be displayed.
+      <br><br>
+      Shortcuts created through this API cannot overwrite an existing shortcut
+      with the same name, and such attempts fail silently. This restriction
+      may be relaxed in a future version of Gears.
     </td>
   </tr>
 </table>
