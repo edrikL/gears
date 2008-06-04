@@ -62,4 +62,4 @@ Modify `GearsFactory::CreateDispatcherModule` in `factory\ie\factory.cc` and `fa
 
 ===Add Unit Tests===
 
-Finally, make sure to add unit tests for your new code. The project comes with its own test framework. See the [http://code.google.com/p/google-gears/source/browse/trunk/gears/test/README.txt test/README.txt] for more details.
+Finally, make sure to add unit tests for your new code. The project comes with its own test framework. See the [http://code.google.com/p/google-gears/source/browse/trunk/gears/test/README.txt test/README.txt] for more details. You can use the [http://code.google.com/p/google-gears/source/browse/trunk/gears/test/testcases/dummy_tests.js dummy module test suite] as a starter.
