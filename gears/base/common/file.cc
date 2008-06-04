@@ -195,11 +195,9 @@ void File::SetLastFileError(const char16 *message,
 int64 File::GetFileSize(const char16 *full_filepath) {
   scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
   if (!file.get()) {
-    return 0;
+    return -1;
   }
-  int64 size = file->Size();
-  // TODO(fry): change GetFileSize to return -1 on error
-  return (size < 0) ? 0 : size;
+  return file->Size();
 }
 
 
