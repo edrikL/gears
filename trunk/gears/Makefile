@@ -839,7 +839,7 @@ VISTA_BROKER_CPPSRCS += \
 ifeq ($(OS),osx)
 COMMON_VPATH += \
 		base/safari \
-		$(NULL)  
+		$(NULL)
 
 OSX_LAUNCHURL_CPPSRCS += \
 		launch_url_in_browser.cc \
@@ -982,7 +982,7 @@ $(BROWSER)_CPPSRCS += \
 
 SF_CPPSRCS += \
 		curl_icon_downloader.mm \
-		$(NULL)  
+		$(NULL)
 #-----------------------------------------------------------------------------
 # desktop_notifier
 
@@ -991,6 +991,8 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_CPPSRCS += \
+		balloons.cc \
+		balloon_collection_test.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
@@ -1380,7 +1382,7 @@ SF_CPPSRCS	+= \
 		progress_event.cc \
 		progress_input_stream.mm \
 		resource_store_np.cc \
-		$(NULL)		
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # httprequest
@@ -1593,7 +1595,7 @@ FF2_CPPSRCS += $(FF3_CPPSRCS)
 include tools/rules.mk
 
 #-----------------------------------------------------------------------------
-# You can add your own site-specific build rules by creating a file called 
+# You can add your own site-specific build rules by creating a file called
 # 'site-build.mk' alongside the Makefile.
 ifneq ($(wildcard site-build.mk),)  # if site-build.mk exists.
 include site-build.mk

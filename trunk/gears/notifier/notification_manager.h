@@ -36,7 +36,7 @@
 
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string16.h"
-#include "gears/notifier/balloon_collection.h"
+#include "gears/notifier/balloons.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if USING_CCTESTS
