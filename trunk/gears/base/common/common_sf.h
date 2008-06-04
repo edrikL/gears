@@ -66,8 +66,10 @@ void ThrowExceptionKey(NSString *key, ...);
 
 #ifdef DEBUG
 #define LOG(a) SafariGearsLog a
+#define LOG16(a) SafariGearsLog16 a
 #else
 #define LOG(a) 0
+#define LOG16(a) 0
 #endif
 
 // Wrappers for throwing localized vararg exceptions

@@ -28,13 +28,33 @@
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/common_sf.h"
 #import "gears/base/safari/browser_utils_sf.h"
+#include "gears/base/safari/cf_string_utils.h"
 
 //------------------------------------------------------------------------------
 void SafariGearsLog(const char *msg, ...) {
   va_list args;
   va_start(args, msg);
-  vprintf(msg, args);
+  NSLogv([NSString stringWithCString:msg], args);
   va_end(args);
+}
+
+//------------------------------------------------------------------------------
+void SafariGearsLog16(const char16 *msg_utf16, ...) {
+  va_list args;
+  va_start(args, msg_utf16);
+  
+  NSMutableString *msg = [[NSMutableString alloc] init]; 
+  [msg setString:[NSString stringWithString16:msg_utf16]];
+  
+  // LOG16 takes char16 literals.
+  [msg replaceOccurrencesOfString:@"%s" 
+                       withString: @"%S "
+                          options:NSLiteralSearch
+                            range:NSMakeRange(0, [msg length])];
+  
+  NSLogv(msg, args);
+  va_end(args);
+  [msg release];
 }
 
 //------------------------------------------------------------------------------
