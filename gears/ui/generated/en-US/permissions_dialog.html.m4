@@ -192,9 +192,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
           will be able to store and access information on your computer.
           </TRANS_BLOCK>
-          <a href="#" onclick="showHelp(true); return false;">
-          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">What&nbsp;is&nbsp;this?</TRANS_BLOCK>
-          </a>
         </td>
       </tr>
     </table>
