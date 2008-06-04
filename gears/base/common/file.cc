@@ -211,7 +211,7 @@ int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
   if (file.get() && file->Seek(position, SEEK_FROM_START)) {
     return file->Read(destination, max_bytes);
   }
-  return 0;
+  return -1;
 }
 
 
