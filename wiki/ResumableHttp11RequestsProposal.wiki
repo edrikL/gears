@@ -39,7 +39,7 @@ When resuming an incomplete operation, the client MUST send an If-Resume header 
 
 The client MAY send an If-Resume with neither a resume-range-spec nor an etag parameter in order to obtain an ETag prior to commencing an operation. A client MAY send an If-Resume with an etag parameter but no resume-range-spec in order to poll the server to determine which byte ranges it already possesses for the specified entity tag. A client MAY send an If-Resume with a resume-range-spec but no etag parameter in order to optimistically begin a resumable operation prior to receiving a 103 (Checkpoint) from the server.
 
-Upon receiving any If-Resume, the server MUST immediately respond with a 103 (Checkpoint) or a final status code. If the server receives a request with an If-Resume header and is not able to locate the operation identified by the entity tag or is otherwise prevented from continuing the operation, the server SHOULD respond with a 412 (Precondition Failed) status code. A server that doesn't support resumability MUST respond to any If-Resume header with a 412 (Precondition Failed).
+Upon receiving any If-Resume, the server MUST immediately respond with a 103 (Checkpoint) or a final status code. If the server receives a request with an If-Resume header and is not able to locate the operation identified by the entity tag or is otherwise prevented from continuing the operation, the server SHOULD respond with a 412 (Precondition Failed) status code.
 
 = Status Code: 418 Resume Incomplete =
 
