@@ -287,7 +287,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          bool *was_redirected,
                          std::string16 *full_redirect_url,
                          std::string16 *error_message) {
-  return MakeHttpRequest(HttpConstants::kHttpGET,
+  return MakeHttpRequest(HttpConstants::kHttpPOST,
                          full_url,
                          is_capturing,
                          reason_header_value,
