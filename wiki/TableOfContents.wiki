@@ -8,6 +8,7 @@
     * [BuildingGearsForSafari]
     * [BuildingGearsForWindows]
     * [ContributingToGears]
+    * [CreatingNewModules]
     * [GearsCodingGuidelines]
     * [HackingGears]
     * [GearsTutorialsAndSampleCode]
