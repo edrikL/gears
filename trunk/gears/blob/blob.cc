@@ -98,14 +98,17 @@ void GearsBlob::GetLength(JsCallContext *context) {
   assert(contents_.get());
 
   int64 length = contents_->Length();
-  if ((length < JS_INT_MIN) || (length > JS_INT_MAX)) {
+  if (length < 0) {
+    context->SetException(STRING16(L"error determining length."));
+    return;
+  } else if (length > JS_INT_MAX) {
     context->SetException(STRING16(L"length is out of range."));
     return;
   }
 
   // If length (which is 64-bit) fits inside 32 bits, then return it as a
   // 32-bit int, otherwise return it as a double.
-  if ((length < INT_MIN) || (length > INT_MAX)) {
+  if (length > INT_MAX) {
     double length_as_double = static_cast<double>(length);
     context->SetReturnValue(JSPARAM_DOUBLE, &length_as_double);
   } else {

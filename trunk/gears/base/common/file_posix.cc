@@ -167,7 +167,7 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
 int64 File::Size() {
   struct stat stat_data;
   if (fstat(fileno(handle_.get()), &stat_data) != 0) {
-    return false;
+    return -1;
   }
   return static_cast<int64>(stat_data.st_size);
 }

@@ -67,8 +67,7 @@ class File {
   static bool DirectoryExists(const char16 *full_dirpath);
 
   // Returns the size of the file. If the file does not exist, or is otherwise
-  // unreadable, returns 0.
-  // TODO(fry): return -1 on error
+  // unreadable, returns -1.
   static int64 GetFileSize(const char16 *full_filepath);
 
   // Reads part of the contents of the file into memory. Returns the number of

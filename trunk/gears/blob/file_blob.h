@@ -36,7 +36,7 @@
 class FileBlob : public BlobInterface {
  public:
   // The filename should be an absolute path, not a relative one.
-  // If it is not valid, Read() and Length() will return 0.
+  // If it is not valid, Read() and Length() will return -1.
   FileBlob(const std::string16& filename);
 
   int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
