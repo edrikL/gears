@@ -40,6 +40,8 @@ resume-range = "Resume-Range" ":" ranges-specifier
 
 A 412 (Precondition Failed) MAY include a Retry-After header as defined in HTTP/1.1 section 14.37. A client which receives a Retry-After SHOULD delay further resume operations for the specified time period. If the delay is not feasible, the client MUST fail the operation. The server MAY send a 412 (Precondition Failed) before receiving the entire request body, but as specified in section 8.2.3 of HTTP/1.1 the server SHOULD NOT close the transport connection until it has read the entire request, or until the client closes the connection.
 
+Servers MUST NOT send 412 (Precondition Failed) responses in the face of fatal errors. By definition, the 412 (Precondition Failed) response indicates that the client can rectify the current error condition by sending the bytes which the server is missing, and thus the respose code MUST only be sent in this scenario.
+
 = Status Code: 416 Requested Range Not Satisfiable =
 
 When resuming an operation, clients SHOULD send byte ranges that are contiguous with the bytes already acknowledged by the server. Servers MAY support the transfer of non-contiguous byte ranges, but are not required to do so; if a server does not support non-contiguous byte ranges, then it MUST  to them respond with a 416 (Requested Range Not Satisfiable). If the server has succesfully received any bytes from the client, then the 416 (Requested Range Not Satisfiable) response MUST include a Resume-Range header acknowledging those bytes.
@@ -59,8 +61,6 @@ bytes-if-resume-spec = bytes-unit "=" [ first-byte-pos "-" [last-byte-pos] ] "/"
 When including a body in an If-Resume request, clients MUST include an if-resume-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos if any bytes are being transferred (i.e. if the byte range is not zero), otherwise they MUST omit both first-byte-pos and last-byte-pos. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
 
 The client MAY send an If-Resume without an if-resume-spec parameter in order to poll the server to determine which byte ranges it already possesses. In such cases, clients MUST NOT include a body in the request. This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed.
-
-If the server receives a request with a If-Resume header and is not able to locate the operation identified by the URL or is otherwise prevented from continuing the operation, the server SHOULD respond with a 412 (Precondition Failed) status code. If the server receives a resume request (e.g. duplicate request to the same URL) without an If-Resume header then it SHOULD fail with a 412 (Precondition Failed)
 
 = Resuming Operations =
 
@@ -85,7 +85,8 @@ http://www.w3.org/Protocols/rfc2616/rfc2616.html
 || 8.2.4 || Connections: Client Behavior if Server Prematurely Closes Connection ||
 || 9.5 || Method: POST ||
 || 9.6 || Method: PUT ||
-|| 10.4.18 || Status Code: 412 Precondition Failed ||
+|| 10.4.13 || Status Code: 412 Precondition Failed ||
+|| 10.4.17 || Status Code: 416 Precondition Failed ||
 || 14.16 || Header Field: Content-Range ||
 || 14.21 || Header Field: Expires ||
 || 14.24 || Header Field: If-Match ||
