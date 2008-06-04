@@ -142,7 +142,11 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <a href="#" id="focus-thief"></a>
         </td>
         <td width="100%" align="left" valign="middle">
-          <h1>PRODUCT_FRIENDLY_NAME_UQ Settings</h1>
+          <h1>
+          <TRANS_BLOCK desc="Header for Gears settings page.">
+          PRODUCT_FRIENDLY_NAME_UQ Settings
+          </TRANS_BLOCK>
+          </h1>
         </td>
       </tr>
     </table>
