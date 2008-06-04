@@ -458,7 +458,7 @@ THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
 THIRD_PARTY_CPPFLAGS += /wd4133 /wd4101
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
-COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
+COMPILE_FLAGS_opt = /MT  /Zi /Zc:wchar_t- /O2
 COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$(*F).pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
