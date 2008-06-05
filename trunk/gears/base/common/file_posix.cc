@@ -67,6 +67,17 @@ class DirEntry : public std::pair<std::string, bool> {
 typedef std::vector<DirEntry> DirContentsVector;
 typedef DirContentsVector::const_iterator DirContentsVectorConstIterator;
 
+File::~File() {
+  Close();
+}
+
+void File::Close() {
+  if (handle_) {
+    fclose(handle_);
+    handle_ = NULL;
+  }
+}
+
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
   scoped_ptr<File> file(new File());
@@ -102,8 +113,8 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
       break;
   }
   file->mode_ = access_mode;
-  file->handle_.reset(fopen(file_path_utf8_.c_str(), mode));
-  if (file->handle_.get() == NULL) {
+  file->handle_ = fopen(file_path_utf8_.c_str(), mode);
+  if (file->handle_ == NULL) {
     return NULL;
   }
   return file.release();
@@ -124,8 +135,8 @@ int64 File::Read(uint8* destination, int64 max_bytes) {
     max_bytes = std::numeric_limits<size_t>::max();
   }
   size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
-                            handle_.get());
-  if (ferror(handle_.get()) && !feof(handle_.get())) {
+                            handle_);
+  if (ferror(handle_) && !feof(handle_)) {
     return -1;
   }
   return bytes_read;
@@ -147,40 +158,40 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
 
   // handle 64-bit seek for 32-bit off_t
   while (offset > std::numeric_limits<off_t>::max()) {
-    if (fseeko(handle_.get(), std::numeric_limits<off_t>::max(), whence) != 0) {
+    if (fseeko(handle_, std::numeric_limits<off_t>::max(), whence) != 0) {
       return false;
     }
     offset -= std::numeric_limits<off_t>::max();
     whence = SEEK_CUR;
   }
   while (offset < std::numeric_limits<off_t>::min()) {
-    if (fseeko(handle_.get(), std::numeric_limits<off_t>::min(), whence) != 0) {
+    if (fseeko(handle_, std::numeric_limits<off_t>::min(), whence) != 0) {
       return false;
     }
     offset -= std::numeric_limits<off_t>::min();
     whence = SEEK_CUR;
   }
 
-  return (fseeko(handle_.get(), static_cast<long>(offset), whence) == 0);
+  return (fseeko(handle_, static_cast<long>(offset), whence) == 0);
 }
 
 int64 File::Size() {
   struct stat stat_data;
-  if (fstat(fileno(handle_.get()), &stat_data) != 0) {
+  if (fstat(fileno(handle_), &stat_data) != 0) {
     return -1;
   }
   return static_cast<int64>(stat_data.st_size);
 }
 
 int64 File::Tell() {
-  return ftello(handle_.get());
+  return ftello(handle_);
 }
 
 bool File::Truncate(int64 length) {
   if (length < 0) {
     return false;
   }
-  return ftruncate(fileno(handle_.get()), length) == 0;
+  return ftruncate(fileno(handle_), length) == 0;
 }
 
 int64 File::Write(const uint8 *source, int64 length) {
@@ -194,8 +205,8 @@ int64 File::Write(const uint8 *source, int64 length) {
   // can't write more data than fwrite can handle
   assert(length <= std::numeric_limits<size_t>::max());
 
-  size_t bytes_written = fwrite(source, 1, length, handle_.get());
-  if (ferror(handle_.get())) {
+  size_t bytes_written = fwrite(source, 1, length, handle_);
+  if (ferror(handle_)) {
     return -1;
   }
   return bytes_written;
@@ -330,6 +341,13 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
   } else {
     return dir_contents.size();
   }
+}
+
+File *File::CreateNewTempFile() {
+  scoped_ptr<File> file(new File());
+  file->mode_ = READ_WRITE;
+  file->handle_ = tmpfile();
+  return file.release();
 }
 
 bool File::CreateNewTempDirectory(std::string16 *full_filepath) {
