@@ -25,10 +25,14 @@
 
 #include "gears/console/js_callback_logging_backend.h"
 
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/console/console.h"
+
 
 JsCallbackLoggingBackend::JsCallbackLoggingBackend(const std::string16 &topic,
-                                                   JsRunnerInterface* js_runner)
-    : observer_topic_(topic), js_runner_(js_runner) {
+                                                   JsRunnerInterface* js_runner,
+                                                   GearsConsole *console)
+    : observer_topic_(topic), js_runner_(js_runner), console_(console) {
   LogEvent::RegisterLogEventClass();
 }
 
@@ -40,7 +44,11 @@ void JsCallbackLoggingBackend::OnNotify(MessageService *service,
                             const char16 *topic,
                             const NotificationData *data) {
   if (!callback_.get() || js_runner_ == NULL) return;
-    
+
+  // Keep a ref to the console.  Otherwise, the calls to js_runner may result in
+  // its release, which deletes us.
+  scoped_refptr<GearsConsole> hold(console_);
+
   const LogEvent *log_event = static_cast<const LogEvent *>(data);
   
   scoped_ptr<JsObject> callback_params;
