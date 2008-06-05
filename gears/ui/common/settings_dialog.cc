@@ -73,9 +73,6 @@ void SettingsDialog::Run() {
   settings_dialog->DoModal(STRING16(L"settings_dialog.html"),
                           kSettingsDialogWidth, kSettingsDialogHeight);
 
-#ifdef BROWSER_WEBKIT
-   visible_ = false;
-#endif
   // Process the result() property and remove any sites or shortcuts the user
   // removed.
   ProcessResult(&settings_dialog->result);
