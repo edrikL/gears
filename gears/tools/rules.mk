@@ -217,21 +217,9 @@ default::
 ifneq "$(BROWSER)" ""
   # Build for just the selected browser.
   # Note that only the modules get built, not the final installers.
-  ifeq ($(OS),osx)
-	# For osx, build the non-installer targets for multiple architectures.
-	# TODO(playmobil): look into restructuring this so we don't need to make
-	# each target twice.
-	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=ppc
-	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=ppc
-	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=ppc
-  else
 	$(MAKE) prereqs    BROWSER=$(BROWSER)
 	$(MAKE) genheaders BROWSER=$(BROWSER)
 	$(MAKE) modules    BROWSER=$(BROWSER)
-  endif
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
@@ -271,26 +259,17 @@ else
   else
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
-	$(MAKE) prereqs    BROWSER=FF2 ARCH=i386
-	$(MAKE) prereqs    BROWSER=FF2 ARCH=ppc
-	$(MAKE) genheaders BROWSER=FF2 ARCH=i386
-	$(MAKE) genheaders BROWSER=FF2 ARCH=ppc
-	$(MAKE) modules    BROWSER=FF2 ARCH=i386
-	$(MAKE) modules    BROWSER=FF2 ARCH=ppc
-
-	$(MAKE) prereqs    BROWSER=FF3 ARCH=i386
-	$(MAKE) prereqs    BROWSER=FF3 ARCH=ppc
-	$(MAKE) genheaders BROWSER=FF3 ARCH=i386
-	$(MAKE) genheaders BROWSER=FF3 ARCH=ppc
-	$(MAKE) modules    BROWSER=FF3 ARCH=i386
-	$(MAKE) modules    BROWSER=FF3 ARCH=ppc
+	$(MAKE) prereqs    BROWSER=FF2
+	$(MAKE) genheaders BROWSER=FF2
+	$(MAKE) modules    BROWSER=FF2
+                                
+	$(MAKE) prereqs    BROWSER=FF3
+	$(MAKE) genheaders BROWSER=FF3
+	$(MAKE) modules    BROWSER=FF3
 	
-	$(MAKE) prereqs    BROWSER=SF ARCH=i386
-	$(MAKE) prereqs    BROWSER=SF ARCH=ppc
-	$(MAKE) genheaders BROWSER=SF ARCH=i386
-	$(MAKE) genheaders BROWSER=SF ARCH=ppc
-	$(MAKE) modules    BROWSER=SF ARCH=i386
-	$(MAKE) modules    BROWSER=SF ARCH=ppc
+	$(MAKE) prereqs    BROWSER=SF
+	$(MAKE) genheaders BROWSER=SF
+	$(MAKE) modules    BROWSER=SF
 
 	$(MAKE) installers
   endif
@@ -701,19 +680,10 @@ ifdef IS_WIN32_OR_WINCE
 endif
 endif
 else
-    # Copy either .xpt file (i386 or ppc) to the output dir. (Note: these files are identical.)
-	cp $(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-    # For OSX, create universal binaries by combining the i386 and ppc versions.
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF3_MODULE_DLL)) -create \
-		$(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_DLL)) \
-		$(OUTDIR)/$(OS)-ppc/ff3/$(notdir $(FF3_MODULE_DLL))
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/ff2-$(notdir $(FF2_MODULE_DLL)) -create \
-		$(OUTDIR)/$(OS)-i386/ff2/$(notdir $(FF2_MODULE_DLL)) \
-		$(OUTDIR)/$(OS)-ppc/ff2/$(notdir $(FF2_MODULE_DLL))
-    # Also create a universal binary for OSX_LAUNCHURL_EXE.
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
-		$(OUTDIR)/$(OS)-i386/common/$(notdir $(OSX_LAUNCHURL_EXE)) \
-		$(OUTDIR)/$(OS)-ppc/common/$(notdir $(OSX_LAUNCHURL_EXE))
+	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
+	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
@@ -728,10 +698,8 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
 # Add Info.plist file & localized strings.
 	cat tools/osx/Info.plist | sed 's/$${EXECUTABLE_NAME}/Gears/' > $@/Contents/Info.plist
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
-# Create a universal binary for the actual plugin.
-	/usr/bin/lipo -output $@/Contents/MacOS/Gears -create \
-	  $(OUTDIR)/$(OS)-i386/safari/gears \
-	  $(OUTDIR)/$(OS)-ppc/safari/gears 
+# Copy the actual plugin.
+	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
 # Copy localized UI.
 	cp -R $(SF_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
 # Copy over all resources.
@@ -739,10 +707,8 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
 # resources to the en-US directory.
 	mkdir -p $@/Contents/Resources/en-US
 	cp $(COMMON_RESOURCES) $@/Contents/Resources/en-US/
-# Create a universal binary for OSX_LAUNCHURL_EXE.
-	/usr/bin/lipo -output $@/Contents/Resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
-		$(OUTDIR)/$(OS)-i386/common/$(notdir $(OSX_LAUNCHURL_EXE)) \
-		$(OUTDIR)/$(OS)-ppc/common/$(notdir $(OSX_LAUNCHURL_EXE)) 
+# Copy luanch_url
+	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
@@ -754,10 +720,8 @@ $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
 	cat tools/osx/Enabler-Info.plist | sed 's/$${EXECUTABLE_NAME}/GearsEnabler/' | sed 's/$${PRODUCT_NAME}/GearsEnabler/' > $@/GearsEnabler.bundle/Contents/Info.plist
 	cp tools/osx/Info $@/
 	cp tools/osx/English.lproj/InfoPlist.strings $@/GearsEnabler.bundle/Contents/Resources/English.lproj/InfoPlist.strings
-# Create a universal binary for the enabler
-	/usr/bin/lipo -output $@/GearsEnabler.bundle/Contents/MacOS/$(notdir $(SF_INPUTMANAGER_EXE)) -create \
-	  $(OUTDIR)/$(OS)-i386/safari/$(notdir $(SF_INPUTMANAGER_EXE)) \
-	  $(OUTDIR)/$(OS)-ppc/safari/$(notdir $(SF_INPUTMANAGER_EXE))
+# Copy the InputManager.
+	cp "$(SF_INPUTMANAGER_EXE)" "$@/GearsEnabler.bundle/Contents/MacOS/"
 	/usr/bin/touch -c $@/GearsEnabler.bundle
 
 

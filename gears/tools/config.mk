@@ -90,7 +90,12 @@ ifeq ($(OS),android)
   # default platform for android
   ARCH = arm
 else
+ifeq ($(OS),osx)
+  # On OSX we build a fat binary.
+  ARCH = i386+ppc
+else
   ARCH = i386
+endif
 endif
 endif
 
@@ -265,8 +270,8 @@ endif
 # OS == osx
 ######################################################################
 ifeq ($(OS),osx)
-CC = gcc -arch $(ARCH)
-CXX = g++ -arch $(ARCH)
+CC = gcc -arch ppc -arch i386
+CXX = g++ -arch ppc -arch i386
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
@@ -340,18 +345,15 @@ CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wn
 THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
 
-SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch $(ARCH) -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch ppc -arch i386 -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
 
 MKDLL = g++
-
-DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
-ifeq ($(BROWSER),SF)
-DLL_PREFIX = 
-DLL_SUFFIX = 
-DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
-else
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
+DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
+ifeq ($(BROWSER),SF)
+DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
+else
 DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
 # for PortAudio: need pthread and math
@@ -365,7 +367,7 @@ EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
 TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
-EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker 
+EXT_LINKER_CMD_FLAG = -filelist 
 
 GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
