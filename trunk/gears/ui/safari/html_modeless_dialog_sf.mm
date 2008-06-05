@@ -122,8 +122,8 @@
 }
 @end
 
-bool HtmlDialog::DoModelessImpl(const char16 *html_filename, int width, int height,
-                                const char16 *arguments_string, 
+bool HtmlDialog::DoModelessImpl(const char16 *html_filename, int width,
+                                int height, const char16 *arguments_string, 
                                 ModelessCompletionCallback callback, 
                                 void *closure) {
    HTMLModelessDialogImp * dialog = [[HTMLModelessDialogImp alloc]
