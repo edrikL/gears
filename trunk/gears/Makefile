@@ -72,6 +72,17 @@ NPAPI_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/convert_utf
+
+THIRD_PARTY_VPATH	+= \
+		../third_party/convert_utf \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # third_party/googleurl
 
 # Only include gurl in builds that use ICU.
@@ -823,6 +834,7 @@ IE_VPATH += \
 		base/common \
 		desktop \
 		vista_broker \
+		../third_party/convert_utf \
 		$(NULL)
 
 VISTA_BROKER_CPPSRCS += \
@@ -831,6 +843,10 @@ VISTA_BROKER_CPPSRCS += \
 		string16.cc \
 		string_utils.cc \
 		vista_broker.cc \
+		$(NULL)
+
+VISTA_BROKER_CSRCS += \
+		ConvertUTF.c \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -988,6 +1004,7 @@ SF_CPPSRCS += \
 
 COMMON_VPATH	+= \
 		notifier \
+		../third_party/convert_utf \
 		$(NULL)
 
 NOTIFIER_CPPSRCS += \
@@ -1009,6 +1026,10 @@ NOTIFIER_CPPSRCS += \
 		string16.cc \
 		string_utils.cc \
 		unit_test.cc \
+		$(NULL)
+
+NOTIFIER_CSRCS += \
+		ConvertUTF.c \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
