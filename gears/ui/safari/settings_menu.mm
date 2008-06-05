@@ -23,24 +23,52 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common.h"
-#import "gears/ui/safari/settings_menu.h"
-#import "gears/base/safari/browser_load_hook.h"
-#import "gears/localserver/safari/http_handler.h"
+#include "gears/ui/safari/settings_menu.h"
+#include "gears/ui/common/settings_dialog.h"
 
-@implementation GearsBrowserLoadHook
+@implementation GearsSettingsMenuEnabler
 + (BOOL)installHook {
-  // Register HTTP intercept hook.
-  if (![GearsHTTPHandler registerHandler]) {
-    return NO;
-  }
+  GearsSettingsMenuEnabler *inst = [[GearsSettingsMenuEnabler alloc] init];
+  if (!inst) return NO;
   
-  if (![GearsSettingsMenuEnabler installHook]) {
-    return NO;
+  NSApplication *app = [NSApplication sharedApplication];
+  if (!app) return NO;
+
+  // Make sure we don't try to add our Notification listener more than once.
+  static bool notification_hook_installed = false;
+  assert(!notification_hook_installed);
+  if (!notification_hook_installed) {
+    [[NSNotificationCenter defaultCenter] 
+        addObserver:inst 
+           selector:@selector(applicationDidFinishLaunching:) 
+               name:NSApplicationDidFinishLaunchingNotification
+             object:app];
+    notification_hook_installed = true;
   }
-  
-  LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
   return YES;
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
+  NSMenu *mainMenu = [NSApp mainMenu];
+  NSMenuItem *app_menu = [mainMenu itemAtIndex:0];
+  if (!app_menu) return;
+  NSMenu *submenu = [app_menu submenu];
+  NSMenuItem *new_menu = 
+      [submenu insertItemWithTitle:@ PRODUCT_FRIENDLY_NAME_ASCII " Settings..." 
+                            action:@selector(showSettingsDialog) 
+                     keyEquivalent:@"" 
+                           atIndex:4];
+  [new_menu setTarget:self];
+}
+
+- (void)showSettingsDialog {
+  if (!SettingsDialog::IsVisible()) {
+    SettingsDialog::Run();
+  }
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)item {
+  return !SettingsDialog::IsVisible();
 }
 
 @end
