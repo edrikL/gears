@@ -33,20 +33,6 @@
 
 class SecurityOrigin;  // base/common/security_model.h
 
-#ifdef WIN32
-// Win32 can use SAFE_HANDLE.
-#include "gears/base/common/scoped_win32_handles.h"
-#else
-// Scoped file. (All our non-WIN32 targets are POSIX compliant.)
-class CloseFileFunctor {
- public:
-  void operator()(FILE *file) const {
-    if (file) { fclose(file); }
-  }
-};
-typedef scoped_token<FILE *, CloseFileFunctor> ScopedFile;
-#endif
-
 class File {
  public:
   // Hard Limit on path component length, used for sanity checking.
@@ -113,10 +99,10 @@ class File {
   static bool GetParentDirectory(const std::string16 &path,
                                  std::string16 *parent);
 
-  // Creates a unique file in the system temporary directory.  Returns the
-  // full path of the new file in 'path'.
-  // Returns true if the function succeeds.  'path' is unmodified on failure.
-  static bool CreateNewTempFile(std::string16 *full_filepath);
+  // Returns a File object associated with a read/write temporary file in the
+  // system temporary directory, or NULL if an error occurred. The file will be
+  // deleted automatically when the returned object is destroyed.
+  static File *CreateNewTempFile();
 
   // Creates a unique directory under the system temporary directory.  Returns
   // the full path of the new directory in 'path'.
@@ -161,28 +147,30 @@ class File {
   // destination.
   // Returns the number of bytes read, or -1 on failure or if the file is not
   // opened for read.
-  virtual int64 Read(uint8 *destination, int64 max_bytes);
+  int64 Read(uint8 *destination, int64 max_bytes);
 
   // Writes length bytes of source to the file.
   // Returns the number of bytes written, or -1 on failure or if the file is
   // not opened for write.
-  virtual int64 Write(const uint8 *source, int64 length);
+  int64 Write(const uint8 *source, int64 length);
 
   enum SeekMethod { SEEK_FROM_START, SEEK_FROM_CURRENT, SEEK_FROM_END };
 
   // Sets the file position indicator to the specified offset.
   // Returns false if there is an error.
-  virtual bool Seek(int64 offset, SeekMethod seek_method = SEEK_FROM_START);
+  bool Seek(int64 offset, SeekMethod seek_method = SEEK_FROM_START);
 
   // Returns the current position in the file, or -1 on failure.
-  virtual int64 Tell();
+  int64 Tell();
 
   // Returns the size of the file, or -1 on failure.
-  virtual int64 Size();
+  int64 Size();
 
   // Truncates the file to the specified length.
   // Returns false if there is an error or if the file is not opened for write.
-  virtual bool Truncate(int64 length);
+  bool Truncate(int64 length);
+
+  ~File();
 
  private:
   static void SetLastFileError(const char16 *message,
@@ -214,16 +202,24 @@ class File {
   // flag to be defined! Or better yet, someone shoot common.h in the head!
   //  DISALLOW_EVIL_CONSTRUCTORS(File);
 
+  // Closes the open file handle. Should only be called by the destructor.
+  void Close();
 
+  // NOTE: handle_ is _not_ automatically closed. Currently it is only ever set
+  //       on construction, and is never modified until destruction. If this
+  //       ever changes, care must be taken to close old handles before they
+  //       change.
 #ifdef WIN32
-  SAFE_HANDLE handle_;
+  HANDLE handle_;
+  std::string16 file_path_;
+  bool auto_delete_;
+  File() : auto_delete_(false), handle_(NULL) {}
 #else
 // Currently all non-win32 targets are POSIX compliant.
-  ScopedFile handle_;
+  FILE *handle_;
+  File() : handle_(NULL) {}
 #endif
   OpenAccessMode mode_;
-
-  File() : handle_(NULL) {}
 
 };
 
