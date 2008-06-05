@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
 #include "gears/blob/blob_builder.h"
 
 #include <limits>
@@ -98,3 +101,4 @@ bool BlobBuilder::IncrementAndCheckSize(int64 size_increment) {
   length_ += size_increment;
   return true;
 }
+#endif
