@@ -107,7 +107,7 @@ void GearsConsole::Initialize() {
     observer_topic_ =
         STRING16(L"console:logstream-") + EnvPageSecurityOrigin().url();
     callback_backend_.reset(
-        new JsCallbackLoggingBackend(observer_topic_, GetJsRunner()));
+        new JsCallbackLoggingBackend(observer_topic_, GetJsRunner(), this));
   }
 
   // Create an event monitor to alert us when the page unloads.

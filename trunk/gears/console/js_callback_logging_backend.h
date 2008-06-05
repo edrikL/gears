@@ -32,6 +32,7 @@
 #include "gears/console/log_event.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+class GearsConsole;
 
 // JsCallbackLoggingBackend provides a means of accessing the log stream
 // via a JavaScript callback function.
@@ -41,7 +42,8 @@
 class JsCallbackLoggingBackend : public MessageObserverInterface {
  public:
   JsCallbackLoggingBackend(const std::string16 &topic,
-                           JsRunnerInterface *js_runner);
+                           JsRunnerInterface *js_runner,
+                           GearsConsole *console);
   ~JsCallbackLoggingBackend();
 
   virtual void OnNotify(MessageService *service,
@@ -59,7 +61,11 @@ class JsCallbackLoggingBackend : public MessageObserverInterface {
   scoped_ptr<JsRootedCallback> callback_;
 
   // The JavaScript context for accessing and running callbacks
-  JsRunnerInterface* js_runner_;
+  JsRunnerInterface *js_runner_;
+
+  // A weak pointer to the GearsConsole object that owns us.  We Addref this
+  // during callback dispatch so that it doesn't get released and delete us.
+  GearsConsole *console_;
 
   DISALLOW_EVIL_CONSTRUCTORS(JsCallbackLoggingBackend);
 };
