@@ -100,6 +100,7 @@ int RunTests(int, char16 **) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
+  TestNotificationManagerDelay();
   TestBalloonCollection();
   if (!DidAllTestsPass()) {
     printf("*** Test failures occurred. ***\n");

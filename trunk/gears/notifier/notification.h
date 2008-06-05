@@ -36,7 +36,11 @@
 // to this class.
 class Notification : public Serializable {
  public:
-  Notification() : version_(kNotificationVersion) {}
+  Notification()
+      : version_(kNotificationVersion),
+        display_at_time_ms_(0),
+        display_until_time_ms_(0) {
+  }
 
   void CopyFrom(const Notification& from) {
     version_ = from.version_;
@@ -45,6 +49,8 @@ class Notification : public Serializable {
     service_ = from.service_;
     id_ = from.id_;
     description_ = from.description_;
+    display_at_time_ms_ = from.display_at_time_ms_;
+    display_until_time_ms_ = from.display_until_time_ms_;
   }
 
   virtual SerializableClassId GetSerializableClassId() {
@@ -58,6 +64,8 @@ class Notification : public Serializable {
     out->WriteString(service_.c_str());
     out->WriteString(id_.c_str());
     out->WriteString(description_.c_str());
+    out->WriteInt64(display_at_time_ms_);
+    out->WriteInt64(display_until_time_ms_);
     return true;
   }
 
@@ -68,7 +76,9 @@ class Notification : public Serializable {
         !in->ReadString(&icon_) ||
         !in->ReadString(&service_) ||
         !in->ReadString(&id_) ||
-        !in->ReadString(&description_)) {
+        !in->ReadString(&description_) ||
+        !in->ReadInt64(&display_at_time_ms_) ||
+        !in->ReadInt64(&display_until_time_ms_)) {
       return false;
     }
     return true;
@@ -82,11 +92,18 @@ class Notification : public Serializable {
     Serializable::RegisterClass(SERIALIZABLE_DESKTOP_NOTIFICATION, New);
   }
 
+  bool Matches(const std::string16 &service,
+               const std::string16 &id) const {
+    return service_ == service && id_ == id;
+  }
+
   const std::string16& title() const { return title_; }
   const std::string16& icon() const { return icon_; }
   const std::string16& service() const { return service_; }
   const std::string16& id() const { return id_; }
   const std::string16& description() const { return description_; }
+  int64 display_at_time_ms() const { return display_at_time_ms_; }
+  int64 display_until_time_ms() const { return display_until_time_ms_; }
 
   void set_title(const std::string16& title) { title_ = title; }
   void set_icon(const std::string16& icon) { icon_ = icon; }
@@ -94,6 +111,12 @@ class Notification : public Serializable {
   void set_id(const std::string16& id) { id_ = id; }
   void set_description(const std::string16& description) {
     description_ = description;
+  }
+  void set_display_at_time_ms(int64 display_at_time_ms) {
+    display_at_time_ms_ = display_at_time_ms;
+  }
+  void set_display_until_time_ms(int64 display_until_time_ms) {
+    display_until_time_ms_ = display_until_time_ms;
   }
 
  private:
@@ -107,6 +130,8 @@ class Notification : public Serializable {
   std::string16 id_;
   std::string16 service_;
   std::string16 description_;
+  int64 display_at_time_ms_;
+  int64 display_until_time_ms_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Notification);
 };

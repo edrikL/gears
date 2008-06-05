@@ -34,6 +34,7 @@
 #include "gears/notifier/balloons.h"
 
 void TestNotificationManager();
+void TestNotificationManagerDelay();
 
 class BalloonCollectionMock : public BalloonCollectionInterface {
  public:
@@ -48,9 +49,14 @@ class BalloonCollectionMock : public BalloonCollectionInterface {
   virtual bool has_space();
   void set_has_space(bool has_space);
 
+  int show_call_count() const {
+    return show_call_count_;
+  }
+
   void set_show_call_count(int show_call_count);
   void set_update_call_count(int update_call_count);
   void set_delete_call_count(int delete_call_count);
+
 
  private:
   bool has_space_;
