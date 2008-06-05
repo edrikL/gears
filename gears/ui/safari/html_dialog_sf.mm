@@ -34,31 +34,63 @@
 #include "gears/base/safari/cf_string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
-
-// Class to display a Modal dialog in WebKit.
-@interface HTMLDialogImp  : NSObject {
- @private
-  NSString *dialog_url_;  // strong
-  NSString *arguments_;  // strong
-  int width_;
-  int height_;
-  bool dialog_dismissed_;
-  NSString *result_string_;  // strong
-  NSWindow *dialog_;
-}
-
-// Initialize an HTMLDialogImp instance.
-- (id)initWithHtmlFile:(const std::string16 &)html_filename 
-             arguments:(const std::string16 &)arguments
-                width:(int)width
-               height:(int)height;
-
-// Show the modal dialog and block until said dialog is dismissed.
-// returns: true on success.
-- (bool)showModal: (std::string16 *)results;
-@end
+#import  "gears/ui/safari/html_dialog_sf.h"
 
 @implementation HTMLDialogImp
+
+#pragma mark Private Instance methods
+// Creates a window and places a pointer to it in the |window_| ivar.
+- (BOOL)createWindow:(unsigned int)window_style {
+  // Create the dialog's window.
+  NSRect content_rect = NSMakeRect(0, 0, width_, height_);
+  window_ = [[NSWindow alloc]  initWithContentRect:content_rect 
+                                         styleMask:window_style
+                                           backing:NSBackingStoreBuffered
+                                             defer:YES];
+
+  if (!window_) {
+    return false;
+  }
+  
+  [window_ setReleasedWhenClosed:YES];
+  
+  // Create a WebView and attach it.
+  NSView *content_view = [window_ contentView];
+  WebView *webview = [[WebView alloc] initWithFrame:[content_view frame]];
+  
+  // Set the user agent for the WebView that we're opening to the same one as
+  // Safari.
+  std::string16 ua_str16;
+  BrowserUtils::GetUserAgentString(&ua_str16);
+  
+  // The user agent string is initialized by the plugin's NP_Initialize
+  // function, but the settings dialog may be displayed before that's
+  // been called, in which case we just use a default string.
+  NSURL *url = [NSURL URLWithString:window_url_];
+  NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
+  if (ua_str16.length() == 0) { 
+    user_agent = [NSString stringWithFormat:@"%@ Safari",
+                          [webview userAgentForURL:url]];
+  }
+  [webview setCustomUserAgent:user_agent];
+
+  [content_view addSubview:webview];
+  [webview release]; // addSubView retains webView.
+  [webview setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];
+  
+  // Make ourselves the WebView's delegate.
+  [webview setFrameLoadDelegate: self];
+  
+  // Load in the dialog's contents.
+  NSURLRequest *url_request = [NSURLRequest requestWithURL:url]; 
+  WebFrame *frame = [webview mainFrame];
+  [frame loadRequest: url_request];
+  
+  // Turn off scrollbars.
+  [[frame frameView] setAllowsScrolling:NO];
+
+  return true;
+}
 
 #pragma mark Public Instance methods
 - (id)initWithHtmlFile:(const std::string16 &)html_filename 
@@ -73,8 +105,8 @@
     NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
     pluginPath = [pluginPath stringByAppendingPathComponent:tmp];
-    dialog_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath]; 
-    [dialog_url_ retain];
+    window_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath]; 
+    [window_url_ retain];
     arguments_ = [[NSString stringWithString16:arguments.c_str()] retain];
     width_ = width;
     height_ = height;
@@ -83,55 +115,22 @@
 }
 
 - (void)dealloc {
-  [dialog_url_ release];
+  [window_url_ release];
   [arguments_ release];
   [result_string_ release];
   [super dealloc];
 }
 
 - (bool)showModal:(std::string16 *)results {
-  // Create the dialog's window.
-  NSRect content_rect = NSMakeRect(0, 0, width_, height_);
-  unsigned int dialog_style = NSTitledWindowMask|NSResizableWindowMask;
-  dialog_ = [[NSWindow alloc]  initWithContentRect:content_rect 
-                                         styleMask:dialog_style
-                                           backing:NSBackingStoreBuffered
-                                             defer:YES];
 
-  if (!dialog_) {
+  unsigned int window_style = NSTitledWindowMask | NSResizableWindowMask;
+  if (![self createWindow:window_style]) {
     return false;
   }
-  
-  // Create a WebView and attach it.
-  NSView *content_view = [dialog_ contentView];
-  WebView *webview = [[WebView alloc] initWithFrame:[content_view frame]];
-  
-  // Set the user agent for the WebView that we're opening to the same one as
-  // Safari.
-  std::string16 ua_str16;
-  BrowserUtils::GetUserAgentString(&ua_str16);
-  NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
-  [webview setCustomUserAgent:user_agent];
 
-  [content_view addSubview:webview];
-  [webview release]; // addSubView retains webView.
-  [webview setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];
-  
-  // Make ourselves the WebView's delegate.
-  [webview setFrameLoadDelegate: self];
-  
-  // Load in the dialog's contents.
-  NSURL *url = [NSURL URLWithString:dialog_url_];
-  NSURLRequest *url_request = [NSURLRequest requestWithURL:url]; 
-  WebFrame *frame = [webview mainFrame];
-  [frame loadRequest: url_request];
-  
-  // Turn off scrollbars.
-  [[frame frameView] setAllowsScrolling:NO];
-
-  // Display sheet.
+  // Display window as sheet.
   NSWindow *front_window = [NSApp keyWindow];
-  [NSApp beginSheet:dialog_ 
+  [NSApp beginSheet:window_ 
      modalForWindow:front_window 
       modalDelegate:nil 
      didEndSelector:nil 
@@ -140,21 +139,19 @@
   // Credit goes to David Sinclair of Dejal software for this method of running
   // a modal WebView.
   NSModalSession session = [NSApp beginModalSessionForWindow:front_window];
-  while (!dialog_dismissed_ && 
+  while (!window_dismissed_ && 
          [NSApp runModalSession:session] == NSRunContinuesResponse) {
     [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
   }
   [NSApp endModalSession:session];
-  [NSApp endSheet:dialog_];
-  [dialog_ close];
-  dialog_ = nil;
+  [NSApp endSheet:window_];
+  [window_ close];
+  window_ = nil;
   
   [result_string_ string16:results];
   return true;
 }
-@end
 
-@implementation HTMLDialogImp(GearsWebViewDelegateMethods)
 // Delegate method called just before any js is run, so this is the perfect
 // time to inject vairables into the js environment.
 - (void)webView:(WebView *)webView 
@@ -187,9 +184,9 @@
 }
 
 // JS callback for setting the result string.
-- (void)setResults: (NSString *)dialog_results {
-  result_string_ = [dialog_results copy];
-  dialog_dismissed_ = true;
+- (void)setResults: (NSString *)window_results {
+  result_string_ = [window_results copy];
+  window_dismissed_ = true;
 }
 @end
 
@@ -222,17 +219,17 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
     return false;
   }
   
-  scoped_objctype<HTMLDialogImp *> dialog([[HTMLDialogImp alloc]
-                                              initWithHtmlFile:html_filename 
-                                                     arguments:arguments_string
-                                                         width:width
-                                                        height:height]);
+  HTMLDialogImp *dialog = [[[HTMLDialogImp alloc]
+                                 initWithHtmlFile:html_filename 
+                                        arguments:arguments_string
+                                            width:width
+                                           height:height] autorelease];
   
-  if (!dialog.get()) {
+  if (!dialog) {
     return false;
   }
   std::string16 results;
-  if (![dialog.get() showModal:&results]) {
+  if (![dialog showModal:&results]) {
     return false;
   }
   

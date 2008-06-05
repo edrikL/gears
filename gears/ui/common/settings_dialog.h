@@ -36,6 +36,10 @@ class SettingsDialog {
   // Show the settings dialog and apply any changes the user makes.
   static void Run();
 
+#ifdef BROWSER_WEBKIT
+  static bool IsVisible() { return visible_; }
+#endif
+
  private:
   // Private constructor. Use static Run() method instead.
   SettingsDialog() {}
@@ -50,6 +54,16 @@ class SettingsDialog {
 
   // Helper method. Process the results of the dialog.
   static void ProcessResult(Json::Value *dialogResult);
+  
+#ifdef BROWSER_WEBKIT
+  // Set the visibility flag for the dialog.
+  static void SetVisible(bool visible) { visible_ = visible; }
+ 
+  // Is the settings dialog currently visible.
+  static bool visible_;
+#endif
+ private:
+  friend void ProcessResultsCallback(Json::Value *result, void *closure);
 };
 
 #endif  // GEARS_UI_COMMON_SETTINGS_DIALOG_H__

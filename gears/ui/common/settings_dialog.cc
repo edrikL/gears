@@ -29,8 +29,11 @@
 #include "gears/ui/common/html_dialog.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+#ifdef BROWSER_WEBKIT
 bool SettingsDialog::visible_ = false;
+#endif
 
+#ifdef BROWSER_WEBKIT
 void ProcessResultsCallback(Json::Value *result, void *closure) {
   scoped_ptr<HtmlDialog> dialog(static_cast<HtmlDialog *>(closure));
   if (result) {
@@ -38,6 +41,7 @@ void ProcessResultsCallback(Json::Value *result, void *closure) {
   }
   SettingsDialog::SetVisible(false);
 }
+#endif
 
 void SettingsDialog::Run() {
   scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog());
@@ -56,18 +60,22 @@ void SettingsDialog::Run() {
   // Show the dialog.
   const int kSettingsDialogWidth = 400;
   const int kSettingsDialogHeight = 350;
-  visible_ = true;
 #ifdef BROWSER_WEBKIT
-  settings_dialog->DoModeless(STRING16(L"settings_dialog.html"),
-                              kSettingsDialogWidth, kSettingsDialogHeight,
-                              ProcessResultsCallback, 
-                              settings_dialog.get());
+  visible_ = true;
+  if (!settings_dialog->DoModeless(STRING16(L"settings_dialog.html"),
+                                   kSettingsDialogWidth, kSettingsDialogHeight,
+                                   ProcessResultsCallback, 
+                                   settings_dialog.get()) ) {
+    return;
+  }
   settings_dialog.release();
 #else
   settings_dialog->DoModal(STRING16(L"settings_dialog.html"),
                           kSettingsDialogWidth, kSettingsDialogHeight);
 
+#ifdef BROWSER_WEBKIT
    visible_ = false;
+#endif
   // Process the result() property and remove any sites or shortcuts the user
   // removed.
   ProcessResult(&settings_dialog->result);
