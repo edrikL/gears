@@ -143,7 +143,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         </td>
         <td width="100%" align="left" valign="middle">
           <h1>
-          <TRANS_BLOCK desc="Header for Gears settings page.">
+          <TRANS_BLOCK>
           PRODUCT_FRIENDLY_NAME_UQ Settings
           </TRANS_BLOCK>
           </h1>
