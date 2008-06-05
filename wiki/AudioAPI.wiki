@@ -113,6 +113,19 @@ Media class
 The media class also fires the following events (HTML5 does not exactly define some of these events and the handling framework yet). Section _'3.2.9.12 - Event summary'_ in http://www.whatwg.org/specs/web-apps/current-work/ helps understand what these events are, and when they are fired. Handlers of these events can decide what to do on event notifications:
 _begin, progress, loadedmetadata, loadedfirstframe, load, abort, error, emptied, stalled, play, pause, waiting, timeupdate, ended, dataunavailable, canshowcurrentframe, canplay, canplaythrough, ratechange, durationchange, volumechange_
 
+*_MediaError class_*
+
+{{{
+MediaError class {
+  const unsigned short MEDIA_ERR_ABORTED = 1;
+  const unsigned short MEDIA_ERR_NETWORK = 2;
+  const unsigned short MEDIA_ERR_DECODE = 3;
+  const unsinged short MEDIA_ERR_ENCODE = 4;
+  const unsinged short MEDIA_ERR_DEVICE_UNAVAILABLE = 5;
+  readonly attribute unsigned short code;
+};
+}}}
+
 *_Audio class : Media_*
 
 The additional properties below are sound channel specific properties.
@@ -158,13 +171,27 @@ Audio class : Media
 MediaRecorder class
 {
   // ------ error state ------
-  // same possible values as that of error in Media class
   readonly attribute MediaError error;
+
+  // -------- network state --------
+  // holds the HTTP post URL to send the recorded data to  
+           attribute DOMString destination;
+  const unsigned short EMPTY = 0;
+  const unsigned short POSTING = 1;
+  const unsigned short POSTED = 2;
+  const unsigned short DATA_UNAVAILABLE = 3;
+  const unsigned short DATA_AVAILABLE = 4;
+  const unsigned short STREAMING = 5;
+  readonly attribute unsigned short networkState;
  
   // ----- recording state ------
-  // specifies says whether recorder is currently recording or not
+  // says whether recorder is currently recording or not
   readonly attribute boolean recording;
-  // bit rate for the recording
+  // channel type
+  const unsigned short MONO = 1;
+  const unsigned short STEREO = 2;
+           attribute short channelType;
+  // bit rate for the recording.
            attribute int bitRate;
   // format is an int. Possible values need to be defined.
            attribute int format; 
@@ -172,30 +199,30 @@ MediaRecorder class
            attribute int bitsPerSample;
   // specifies if blob is streamed as and when it is written to, or not.
            attribute boolean autoStream;
+  // specifies the length (in milli seconds) of the media recorded.
+  readonly attribute float position;
+
+  void record();
+  void pause();
+  void unpause();
+  void mute();
+  void unmute();
+  void stop();
 
   // ------- controls ---------
   // self explanatory
            attribute float volume;
-  readonly attribute float position;
-           attribute boolean muted;
+  readonly attribute boolean muted;
   readonly attribute boolean paused;
 
-  // -------- events --------
+
+  // -------- cue ranges --------
   // Provides ability to set callbacks at specific points in playback time.
   // similar to API in Audio class. Look at HTML5 spec for explanation.
   void addCueRange(in DOMString className, in float start, in float end, 
                   in boolean pauseOnExit,
                   in VoidCallback enterCallback, in VoidCallback exitCallback);
   void removeCueRanges(in DOMString className);
-
-  // -------- record functionality --------
-  // holds the HTTP post URL to send the recorded data to  
-         attribute DOMString destination;
-
-  // below methods are self explanatory
-  void record();
-  void pause();
-  void stop();
 
   // -------- access blob -------
   // Returns: the handle to the media blob object containing the media data
@@ -205,10 +232,13 @@ MediaRecorder class
 
 *_Events from MediaRecorder class:_*
 The MediaRecorder class throws the following events, under the stated preconditions:
-   * _canstream_ - Some data was just made available for streaming now.
-   * _pause_ - Paused.
    * _record_ - Recording starts.
+   * _pause_ - Paused.
+   * _unpause_ - Unpaused.
+   * _mute_ - Muted.
+   * _unmute_ - Unmuted.
    * _ended_ - Finished recording.
+   * _canstream_ - Some data was just made available for streaming now.
 
 *_AudioRecorder class : MediaRecorder _*
 {{{
