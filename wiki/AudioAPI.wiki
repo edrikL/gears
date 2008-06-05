@@ -178,7 +178,7 @@ MediaRecorder class
            attribute float volume;
   readonly attribute float position;
            attribute boolean muted;
-           attribute boolean paused;
+  readonly attribute boolean paused;
 
   // -------- events --------
   // Provides ability to set callbacks at specific points in playback time.
