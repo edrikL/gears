@@ -64,8 +64,7 @@ Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
   for (Balloons::iterator it = balloons_.begin();
        it != balloons_.end();
        ++it) {
-    if ((*it)->notification().id() == id &&
-        (*it)->notification().service() == service) {
+    if ((*it)->notification().Matches(service, id)) {
       Balloon *result = *it;
       if (and_remove) {
         balloons_.erase(it);
