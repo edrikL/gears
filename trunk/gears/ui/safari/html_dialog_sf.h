@@ -23,24 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common.h"
-#import "gears/ui/safari/settings_menu.h"
-#import "gears/base/safari/browser_load_hook.h"
-#import "gears/localserver/safari/http_handler.h"
-
-@implementation GearsBrowserLoadHook
-+ (BOOL)installHook {
-  // Register HTTP intercept hook.
-  if (![GearsHTTPHandler registerHandler]) {
-    return NO;
-  }
-  
-  if (![GearsSettingsMenuEnabler installHook]) {
-    return NO;
-  }
-  
-  LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
-  return YES;
+// Class to display a Modal dialog in WebKit.
+@interface HTMLDialogImp : NSObject {
+ @protected
+  NSString *window_url_;
+  NSString *arguments_; 
+  int width_;
+  int height_;
+  bool window_dismissed_;
+  NSString *result_string_;
+  NSWindow *window_;  // weak
 }
 
+// Initialize an HTMLDialogImp instance.
+- (id)initWithHtmlFile:(const std::string16 &)html_filename 
+             arguments:(const std::string16 &)arguments
+                width:(int)width
+               height:(int)height;
+
+// Show the modal dialog and block until said dialog is dismissed.
+// returns: true on success.
+- (bool)showModal: (std::string16 *)results;
+
+// Creates a window and places a pointer to it in the |window_| ivar.
+- (BOOL)createWindow:(unsigned int)window_style;
+
+// WebView delegate Methods
+// Delegate method called just before any js is run, so this is the perfect
+// time to inject vairables into the js environment.
+- (void)webView:(WebView *)webView 
+            windowScriptObjectAvailable:(WebScriptObject *)windowScriptObject;
+
++ (BOOL)isSelectorExcludedFromWebScript:(SEL)selector;
++ (NSString *)webScriptNameForSelector:(SEL)sel;
+
+// Methods callable from JS.
+// JS callback for setting the result string.
+- (void)setResults: (NSString *)window_results;
 @end

@@ -23,24 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common.h"
-#import "gears/ui/safari/settings_menu.h"
-#import "gears/base/safari/browser_load_hook.h"
-#import "gears/localserver/safari/http_handler.h"
+#ifndef GEARS_UI_SETTINGS_MENU_H__
+#define GEARS_UI_SETTINGS_MENU_H__
 
-@implementation GearsBrowserLoadHook
-+ (BOOL)installHook {
-  // Register HTTP intercept hook.
-  if (![GearsHTTPHandler registerHandler]) {
-    return NO;
-  }
-  
-  if (![GearsSettingsMenuEnabler installHook]) {
-    return NO;
-  }
-  
-  LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
-  return YES;
-}
+#import <Cocoa/Cocoa.h>
 
+@interface GearsSettingsMenuEnabler : NSObject
++(BOOL)installHook;
 @end
+
+#endif  // GEARS_UI_SETTINGS_MENU_H__

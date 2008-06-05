@@ -208,6 +208,8 @@
 		B55F24550DB3E86B00AF44E2 /* vdbefifo.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F244E0DB3E86B00AF44E2 /* vdbefifo.c */; };
 		B55F24560DB3E86B00AF44E2 /* vdbeblob.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F244F0DB3E86B00AF44E2 /* vdbeblob.c */; };
 		B55F24570DB3E86B00AF44E2 /* vdbeaux.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F24500DB3E86B00AF44E2 /* vdbeaux.c */; };
+		B55FD9BF0DF5FB63007FC7E1 /* settings_menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = B55FD9BD0DF5FB63007FC7E1 /* settings_menu.mm */; };
+		B55FDA010DF71B8F007FC7E1 /* html_modeless_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B55FDA000DF71B8E007FC7E1 /* html_modeless_dialog_sf.mm */; };
 		B563C47B0DF5DFE600A145D1 /* database_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B563C4740DF5DFE600A145D1 /* database_utils.cc */; };
 		B563C47C0DF5DFE600A145D1 /* result_set.cc in Sources */ = {isa = PBXBuildFile; fileRef = B563C4760DF5DFE600A145D1 /* result_set.cc */; };
 		B563C47D0DF5DFE600A145D1 /* database.cc in Sources */ = {isa = PBXBuildFile; fileRef = B563C4770DF5DFE600A145D1 /* database.cc */; };
@@ -748,6 +750,10 @@
 		B55F244E0DB3E86B00AF44E2 /* vdbefifo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vdbefifo.c; path = ../../../third_party/sqlite_google/src/vdbefifo.c; sourceTree = SOURCE_ROOT; };
 		B55F244F0DB3E86B00AF44E2 /* vdbeblob.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vdbeblob.c; path = ../../../third_party/sqlite_google/src/vdbeblob.c; sourceTree = SOURCE_ROOT; };
 		B55F24500DB3E86B00AF44E2 /* vdbeaux.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vdbeaux.c; path = ../../../third_party/sqlite_google/src/vdbeaux.c; sourceTree = SOURCE_ROOT; };
+		B55FD9BD0DF5FB63007FC7E1 /* settings_menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = settings_menu.mm; path = ../../ui/safari/settings_menu.mm; sourceTree = SOURCE_ROOT; };
+		B55FD9BE0DF5FB63007FC7E1 /* settings_menu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = settings_menu.h; path = ../../ui/safari/settings_menu.h; sourceTree = SOURCE_ROOT; };
+		B55FDA000DF71B8E007FC7E1 /* html_modeless_dialog_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_modeless_dialog_sf.mm; path = ../../ui/safari/html_modeless_dialog_sf.mm; sourceTree = SOURCE_ROOT; };
+		B55FDB330DF754E9007FC7E1 /* html_dialog_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = html_dialog_sf.h; path = ../../ui/safari/html_dialog_sf.h; sourceTree = SOURCE_ROOT; };
 		B563C4730DF5DFE600A145D1 /* database_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_utils.h; path = ../../database/database_utils.h; sourceTree = SOURCE_ROOT; };
 		B563C4740DF5DFE600A145D1 /* database_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database_utils.cc; path = ../../database/database_utils.cc; sourceTree = SOURCE_ROOT; };
 		B563C4750DF5DFE600A145D1 /* database_utils_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_utils_test.h; path = ../../database/database_utils_test.h; sourceTree = SOURCE_ROOT; };
@@ -2101,14 +2107,14 @@
 			isa = PBXGroup;
 			children = (
 				B5AFB3280DAD233D0058E178 /* permissions_dialog.cc */,
+				B5B307610DB578D900A206B8 /* html_dialog.h */,
 				B5AFB32B0DAD233D0058E178 /* html_dialog.cc */,
+				B5B307600DB578D900A206B8 /* html_dialog.css */,
 				B5AFB32A0DAD233D0058E178 /* permissions_dialog.h */,
 				B5AFB3270DAD233D0058E178 /* settings_dialog.h */,
 				B5AFB3290DAD233D0058E178 /* settings_dialog.cc */,
 				B5B3075E0DB578D900A206B8 /* button.css */,
 				B5B3075F0DB578D900A206B8 /* button_bg.gif */,
-				B5B307600DB578D900A206B8 /* html_dialog.css */,
-				B5B307610DB578D900A206B8 /* html_dialog.h */,
 				B5B307630DB578D900A206B8 /* icon_16x16.png */,
 				B5B307640DB578D900A206B8 /* icon_32x32.png */,
 				B5B307650DB578D900A206B8 /* icon_48x48.png */,
@@ -2120,7 +2126,11 @@
 		B5AFB3260DAD230E0058E178 /* safari */ = {
 			isa = PBXGroup;
 			children = (
+				B55FDB330DF754E9007FC7E1 /* html_dialog_sf.h */,
 				B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */,
+				B55FDA000DF71B8E007FC7E1 /* html_modeless_dialog_sf.mm */,
+				B55FD9BD0DF5FB63007FC7E1 /* settings_menu.mm */,
+				B55FD9BE0DF5FB63007FC7E1 /* settings_menu.h */,
 			);
 			name = safari;
 			sourceTree = "<group>";
@@ -2742,6 +2752,8 @@
 				B563C4910DF5E56E00A145D1 /* blob_test.cc in Sources */,
 				B55E5FEB0DF5EF5100D3DC1F /* http_handler.mm in Sources */,
 				B55E5FFA0DF5F05500D3DC1F /* browser_load_hook.mm in Sources */,
+				B55FD9BF0DF5FB63007FC7E1 /* settings_menu.mm in Sources */,
+				B55FDA010DF71B8F007FC7E1 /* html_modeless_dialog_sf.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
