@@ -328,6 +328,12 @@ function handleResult(rs, fn) {
  */
 function sendHttpRequest(url, method, data, callback, cb_request) {
   var req = google.gears.factory.create('beta.httprequest');
+
+  // TODO(aa): We are seeing sporadic failures in these tests. A theory is that
+  // HttpRequest is getting gc'd. Remove this test of that theory when it is
+  // proven or disproven.
+  global.kungFuGrip = req;
+
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
       if (cb_request) {

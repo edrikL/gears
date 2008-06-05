@@ -287,6 +287,11 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
                    expectedResponse, expectedHeaders, expectedResponseLength) {
   var request = google.gears.factory.create('beta.httprequest');
 
+  // TODO(aa): We are seeing sporadic failures in these tests. A theory is that
+  // HttpRequest is getting gc'd. Remove this test of that theory when it is
+  // proven or disproven.
+  global.kungFuGrip = request;
+
   request.upload.onprogress = handleProgress;
   request.onreadystatechange = handleReadyStateChange;
   request.open(method, url, true);

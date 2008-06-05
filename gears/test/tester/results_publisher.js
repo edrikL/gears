@@ -40,6 +40,11 @@ ResultsPublisher.prototype.publish = function(url, parameters) {
     return false;
   }
 
+  // TODO(aa): We are seeing sporadic failures in this post. A theory is that
+  // HttpRequest is getting gc'd. Remove this test of that theory when it is
+  // proven or disproven.
+  global.kungFuGrip = http_request;
+
   http_request.open('POST', url);
   http_request.setRequestHeader("Content-type",
                                 "application/x-www-form-urlencoded");
