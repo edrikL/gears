@@ -122,15 +122,6 @@ class File {
   static bool GetParentDirectory(const std::string16 &path,
                                  std::string16 *parent);
 
-  // Clears the last file error for the current thread
-  static void ClearLastFileError();
-
-  // Gets the last file error that occurred on the current thread. If
-  // there was no error, returns false and error_out is cleared.
-  // Note: CreateNewFile is the only method that sets an error message
-  // at this time.
-  static bool GetLastFileError(std::string16 *error_out);
-
   enum OpenAccessMode { READ, WRITE, READ_WRITE };
 
   enum OpenExistsMode { NEVER_FAIL, FAIL_IF_NOT_EXISTS, FAIL_IF_EXISTS };
@@ -176,12 +167,6 @@ class File {
   ~File();
 
  private:
-  static void SetLastFileError(const char16 *message,
-                               const char16 *filepath,
-                               int error_code);
-
-  static const char16 *kCreateFileFailedMessage;
-
   // Used by SplitPath
   typedef std::vector<std::string16> PathComponents;
 

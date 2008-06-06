@@ -109,8 +109,6 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                                     FILE_ATTRIBUTE_NORMAL,
                                     NULL);
   if (file->handle_ == INVALID_HANDLE_VALUE) {
-    // TODO(fry): SetLastFileError(kOpenFileFailedMessage, full_filepath,
-    // GetLastError());
     return NULL;
   }
   return file.release();
@@ -226,9 +224,6 @@ bool File::CreateNewFile(const char16 *full_filepath) {
                                              FILE_ATTRIBUTE_NORMAL,
                                              NULL));
   if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    SetLastFileError(kCreateFileFailedMessage,
-                     full_filepath,
-                     GetLastError());
     return false;
   }
   return true;
