@@ -308,16 +308,13 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
   var progress_called = false;
   var last_position = 0;
   function handleProgress(event) {
-    // TODO(bgarcia): Activate for other browsers when ready.
-    if (isFirefox || isSafari) {
-      assert(method == 'POST' || method == 'PUT');
-      assert(data);
-      assert(data.length > 0);
-      assert(event.total >= data.length);  // May be larger due to encoding.
-      assert(event.loaded > last_position);
-      last_position = event.loaded;
-      progress_called = true;
-    }
+    assert(method == 'POST' || method == 'PUT');
+    assert(data);
+    assert(data.length > 0);
+    assert(event.total >= data.length);  // May be larger due to encoding.
+    assert(event.loaded > last_position);
+    last_position = event.loaded;
+    progress_called = true;
   }
 
   var success = false;
@@ -390,13 +387,10 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
       }
     }
     if (method == 'POST' || method == 'PUT') {
-      // TODO(bgarcia): Activate for other browsers when ready.
-      if (isFirefox || isSafari) {
-        // It appears that the timing can work out so that the progress
-        // callback does not get called.
-        // TODO(bgarcia): determine if this is something that can be fixed.
-        //assert(progress_called);
-      }
+      // It appears that the timing can work out so that the progress
+      // callback does not get called.
+      // TODO(bgarcia): determine if this is something that can be fixed.
+      //assert(progress_called);
     }
     completeAsync();
   }

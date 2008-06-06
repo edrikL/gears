@@ -32,6 +32,9 @@
 //------------------------------------------------------------------------------
 
 ProgressEvent::Listener::Listener() {
+  // TODO(bgarcia): Is there a better location to call InitThreadMessageQueue?
+  //                Currently needed here for IE.
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
   // Establishes the thread on which we should make progress calls.
   thread_ = ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
 }
