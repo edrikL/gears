@@ -29,17 +29,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
   <head>
-    <title>Google Gears and Security</title>
+    <title>Gears and Security</title>
     <link rel="stylesheet" type="text/css" href="gears.css" />
   </head>
 
 <body>
 
-<h1>Google Gears and Security</h1>
+<h1>Gears and Security</h1>
 
 <div id="pagecontent">
 
-<p>This page describes the security model used in Google Gears, and
+<p>This page describes the security model used in Gears, and
   discusses what developers can do to build secure applications.
 
 
@@ -58,13 +58,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <a name="model" id="model"></a>
 <h1>Basic Security Model</h1>
 
-<p>Google Gears uses the
+<p>Gears uses the
   <a href="http://en.wikipedia.org/wiki/Same_origin_policy">same origin
   policy</a> as its underlying security model. A web page with a
   particular <i>scheme, host, and port</i> can only access resources with the
   same <i>scheme, host, and port</i>.
 
-<p>This means a site using Google Gears:
+<p>This means a site using Gears:
   <ul>
   <li>Database: Can only open databases created for that site's origin.
   <li>LocalServer: Can only capture URLs and use manifests from the site's
@@ -79,16 +79,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <a name="permissions" id="permissions"></a>
 <h1>Permissions Dialog</h1>
 
-<p>To protect users, Google Gears shows a warning dialog when a site
-  first attempts to use the Google Gears API. User opt-in is important
-  because Google Gears allows applications to store data on the user's
+<p>To protect users, Gears shows a warning dialog when a site
+  first attempts to use the Gears API. User opt-in is important
+  because Gears allows applications to store data on the user's
   hard disk.
 
 <p>Users can grant or deny access for each security origin.  When a user grants
 access to Gears for a particular origin, Gears remembers this decision for
 future visits. Denying access is only until the page is reloaded, though users
 can also choose to never allow a particular site to access Gears. Remembered
-decisions can later be changed using the Google Gears Settings dialog, located
+decisions can later be changed using the Gears Settings dialog, located
 in the browser's Tools menu.
 
 
@@ -96,9 +96,9 @@ in the browser's Tools menu.
 <a name="enduserdata" id="enduserdata"></a>
 <h1>Security of End-User Data</h1>
 
-<p>Google Gears data files are protected with the user's operating system
+<p>Gears data files are protected with the user's operating system
   login credentials. Users with separate login names cannot access each other's
-  Google Gears data files, as enforced by the operating system.
+  Gears data files, as enforced by the operating system.
 
 <p>On the other hand, two people using the same OS login could theoretically
   access each other's Gears data files, just as they could access any other

@@ -40,7 +40,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <div id='main' style='margin:1em; font-size:1.2em;'>
 <p>Offline access requires <b><a
     href='http://gears.google.com/'
-    target='_blank'>Google Gears</a></b>. Go install it, then come back here
+    target='_blank'>Gears</a></b>. Go install it, then come back here
     to finish setting up offline access.
 </div>
 
