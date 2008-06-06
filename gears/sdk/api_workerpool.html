@@ -113,7 +113,7 @@ objects.
 This is a consequence of workers not sharing any execution state.
 
 <p>However, workers do have access to all JavaScript built-in functions.  Most
-Google Gears methods can also be used, through a global variable that is
+Gears methods can also be used, through a global variable that is
 automatically defined: <code>google.gears.factory</code>.  (One exception is
 the LocalServer file submitter, which requires the DOM.)  For other
 functionality, created workers can ask the main page to carry out requests.
