@@ -27,13 +27,14 @@
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/database2/database2_metadata.h"
 #include "gears/localserver/common/localserver_db.h"
 
 static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
 static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 7;
+static const int kCurrentVersion = 8;
 static const int kOldestUpgradeableVersion = 1;
 
 const char16 *PermissionsDB::kShortcutsChangedTopic = 
@@ -74,8 +75,9 @@ PermissionsDB::PermissionsDB()
     : version_table_(&db_, kVersionTableName),
       access_table_(&db_, kAccessTableName),
       shortcut_table_(&db_),
-      database_name_table_(&db_) {
-}
+      database_name_table_(&db_),
+      database2_metadata_(&db_) {
+	}
 
 
 bool PermissionsDB::Init() {
@@ -119,7 +121,7 @@ bool PermissionsDB::Init() {
       return false;
     }
   } else {
-    if (!UpgradeToVersion7()) {
+    if (!UpgradeToVersion8()) {
       return false;
     }
   }
@@ -543,6 +545,38 @@ bool PermissionsDB::UpgradeToVersion7() {
   }
 
   if (!version_table_.SetInt(kVersionKeyName, 7)) {
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool PermissionsDB::UpgradeToVersion8() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion7");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  int version = 0;
+  version_table_.GetInt(kVersionKeyName, &version);
+
+  if (version < 7) {
+    if (!UpgradeToVersion7()) {
+      return false;
+    }
+    version_table_.GetInt(kVersionKeyName, &version);
+  }
+
+  if (version != 7) {
+    LOG(("PermissionsDB::UpgradeToVersion7 unexpected version: %d", version));
+    return false;
+  }
+
+  if (!database2_metadata_.CreateTableVersion8()) {
+    return false;
+  }
+
+  if (!version_table_.SetInt(kVersionKeyName, 8)) {
     return false;
   }
 
