@@ -42,9 +42,27 @@ class File {
   // Returns true if a new file has been created.
   static bool CreateNewFile(const char16 *full_filepath);
 
+  // Returns a File object associated with a read/write temporary file in the
+  // system temporary directory, or NULL if an error occurred. The file will be
+  // deleted automatically when the returned object is destroyed.
+  static File *CreateNewTempFile();
+
+  // Creates a unique directory under the system temporary directory.  Returns
+  // the full path of the new directory in 'path'.
+  // Returns true if the function succeeds.  'path' is unmodified on failure.
+  static bool CreateNewTempDirectory(std::string16 *full_filepath);
+
+  // Ensures all directories along the specified path exist.  Any directories
+  // that do not exist will be created. Returns true if the function succeeds.
+  static bool RecursivelyCreateDir(const char16 *full_dirpath);
+
   // Deletes a file. If the file does not exist, returns false.
   // Returns true if the file was deleted.
   static bool Delete(const char16 *full_filepath);
+
+  // Removes the directory and all of its children. If the directory does
+  // not exist, returns false. Returns true if the function succeeds.
+  static bool DeleteRecursively(const char16 *full_dirpath);
 
   // Returns true if the file exists.
   static bool Exists(const char16 *full_filepath);
@@ -67,6 +85,11 @@ class File {
   // returns false. Returns true on success
   static bool ReadFileToVector(const char16 *full_filepath,
                                std::vector<uint8> *data);
+
+  // Writes raw data to a file.
+  // If file doesn't exist or an error occurs, false is returned.
+  static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
+                               int length);
 
   // Writes the contents of the file. If the file does not exist, returns false.
   // Existing contents are overwritten. Returns true on success
@@ -98,29 +121,6 @@ class File {
   // * Fails if path doesn't specify a parent directory e.g. 'filename'.
   static bool GetParentDirectory(const std::string16 &path,
                                  std::string16 *parent);
-
-  // Returns a File object associated with a read/write temporary file in the
-  // system temporary directory, or NULL if an error occurred. The file will be
-  // deleted automatically when the returned object is destroyed.
-  static File *CreateNewTempFile();
-
-  // Creates a unique directory under the system temporary directory.  Returns
-  // the full path of the new directory in 'path'.
-  // Returns true if the function succeeds.  'path' is unmodified on failure.
-  static bool CreateNewTempDirectory(std::string16 *full_filepath);
-
-  // Ensures all directories along the specified path exist.  Any directories
-  // that do not exist will be created. Returns true if the function succeeds.
-  static bool RecursivelyCreateDir(const char16 *full_dirpath);
-
-  // Removes the directory and all of its children. If the directory does
-  // not exist, returns false. Returns true if the function succeeds.
-  static bool DeleteRecursively(const char16 *full_dirpath);
-
-  // Writes raw data to a file.
-  // If file doesn't exist or an error occurs, false is returned.
-  static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
-                               int length);
 
   // Clears the last file error for the current thread
   static void ClearLastFileError();
