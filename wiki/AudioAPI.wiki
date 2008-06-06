@@ -120,8 +120,8 @@ MediaError class {
   const unsigned short MEDIA_ERR_ABORTED = 1;
   const unsigned short MEDIA_ERR_NETWORK = 2;
   const unsigned short MEDIA_ERR_DECODE = 3;
-  const unsinged short MEDIA_ERR_ENCODE = 4;
-  const unsinged short MEDIA_ERR_DEVICE_UNAVAILABLE = 5;
+  const unsigned short MEDIA_ERR_ENCODE = 4;
+  const unsigned short MEDIA_ERR_DEVICE_UNAVAILABLE = 5;
   readonly attribute unsigned short code;
 };
 }}}
