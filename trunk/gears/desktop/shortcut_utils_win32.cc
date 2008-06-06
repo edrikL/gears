@@ -241,26 +241,9 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
       }
       break;
     case Desktop::SHORTCUT_LOCATION_STARTMENU:
-      {
-        const int kMaxStringLength = 256;
-        char16 program_group[kMaxStringLength];
-        if (LoadString(GetGearsModuleHandle(), IDS_PROGRAM_GROUP,
-                       program_group, kMaxStringLength) &&
-            SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, TRUE)) {
-          std::string16 path = path_buf;
-          path += STRING16(L"\\");
-          path += program_group;
-
-          int result = SHCreateDirectoryEx(NULL, path.c_str(), NULL);
-          switch (result) {
-            case ERROR_SUCCESS:
-            case ERROR_ALREADY_EXISTS:
-            case ERROR_FILE_EXISTS: {
-              *shortcut_location_path = path;
-              return true;
-            }
-          }
-        }
+      if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, TRUE)) {
+        *shortcut_location_path = path_buf;
+        return true;
       }
       break;
   }
