@@ -205,7 +205,7 @@ bool TestFileObject() {
   filepath += kPathSeparator;
   filepath += kFileName;
 
-  // Read mode with non-existent file; read should never create the file
+  // Read mode with nonexistent file; read should never create the file
   TEST_ASSERT(!File::Exists(filepath.c_str()));
   TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_NOT_EXISTS,
                            false, false));
@@ -214,7 +214,7 @@ bool TestFileObject() {
   TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
                            false, false));
 
-  // Write mode with inexistant file
+  // Write mode with nonexistent file
   TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
                            false, false));
   TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
@@ -224,7 +224,7 @@ bool TestFileObject() {
                            true, true));
   TEST_ASSERT(File::Delete(filepath.c_str()));
 
-  // Read/Write mode with inexistant file
+  // Read/Write mode with nonexistent file
   TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
                            false, false));
   TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
@@ -234,7 +234,7 @@ bool TestFileObject() {
                            true, true));
 
 
-  // Read mode with existant file
+  // Read mode with existent file
   TEST_ASSERT(File::Exists(filepath.c_str()));
   TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_EXISTS,
                            false, true));
@@ -243,7 +243,7 @@ bool TestFileObject() {
   TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
                            true, true));
 
-  // Write mode with existant file
+  // Write mode with existent file
   TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
                            false, true));
   TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
@@ -251,7 +251,7 @@ bool TestFileObject() {
   TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::NEVER_FAIL,
                            true, true));
 
-  // Read/Write mode with existant file
+  // Read/Write mode with existent file
   TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
                            false, true));
   TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
@@ -290,6 +290,8 @@ bool TestFileObject() {
   TEST_ASSERT(file->Truncate(0));
   TEST_ASSERT(file->Read(data_read, 1) == -1);
   TEST_ASSERT(file->Write(data_write, size) == size);
+  TEST_ASSERT(file->Flush());
+  TEST_ASSERT(file->Size() == size);
   TEST_ASSERT(file->Tell() == size);
   TEST_ASSERT(file->Read(data_read, 1) == -1);
 
@@ -389,6 +391,25 @@ bool TestFileObject() {
   // NULL read/write parameters
   TEST_ASSERT(file->Read(NULL, 0) == -1);
   TEST_ASSERT(file->Write(NULL, 0) == -1);
+
+  // tmpfile
+  file.reset();
+  file.reset(File::CreateNewTempFile());
+  TEST_ASSERT(file->Size() == 0);
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(file->Write(data_write, size) == size);
+  TEST_ASSERT(file->Flush());
+  TEST_ASSERT(file->Size() == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(file->Seek(0, File::SEEK_FROM_START));
+  TEST_ASSERT(file->Tell() == 0);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  // EOF is a 0-byte read
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Tell() == size);
 
   return true;
 }

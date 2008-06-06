@@ -62,6 +62,11 @@ void File::Close() {
 }
 
 
+bool File::Flush() {
+  return ::FlushFileBuffers(handle_) != 0;
+}
+
+
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
   scoped_ptr<File> file(new File());
@@ -80,7 +85,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
   DWORD creation_disposition = 0;
   switch (exists_mode) {
     case NEVER_FAIL:
-      // OPEN_ALWAYS creates inexistant files, which is not desired in read mode
+      // OPEN_ALWAYS creates nonexistent files which is not desired in read mode
       creation_disposition = (access_mode == READ) ?
           OPEN_EXISTING : OPEN_ALWAYS;
       break;
@@ -88,7 +93,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
       creation_disposition = OPEN_EXISTING;
       break;
     case FAIL_IF_EXISTS:
-      // CREATE_NEW creates inexistant files, which is not desired in read mode
+      // CREATE_NEW creates nonexistent files, which is not desired in read mode
       if (access_mode == READ) {
         return NULL;
       }
@@ -112,7 +117,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
 }
 
 
-int64 File::Read(uint8* destination, int64 max_bytes) {
+int64 File::Read(uint8* destination, int64 max_bytes) const {
   if (!destination || max_bytes < 0) {
     return -1;
   }
@@ -131,7 +136,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) {
 }
 
 
-bool File::Seek(int64 offset, SeekMethod seek_method) {
+bool File::Seek(int64 offset, SeekMethod seek_method) const {
   DWORD move_method = 0;
   switch (seek_method) {
     case SEEK_FROM_START:
@@ -154,7 +159,7 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
 }
 
 
-int64 File::Size() {
+int64 File::Size() const {
   LARGE_INTEGER size;
   size.LowPart = ::GetFileSize(handle_,
                                reinterpret_cast<LPDWORD>(&size.HighPart));
@@ -165,7 +170,7 @@ int64 File::Size() {
 }
 
 
-int64 File::Tell() {
+int64 File::Tell() const {
   LARGE_INTEGER pos;
   pos.QuadPart = 0;
   pos.LowPart = SetFilePointer(handle_, pos.LowPart, &pos.HighPart,

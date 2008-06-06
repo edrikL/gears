@@ -78,6 +78,10 @@ void File::Close() {
   }
 }
 
+bool File::Flush() {
+  return !fflush(handle_);
+}
+
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
   scoped_ptr<File> file(new File());
@@ -108,7 +112,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
     case WRITE:
       // NOTE: Read will fail when opened for WRITE
     case READ_WRITE:
-      // NOTE: rb+ does not create inexistant files, and w+ truncates them
+      // NOTE: rb+ does not create nonexistent files, and w+ truncates them
       mode = File::Exists(full_filepath) ? "rb+" : "w+";
       break;
   }
@@ -120,7 +124,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
   return file.release();
 }
 
-int64 File::Read(uint8* destination, int64 max_bytes) {
+int64 File::Read(uint8* destination, int64 max_bytes) const {
   if (mode_ == WRITE) {
     // NOTE: we may have opened the file with read-write access to avoid
     // truncating it, but we still want to refuse reads
@@ -142,7 +146,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) {
   return bytes_read;
 }
 
-bool File::Seek(int64 offset, SeekMethod seek_method) {
+bool File::Seek(int64 offset, SeekMethod seek_method) const {
   int whence = 0;
   switch (seek_method) {
     case SEEK_FROM_START:
@@ -175,7 +179,7 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
   return (fseeko(handle_, static_cast<long>(offset), whence) == 0);
 }
 
-int64 File::Size() {
+int64 File::Size() const {
   struct stat stat_data;
   if (fstat(fileno(handle_), &stat_data) != 0) {
     return -1;
@@ -183,7 +187,7 @@ int64 File::Size() {
   return static_cast<int64>(stat_data.st_size);
 }
 
-int64 File::Tell() {
+int64 File::Tell() const {
   return ftello(handle_);
 }
 
@@ -347,6 +351,9 @@ File *File::CreateNewTempFile() {
   scoped_ptr<File> file(new File());
   file->mode_ = READ_WRITE;
   file->handle_ = tmpfile();
+  if (file->handle_ == NULL) {
+    return NULL;
+  }
   return file.release();
 }
 

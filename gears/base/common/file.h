@@ -147,24 +147,27 @@ class File {
   // destination.
   // Returns the number of bytes read, or -1 on failure or if the file is not
   // opened for read.
-  int64 Read(uint8 *destination, int64 max_bytes);
+  int64 Read(uint8 *destination, int64 max_bytes) const;
 
   // Writes length bytes of source to the file.
   // Returns the number of bytes written, or -1 on failure or if the file is
   // not opened for write.
   int64 Write(const uint8 *source, int64 length);
 
+  // Forces a write of all buffered data to the file on disk.
+  bool Flush();
+
   enum SeekMethod { SEEK_FROM_START, SEEK_FROM_CURRENT, SEEK_FROM_END };
 
   // Sets the file position indicator to the specified offset.
   // Returns false if there is an error.
-  bool Seek(int64 offset, SeekMethod seek_method = SEEK_FROM_START);
+  bool Seek(int64 offset, SeekMethod seek_method = SEEK_FROM_START) const;
 
   // Returns the current position in the file, or -1 on failure.
-  int64 Tell();
+  int64 Tell() const;
 
   // Returns the size of the file, or -1 on failure.
-  int64 Size();
+  int64 Size() const;
 
   // Truncates the file to the specified length.
   // Returns false if there is an error or if the file is not opened for write.
