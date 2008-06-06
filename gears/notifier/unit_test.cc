@@ -25,6 +25,9 @@
 
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
+int main(int, char **) {
+  return 0;
+}
 #else
 #if USING_CCTESTS
 #include <string>
@@ -96,7 +99,7 @@ const std::string16& GetTestLog() {
   return UnitTest::instance()->log();
 }
 
-int RunTests(int, char16 **) {
+int main(int, char **) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
@@ -110,6 +113,9 @@ int RunTests(int, char16 **) {
 
   return 0;
 }
-
+#else
+int main(int, char **) {
+  return 0;
+}
 #endif  // USING_CCTESTS
 #endif  // OFFICIAL_BUILD

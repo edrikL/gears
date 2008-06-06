@@ -1000,22 +1000,19 @@ SF_CPPSRCS += \
 		curl_icon_downloader.mm \
 		$(NULL)
 #-----------------------------------------------------------------------------
-# desktop_notifier
+# notifier
 
 COMMON_VPATH	+= \
 		notifier \
 		../third_party/convert_utf \
 		$(NULL)
 
-NOTIFIER_CPPSRCS += \
+NOTIFIER_CORE	+= \
 		balloons.cc \
-		balloon_collection_test.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
 		notification_manager.cc \
-		notification_manager_test.cc \
-		notifier.cc \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
@@ -1025,10 +1022,28 @@ NOTIFIER_CPPSRCS += \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
-		unit_test.cc \
+		$(NULL)
+
+NOTIFIER_CPPSRCS += \
+		$(NOTIFIER_CORE) \
+		notifier.cc \
 		$(NULL)
 
 NOTIFIER_CSRCS += \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# notifier_test
+
+NOTIFIER_TEST_CPPSRCS += \
+		$(NOTIFIER_CORE) \
+		balloon_collection_test.cc \
+		notification_manager_test.cc \
+		unit_test.cc \
+		$(NULL)
+
+NOTIFIER_TEST_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 

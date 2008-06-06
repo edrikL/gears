@@ -40,6 +40,14 @@
 #include "gears/notifier/unit_test.h"
 #include "gears/notifier/user_activity.h"
 
+// This method is defined in the _test file so that notification_manager.cc
+// has no dependencies on test files (even when USING_CCTEST is defined).
+BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
+  BalloonCollectionMock *mock = new BalloonCollectionMock;
+  balloon_collection_.reset(mock);
+  return mock;
+}
+
 #undef TEST_ASSERT
 #define TEST_ASSERT(test, message)                                      \
   do {                                                                  \
