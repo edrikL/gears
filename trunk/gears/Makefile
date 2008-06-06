@@ -1360,6 +1360,8 @@ IE_CPPSRCS	+= \
 		http_request_ie.cc \
 		localserver_ie.cc \
 		managed_resource_store_ie.cc \
+		progress_event.cc \
+		progress_input_stream.cc \
 		resource_store_ie.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
