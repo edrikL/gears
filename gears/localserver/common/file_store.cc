@@ -600,10 +600,6 @@ static bool CreateUniqueFile(const char16* full_dirpath,
     *full_filepath += kPathSeparator;
     *full_filepath += new_name + attempts_suffix + extension;
 
-    if (attempts > 0) {
-      File::ClearLastFileError();
-    }
-
     // Create a new file, if a file already exists this will fail
     if (File::CreateNewFile(full_filepath->c_str())) {
       return true;
