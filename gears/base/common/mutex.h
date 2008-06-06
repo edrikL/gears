@@ -116,6 +116,7 @@ class Condition {
   // A Condition that returns the value of *cond.
   explicit Condition(bool *cond)
       : function_(reinterpret_cast<InternalFunctionType>(Dereference)),
+        method_(NULL),
         arg_(cond) {}
 
   // Templated versions for invoking a method that returns a bool.
