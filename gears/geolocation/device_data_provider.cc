@@ -141,6 +141,8 @@ WifiDataProviderBase *WifiDataProviderBase::Create() {
 
 #ifdef WINCE
 // WinCE uses WinceWifiDataProvider.
+#elif defined(WIN32) && !defined(WINCE)
+// Win32 uses Win32WifiDataProvider.
 #else
 // static
 template <>

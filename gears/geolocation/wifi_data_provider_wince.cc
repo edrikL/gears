@@ -39,6 +39,7 @@
 #include <windows.h>
 #include <winioctl.h>  // For IOCTL_NDISUIO_QUERY_OID_VALUE
 #include "gears/base/common/string_utils.h"  // For UTF8ToString16()
+#include "gears/geolocation/wifi_data_provider_common.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // The time period, in milliseconds, between successive polls of the wifi data.
@@ -163,27 +164,6 @@ static bool QueryOid(const HANDLE &ndis_handle,
   return true;
 }
 
-static bool ConvertToGearsFormat(const NDIS_WLAN_BSSID_EX &data,
-                                 AccessPointData *access_point_data) {
-  assert(access_point_data);
-  char16 mac[18];  // Format is XX-XX-XX-XX-XX-XX.
-  // NDIS_WLAN_BSSID_EX::MacAddress is big-endian. Write in byte chunks.
-  const uint8 *mac_as_int = data.MacAddress;
-#ifdef DEBUG
-  int num_characters =
-#endif
-      wsprintf(mac, STRING16(L"%02x-%02x-%02x-%02x-%02x-%02x"), mac_as_int[0],
-               mac_as_int[1], mac_as_int[2], mac_as_int[3], mac_as_int[4],
-               mac_as_int[5]);
-  assert(num_characters == 17);
-  access_point_data->mac_address = mac;
-  access_point_data->radio_signal_strength = data.Rssi;
-  // It appears that we can not get the age of the scan. The only way to get
-  // this information would be to perform the scan ourselves, which is not
-  // possible.
-  return true;
-}
-
 // Gets the data for all access points for the specified card and appends to the
 // supplied vector. Returns the number of access points found, or -1 on failure.
 static int GetCardAccessPointData(const HANDLE &ndis_handle,
@@ -207,31 +187,12 @@ static int GetCardAccessPointData(const HANDLE &ndis_handle,
     return 0;
   }
   // Cast the data to a list of BSS IDs.
-  NDIS_802_11_BSSID_LIST_EX *bss_id_list =
-      reinterpret_cast<NDIS_802_11_BSSID_LIST_EX*>(&oid_response_data[0]);
+  NDIS_802_11_BSSID_LIST *bss_id_list =
+      reinterpret_cast<NDIS_802_11_BSSID_LIST*>(&oid_response_data[0]);
   
-  // Walk through the BSS IDs.
-  int32 found = 0;
-  uint8 *iterator = reinterpret_cast<uint8*>(bss_id_list->Bssid);
-  uint8 *end_of_buffer =
-      reinterpret_cast<uint8*>(bss_id_list) + oid_response_data.size();
-  for (int i = 0; i < static_cast<int>(bss_id_list->NumberOfItems); ++i) {
-    NDIS_WLAN_BSSID_EX *bss_id =
-        reinterpret_cast<NDIS_WLAN_BSSID_EX*>(iterator);
-    // Check that the length of this BSS ID is reasonable.
-    if (bss_id->Length < sizeof(NDIS_WLAN_BSSID_EX) ||
-        iterator + bss_id->Length > end_of_buffer) {
-      break;
-    }
-    AccessPointData access_point_data;
-    if (ConvertToGearsFormat(*bss_id, &access_point_data)) {
-      access_points->push_back(access_point_data);
-      ++found;
-    }
-    // Move to the next BSS ID.
-    iterator += bss_id->Length;
-  }
-  return found;
+  return GetDataFromBssIdList(*bss_id_list,
+                              oid_response_data.size(),
+                              access_points);
 }
 
 static bool GetAccessPointData(const HANDLE &ndis_handle,
