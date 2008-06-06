@@ -30,6 +30,13 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
 
+// NOTE(shess) This may interact with various SQLite features.  For
+// instance, VACUUM is implemented in terms of more basic SQLite
+// features, such as PRAGMA (or ATTACH, which Gears also disables).
+int ForbidActions(void *userData, int iType,
+                  const char *zPragma, const char *zArg,
+                  const char *zDatabase, const char *zView);
+
 // Handle dealing with corrupt databases.  This should be called after
 // any sqlite3_*() call on a handle from OpenSqliteDatabase() which
 // returned a SQLite code other than SQLITE_OK.  Pass the database

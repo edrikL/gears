@@ -25,29 +25,56 @@
 
 #include "gears/database2/connection.h"
 #include "gears/database2/statement.h"
+#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
+// TODO(aa): Refactor so we don't have to rely on code from database1.
+#include "gears/database/database_utils.h"
 
-// TODO(dimitri.glazkov): implement actual database operations. For now, all
-// operations pretend to succeed to facilitate in-progress testing
+// Open filename as a SQLite database, and setup appropriately for Gears use. 
+// Returns SQLITE_OK in case of success, otherwise returns the error code sqlite
+// returned.  The caller must arrange to eventually call sqlite3_close() on the
+// handle returned in *db even if an error is returned.
+//
+// Note: we *do not* set a busy timeout because in Database2 we ensure that all
+// database access is serial at the API layer.
+//
+// TODO(aa): Refactor to share with Database1 after integration dispatcher-based
+// Database1.
+static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
+  assert(*db == NULL);
 
-bool Database2Connection::OpenAndVerifyVersion(
-                              const std::string16 &database_version) {
-  // open database if not already open
-  // read expected_version (user_version value)
-  // read version from Permissions.db
-  // if database_version is not an empty value or null,
-  if (!database_version.empty()) {
-    // if database_version matches version
-      // return true
-    // otherwise,
-      return false;
-  // return true
+  int sql_status = sqlite3_open16(filename.c_str(), db);
+  if (sql_status != SQLITE_OK) {
+    return sql_status;
   }
-  return true;
+
+  // Set reasonable defaults.
+  sql_status = sqlite3_exec(*db,
+                            "PRAGMA encoding = 'UTF-8';"
+                            "PRAGMA auto_vacuum = 1;"
+                            "PRAGMA cache_size = 2048;"
+                            "PRAGMA page_size = 4096;"
+                            "PRAGMA synchronous = NORMAL;",
+                            NULL, NULL, NULL
+                            );
+  if (sql_status != SQLITE_OK) {
+    return sql_status;
+  }
+
+  sql_status = sqlite3_set_authorizer(*db, ForbidActions, NULL);
+  if (sql_status != SQLITE_OK) {
+    return sql_status;
+  }
+
+  return SQLITE_OK;
 }
 
 bool Database2Connection::Execute(const std::string16 &statement,
                                   Database2Values *arguments,
                                   Database2RowHandlerInterface *row_handler) {
+  if (!OpenIfNecessary()) return false;
+
   // if (bogus_version_) {
    // set error code to "version mismatch" (error code 2)
   // }
@@ -59,6 +86,8 @@ bool Database2Connection::Execute(const std::string16 &statement,
 }
 
 bool Database2Connection::Begin() {
+  if (!OpenIfNecessary()) return false;
+
   // execute BEGIN    
   // if error, set error code and message, return false
   // read actual_version, if doesn't match expected_version_, 
@@ -68,13 +97,57 @@ bool Database2Connection::Begin() {
 }
 
 void Database2Connection::Rollback() {
+  assert(handle_);
+
   // execute ROLLBACK
   // don't remember or handle errors
 }
 
 bool Database2Connection::Commit() {
+  assert(handle_);
+
   // execute COMMIT
   // if error, set error code and message, return false
   // return true upon success
+  return true;
+}
+
+bool Database2Connection::OpenIfNecessary() {
+  if (handle_) { return true; }  // already opened
+
+  // Setup the directory.
+  std::string16 dirname;
+  if (!GetDataDirectory(origin_, &dirname)) {
+    error_message_ = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+
+  // Ensure directory exists; sqlite_open does not do this.
+  if (!File::RecursivelyCreateDir(dirname.c_str())) {
+    error_message_ = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+
+  std::string16 full_path(dirname);
+  full_path += kPathSeparator;
+  full_path += filename_;
+
+  sqlite3 *temp_db = NULL;
+  int sql_status = OpenAndSetupDatabase(full_path, &temp_db);
+  if (sql_status != SQLITE_OK) {
+    sql_status = SqlitePoisonIfCorrupt(temp_db, sql_status);
+    if (sql_status == SQLITE_CORRUPT) {
+      database2_metadata_->MarkDatabaseCorrupt(origin_, filename_);
+      ExceptionManager::ReportAndContinue();
+      error_message_ = GET_INTERNAL_ERROR_MESSAGE();
+    } else {
+      error_message_ = GET_INTERNAL_ERROR_MESSAGE();
+    }
+
+    sqlite3_close(temp_db);
+    return false;
+  }
+
+  handle_ = temp_db;
   return true;
 }

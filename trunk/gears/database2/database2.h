@@ -50,10 +50,11 @@ class Database2 : public ModuleImplBaseClassVirtual {
  public:
   ~Database2() {}
 
-    // creates an instance of Database2
+  // creates an instance of Database2
   static bool Create(const ModuleImplBaseClass *sibling, 
                      const std::string16 &name,
                      const std::string16 &version,
+                     Database2Connection *connection,
                      scoped_refptr<Database2> *instance);
 
   // creates an object, implementing HTML5 SQLError interface
@@ -62,12 +63,14 @@ class Database2 : public ModuleImplBaseClassVirtual {
                           const std::string16 &message,
                           JsObject *instance);
 
-  // explicit (not part of the ::Create), so that the caller could distinguish
-  // between internal failures and version mismatch errors
-  bool Open();
-
   // returns (or creates) a transaction queue for this database
   Database2TransactionQueue *GetQueue();
+
+  // IN: void
+  // OUT: string version
+  void GetVersion(JsCallContext *context) {
+    context->SetReturnValue(JSPARAM_STRING16, &version_);
+  }
 
   // IN: string old_version, string new_version, optional function callback,
   //     optional function success_callback, optional function failure
