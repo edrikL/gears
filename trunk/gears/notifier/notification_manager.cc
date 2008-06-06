@@ -334,12 +334,4 @@ void NotificationManager::OnUserActivityChange() {
 void NotificationManager::OnBalloonSpaceChanged() {
   ShowNotifications();
 }
-
-#if USING_CCTESTS
-BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
-  BalloonCollectionMock *mock = new BalloonCollectionMock;
-  balloon_collection_.reset(mock);
-  return mock;
-}
-#endif  // USING_CCTESTS
 #endif  // OFFICIAL_BUILD
