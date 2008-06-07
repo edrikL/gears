@@ -107,8 +107,7 @@ class Database2Transaction
   friend bool CreateModule<Database2Transaction, Database2Transaction>(
                   JsRunnerInterface *js_runner,
                   scoped_refptr<Database2Transaction>* module);
-  Database2Transaction::Database2Transaction() :
-    ModuleImplBaseClassVirtual("Database2Transaction") {}
+  Database2Transaction() : ModuleImplBaseClassVirtual("Database2Transaction") {}
 
   std::string16 old_version_;
   std::string16 new_version_;
