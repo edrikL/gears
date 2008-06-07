@@ -34,8 +34,10 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class BlobInterface;
+class File;
 
 // Creates a Blob from multiple data sources.
 class BlobBuilder {
@@ -58,13 +60,15 @@ class BlobBuilder {
   // It also has the side-effect of resetting the BlobBuilder.
   void CreateBlob(scoped_refptr<BlobInterface> *blob);
 
+  // Returns the current total length of all data.
+  int64 Length() const;
+
  private:
-  bool IncrementAndCheckSize(int64 size_increment);
   void PushDataAsBlob();
 
   std::vector<scoped_refptr<BlobInterface> > blob_list_;
   std::vector<uint8> data_;
-  int64 length_;
+  scoped_ptr<File> file_;
   DISALLOW_EVIL_CONSTRUCTORS(BlobBuilder);
 };
 

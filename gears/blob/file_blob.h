@@ -30,8 +30,13 @@
 // The blob API has not been finalized for official builds
 #else
 
-#include "gears/blob/blob_interface.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
+#include "gears/blob/blob_interface.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+
+class File;
 
 class FileBlob : public BlobInterface {
  public:
@@ -39,12 +44,17 @@ class FileBlob : public BlobInterface {
   // If it is not valid, Read() and Length() will return -1.
   FileBlob(const std::string16& filename);
 
+  // FileBlob will assume ownership of the File object and will delete
+  // it when FileBlob is deleted.
+  FileBlob(File *file);
+
   int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
   int64 Length() const;
 
  private:
-  std::string16 filename_;
+  mutable Mutex file_lock_;
+  scoped_ptr<File> file_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileBlob);
 };

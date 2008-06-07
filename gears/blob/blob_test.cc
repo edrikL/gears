@@ -30,8 +30,11 @@
 #ifdef USING_CCTESTS
 
 #include <cstring>
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
 #include "gears/blob/blob_builder.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/blob/file_blob.h"
 #include "gears/blob/join_blob.h"
 #include "gears/blob/slice_blob.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -107,7 +110,58 @@ bool TestBufferBlob(std::string16 *error) {
   return true;
 }
 
-// TODO(bpm): TestFileBlob
+bool TestFileBlob(std::string16 *error) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    printf("TestFileBlob - failed (%d)\n", __LINE__); \
+    assert(error); \
+    *error += STRING16(L"TestFileBlob - failed. "); \
+    return false; \
+  } \
+}
+  uint8 buffer[64];
+  const uint8 vec_contents[] = "abcdef";
+  scoped_ptr<File> file(File::CreateNewTempFile());
+  file->Write(vec_contents, sizeof(vec_contents) - 1);
+  file->Flush();
+
+  // Test FileBlob construction given a File*.
+  scoped_refptr<FileBlob> blob(new FileBlob(file.release()));
+  TEST_ASSERT(blob->Length() == 6);
+  memset(buffer, 0, sizeof(buffer));
+  TEST_ASSERT(6 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(memcmp(buffer, "abcdef", 7) == 0);
+
+  // Create a FileBlob from a nonexistent file.
+  blob.reset(new FileBlob(STRING16(L"/A/B/C/Z/doesnotexist")));
+  TEST_ASSERT(blob->Length() == -1);
+  TEST_ASSERT(-1 == blob->Read(buffer, 0, sizeof(buffer)));
+
+  // Test an empty FileBlob.
+  std::string16 temp_dir;
+  File::CreateNewTempDirectory(&temp_dir);
+  std::string16 filepath(temp_dir + kPathSeparator +
+                         STRING16(L"TestFileBlob.ext"));
+  File::CreateNewFile(filepath.c_str());
+  blob.reset(new FileBlob(filepath));
+  TEST_ASSERT(blob->Length() == 0);
+  TEST_ASSERT(0 == blob->Read(buffer, 0, sizeof(buffer)));
+
+  // Test FileBlob construction given a file name.
+  File::WriteBytesToFile(filepath.c_str(), vec_contents, 6);
+  blob.reset(new FileBlob(filepath));
+  TEST_ASSERT(blob->Length() == 6);
+  TEST_ASSERT(6 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "abcdef", 7));
+
+  // Cleanup
+  File::DeleteRecursively(temp_dir.c_str());
+
+  return true;
+}
+
 
 bool TestSliceBlob(std::string16 *error) {
 #undef TEST_ASSERT
@@ -222,6 +276,15 @@ bool TestJoinBlob(std::string16 *error) {
   TEST_ASSERT(3 == blob->Read(buffer, 1, 3));
   TEST_ASSERT(0 == memcmp(buffer, "omb", 3));
 
+  // JoinBlob containing data, blob, then more data.
+  builder.AddData("ahh", 3);
+  builder.AddBlob(blob1.get());
+  builder.AddData("ahh", 3);
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 9);
+  TEST_ASSERT(9 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "ahhnomahh", 9));
+
   // JoinBlob containing EmptyBlobs and other empty data.
   builder.AddBlob(new EmptyBlob);
   builder.AddBlob(blob1.get());
@@ -265,7 +328,21 @@ bool TestJoinBlob(std::string16 *error) {
   TEST_ASSERT(12 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "nommnomnburp", 12));
 
-  // TODO(bgarcia): test with FileBlob
+  // Create JoinBlob from strings surrounding a FileBlob.
+  const uint8 vec_contents[] = "abcdef";
+  scoped_ptr<File> file(File::CreateNewTempFile());
+  file->Write(vec_contents, sizeof(vec_contents) - 1);
+  file->Flush();
+  scoped_refptr<FileBlob> blob3(new FileBlob(file.release()));
+  builder.AddString(STRING16(L"one"));
+  builder.AddString(STRING16(L"two"));
+  builder.AddBlob(blob3.get());
+  builder.AddString(STRING16(L"three"));
+  builder.CreateBlob(&blob);
+  TEST_ASSERT(blob->Length() == 17);
+  TEST_ASSERT(17 == blob->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(0 == memcmp(buffer, "onetwoabcdefthree", 17));
+
   return true;
 }
 

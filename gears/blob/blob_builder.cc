@@ -29,24 +29,25 @@
 #include "gears/blob/blob_builder.h"
 
 #include <limits>
+#include "gears/base/common/file.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/blob/file_blob.h"
 #include "gears/blob/join_blob.h"
 
 namespace {
-const std::string::size_type max_data_len =
-    std::numeric_limits<std::vector<uint8>::size_type>::max();
+const int64 kMaxBufferSize = 1024 * 1024; // 1MB
 }
 
-BlobBuilder::BlobBuilder() : length_(0) {
+BlobBuilder::BlobBuilder() {
 }
 
 BlobBuilder::~BlobBuilder() {
 }
 
 bool BlobBuilder::AddBlob(BlobInterface *blob) {
-  if (!IncrementAndCheckSize(blob->Length())) return false;
+  if (blob->Length() < 0) return false;
   if (blob->Length() == 0) return true;
   PushDataAsBlob();
   blob_list_.push_back(blob);
@@ -54,13 +55,29 @@ bool BlobBuilder::AddBlob(BlobInterface *blob) {
 }
 
 bool BlobBuilder::AddData(const void *data, int64 length) {
-  if (!IncrementAndCheckSize(length)) return false;
+  if (length < 0) return false;
   if (length == 0) return true;
-  // TODO(bgarcia): handle larger data by splitting into multiple BufferBlobs
-  // or creating a FileBlob.  For now, return false if it's too large.
-  if (max_data_len - data_.size() < length) return false;
-  data_.insert(data_.end(), static_cast<const uint8*>(data),
-               static_cast<const uint8*>(data) + length);
+  if (!file_.get() && (length + data_.size() > kMaxBufferSize)) {
+    file_.reset(File::CreateNewTempFile());
+    if (!data_.empty()) {
+      int64 result = file_->Write(&data_[0], data_.size());
+      if (result != length) return false;
+      data_.clear();
+    }
+  }
+
+  if (file_.get()) {
+    int64 pos = file_->Tell();
+    int64 result = file_->Write(static_cast<const uint8*>(data), length);
+    if (result != length) {
+      file_->Truncate(pos);
+      file_->Seek(pos, File::SEEK_FROM_START);
+      return false;
+    }
+  } else {
+    data_.insert(data_.end(), static_cast<const uint8*>(data),
+                 static_cast<const uint8*>(data) + length);
+  }
   return true;
 }
 
@@ -72,7 +89,6 @@ bool BlobBuilder::AddString(const std::string16 &data) {
 
 void BlobBuilder::CreateBlob(scoped_refptr<BlobInterface> *blob) {
   PushDataAsBlob();
-  length_ = 0;
   if (blob_list_.size() == 0) {
     *blob = new EmptyBlob;
   } else if (blob_list_.size() == 1) {
@@ -84,21 +100,30 @@ void BlobBuilder::CreateBlob(scoped_refptr<BlobInterface> *blob) {
   }
 }
 
+int64 BlobBuilder::Length() const {
+  int64 length(0);
+  if (file_.get()) {
+    length = file_->Size();
+    // TODO(bgarcia): If something bad happened to the file, is there
+    //                anything we can do to recover from this situation?
+    assert(length != -1);
+  }
+  length += data_.size();
+  for (unsigned i = 0; i < blob_list_.size();  ++i) {
+    length += blob_list_[i]->Length();
+  }
+  return length;
+}
+
 void BlobBuilder::PushDataAsBlob() {
   if (!data_.empty()) {
-    scoped_refptr<BlobInterface> blob = new BufferBlob(&data_);
-    blob_list_.push_back(blob);
+    assert(!file_.get());
+    blob_list_.push_back(new BufferBlob(&data_));
+    data_.clear();
+  } else if (file_.get()) {
+    file_->Flush();
+    blob_list_.push_back(new FileBlob(file_.release()));
   }
 }
 
-bool BlobBuilder::IncrementAndCheckSize(int64 size_increment) {
-  if (size_increment < 0) {
-    return false;
-  }
-  if (std::numeric_limits<int64>::max() - length_ < size_increment) {
-    return false;
-  }
-  length_ += size_increment;
-  return true;
-}
 #endif
