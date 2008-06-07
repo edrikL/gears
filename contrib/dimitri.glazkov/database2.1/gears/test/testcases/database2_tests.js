@@ -65,7 +65,7 @@ function testDatabaseOpenVersioned() {
   var db3 = db_manager.openDatabase(name, '');
   assertEqual('1.0', db3.version);
   // TODO(aa): Test the data that was created above.
-  assert(db, 'Database should be a value');
+  assert(db3, 'Database should be a value');
 }
 
 function testWeirdDatabaseNames() {
@@ -124,59 +124,61 @@ function testDatabaseApiSig() {
   });
 }
 
-function testDatabaseTransaction() {
-  withDb(function(db) {
-    var method = 'Database2.transaction()';
-    var inFlight;
-    var outOfOrder = 0;
-    // this tests the fact that the transaction callback is called 
-    // asynchronously and whether the callback is invoked in a proper sequence
-    // if startAsync times out, the callback is not invoked at all
-    db.transaction(function(tx) {
-      inFlight = true;
-      outOfOrder--;
-      if (outOfOrder) {
-        assert(false, method + ' invokes callback out of sequence');
-      }
-      completeAsync();
-    });
-    outOfOrder++;
-    if (inFlight) {
-      assert(false, method + ' is not called asynchronously');
-    }
-    startAsync();
+// TODO(dimitri.glazkov): Uncomment when functionality implemented
+//function testDatabaseTransaction() {
+//  withDb(function(db) {
+//    var method = 'Database2.transaction()';
+//    var inFlight;
+//    var outOfOrder = 0;
+//    // this tests the fact that the transaction callback is called 
+//    // asynchronously and whether the callback is invoked in a proper sequence
+//    // if startAsync times out, the callback is not invoked at all
+//    db.transaction(function(tx) {
+//      inFlight = true;
+//      outOfOrder--;
+//      if (outOfOrder) {
+//        assert(false, method + ' invokes callback out of sequence');
+//      }
+//      completeAsync();
+//    });
+//    outOfOrder++;
+//    if (inFlight) {
+//      assert(false, method + ' is not called asynchronously');
+//    }
+//    startAsync();
 
-    // TODO(aa): Remove when transaction() works.
-    completeAsync();
-  });
-}
+//    // TODO(aa): Remove when transaction() works.
+//    completeAsync();
+//  });
+//}
 
-function testDatabaseSynchronousTransaction() {
-  withDb(function(db) {
-    var method = 'Database2.synchronousTransaction() ';
-    var inFlight;
-    var outOfOrder = 0;
-    // this tests the fact that the transaction callback is called 
-    // synchronously and whether the callback is invoked in a proper sequence
-    db.synchronousTransaction(function(tx) {
-      inFlight = true;
-      if (outOfOrder) {
-        assert(false, method + ' invokes callback out of sequence');
-      }
-    });
-    outOfOrder++;
-    if (!inFlight) {
-      assert(false, method + ' is not called synchronously');
-    }
-    
-    // test statement execution
-    db.synchronousTransaction(function(tx) {
-      var method = 'Database2Transaction.executeSql()';
-      var rs = tx.executeSql('SELECT * FROM Pages;');
-      assert(rs, method + ' should return a result set');
-    });
-  });
-}
+// TODO(dimitri.glazkov): Uncomment when functionality implemented
+// function testDatabaseSynchronousTransaction() {
+//   withDb(function(db) {
+//     var method = 'Database2.synchronousTransaction() ';
+//     var inFlight;
+//     var outOfOrder = 0;
+//     // this tests the fact that the transaction callback is called 
+//     // synchronously and whether the callback is invoked in a proper sequence
+//     db.synchronousTransaction(function(tx) {
+//       inFlight = true;
+//       if (outOfOrder) {
+//         assert(false, method + ' invokes callback out of sequence');
+//       }
+//     });
+//     outOfOrder++;
+//     if (!inFlight) {
+//       assert(false, method + ' is not called synchronously');
+//     }
+//     
+//     // test statement execution
+//     db.synchronousTransaction(function(tx) {
+//       var method = 'Database2Transaction.executeSql()';
+//       var rs = tx.executeSql('SELECT * FROM Pages;');
+//       assert(rs, method + ' should return a result set');
+//     });
+//   });
+// }
 
 function testStatementArguments() {
   withDb(function(db) {
@@ -203,15 +205,45 @@ function testStatementArguments() {
   });
 }
 
-function testSQLTransactionApiSig() {
+// TODO(dimitri.glazkov): Add tests for type fidelity, large integers, and
+// unsupported types.
+// TODO(dimitri.glazkov): Rework the tests to create/drop test tables with setup
+// and tear-down methods.
+function testSyncExecution() {
   withDb(function(db) {
-    var method = 'SQLTransaction.executeSql';
-    db.transaction(function(tx) {
-      assert(typeof tx.executeSQL != 'undefined',
-             method + ' should be present');
+    db.synchronousTransaction(function(tx) {
+      var rs;
+      tx.executeSql('CREATE TABLE IF NOT EXISTS Pages(' +
+                    ' pageId INTEGER PRIMARY KEY,' +
+                    ' version TEXT)');
+      var pageId;
+      rs = tx.executeSql('SELECT IFNULL(MAX(pageId) + 1, 1) AS max FROM Pages');
+      assert(rs, 'Synchronous execute should return a result set');
+      assert(rs.rows, 'result set must contain rows');
+      assert(rs.rows.length, 'result set must contain one row');
+      assert(rs.rows[0].max,
+        'result set must return one non-zero int value with the key of "max"');
+      pageId = rs.rows[0].max;
+      tx.executeSql('INSERT INTO Pages(pageId, version) ' +
+                    'VALUES(?,?)', [ pageId, 'test' ]);
+      var rs = tx.executeSql('SELECT * FROM Pages WHERE pageId = ?',
+        [ pageId ]);
+      assert(rs.rows[0].pageId == pageId,
+        'result set must return the last returned value');
     });
   });
 }
+
+// TODO(dimitri.glazkov): Uncomment when functionality implemented
+//function testSQLTransactionApiSig() {
+//  withDb(function(db) {
+//    var method = 'SQLTransaction.executeSql';
+//    db.transaction(function(tx) {
+//      assert(typeof tx.executeSQL != 'undefined',
+//             method + ' should be present');
+//    });
+//  });
+//}
 
 function withDb(fn, version) {
   db_manager && fn && fn.call(
