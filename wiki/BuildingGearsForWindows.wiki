@@ -14,7 +14,8 @@ Install the following to create the build environment:
   * Wix 3.0.2925 - http://wix.sourceforge.net/downloadv3.html
   * Python 2.4 - http://www.python.org/ftp/python/2.4.4/python-2.4.4.msi
   * Subversion - http://subversion.tigris.org/downloads/subversion-1.4.4.zip 
-  * Unxutils - ftp://garbo.uwasa.fi/win95/unix/UnxUtils.zip and ftp://garbo.uwasa.fi/win95/unix/UnxUpdates.zip.  Or you can get the combined package [http://google-gears.googlecode.com/files/UnxUtils.zip here].
+  * Unxutils - ftp://garbo.uwasa.fi/win95/unix/UnxUtils.zip and ftp://garbo.uwasa.fi/win95/unix/UnxUpdates.zip.
+    * Or you can get the combined package [http://google-gears.googlecode.com/files/UnxUtils.zip here].
 
 Follow the instructions at http://code.google.com/p/google-gears/source to set up your source tree.
 
