@@ -150,6 +150,9 @@ bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
 // from ipc_message_queue_win32_test.cc
 bool TestIpcMessageQueue(std::string16 *error);
 #endif
+#ifdef OS_ANDROID
+bool TestThreadMessageQueue(std::string16* error);
+#endif
 bool TestStopwatch(std::string16 *error);
 bool TestJsonEscaping(std::string16 *error);
 bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
@@ -268,6 +271,9 @@ void GearsTest::RunTests(JsCallContext *context) {
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
   ok &= TestIpcMessageQueue(&error);
+#endif
+#ifdef OS_ANDROID
+  ok &= TestThreadMessageQueue(&error);
 #endif
 #ifndef OFFICIAL_BUILD
 #if BROWSER_FF
