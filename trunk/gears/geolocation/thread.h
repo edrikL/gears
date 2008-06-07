@@ -27,6 +27,7 @@
 #define GEARS_GEOLOCATION_THREAD_H__
 
 #include "gears/base/common/event.h"
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
 
 // This class abstracts creating a new thread. Derived classes implement the Run
@@ -39,7 +40,7 @@ class Thread {
   virtual ~Thread();
 
   // Creates a thread and invokes this->Run() as its body.
-  void Start();
+  ThreadId Start();
 
   // Waits for the Run method to complete. Note that the thread may execute code
   // in CleanUp() after this method has returned.
@@ -55,20 +56,15 @@ class Thread {
   // does nothing.
   virtual void CleanUp() {}
 
-  // Thread entry point.
-#if defined(WIN32) || defined(WINCE)
-  static unsigned int __stdcall ThreadMain(void *user_data);
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
-  static void *ThreadMain(void *user_data);
-#else
-#error Platform not supported.
-#endif
+  Event run_complete_event_;
 
 #ifdef DEBUG
   bool is_running_;
   Mutex is_running_mutex_;
 #endif
-  Event run_complete_event_;
+
+  // Initializes the message queue for this thread and calls Run().
+  friend void ThreadMain(void *user_data);
 };
 
 #endif  // GEARS_GEOLOCATION_THREAD_H__
