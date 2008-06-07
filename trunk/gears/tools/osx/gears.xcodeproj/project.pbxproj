@@ -86,6 +86,7 @@
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
+		B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54C2E690DF9FCEC005129EE /* database2_metadata.cc */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55E5FEB0DF5EF5100D3DC1F /* http_handler.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD8E0D52925E00B0A65D /* http_handler.mm */; };
 		B55E5FFA0DF5F05500D3DC1F /* browser_load_hook.mm in Sources */ = {isa = PBXBuildFile; fileRef = B55E5FF90DF5F05500D3DC1F /* browser_load_hook.mm */; };
@@ -624,6 +625,8 @@
 		B544DB710D2EE93800D30561 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		B544DCC40D3578B000D30561 /* http_request_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_request_sf.h; path = ../../localserver/safari/http_request_sf.h; sourceTree = SOURCE_ROOT; };
 		B544FD620D89326D00568660 /* cf_string_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cf_string_utils.cc; path = ../../base/safari/cf_string_utils.cc; sourceTree = SOURCE_ROOT; };
+		B54C2E680DF9FCEC005129EE /* database2_metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database2_metadata.h; path = ../../database2/database2_metadata.h; sourceTree = SOURCE_ROOT; };
+		B54C2E690DF9FCEC005129EE /* database2_metadata.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2_metadata.cc; path = ../../database2/database2_metadata.cc; sourceTree = SOURCE_ROOT; };
 		B54D29110D9287D20029F7EF /* dispatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dispatcher.h; path = ../../base/common/dispatcher.h; sourceTree = SOURCE_ROOT; };
 		B54D29120D9287D20029F7EF /* dispatcher.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dispatcher.cc; path = ../../base/common/dispatcher.cc; sourceTree = SOURCE_ROOT; };
 		B54D50AB0DD8FEB7009BFB67 /* js_standalone_engine.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = js_standalone_engine.h; path = ../../base/common/js_standalone_engine.h; sourceTree = SOURCE_ROOT; };
@@ -1264,6 +1267,8 @@
 				B507A3EC0DEC70FD00DC9D6A /* database2.cc */,
 				B507A3F60DEC70FD00DC9D6A /* database2_common.h */,
 				B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */,
+				B54C2E680DF9FCEC005129EE /* database2_metadata.h */,
+				B54C2E690DF9FCEC005129EE /* database2_metadata.cc */,
 				B507A3EF0DEC70FD00DC9D6A /* interpreter.h */,
 				B507A3F30DEC70FD00DC9D6A /* interpreter.cc */,
 				B507A3FD0DEC70FD00DC9D6A /* manager.h */,
@@ -2768,6 +2773,7 @@
 				B55FD9BF0DF5FB63007FC7E1 /* settings_menu.mm in Sources */,
 				B55FDA010DF71B8F007FC7E1 /* html_modeless_dialog_sf.mm in Sources */,
 				B55FDB690DF88766007FC7E1 /* ConvertUTF.c in Sources */,
+				B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
