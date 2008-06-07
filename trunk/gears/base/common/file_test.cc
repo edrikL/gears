@@ -411,6 +411,10 @@ bool TestFileObject() {
   TEST_ASSERT(file->Read(data_read, 1) == 0);
   TEST_ASSERT(file->Tell() == size);
 
+  // Remove the entire tmp_dir incuding the sub-dir it contains
+  TEST_ASSERT(File::DeleteRecursively(temp_dir.c_str()));
+  TEST_ASSERT(!File::DirectoryExists(temp_dir.c_str()));
+
   return true;
 }
 

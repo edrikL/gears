@@ -32,19 +32,30 @@
 
 
 FileBlob::FileBlob(const std::string16& filename)
-    : BlobInterface(),
-      filename_(filename) {
+    : file_(File::Open(filename.c_str(), File::READ,
+                       File::FAIL_IF_NOT_EXISTS)) {
+}
+
+
+FileBlob::FileBlob(File *file) : file_(file) {
 }
 
 
 int64 FileBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
-  return File::ReadFileSegmentToBuffer(
-      filename_.c_str(), destination, offset, max_bytes);
+  MutexLock locker(&file_lock_);
+  if (file_.get() && file_->Seek(offset, File::SEEK_FROM_START)) {
+    return file_->Read(destination, max_bytes);
+  }
+  return -1;
 }
 
 
 int64 FileBlob::Length() const {
-  return File::GetFileSize(filename_.c_str());
+  MutexLock locker(&file_lock_);
+  if (file_.get()) {
+    return file_->Size();
+  }
+  return -1;
 }
 
 #endif  // not OFFICIAL_BUILD

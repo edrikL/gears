@@ -143,6 +143,7 @@ bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
+bool TestFileBlob(std::string16 *error);  // from blob_test.cc
 bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
 bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
@@ -265,6 +266,7 @@ void GearsTest::RunTests(JsCallContext *context) {
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
   ok &= TestBufferBlob(&error);
+  ok &= TestFileBlob(&error);
   ok &= TestJoinBlob(&error);
   ok &= TestSliceBlob(&error);
 #endif  // not OFFICIAL_BUILD
