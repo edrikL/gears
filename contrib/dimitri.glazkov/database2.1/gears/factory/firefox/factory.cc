@@ -40,6 +40,13 @@
 #include "gears/database/firefox/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
+
+#ifdef OFFICIAL_BUILD
+// The Dummy module is not included in official builds.
+#else
+#include "gears/dummy/dummy_module.h"
+#endif
+
 #include "gears/factory/common/factory_utils.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/image/image_loader.h"
@@ -180,6 +187,12 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.audiorecorder")) {
     CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
 #endif  // OFFICIAL_BUILD
+#ifdef OFFICIAL_BUILD
+  // The Dummy module is not included in official builds.
+#else
+  } else if (object_name == STRING16(L"beta.dummymodule")) {
+    CreateModule<DummyModule>(GetJsRunner(), &object);
+#endif // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();

@@ -36,6 +36,13 @@
 #include "gears/database/npapi/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
+
+#ifdef OFFICIAL_BUILD
+// The Dummy module is not included in official builds.
+#else
+#include "gears/dummy/dummy_module.h"
+#endif
+
 #include "gears/factory/common/factory_utils.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
@@ -153,6 +160,12 @@ void GearsFactory::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.audiorecorder")) {
     CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
 #endif  // OFFICIAL_BUILD
+#ifdef OFFICIAL_BUILD
+  // The Dummy module is not included in official builds.
+#else
+  } else if (object_name == STRING16(L"beta.dummymodule")) {
+    CreateModule<DummyModule>(GetJsRunner(), &object);
+#endif // OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.timer")) {
