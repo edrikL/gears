@@ -48,7 +48,7 @@
 // can be represented by IEEE 754 without loss of precision.
 // For this reason, we cap the range of supported integers
 // to [-2^53, 2^53] by throwing an exception if the values
-// are outside this interval. This restriction is enforced, 
+// are outside this interval. This restriction is enforced,
 // for example, in GearsDatabase::get_lastInsertRowId() and
 // GearsResultSet::field().
 #define JS_INT_MAX (GG_LONGLONG(1) << DBL_MANT_DIG)  // 2^53
@@ -99,7 +99,7 @@
 #ifdef WIN32
 #include "gears/base/common/common_ie.h"
 #else
-#define LOG(args)  __noop
+#define LOG(args) do { } while (false)
 #endif
 
 #else

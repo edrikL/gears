@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // The methods of the File class with a browser neutral implementation.
@@ -34,7 +34,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-// An arbitrary number that is a good limit on the filename length we should 
+// An arbitrary number that is a good limit on the filename length we should
 // be creating internally.
 const size_t File::kMaxPathComponentChars = 128;
 
@@ -93,7 +93,7 @@ bool File::GetBaseName(const std::string16 &path,  std::string16 *basename) {
     }
 
     // A corner case - if we got here it means that the input consisted entirely
-    // of path separators, so return a single path separator. Note that if we 
+    // of path separators, so return a single path separator. Note that if we
     // get an empty string as input we want to return an empty string.
     if (basename->empty() && path.length() > 0) {
       *basename = kPathSep;
@@ -102,27 +102,27 @@ bool File::GetBaseName(const std::string16 &path,  std::string16 *basename) {
   return true;
 }
 
-bool File::GetParentDirectory(const std::string16 &path, 
+bool File::GetParentDirectory(const std::string16 &path,
                               std::string16 *parent) {
   assert(parent);
-  
+
   if (path.empty()) {
     return false;
   }
-  
+
   std::string16 base_name;
   if (!GetBaseName(path, &base_name)) {
     return false;
   }
-  
+
   // Return false if no parent specified in path.
   int parent_length = path.length() - base_name.length() - 1;
   if (parent_length < 1) {
     return false;
   }
-  
+
   std::string16 tmp_parent = path.substr(0, parent_length);
-  
+
   // Clean trailing '/s' off parent.  Note that '/' is a legal value for the
   // parent directory.
   while (parent_length > 1 &&
@@ -132,13 +132,11 @@ bool File::GetParentDirectory(const std::string16 &path,
   }
 
   *parent = tmp_parent;
-  
+
   return true;
-  
-  
 }
 
-void File::SplitPath(const std::string16 &path, 
+void File::SplitPath(const std::string16 &path,
                      PathComponents *exploded_path) {
   assert(exploded_path);
 
@@ -146,60 +144,12 @@ void File::SplitPath(const std::string16 &path,
   Tokenize(path, path_sep, exploded_path);
 }
 
-// Support for storing and retrieving the last file error that occurred
-// on a given thread. This is used to report better error messages.
-// TODO(michaeln): LastError functions can be tricky to use correctly,
-// consider something else later
-
-const char16 *File::kCreateFileFailedMessage = STRING16(
-                        L"Failed to create file");
-
-static const std::string kLastFileErrorKey("base:LastFileError");
-
-static void DeleteString16(void *thread_local_value) {
-  std::string16 *error = reinterpret_cast<std::string16*>(thread_local_value);
-  delete error;
-}
-
-void File::ClearLastFileError() {
-  ThreadLocals::DestroyValue(kLastFileErrorKey);
-}
-
-bool File::GetLastFileError(std::string16 *error_out) {
-  std::string16 *error = reinterpret_cast<std::string16*>(
-                             ThreadLocals::GetValue(kLastFileErrorKey));
-  if (error) {
-    *error_out = *error;
-    return true;
-  } else {
-    error_out->clear();
-    return false;
-  }
-}
-
-void File::SetLastFileError(const char16 *message,
-                            const char16 *filepath,
-                            int error_code) {
-  std::string16 *value = new std::string16(message);
-  (*value) += STRING16(L", '");
-  (*value) += filepath;
-  (*value) += STRING16(L"', error = ");
-  (*value) += IntegerToString16(error_code);
-
-  ThreadLocals::SetValue(kLastFileErrorKey, 
-                         value,
-                         &DeleteString16);
-}
-
-
 int64 File::GetFileSize(const char16 *full_filepath) {
   scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
   if (!file.get()) {
-    return 0;
+    return -1;
   }
-  int64 size = file->Size();
-  // TODO(fry): change GetFileSize to return -1 on error
-  return (size < 0) ? 0 : size;
+  return file->Size();
 }
 
 
@@ -211,7 +161,7 @@ int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
   if (file.get() && file->Seek(position, SEEK_FROM_START)) {
     return file->Read(destination, max_bytes);
   }
-  return 0;
+  return -1;
 }
 
 

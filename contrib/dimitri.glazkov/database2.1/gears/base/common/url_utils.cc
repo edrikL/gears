@@ -23,10 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <assert.h>
+
 #include "gears/base/common/url_utils.h"
 
 #include "gears/base/common/base64.h"
 #include "gears/base/common/string_utils.h"
+#include "third_party/googleurl/src/gurl.h"
 
 bool IsRelativeUrl(const char16 *url) {
   // From RFC 2396 (URI Generic Syntax):
@@ -124,8 +127,7 @@ bool ParseDataUrl(const std::string16& url, std::string16* mime_type,
   if (base64_encoded ||
       !(mime_type->compare(0, 5, STRING16(L"text/")) == 0 ||
         mime_type->find(STRING16(L"xml")) != std::string16::npos)) {
-    temp_data.erase(std::remove_if(temp_data.begin(), temp_data.end(),
-                                   std::isspace),
+    temp_data.erase(std::remove_if(temp_data.begin(), temp_data.end(), isspace),
                     temp_data.end());
   }
 
@@ -296,4 +298,34 @@ std::string EscapeUrl(const std::string &source, unsigned int flags) {
   result += temp_buffer;
 
   return result;
+}
+
+bool ResolveAndNormalize(const char16 *base, const char16 *url,
+                         std::string16 *out) {
+  assert(url && out);
+  GURL gurl;
+  if (base != NULL) {
+    GURL base_gurl(base);
+    if (!base_gurl.is_valid()) {
+      return false;
+    }
+    gurl = base_gurl.Resolve(url);
+  } else {
+    gurl = GURL(url);
+  }
+
+  if (!gurl.is_valid()) {
+    return false;
+  }
+
+  // strip the fragment part of the url
+  GURL::Replacements strip_fragment;
+  strip_fragment.SetRef("", url_parse::Component());
+  gurl = gurl.ReplaceComponents(strip_fragment);
+
+  if (!UTF8ToString16(gurl.spec().c_str(), gurl.spec().length(), out)) {
+    return false;
+  }
+
+  return true;
 }

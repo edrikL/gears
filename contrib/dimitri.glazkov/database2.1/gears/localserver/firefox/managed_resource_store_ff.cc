@@ -395,7 +395,8 @@ NS_IMETHODIMP GearsManagedResourceStore::CheckForUpdate() {
     RETURN_NORMAL();
   }
 
-  update_task_.reset(UpdateTask::CreateUpdateTask());
+  update_task_.reset(
+      UpdateTask::CreateUpdateTask(EnvPageBrowsingContext()));
   if (!update_task_->Init(&store_)) {
     update_task_.reset(NULL);
     RETURN_EXCEPTION(STRING16(L"Failed to initialize update task."));

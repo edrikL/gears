@@ -40,6 +40,7 @@
 #include "gears/blob/buffer_blob.h"
 #endif  // !OFFICIAL_BUILD
 #include "gears/localserver/ie/http_handler_ie.h"
+#include "gears/localserver/ie/progress_input_stream.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // We use URLMON's pull-data model which requires making stream read calls
@@ -201,7 +202,8 @@ bool IEHttpRequest::GetResponseHeader(const char16* name,
 //------------------------------------------------------------------------------
 // Open
 //------------------------------------------------------------------------------
-bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
+bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async,
+                    BrowsingContext *browsing_context) {
   assert(!IsRelativeUrl(url));
   if (!IsUninitialized())
     return false;
@@ -396,6 +398,13 @@ void IEHttpRequest::SetReadyState(ReadyState state) {
   }
 }
 
+void IEHttpRequest::OnUploadProgress(int64 position, int64 total) {
+  if (was_aborted_) return;
+  if (listener_) {
+    listener_->UploadProgress(this, position, total);
+  }
+}
+
 //------------------------------------------------------------------------------
 // IServiceProvider::QueryService
 // Implemented to return an interface pointer for IHttpNegotiate and
@@ -580,6 +589,8 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
     wcscpy(info->szCustomVerb, method_.c_str());
   }
 
+  CComPtr<IStream> data_stream;
+  int64 data_length;
 #ifdef OFFICIAL_BUILD
   if (is_post_or_put && !post_data_string_.empty()) {
     CComObject<StreamBuffer> *buf = NULL;
@@ -587,24 +598,34 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
     if (FAILED(hr))
       return hr;
     buf->Initialize(post_data_string_.data(), post_data_string_.size());
-    info->stgmedData.tymed = TYMED_ISTREAM;
-    info->stgmedData.pstm = static_cast<IStream*>(buf);
-    // buf has a 0 reference count at this point.  The caller of GetBindInfo
-    // will immediately do an AddRef on buf.
+    data_stream = buf;
+    data_length = post_data_string_.size();
   }
 #else  // !OFFICIAL_BUILD
   if (is_post_or_put && post_data_.get()) {
-    CComObject<BlobStream> *stream = NULL;
-    HRESULT hr = CComObject<BlobStream>::CreateInstance(&stream);
+    CComObject<BlobStream> *blob_stream = NULL;
+    HRESULT hr = CComObject<BlobStream>::CreateInstance(&blob_stream);
     if (FAILED(hr))
       return hr;
-    stream->Initialize(post_data_.get(), 0);
+    blob_stream->Initialize(post_data_.get(), 0);
+    data_stream = blob_stream;
+    data_length = post_data_->Length();
+  }
+#endif  // !OFFICIAL_BUILD
+
+  if (data_stream) {
+    CComObject<ProgressInputStream> *stream = NULL;
+    HRESULT hr = CComObject<ProgressInputStream>::CreateInstance(&stream);
+    if (FAILED(hr)) {
+      return hr;
+    }
+    stream->Initialize(this, data_stream);
+
     info->stgmedData.tymed = TYMED_ISTREAM;
     info->stgmedData.pstm = static_cast<IStream*>(stream);
     // stream has a 0 reference count at this point.  The caller of GetBindInfo
     // will immediately do an AddRef on stream.
   }
-#endif  // !OFFICIAL_BUILD
 
   return S_OK;
 }

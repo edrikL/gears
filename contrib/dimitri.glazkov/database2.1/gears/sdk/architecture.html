@@ -73,7 +73,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <p>For example, if your AJAX application  issues a JSON request directly to the server to get all the accounts for a user, you might change this to instead ask an intermediate object for all the accounts for the user. This object could then decide whether to retrieve the data from the server, the local store, or some combination of both. Similarly, when the application wants to update the user's accounts, the app does so by calling the intermediate object. The intermediate object can then decide whether to write the data locally, whether to send the data to the server, and it can schedule synchronization.</p>
 
-<p>You can think of this intermediate object as a data switch layer that implements the same interface as the data layer. As a first step, you can make the data switch forward all your calls to the data layer that interacts with the server. This step is useful since it is  the code path that is followed when Google Gears is not installed or if the user doesn't want to enable the application to work offline. Note that a data switch is not strictly necessary (for example GearPad does not have a data switch layer).</p>
+<p>You can think of this intermediate object as a data switch layer that implements the same interface as the data layer. As a first step, you can make the data switch forward all your calls to the data layer that interacts with the server. This step is useful since it is  the code path that is followed when Gears is not installed or if the user doesn't want to enable the application to work offline. Note that a data switch is not strictly necessary (for example GearPad does not have a data switch layer).</p>
 
 <p>
 	<center>
@@ -83,7 +83,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </p>
 
 
-<p>The next step, as shown in the figure below, is to create a new local data layer that uses a Google Gears database instead of going to the web server for data. It's simpler if this data layer has the same interface as the existing data layer used to communicate with the server. If the interface is different then some translation needs to be done and you might as well do that inside this data layer.</p>
+<p>The next step, as shown in the figure below, is to create a new local data layer that uses a Gears database instead of going to the web server for data. It's simpler if this data layer has the same interface as the existing data layer used to communicate with the server. If the interface is different then some translation needs to be done and you might as well do that inside this data layer.</p>
 
 <p>To test this step, you can set the data switch layer to talk to this new (local) data layer. You might want to pre-populate the database to make things easier to test.</p>
 

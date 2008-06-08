@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/permissions_db.h"
+#include "gears/base/common/message_service.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/database2/database2_metadata.h"
@@ -36,6 +37,8 @@ static const char16 *kAccessTableName = STRING16(L"Access");
 static const int kCurrentVersion = 8;
 static const int kOldestUpgradeableVersion = 1;
 
+const char16 *PermissionsDB::kShortcutsChangedTopic = 
+                  STRING16(L"base:permissions:shortcuts-changed");
 
 const std::string PermissionsDB::kThreadLocalKey("base:permissions");
 
@@ -239,10 +242,15 @@ bool PermissionsDB::SetShortcut(const SecurityOrigin &origin,
                                 const char16 *icon128x128_url,
                                 const char16 *msg,
                                 const bool allow) {
-  return shortcut_table_.SetShortcut(origin.url().c_str(), name,
-                                     app_url, icon16x16_url, icon32x32_url,
-                                     icon48x48_url, icon128x128_url, msg,
-                                     allow);
+  bool ok = shortcut_table_.SetShortcut(origin.url().c_str(), name,
+                                        app_url, icon16x16_url, icon32x32_url,
+                                        icon48x48_url, icon128x128_url, msg,
+                                        allow);
+  if (ok) {
+    MessageService::GetInstance()->NotifyObservers(kShortcutsChangedTopic,
+                                                   NULL);
+  }
+  return ok;
 }
 
 bool PermissionsDB::GetOriginsWithShortcuts(
@@ -287,11 +295,21 @@ bool PermissionsDB::GetShortcut(const SecurityOrigin &origin,
 
 bool PermissionsDB::DeleteShortcut(const SecurityOrigin &origin,
                                    const char16 *name) {
-  return shortcut_table_.DeleteShortcut(origin.url().c_str(), name);
+  bool ok = shortcut_table_.DeleteShortcut(origin.url().c_str(), name);
+  if (ok) {
+    MessageService::GetInstance()->NotifyObservers(kShortcutsChangedTopic,
+                                                   NULL);
+  }
+  return ok;
 }
 
 bool PermissionsDB::DeleteShortcuts(const SecurityOrigin &origin) {
-  return shortcut_table_.DeleteShortcuts(origin.url().c_str());
+  bool ok = shortcut_table_.DeleteShortcuts(origin.url().c_str());
+  if (ok) {
+    MessageService::GetInstance()->NotifyObservers(kShortcutsChangedTopic,
+                                                   NULL);
+  }
+  return ok;
 }
 
 // TODO(shess): Should these just be inline in the .h?

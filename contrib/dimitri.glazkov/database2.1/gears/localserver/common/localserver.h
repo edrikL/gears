@@ -46,7 +46,7 @@
 class LocalServer {
  public:
   // Returns if the database has a response for the url at this time
-  static bool CanServeLocally(const char16 *url);
+  static bool CanServeLocally(const char16 *url, BrowsingContext *context);
 
   // Removes the server from the DB, deleting all related rows from
   // the Servers, Versions, Entries, and Payloads tables

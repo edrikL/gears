@@ -38,6 +38,9 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/desktop/curl_icon_downloader.h"
+#endif
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notifier_process.h"
@@ -96,13 +99,17 @@ GearsDesktop::GearsDesktop()
 }
 
 #ifdef OS_ANDROID
-Desktop::Desktop(const SecurityOrigin &security_origin, NPP context)
-    : security_origin_(security_origin) {
-  js_call_context_ = context;
+Desktop::Desktop(const SecurityOrigin &security_origin,
+                 BrowsingContext *context, NPP js_context)
+    : security_origin_(security_origin),
+      js_call_context_(js_context),
+      browsing_context_(context) {
 }
 #else
-Desktop::Desktop(const SecurityOrigin &security_origin)
-    : security_origin_(security_origin) {
+Desktop::Desktop(const SecurityOrigin &security_origin,
+                 BrowsingContext *context)
+    : security_origin_(security_origin),
+      browsing_context_(context) {
 }
 #endif
 
@@ -297,9 +304,10 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 
   // Prepare the shortcut.
 #ifdef OS_ANDROID
-  Desktop desktop(EnvPageSecurityOrigin(), EnvPageJsContext());
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext(),
+                  EnvPageJsContext());
 #else
-  Desktop desktop(EnvPageSecurityOrigin());
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
 #endif
   if (!desktop.ValidateShortcutInfo(&shortcut_info)) {
     if (desktop.has_error())
@@ -608,6 +616,16 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       return false;
     }
   } else {
+#ifdef BROWSER_WEBKIT
+  // Workaround for bug in OS X 10.4, see definition of GetURLData() for
+  // details.
+  if (!GetURLData(icon->url, &(icon->png_data))) {
+    *error = STRING16(L"Could not load icon ");
+    *error += icon->url.c_str();
+    *error += STRING16(L".");
+    return false;
+  }
+#else
     // Fetch the png data
     scoped_refptr<HttpRequest> request;
     HttpRequest::Create(&request);
@@ -616,7 +634,8 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
     request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     int status = 0;
-    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), async) ||
+    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), 
+                       async, browsing_context_.get()) ||
         !request->Send() ||
         (!async && (!request->GetStatus(&status) ||
                     status != HTTPResponse::RC_REQUEST_OK))) {
@@ -639,6 +658,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       *error += STRING16(L".");
       return false;
     }
+#endif
   }
 
   return true;

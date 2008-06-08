@@ -27,9 +27,8 @@
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
-// TODO(aa): A little ugly to include code from database1 this way. Refactor
-// after integration dispatcher-based Database1 from trunk.
-#include "gears/database/common/database_utils.h"
+// TODO(aa): Refactor so we don't have to rely on code from database1.
+#include "gears/database/database_utils.h"
 #include "gears/database2/database2_common.h"
 #include "gears/database2/statement.h"
 
@@ -64,7 +63,7 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
     return sql_status;
   }
 
-  sql_status = sqlite3_set_authorizer(*db, ForbidAllPragmas, NULL);
+  sql_status = sqlite3_set_authorizer(*db, ForbidActions, NULL);
   if (sql_status != SQLITE_OK) {
     return sql_status;
   }

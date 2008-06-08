@@ -66,6 +66,10 @@ NPError NPP_New(NPMIMEType pluginType,
   instance->pdata = obj;
 
   // Keep a copy of the user agent string.
+  // Note that this will initialize exactly once on the main thread.
+  // this means that this correctly stores the browsers user-agent, even when 
+  // workers use a seperate JS engine which may have NPAPI bindings that return
+  // a different value for the UA.
   if (g_user_agent.empty()) {
     const char *user_agent_utf8 = NPN_UserAgent(instance);
     UTF8ToString16(user_agent_utf8, &g_user_agent);

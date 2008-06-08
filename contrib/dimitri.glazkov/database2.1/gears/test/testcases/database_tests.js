@@ -256,10 +256,17 @@ function testIntegerRanges() {
   db.execute('drop table if exists RangeTestTable');
   db.execute('create table RangeTestTable (i int)');
 
+  testIntegerValue(-4294967296);  // -2^32
+  testIntegerValue(-2147483649);  // -2^31 - 1
+  testIntegerValue(-2147483648);  // -2^31       aka int32.min
+  testIntegerValue(-2147483647);  // -2^31 + 1
   testIntegerValue(0);
-  testIntegerValue(-2147483648);  // int32.min
-  testIntegerValue(2147483647);   // int32.max
-  testIntegerValue(0xffffffff);   // uint32.max;
+  testIntegerValue(+2147483646);  //  2^31 - 2
+  testIntegerValue(+2147483647);  //  2^31 - 1   aka int32.max
+  testIntegerValue(+2147483648);  //  2^31
+  testIntegerValue(0xfffffffe);   //  2^32 - 2
+  testIntegerValue(0xffffffff);   //  2^32 - 1   aka uint32.max
+  testIntegerValue(+4294967296);  //  2^32
   testIntegerValue(9007199254740989);   // large positive int64
   testIntegerValue(-9007199254740989);  // large negative int64
   // We dont explicitly test min/max possible int64 values because javascript

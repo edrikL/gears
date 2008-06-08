@@ -33,11 +33,15 @@
 // UpdateTaskSingleProcess
 //------------------------------------------------------------------------------
 class UpdateTaskSingleProcess : public UpdateTask {
+ public:
+  UpdateTaskSingleProcess(BrowsingContext *browsing_context)
+      : UpdateTask(browsing_context) { }
+
  protected:
   // Overriden to ensure only one task per application runs at a time
   virtual void Run();
 
-private:
+ private:
   static bool SetRunningTask(UpdateTaskSingleProcess *task);
   static void ClearRunningTask(UpdateTaskSingleProcess *task);
 };

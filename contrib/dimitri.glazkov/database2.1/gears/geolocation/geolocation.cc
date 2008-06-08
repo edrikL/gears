@@ -22,6 +22,9 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file implements GearsGeolocation, the main class of the Gears
+// Geolocation API.
 
 #ifdef OFFICIAL_BUILD
 // The Geolocation API has not been finalized for official builds.
@@ -42,13 +45,19 @@ static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 
 // Local functions
-static bool ParseOptions(JsCallContext *context, bool repeats,
-                         std::vector<std::string16> *urls,
-                         GearsGeolocation::FixRequestInfo *info);
-static bool ConvertPositionToJavaScriptObject(const Position &p,
-                                              const char16 *error,
-                                              JsRunnerInterface *js_runner,
-                                              JsObject *js_object);
+// Gets the requested property only if it is specified. Returns true on success.
+static bool GetPropertyIfSpecified(JsCallContext *context,
+                                   const JsObject &object,
+                                   const std::string16 &name,
+                                   JsScopedToken *token);
+// Sets an object integer property if the input value is valid.
+static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
+                                        int value,
+                                        JsObject *object);
+// Sets an object string property if the input value is valid.
+static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
+                                           const std::string16 &value,
+                                           JsObject *object);
 
 DECLARE_GEARS_WRAPPER(GearsGeolocation);
 
@@ -107,13 +116,15 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
   // TODO(steveblock): Cancel the fix.
 }
 
-// Non-API methods
-
+// Non-API method.
 void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Get the arguments.
   std::vector<std::string16> urls;
   FixRequestInfo info;
-  ParseOptions(context, repeats, &urls, &info);
+  if (!ParseArguments(context, repeats, &urls, &info)) {
+    assert(context->is_exception_set());
+    return;
+  }
 
   // TODO(steveblock): Create a set of LocationProviders and request them to get
   // a position fix.
@@ -127,38 +138,19 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   ++next_fix_request_id_;
 }
 
-// LocationProviderInterface::ListenerInterface implementation.
-
+// LocationProviderBase::ListenerInterface implementation.
 bool GearsGeolocation::LocationUpdateAvailable(
-    LocationProviderInterface *provider, const Position &position) {
+    LocationProviderBase *provider, const Position &position) {
   // TODO(steveblock): Determine the fix request(s) to which this provider
   // belongs. Update our current position estimate and call back to JavaScript.
   return true;
 }
 
-// Local functions
-
-// Gets the requested property only if it is specified. Returns true on success.
-bool GetPropertyIfSpecified(JsCallContext *context, const JsObject &object,
-                            const std::string16 &name, JsScopedToken *token) {
-  assert(token);
-  // GetProperty should always succeed, but will get a token of type
-  // JSPARAM_UNDEFINED if the requested property is not present.
-  JsScopedToken token_local;
-  if (!object.GetProperty(name, &token_local)) {
-    assert(false);
-    return false;
-  }
-  if (JsTokenGetType(token_local, context->js_context()) == JSPARAM_UNDEFINED) {
-    return false;
-  }
-  *token = token_local;
-  return true;
-}
-
-static bool ParseOptions(JsCallContext *context, bool repeats,
-                         std::vector<std::string16> *urls,
-                         GearsGeolocation::FixRequestInfo *info) {
+bool GearsGeolocation::ParseArguments(JsCallContext *context,
+                                      bool repeats,
+                                      std::vector<std::string16> *urls,
+                                      GearsGeolocation::FixRequestInfo *info) {
+  assert(context);
   assert(urls);
   assert(info);
   info->repeats = repeats;
@@ -180,85 +172,13 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
   // Set default values for options.
   info->enable_high_accuracy = false;
   info->request_address = false;
+  urls->clear();
   // We have to check that options is present because it's not valid to use an
   // uninitialised JsObject.
   if (num_arguments > 1) {
-    JsScopedToken token;
-    if (GetPropertyIfSpecified(context, options, kEnableHighAccuracy, &token)) {
-      if (!JsTokenToBool_NoCoerce(token, context->js_context(),
-                                  &(info->enable_high_accuracy))) {
-        std::string16 error = STRING16(L"options.");
-        error += kEnableHighAccuracy;
-        error += STRING16(L" should be a boolean.");
-        context->SetException(error);
-        return false;
-      }
-    }
-    if (GetPropertyIfSpecified(context, options, kRequestAddress, &token)) {
-      if (!JsTokenToBool_NoCoerce(token, context->js_context(),
-                                  &(info->request_address))) {
-        std::string16 error = STRING16(L"options.");
-        error += kRequestAddress;
-        error += STRING16(L" should be a boolean.");
-        context->SetException(error);
-        return false;
-      }
-    }
-    if (GetPropertyIfSpecified(context, options, kAddressLanguage, &token)) {
-      if (!JsTokenToString_NoCoerce(token, context->js_context(),
-                                    &(info->address_language))) {
-        std::string16 error = STRING16(L"options.");
-        error += kAddressLanguage;
-        error += STRING16(L" should be a string.");
-        context->SetException(error);
-        return false;
-      }
-    }
-    if (GetPropertyIfSpecified(context, options, kGearsLocationProviderUrls,
-                               &token)) {
-      std::string16 error = STRING16(L"options.");
-      error += kGearsLocationProviderUrls;
-      error += STRING16(L" should be null or an array of strings.");
-      if (JsTokenGetType(token, context->js_context()) == JSPARAM_ARRAY) {
-        // gearsLocationProviderUrls is an array.
-        JsArray js_array;
-        if (!js_array.SetArray(token, context->js_context())) {
-          LOG(("GearsGeolocation::ParseOptions() : Failed to set array with "
-               "gearsLocationProviderUrls.\n"));
-          assert(false);
-          return false;
-        }
-        int length;
-        if (!js_array.GetLength(&length)) {
-          LOG(("GearsGeolocation::ParseOptions() : Failed to get length of "
-               "gearsLocationProviderUrls.\n"));
-          assert(false);
-          return false;
-        }
-        for (int i = 0; i < length; ++i) {
-          JsScopedToken token;
-          if (!js_array.GetElement(i, &token)) {
-            LOG(("GearsGeolocation::ParseOptions() : Failed to get element "
-                 "from gearsLocationProviderUrls.\n"));
-            assert(false);
-            return false;
-          }
-          std::string16 url;
-          if (!JsTokenToString_NoCoerce(token, context->js_context(), &url)) {
-            context->SetException(error);
-            return false;
-          }
-          urls->push_back(url);
-        }
-      } else if (JsTokenGetType(token, context->js_context()) != JSPARAM_NULL) {
-        // If gearsLocationProviderUrls is null, we do not use the default URL.
-        // If it's not an array and not null, this is an error.
-        context->SetException(error);
-        return false;
-      }
-    } else {
-    // gearsLocationProviderUrls is not specified, so use the default URL.
-    urls->push_back(kDefaultLocationProviderUrl);
+    if (!ParseOptions(context, options, urls, info)) {
+      assert(context->is_exception_set());
+      return false;
     }
   } else {
     // options is not specified, so use the default URL.
@@ -267,7 +187,194 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
   return true;
 }
 
-// Sets an object integer property if the input value is valid.
+bool GearsGeolocation::ParseOptions(JsCallContext *context,
+                                    const JsObject &options,
+                                    std::vector<std::string16> *urls,
+                                    GearsGeolocation::FixRequestInfo *info) {
+  assert(context);
+  assert(urls);
+  assert(info);
+  JsScopedToken token;
+  if (GetPropertyIfSpecified(context, options, kEnableHighAccuracy, &token)) {
+    if (!JsTokenToBool_NoCoerce(token, context->js_context(),
+                                &(info->enable_high_accuracy))) {
+      std::string16 error = STRING16(L"options.");
+      error += kEnableHighAccuracy;
+      error += STRING16(L" should be a boolean.");
+      context->SetException(error);
+      return false;
+    }
+  }
+  if (GetPropertyIfSpecified(context, options, kRequestAddress, &token)) {
+    if (!JsTokenToBool_NoCoerce(token, context->js_context(),
+                                &(info->request_address))) {
+      std::string16 error = STRING16(L"options.");
+      error += kRequestAddress;
+      error += STRING16(L" should be a boolean.");
+      context->SetException(error);
+      return false;
+    }
+  }
+  if (GetPropertyIfSpecified(context, options, kAddressLanguage, &token)) {
+    if (!JsTokenToString_NoCoerce(token, context->js_context(),
+                                  &(info->address_language))) {
+      std::string16 error = STRING16(L"options.");
+      error += kAddressLanguage;
+      error += STRING16(L" should be a string.");
+      context->SetException(error);
+      return false;
+    }
+  }
+  if (GetPropertyIfSpecified(context, options, kGearsLocationProviderUrls,
+                             &token)) {
+    if (!ParseLocationProviderUrls(context, token, urls)) {
+      std::string16 error = STRING16(L"options.");
+      error += kGearsLocationProviderUrls;
+      error += STRING16(L" should be null or an array of strings.");
+      context->SetException(error);
+      return false;
+    }
+  } else {
+  // gearsLocationProviderUrls is not specified, so use the default URL.
+  urls->push_back(kDefaultLocationProviderUrl);
+  }
+  return true;
+}
+
+bool GearsGeolocation::ParseLocationProviderUrls(
+    JsCallContext *context,
+    const JsScopedToken &token,
+    std::vector<std::string16> *urls) {
+  assert(context);
+  assert(urls);
+  if (JsTokenGetType(token, context->js_context()) == JSPARAM_ARRAY) {
+    // gearsLocationProviderUrls is an array.
+    JsArray js_array;
+    if (!js_array.SetArray(token, context->js_context())) {
+      LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to set "
+           "array with gearsLocationProviderUrls."));
+      assert(false);
+      return false;
+    }
+    int length;
+    if (!js_array.GetLength(&length)) {
+      LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
+           "length of gearsLocationProviderUrls."));
+      assert(false);
+      return false;
+    }
+    for (int i = 0; i < length; ++i) {
+      JsScopedToken token;
+      if (!js_array.GetElement(i, &token)) {
+        LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
+             "element from gearsLocationProviderUrls."));
+        assert(false);
+        return false;
+      }
+      std::string16 url;
+      if (!JsTokenToString_NoCoerce(token, context->js_context(), &url)) {
+        return false;
+      }
+      urls->push_back(url);
+    }
+  } else if (JsTokenGetType(token, context->js_context()) != JSPARAM_NULL) {
+    // If gearsLocationProviderUrls is null, we do not use the default URL.
+    // If it's not an array and not null, this is an error.
+    return false;
+  }
+  return true;
+}
+
+bool GearsGeolocation::ConvertPositionToJavaScriptObject(
+    const Position &position,
+    const char16 *error,
+    JsRunnerInterface *js_runner,
+    JsObject *js_object) {
+  assert(js_object);
+  assert(position.IsValid());
+  bool result = true;
+  // latitude, longitude and date should always be valid.
+  result &= js_object->SetPropertyDouble(STRING16(L"latitude"),
+                                         position.latitude);
+  result &= js_object->SetPropertyDouble(STRING16(L"longitude"),
+                                         position.longitude);
+  scoped_ptr<JsObject> date_object(js_runner->NewDate(position.timestamp));
+  result &= NULL != date_object.get();
+  if (date_object.get()) {
+    result &= js_object->SetPropertyObject(STRING16(L"timestamp"),
+                                           date_object.get());
+  }
+  // Other properties may not be valid.
+  result &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
+                                        position.altitude,
+                                        js_object);
+  result &= SetObjectPropertyIfValidInt(STRING16(L"horizontalAccuracy"),
+                                        position.horizontal_accuracy,
+                                        js_object);
+  result &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
+                                        position.vertical_accuracy,
+                                        js_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"errorMessage"),
+                                           error,
+                                           js_object);
+  // Address
+  scoped_ptr<JsObject> address_object(js_runner->NewObject());
+  result &= NULL != address_object.get();
+  if (address_object.get()) {
+    result &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
+                                             position.address.street_number,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"street"),
+                                             position.address.street,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"premises"),
+                                             position.address.premises,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"city"),
+                                             position.address.city,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"county"),
+                                             position.address.county,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"region"),
+                                             position.address.region,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"country"),
+                                             position.address.country,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
+                                             position.address.country_code,
+                                             address_object.get());
+    result &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
+                                             position.address.postal_code,
+                                             address_object.get());
+    result &= js_object->SetPropertyObject(STRING16(L"address"),
+                                           address_object.get());
+  }
+  return result;
+}
+
+// Local functions
+
+static bool GetPropertyIfSpecified(JsCallContext *context,
+                                   const JsObject &object,
+                                   const std::string16 &name,
+                                   JsScopedToken *token) {
+  assert(token);
+  // GetProperty should always succeed, but will get a token of type
+  // JSPARAM_UNDEFINED if the requested property is not present.
+  JsScopedToken token_local;
+  if (!object.GetProperty(name, &token_local)) {
+    assert(false);
+    return false;
+  }
+  if (JsTokenGetType(token_local, context->js_context()) == JSPARAM_UNDEFINED) {
+    return false;
+  }
+  *token = token_local;
+  return true;
+}
+
 static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
                                         int value,
                                         JsObject *object) {
@@ -278,7 +385,6 @@ static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
   return true;
 }
 
-// Sets an object string property if the input value is valid.
 static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
                                            const std::string16 &value,
                                            JsObject *object) {
@@ -288,87 +394,5 @@ static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
   }
   return true;
 }
-
-static bool ConvertPositionToJavaScriptObject(const Position &p,
-                                              const char16 *error,
-                                              JsRunnerInterface *js_runner,
-                                              JsObject *js_object) {
-  assert(js_object);
-  assert(p.IsValid());
-  bool ret = true;
-  // latitude, longitude and date should always be valid.
-  ret &= js_object->SetPropertyDouble(STRING16(L"latitude"), p.latitude);
-  ret &= js_object->SetPropertyDouble(STRING16(L"longitude"), p.longitude);
-  scoped_ptr<JsObject> date_object(js_runner->NewDate(p.timestamp));
-  ret &= NULL != date_object.get();
-  if (date_object.get()) {
-    ret &= js_object->SetPropertyObject(STRING16(L"timestamp"),
-                                        date_object.get());
-  }
-  // Other properties may not be valid.
-  ret &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
-                                     p.altitude,
-                                     js_object);
-  ret &= SetObjectPropertyIfValidInt(STRING16(L"horizontalAccuracy"),
-                                     p.horizontal_accuracy,
-                                     js_object);
-  ret &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
-                                     p.vertical_accuracy,
-                                     js_object);
-  ret &= SetObjectPropertyIfValidString(STRING16(L"errorMessage"),
-                                        error,
-                                        js_object);
-  // Address
-  scoped_ptr<JsObject> address_object(js_runner->NewObject());
-  ret &= NULL != address_object.get();
-  if (address_object.get()) {
-    ret &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
-                                          p.address.street_number,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"street"),
-                                          p.address.street,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"premises"),
-                                          p.address.premises,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"city"),
-                                          p.address.city,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"county"),
-                                          p.address.county,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"region"),
-                                          p.address.region,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"country"),
-                                          p.address.country,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
-                                          p.address.country_code,
-                                          address_object.get());
-    ret &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
-                                          p.address.postal_code,
-                                          address_object.get());
-    ret &= js_object->SetPropertyObject(STRING16(L"address"),
-                                        address_object.get());
-  }
-  return ret;
-}
-
-#ifdef USING_CCTESTS
-// These methods are used only for testing as a means to access the static
-// functions defined here.
-bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
-                                 std::vector<std::string16> *urls,
-                                 GearsGeolocation::FixRequestInfo *info) {
-  return ParseOptions(context, repeats, urls, info);
-}
-bool ConvertPositionToJavaScriptObjectTest(const Position &p,
-                                           const char16 *error,
-                                           JsRunnerInterface *js_runner,
-                                           JsObject *js_object) {
-  return ConvertPositionToJavaScriptObject(p, error, js_runner, js_object);
-}
-#endif
 
 #endif  // OFFICIAL_BUILD

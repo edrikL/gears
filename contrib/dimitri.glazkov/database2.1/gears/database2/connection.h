@@ -33,9 +33,9 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/database2/database2_metadata.h"
-#include "third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/sqlite_gsoogle/preprocessed/sqlite3.h"
 
 // used to store value-type pairs
 struct Database2Variant {

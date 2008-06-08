@@ -357,7 +357,7 @@ bool JsContextWrapper::InitClass(const char *class_name,
   *proto_obj = JS_InitClass(cx_, global_obj_,
                             NULL, // parent_proto
                             alloc_jsclass.get(), // JSClass *
-                            JsContextWrapper::JsWrapperConstructor,
+                            NULL, // constructor
                             0, // ctor_num_args
                             NULL, NULL,  //   prototype   props/funcs
                             NULL, NULL); // "constructor" props/funcs

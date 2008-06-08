@@ -24,8 +24,13 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "gears/localserver/safari/progress_input_stream.h"
+
+#include "gears/localserver/common/progress_event.h"
 #include "gears/localserver/safari/http_request_sf.h"
 
+//------------------------------------------------------------------------------
+// ProgressInputStream implementation
+//------------------------------------------------------------------------------
 @implementation ProgressInputStream
 
 #pragma mark Public instance methods
@@ -37,6 +42,7 @@
   if (self != nil) {
     input_stream_ = [input_stream retain];
     request_ = request;
+    request_->Ref();
     total_ = total;
   }
   return self;
@@ -48,6 +54,7 @@
 }
 
 - (void)dealloc {
+  request_->Unref();
   [input_stream_ release];
   [data_ release];
   [super dealloc];
@@ -59,7 +66,7 @@
   NSInteger bytes_read = [input_stream_ read:buffer maxLength:len];
   if (bytes_read > 0) {
     position_ += bytes_read;
-    request_->OnUploadProgress(position_, total_);
+    ProgressEvent::Update(request_, request_, position_, total_);
   }
   return bytes_read;
 }

@@ -69,7 +69,8 @@ class SafeHttpRequest
       delete this;
   }
 
-  virtual bool Open(const char16 *method, const char16* url, bool async);
+  virtual bool Open(const char16 *method, const char16* url, bool async,
+                    BrowsingContext *browsing_context);
 
   virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
@@ -138,6 +139,7 @@ class SafeHttpRequest
     std::string16 method;
     std::string16 full_url;
     std::vector< std::pair<std::string16, std::string16> > headers;
+    scoped_refptr<BrowsingContext> browsing_context;
 
     std::string16 post_data_string;
 #ifndef OFFICIAL_BUILD

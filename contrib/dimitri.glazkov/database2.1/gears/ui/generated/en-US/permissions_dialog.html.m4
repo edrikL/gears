@@ -1,4 +1,4 @@
-m4_changequote(`~',`~')m4_dnl
+﻿m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -31,9 +31,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
 <head>
   <title>PRODUCT_FRIENDLY_NAME_UQ Security Warning</title>
-  <link rel="stylesheet" href="button.css">
-  <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
+m4_include(ui/common/button.css)
+m4_include(ui/common/html_dialog.css)
     #content {
       margin:0 1em;
     }
@@ -192,9 +192,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
           will be able to store and access information on your computer.
           </TRANS_BLOCK>
-          <a href="#" onclick="showHelp(true); return false;">
-          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">What&nbsp;is&nbsp;this?</TRANS_BLOCK>
-          </a>
         </td>
       </tr>
     </table>
@@ -321,6 +318,7 @@ m4_include(ui/common/button.js)
 </script>
 
 <script>
+  var debug = false;
   initDialog();
 
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
@@ -376,16 +374,19 @@ m4_include(ui/common/button.js)
   }
 
   function initWarning() {
-    // The arguments to this dialog are a single string, see PermissionsDialog
-    var args = getArguments();
-    
-    // Handy for debugging layout:
-    // var args = {
-    //   origin: "http://www.google.com",
-    //   customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-    //   customName: "My Application",
-    //   customMessage: "Press the button to enable my application to run offline!"
-    // };
+    var args;
+    if (debug) {
+      // Handy for debugging layout:
+      args = {
+        origin: "http://www.google.com",
+        customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+        customName: "My Application",
+        customMessage: "Press the button to enable my application to run offline!"
+      };
+    } else {
+      // The arguments to this dialog are a single string, see PermissionsDialog
+      args = getArguments();
+    }
 
     var origin = args['origin'];  // required parameter
     var customIcon = args['customIcon'];

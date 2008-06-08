@@ -26,6 +26,9 @@
 #ifndef GEARS_BASE_COMMON_COMMON_NPAPI_H__
 #define GEARS_BASE_COMMON_COMMON_NPAPI_H__
 
+//-----------------------------------------------------------------------------
+// For the NPAPI on Android build target
+//-----------------------------------------------------------------------------
 #ifdef ANDROID
 
 // Android logging support. Out-of-line to avoid polluting the
@@ -48,39 +51,7 @@ extern "C" void android_log_helper(const char *tag,
 #define LOG(args) \
     do { LOG_INNER args ; } while(0)
 
-#else // !defined(ANDROID)
-
-#include <windows.h>  // for DWORD
-#include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
-
-// TODO(mpcomplete): remove when possible.
-// For Win32 we use the Apartment threading model. To do this, we define the
-// preprocessor symbol _ATL_APARTMENT_THREADED and initialise new threads with
-// COINIT_APARTMENTTHREADED.
-#define GEARS_COINIT_THREAD_MODEL COINIT_APARTMENTTHREADED
-
-const HWND  kMessageOnlyWindowParent = HWND_MESSAGE;
-const DWORD kMessageOnlyWindowStyle  = NULL;
-
-#define ENABLE_LOGGING
-#if defined(DEBUG) && defined(ENABLE_LOGGING)
-// ATLTRACE for Win32 can take either a wide or narrow string.
-#define LOG(args) ATLTRACE args
-#define LOG16(args) ATLTRACE args
-#else  // defined(DEBUG) && defined(ENABLE_LOGGING)
-#define LOG(args) __noop
-#define LOG16(args) __noop
-#endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
-
-#endif // !defined(ANDROID)
-
-// Debug only code to help us assert that class methods are restricted to a
-// single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
-// Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
 #ifdef DEBUG
-
-#ifdef ANDROID
-
 #include <assert.h>
 #include <pthread.h>
 
@@ -102,7 +73,34 @@ class CurrentThreadID {
 #define ASSERT_SINGLE_THREAD() \
     assert(pthread_equal(pthread_self(), thread_id_.get()))
 
-#else // !defined(ANDROID)
+#else  // !DEBUG
+#define DECL_SINGLE_THREAD
+#define ASSERT_SINGLE_THREAD()
+#endif
+
+#else  // !ANDROID
+
+//-----------------------------------------------------------------------------
+// For the NPAPI on Win32 build target
+//-----------------------------------------------------------------------------
+#include <windows.h>  // for DWORD
+#include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
+
+#define ENABLE_LOGGING
+#if defined(DEBUG) && defined(ENABLE_LOGGING)
+// ATLTRACE for Win32 can take either a wide or narrow string.
+#define LOG(args) ATLTRACE args
+#define LOG16(args) ATLTRACE args
+#else  // defined(DEBUG) && defined(ENABLE_LOGGING)
+#define LOG(args) __noop
+#define LOG16(args) __noop
+#endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
+
+
+// Debug only code to help us assert that class methods are restricted to a
+// single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
+// Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
+#ifdef DEBUG
 
 class CurrentThreadID {
  public:
@@ -122,11 +120,11 @@ class CurrentThreadID {
 #define ASSERT_SINGLE_THREAD() \
     ATLASSERT(thread_id_.get() == GetCurrentThreadId())
 
-#endif
-
-#else
+#else  // !DEBUG
 #define DECL_SINGLE_THREAD
 #define ASSERT_SINGLE_THREAD()
 #endif
+
+#endif // !ANDROID
 
 #endif // GEARS_BASE_COMMON_COMMON_NPAPI_H__

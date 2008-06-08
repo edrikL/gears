@@ -34,10 +34,11 @@
   NSString *key = (NSString *)kCFBundleVersionKey;
   NSString *vers = [webkitBundle objectForInfoDictionaryKey:key];
   
-  if ([vers floatValue] >= 522)
+  // 4525 corresponds to Safari 3.1.1.
+  if ([vers floatValue] >= 4525)
     return YES;
   
-  NSLog(@"%s requires WebKit 522 or later (Current: %d)",
+  NSLog(@"%s requires WebKit 4525 or later (Current: %d)",
         PRODUCT_FRIENDLY_NAME_ASCII, [vers intValue]);
   return NO;
 }

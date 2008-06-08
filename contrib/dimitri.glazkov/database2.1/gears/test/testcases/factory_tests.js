@@ -65,6 +65,7 @@ function testDisallowDirectObjectCreation() {
   // everything else should go through GearsFactory.
   var objects = [
     'GearsDatabase',
+    'GearsHttpRequest',
     'GearsResultSet',
     'GearsWorkerPool',
     'GearsLocalServer',

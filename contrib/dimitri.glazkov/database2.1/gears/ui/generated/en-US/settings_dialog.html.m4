@@ -1,4 +1,4 @@
-m4_changequote(`~',`~')m4_dnl
+﻿m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -31,9 +31,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
 <head>
   <title>PRODUCT_FRIENDLY_NAME_UQ Settings</title>
-  <link rel="stylesheet" href="button.css">
-  <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
+m4_include(ui/common/button.css)
+m4_include(ui/common/html_dialog.css)
     h1 {
       font-size:1.2em;
       margin:0;
@@ -142,7 +142,11 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <a href="#" id="focus-thief"></a>
         </td>
         <td width="100%" align="left" valign="middle">
-          <h1>PRODUCT_FRIENDLY_NAME_UQ Settings</h1>
+          <h1>
+          <TRANS_BLOCK>
+          PRODUCT_FRIENDLY_NAME_UQ Settings
+          </TRANS_BLOCK>
+          </h1>
         </td>
       </tr>
     </table>
@@ -234,6 +238,7 @@ m4_include(ui/common/html_dialog.js)
 m4_include(ui/common/button.js)
 </script>
 <script>
+  var debug = false;
   var g_dialogResult = {"removeSites": []};
   var allowedSites;
   var deniedSites;
@@ -275,14 +280,18 @@ m4_include(ui/common/button.js)
   }
 
   function initSettings() {
-    var args = getArguments();
-    
-    // Handy for debugging layout:
-    // var args = {
-    //   allowed: ["http://www.google.com", "http://aaronboodman.com"],
-    //   denied: ["http://www.evil.org"]
-    // };
-    
+    var args;
+
+    if (debug) {
+      // Handy for debugging layout:
+      var args = {
+        allowed: ["http://www.google.com", "http://aaronboodman.com"],
+        denied: ["http://www.evil.org"]
+      };
+    } else {
+      args = getArguments();
+    }
+
     allowedSites = args.allowed;
     deniedSites = args.denied;
     initList("div-allowed", args.allowed, ALLOWED);

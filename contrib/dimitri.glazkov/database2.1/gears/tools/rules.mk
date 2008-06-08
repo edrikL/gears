@@ -1,9 +1,9 @@
 # Copyright 2005, Google Inc.
 #
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
-#  1. Redistributions of source code must retain the above copyright notice, 
+#  1. Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
 #  2. Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 #     specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 # SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 # PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 # OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # NOTES:
@@ -84,7 +84,8 @@ SUBSTITUTE_OBJ_SUFFIX = $(foreach SUFFIX,$(SOURCECODE_SUFFIXES), \
 COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COMMON_CPPSRCS) $(COMMON_CSRCS))
 $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $($(BROWSER)_CPPSRCS) $($(BROWSER)_CSRCS))
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
-NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS))
+NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS) $(NOTIFIER_CSRCS))
+NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_TEST_CPPSRCS)  $(NOTIFIER_TEST_CSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
@@ -93,7 +94,7 @@ SQLITE_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(SQLITE_OUTDIR), $(SQL
 PERF_TOOL_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(PERF_TOOL_CPPSRCS))
 IE_WINCESETUP_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(IE_OUTDIR), $(IE_WINCESETUP_CPPSRCS))
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
-VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS))
+VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS) $(VISTA_BROKER_CSRCS))
 
 
 # IMPORTANT: If you change these lists, you need to change the corresponding
@@ -121,6 +122,7 @@ DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SF_INPUTMANAGER_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -151,7 +153,6 @@ $(BROWSER)_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $($(BROWSER)_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$($(BROWSER)_M4SRCS_I18N))))
 COMMON_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
-
 
 $(BROWSER)_VPATH += $($(BROWSER)_OUTDIR)/genfiles
 COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
@@ -188,6 +189,7 @@ SF_INPUTMANAGER_EXE = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 # exception_handler_win32.cc.
 CRASH_SENDER_EXE  = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
 NOTIFIER_EXE      = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
+NOTIFIER_TEST_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
 OSX_LAUNCHURL_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
 PERF_TOOL_EXE     = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 
@@ -218,21 +220,9 @@ default::
 ifneq "$(BROWSER)" ""
   # Build for just the selected browser.
   # Note that only the modules get built, not the final installers.
-  ifeq ($(OS),osx)
-	# For osx, build the non-installer targets for multiple architectures.
-	# TODO(playmobil): look into restructuring this so we don't need to make
-	# each target twice.
-	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=ppc
-	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=ppc
-	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=i386
-	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=ppc
-  else
 	$(MAKE) prereqs    BROWSER=$(BROWSER)
 	$(MAKE) genheaders BROWSER=$(BROWSER)
 	$(MAKE) modules    BROWSER=$(BROWSER)
-  endif
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
@@ -272,26 +262,17 @@ else
   else
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
-	$(MAKE) prereqs    BROWSER=FF2 ARCH=i386
-	$(MAKE) prereqs    BROWSER=FF2 ARCH=ppc
-	$(MAKE) genheaders BROWSER=FF2 ARCH=i386
-	$(MAKE) genheaders BROWSER=FF2 ARCH=ppc
-	$(MAKE) modules    BROWSER=FF2 ARCH=i386
-	$(MAKE) modules    BROWSER=FF2 ARCH=ppc
+	$(MAKE) prereqs    BROWSER=FF2
+	$(MAKE) genheaders BROWSER=FF2
+	$(MAKE) modules    BROWSER=FF2
+                                
+	$(MAKE) prereqs    BROWSER=FF3
+	$(MAKE) genheaders BROWSER=FF3
+	$(MAKE) modules    BROWSER=FF3
 
-	$(MAKE) prereqs    BROWSER=FF3 ARCH=i386
-	$(MAKE) prereqs    BROWSER=FF3 ARCH=ppc
-	$(MAKE) genheaders BROWSER=FF3 ARCH=i386
-	$(MAKE) genheaders BROWSER=FF3 ARCH=ppc
-	$(MAKE) modules    BROWSER=FF3 ARCH=i386
-	$(MAKE) modules    BROWSER=FF3 ARCH=ppc
-	
-	$(MAKE) prereqs    BROWSER=SF ARCH=i386
-	$(MAKE) prereqs    BROWSER=SF ARCH=ppc
-	$(MAKE) genheaders BROWSER=SF ARCH=i386
-	$(MAKE) genheaders BROWSER=SF ARCH=ppc
-	$(MAKE) modules    BROWSER=SF ARCH=i386
-	$(MAKE) modules    BROWSER=SF ARCH=ppc
+	$(MAKE) prereqs    BROWSER=SF
+	$(MAKE) genheaders BROWSER=SF
+	$(MAKE) modules    BROWSER=SF
 
 	$(MAKE) installers
   endif
@@ -360,7 +341,7 @@ endif
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
 # TODO(cprince): Get tools to link on WinCE.
-modules:: $(PERF_TOOL_EXE)
+modules:: $(NOTIFIER_TEST_EXE) $(PERF_TOOL_EXE)
 endif
 endif
 
@@ -370,7 +351,6 @@ endif
 ifeq ($(OS),win32)
 modules:: $(CRASH_SENDER_EXE) $(NOTIFIER_EXE)
 endif
-
 
 clean::
 ifdef CMD_LINE_MODE  # If MODE is specified on command line.
@@ -413,8 +393,8 @@ $(SQLITE_OUTDIR):
 $(THIRD_PARTY_OUTDIR):
 	"mkdir" -p $@
 $(VISTA_BROKER_OUTDIR):
-	"mkdir" -p $@	
-	
+	"mkdir" -p $@
+
 # M4 (GENERIC PREPROCESSOR) TARGETS
 
 $($(BROWSER)_OUTDIR)/genfiles/%: %.m4
@@ -486,6 +466,9 @@ $(OSX_LAUNCHURL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
+$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	@$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
 $(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
@@ -606,7 +589,7 @@ $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS
 	@echo $(IE_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
-	rm $(OUTDIR)/obj_list.temp 	
+	rm $(OUTDIR)/obj_list.temp
 
 # Note the use of DLLFLAGS_NOPDB instead of DLLFLAGS here.
 $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
@@ -615,8 +598,10 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 ifneq ($(OS),android)
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
-	@echo $(NPAPI_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	@echo $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	@echo $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	@echo $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
@@ -633,6 +618,9 @@ $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 
 $(NOTIFIER_EXE): $(NOTIFIER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS)
+
+$(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS)
 
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
@@ -656,14 +644,14 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # For $(FFMERGED_INSTALLER_XPI):
 #   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
 # For $(SF_PLUGIN_BUNDLE):
-#   $(SF_MODULE_DLL)
+#   $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # In order to make sure the Installer is always up to date despite these missing
 # dependencies, we list it as a phony target, so it's always rebuilt.
-.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER)
+.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 
 $(SF_INSTALLER): $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 	@echo "TODO(playmobil): Create Safari Installer pkg"
-	
+
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
 else
@@ -702,19 +690,10 @@ ifdef IS_WIN32_OR_WINCE
 endif
 endif
 else
-    # Copy either .xpt file (i386 or ppc) to the output dir. (Note: these files are identical.)
-	cp $(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-    # For OSX, create universal binaries by combining the i386 and ppc versions.
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF3_MODULE_DLL)) -create \
-		$(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_DLL)) \
-		$(OUTDIR)/$(OS)-ppc/ff3/$(notdir $(FF3_MODULE_DLL))
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/ff2-$(notdir $(FF2_MODULE_DLL)) -create \
-		$(OUTDIR)/$(OS)-i386/ff2/$(notdir $(FF2_MODULE_DLL)) \
-		$(OUTDIR)/$(OS)-ppc/ff2/$(notdir $(FF2_MODULE_DLL))
-    # Also create a universal binary for OSX_LAUNCHURL_EXE.
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
-		$(OUTDIR)/$(OS)-i386/common/$(notdir $(OSX_LAUNCHURL_EXE)) \
-		$(OUTDIR)/$(OS)-ppc/common/$(notdir $(OSX_LAUNCHURL_EXE))
+	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
+	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
@@ -729,21 +708,17 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
 # Add Info.plist file & localized strings.
 	cat tools/osx/Info.plist | sed 's/$${EXECUTABLE_NAME}/Gears/' > $@/Contents/Info.plist
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
-# Create a universal binary for the actual plugin.
-	/usr/bin/lipo -output $@/Contents/MacOS/Gears -create \
-	  $(OUTDIR)/$(OS)-i386/safari/gears \
-	  $(OUTDIR)/$(OS)-ppc/safari/gears 
+# Copy the actual plugin.
+	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
 # Copy localized UI.
-	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
+	cp -R $(SF_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
 # Copy over all resources.
 # Todo(playmobil): Handle localization correctly - currently we copy all
 # resources to the en-US directory.
 	mkdir -p $@/Contents/Resources/en-US
 	cp $(COMMON_RESOURCES) $@/Contents/Resources/en-US/
-# Create a universal binary for OSX_LAUNCHURL_EXE.
-	/usr/bin/lipo -output $@/Contents/Resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
-		$(OUTDIR)/$(OS)-i386/common/$(notdir $(OSX_LAUNCHURL_EXE)) \
-		$(OUTDIR)/$(OS)-ppc/common/$(notdir $(OSX_LAUNCHURL_EXE)) 
+# Copy luanch_url
+	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
@@ -755,10 +730,8 @@ $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
 	cat tools/osx/Enabler-Info.plist | sed 's/$${EXECUTABLE_NAME}/GearsEnabler/' | sed 's/$${PRODUCT_NAME}/GearsEnabler/' > $@/GearsEnabler.bundle/Contents/Info.plist
 	cp tools/osx/Info $@/
 	cp tools/osx/English.lproj/InfoPlist.strings $@/GearsEnabler.bundle/Contents/Resources/English.lproj/InfoPlist.strings
-# Create a universal binary for the enabler
-	/usr/bin/lipo -output $@/GearsEnabler.bundle/Contents/MacOS/$(notdir $(SF_INPUTMANAGER_EXE)) -create \
-	  $(OUTDIR)/$(OS)-i386/safari/$(notdir $(SF_INPUTMANAGER_EXE)) \
-	  $(OUTDIR)/$(OS)-ppc/safari/$(notdir $(SF_INPUTMANAGER_EXE))
+# Copy the InputManager.
+	cp "$(SF_INPUTMANAGER_EXE)" "$@/GearsEnabler.bundle/Contents/MacOS/"
 	/usr/bin/touch -c $@/GearsEnabler.bundle
 
 

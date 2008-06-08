@@ -27,18 +27,32 @@
 
 #include "gears/base/common/string_utils.h"
 #include "gears/ui/common/html_dialog.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
+#ifdef BROWSER_WEBKIT
+bool SettingsDialog::visible_ = false;
+#endif
+
+#ifdef BROWSER_WEBKIT
+void ProcessResultsCallback(Json::Value *result, void *closure) {
+  scoped_ptr<HtmlDialog> dialog(static_cast<HtmlDialog *>(closure));
+  if (result) {
+    SettingsDialog::ProcessResult(result);
+  }
+  SettingsDialog::SetVisible(false);
+}
+#endif
 
 void SettingsDialog::Run() {
-  HtmlDialog settings_dialog;
+  scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog());
 
   // Populate the arguments() property with the current allowed and denied
   // sites.
-  if (!PopulateOrigins(&settings_dialog.arguments["allowed"],
+  if (!PopulateOrigins(&(settings_dialog->arguments["allowed"]),
                        PermissionsDB::PERMISSION_ALLOWED)) {
     return;
   }
-  if (!PopulateOrigins(&settings_dialog.arguments["denied"],
+  if (!PopulateOrigins(&(settings_dialog->arguments["denied"]),
                        PermissionsDB::PERMISSION_DENIED)) {
     return;
   }
@@ -46,12 +60,23 @@ void SettingsDialog::Run() {
   // Show the dialog.
   const int kSettingsDialogWidth = 400;
   const int kSettingsDialogHeight = 350;
-  settings_dialog.DoModal(STRING16(L"settings_dialog.html"),
+#ifdef BROWSER_WEBKIT
+  visible_ = true;
+  if (!settings_dialog->DoModeless(STRING16(L"settings_dialog.html"),
+                                   kSettingsDialogWidth, kSettingsDialogHeight,
+                                   ProcessResultsCallback, 
+                                   settings_dialog.get()) ) {
+    return;
+  }
+  settings_dialog.release();
+#else
+  settings_dialog->DoModal(STRING16(L"settings_dialog.html"),
                           kSettingsDialogWidth, kSettingsDialogHeight);
 
   // Process the result() property and remove any sites or shortcuts the user
   // removed.
-  ProcessResult(&settings_dialog.result);
+  ProcessResult(&settings_dialog->result);
+#endif
 }
 
 

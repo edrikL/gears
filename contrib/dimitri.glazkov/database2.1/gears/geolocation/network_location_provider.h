@@ -38,7 +38,7 @@
 class AsyncWait;
 
 class NetworkLocationProvider
-    : public LocationProviderInterface,
+    : public LocationProviderBase,
       public DeviceDataProviderBase<RadioData>::ListenerInterface,
       public DeviceDataProviderBase<WifiData>::ListenerInterface,
       public NetworkLocationRequest::ListenerInterface {
@@ -49,9 +49,9 @@ class NetworkLocationProvider
                           const std::string16 &host_name);
   virtual ~NetworkLocationProvider();
 
-  // LocationProviderInterface implementation.
+  // LocationProviderBase implementation.
   virtual void SetListener(
-      LocationProviderInterface::ListenerInterface *listener);
+      LocationProviderBase::ListenerInterface *listener);
   virtual bool GetCurrentPosition();
 
  private:
@@ -74,7 +74,7 @@ class NetworkLocationProvider
   bool MakeRequestImpl();
 
   NetworkLocationRequest *request_;
-  LocationProviderInterface::ListenerInterface *listener_;
+  LocationProviderBase::ListenerInterface *listener_;
   RadioData radio_data_;
   WifiData wifi_data_;
   Mutex data_mutex_;

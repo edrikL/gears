@@ -48,9 +48,11 @@ class AsyncWait : public Thread {
   void Abort() {
     stop_event_.Signal();
   }
+
  private:
   // Private destructor. The object is destroyed when the thread terminates.
   ~AsyncWait() {}
+
   // Thread implementation.
   virtual void Run() {
     if (!stop_event_.WaitWithTimeout(kDataCompleteWaitPeriod)) {
@@ -109,7 +111,7 @@ NetworkLocationProvider::~NetworkLocationProvider() {
 // LocationProviderInterface implementation.
 
 void NetworkLocationProvider::SetListener(
-    LocationProviderInterface::ListenerInterface *listener) {
+    LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
   listener_ = listener;
 }

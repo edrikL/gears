@@ -40,7 +40,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <div id="pagecontent">
 
 <p>The Database module provides browser-local relational data storage to
-your JavaScript web application. Google Gears uses the open source
+your JavaScript web application. Gears uses the open source
 <a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/">SQLite</a>
 database system.</p>
 
@@ -62,7 +62,7 @@ database system.</p>
 
 <h2 id="overview">Overview</h2>
 <p>The Database module is used to persistently store an application user's data on the user's computer.  Data is stored using the same-origin security policy, meaning that a web application cannot access data outside of its domain (see <a href="security.html#model">Security</a>).</p>
-<p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Google Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
+<p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
 <h4>Security considerations</h4>
 <p>SQL statements passed to <code>execute()</code> can and should use bind parameters (<code>?</code>) to prevent SQL injection attacks.  Read about <a href="security.html#database">database security</a> best practices on the Security page. </p>
 <h4>Permission</h4>
@@ -450,12 +450,12 @@ rs.close();</code></pre>
 <br />
 
 <h2>Local Modifications to SQLite</h2>
-<p>This section describes  modifications that Google Gears makes to SQLite. </p>
+<p>This section describes  modifications that Gears makes to SQLite. </p>
 <h4>Attached databases</h4>
 <p>The SQLite <a href="http://www.sqlite.org/lang_attach.html">ATTACH
 and DETACH</a> commands can be used to open an arbitrary SQLite
 database on the user's disk.  For this reason, these commands have
-been disabled in Google Gears.  In the future this functionality may
+been disabled in Gears.  In the future this functionality may
 be exposed in a way which respects the same-origin security
 policy.</p>
 
@@ -464,11 +464,11 @@ policy.</p>
 <p>The SQLite <a href="http://www.sqlite.org/pragma.html">PRAGMA</a>
 command allows setting and inspection of various platform settings,
 including certain settings which could potentially be used to
-compromise security.  At this time, Google Gears disables PRAGMA,
+compromise security.  At this time, Gears disables PRAGMA,
 though it is possible that specific PRAGMA uses may be re-enabled or
 exposed in the Database interface.</p>
 
-<p>The default PRAGMA settings for Google Gears which differ from the
+<p>The default PRAGMA settings for Gears which differ from the
 SQLite defaults:
 <ul>
   <li>PRAGMA encoding = 'UTF-8';<br/>
@@ -508,7 +508,7 @@ SQLite defaults:
 
 <h2>Full-Text Search</h2>
 
-<p>Google Gears includes an SQLite extension called <a
+<p>Gears includes an SQLite extension called <a
 href="http://www.sqlite.org/cvstrac/wiki?p=FtsTwo">fts2</a>, for
 "Full-Text Search".  fts2 allows you to create a table and search for words in TEXT data.
 An fts2 table is created as follows:</p>

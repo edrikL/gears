@@ -22,6 +22,13 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file declares GearsGeolocation, the main class of the Gears Geolocation
+// API. The GearsGeolocation object provides the API methods to JavaScript. It
+// uses a set of location providers to gather position information.
+//
+// This file also declares the Position structure, which is used to represent a
+// position fix.
 
 #ifndef GEARS_GEOLOCATION_GEOLOCATION_H__
 #define GEARS_GEOLOCATION_GEOLOCATION_H__
@@ -30,6 +37,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/geolocation/location_provider.h"
+#ifdef USING_CCTESTS
+#include "gears/geolocation/geolocation_test.h"
+#endif
 
 // The internal representation of an address.
 struct Address {
@@ -49,11 +59,15 @@ struct Address {
 // passed to JavaScript.
 struct Position {
  public:
-  Position() : altitude(kint32min), horizontal_accuracy(kint32min),
-               vertical_accuracy(kint32min), timestamp(-1) {}
+  Position()
+      : altitude(kint32min),
+        horizontal_accuracy(kint32min),
+        vertical_accuracy(kint32min),
+        timestamp(-1) {}
   bool IsValid() const {
     return -1 != timestamp;
   }
+
   double latitude;          // In degrees
   double longitude;         // In degrees
   int altitude;             // In metres
@@ -63,34 +77,55 @@ struct Position {
   Address address;
 };
 
-// The principal class of the location API.
+// The principal class of the Geolocation API.
 class GearsGeolocation
     : public ModuleImplBaseClassVirtual,
-      public LocationProviderInterface::ListenerInterface {
+      public LocationProviderBase::ListenerInterface {
  public:
+#ifdef USING_CCTESTS
+  // Uses ParseArguments for testing.
+  friend void TestParseGeolocationOptions(JsCallContext *context,
+                                          JsRunnerInterface *js_runner);
+  // Uses ConvertPositionToJavaScriptObject for testing.
+  friend void TestGeolocationGetLocationFromResponse(
+      JsCallContext *context,
+      JsRunnerInterface *js_runner);
+#endif
+
   GearsGeolocation();
   virtual ~GearsGeolocation();
 
-  // API methods.
+  // API methods. See the Geolocation API design document at
+  // http://code.google.com/p/google-gears/wiki/LocationAPI for a more complete
+  // description of these methods.
 
+  // Gets the last, cached, position fix. This method does not cause Gears to
+  // actively seek a position update.
   // IN: nothing
   // OUT: object position
   void GetLastPosition(JsCallContext *context);
 
+  // Instructs Gears to get a new position fix. The supplied callback function
+  // is called with a valid position as soon as it is available, or with NULL on
+  // failure.
   // IN: function callback_function, object position_options
   // OUT: nothing
   void GetCurrentPosition(JsCallContext *context);
 
+  // Instructs Gears to get a new position fix. The supplied callback function
+  // is called repeatedly with position updates as they become available. The
+  // return value is a unique ID for this watch which can be used to cancel it.
   // IN: function callback_function, object position_options
   // OUT: int watch_id
   void WatchPosition(JsCallContext *context);
 
+  // Cancels the position watch specified by the supplied ID.
   // IN: int watch_id
   // OUT: nothing
   void ClearWatch(JsCallContext *context);
 
   // Maintains all the data for a position fix.
-  typedef std::set<scoped_refptr<LocationProviderInterface> > ProviderSet;
+  typedef std::set<scoped_refptr<LocationProviderBase> > ProviderSet;
   struct FixRequestInfo {
     ProviderSet providers;
     bool enable_high_accuracy;
@@ -100,10 +135,36 @@ class GearsGeolocation
   };
 
  private:
-  // LocationProviderInterface::ListenerInterface implementation.
-  virtual bool LocationUpdateAvailable(LocationProviderInterface *provider,
+  // LocationProviderBase::ListenerInterface implementation.
+  virtual bool LocationUpdateAvailable(LocationProviderBase *provider,
                                        const Position &position);
+  // Internal method used by GetCurrentPosition and WatchPosition to get a
+  // position fix.
   void GetPositionFix(JsCallContext *context, bool repeats);
+
+  // Parses the JavaScript arguments passed to the GetCurrentPosition and
+  // WatchPosition methods.
+  static bool ParseArguments(JsCallContext *context,
+                             bool repeats,
+                             std::vector<std::string16> *urls,
+                             GearsGeolocation::FixRequestInfo *info);
+  // Parses a JsObject representing the options parameter. The output is a
+  // vector of URLs and the fix request info. Return value indicates success.
+  static bool ParseOptions(JsCallContext *context,
+                           const JsObject &options,
+                           std::vector<std::string16> *urls,
+                           GearsGeolocation::FixRequestInfo *info);
+  // Parses a JsScopedToken representing the gearsLocationProviderUrls field.
+  // The output is a vector of URLs. Return value indicates success.
+  static bool ParseLocationProviderUrls(JsCallContext *context,
+                                        const JsScopedToken &token,
+                                        std::vector<std::string16> *urls);
+
+  // Converts a Gears position object to a JavaScript object.
+  static bool ConvertPositionToJavaScriptObject(const Position &position,
+                                                const char16 *error,
+                                                JsRunnerInterface *js_runner,
+                                                JsObject *js_object);
 
   int next_fix_request_id_;
 

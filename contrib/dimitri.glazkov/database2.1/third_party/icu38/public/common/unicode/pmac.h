@@ -274,7 +274,7 @@ typedef unsigned int uint32_t;
 /* Symbol import-export control                                              */
 /*===========================================================================*/
 
-#if 1
+#if 0
 #define U_EXPORT __attribute__((visibility("default")))
 /*#elif defined(__HP_aCC) || defined(__HP_cc)
 #define U_EXPORT __declspec(dllexport)*/

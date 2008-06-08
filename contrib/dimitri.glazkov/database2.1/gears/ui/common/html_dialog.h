@@ -42,11 +42,18 @@
 // jsoncpp? Or wrap it?
 class HtmlDialog {
  public:
+  typedef void (* ModelessCompletionCallback)(Json::Value *result, 
+                                              void *closure);
+ public:
   // Constructor.
   HtmlDialog() : arguments(Json::objectValue), result(Json::nullValue) {}
 
   // Open the dialog.
   bool DoModal(const char16 *html_filename, int width, int height);
+  
+  // Open the dialog and call the callback when it's closed.
+  bool DoModeless(const char16 *html_filename, int width, int height,
+                  ModelessCompletionCallback callback, void *closure);
 
   // Parses the result from the dialog and assings to result_.
   bool SetResult(const char16 *result_string);
@@ -61,6 +68,11 @@ class HtmlDialog {
   // Platform-specific implementation of DoModal().
   bool DoModalImpl(const char16 *html_filename, int width, int height,
                    const char16 *arguments_string);
-};
+                   
+  bool DoModelessImpl(const char16 *html_filename, int width, int height,
+                      const char16 *arguments_string, 
+                      ModelessCompletionCallback callback, 
+                      void *closure);
+}; 
 
 #endif  // GEARS_UI_COMMON_HTML_DIALOG_H__

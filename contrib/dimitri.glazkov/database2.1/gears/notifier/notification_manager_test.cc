@@ -33,11 +33,20 @@
 
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager.h"
 #include "gears/notifier/unit_test.h"
 #include "gears/notifier/user_activity.h"
+
+// This method is defined in the _test file so that notification_manager.cc
+// has no dependencies on test files (even when USING_CCTEST is defined).
+BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
+  BalloonCollectionMock *mock = new BalloonCollectionMock;
+  balloon_collection_.reset(mock);
+  return mock;
+}
 
 #undef TEST_ASSERT
 #define TEST_ASSERT(test, message)                                      \
@@ -194,6 +203,71 @@ void TestNotificationManager() {
   activity.set_user_mode(USER_NORMAL_MODE);
   balloon_collection->set_show_call_count(1);
   manager.OnUserActivityChange();
+}
+
+void RunMessageLoop(int max_time_ms) {
+  // TODO(levin): Set-up timer for max_timer_ms that calls
+  // a function which quits the message loop.
+
+#ifdef WIN32
+  while (true) {
+    MSG message;
+    // Returns 0 if WM_QUIT, else non-zero (but -1 if error)
+    BOOL ret = GetMessage(&message, NULL, 0, 0);
+    if (!ret) {
+      break;
+    }
+    if (ret != -1) {
+      TranslateMessage(&message);
+      DispatchMessage(&message);
+    }
+  }
+  // To quit: PostQuitMessage(0);
+#elif defined(OS_MACOSX)
+  // Loop, waiting for events to be processed.
+  // Likely: CFRunLoopRun();
+  // To quit: CFRunLoopStop(CFRunLoopGetCurrent());
+#elif defined(LINUX)
+  // TODO(levin): fill this in depending on what is done for the timers.
+  // Likely: gtk_main();
+  // To quit: gtk_main_quit();
+#endif
+}
+
+void TestNotificationManagerDelay() {
+  UserActivityMock activity;
+  NotificationManager manager(&activity);
+  BalloonCollectionMock *balloon_collection =
+      manager.UseBalloonCollectionMock();
+
+  // Start with room in the balloon collection.
+  balloon_collection->set_has_space(true);
+
+  // Add a notification when there is no space.
+  Notification notification1;
+  notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
+  notification1.set_id(STRING16(L"1"));
+  notification1.set_display_at_time_ms(GetCurrentTimeMillis() + 500);
+  manager.Add(notification1);
+
+  // TODO(levin): enable the following when timer is working.
+
+  // balloon_collection->set_show_call_count(1);
+  // // Wait for the 1/2 sec to expire
+  // RunMessageLoop(500);
+  // // Timers aren't exact, so if the balloon hasn't displayed,
+  // // give it a 1/2 second more to be displayed.
+  // if (balloon_collection->show_call_count()) {
+  //   RunMessageLoop(500);
+  // }
+
+  // TODO(levin): Test 2: do an update in which the display at time changes
+
+  // TODO(levin): Test 3: Try snooze with an old display at time
+  // (and then update with a new display at time in the past).
+
+  // See NotificationManager::Add for several other test cases around updating
+  // notifications with a new display at time.
 }
 
 #endif  // USING_CCTESTS

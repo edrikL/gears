@@ -287,6 +287,12 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
                    expectedResponse, expectedHeaders, expectedResponseLength) {
   var request = google.gears.factory.create('beta.httprequest');
 
+  // TODO(aa): We are seeing sporadic failures in these tests. A theory is that
+  // HttpRequest is getting gc'd. Remove this test of that theory when it is
+  // proven or disproven.
+  global.kungFuGrip = request;
+
+  request.upload.onprogress = handleProgress;
   request.onreadystatechange = handleReadyStateChange;
   request.open(method, url, true);
 
@@ -298,6 +304,18 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
   }
 
   request.send(data);
+
+  var progress_called = false;
+  var last_position = 0;
+  function handleProgress(event) {
+    assert(method == 'POST' || method == 'PUT');
+    assert(data);
+    assert(data.length > 0);
+    assert(event.total >= data.length);  // May be larger due to encoding.
+    assert(event.loaded > last_position);
+    last_position = event.loaded;
+    progress_called = true;
+  }
 
   var success = false;
   function handleReadyStateChange() {
@@ -368,7 +386,12 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
                'Should be able to get responseBlob repeatedly');
       }
     }
-
+    if (method == 'POST' || method == 'PUT') {
+      // It appears that the timing can work out so that the progress
+      // callback does not get called.
+      // TODO(bgarcia): determine if this is something that can be fixed.
+      //assert(progress_called);
+    }
     completeAsync();
   }
 }
@@ -403,4 +426,16 @@ function testSetGetOnreadystatechange() {
   };
   request.onreadystatechange = aFunction;
   assertEqual(aFunction, request.onreadystatechange);
+}
+
+function testSetGetOnprogress() {
+  // TODO(bgarcia): Activate for other browsers when ready.
+  if (isFirefox || isSafari) {
+    var request = google.gears.factory.create('beta.httprequest');
+    var handleProgress = function() {
+      return 'this is a test';
+    };
+    request.upload.onprogress = handleProgress;
+    assertEqual(handleProgress, request.upload.onprogress);
+  }
 }

@@ -32,6 +32,8 @@
 // IEUpdateTask
 //------------------------------------------------------------------------------
 class IEUpdateTask : public UpdateTask {
+ public:
+  IEUpdateTask(BrowsingContext *context) : UpdateTask(context) { }
  protected:
   // Overriden to ensure only one task per application runs at a time
   virtual void Run();

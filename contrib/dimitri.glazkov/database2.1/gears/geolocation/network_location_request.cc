@@ -63,7 +63,10 @@ NetworkLocationRequest* NetworkLocationRequest::Create(
 NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
                                                const std::string16 &host_name,
                                                ListenerInterface *listener)
-    : listener_(listener), url_(url), host_name_(host_name) {
+    : AsyncTask(NULL),
+      listener_(listener),
+      url_(url),
+      host_name_(host_name) {
   if (!Init()) {
     assert(false);
   }
@@ -183,15 +186,17 @@ static void AddInteger(const std::string &property_name,
   }
 }
 
-// Adds an angle as a double if it's valid.
-static void AddAngle(const std::string &property_name,
+// Adds an angle as a double if it's valid. Returns true if added.
+static bool AddAngle(const std::string &property_name,
                      const double &value,
                      Json::Value *object) {
   assert(object);
   assert(object->isObject());
   if (value >= -180.0 && value <= 180.0) {
     (*object)[property_name] = Json::Value(value);
+    return true;
   }
+  return false;
 }
 
 static bool FormRequestBody(const std::string16 &host_name,
@@ -211,8 +216,11 @@ static bool FormRequestBody(const std::string16 &host_name,
   }
   body_object["version"] = Json::Value(kGearsNetworkLocationProtocolVersion);
   AddString("host", host_name, &body_object);
-  AddInteger("home_mobile_country_code", radio_data.home_mcc, &body_object);
-  AddInteger("home_mobile_network_code", radio_data.home_mnc, &body_object);
+
+  AddInteger("home_mobile_country_code", radio_data.home_mobile_country_code,
+             &body_object);
+  AddInteger("home_mobile_network_code", radio_data.home_mobile_network_code,
+             &body_object);
   AddString("radio_type", RadioTypeToString(radio_data.radio_type),
             &body_object);
   AddString("carrier", radio_data.carrier, &body_object);
@@ -220,43 +228,56 @@ static bool FormRequestBody(const std::string16 &host_name,
   AddString("address_language", address_language, &body_object);
 
   Json::Value location;
-  AddAngle("latitude", latitude, &location);
-  AddAngle("longitude", longitude, &location);
-  body_object["location"] = location;
+  if (AddAngle("latitude", latitude, &location) &&
+      AddAngle("longitude", longitude, &location)) {
+    body_object["location"] = location;
+  }
 
   Json::Value cell_towers;
   assert(cell_towers.isArray());
-  for (int i = 0; i < static_cast<int>(radio_data.cell_data.size()); ++i) {
+  int num_cell_towers = static_cast<int>(radio_data.cell_data.size());
+  for (int i = 0; i < num_cell_towers; ++i) {
     Json::Value cell_tower;
     assert(cell_tower.isObject());
-    AddInteger("cell_id", radio_data.cell_data[i].cid, &cell_tower);
-    AddInteger("location_area_code", radio_data.cell_data[i].lac, &cell_tower);
-    AddInteger("mobile_country_code", radio_data.cell_data[i].mcc, &cell_tower);
-    AddInteger("mobile_network_code", radio_data.cell_data[i].mnc, &cell_tower);
+    AddInteger("cell_id", radio_data.cell_data[i].cell_id, &cell_tower);
+    AddInteger("location_area_code", radio_data.cell_data[i].location_area_code,
+               &cell_tower);
+    AddInteger("mobile_country_code",
+               radio_data.cell_data[i].mobile_country_code, &cell_tower);
+    AddInteger("mobile_network_code",
+               radio_data.cell_data[i].mobile_network_code, &cell_tower);
     AddInteger("age", radio_data.cell_data[i].age, &cell_tower);
-    AddInteger("signal_strength", radio_data.cell_data[i].rss, &cell_tower);
-    AddInteger("timing_advance", radio_data.cell_data[i].adv, &cell_tower);
+    AddInteger("signal_strength", radio_data.cell_data[i].radio_signal_strength,
+               &cell_tower);
+    AddInteger("timing_advance", radio_data.cell_data[i].timing_advance,
+               &cell_tower);
     cell_towers[i] = cell_tower;
   }
-  body_object["cell_towers"] = cell_towers;
+  if (num_cell_towers > 0) {
+    body_object["cell_towers"] = cell_towers;
+  }
 
   Json::Value wifi_towers;
   assert(wifi_towers.isArray());
-  for (int i = 0;
-       i < static_cast<int>(wifi_data.access_point_data.size());
-       ++i) {
+  int num_wifi_towers = static_cast<int>(wifi_data.access_point_data.size());
+  for (int i = 0; i < num_wifi_towers; ++i) {
     Json::Value wifi_tower;
     assert(wifi_tower.isObject());
-    AddString("mac_address", wifi_data.access_point_data[i].mac, &wifi_tower);
-    AddInteger("signal_strength", wifi_data.access_point_data[i].rss,
+    AddString("mac_address", wifi_data.access_point_data[i].mac_address,
+              &wifi_tower);
+    AddInteger("signal_strength",
+               wifi_data.access_point_data[i].radio_signal_strength,
                &wifi_tower);
     AddInteger("age", wifi_data.access_point_data[i].age, &wifi_tower);
-    AddInteger("channel", wifi_data.access_point_data[i].cha, &wifi_tower);
-    AddInteger("signal_to_noise", wifi_data.access_point_data[i].snr, &wifi_tower);
-    AddString("ssid", wifi_data.access_point_data[i].ssi, &wifi_tower);
+    AddInteger("channel", wifi_data.access_point_data[i].channel, &wifi_tower);
+    AddInteger("signal_to_noise",
+               wifi_data.access_point_data[i].signal_to_noise, &wifi_tower);
+    AddString("ssid", wifi_data.access_point_data[i].ssid, &wifi_tower);
     wifi_towers[i] = wifi_tower;
   }
-  body_object["wifi_towers"] = wifi_towers;
+  if (num_wifi_towers > 0) {
+    body_object["wifi_towers"] = wifi_towers;
+  }
 
   Json::FastWriter writer;
   std::string body_string = writer.write(body_object);

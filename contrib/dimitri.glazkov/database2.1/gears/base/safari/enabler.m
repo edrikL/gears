@@ -25,7 +25,7 @@
 
 #import "gears/base/safari/enabler.h"
 #import "gears/base/safari/loader.h"
-#import "gears/localserver/safari/http_handler.h"
+#import "gears/base/safari/browser_load_hook.h"
 
 @implementation GearsEnabler
 //------------------------------------------------------------------------------
@@ -38,8 +38,13 @@
       BOOL result = NO;
 
       // Check if Gears can be loaded into this version of Safari
-      if ([GearsLoader canLoadGears])
-        result = [GearsHTTPHandler registerHandler];
+      if ([GearsLoader canLoadGears]) {
+        if ([GearsLoader loadGearsBundle]) {
+          Class gearsBrowserLoadHook = 
+                     NSClassFromString(@"GearsBrowserLoadHook"); 
+          result = [gearsBrowserLoadHook installHook];
+        }
+      }
       
       if (!result) {
         [self release];

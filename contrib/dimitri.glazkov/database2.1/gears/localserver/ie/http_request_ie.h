@@ -35,6 +35,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
+#include "gears/localserver/common/progress_event.h"
 
 #ifndef OFFICIAL_BUILD
 class BlobInterface;
@@ -45,7 +46,8 @@ class IEHttpRequest
       public IBindStatusCallback,
       public IHttpNegotiate,
       public IServiceProviderImpl<IEHttpRequest>,
-      public HttpRequest {
+      public HttpRequest,
+      public ProgressEvent::Listener {
  public:
   // HttpRequest interface
 
@@ -91,7 +93,8 @@ class IEHttpRequest
   virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
-  virtual bool Open(const char16 *method, const char16* url, bool async);
+  virtual bool Open(const char16 *method, const char16* url, bool async,
+                    BrowsingContext *browsing_context);
   virtual bool SetRequestHeader(const char16* name, const char16* value);
   virtual bool Send();
   virtual bool SendString(const char16 *data);
@@ -179,6 +182,9 @@ class IEHttpRequest
       /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
 
  private:
+  // ProgressEvent::Listener implementation
+  virtual void OnUploadProgress(int64 position, int64 total);
+
 #ifdef OFFICIAL_BUILD
   bool SendImpl();
 #else  // !OFFICIAL_BUILD

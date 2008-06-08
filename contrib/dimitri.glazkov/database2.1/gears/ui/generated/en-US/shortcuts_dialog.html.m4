@@ -1,4 +1,4 @@
-m4_changequote(`~',`~')m4_dnl
+﻿m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -30,9 +30,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
-  <link rel="stylesheet" href="button.css">
-  <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
+m4_include(ui/common/button.css)
+m4_include(ui/common/html_dialog.css)
     #icon {
       margin-right:0.5em;
     }
@@ -234,6 +234,7 @@ m4_include(ui/common/button.js)
 </script>
 
 <script>
+  var debug = false;
   var iconHeight = 32;
   var iconWidth = 32;
   var dialogMinHeight = 200;
@@ -241,20 +242,24 @@ m4_include(ui/common/button.js)
   // We currently only support custom locations for desktop windows.
   var locationsEnabled = browser.windows && !browser.ie_mobile;
 
-  var args = getArguments();
+  var args;
 
-  // Handy for debugging layout:
-  // var args = {
-  //   style: "simple",
-  //   name: "My Application",
-  //   link: "http://www.google.com/",
-  //   description: "This application does things does things!",
-  //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
-  //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
-  //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-  //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
-  //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
-  // };
+  if (debug) {
+    // Handy for debugging layout:
+    args = {
+      style: "simple",
+      name: "My Application",
+      link: "http://www.google.com/",
+      description: "This application does things does things!",
+      // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
+      icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
+      icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+      icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
+      icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
+    };
+  } else {
+    args = getArguments();
+  }
 
   initDialog();
   initLayout();

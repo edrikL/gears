@@ -72,6 +72,17 @@ NPAPI_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/convert_utf
+
+THIRD_PARTY_VPATH	+= \
+		../third_party/convert_utf \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # third_party/googleurl
 
 # Only include gurl in builds that use ICU.
@@ -279,7 +290,7 @@ THIRD_PARTY_VPATH	+= \
 THIRD_PARTY_CPPSRCS	+= \
 		modp_b64.cc \
 		$(NULL)
-		
+
 #-----------------------------------------------------------------------------
 # third_party/spidermonkey
 
@@ -680,7 +691,6 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
-		url_utils_np.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -714,7 +724,6 @@ IE_CPPSRCS	+= \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
-		url_utils_ie.cc \
 		vista_utils.cc \
 		$(NULL)
 ifeq ($(OS),win32)
@@ -763,7 +772,6 @@ NPAPI_CPPSRCS	+= \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		plugin.cc \
-		url_utils_np.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -796,12 +804,14 @@ SF_VPATH	+= \
 		$(NULL)
 
 SF_CPPSRCS	+= \
+		browser_load_hook.mm \
 		browser_utils.cc \
 		browser_utils_sf.cc \
 		common_sf.mm \
 		cf_string_utils.cc \
 		file_posix.cc \
 		html_event_monitor_np.cc \
+		http_handler.mm \
 		ipc_message_queue_null.cc \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
@@ -815,7 +825,6 @@ SF_CPPSRCS	+= \
 		paths_sf_more.mm \
 		plugin.cc \
 		safari_workaround.m \
-		url_utils_np.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -825,6 +834,7 @@ IE_VPATH += \
 		base/common \
 		desktop \
 		vista_broker \
+		../third_party/convert_utf \
 		$(NULL)
 
 VISTA_BROKER_CPPSRCS += \
@@ -835,13 +845,17 @@ VISTA_BROKER_CPPSRCS += \
 		vista_broker.cc \
 		$(NULL)
 
+VISTA_BROKER_CSRCS += \
+		ConvertUTF.c \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # launch_url_with_browser
 
 ifeq ($(OS),osx)
 COMMON_VPATH += \
 		base/safari \
-		$(NULL)  
+		$(NULL)
 
 OSX_LAUNCHURL_CPPSRCS += \
 		launch_url_in_browser.cc \
@@ -857,7 +871,6 @@ SF_VPATH += \
 
 SF_INPUTMANAGER_CPPSRCS += \
 		enabler.m \
-		http_handler.mm \
 		loader.mm \
 		$(NULL)
 
@@ -875,7 +888,7 @@ PERF_TOOL_CPPSRCS += \
 
 
 #-----------------------------------------------------------------------------
-# console/common (built for all browsers)
+# console
 
 $(BROWSER)_VPATH	+= \
 		console \
@@ -914,10 +927,10 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# database/common (built for all browsers)
+# database
 
 $(BROWSER)_VPATH	+= \
-		database/common \
+		database \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
@@ -926,52 +939,6 @@ $(BROWSER)_CPPSRCS	+= \
 		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/firefox
-
-FF3_VPATH	+= \
-		database/firefox \
-		$(NULL)
-
-FF3_M4SRCS	+= \
-		database.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		database.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/ie
-
-IE_VPATH	+= \
-		database/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		database.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/npapi
-ifeq ($(USING_NPAPI),1)
-$(BROWSER)_VPATH	+= \
-		database/npapi \
-		$(NULL)
-
-$(BROWSER)_IDLSRCS	+= \
-		$(NULL)
-
-$(BROWSER)_CPPSRCS	+= \
-		$(NULL)
-endif		
 
 #-----------------------------------------------------------------------------
 # database2
@@ -1030,20 +997,23 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_win32.cc \
 		$(NULL)
 
+SF_CPPSRCS += \
+		curl_icon_downloader.mm \
+		$(NULL)
 #-----------------------------------------------------------------------------
-# desktop_notifier
+# notifier
 
 COMMON_VPATH	+= \
 		notifier \
+		../third_party/convert_utf \
 		$(NULL)
 
-NOTIFIER_CPPSRCS += \
+NOTIFIER_CORE	+= \
+		balloons.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
 		notification_manager.cc \
-		notification_manager_test.cc \
-		notifier.cc \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
@@ -1053,7 +1023,29 @@ NOTIFIER_CPPSRCS += \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		$(NULL)
+
+NOTIFIER_CPPSRCS += \
+		$(NOTIFIER_CORE) \
+		notifier.cc \
+		$(NULL)
+
+NOTIFIER_CSRCS += \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# notifier_test
+
+NOTIFIER_TEST_CPPSRCS += \
+		$(NOTIFIER_CORE) \
+		balloon_collection_test.cc \
+		notification_manager_test.cc \
 		unit_test.cc \
+		$(NULL)
+
+NOTIFIER_TEST_CSRCS += \
+		ConvertUTF.c \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1251,42 +1243,36 @@ SF_VPATH	+= \
 
 SF_CPPSRCS	+= \
 		html_dialog_sf.mm \
+		html_modeless_dialog_sf.mm \
+		settings_menu.mm \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # workerpool/firefox
 
 FF3_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/firefox \
 		$(NULL)
 
-FF3_M4SRCS	+= \
-		workerpool.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		workerpool.idl \
-		$(NULL)
-
 FF3_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# workerpool/f
+# workerpool/ie
 
 IE_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/ie \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		workerpool.idl \
-		$(NULL)
-
 IE_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
@@ -1296,11 +1282,13 @@ IE_CPPSRCS	+= \
 
 ifeq ($(USING_NPAPI),1)
 $(BROWSER)_VPATH	+= \
+		workerpool \
 		workerpool/common \
 		workerpool/npapi \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
+		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
@@ -1362,6 +1350,7 @@ FF3_CPPSRCS	+= \
 		http_request_ff.cc \
 		localserver_ff.cc \
 		managed_resource_store_ff.cc \
+		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ff.cc \
 		safe_http_request.cc \
@@ -1384,6 +1373,8 @@ IE_CPPSRCS	+= \
 		http_request_ie.cc \
 		localserver_ie.cc \
 		managed_resource_store_ie.cc \
+		progress_event.cc \
+		progress_input_stream.cc \
 		resource_store_ie.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
@@ -1441,9 +1432,10 @@ SF_CPPSRCS	+= \
 		localserver_db_proxy.mm \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
+		progress_event.cc \
 		progress_input_stream.mm \
 		resource_store_np.cc \
-		$(NULL)		
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # httprequest
@@ -1454,6 +1446,7 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		httprequest.cc \
+		httprequest_upload.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1467,9 +1460,11 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		blob.cc \
+		blob_builder.cc \
 		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		join_blob.cc \
 		slice_blob.cc \
 		$(NULL)
 
@@ -1615,7 +1610,9 @@ $(BROWSER)_CPPSRCS	+= \
 		network_location_request.cc \
 		radio_data_provider_wince.cc \
 		thread.cc \
+		wifi_data_provider_common.cc \
 		wifi_data_provider_wince.cc \
+		wifi_data_provider_win32.cc \
 		$(NULL)
 endif
 
@@ -1651,3 +1648,10 @@ FF2_CPPSRCS += $(FF3_CPPSRCS)
 
 #-----------------------------------------------------------------------------
 include tools/rules.mk
+
+#-----------------------------------------------------------------------------
+# You can add your own site-specific build rules by creating a file called
+# 'site-build.mk' alongside the Makefile.
+ifneq ($(wildcard site-build.mk),)  # if site-build.mk exists.
+include site-build.mk
+endif

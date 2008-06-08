@@ -37,7 +37,7 @@
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/cctests/test.h"
 #include "gears/console/console.h"
-#include "gears/database/firefox/database.h"
+#include "gears/database/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 
@@ -57,7 +57,7 @@
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
-#include "gears/workerpool/firefox/workerpool.h"
+#include "gears/workerpool/workerpool.h"
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_ADDREF(GearsFactory)
@@ -162,12 +162,16 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
+  } else if (object_name == STRING16(L"beta.database")) {
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.workerpool")) {
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media, and Image APIs have not been
   // finalized for official builds.
@@ -219,12 +223,8 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
   nsCOMPtr<nsISupports> isupports = NULL;
 
   nsresult nr = NS_ERROR_FAILURE;
-  if (object_name == STRING16(L"beta.database")) {
-    isupports = do_QueryInterface(new GearsDatabase(), &nr);
-  } else if (object_name == STRING16(L"beta.localserver")) {
+  if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-  } else if (object_name == STRING16(L"beta.workerpool")) {
-    isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
   }  else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();

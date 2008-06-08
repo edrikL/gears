@@ -30,7 +30,25 @@
 #include <atlsync.h>  // For _beginthreadex()
 #elif defined(WINCE)
 #include "gears/base/common/wince_compatibility.h"
+#elif defined(OS_ANDROID)
+#include "gears/base/android/java_jni.h"
 #endif
+
+struct ThreadStartData {
+  explicit ThreadStartData(Thread* thread_self)
+      : thread_id(0),
+        self(thread_self) {
+  }
+  Event started_event;
+  ThreadId thread_id;
+  Thread *self;
+};
+
+// Helper method that does the thread creation.
+static bool CreateThread(ThreadStartData* thread_data);
+
+//------------------------------------------------------------------------------
+// Thread
 
 Thread::Thread() {
 #ifdef DEBUG
@@ -45,45 +63,92 @@ Thread::~Thread() {
 #endif
 }
 
-void Thread::Start() {
+ThreadId Thread::Start() {
+
 #ifdef DEBUG
   MutexLock lock(&is_running_mutex_);
   assert(!is_running_);
 #endif
-#if defined(WIN32) || defined(WINCE)
-  if (_beginthreadex(NULL, 0, &ThreadMain, this, 0, NULL) != NULL) {
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
-  pthread_t thread;
-  if (pthread_create(&thread, NULL, ThreadMain, this) == 0 && thread != 0) {
-#endif
+
+  ThreadStartData thread_data(this);
+
+  if (CreateThread(&thread_data)) {
 #ifdef DEBUG
     is_running_ = true;
 #endif
+    thread_data.started_event.Wait();
   } else {
     LOG(("Failed to start thread."));
   }
+
+  return thread_data.thread_id;
 }
 
 void Thread::Join() {
   run_complete_event_.Wait();
 }
 
-// static
+//------------------------------------------------------------------------------
+// Internal
+
+void ThreadMain(void *user_data) {
+  ThreadStartData *thread_data = reinterpret_cast<ThreadStartData*>(user_data);
+
+  // Initialize the message queue.
+  ThreadMessageQueue* queue = ThreadMessageQueue::GetInstance();
+  queue->InitThreadMessageQueue();
+  // Get this thread's id.
+  thread_data->thread_id = queue->GetCurrentThreadId();
+  // Let our creator know that we started ok.
+
+  // WARINING: thread_data must not be used after
+  // the start_event is signaled. 
+  // The Thread pointer, on the other hand, is guaranteed
+  // to be valid for the entire lifetime of this function.
+  Thread* thread = thread_data->self;
+  thread_data->started_event.Signal();
+  // Do the actual work.
+  thread->Run();
+
+#ifdef DEBUG
+  thread->is_running_mutex_.Lock();
+  thread->is_running_ = false;
+#endif
+  // Let our creator know we're about to exit.
+  thread->run_complete_event_.Signal();
+
+#ifdef DEBUG
+  thread->is_running_mutex_.Unlock();
+#endif
+
+  thread->CleanUp();
+}
+
 #if defined(WIN32) || defined(WINCE)
-unsigned int __stdcall Thread::ThreadMain(void *user_data) {
+static unsigned int __stdcall OSThreadMain(void *user_data) {
 #elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
-void *Thread::ThreadMain(void *user_data) {
+static void *OSThreadMain(void *user_data) {
 #endif
-  Thread *self = reinterpret_cast<Thread*>(user_data);
-  self->Run();
-#ifdef DEBUG
-  self->is_running_mutex_.Lock();
-  self->is_running_ = false;
+
+#ifdef OS_ANDROID
+  JniAttachCurrentThread();
 #endif
-  self->run_complete_event_.Signal();
-#ifdef DEBUG
-  self->is_running_mutex_.Unlock();
+
+  ThreadMain(user_data);
+
+#ifdef OS_ANDROID
+  JniDetachCurrentThread();
 #endif
-  self->CleanUp();
+
   return 0;
+}
+
+static bool CreateThread(ThreadStartData* thread_data) {
+#if defined(WIN32) || defined(WINCE)
+  return (_beginthreadex(NULL, 0, &OSThreadMain, thread_data, 0, NULL) != NULL);
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
+  pthread_t thread_id;
+  return (pthread_create(&thread_id, NULL, &OSThreadMain, thread_data) == 0 &&
+          thread_id != 0);
+#endif
 }

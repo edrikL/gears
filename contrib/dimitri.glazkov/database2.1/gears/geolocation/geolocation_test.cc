@@ -37,16 +37,6 @@
 #include "gears/geolocation/device_data_provider.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-// From geolocation.cc
-bool ParseGeolocationOptionsTest(JsCallContext *context,
-                                 bool repeats,
-                                 std::vector<std::string16> *urls,
-                                 GearsGeolocation::FixRequestInfo *info);
-bool ConvertPositionToJavaScriptObjectTest(const Position &p,
-                                           const char16 *error,
-                                           JsRunnerInterface *js_runner,
-                                           JsObject *js_object);
-
 // From network_location_request.cc
 bool FormRequestBodyTest(const std::string16 &host_name,
                          const RadioData &radio_data,
@@ -63,7 +53,7 @@ void TestParseGeolocationOptions(JsCallContext *context,
                                  JsRunnerInterface *js_runner) {
   std::vector<std::string16> urls;
   GearsGeolocation::FixRequestInfo info;
-  if (!ParseGeolocationOptionsTest(context, false, &urls, &info)) {
+  if (!GearsGeolocation::ParseArguments(context, false, &urls, &info)) {
     if (!context->is_exception_set()) {
       context->SetException(
           STRING16(L"Internal error parsing geolocation options."));
@@ -103,22 +93,22 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
 
   RadioData radio_data;
   CellData cell_data;
-  cell_data.cid = 23874;
-  cell_data.lac = 98;
-  cell_data.mnc = 15;
-  cell_data.mcc = 234;
-  cell_data.rss = -65;
+  cell_data.cell_id = 23874;
+  cell_data.location_area_code = 98;
+  cell_data.mobile_network_code = 15;
+  cell_data.mobile_country_code = 234;
+  cell_data.radio_signal_strength = -65;
   radio_data.cell_data.push_back(cell_data);
   radio_data.radio_type = RADIO_TYPE_GSM;
 
   WifiData wifi_data;
   AccessPointData access_point_data;
-  access_point_data.mac = STRING16(L"00-0b-86-d7-6a-42");
-  access_point_data.rss = -50;
+  access_point_data.mac_address = STRING16(L"00-0b-86-d7-6a-42");
+  access_point_data.radio_signal_strength = -50;
   access_point_data.age = 15;
-  access_point_data.cha = 19;
-  access_point_data.snr = 10;
-  access_point_data.ssi = STRING16(L"Test SSID");
+  access_point_data.channel = 19;
+  access_point_data.signal_to_noise = 10;
+  access_point_data.ssid = STRING16(L"Test SSID");
   wifi_data.access_point_data.push_back(access_point_data);
 
   scoped_refptr<BlobInterface> blob;
@@ -176,8 +166,9 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   position.timestamp = 42;
   scoped_ptr<JsObject> position_object(js_runner->NewObject());
 
-  if (!ConvertPositionToJavaScriptObjectTest(position, STRING16(L"test error"),
-                                             js_runner, position_object.get())) {
+  if (!GearsGeolocation::ConvertPositionToJavaScriptObject(
+      position, STRING16(L"test error"),
+      js_runner, position_object.get())) {
     context->SetException(STRING16(L"Failed to convert position to JavaScript"
                                    L"object."));
     return;

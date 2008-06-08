@@ -30,18 +30,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-#if BROWSER_IE
-#include <windows.h>
-#include <wininet.h>
-#elif BROWSER_FF
 #include "third_party/googleurl/src/url_parse.h"
-#elif BROWSER_SAFARI
-#include "gears/base/safari/browser_utils_sf.h"
-#include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/cf_string_utils.h"
-#elif BROWSER_NPAPI
-#include "third_party/googleurl/src/url_parse.h"
-#endif
 
 
 const char16* kUnknownDomain      = STRING16(L"_null_.localdomain");
@@ -84,81 +73,6 @@ bool SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
 bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   initialized_ = false;
 
-#if BROWSER_IE
-  URL_COMPONENTSW components = {0};
-  components.dwStructSize = sizeof(URL_COMPONENTSW);
-  components.dwHostNameLength = 1;
-  components.dwSchemeLength = 1;
-  if (!InternetCrackUrlW(full_url, 0, 0, &components)) {
-    return false;
-  }
-
-  // Disallow urls with embedded username:passwords. These
-  // are disabled by default in IE such that InternetCrackUrl fails.
-  // To have consistent behavior, do the same for all browsers.
-  if (components.lpszUserName && components.dwUserNameLength) {
-    return false;
-  }
-  switch (components.nScheme) {
-    case INTERNET_SCHEME_HTTP:
-    case INTERNET_SCHEME_HTTPS: {
-      if (!components.lpszScheme || !components.lpszHostName) {
-        return false;
-      }
-      std::string16 scheme(components.lpszScheme, components.dwSchemeLength);
-      std::string16 host(components.lpszHostName, components.dwHostNameLength);
-      return Init(full_url, scheme.c_str(), host.c_str(), components.nPort);
-    }
-    case INTERNET_SCHEME_FILE:
-      return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-    default:
-      return false;
-  }
-
-#elif BROWSER_SAFARI
-  scoped_CFString url_str(CFStringCreateWithString16(full_url));
-  scoped_CFURL url(CFURLCreateWithString(kCFAllocatorDefault,
-                                         url_str.get(), NULL));
-  if (!url.get())
-    return false;
-
-  // Disallow urls with embedded username:passwords.
-  // To have consistent behavior, do the same for all browsers.
-  // CFURLCopyUserName() will return NULL if there is no user name.
-  scoped_CFString user_name(CFURLCopyUserName(url.get()));
-  if (user_name.get())
-    return false;
-  
-  scoped_CFString scheme_str(CFURLCopyScheme(url.get()));
-  if (!scheme_str.get())
-    return false;
-
-  std::string16 scheme;
-  CFStringRefToString16(scheme_str.get(), &scheme);
-  LowerString(scheme);
-
-  if (scheme == HttpConstants::kHttpScheme ||
-      scheme == HttpConstants::kHttpsScheme) {
-    scoped_CFString host_str(CFURLCopyHostName(url.get()));
-    std::string16 host;
-    CFStringRefToString16(host_str.get(), &host);
-    
-    // CF's implementation is that if no port is specified, it returns -1
-    // The expectation is that http defaults to 80 and https defaults to 443.
-    int port = CFURLGetPortNumber(url.get());
-    
-    if (port < 0) {
-      if (scheme == HttpConstants::kHttpsScheme)
-        port = HttpConstants::kHttpsDefaultPort;
-      else
-        port = HttpConstants::kHttpDefaultPort;
-    }
-
-    return Init(full_url, scheme.c_str(), host.c_str(), port);
-  } else if (scheme == HttpConstants::kFileScheme) {
-    return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-  }
-#elif BROWSER_NPAPI || BROWSER_FF
   int url_len = char16_wcslen(full_url);
 
   url_parse::Component scheme_comp;
@@ -198,7 +112,6 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   } else if (scheme == STRING16(L"file")) {
     return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
-#endif
-  
+
   return false;
 }

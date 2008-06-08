@@ -22,6 +22,9 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// This file implements a mock location provider and the factory functions for
+// creating various types of location provider.
 
 #ifdef OFFICIAL_BUILD
 // The Geolocation API has not been finalized for official builds.
@@ -37,11 +40,11 @@
 #include "gears/geolocation/geolocation.h"  // For Position
 
 // Mock implementation of a location provider for testing.
-class MockLocationProvider : public LocationProviderInterface {
+class MockLocationProvider : public LocationProviderBase {
  public:
   MockLocationProvider() {}
   virtual ~MockLocationProvider() {}
-  // LocationProviderInterface implementation.
+  // LocationProviderBase implementation.
   virtual void SetListener(ListenerInterface *listener) {
     assert(listener);
     listener_ = listener;
@@ -59,23 +62,23 @@ class MockLocationProvider : public LocationProviderInterface {
     return true;
   }
  private:
-  LocationProviderInterface::ListenerInterface *listener_;
+  LocationProviderBase::ListenerInterface *listener_;
   DISALLOW_EVIL_CONSTRUCTORS(MockLocationProvider);
 };
 
-LocationProviderInterface* NewMockLocationProvider() {
+LocationProviderBase *NewMockLocationProvider() {
   return new MockLocationProvider();
 }
 
 #endif
 
-LocationProviderInterface* NewGpsLocationProvider() {
+LocationProviderBase *NewGpsLocationProvider() {
   // TODO(steveblock): Implement me.
   assert(false);
   return NULL;
 }
 
-LocationProviderInterface* NewNetworkLocationProvider(
+LocationProviderBase *NewNetworkLocationProvider(
     const std::string16 &url, const std::string16 &host_name) {
   return new NetworkLocationProvider(url, host_name);
 }

@@ -39,6 +39,25 @@ bool HtmlDialog::DoModal(const char16 *html_filename, int width, int height) {
   return DoModalImpl(html_filename, width, height, input_string.c_str());
 }
 
+bool HtmlDialog::DoModeless(const char16 *html_filename, int width, int height,
+                            ModelessCompletionCallback callback, 
+                            void *closure) {
+#ifdef BROWSER_WEBKIT
+  // The Json library deals only in UTF-8, so we need to convert :(.
+  std::string16 input_string;
+  if (!UTF8ToString16(arguments.toStyledString().c_str(), &input_string)) {
+    return false;
+  }
+
+  return DoModelessImpl(html_filename, width, height, input_string.c_str(),
+                        callback, closure);
+#else
+  assert(false);
+  return false;
+#endif
+}
+
+
 
 bool HtmlDialog::SetResult(const char16 *value) {
   // NULL and empty are OK. They just means that the dialog did not set a

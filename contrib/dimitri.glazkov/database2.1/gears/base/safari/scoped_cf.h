@@ -102,14 +102,6 @@ class ReleaseObjCRef {
       [x release];
   }
 };
-
-template<typename T>
-class scoped_objctype : public scoped_token<T, ReleaseObjCRef> {
- public:
-  explicit scoped_objctype(T value) :
-      scoped_token<T, ReleaseObjCRef>(value) {
-  }
-};
 #endif
 
 // CFDictionaryRef

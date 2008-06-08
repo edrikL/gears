@@ -36,6 +36,7 @@ static bool TestStartsWithAndEndsWith();
 static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
 static bool TestStringMatch();
+static bool TestUTFConversion();
 
 bool TestStringUtils(std::string16 *error) {
   bool ok = true;
@@ -43,6 +44,7 @@ bool TestStringUtils(std::string16 *error) {
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
   ok &= TestStringMatch();
+  ok &= TestUTFConversion();
   if (!ok) {
     assert(error); \
     *error += STRING16(L"TestStringUtils - failed. "); \
@@ -223,4 +225,68 @@ static bool TestStringMatch() {
 
   return true;
 }
+
+static bool TestUTFConversion() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestUTFConversion - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+  // string16 -> utf8 tests
+  {
+    // 2 byte utf8
+    const std::string16 sample16(STRING16(L"Sample of a string \0x0430"));
+    const std::string expected8("Sample of a string \0xD0\0xB0");
+    std::string result8;
+    TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
+    TEST_ASSERT(expected8 == result8);
+  }
+  {
+    // 3 byte utf8
+    const std::string16 sample16(STRING16(L"\0x4E8C"));
+    const std::string expected8("\0xE4\0xBA\0x8E");
+    std::string result8;
+    TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
+    TEST_ASSERT(expected8 == result8);
+  }
+  {
+    // 4 byte utf8
+    const std::string16 sample16(STRING16(L"\0xD800\xDF02"));
+    const std::string expected8("\0xF0\0x90\0x8C\0x82");
+    std::string result8;
+    TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
+    TEST_ASSERT(expected8 == result8);
+  }
+  // utf8 -> string16 tests
+  {
+    // 2 byte utf8
+    const std::string sample8("Sample of a string \0xD0\0xB0");
+    const std::string16 expected16(STRING16(L"Sample of a string \0x0430"));
+    std::string16 result16;
+    TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
+    TEST_ASSERT(expected16 == result16);
+  }
+  {
+    // 3 byte utf8
+    const std::string sample8("\0xE4\0xBA\0x8E");
+    const std::string16 expected16(STRING16(L"\0x4E8C"));
+    std::string16 result16;
+    TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
+    TEST_ASSERT(expected16 == result16);
+  }
+  {
+    // 4 byte utf8
+    const std::string sample8("\0xF0\0x90\0x8C\0x82");
+    const std::string16 expected16(STRING16(L"\0xD800\xDF02"));
+    std::string16 result16;
+    TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
+    TEST_ASSERT(expected16 == result16);
+  }
+  LOG(("TestUTFConversion - passed\n"));
+  return true;
+}
+
 #endif  // USING_CCTESTS

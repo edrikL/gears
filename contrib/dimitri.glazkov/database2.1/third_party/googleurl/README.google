@@ -18,3 +18,4 @@ Local Modifications:
     ICU.
   - In url_canon_interal, changed the type of several local varialbles from int
     to size_t to fix compile warnings on Linux.
+  - In url_canon_interal, added define guards to deal with WINCE.

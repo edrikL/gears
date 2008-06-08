@@ -29,10 +29,12 @@
 #define GEARS_BASE_IE_ACTIVEX_UTILS_H__
 
 #include <vector>
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h"
 
 struct IHTMLElement;
+class BrowsingContext;
 class SecurityOrigin;
 
 #ifdef WINCE
@@ -53,6 +55,11 @@ class ActiveXUtils {
   // and PageLocation to PageLocationUrl, for consistency.
   static bool GetPageLocation(IUnknown *site, std::string16 *page_location_url);
   static bool GetPageOrigin(IUnknown *site, SecurityOrigin *security_origin);
+
+  // Returns the page's browsing context.
+  // Returns true on success.
+  static bool GetPageBrowsingContext(
+      IUnknown *site, scoped_refptr<BrowsingContext> *browsing_context);
 
 #ifdef WINCE
   // We're not able to get IWebBrowser2 on WinCE. Instead we obtain the window

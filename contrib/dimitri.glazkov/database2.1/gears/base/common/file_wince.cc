@@ -45,6 +45,28 @@
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+
+File::~File() {
+  Close();
+  if (auto_delete_) {
+    Delete(file_path_.c_str());
+  }
+}
+
+
+void File::Close() {
+  if (handle_ != INVALID_HANDLE_VALUE) {
+    ::CloseHandle(handle_);
+    handle_ = INVALID_HANDLE_VALUE;
+  }
+}
+
+
+bool File::Flush() {
+  return ::FlushFileBuffers(handle_) != 0;
+}
+
+
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
   scoped_ptr<File> file(new File());
@@ -63,7 +85,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
   DWORD creation_disposition = 0;
   switch (exists_mode) {
     case NEVER_FAIL:
-      // OPEN_ALWAYS creates inexistant files, which is not desired in read mode
+      // OPEN_ALWAYS creates nonexistent files which is not desired in read mode
       creation_disposition = (access_mode == READ) ?
           OPEN_EXISTING : OPEN_ALWAYS;
       break;
@@ -71,7 +93,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
       creation_disposition = OPEN_EXISTING;
       break;
     case FAIL_IF_EXISTS:
-      // CREATE_NEW creates inexistant files, which is not desired in read mode
+      // CREATE_NEW creates nonexistent files, which is not desired in read mode
       if (access_mode == READ) {
         return NULL;
       }
@@ -79,22 +101,21 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
       break;
   }
   file->mode_ = access_mode;
-  file->handle_.reset(::CreateFileW(full_filepath,
+  file->handle_ = ::CreateFileW(full_filepath,
                                     desired_access,
                                     access_mode == READ ? FILE_SHARE_READ : 0,
                                     NULL,
                                     creation_disposition,
                                     FILE_ATTRIBUTE_NORMAL,
-                                    NULL));
-  if (file->handle_.get() == INVALID_HANDLE_VALUE) {
-    // TODO(fry): SetLastFileError(kOpenFileFailedMessage, full_filepath,
-    // GetLastError());
+                                    NULL);
+  if (file->handle_ == INVALID_HANDLE_VALUE) {
     return NULL;
   }
   return file.release();
 }
 
-int64 File::Read(uint8* destination, int64 max_bytes) {
+
+int64 File::Read(uint8* destination, int64 max_bytes) const {
   if (!destination || max_bytes < 0) {
     return -1;
   }
@@ -104,7 +125,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) {
     max_bytes = std::numeric_limits<DWORD>::max();
   }
   DWORD bytes_read;
-  if (!::ReadFile(handle_.get(), destination,
+  if (!::ReadFile(handle_, destination,
                   static_cast<DWORD>(max_bytes), &bytes_read, NULL)) {
     return -1;
   }
@@ -113,7 +134,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) {
 }
 
 
-bool File::Seek(int64 offset, SeekMethod seek_method) {
+bool File::Seek(int64 offset, SeekMethod seek_method) const {
   DWORD move_method = 0;
   switch (seek_method) {
     case SEEK_FROM_START:
@@ -129,16 +150,16 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
 
   LARGE_INTEGER pos;
   pos.QuadPart = offset;
-  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+  pos.LowPart = SetFilePointer(handle_, pos.LowPart, &pos.HighPart,
                                move_method);
 
   return (pos.LowPart != 0xFFFFFFFF || GetLastError() == NO_ERROR);
 }
 
 
-int64 File::Size() {
+int64 File::Size() const {
   LARGE_INTEGER size;
-  size.LowPart = ::GetFileSize(handle_.get(),
+  size.LowPart = ::GetFileSize(handle_,
                                reinterpret_cast<LPDWORD>(&size.HighPart));
   if (size.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
     return -1;
@@ -147,10 +168,10 @@ int64 File::Size() {
 }
 
 
-int64 File::Tell() {
+int64 File::Tell() const {
   LARGE_INTEGER pos;
   pos.QuadPart = 0;
-  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+  pos.LowPart = SetFilePointer(handle_, pos.LowPart, &pos.HighPart,
                                FILE_CURRENT);
 
   if (pos.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
@@ -168,7 +189,7 @@ bool File::Truncate(int64 length) {
   if (!Seek(length, SEEK_FROM_START)) {
     return false;
   }
-  bool success = (SetEndOfFile(handle_.get()) != FALSE);
+  bool success = (SetEndOfFile(handle_) != FALSE);
   // try to seek back, even if truncate failed
   Seek(pos, SEEK_FROM_START);
   // TODO(fry): return false if Seek fails?
@@ -188,7 +209,7 @@ int64 File::Write(const uint8 *source, int64 length) {
   assert(length < std::numeric_limits<DWORD>::max());
   DWORD data_size = static_cast<DWORD>(length);
   DWORD bytes_written;
-  return ::WriteFile(handle_.get(), source, data_size, &bytes_written, NULL)
+  return ::WriteFile(handle_, source, data_size, &bytes_written, NULL)
       ? bytes_written : -1;
 }
 
@@ -203,9 +224,6 @@ bool File::CreateNewFile(const char16 *full_filepath) {
                                              FILE_ATTRIBUTE_NORMAL,
                                              NULL));
   if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    SetLastFileError(kCreateFileFailedMessage,
-                     full_filepath,
-                     GetLastError());
     return false;
   }
   return true;
@@ -252,7 +270,7 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
 }
 
 
-bool File::CreateNewTempFile(std::string16 *path) {
+bool CreateNewTempFileName(std::string16 *path) {
   static const char16 *kTempFilePrefix = STRING16(PRODUCT_SHORT_NAME);
 
   // Get the system temp directory.
@@ -274,9 +292,22 @@ bool File::CreateNewTempFile(std::string16 *path) {
 }
 
 
+File *File::CreateNewTempFile() {
+  std::string16 filename;
+  if (!CreateNewTempFileName(&filename)) {
+    return NULL;
+  }
+  scoped_ptr<File> file(Open(filename.c_str(), READ_WRITE, FAIL_IF_NOT_EXISTS));
+  if (file.get()) {
+    file->auto_delete_ = true;
+  }
+  return file.release();
+}
+
+
 bool File::CreateNewTempDirectory(std::string16 *path) {
   std::string16 temp;  // to avoid modifying 'path' if something fails
-  if (!CreateNewTempFile(&temp)) {
+  if (!CreateNewTempFileName(&temp)) {
     return false;
   }
 

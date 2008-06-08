@@ -25,6 +25,9 @@
 
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
+int main(int, char **) {
+  return 0;
+}
 #else
 #if USING_CCTESTS
 #include <string>
@@ -34,6 +37,7 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
+#include "gears/notifier/balloon_collection_test.h"
 #include "gears/notifier/notification_manager_test.h"
 
 class UnitTest {
@@ -95,10 +99,12 @@ const std::string16& GetTestLog() {
   return UnitTest::instance()->log();
 }
 
-int RunTests(int, char16 **) {
+int main(int, char **) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
+  TestNotificationManagerDelay();
+  TestBalloonCollection();
   if (!DidAllTestsPass()) {
     printf("*** Test failures occurred. ***\n");
     return 1;
@@ -107,6 +113,9 @@ int RunTests(int, char16 **) {
 
   return 0;
 }
-
+#else
+int main(int, char **) {
+  return 0;
+}
 #endif  // USING_CCTESTS
 #endif  // OFFICIAL_BUILD

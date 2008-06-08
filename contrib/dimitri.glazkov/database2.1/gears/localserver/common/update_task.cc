@@ -592,10 +592,8 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
     if (!transaction.Begin()) {
       return false;
     }
-    File::ClearLastFileError();
     if (!db->InsertPayload(version->server_id, url.c_str(), &new_payload)) {
       LOG(("UpdateTask::ProcessUrl - InsertPayload failed\n"));
-      File::GetLastFileError(&error_msg_);
       return false;
     }
     payload_id = new_payload.id;

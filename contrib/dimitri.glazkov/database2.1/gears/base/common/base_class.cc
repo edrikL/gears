@@ -43,7 +43,6 @@
 #include "gears/base/safari/browser_utils.h"
 #endif
 
-
 bool ModuleImplBaseClass::InitBaseFromSibling(
                               const ModuleImplBaseClass *other) {
   assert(other->module_environment_.get());
@@ -62,29 +61,36 @@ bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
 #endif
   bool is_worker = false;
   SecurityOrigin security_origin;
+  scoped_refptr<BrowsingContext> browsing_context;
   // We allocate a new (with a fresh ref-count of zero) ModuleEnvironment
   // object, which is passed immediately to InitBase, which maintains a separate
   // reference, and will therefore look after de-allocating the new object.
 #if BROWSER_FF
   JsContextPtr cx;
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
-                   DOMUtils::GetPageOrigin(&security_origin);
+                   DOMUtils::GetPageOrigin(&security_origin) &&
+                   DOMUtils::GetPageBrowsingContext(&browsing_context);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, cx, is_worker, NewDocumentJsRunner(NULL, cx)));
+      security_origin, cx, is_worker, NewDocumentJsRunner(NULL, cx),
+      browsing_context.get()));
 #elif BROWSER_IE
-  bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
+  bool succeeded =
+      ActiveXUtils::GetPageOrigin(site, &security_origin) &&
+      ActiveXUtils::GetPageBrowsingContext(site, &browsing_context);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, site, is_worker, NewDocumentJsRunner(site, NULL)));
+      security_origin, site, is_worker, NewDocumentJsRunner(site, NULL),
+      browsing_context.get()));
 #elif BROWSER_NPAPI
-  bool succeeded = BrowserUtils::GetPageSecurityOrigin(instance,
-                                                       &security_origin);
+  bool succeeded =
+      BrowserUtils::GetPageSecurityOrigin(instance, &security_origin) &&
+      BrowserUtils::GetPageBrowsingContext(instance, &browsing_context);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, instance, is_worker, NewDocumentJsRunner(NULL,
-                                                                instance)));
+      security_origin, instance, is_worker,
+      NewDocumentJsRunner(NULL, instance), browsing_context.get()));
 #elif BROWSER_SAFARI
   bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, is_worker, NULL));
+      security_origin, is_worker, NULL, browsing_context.get()));
 #endif
 }
 
@@ -143,6 +149,11 @@ IUnknown* ModuleImplBaseClass::EnvPageIUnknownSite() const {
 const SecurityOrigin& ModuleImplBaseClass::EnvPageSecurityOrigin() const {
   assert(module_environment_.get());
   return module_environment_->security_origin_;
+}
+
+BrowsingContext *ModuleImplBaseClass::EnvPageBrowsingContext() const {
+  assert(module_environment_.get());
+  return module_environment_->browsing_context_.get();
 }
 
 JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {

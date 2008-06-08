@@ -52,6 +52,7 @@ typedef Deletable MessageData;
 enum ThreadMessageTypes {
   kMessageService_Notify = 1,
   kAsyncRouter_Call,
+  kAndroidLoop_Exit,
 };
 
 // A facility for sending and receiving messages asynchronously 
@@ -117,6 +118,20 @@ class ThreadMessageQueue {
   DISALLOW_EVIL_CONSTRUCTORS(ThreadMessageQueue);
 };
 
+#ifdef OS_ANDROID
+// A facility for running a message loop for the calling thread.
+class AndroidMessageLoop {
+ public:
+  // Starts the message loop for the calling thread.
+  static void Start();
+  // Stops the message loop for the given thread.
+  static void Stop(ThreadId thread_id);
+
+ private:
+  AndroidMessageLoop();
+  DISALLOW_EVIL_CONSTRUCTORS(AndroidMessageLoop);
+};
+#endif
 
 #ifdef USING_CCTESTS
 // A mock implementation of the ThreadMessageQueue that

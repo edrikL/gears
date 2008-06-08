@@ -32,7 +32,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/console.h"
-#include "gears/database/ie/database.h"
+#include "gears/database/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 
@@ -49,7 +49,7 @@
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/ie/string_table.h"
-#include "gears/workerpool/ie/workerpool.h"
+#include "gears/workerpool/workerpool.h"
 #ifdef WINCE
 // The Image, Canvas and Media API are not yet available for WinCE.
 #else
@@ -173,12 +173,16 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
+  } else if (object_name == STRING16(L"beta.database")) {
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.workerpool")) {
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media and Image APIs have not
   // been finalized for official builds.
@@ -238,19 +242,9 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   CComQIPtr<IDispatch> idispatch;
 
   HRESULT hr = E_FAIL;
-  if (object_name == STRING16(L"beta.database")) {
-    CComObject<GearsDatabase> *obj;
-    hr = CComObject<GearsDatabase>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.localserver")) {
+  if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.workerpool")) {
-    CComObject<GearsWorkerPool> *obj;
-    hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else {

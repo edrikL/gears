@@ -32,6 +32,8 @@
 // NPUpdateTask
 //------------------------------------------------------------------------------
 class NPUpdateTask : public UpdateTask {
+ public:
+  NPUpdateTask(BrowsingContext *context) : UpdateTask(context) { }
  protected:
   // Overriden to ensure only one task per application runs at a time
   virtual void Run();

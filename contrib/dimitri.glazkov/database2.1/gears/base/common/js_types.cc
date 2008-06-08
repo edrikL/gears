@@ -43,6 +43,7 @@
 #include "genfiles/interfaces.h"
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 #elif BROWSER_SAFARI
@@ -181,8 +182,15 @@ bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
                                JsContextPtr context,
                                const JsToken in,
                                ModuleImplBaseClass **out) {
-  // TODO(nigeltao): implement.
-  return false;
+  if (!NPVARIANT_IS_OBJECT(in)) {
+    return false;
+  }
+  NPObject *object = NPVARIANT_TO_OBJECT(in);
+  if (object->_class != GetNPClass<ModuleWrapper>()) {
+    return false;
+  }
+  *out = static_cast<ModuleWrapper*>(object)->GetModuleImplBaseClass();
+  return true;
 }
 #endif
 
@@ -1675,35 +1683,40 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
 }
 
 bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
-  // TODO(nigeltao): implement for NPAPI
-  return false;
+  out->Reset(value);
+  return true;
 }
 
 bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
-  // TODO(nigeltao): implement for NPAPI
-  return false;
+  out->Reset(value);
+  return true;
 }
 
 bool StringToJsToken(JsContextPtr context, const char16 *value,
                      JsScopedToken *out) {
-  // TODO(nigeltao): implement for NPAPI
-  return false;
+  out->Reset(value);
+  return true;
 }
 
 bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
-  // TODO(nigeltao): implement for NPAPI
-  return false;
+  out->Reset(value);
+  return true;
 }
 
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
-  // TODO(nigeltao): implement for NPAPI
-  return false;
+  out->ResetToNull();
+  return true;
 }
 
 // ScopedNPVariant functions.
 void ScopedNPVariant::Reset() {
   NPN_ReleaseVariantValue(this);
   VOID_TO_NPVARIANT(*this);
+}
+
+void ScopedNPVariant::ResetToNull() {
+  Reset();
+  NULL_TO_NPVARIANT(*this);
 }
 
 void ScopedNPVariant::Reset(int value) {

@@ -8,7 +8,7 @@ C/C++.  Only some UTF support is included.
   - Removed everything except 'source/common/utf_impl.cc' and
     'public/common/unicode/*.h'
 
-Some minor changes were required for it to build on Linux:
+Some minor changes were required for it to build:
   - In public/common/unicode/utf.h:
       "#define U_SENTINEL (-1)" is changed to "#define U_SENTINEL (~0)"
   - In public/common/unicode/umachine.h we add:
@@ -17,3 +17,4 @@ Some minor changes were required for it to build on Linux:
   - We add public/common/unicode/plinux.h  It is generated as platform.h on a
     linux machine via:
       "runConfigureICU Linux"
+  - in plinux.h and pmac.h, we change #if 1 to #if 0 around the definition of U_EXPORT
