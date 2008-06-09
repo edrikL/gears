@@ -354,3 +354,9 @@ void NPN_SetException(NPObject* obj, const NPUTF8 *message)
 {
   GetNPNFuncs().setexception(obj, message);
 }
+
+bool NPN_Enumerate(NPP npp, NPObject *obj, NPIdentifier **identifier,
+                   uint32_t *count)
+{
+  return GetNPNFuncs().enumerate(npp, obj, identifier, count);
+}
