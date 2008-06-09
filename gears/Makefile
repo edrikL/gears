@@ -1599,6 +1599,7 @@ $(BROWSER)_CPPSRCS	+= \
 		radio_data_provider_wince.cc \
 		thread.cc \
 		wifi_data_provider_common.cc \
+		wifi_data_provider_linux.cc \
 		wifi_data_provider_wince.cc \
 		wifi_data_provider_win32.cc \
 		$(NULL)
