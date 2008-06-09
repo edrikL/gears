@@ -76,7 +76,7 @@ Canvas class
   // Properties. Assigning to any of these resets all pixels to transparent black.
   attribute unsigned long width;
   attribute unsigned long height;
-  attribute string colorMode;  // one of the strings "RGBA32" and "RGB24".
+  attribute string colorMode;  // one of the strings "RGBA32" and "RGB24". default: RGBA32
 
   // Returns a context.
   CanvasRenderingContext2D getContext(string contextId);
