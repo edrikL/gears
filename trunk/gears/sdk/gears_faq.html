@@ -1,0 +1,1552 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice, 
+     this list of conditions and the following disclaimer.
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+  3. Neither the name of Google Inc. nor the names of its contributors may be
+     used to endorse or promote products derived from this software without
+     specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+  <head>
+    <title>Gears FAQ</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
+  
+<body>
+  <h1>Gears FAQ</h1>
+
+  <div id="pagecontent">
+
+
+
+    <a name="Google__Gearsfor__Web__Users"></a>
+    <h1>Gears for Web Users</h1>
+    <p>
+      <div style="padding:0px 40px 0px 40px">
+        <a href="#whySeeConnectionError">Why do I see a connection error when I try to install?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#isGearsInstalled">How do I know if Gears is installed on a computer I am using?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#installOnAnotherMozillaBrowser">How do I install Gears on another Mozilla based browser?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#runGearsOn64Bit">How do I run Gears on my 64-bit system?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#uninstall">How do I uninstall Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#anyAppOffline">Does Gears make any application work offline?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#whatIsDialog">Why do I see a dialog asking if I want to allow a website to use Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+      </div>
+
+    </p>
+
+
+
+
+
+
+    <a name="Getting__Started"></a>
+    <h1>Getting Started</h1>
+    <p>
+      <div style="padding:0px 40px 0px 40px">
+        <a href="#whatIsGears">What is Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howToContribute">How do I contribute to Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#status">What is the status of Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#automaticallyOffline">Does Gears automatically make my web application work offline?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#supportedSystems">What browsers and operating systems are supported by Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#needLicense">Do I need a license to use Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howToBuildApplication">How do I build an application with Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#greatIdea">I have a great idea for Gears.  Whom should I contact?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+      </div>
+
+    </p>
+
+
+
+
+
+
+
+
+    <a name="Developing__With__Gears"></a>
+    <h1>Developing With Gears</h1>
+
+
+
+    <p>
+      <div style="padding:0px 40px 0px 40px">
+        <a href="#deployApp">How do I deploy an application that uses Gears?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#canGearsServeScripts">Can Gears LocalServer serve up scripting files like PHP or JSP?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#sqliteTool">Is there a tool to interactively manage and query Gears' SQLite database tables?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#deteDatabases">How do I delete databases that were created from the Gears API?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#prepareWorkerPoolCode">How do I make JavaScript source code available to a child WorkerPool during initialization?</a>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#separatePorts">If I have two applications on separate ports, will they have the same LocalServer and Database files?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#crossOriginWorker">What is a cross-origin worker? What is it useful for? How do I use it?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#multipleWorkersAccessingDB">Do I need to protect from multiple workers editing the database at once?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#storeURLParameters">Does LocalServer store URL parameters?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#whichLocalServerToUse">What LocalServer store do you use when?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howToOfflineCrossOrigin">How do I 'offline' a cross-origin resource?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#queryLocalServer">Is there a tool to interactively manage and query Gears' LocalServer?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#workerPoolDOMAccess">Do WorkerPool workers have access to the DOM document object?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#isOnlineFunction">Is there an isOnline function in Gears to check whether the application is online? Do you plan to have one?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#automaticOffline">Does Gears automatically make my web application work offline?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howMakeOffilne">Gears lets my web application work offline, right? How do I do that?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howStoreData">Gears lets my web application store data on the user's computer, right? How do I do that?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#howRunBackground">Gears lets my web application run code in the background, right? How do I do that?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#linuxCompatible">What does Gears require to be compatible with my Linux system?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="#whereAreFiles">Where are Gears files stored?</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+      </div>
+
+    </p>
+
+
+
+
+
+
+
+
+
+    <a name="Articles__And__Tutorials"></a>
+    <h1>Articles And Tutorials</h1>
+    <p>
+      <div style="padding:0px 40px 0px 40px">
+        <a href="articles/gearsmonkey.html">GearsMonkey: Gears + Greasemonkey to take Wikipedia offline</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="articles/take_app_offline.html">Taking Web Applications Offline with Gears</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+        <a href="articles/performant_offline_app.html">Using Google Base and Gears for a Performant, Offline Experience</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+
+      </div>
+
+    </p>
+
+
+
+
+
+
+
+
+    <hr>
+
+    <a name="Google__Gearsfor__Web__Users"></a>
+    <h2>Gears for Web Users</h2>
+
+
+
+
+
+    <dt id="whySeeConnectionError">Why do I see a connection error when I try to install?
+    </dt>
+
+    <dd>
+      <p>
+        Listed below are several possible causes for the connection error you're receiving. Please determine which of these causes may be applicable to you and follow the instructions to resolve the problem. 
+      </p>
+      <ul>
+        <li>
+          Your firewall, anti-virus software, or proxy is preventing the program from accessing the Internet. In this case, you need to add it to your security software's exceptions list. If you're using Windows firewall, you can add this program by following these steps:  
+          <ol>
+            <li>
+              Click "Start" in your Windows Taskbar and choose "Control Panel" >
+              "Windows Firewall."
+            </li>
+            <li>
+              Select the "Exceptions" tab.
+            </li>
+            <li>
+              Click the "Add Program" button.
+            </li>
+            <li>
+              Click "Browse" and select "My Computer" from the left side of the window.
+            </li>
+            <li>
+              Select "Local Disk (C:)" and click "Open."
+            </li>
+            <?cs if:Query.isMachine == "1"  ?>
+            <li>
+              Double-click "Program Files" >
+              "Google" >
+              "Common."
+            </li>
+            <li>
+              Select the folder with the highest number and open it.
+            </li>
+            <li>
+              Choose the file "googleupdate.exe."
+            </li>
+            <?cs else ?>
+            <li>
+              Open "Documents and Settings."
+            </li>
+            <li>
+              Open the folder with your username.
+            </li>
+            <li>
+              Open "Local Settings" >
+              "Application Data" >
+              "Google" >
+              "Update."
+            </li>
+            <li>
+              Select the folder with the highest number and open it.
+            </li>
+            <li>
+              Choose the file "googleupdate.exe."
+            </li>
+            <?cs /if ?>
+          </ol>
+          <p>
+            If you're using other firewall software, please visit that program's website for specific instructions to add applications to the exceptions list.
+          </p>
+
+        </li>
+        <li>
+          You may not have the latest updates for Windows XP. If you're not currently running Windows XP Service Pack 2, please try upgrading Windows.
+        </li>
+        <br />
+        <li>
+          You’re on an authenticated proxy server that isn't supported. Currently, we support the Negotiate authentication scheme. This includes both Kerberos and NTLM, depending on what is available. Additionally, proxies using &quot;integrated authentication&quot; are supported, provided that the current user is authorized to go through that proxy. Please determine if you're on a supported proxy server.
+        </li>
+        <br />
+        <li>
+          Your computer's Background Intelligent Transfer Service (BITS) isn't starting properly. If this is the case, you may want to verify that BITS is correctly configured. To ensure that BITS is enabled, please follow these steps:  <ol>
+            <li>
+              Click the "Start" button in your Windows taskbar and select "Settings" >
+              "Control Panel" >
+              "Administrative Tools" >
+              "Services." 
+            </li>
+            <li>
+              Select "Background Intelligent Transfer Service" from the list.
+            </li>
+            <li>
+              Right-click “Background Intelligent Transfer Service” and choose "Properties" from the menu.
+            </li>
+            <li>
+              From the "General" tab verify that the "Startup" type is set to either "Automatic" or "Manual." Make sure this setting is not "Disabled." 
+            </li>
+          </ol>
+          <p>
+            If you continue to have difficulties with BITS, make sure you have write access to the following folder:
+          </p>
+          <p>
+            C:\Documents and Settings\All Users\Application Data\Microsoft\Network\Downloader\
+          </p>
+          <p>
+            To determine if you have write access, right-click the folder and choose &quot;Properties.&quot; If you see an empty box next to &quot;Read-only&quot; in the &quot;General tab,&quot; you do have write access. If you see a checkmark or a green box, click the box until it's empty and click &quot;OK.&quot; If you're unable to click the box, please speak with your system administrator. 
+          </p>
+
+        </li>
+      </ul>
+    </dd>
+
+
+
+    <dt id="isGearsInstalled">
+      How do I know if Gears is installed on a computer I am using?
+    </dt>
+
+    <dd>
+      <p>
+        Occasionally you may wish to know if Gears is installed on a particular computer. For example, you may wish to know if Gears is installed on a computer at an internet cafe, prior to logging in with any sensitive information. Currently, there are two ways to accomplish this:
+      </p>
+      <ul>
+        <li>
+          Visit the page  <a href="http://gears.google.com/" title="http://gears.google.com/">http://gears.google.com/</a>.  That page will clearly tell you whether Gears is installed or not.  
+        </li>
+        <li>
+          Attempt to access the Gears settings dialog, which is available from the browser's Tools menu if Gears is installed.  <li>
+            <li>
+              Check the computer directly:  
+            </li>
+            <ul>
+              <li>
+                <b>Windows XP or Vista</b>
+                <br/>
+                Open <strong>Add or Remove Programs</strong> (on XP) or <strong>Programs and Features</strong> (on Vista) from the Windows Control Panel. If Gears is not listed, then Gears is not installed.<br/>
+              </li>
+              <li>
+                <b>Mac OS X or Linux</b>
+                <br/>
+                In Firefox, select Tools &gt; Extensions (Firefox 1.x) or Tools &gt;  Add-ons (Firefox 2.0+) from the menu. If Gears is not listed,  then Gears is not installed.  
+              </li>
+              <li>
+                <b>Windows Mobile</b>
+                <br/>
+                If your particular phone supports it, you can access the list of installed programs by selecting Remove Programs from the Settings page. If Gears is not listed, then Gears is not installed.  
+              </li>
+            </ul>
+          </ul>
+        </dd>
+
+
+
+        <dt id="installOnAnotherMozillaBrowser">
+          How do I install Gears on another Mozilla based browser?
+        </dt>
+
+        <dd>
+          <br/>
+          There are 3 steps:
+          <ol>
+            <li>
+              Go to the install directory of Gears:<br/>
+              <b>Mac OS X </b> - ~/Library/Application Support/Firefox/Profiles/&lt;<em>yourprofile</em>&gt;/extensions/{000a9d1c-beef-4f90-9363-039d445309b8}
+              <br/>
+              <b>Windows</b> - C:\Program Files\Google\Gears\Firefox	
+              <br/>
+              <b>Linux</b> - ./mozilla/firefox/&lt;<em>yourprofile</em>&gt;/extensions/{000a9d1c-beef-4f90-9363-039d445309b8}	
+            </li>
+            <li>
+              Modify the <em>install.rdf</em> file:		
+              <ol>
+                <li>
+                  Do a search on any search engine for the GUID of the Mozilla variant you are using. The example below uses Flock's
+                </li>
+                <li>
+                  Add this to your <em>install.rdf</em> file under the last &lt;/em:targetApplication&gt; (note: id is the GUID):
+<pre>
+&lt;em:targetApplication&gt;
+  &lt;Description&gt;	
+    &lt;em:id&gt;{a463f10c-3994-11da-9945-000d60ca027b}&lt;/em:id&gt;	
+    &lt;em:maxVersion&gt;6.02&lt;/em:maxVersion&gt; 		
+    &lt;em:minVersion&gt;0.2&lt;/em:minVersion&gt; 	
+  &lt;/Description&gt; 
+&lt;/em:targetApplication&gt;
+</pre>
+
+                </li>
+              </ol>
+              <li>
+                Zip up the contents of the directory, rename the .ZIP to .XPI, drag the .XPI into your Mozilla variant.
+              </li>
+            </li>
+          </ol>
+        </dd>
+
+
+
+        <dt id="runGearsOn64Bit">
+          How do I run Gears on my 64-bit system?
+        </dt>
+
+        <dd>
+          <p>
+            There are two ways to do so.
+            <ol>
+              <li>
+                <a href="http://groups.google.com/group/gears-users/browse_thread/thread/4584842dd14a4882" title="64 bit Linux support -		  Gears |		  Google Groups">A patch</a>    submitted by a user.		
+              </li>
+              <li>
+                A plugin called <a href="http://plugindoc.mozdev.org/linux-amd64.html#nswrapper" title="PluginDoc: Linux (x86_64)">nspluginwrapper</a> to use 32-bit browser plugins with x86_64 browsers.		
+              </li>
+            </ol>
+          </p>
+        </dd>
+
+
+
+        <dt id="uninstall">
+          How do I uninstall Gears?
+        </dt>
+
+        <dd>
+          To uninstall Gears, you can follow the instructions here:<a href="http://code.google.com/apis/gears/install.html" title="http://code.google.com/apis/gears/install.html">http://code.google.com/apis/gears/install.html</a>.  Once you uninstall Gears, you will no longer have offline access to applications that require Gears.
+        </dd>
+
+
+
+        <dt id="anyAppOffline">
+          Does Gears make any application work offline?
+        </dt>
+
+        <dd>
+          No. Only web sites that have been specifically designed to use Gears can take advantage of its offline capabilities.
+        </dd>
+
+
+
+        <dt id="whatIsDialog">
+          Why do I see a dialog asking if I want to allow a website to use Gears?
+        </dt>
+
+        <dd>
+          <p>
+            Since Gears allows web applications to write to your computer, Gears wants to be sure that the website has your permission to do so. You will see this dialog ever time the website tries to use Gears. If you trust the website and always want to permit it to use Gears, then check "Remember my decision for this site" and click Allow.
+          </p>
+          <p>
+            If you visit a new site that also wants to use Gears, you will see the message and can choose to give the new site permission or not.
+          </p>
+        </dd>
+
+
+
+
+
+
+        <hr>
+
+        <a name="Getting__Started"></a>
+        <h2>Getting Started</h2>
+
+
+
+
+
+        <dt id="whatIsGears">
+          What is Gears?
+        </dt>
+
+        <dd>
+          <p>
+            Gears is an open source browser extension that lets developers create web applications that can run offline. Gears provides three key features:
+          </p>
+          <ul>
+            <li>
+              A local server, to cache and serve application resources (HTML, JavaScript, images, etc.) without needing to contact a server
+            </li>
+            <li>
+              A database, to store and access data from within the browser
+            </li>
+            <li>
+              A worker thread pool, to make web applications more responsive by performing expensive operations in the background
+            </li>
+          </ul>
+          <p>
+            Gears
+          </b> is currently an early-access developers' release. It is not yet intended for use by real users in production applications at this time.
+        </p>
+        <br />
+        <p>
+          If you're a developer interested in using Gears with your application, visit the <a href="http://code.google.com/apis/gears/">Gears Developer Page</a>.
+        </p>
+        <p>
+          If you wish to install Gears on your computer, visit the <a href="http://gears.google.com/">Gears Home Page</a>. Please note, however, that Gears is not yet intended for general use.
+        </p>
+      </dd>
+
+
+
+      <dt id="howToContribute">
+        How do I contribute to Gears?
+      </dt>
+
+      <dd>
+        <p>
+          Go to the <a href="http://code.google.com/p/google-gears/">Google Code Project home for Gears</a>. There is also a <a href="http://code.google.com/p/google-gears/wiki/ContributingToGears">wiki document</a> that explains how to contribute to Gears.
+        </p>
+      </dd>
+
+
+
+      <dt id="status">
+        What is the status of Gears?
+      </dt>
+      <dd>
+        <p>
+          Gears is currently a beta product; moreover, it is currently considered to be a developer-only release. When the developer community has had a chance to examine, critique, and improve Gears, a final version suitable for use with production applications will be made available.
+        </p>
+        <p>
+          Gears is open source software, licensed under the New BSD license. Generally speaking, this license allows you to embed the Gears runtime or API in your software, without restriction. You should, of course, consult a lawyer about licensing issues before choosing to embed Gears in your software. There is no restriction on web applications which make use of Gears installations on users' computers.
+        </p>
+        <p>
+          Google is working with a variety of partners to make Gears widely available, and easy for developers to use.
+        </p>
+        <p>
+          For more information, visit the <a href="http://code.google.com/apis/gears/">Gears Developers' Site</a>.
+        </p>
+      </dd>
+
+
+
+      <dt id="automaticallyOffline">
+        Does Gears automatically make my web application work offline?
+      </dt>
+
+      <dd>
+        <p>
+          Gears extends browsers by making new APIs available to JavaScript code. Like all APIs, they must be used explicitly. To take advantage of the offline features provided by Gears, you'll need to add or change code in your web application.
+        </p>
+        <br />
+        <p>
+          There are three core modules provided by Gears: a <a href="http://code.google.com/apis/gears/api_localserver.html">LocalServer</a> for storing and accessing application pages offline, a <a href="http://code.google.com/apis/gears/api_database.html">Database</a> for storing and accessing application data on the user's computer, and a <a href="http://code.google.com/apis/gears/api_workerpool.html">WorkerPool</a> for performing long-running tasks (such as the code that synchronizes data between your server and users' computers). For more information, follow the links.
+        </p>
+        <br />
+        <p>
+          A <a href="http://code.google.com/apis/gears/tutorial.html">Gears Tutorial</a> is available that illustrates the basic concepts. You may also find the <a href="http://code.google.com/apis/gears/sample.html">Gears sample applications</a>useful. Source code for these samples can be downloaded in a zip file found on the same page.
+        </p>
+      </dd>
+
+
+
+      <dt id="supportedSystems">
+        What browsers and operating systems are supported by Gears?
+      </dt>
+
+      <dd>
+        <p>
+          Gears works on the following browsers:
+        </p>
+        <ul>
+          <li>
+            Apple Mac OS X (10.2 or higher)
+          </li>
+          <ul>
+            <li>
+              Firefox 1.5 or higher
+            </li>
+          </ul>
+          <li>
+            Linux (<a href="http://code.google.com/support/bin/answer.py?answer=71866&topic=11630">Requirements</a>)
+          </li>
+          <ul>
+            <li>
+              Firefox 1.5 or higher
+            </li>
+          </ul>
+          <li>
+            Microsoft Windows (XP or higher)
+          </li>
+          <ul>
+            <li>
+              Firefox 1.5 or higher
+            </li>
+            <li>
+              Internet Explorer 6 or higher
+            </li>
+          </ul>
+          <li>
+            Microsoft Windows Mobile (5 or higher)
+          </li>
+          <ul>
+            <li>
+              Internet Explorer 4.01 or higher
+            </li>
+            <li>
+              The following devices are not supported
+            </li>
+            <ul>
+              <li>
+                Samsung i320 and i320N
+              </li>
+              <li>
+                Orange SPV C600
+              </li>
+              <li>
+                Motorola Q
+              </li>
+            </ul>
+          </ul>
+        </ul>
+        <p>
+          Additionally, the team is working on supporting Safari on Mac OS X in a future release.
+        </p>
+      </dd>
+
+
+
+      <dt id="needLicense">
+        Do I need a license to use Gears?
+      </dt>
+
+      <dd>
+        <p>
+          Gears is open source software, licensed under the <a href="http://www.opensource.org/licenses/bsd-license.php">New BSD license</a>
+          . Generally speaking, this license is very permissive. You should, of course, always consult an attorney if you have any questions about software licensing.
+        </p>
+        <p>
+          There are generally two ways to use Gears: by embedding the API or runtime software in an application you distribute to end users, or by writing a web application which makes use of installations of Gears on end-users' computers.
+        </p>
+        <p>
+          The <a href="http://www.opensource.org/licenses/bsd-license.php">New BSD license</a>
+          allows you to embed the Gears runtime or API in your software, with very minimal restrictions. There are no restrictions on web applications which make use of Gears installations on users' computers.
+        </p>
+      </dd>
+
+
+
+      <dt id="howToBuildApplication">
+        How do I build an application with Gears?
+      </dt>
+
+      <dd>
+        <p>
+          Enhancing your web application with offline functionality can be challenging at first. Here are some resources to help you get started:
+        </p>
+        <ul>
+          <li>
+            The <a href="http://code.google.com/apis/gears/tutorial.html">Gears Tutorial</a>
+            will walk you through the process of building a very basic, static application.
+          </li>
+          <li>
+            The <a href="http://code.google.com/apis/gears/sample.html">Gears Samples</a>
+            demonstrate how to use each of the core APIs included in Gears, with source code.
+          </li>
+          <li>
+            Read <a href="http://code.google.com/apis/gears/architecture.html">Choosing an Offline Application Architecture</a>
+            to learn about design decisions you may encounter.
+          </li>
+          <li>
+            When you're ready to start debugging, check out the <a href="http://code.google.com/apis/gears/tools.html">debugging tools</a>
+            .
+          </li>
+        </ul>
+        <p>
+          If those resources don't answer your question, you can also contact other Gears developers over at the <a href="http://groups.google.com/group/gears-users">Gears Discussion Group</a>
+          .
+        </p>
+      </dd>
+
+
+
+      <dt id="greatIdea">
+        I have a great idea for Gears.  Whom should I contact?
+      </dt>
+
+      <dd>
+        <p>
+          We'd love to hear your feedback and suggestions! Gears is open source software, so you should feel free to join our community. If you have a cool new idea you'd like to discuss, you should join our <a href="http://groups.google.com/group/gears-users">Google Group</a>
+          and post your comment there.
+        </p>
+        <p>
+          The Gears discussion group is intended for all topics, so don't be shy! You can post there whether your idea is about an application you'd like to build, or an enhancement or feature you'd like to see in Gears. Perhaps most importantly, you can also post there if you're having problems using Gears in an application you're building. The Gears discussion group is an open forum. Developers help each other, but the group also includes Google employees working on Gears who post regularly.
+        </p>
+        <p>
+          If you're interested in obtaining the source code for Gears and making some enhancements of your own, you should also visit the <a href="http://code.google.com/p/google-gears/">Gears Contributors Site</a>.
+        </p>
+      </dd>
+
+
+
+
+
+
+      <hr>
+
+      <a name="Developing__With__Gears">
+      </a>
+      <h2>Developing  With  Gears</h2>
+
+
+
+
+
+      <dt id="deployApp">
+        How do I deploy an application that uses Gears?
+      </dt>
+
+      <dd>
+        <p>
+          You should not do so at all.
+        </p>
+        <p>
+          At this time, Gears is a developer-only release. Google is working with partners in the developer community and in industry to improve Gears in anticipation of a public release. Until that release, Gears is not suitable for deployment on end-user computers. As a result,applications built on Gears should not be relied on in production environments.
+        </p>
+        <p>
+          When the Gears community reaches consensus on a final API, Google will release a corresponding production-quality version of Gears. When that happens, this article will be updated.
+        </p>
+      </dd>
+
+
+
+      <dt id="canGearsServeScripts">
+        Can Gears LocalServer serve up scripting files like PHP or JSP?
+      </dt>
+
+      <dd>
+        <p>
+          No. Gears LocalServer is simply a static content cache that intercepts URL requests to static content and serves them locally. The LocalServer does not provide the capability to interpret any server-side scripting.
+        </p>
+      </dd>
+
+
+
+      <dt id="sqliteTool">
+        Is there a tool to interactively manage and query Gears' SQLite database tables?
+      </dt>
+
+      <dd>
+        <p>
+          Yes. The Database Query Tool allows developers to interface with SQLite interactively via SQL commands. It can be downloaded at <a href='http://code.google.com/apis/gears/tools.html'>http://code.google.com/apis/gears/tools.html</a>. Simply copy the "dbquery.html" file to your server directory and visit the URL in your browser, and you can start issuing SQL commands to the embedded SQLite. There is also a similar third party tool, called <a href="http://code.google.com/p/gearsinmotion/">Gears In Motion</a> which is very good.
+        </p>
+        <p>
+          If you desire to check the contents of localserver.db (the database for LocalServer) then it is suggested that you use a SQLite management client. A list of them can be found <a href="http://www.sqlite.org/cvstrac/wiki?p=ManagementTools">here</a>.
+        </p>
+      </dd>
+
+
+
+      <dt id="deteDatabases">
+        How do I delete databases that were created from the Gears API?
+      </dt>
+
+      <dd>
+        <p>
+          The Gears API does not provide a programmatic way to delete an existing database. Consider the following code, which creates a Gears Database:<br/>
+    <pre>db = google.gears.factory.create('beta.database', '1.0');
+db.open('mydb');</pre>
+
+        </p>
+        <p>
+          Databases created with code such as this can only be explicitly removed from your local machine by physically deleting the corresponding database file generated for the browser. Gears Database files reside in the Gears data directory associated with the browser. The specific path to this directory depends on your browser and the underlying operating system. The Gears data directories for common configurations are listed in <a href='http://code.google.com/apis/gears/api_database.html#directories'>http://code.google.com/apis/gears/api_database.html#directories</a>.
+        </p>
+        <p>
+          The physical database file resides below the Gears data directory, according to this format: <br/>
+            <pre>&#91;path&#93;/&#91;application url&#93;/http_&#91;port number&#93;/&#91;db name&#93;#database</pre>
+        </p>
+      </dd>
+
+
+
+      <dt id="prepareWorkerPoolCode">
+        How do I make JavaScript source code available to a child WorkerPool during initialization?
+      </dt>
+
+      <dd>
+        <p>
+          Since a Gears WorkerPool worker has no access to the address space of its parent worker, all source code must be explicitly passed in during child worker initialization as such -
+        </p>
+          <pre>childCode = '......'; /* JavaScript code as string */
+childId = workerPool.createWorker(childCode);</pre>
+
+        <p>
+          The challenge lies in creating a string that encapsulates all the JavaScript codes that will be required by the child worker, and there are three ways to do this:<br/>
+          <ol>
+            <li>
+              You can write out the entire code as a string to be passed in. For example:<br/>
+              <br/>
+                <pre>childCode = 'function square(num) { return num*num; }';</pre>
+            </li>
+            <li>
+              You can wrap the code into a single function and use String() to flatten the function object into a string. For example:<br/>
+              <br/>
+                <pre>function square(num) {  return num * num;  }
+childCode = String(square);</pre>
+            </li>
+            <li>
+              You can retrieve it as a file string through an AJAX invocation (since local file reading is not allowed in JavaScript). For example:<br/>
+              <br/>
+                <pre>/* XMLHttpRequestObject is the XHR object of your browser */
+XMLHttpRequestObject.open("GET", 'square.js');
+XMLHttpRequestObject.onreadystatechange = function() {
+  if (XMLHttpRequestObject.readyState == 4 &amp;&amp; XMLHttpRequestObject.status == 200) {
+    childCode = XMLHttpRequestObject.responseText;
+  }
+}</pre>
+            </li>
+          </ol>
+        </p>
+      </dd>
+
+
+
+      <dt id="separatePorts">
+        If I have two applications on separate ports, will they have the same LocalServer and Database files?
+      </dt>
+
+      <dd>
+        <p>
+          No. Separate storages are made for separate domains. Gears looks at the protocol + host + port to determine domains. A different port would be a different domain.
+        </p>
+      </dd>
+
+
+
+      <dt id="crossOriginWorker">
+        What is a cross-origin worker? What is it useful for? How do I use it?
+      </dt>
+
+      <dd>
+        <p>
+          A cross-origin worker is WorkerPool worker created in a JavaScript file on a domain and has been initialized to run JavaScript code on a cross-origin server.
+        </p>
+        <p>
+          A cross-origin worker is useful because it is a secure solution to the cross-origin restriction policy of the browser. It allows you to make a request to a cross-origin server, even though the browser usually restricts this.
+        </p>
+        <p>
+          What can it be used for?
+        </p>
+        <ul>
+          <li>
+            Expose a service to users which was previously unreachable with an XMLHTTPRequest, due to cross-origin restrictions. By using cross-origin workers, you could make a web service API accessible to users' workers by putting a JavaScript worker file on your domain.
+          </li>
+          <li>
+            Offline resources that are on another domain. For instance, say you have a photo site and you have a separate server for the pictures. If you wanted to enable Gears offline support, you would have to do a <em>store.capture</em> on them which would fail due to cross-origin restrictions. However, if you had a JavaScript file on the other origin which called <em>store.capture</em>, then you could initiate a worker on that file and it would be successful.
+          </li>
+        </ul><br/>
+        <b>Example</b>
+        <p>
+          Take a cross-origin resource offline with a cross-origin worker.
+        </p>
+        <p>
+
+          ----<em>cache_cross_origin_resource.html</em>----
+        </p>
+              <pre>&lt;script type="text/javascript" src="gears_init.js"&gt;
+&lt;/script&gt;&lt;script type="text/javascript"&gt;
+// Create the workerpool
+var workerPool = google.gears.factory.create('beta.workerpool','1.0');
+// Set the message handler for when a worker sends a message
+workerPool.onmessage = function(a, b, message) {
+  alert('Received message from worker ' + message.sender + ': ' + message.text);
+};
+// Create a worker from a JavaScript file on another origin
+var childWorkerId = workerPool.createWorkerFromUrl('http://www.crossorigin.com/worker.js');
+// Send a message to the worker.  The worker's onmessage handler in worker.js will decide what to do with this
+workerPool.sendMessage('crossOriginResource.html', childWorkerId);
+&lt;/script&gt;</pre>
+        <p>
+          ----<em>worker.js</em>----
+        </p>
+          <pre>// Setup the WorkerPool
+var wp = google.gears.workerPool;
+// Allow a cross-origin script to run this
+wp.allowCrossOrigin();
+wp.onmessage = function(a,b,messageObject) {
+  // Ignore messages from unexpected origins
+  if(messageObject.origin == 'http://www.expectedorigin.com') {
+    // Create LocalServer
+    var localServer = google.gears.factory.create('beta.localserver');    
+    
+    // Create ResourceStore (Could also use ManagedResourceStore)    
+    var store = localServer.createStore('Cross_Origin_Store');    
+    
+    // We are capturing the filename sent to us by the     
+    // WorkerPool (crossOriginResource.html)    
+    var fileToCapture = messageObject.text;    
+    
+    // Capture the file    
+    store.capture(fileToCapture, function(url, success, captureId){      
+      // When capture finishes, let the WorkerPool know the status      
+      // This will cause workerPool.onmessage to alert the message received      
+      wp.sendMessage(url + ' captured ' + (success ? 'succeeded' : 'failed'), messageObject.sender);    
+    });
+  }
+}</pre>
+    </dd>
+
+
+
+    <dt id="multipleWorkersAccessingDB">
+      Do I need to protect from multiple workers editing the database at once?
+    </dt>
+
+    <dd>
+      <p>
+        No. SQLite is thread-safe. However, if multiple workers attempt to access the database at once then some requests might fail. It is up to the application to have workers retry requests upon failure.
+      </p>
+    </dd>
+
+
+
+    <dt id="storeURLParameters">
+      Does LocalServer store URL parameters?
+    </dt>
+
+    <dd>
+
+      <p>
+        Yes. If you use a ResourceStore or a ManagedResourceStore and you store a URL with parameters then whatever was captured for that URL will be served back when that URL is requested.
+        Ex:
+            <pre>store.capture('foobar.html?foo=1&bar=2');</pre>
+            When the browser requests <em>foobar.html?foo=1&bar=2</em> it will be served the stored page, but not when it requests <em>foobar.html</em>.		
+      </p>
+    </dd>
+
+
+
+    <dt id="whichLocalServerToUse">
+      What LocalServer store do you use when?
+    </dt>
+
+    <dd>
+      <p>
+        In most cases, use the <a href="http://code.google.com/apis/gears/api_localserver.html#ManagedResourceStore">ManagedResourceStore</a>. It is meant to be used for application resources such as CSS, HTML, JavaScript, and images. It is good because it enables you to push your updated application in one step to the clients.
+      </p>
+      <p>
+        The <a href="http://code.google.com/apis/gears/api_localserver.html#ResourceStore">ResourceStore</a> is meant to be more of a specialized tool and should be used accordingly. For instance, if your application has user-generated content or user-specific data then it would be difficult to control it with a ManagedResourceStore. Using a ResourceStore to handle this dynamic content is ideal.
+      </p>
+    </dd>
+
+
+
+    <dt id="howToOfflineCrossOrigin">
+      How do I 'offline' a cross-origin resource?
+    </dt>
+
+    <dd>
+      <p>
+        First, read an article on the dangers of <a href="http://www.cgisecurity.com/articles/xss-faq.shtml">cross-origin scripting</a>.
+      </p>
+      <p>
+        After understanding the security risks, here are two potential solutions:<br/>
+        (1) Use Gears' cross-origin workers<br/>
+        (2) Use cross-origin proxying	
+      </p>
+      <b>Solution (1)</b>
+      <p>
+        This is a safer alternative and therefore the suggested one. However, you must have access to put Javascript on any origins you wish to use. If you are trying to grab resources from an origin you do not control, use (2). However, be warned that this is unsafe and can expose you to attacks.
+      </p>
+      <p>
+        The first step is to grab <a href="http://code.google.com/p/google-gears/downloads/list">the most recent version of Gears</a>. One problem is that this is not the public version of gears that the average user will have installed - it is a developer release to play with new features.
+      </p>
+      <p>
+        Say we have two origins, http://www.foo.com/ and http://www.bar.com/ with the style.css file on bar.com. What you do is create a WorkerPool on foo.com which does a createWorkerFromUrl. The URL it will create it from is a Javascript worker file that you have placed on bar.com.
+      </p>
+      <p>
+        The worker file on bar.com will then create a LocalServer and ResourceStore, then capture style.css.
+      </p>
+      <p>
+        Here is example code:<br/>
+      </p>
+      <i>test.hml (this origin is http://www.foo.com/)</i>
+          <pre class="code">&lt;script type="text/javascript" src="gears_init.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');	
+  workerPool.onmessage = function(a, b, message) {	
+    alert('Received message from worker ' + message.sender + ': ' +	message.text);	
+  };	
+  var childWorkerId = workerPool.createWorkerFromUrl('http://www.bar.com/worker.js');
+  workerPool.sendMessage('', childWorkerId);	
+&lt;/script&gt;</pre>
+      <i>worker.js (this origin is http://www.bar.com/)</i>
+          <pre class="code">var wp = google.gears.workerPool;
+wp.allowCrossOrigin();
+wp.onmessage = function(a, b, message) {	
+  localServer = google.gears.factory.create('beta.localserver', '1.1');		
+  var store = localServer.createStore("Test_Store");		
+  store.capture("style.css", function(){
+    wp.sendMessage("Captured!", message.sender);
+  });
+}</pre>
+      For ease of reading, the try catch blocks that you should be using are left out! Don't forget them or to make sure the user has Gears installed.	
+      <br/><br/>
+      <b>Solution (2)</b>
+      <p>
+        Be sure you understand the security risks of cross-origin proxying!
+      </p>
+      <p>
+        Use a PHP file that you store on the origin you are grabbing resources with to echo back the output of a resource from another origin. Then, to 'offline' this data, use resource store to store the PHP file with the exact parameters sent to it.
+      </p>
+      <p>
+        An example would be if I am on http://www.foo.com/ and I have a CSS located at http://www.bar.com/style.css. I would then tell my ResourceStore to pull down the URL http://www.foo.com/php_proxy.php?url=http://www.bar.com/style.css.php_proxy.php. The php_proxy would take the input url and do an HTTP request for that resource and echo it back as an image.
+      </p>
+      <p>
+        Here is what the code for php_proxy.php would look like:
+      </p>
+          <pre class="code">&lt;?php		
+header("Content-Type: text/css");
+$base_url = $_GET['url'];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $base_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+curl_setopt($ch, CURLOPT_HEADER, false);
+
+echo( curl_exec($ch) );
+?&gt;</pre>
+          Then, in my HTML instead of:	
+          <pre class="code">&lt;link rel="stylesheet" type="text/css" media="print" href="http://www.bar.com/style.css"/&gt;</pre>
+          I would use:	
+          <pre class="code">&lt;link rel="stylesheet" type="text/css" media="print" href="http://www.foo.com/php_proxy.php?url=http://www.bar.com/style.css" /&gt;</pre>
+          The last step is to have the ResourceStore grab http://www.foo.com/php_proxy.php?url=http://www.bar.com/style.css
+    </dd>
+
+    <dt id="queryLocalServer">
+      Is there a tool to interactively manage and query Gears' LocalServer?
+    </dt>
+
+    <dd>
+      <style type="text/css">
+      /*table, table tr, table tr td { border:0; }*/#gc-pagecontent {border-left:3px solid #fff;}#breadcrumbs {padding:4px;}ul.section {list-style-type:none;line-height:155%;margin:0;padding:0 0 0 .2em}ul.section li {background-image: url(https://services.google.com/images/smallbullet.gif);background-repeat: no-repeat;background-position: 0 .6em;padding:0 0 0 .8em}.noticebox {border:1px solid #ccc;background: #efeff4;padding:6px;margin:8px 0 0 0;}</style>
+      <p>
+        If you've been wondering how to manage the stores and resources in Gears while developing, here's a solution. A script has been written which lets you add/remove stores, and the resources inside of them.
+      </p>
+      <p>
+        <strong>
+          Limitations:
+        </strong>
+        <ul>
+          <li>
+            Can only add/remove from domains the script is located on
+          </li>
+          <li>
+            Must add a symlink in your profile directory
+          </li>
+        </ul>
+      </p>
+      <p>
+        <strong>
+          (Mac/Linux) How to use it:
+        </strong>
+        <ol>
+          <li>
+            Navigate to your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a>.
+          </li>
+          <li>
+            Create a symlink:<br/>
+                <pre>ln localserver.db &lt;<em>domain</em>&gt;/http_80/localserver#database</pre>
+                An example would be
+                <pre>ln localserver.db www.google.com/http_80/localserver#database</pre>
+          </li>
+          <li>
+            Upload the <a href="http://code.google.com/articles/support/inspect_LocalServer_dbtail.html">LocalServer inspector</a> script to the domain you want to edit. Don't forget to put <a href="http://code.google.com/apis/gears/resources/gears_init.js">gears_init.js</a> there as well.		
+          </li>
+          <li>
+            Navigate your browser to the location of the LocalServer inspector script.		
+          </li>
+        </ol>
+      </p>
+      <p>
+        <p>
+          <strong>(Windows) How to use it:</strong>
+          <p>
+            There is no utility built in to Windows to create a hard link (the equivalent of Mac/Linux symlink). There is an <a href="http://shell-shocked.org/article.php?id=284">article</a> that talks about making hard links. A simple utility is Hard Link Magic.	
+          </p>
+          <p>
+            Use a hard link utility to connect the <em>localserver.db</em> file located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a> to a new file, &lt;<em>gears directory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database.	
+          </p>
+          <p>
+            Follow steps 3 &amp; 4 of the Mac/Linux section.	
+          </p>
+
+        </p>
+        <strong>How it works:</strong>
+        <p>
+          The file <em>localserver.db</em>, located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a>, is an SQLite database file that keeps track of all stores and resources on all domains in your Gears LocalServer. To prevent different domains from editing each other's offline data, this file is protected from being accessed in Gears code.	
+        </p>
+        <p>
+          By creating a symlink to that file in your domain, it is like putting the <em>localserver.db</em> file in that folder. The script then opens that database and queries it for the stores and databases.	
+        </p>
+      </p>
+      <p>
+        <strong>
+          Troubleshooting:
+        </strong>
+        <p>
+          If you received the "File exists" error while trying to create the symlink or there is an error when you open the LocalServer inspector tool, then delete the file &lt;<em>GearsDirectory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database and recreate the symlink.	
+        </p>
+
+      </p>
+
+    </dd>
+
+
+
+    <dt id="workerPoolDOMAccess">
+      Do WorkerPool workers have access to the DOM document object?
+    </dt>
+
+    <dd>
+
+      No, workers have no access to the DOM object. However, they can message back to their parent which can access the DOM. Also, two new modules were introduced in Gears versions 0.2+, HTTPRequest and Timer. These modules allow you to make HTTPRequests in workers, as well as use timers to execute timed events.
+    </dd>
+
+
+
+    <dt id="isOnlineFunction">
+      Is there an isOnline function in Gears to check whether the application is online? Do you plan to have one?
+    </dt>
+    <dd>
+
+      <p>
+        No, there isn't an isOnline function in Gears at this time. And currently, there are no plans to implement it.
+      </p>
+      <p>
+        There are 2 reasons why we haven't implemented it yet:		
+        <ol>
+          <li>
+            There are multiple definitions of the application being 'offline'. The reason could be any of these:		
+            <ul>
+              <li>
+                The browser has the 'work offline' flag set
+              </li>
+              <li>
+                The network cable is unplugged
+              </li>
+              <li>
+                The VPN is down
+              </li>
+              <li>
+                DNS is down
+              </li>
+              <li>
+                The server you are trying to reach is down
+              </li>
+              <li>
+                The server has a bug and cannot process your request
+              </li>
+            </ul>
+            We can't assume how an application should determine if it is offline or not because each application will have different requirements.		
+          </li>
+          <li>
+            <p>
+              We don't want users to neglect syncing reliability.
+            </p>
+            <p>
+              The popular suggestion to implement isOnline has been to make a periodic XMLHttpRequest to a resource, whose success/failure would designate the application being on/offline. The problem with this is that you cannot assume that when a ping succeeds you can start syncing and be guaranteed that that you are online. For example, if isOnline() returns true and you start sending sync updates, something could happen in the connection between the user and the server and these syncs would be permanently lost - meanwhile the application still thinks it is online.
+            </p>
+            <p>
+              So instead what we encourage people to do is to queue all updates locally in the database module, and then try and send them to their server separately. If the update succeeds, remove them from the database. If the update fails for any reason, try again next time. In that way, you're always ready for the server to go down at any time and you never lose anything.
+            </p>
+
+          </li>
+        </ol>
+
+      </p>
+      <p>
+        <b>
+          Sample Code for periodic XMLHttpRequests
+        </b>
+        - uses Gears v0.2+ HTTPRequest
+      </p>
+      <p>
+        Here is some sample code that makes use of Gears' HTTPRequest module to change the UI of an application - let the user know when they are on/offline. It requires <em>gears_init.js</em> to be in the same directory.	
+      </p>
+          <pre class="code">&lt;div id="serverStatus"&gt;&lt;/div&gt;
+&lt;div id="pings"&gt;&lt;/div&gt;
+&lt;script src="gears_init.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" charset="utf-8"&gt;
+  var numPings = 0;
+  var request = google.gears.factory.create('beta.httprequest', '1.0');
+  var TIME_BETWEEN_PINGS = 3*1000;
+  var PING_TIMEOUT_SECONDS = 1*1000;
+  function pingSuccess() {
+    if(request.responseText != "" &amp;&amp; request.responseText.indexOf("404 Page not found") == -1){
+      document.getElementById('serverStatus').innerHTML = "&#91;Server Accessible&#93;";
+    } else {		
+      document.getElementById('serverStatus').innerHTML = "&#91;Server Inaccessible&#93;";	
+    }
+  }
+
+  function isServerAvailable() {	
+    var resource_to_test = "FAQs_to_write.txt";	
+    resource_to_test += "?q=" + Math.floor(Math.random() * 100000);	
+    request.open('GET', resource_to_test);	
+    window.setTimeout("pingSuccess()",PING_TIMEOUT_SECONDS);	
+    request.onreadystatechange = function() {		
+      if (request.readyState == 4) {
+        numPings++;
+        document.getElementById('pings').innerHTML = "Number of pings: " +			                                              numPings;
+      }
+    };
+    request.send();
+    window.setTimeout("isServerAvailable()",TIME_BETWEEN_PINGS);
+  }
+  isServerAvailable();
+&lt;/script&gt;</pre>
+      Be aware that the <em>resource_to_test</em> must be a file located on the same domain this code is running on. Also note that in the <em>pingSuccess</em> function, there is a test for a page returning "404 Page not found". Different domains will send the user a different 404 error, so please be aware of what check is correct for your domain.	
+      <p>
+        <b>
+          Sample Code for browser being offline
+        </b>
+
+      </p>
+      <p>
+        To check if the user has manually told the browser to work offline, use this:
+      </p>
+          <pre class="code">alert(navigator.onLine);</pre>
+      <p>
+        Note: This works on IE and Firefox
+      </p>
+    </dd>
+
+
+
+    <dt id="automaticOffline">
+      Does Gears automatically make my web application work offline?
+    </dt>
+
+    <dd>
+      <p>
+        Gears extends browsers by making new APIs available to JavaScript code. Like all APIs, they must be used explicitly. To take advantage of the offline features provided by Gears, you'll need to add or change code in your web application.
+      </p>
+      <br />
+      <p>
+        There are three core modules provided by Gears: a <a href="http://code.google.com/apis/gears/api_localserver.html">LocalServer</a> for storing and accessing application pages offline, a <a href="http://code.google.com/apis/gears/api_database.html">Database</a> for storing and accessing application data on the user's computer, and a <a href="http://code.google.com/apis/gears/api_workerpool.html">WorkerPool</a> for performing long-running tasks (such as the code that synchronizes data between your server and users' computers). For more information, follow the links.
+      </p>
+      <br />
+      <p>
+        A <a href="http://code.google.com/apis/gears/tutorial.html">Gears Tutorial</a> is available that illustrates the basic concepts. You may also find the <a href="http://code.google.com/apis/gears/sample.html">Gears sample applications</a> useful. Source code for these samples can be downloaded in a zip file found on the same page.
+      </p>
+    </dd>
+
+
+
+    <dt id="howMakeOffilne">
+      Gears lets my web application work offline, right? How do I do that?
+    </dt>
+
+    <dd>
+      <p>
+        Gears provides a LocalServer module to access application data offline. This module consists of two sub-parts:
+      </p>
+      <ul>
+        <li>
+          A ResourceStore, used to capture application content (such as images and  static files) for later use offline  
+        </li>
+        <li>
+          A ManagedResourceStore, used to capture the URLs that make up an application  
+        </li>
+      </ul>
+      <p>
+        More information is available in the<a href="http://code.google.com/apis/gears/api_localserver.html" title="LocalServer API documentation">LocalServer API documentation</a>.
+      </p>
+    </dd>
+
+
+
+    <dt id="howStoreData">
+      Gears lets my web application store data on the user's computer, right? How do I do that?
+    </dt>
+
+    <dd>
+      <p>
+        Gears provides a Database module to store and retrieve data from a user's computer. This module consists of a SQL interface to a relational database embedded in the user's browser as part of Gears. Tables can be created to store data, in a manner that will be familiar to any SQL developer.
+      </p>
+      <br/>
+      <p>
+        More information is available in the<a href="http://code.google.com/apis/gears/api_database.html" title="Database API Documentation">Database API Documentation</a>.
+      </p>
+    </dd>
+
+
+
+    <dt id="howRunBackground">
+      Gears lets my web application run code in the background, right? How do I do that?
+    </dt>
+
+    <dd>
+      <p>
+        Gears provides a WorkerPool module to run JavaScript code in separate contexts. These contexts (which are similar to threads) run in isolated JavaScript environments, and have no window object, document object, or other DOM elements. However, these threads do have access to the XmlHttpRequest function, and so can make AJAX-style calls as necessary. This is frequently useful to implement a component that synchronizes data between a user's computer (for offline use) and the server (for online use and backup).
+      </p>
+      <br/>
+      <p>
+        Workers from the same pool can communicate with each other by passing messages.
+      </p>
+      <br/>
+      <p>
+        More information is available in the<a href="http://code.google.com/apis/gears/api_workerpool.html" title="WorkerPool API Documentation">WorkerPool API Documentation</a>.
+      </p>
+    </dd>
+
+
+
+    <dt id="linuxCompatible">
+      What does Gears require to be compatible with my Linux system?
+    </dt>
+
+    <dd>
+      If you'd like to run the Gears for Firefox on a Linux (32-bit) platform, please make sure your system has glibc 2.3.5 or higher and libstdc++6 (Gears 0.3) or libstdc++5 (Gears pre-0.3).
+    </dd>
+
+
+
+    <dt id="whereAreFiles">
+      Where are Gears files stored?
+    </dt>
+
+    <dd>
+      <p>
+        <strong>
+          Windows Vista - Internet Explorer 
+        </strong>
+
+      </p>
+      <p>
+        Location: {FOLDERID_LocalAppDataLow}\Google\Gears for Internet Explorer<br />
+        Example: C:\Users\Bob\AppData\LocalLow\Google\Gears for Internet Explorer
+      </p>
+      <p>
+        <strong>
+          Windows Vista - Firefox 
+        </strong>
+        - Files are stored in the user local profile directory. 
+      </p>
+      <p>
+        Location: C:\Users\&lt;username&gt;\AppData\Local\Mozilla\Firefox\Profiles\{profile}.default\Gears for Firefox <br />
+        Example: C:\Users\Bob\AppData\Local\Mozilla\Firefox\Profiles\uelib44s.default\Gears for Firefox 
+      </p>
+      <p>
+        <strong>
+          Windows XP - Internet Explorer 
+        </strong>
+        - Files are stored in the user local profile directory. 
+      </p>
+      <p>
+        Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Google\Gears for Internet Explorer<br />
+        Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Google\Gears for Internet Explorer
+      </p>
+      <p>
+        <strong>
+          Windows XP - Firefox 
+        </strong>
+        - Files are stored in the user local profile directory. 
+      </p>
+      <p>
+        Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Mozilla\Firefox\Profiles\{profile}\Gears for Firefox<br />
+        Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Mozilla\Firefox\Profiles\uelib44s.default\Gears for Firefox
+      </p>
+      <p>
+        <strong>
+          Mac OS/X - Firefox 
+        </strong>
+        - Files are stored in the user local profile directory. 
+      </p>
+      <p>
+        Location: Users/&lt;username&gt;/Library/Caches/Firefox/Profiles/{profile}.default/Gears for Firefox <br />
+        Example: Users/Bob/Library/Caches/Firefox/Profiles/08ywpi3q.default/Gears for Firefox
+      </p>
+      <p>
+        <strong>
+          Linux - Firefox 
+        </strong>
+        - Files are stored in the user home directory.
+      </p>
+      <p>
+        Location: ~<em>bob</em>/.mozilla/firefox/&lt;firefox's profile id&gt;/Gears for Firefox <br />
+        Example: ~bob/.mozilla/firefox/08ywpi3q.default/Gears for Firefox 
+      </p>
+      <p>
+        <strong>
+          Microsoft Windows Mobile - Internet Explorer
+        </strong>
+        - Files are stored in the Application Data directory.
+      </p>
+      <p>
+        Location: \Application Data\Google\Gears for Internet Explorer
+      </p><br/>
+      <b>What do the files do?</b>
+      <p>
+        <strong>
+          localserver.db
+        </strong>
+        - This is a SQLite database that keeps track of all files that are stored in the LocalServer across all domains. This file is used in the internals of the Gears code, and cannot be accessed from within a Gears program.
+      </p>
+      <p>
+        <strong>
+          permissions.db
+        </strong>
+        - This is a SQLite database that keeps track of all domains that have been allowed to use Gears.
+      </p>
+      <p>
+        <strong>
+          &lt;<em>domain</em>&gt;/http_80/&lt;<em>filename</em>&gt;#database
+        </strong>
+        - This is a SQLite database file that has been created by an application on &lt;<em>domain</em>&gt;
+      </p>
+      <p>
+        <strong>
+          &lt;<em>domain</em>&gt;/http_80/&lt;<em>filename</em>&gt;#localserver
+        </strong>
+        - This is a folder that contains files cached by either type of LocalServer store, a ResourceStore or a ManagedResourceStore, created by &lt;<em>domain</em>
+        &gt;
+      </p>
+    </dd>
+  </body>
+
+  </html>
