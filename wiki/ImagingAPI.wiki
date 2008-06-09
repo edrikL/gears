@@ -46,7 +46,6 @@ Canvas class
   // Supported formats: JPEG, PNG, BMP
   // 'attributes' is a map of key-value pairs. 
   // These are the available keys, all optional:
-  //      colorMode -- one of the strings "RGBA_32" and "RGB_24".
   //      indexed -- boolean. defaults to false unless palette is specified.
   //      palette -- an array of colors (as integer values). Explicitly specifying indexed = false while passing in a palette is an error.
   //      compressionQuality -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
@@ -76,7 +75,6 @@ Canvas class
   // Properties. Assigning to any of these resets all pixels to transparent black.
   attribute unsigned long width;
   attribute unsigned long height;
-  attribute string colorMode;  // one of the strings "RGBA32" and "RGB24". default: RGBA32
 
   // Returns a context.
   CanvasRenderingContext2D getContext(string contextId);
