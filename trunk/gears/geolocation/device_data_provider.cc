@@ -73,7 +73,7 @@ class MockDeviceDataProvider
 class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
  private:
   // Allow RadioDataProviderBase::Create() to access our private constructor.
-  friend RadioDataProviderBase;
+  friend class RadioDataProviderBase;
 
   MockRadioDataProvider() {}
   virtual ~MockRadioDataProvider() {}
@@ -100,7 +100,7 @@ class MockRadioDataProvider : public MockDeviceDataProvider<RadioData> {
 class MockWifiDataProvider : public MockDeviceDataProvider<WifiData> {
  private:
   // Allow WifiDataProviderBase::Create() to access our private constructor.
-  friend WifiDataProviderBase;
+  friend class WifiDataProviderBase;
 
   MockWifiDataProvider() {}
   virtual ~MockWifiDataProvider() {}
@@ -139,10 +139,12 @@ WifiDataProviderBase *WifiDataProviderBase::Create() {
 
 #else  // USING_MOCK_DEVICE_DATA_PROVIDERS
 
-#ifdef WINCE
+#if defined(WINCE)
 // WinCE uses WinceWifiDataProvider.
 #elif defined(WIN32) && !defined(WINCE)
 // Win32 uses Win32WifiDataProvider.
+#elif defined(LINUX)
+// Linux uses LinuxWifiDataProvider.
 #else
 // static
 template <>
