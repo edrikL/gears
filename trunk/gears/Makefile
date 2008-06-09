@@ -83,6 +83,90 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/glint
+# Note: Glint is only needed in NOTIFIER_EXE, not in MODULE_DLL,
+# so we don't add Glint to THIRD_PARTY_CPPSRCS - that would increase the size
+# of of MODULE_DLL unnecessarily.
+GLINT_VPATH += \
+		../third_party/glint/crossplatform \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		allocator.cc \
+		animation_timeline.cc \
+		base_object.cc \
+		bitmap.cc \
+		button.cc \
+		color.cc \
+		column.cc \
+		core.cc \
+		current_time.cc \
+		draw_stack.cc \
+		image_node.cc \
+		lexer.cc \
+		message.cc \
+		nine_grid.cc \
+		node.cc \
+		rectangle.cc \
+		root_ui.cc \
+		row.cc \
+		simple_text.cc \
+		size.cc \
+		snapshot_stack.cc \
+		tile_plane.cc \
+		transform.cc \
+		$(NULL)
+
+# Glint Win32 files
+ifeq ($(OS),win32)
+GLINT_VPATH += \
+		../third_party/glint/win \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		formatted_text.cc \
+		win32.cc \
+		$(NULL)
+endif
+
+# Glint OSX files
+ifeq ($(OS),osx)
+GLINT_VPATH += \
+		../third_party/glint/mac \
+		../third_party/glint/posix \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		darwin_platform_bitmaps.mm \
+		darwin_platform_fonttext.mm \
+		darwin_platform_misc.mm \
+		darwin_platform_windows.mm \
+		glint_bitmap_view.mm \
+		glint_window.mm \
+		glint_work_item_dispatcher.mm \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		posix.cc \
+		formatted_text.cc \
+		$(NULL)
+endif
+
+# Glint Linux files
+ifeq ($(OS),linux)
+GLINT_VPATH += \
+		../third_party/glint/linux \
+		../third_party/glint/posix \
+		$(NULL)
+
+GLINT_CPPSRCS = \
+		linux.cc \
+		posix.cc \
+		formatted_text.cc \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # third_party/googleurl
 
 # Only include gurl in builds that use ICU.
@@ -1006,6 +1090,7 @@ SF_CPPSRCS += \
 COMMON_VPATH	+= \
 		notifier \
 		../third_party/convert_utf \
+		$(GLINT_VPATH) \
 		$(NULL)
 
 NOTIFIER_CORE	+= \
@@ -1025,7 +1110,9 @@ NOTIFIER_CORE	+= \
 		string_utils.cc \
 		$(NULL)
 
+
 NOTIFIER_CPPSRCS += \
+		$(GLINT_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		notifier.cc \
 		$(NULL)

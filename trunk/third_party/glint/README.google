@@ -1,0 +1,20 @@
+Glint is a simple UI and rendering framework.
+
+It is downloaded from http://glint-ui.googlecode.com/svn/trunk at revision 23.
+
+I removed following directories:
+ third_party (has expat xml library, gnu tools and smart_ptr)
+ tools (build scripts)
+ test
+ sample_apps
+Also, removed Makefile and make.bat that build sample applications.
+
+Modifications:
+ changed in linux/linux.h:
+ from:
+  #include "glint/third_party/scoped_ptr/scoped_ptr.h"
+ to:
+  #include "third_party/scoped_ptr/scoped_ptr.h"
+ to pick up Gears' implementation.
+
+Dmitry Titov (dimich@google.com)
