@@ -58,7 +58,7 @@
 
 #include <windows.h>
 #include "gears/base/common/string_utils.h"
-#include "gears/geolocation/wifi_data_provider_common.h"
+#include "gears/geolocation/wifi_data_provider_windows_common.h"
 
 // The time period, in milliseconds, between successive polls of the wifi data.
 static const int kPollingInterval = 1000;
