@@ -177,11 +177,8 @@ MediaRecorder class
   // holds the HTTP post URL to send the recorded data to  
            attribute DOMString destination;
   const unsigned short EMPTY = 0;
-  const unsigned short POSTING = 1;
-  const unsigned short POSTED = 2;
-  const unsigned short DATA_UNAVAILABLE = 3;
-  const unsigned short DATA_AVAILABLE = 4;
-  const unsigned short STREAMING = 5;
+  const unsigned short SENDING = 1;
+  const unsigned short SENT = 2;
   readonly attribute unsigned short networkState;
  
   // ----- recording state ------
@@ -238,7 +235,6 @@ The MediaRecorder class throws the following events, under the stated preconditi
    * _mute_ - Muted.
    * _unmute_ - Unmuted.
    * _ended_ - Finished recording.
-   * _canstream_ - Some data was just made available for streaming now.
 
 *_AudioRecorder class : MediaRecorder _*
 {{{
