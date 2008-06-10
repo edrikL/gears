@@ -68,6 +68,13 @@ function testFundamentalTypeMessages() {
   wp.onmessage = function(text, sender, message) {
     assertEqual(testCases[numMessagesReceived], message.body,
                 'Incorrect message body');
+    // Regardless of the original type of the message sent, text (as in the
+    // first arg to onmessage) and message.text (the text property of the
+    // third arg to onmessage) should be a string, for backwards compatability.
+    assertEqual('string', typeof(text),
+                'Incorrect type for text');
+    assertEqual('string', typeof(message.text),
+                'Incorrect type for message.text');
     numMessagesReceived++;
     if (numMessagesReceived == testCases.length) {
       completeAsync();
