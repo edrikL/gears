@@ -23,13 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// This file contains a single function which is common to both the WIN32 and
-// WINCE implementations of the wifi data provider.
+// This file contains functions which are common to both the WIN32 and WINCE
+// implementations of the wifi data provider.
 
 #ifndef GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_COMMON_H__
 #define GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_COMMON_H__
 
 #include <vector>
+#include "gears/base/common/string16.h"
 
 #ifdef WINCE
 
@@ -71,6 +72,8 @@ typedef struct _NDIS_802_11_BSSID_LIST {
 #endif
 
 struct AccessPointData;
+
+std::string16 MacAddressAsString16(const UCHAR mac_as_int[6]);
 
 // Extracts access point data from the NDIS_802_11_BSSID_LIST structure and
 // appends it to the data vector. Returns the number of access points for which

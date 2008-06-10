@@ -33,12 +33,9 @@
 
 #include "gears/geolocation/device_data_provider.h"
 
-bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
-                          AccessPointData *access_point_data) {
-  assert(access_point_data);
+std::string16 MacAddressAsString16(const UCHAR mac_as_int[6]) {
   char16 mac[18];  // Format is XX-XX-XX-XX-XX-XX.
-  // NDIS_WLAN_BSSID_EX::MacAddress is big-endian. Write in byte chunks.
-  const uint8 *mac_as_int = data.MacAddress;
+  // mac_as_int is big-endian. Write in byte chunks.
 #ifdef DEBUG
   int num_characters =
 #endif
@@ -46,7 +43,13 @@ bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
                mac_as_int[1], mac_as_int[2], mac_as_int[3], mac_as_int[4],
                mac_as_int[5]);
   assert(num_characters == 17);
-  access_point_data->mac_address = mac;
+  return mac;
+}
+
+bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
+                          AccessPointData *access_point_data) {
+  assert(access_point_data);
+  access_point_data->mac_address = MacAddressAsString16(data.MacAddress);
   access_point_data->radio_signal_strength = data.Rssi;
   // It appears that we can not get the age of the scan. The only way to get
   // this information would be to perform the scan ourselves, which is not
@@ -60,9 +63,11 @@ int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST &bss_id_list,
   // Walk through the BSS IDs.
   int found = 0;
   const uint8 *iterator = reinterpret_cast<const uint8*>(&bss_id_list.Bssid[0]);
-  const uint8 *end_of_buffer = reinterpret_cast<const uint8*>(&bss_id_list) + list_size;
+  const uint8 *end_of_buffer =
+      reinterpret_cast<const uint8*>(&bss_id_list) + list_size;
   for (int i = 0; i < static_cast<int>(bss_id_list.NumberOfItems); ++i) {
-    const NDIS_WLAN_BSSID *bss_id = reinterpret_cast<const NDIS_WLAN_BSSID*>(iterator);
+    const NDIS_WLAN_BSSID *bss_id =
+        reinterpret_cast<const NDIS_WLAN_BSSID*>(iterator);
     // Check that the length of this BSS ID is reasonable.
     if (bss_id->Length < sizeof(NDIS_WLAN_BSSID) ||
         iterator + bss_id->Length > end_of_buffer) {
