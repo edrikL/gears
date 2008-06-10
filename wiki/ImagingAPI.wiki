@@ -38,7 +38,7 @@ The Gears Canvas is based on HTML5 [http://www.whatwg.org/specs/web-apps/current
 Canvas class
 {  
   // Throws away the existing contents of the canvas.
-  // Sets the canvas's dimensions and color mode to those of the image in the blob.
+  // Sets the canvas's dimensions to those of the image in the blob.
   void load(Blob blob);
 
   
@@ -52,7 +52,7 @@ Canvas class
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
 
-  // Returns a new Canvas object with the same state (width, height, color mode and pixels).
+  // Returns a new Canvas object with the same pixels.
   Canvas clone();
 
   // The palette of the image, if the canvas was load()ed from an indexed mode image.
@@ -154,7 +154,6 @@ CanvasRenderingContext2D class
   // alphaResult   = a[15] * srcR + a[16] * srcG + a[17] * srcB + a[18] * srcA + a[19]
   // 
   // Result components are clipped to the range 0.0 to 1.0.
-  // If the color mode is RGB, the last row and the penultimate column disappear.
   // 
   // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
   // 
@@ -329,7 +328,6 @@ function process(var srcBlob) {
 
   var destBlob = destCanvas.toBlob("image/jpeg", {
       'interlaced': true,
-      'colorMode': canvas.RGB_24,
       'compressionQuality':0.7});
 
   // display and upload the output blob as in the previous example.
