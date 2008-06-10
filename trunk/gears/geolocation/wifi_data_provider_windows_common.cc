@@ -29,7 +29,7 @@
 
 #if defined(WIN32) || defined(WINCE)
 
-#include "gears/geolocation/wifi_data_provider_common.h"
+#include "gears/geolocation/wifi_data_provider_windows_common.h"
 
 #include "gears/geolocation/device_data_provider.h"
 
