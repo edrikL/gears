@@ -358,5 +358,11 @@ void NPN_SetException(NPObject* obj, const NPUTF8 *message)
 bool NPN_Enumerate(NPP npp, NPObject *obj, NPIdentifier **identifier,
                    uint32_t *count)
 {
+#ifdef BROWSER_WEBKIT
+  // TODO(playmobil): enable when the headers are fixed.
+  assert(false);
+  return false;
+#else
   return GetNPNFuncs().enumerate(npp, obj, identifier, count);
+#endif
 }
