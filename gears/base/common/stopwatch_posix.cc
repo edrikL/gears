@@ -26,7 +26,7 @@
 // This file is used by both Linux and OSX.
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
-#if defined(LINUX) || defined(OS_MACOSX)
+#if defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
 
 #include "gears/base/common/stopwatch.h"
 

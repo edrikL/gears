@@ -37,7 +37,7 @@
 // layer.
 #if BROWSER_FF
 typedef int ThreadId;
-#elif BROWSER_WEBKIT
+#elif BROWSER_WEBKIT || defined(ANDROID)
 typedef pthread_t ThreadId;
 #elif BROWSER_IE || defined(WIN32) || defined(WINCE)
 typedef DWORD ThreadId;

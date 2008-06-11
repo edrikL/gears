@@ -29,7 +29,7 @@
 #include <map>
 #include "gears/base/common/common.h"
 
-#if BROWSER_SAFARI
+#if BROWSER_SAFARI || defined(ANDROID)
 #include <pthread.h>
 #endif
 
@@ -146,7 +146,7 @@ class ThreadLocals {
 
   // Called by NSPR when the value in our TLS slot is destructed.
   static void PR_CALLBACK TlsDestructor(void *priv);
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
   // The pthread key to use to save the map
   static pthread_key_t tls_index_;
 

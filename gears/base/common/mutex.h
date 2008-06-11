@@ -74,7 +74,7 @@ class Mutex {
 
 #if defined(WIN32) || defined(WINCE)
   CRITICAL_SECTION crit_sec_;
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_t mutex_;
 #endif
 };
