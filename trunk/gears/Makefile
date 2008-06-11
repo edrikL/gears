@@ -704,6 +704,8 @@ $(BROWSER)_CPPSRCS	+= \
 		async_router.cc \
 		base_class.cc \
 		base64.cc \
+		byte_store.cc \
+		byte_store_test.cc \
 		circular_buffer_test.cc \
 		database_name_table.cc \
 		event.cc \
