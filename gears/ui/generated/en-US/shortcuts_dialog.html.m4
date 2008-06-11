@@ -281,7 +281,8 @@ m4_include(ui/common/button.js)
   }
 
   function initSimpleStyle() {
-    window.title = dom.getTextContent(dom.getElementById("string-title-simple"));
+    window.title =
+        dom.getTextContent(dom.getElementById("string-title-simple"));
     dom.getElementById("icon").parentNode.style.display = "none";
     dom.getElementById("header").style.display = "none";
     dom.getElementById("head").style.paddingBottom = "0";
@@ -302,24 +303,30 @@ m4_include(ui/common/button.js)
   }
 
   function initPieStyle() {
-    // TODO(aa): Use a shorter title for PIE?
-    window.title = dom.getTextContent(dom.getElementById("string-title-default"));
+    // For PIE, we don't set a window title.
     setElementContents("string-header-wince", "header");
 
     if (window.pie_dialog.IsSmartPhone()) {
-      // For touchscreen devices
+      // On softkey-only devices we only use a regular link to trigger
+      // the "never-allow" action. For "allow" and "deny" we use only
+      // the softkey lables.
+      setElementContents("string-never-allow-wince", "deny-permanently-link");
+    } else {
+      // For touchscreen devices, we use buttons for all actions. Additionally,
+      // we also set the sofkey labels.
       setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
       setButtonLabel("string-no", "deny-button", "string-no-accesskey");
       setButtonLabel("string-never-allow-wince", "deny-permanently-button");
-    } else {
-      // For softkey UI devices
-      window.pie_dialog.SetButton(dom.getElementById("allow-text").innerText,
-                                  "allowShortcutsTemporarily();");
-      window.pie_dialog.SetCancelButton(dom.getElementById("deny-text").innerText);
-      setElementContents("string-never-allow-wince", "deny-permanently-link");
     }
+    // Set the softkey labels for both softkey-only and touchscreen UIs.
+    window.pie_dialog.SetButton(dom.getElementById("string-yes").innerText,
+                                "allowShortcutsTemporarily();");
+    window.pie_dialog.SetCancelButton(dom.getElementById("string-no").innerText);
     // On PIE, the allow button is disabled by default.
     // TODO(aa): Why not just remove the disabled attribute?
+    // (andreip): Because on WinCE, we need to also call
+    // window.pie_dialog.SetButtonEnabled(true); , which enables the right
+    // softkey button.
     enableButton(dom.getElementById("allow-button"));
   }
 
@@ -437,7 +444,6 @@ m4_include(ui/common/button.js)
         }
       }
     }
-
     saveAndClose(result);
   }
 
