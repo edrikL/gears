@@ -127,8 +127,7 @@ bool ParseDataUrl(const std::string16& url, std::string16* mime_type,
   if (base64_encoded ||
       !(mime_type->compare(0, 5, STRING16(L"text/")) == 0 ||
         mime_type->find(STRING16(L"xml")) != std::string16::npos)) {
-    temp_data.erase(std::remove_if(temp_data.begin(), temp_data.end(),
-                                   std::isspace),
+    temp_data.erase(std::remove_if(temp_data.begin(), temp_data.end(), isspace),
                     temp_data.end());
   }
 
