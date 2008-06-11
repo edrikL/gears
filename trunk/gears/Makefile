@@ -1061,8 +1061,6 @@ $(BROWSER)_CPPSRCS += \
 		shortcut_utils_win32.cc \
 		$(NULL)
 
-# TODO: Implement file dialogs for NPAPI
-ifneq ($(BROWSER),NPAPI)
 $(BROWSER)_CPPSRCS += \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
@@ -1070,7 +1068,6 @@ $(BROWSER)_CPPSRCS += \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
 		$(NULL)
-endif
 
 # The browser module also needs these files, to communicate with the notifier.
 $(BROWSER)_VPATH += \
