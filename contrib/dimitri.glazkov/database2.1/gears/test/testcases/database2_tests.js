@@ -25,6 +25,13 @@
 
 var db_manager = google.gears.factory.create('beta.databasemanager');
 
+var startTime = new Date().getTime();
+var counter = 0;
+
+function getNewDatabaseName() {
+  return "unit_test_db_" + startTime + "_" + ++counter;
+}
+
 function testDatabaseManagerCreation() {
   assertNotNull(db_manager, 'Database manager should be a value');
 }
@@ -46,21 +53,56 @@ function testDatabaseOpening() {
   assert(db, 'Database should be a value');
 }
 
-function testDatabaseOptionalParams() {
-  var db = db_manager.openDatabase('unit_test_db', '');
+function testDatabaseOpenVersioned() {
+  var name = getNewDatabaseName();
+  var db1 = db_manager.openDatabase(name, '1.0');
+  assertEqual('1.0', db1.version);
+  // TODO(aa): Insert some data to test below.
+  
+  var db2 = db_manager.openDatabase(name, '1.0');
+  // TODO(aa): Test the data that was created above.
+
+  var db3 = db_manager.openDatabase(name, '');
+  assertEqual('1.0', db3.version);
+  // TODO(aa): Test the data that was created above.
   assert(db, 'Database should be a value');
+}
+
+function testWeirdDatabaseNames() {
+  var longName = '';
+  for (var i = 0; i < 99; i++) {
+    longName += 'x';
+  }
+  
+  // This is meant to verify both that we can create databases with weird names,
+  // and that they stay unique.
+  var weirdNames = [
+    longName,
+    longName + 'x',
+    'foo?',
+    'foo',
+    ' ',
+    '',
+    '/\:*?"<>|;'  // see base/common/string_utils.h - IsCharValidInPathComponent
+  ]
+
+  var baseName = getNewDatabaseName();
+    
+  for (var i = 0; i < weirdNames.length; i++) {
+    var db = db_manager.openDatabase(baseName + weirdNames[i], '');
+    // TODO(aa): Store the database's name in a text column inside the database.
+  }
+
+  for (var i = 0; i < weirdNames.length; i++) {
+    var db = db_manager.openDatabase(baseName + weirdNames[i], '');
+    // TODO(aa): Verify the name stored is correct.
+  }
 }
 
 function testDatabaseVersionNull() {
   assertError(function() {
     var db = db_manager.openDatabase('unit_test_db', null);
   }, "Required argument 2 is missing.");
-}
-
-function testDatabaseVersionNonNull() {
-  return;  // not working yet
-  var db = db_manager.openDatabase('unit_test_db', '1.0');
-  assert(db, 'Database should be a value');
 }
 
 function testDatabaseApiSig() {

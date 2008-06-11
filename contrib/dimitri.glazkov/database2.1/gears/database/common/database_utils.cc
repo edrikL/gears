@@ -31,12 +31,9 @@
 #include "gears/base/common/string_utils.h" // for IsStringValidPathComponent()
 #include "gears/database/common/database_utils.h"
 
-// NOTE(shess) This may interact with various SQLite features.  For
-// instance, VACUUM is implemented in terms of more basic SQLite
-// features, such as PRAGMA (or ATTACH, which Gears also disables).
-static int ForbidActions(void *userData, int iType,
-                         const char *zPragma, const char *zArg,
-                         const char *zDatabase, const char *zView) {
+int ForbidAllPragmas(void *userData, int iType,
+                            const char *zPragma, const char *zArg,
+                            const char *zDatabase, const char *zView) {
   if (iType == SQLITE_PRAGMA) {
     // TODO(shess): Could test zPragma for the specific pragma being
     // accessed, and allow some of them.  Could allow zArg==NULL
@@ -162,7 +159,7 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
     return sql_status;
   }
 
-  sql_status = sqlite3_set_authorizer(*db, ForbidActions, NULL);
+  sql_status = sqlite3_set_authorizer(*db, ForbidAllPragmas, NULL);
   if (sql_status != SQLITE_OK) {
     return sql_status;
   }
