@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <limits>
+
 #include "gears/base/common/byte_store.h"
 
 #include "gears/base/common/string_utils.h"
@@ -136,9 +138,12 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
       max_bytes = data_.size() - offset;
     }
     if (max_bytes > std::numeric_limits<size_t>::max()) {
-      max_bytes = static_cast<int64>(std::numeric_limits<size_t>::max());
+      max_bytes = std::numeric_limits<size_t>::max();
     }
-    memcpy(destination, &data_[offset], max_bytes);
+  
+    assert(offset < kint32max);
+    memcpy(destination, &data_[static_cast<int>(offset)],
+                        static_cast<size_t>(max_bytes));
     return max_bytes;
   }
   // Stored in a file.
