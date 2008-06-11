@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include "gears/blob/join_blob.h"
 
 #include <limits>
@@ -69,5 +65,3 @@ int64 JoinBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   }
   return bytes_read;
 }
-
-#endif  // not OFFICIAL_BUILD

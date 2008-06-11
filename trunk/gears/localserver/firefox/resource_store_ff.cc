@@ -330,15 +330,12 @@ NS_IMETHODIMP GearsResourceStore::Copy(const nsAString &src_url,
   RETURN_NORMAL();
 }
 
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
 //------------------------------------------------------------------------------
 // CaptureBlob
 //------------------------------------------------------------------------------
 NS_IMETHODIMP GearsResourceStore::CaptureBlob(// ModuleImplBaseClass *blob,
                                               // const nsAString &url_astring
-                                              ) {
+                                             ) {
   // Validate arguments
   JsParamFetcher js_params(this);
   if (js_params.GetCount(false) < 1) {
@@ -380,7 +377,6 @@ NS_IMETHODIMP GearsResourceStore::CaptureBlob(// ModuleImplBaseClass *blob,
 
   return NS_OK;
 }
-#endif  // OFFICIAL_BUILD
 
 
 //------------------------------------------------------------------------------

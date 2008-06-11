@@ -37,9 +37,7 @@
 #include "gears/localserver/common/progress_event.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#ifndef OFFICIAL_BUILD
 class BlobInterface;
-#endif  // !OFFICIAL_BUILD
 
 //------------------------------------------------------------------------------
 // SFHttpRequest
@@ -94,9 +92,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send();
   virtual bool SendString(const char16 *data);
-#ifndef OFFICIAL_BUILD
   virtual bool SendBlob(BlobInterface *data);
-#endif  // !OFFICIAL_BUILD
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();

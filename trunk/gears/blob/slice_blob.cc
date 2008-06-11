@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include <assert.h>
 
 #include "gears/blob/slice_blob.h"
@@ -57,5 +53,3 @@ int64 SliceBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
 int64 SliceBlob::Length() const {
   return length_;
 }
-
-#endif  // not OFFICIAL_BUILD

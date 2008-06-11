@@ -26,10 +26,6 @@
 #ifndef GEARS_BLOB_BLOB_INPUT_STREAM_FF_H__
 #define GEARS_BLOB_BLOB_INPUT_STREAM_FF_H__
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include <nsIInputStream.h>
 #include "gears/base/common/scoped_refptr.h"
 
@@ -55,7 +51,5 @@ class BlobInputStream : public nsIInputStream {
 
   DISALLOW_EVIL_CONSTRUCTORS(BlobInputStream);
 };
-
-#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_INPUT_STREAM_FF_H__

@@ -143,13 +143,9 @@ interface GearsResourceStoreInterface : IDispatch {
 #ifdef WINCE
   // No BLOB support on WINCE yet
 #else
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
   HRESULT captureBlob(
       [in] IUnknown *blob,
       [in] const BSTR url);
-#endif  // OFFICIAL_BUILD
 #endif  // WINCE
   
   HRESULT captureFile(

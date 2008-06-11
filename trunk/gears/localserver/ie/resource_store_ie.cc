@@ -484,9 +484,6 @@ STDMETHODIMP GearsResourceStore::copy(
 #ifdef WINCE
 // Blob not supported yet on Wince.
 #else
-#ifdef OFFICIAL_BUILD
-// Blob support is not ready for prime time yet
-#else
 //------------------------------------------------------------------------------
 // captureBlob
 //------------------------------------------------------------------------------
@@ -531,7 +528,6 @@ STDMETHODIMP GearsResourceStore::captureBlob(
   }
   RETURN_NORMAL();
 }
-#endif  // OFFICIAL_BUILD
 #endif  // WINCE
 
 //------------------------------------------------------------------------------

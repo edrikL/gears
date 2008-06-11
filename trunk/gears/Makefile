@@ -1527,7 +1527,6 @@ $(BROWSER)_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # blob
 
-ifneq ($(OFFICIAL_BUILD),1)
 # (built for all browsers)
 $(BROWSER)_VPATH += \
 		blob \
@@ -1552,7 +1551,6 @@ FF3_CPPSRCS	+= \
 SF_CPPSRCS += \
 		blob_input_stream_sf.mm \
 		$(NULL)
-endif # not OFFICIAL_BUILD
 
 
 #-----------------------------------------------------------------------------

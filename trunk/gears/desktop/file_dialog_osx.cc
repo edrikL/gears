@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// File picker is not ready for official builds
-#else
-
 #ifdef OS_MACOSX
 #include "gears/desktop/file_dialog_osx.h"
 
@@ -401,5 +397,3 @@ bool FileDialogCarbon::OpenDialog(const std::vector<Filter>& filters,
 }
 
 #endif  // OS_MACOSX
-
-#endif  // OFFICIAL_BUILD
