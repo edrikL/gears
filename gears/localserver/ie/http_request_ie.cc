@@ -32,13 +32,9 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#ifdef OFFICIAL_BUILD
-#include "gears/base/ie/stream_buffer.h"
-#else  // !OFFICIAL_BUILD
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"
-#endif  // !OFFICIAL_BUILD
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/progress_input_stream.h"
 #include "gears/localserver/ie/urlmon_utils.h"
@@ -266,29 +262,6 @@ bool IEHttpRequest::GetInitialUrl(std::string16 *full_url) {
 // Send, SendString, SendImp
 //------------------------------------------------------------------------------
 
-#ifdef OFFICIAL_BUILD
-bool IEHttpRequest::Send() {
-  if (IsPostOrPut()) {
-    return SendString(L"");
-  } else {
-    return SendImpl();
-  }
-}
-
-bool IEHttpRequest::SendString(const char16 *data) {
-  if (!IsOpen() || !data) return false;
-  if (!IsPostOrPut())
-    return false;
-
-  String16ToUTF8(data, &post_data_string_);
-
-  // TODO(michaeln): do we have to set this or will URLMON do so based
-  // on the size of our stream?
-  std::string16 size_str = IntegerToString16(post_data_string_.size());
-  SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
-  return SendImpl();
-}
-#else  // !OFFICIAL_BUILD
 bool IEHttpRequest::Send() {
   if (!IsOpen())
     return false;
@@ -317,11 +290,7 @@ bool IEHttpRequest::SendBlob(BlobInterface *data) {
 
   return SendImpl(data);
 }
-#endif  // !OFFICIAL_BUILD
 
-#ifdef OFFICIAL_BUILD
-bool IEHttpRequest::SendImpl() {
-#else  // !OFFICIAL_BUILD
 bool IEHttpRequest::SendImpl(BlobInterface *data) {
   if (data) {
     post_data_ = data;
@@ -331,7 +300,6 @@ bool IEHttpRequest::SendImpl(BlobInterface *data) {
     std::string16 size_str = Integer64ToString16(post_data_->Length());
     SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
   }
-#endif  // !OFFICIAL_BUILD
 
   // The request can complete prior to Send returning depending on whether
   // the response is retrieved from the cache. We guard against a caller's
@@ -591,17 +559,6 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
 
   CComPtr<IStream> data_stream;
   int64 data_length;
-#ifdef OFFICIAL_BUILD
-  if (is_post_or_put && !post_data_string_.empty()) {
-    CComObject<StreamBuffer> *buf = NULL;
-    HRESULT hr = CComObject<StreamBuffer>::CreateInstance(&buf);
-    if (FAILED(hr))
-      return hr;
-    buf->Initialize(post_data_string_.data(), post_data_string_.size());
-    data_stream = buf;
-    data_length = post_data_string_.size();
-  }
-#else  // !OFFICIAL_BUILD
   if (is_post_or_put && post_data_.get()) {
     CComObject<BlobStream> *blob_stream = NULL;
     HRESULT hr = CComObject<BlobStream>::CreateInstance(&blob_stream);
@@ -611,7 +568,6 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
     data_stream = blob_stream;
     data_length = post_data_->Length();
   }
-#endif  // !OFFICIAL_BUILD
 
   if (data_stream) {
     CComObject<ProgressInputStream> *stream = NULL;

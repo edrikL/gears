@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else  // OFFICIAL_BUILD
-
 #include <cassert>
 
 #import "gears/blob/blob_input_stream_sf.h"
@@ -106,5 +102,3 @@
 }
 
 @end
-
-#endif  // OFFICIAL_BUILD

@@ -108,13 +108,9 @@ class ATL_NO_VTABLE GearsResourceStore
 #ifdef WINCE
   // No BLOB support on WINCE yet
 #else
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
   virtual HRESULT STDMETHODCALLTYPE captureBlob(
       /* [in] */ IUnknown *blob,
       /* [in] */ const BSTR url);
-#endif  // OFFICIAL_BUILD
 #endif  // WINCE
 
   virtual HRESULT STDMETHODCALLTYPE captureFile(

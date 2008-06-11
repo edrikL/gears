@@ -26,10 +26,6 @@
 #ifndef GEARS_BLOB_BLOB_STREAM_IE_H___
 #define GEARS_BLOB_BLOB_STREAM_IE_H___
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds.
-#else
-
 #include <assert.h>
 #include <atlcom.h>
 #include "gears/base/common/scoped_refptr.h"
@@ -230,7 +226,5 @@ class BlobStream
   scoped_refptr<BlobInterface> blob_;
   int64 offset_;
 };
-
-#endif  // !OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_STREAM_IE_H___

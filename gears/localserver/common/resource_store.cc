@@ -56,7 +56,6 @@ bool ResourceStore::FindServer(const SecurityOrigin &security_origin,
                                  server);
 }
 
-#ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 // AppendHeader is only used by Blob.
 //-----------------------------------------------------------------------------
@@ -112,7 +111,6 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
   item->payload.headers = headers;
   return true;
 }
-#endif
 
 
 //------------------------------------------------------------------------------

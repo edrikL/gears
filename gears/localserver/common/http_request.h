@@ -35,9 +35,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-#ifndef OFFICIAL_BUILD
 class BlobInterface;
-#endif  // OFFICIAL_BUILD
 
 //------------------------------------------------------------------------------
 // A cross-platform interface for sending HTTP requests.  Implementations
@@ -119,9 +117,7 @@ class HttpRequest {
   virtual bool SetRequestHeader(const char16 *name, const char16 *value) = 0;
   virtual bool Send() = 0;
   virtual bool SendString(const char16 *name) = 0;
-#ifndef OFFICIAL_BUILD
   virtual bool SendBlob(BlobInterface* blob) = 0;
-#endif  // OFFICIAL_BUILD
   virtual bool GetAllResponseHeaders(std::string16 *headers) = 0;
   virtual bool GetResponseHeader(const char16* name, std::string16 *header) = 0;
   virtual bool Abort() = 0;

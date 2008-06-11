@@ -31,10 +31,6 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/blob/blob_interface.h"
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 class GearsBlob : public ModuleImplBaseClassVirtual {
  public:
   static const std::string kModuleName;
@@ -73,7 +69,5 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };
-
-#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_H__

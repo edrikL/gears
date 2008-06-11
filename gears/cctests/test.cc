@@ -34,10 +34,8 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string_utils.h"
-#ifndef OFFICIAL_BUILD
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
-#endif
 
 DECLARE_GEARS_WRAPPER(GearsTest);
 
@@ -77,9 +75,7 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testGeolocationGetLocationFromResponse",
                  &GearsTest::TestGeolocationGetLocationFromResponse);
 #endif
-#ifndef OFFICIAL_BUILD
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
-#endif
 }
 
 #ifdef WIN32
@@ -140,13 +136,10 @@ bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
 bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
 bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
 bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
 bool TestFileBlob(std::string16 *error);  // from blob_test.cc
 bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
 bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
-#endif  // not OFFICIAL_BUILD
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
 // from ipc_message_queue_win32_test.cc
 bool TestIpcMessageQueue(std::string16 *error);
@@ -263,13 +256,10 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSerialization(&error);
   ok &= TestCircularBuffer(&error);
   ok &= TestRefCount(&error);
-#ifndef OFFICIAL_BUILD
-  // The blob API has not been finalized for official builds
   ok &= TestBufferBlob(&error);
   ok &= TestFileBlob(&error);
   ok &= TestJoinBlob(&error);
   ok &= TestSliceBlob(&error);
-#endif  // not OFFICIAL_BUILD
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
   ok &= TestIpcMessageQueue(&error);
@@ -277,10 +267,8 @@ void GearsTest::RunTests(JsCallContext *context) {
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);
 #endif
-#ifndef OFFICIAL_BUILD
 #if BROWSER_FF
   ok &= TestBlobInputStreamFf(&error);
-#endif
 #endif
   ok &= TestStopwatch(&error);
   ok &= TestJsonEscaping(&error);
@@ -2065,7 +2053,6 @@ void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
 }
 #endif
 
-#ifndef OFFICIAL_BUILD
 void GearsTest::CreateBlobFromString(JsCallContext *context) {
   std::string16 input_utf16;
   JsArgument argv[] = {
@@ -2086,6 +2073,5 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
   gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
 }
-#endif  // OFFICIAL_BUILD
 
 #endif  // USING_CCTESTS

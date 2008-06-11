@@ -125,9 +125,6 @@ class AsyncTask : protected HttpRequest::HttpListener,
                std::string16 *full_redirect_url,
                std::string16 *error_message);
 
-  #ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-#else
   // As HttpGet, but for POST.
   bool HttpPost(const char16 *full_url,
                 bool is_capturing,
@@ -139,7 +136,6 @@ class AsyncTask : protected HttpRequest::HttpListener,
                 bool *was_redirected,
                 std::string16 *full_redirect_url,
                 std::string16 *error_message);
-#endif
 
   CriticalSection lock_;
   bool is_aborted_;
@@ -154,12 +150,7 @@ class AsyncTask : protected HttpRequest::HttpListener,
                        const char16 *reason_header_value,
                        const char16 *if_mod_since_date,
                        const char16 *required_cookie,
-#ifdef OFFICIAL_BUILD
-                       // The Blob API has not yet been finalized for official
-                       // builds.
-#else
                        BlobInterface *post_body,
-#endif
                        WebCacheDB::PayloadInfo *payload,
                        bool *was_redirected,
                        std::string16 *full_redirect_url,

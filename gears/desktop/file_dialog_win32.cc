@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// File picker is not ready for official builds
-#else
-
 #if defined(WIN32)
 
 #include "gears/desktop/file_dialog_win32.h"
@@ -164,5 +160,3 @@ bool FileDialogWin32::OpenDialog(const std::vector<Filter>& filters,
 }
 
 #endif  // WIN32
-
-#endif  // OFFICIAL_BUILD

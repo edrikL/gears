@@ -226,11 +226,7 @@ struct AsyncTask::HttpRequestParameters {
   const char16 *reason_header_value;
   const char16 *if_mod_since_date;
   const char16 *required_cookie;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-#else
   BlobInterface *post_body;
-#endif
   WebCacheDB::PayloadInfo *payload;
   bool *was_redirected;
   std::string16 *full_redirect_url;
@@ -259,21 +255,13 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                          reason_header_value,
                          if_mod_since_date,
                          required_cookie,
-#ifdef OFFICIAL_BUILD
-                         // The Blob API has not yet been finalized for official
-                         // builds.
-#else
                          NULL,
-#endif
                          payload,
                          was_redirected,
                          full_redirect_url,
                          error_message);
 }
 
-#ifdef OFFICIAL_BUILD
-// The Blob API has not yet been finalized for official builds.
-#else
 //------------------------------------------------------------------------------
 // HttpPost
 //------------------------------------------------------------------------------
@@ -299,7 +287,6 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          full_redirect_url,
                          error_message);
 }
-#endif
 
 //------------------------------------------------------------------------------
 // MakeHttpRequest
@@ -310,12 +297,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 const char16 *reason_header_value,
                                 const char16 *if_mod_since_date,
                                 const char16 *required_cookie,
-#ifdef OFFICIAL_BUILD
-                                // The Blob API has not yet been finalized for
-                                // official builds.
-#else
                                 BlobInterface *post_body,
-#endif
                                 WebCacheDB::PayloadInfo *payload,
                                 bool *was_redirected,
                                 std::string16 *full_redirect_url,
@@ -357,11 +339,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   params.reason_header_value = reason_header_value;
   params.if_mod_since_date = if_mod_since_date;
   params.required_cookie = required_cookie;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-#else
   params.post_body = post_body;
-#endif
   params.payload = payload;
   params.was_redirected = was_redirected;
   params.full_redirect_url = full_redirect_url;
@@ -458,13 +436,8 @@ bool AsyncTask::OnStartHttpGet() {
   // Rely on logic inside HttpRequest to check for valid combinations of
   // method and presence of body.
   bool result = false;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-  if (false) {
-#else
   if (params_->post_body) {
     result = http_request->SendBlob(params_->post_body);
-#endif
   } else {
     result = http_request->Send();
   }

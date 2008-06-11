@@ -212,7 +212,6 @@ bool SafeHttpRequest::Send() {
   return SendImpl();
 }
 
-#ifndef OFFICIAL_BUILD
 bool SafeHttpRequest::SendBlob(BlobInterface *blob) {
   assert(IsApartmentThread());
   MutexLock locker(&request_info_lock_);
@@ -220,7 +219,6 @@ bool SafeHttpRequest::SendBlob(BlobInterface *blob) {
   request_info_.post_data_blob = blob;
   return SendImpl();
 }
-#endif // OFFICIAL_BUILD
 
 bool SafeHttpRequest::SendString(const char16 *name) {
   assert(IsApartmentThread());
@@ -385,11 +383,9 @@ void SafeHttpRequest::OnSendCall() {
     if (!request_info_.post_data_string.empty()) {
       ok = native_http_request_->SendString(
           request_info_.post_data_string.c_str());
-#ifndef OFFICIAL_BUILD
     } else if (request_info_.post_data_blob.get()) {
       ok = native_http_request_->SendBlob(
           request_info_.post_data_blob.get());
-#endif
     } else {
       ok = native_http_request_->Send();
     }

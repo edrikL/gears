@@ -29,10 +29,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
 #include "gears/blob/blob_interface.h"
-#endif
 #include "gears/localserver/common/localserver.h"
 #include "gears/localserver/common/localserver_db.h"
 
@@ -54,13 +51,10 @@ class ResourceStore : public LocalServer {
     WebCacheDB::PayloadInfo payload;
   };
 
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
   // Converts a Blob to an Item that could be served by ResourceStore
   static bool BlobToItem(BlobInterface *blob,
                          const char16 *full_url,
                          Item *out);
-#endif
 
   // Constructor
   ResourceStore();

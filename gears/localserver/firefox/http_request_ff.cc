@@ -54,10 +54,8 @@
 #include "gears/localserver/firefox/progress_input_stream.h"
 #include "gears/localserver/firefox/ui_thread.h"
 
-#ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_ff.h"
 #include "gears/blob/blob_interface.h"
-#endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(FFHttpRequest,
                               nsIRequestObserver,
@@ -356,7 +354,6 @@ bool FFHttpRequest::SendString(const char16 *data) {
   return SendImpl();
 }
 
-#ifndef OFFICIAL_BUILD
 bool FFHttpRequest::SendBlob(BlobInterface *blob) {
   if (was_sent_) {
     return false;
@@ -366,7 +363,6 @@ bool FFHttpRequest::SendBlob(BlobInterface *blob) {
                                               blob->Length());
   return SendImpl();
 }
-#endif  // !OFFICIAL_BUILD
 
 bool FFHttpRequest::SendImpl() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);

@@ -31,11 +31,8 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/url_utils.h"
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
-#endif  // not OFFICIAL_BUILD
 #include "gears/httprequest/httprequest_upload.h"
 
 // Error messages.
@@ -44,9 +41,7 @@ static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kFailedURLResolveError =
                          STRING16(L"Failed to resolve URL.");
-#ifndef OFFICIAL_BUILD
 static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
-#endif
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
 static const char16 *kNotInteractiveError =
                         STRING16(L"Request is not loading or done.");
@@ -69,9 +64,7 @@ void Dispatcher<GearsHttpRequest>::Init() {
                    &GearsHttpRequest::GetOnReadyStateChange,
                    &GearsHttpRequest::SetOnReadyStateChange);
   RegisterProperty("readyState", &GearsHttpRequest::GetReadyState, NULL);
-#ifndef OFFICIAL_BUILD
   RegisterProperty("responseBlob", &GearsHttpRequest::GetResponseBlob, NULL);
-#endif
   RegisterProperty("responseText", &GearsHttpRequest::GetResponseText, NULL);
   RegisterProperty("status", &GearsHttpRequest::GetStatus, NULL);
   RegisterProperty("statusText", &GearsHttpRequest::GetStatusText, NULL);
@@ -213,9 +206,7 @@ void GearsHttpRequest::Send(JsCallContext *context) {
   }
 
   std::string16 post_data_string;
-#ifndef OFFICIAL_BUILD
   ModuleImplBaseClass *post_data_module = NULL;
-#endif
 
   int post_data_type = context->GetArgumentType(0);
   // The Gears JS API treats a (JavaScript) null and undefined the same.
@@ -230,7 +221,6 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     if (post_data_type == JSPARAM_STRING16) {
       argv[0].type = JSPARAM_STRING16;
       argv[0].value_ptr = &post_data_string;
-#ifndef OFFICIAL_BUILD
     // Dispatcher modules are also JavaScript objects, and so it is valid for
     // GetArgumentType to return JSPARAM_OBJECT for a Dispatcher module.
     // TODO(nigeltao): fix this, so that it's always just
@@ -239,7 +229,6 @@ void GearsHttpRequest::Send(JsCallContext *context) {
                (post_data_type == JSPARAM_OBJECT)) {
       argv[0].type = JSPARAM_DISPATCHER_MODULE;
       argv[0].value_ptr = &post_data_module;
-#endif
     } else {
       context->SetException(
           STRING16(L"First parameter must be a Blob or a string."));
@@ -249,14 +238,12 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     if (context->is_exception_set()) {
       return;
     }
-#ifndef OFFICIAL_BUILD
     if (post_data_module &&
         GearsBlob::kModuleName != post_data_module->get_module_name()) {
       context->SetException(
           STRING16(L"First parameter must be a Blob or a string."));
       return;
     }
-#endif
   }
 
   scoped_refptr<HttpRequest> request_being_sent = request_;
@@ -268,7 +255,6 @@ void GearsHttpRequest::Send(JsCallContext *context) {
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(post_data_string.c_str());
-#ifndef OFFICIAL_BUILD
   } else if (post_data_module) {
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
@@ -277,7 +263,6 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     scoped_refptr<BlobInterface> blob;
     static_cast<GearsBlob*>(post_data_module)->GetContents(&blob);
     ok = request_->SendBlob(blob.get());
-#endif
   } else {
     ok = request_->Send();
   }
@@ -393,7 +378,6 @@ void GearsHttpRequest::GetReadyState(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_INT, &ready_state);
 }
 
-#ifndef OFFICIAL_BUILD
 void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
   if (!IsComplete()) {
     context->SetException(kNotCompleteError);
@@ -442,7 +426,6 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
   response_blob_->Reset(blob.get());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
 }
-#endif
 
 void GearsHttpRequest::GetResponseText(JsCallContext *context) {
   if (!(IsInteractive() || IsComplete())) {
@@ -524,9 +507,7 @@ void GearsHttpRequest::ReleaseRequest() {
     request_.reset();
   }
   response_text_.reset();
-#ifndef OFFICIAL_BUILD
   response_blob_.reset();
-#endif
 }
 
 HttpRequest::ReadyState GearsHttpRequest::GetState() {

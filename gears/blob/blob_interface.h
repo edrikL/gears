@@ -26,10 +26,6 @@
 #ifndef GEARS_BLOB_BLOB_INTERFACE_H__
 #define GEARS_BLOB_BLOB_INTERFACE_H__
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
 
@@ -73,7 +69,5 @@ class EmptyBlob : public BlobInterface {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(EmptyBlob);
 };
-
-#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_INTERFACE_H__

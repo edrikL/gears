@@ -32,9 +32,7 @@
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/scoped_refptr.h"
-#ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_interface.h"
-#endif
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -90,9 +88,7 @@ class SafeHttpRequest
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
 
   virtual bool Send();
-#ifndef OFFICIAL_BUILD
   virtual bool SendBlob(BlobInterface* blob);
-#endif  // OFFICIAL_BUILD
   virtual bool SendString(const char16 *name);
 
   virtual bool Abort();
@@ -142,9 +138,7 @@ class SafeHttpRequest
     scoped_refptr<BrowsingContext> browsing_context;
 
     std::string16 post_data_string;
-#ifndef OFFICIAL_BUILD
     scoped_refptr<BlobInterface> post_data_blob;
-#endif
     ProgressInfo upload_progress;
     ResponseInfo response;
 
