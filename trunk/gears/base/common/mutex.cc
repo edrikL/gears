@@ -26,7 +26,7 @@
 #include <assert.h>
 #if defined(WIN32) || defined(WINCE)
 #include <windows.h>
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
 #include <pthread.h>
 #include <sched.h>
 #else
@@ -43,7 +43,7 @@ Mutex::Mutex()
 {
 #if defined(WIN32) || defined(WINCE)
   InitializeCriticalSection(&crit_sec_);
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_init(&mutex_, NULL);
 #endif
 }
@@ -52,7 +52,7 @@ Mutex::Mutex()
 Mutex::~Mutex() {
 #if defined(WIN32) || defined(WINCE)
   DeleteCriticalSection(&crit_sec_);
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_destroy(&mutex_);
 #endif
 }
@@ -61,7 +61,7 @@ Mutex::~Mutex() {
 void Mutex::Lock() {
 #if defined(WIN32) || defined(WINCE)
   EnterCriticalSection(&crit_sec_);
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_lock(&mutex_);
 #endif
 
@@ -80,7 +80,7 @@ void Mutex::Unlock() {
 
 #if defined(WIN32) || defined(WINCE)
   LeaveCriticalSection(&crit_sec_);
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_unlock(&mutex_);
 #endif
 }
@@ -115,7 +115,7 @@ bool Mutex::AwaitImpl(const Condition &cond, int64 end_time) {
     // (The Condition cannot possibly change when no other thread runs.)
 #if defined(WIN32) || defined(WINCE)
     Sleep(0);                       // equivalent to 'yield' in Win32
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
     sched_yield();
 #endif
 

@@ -47,9 +47,9 @@ DWORD ThreadLocals::tls_index_;
 #elif BROWSER_FF
 const PRUintn kNoIndex = 0xffffffff;
 PRUintn ThreadLocals::tls_index_;
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
 pthread_once_t ThreadLocals::tls_index_init_ = PTHREAD_ONCE_INIT;
-pthread_key_t ThreadLocals::tls_index_ = NULL;
+pthread_key_t ThreadLocals::tls_index_;
 #endif
 
 //------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ void ThreadLocals::DestroyValue(const std::string &key) {
 // GetMap
 //------------------------------------------------------------------------------
 ThreadLocals::Map *ThreadLocals::GetMap(bool createIfNeeded) {
-#if !BROWSER_SAFARI
+#if !BROWSER_SAFARI && !defined(ANDROID)
   assert(tls_index_ != kNoIndex);
 #endif
   Map *map = GetTlsMap();
@@ -161,7 +161,7 @@ void ThreadLocals::SetTlsMap(Map* map) {
   ::TlsSetValue(tls_index_, map);
 #elif BROWSER_FF
   PR_SetThreadPrivate(tls_index_, map);
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
   pthread_setspecific(tls_index_, map);
 #endif
@@ -176,7 +176,7 @@ ThreadLocals::Map* ThreadLocals::GetTlsMap() {
   return reinterpret_cast<Map*>(TlsGetValue(tls_index_));
 #elif BROWSER_FF
   return reinterpret_cast<Map*>(PR_GetThreadPrivate(tls_index_));
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
   return reinterpret_cast<Map*>(pthread_getspecific(tls_index_));
 #endif
@@ -247,7 +247,7 @@ void PR_CALLBACK ThreadLocals::TlsDestructor(void *priv) {
     DestroyMap(reinterpret_cast<Map*>(priv));
 }
 
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
 
 void ThreadLocals::InitializeKey() {
   pthread_key_create(&tls_index_, FinalizeKey);
