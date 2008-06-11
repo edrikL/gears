@@ -47,9 +47,12 @@ ifneq ($(findstring $(BROWSER), SF|NPAPI),)
   USING_NPAPI = 1
 endif
 
-# Build third_party ICU on NPAPI platforms, unless specifically disabled.
+# Build third_party ICU on SF, NPAPI and Firefox platforms, unless specifically
+# disabled.
 ifeq ($(USING_ICU),)
-  USING_ICU = $(USING_NPAPI)
+  ifneq ($(findstring $(BROWSER), SF|NPAPI|FF2|FF3),)
+    USING_ICU = 1
+  endif
 endif
 
 # Store value of unmodified command line parameters.
@@ -105,7 +108,7 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
-ifeq ($(USING_NPAPI),1)
+ifeq ($(USING_ICU),1)
 #Additional include paths for gurl.
 CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl
 endif

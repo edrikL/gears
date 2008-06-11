@@ -74,8 +74,8 @@ endif
 #-----------------------------------------------------------------------------
 # third_party/googleurl
 
-# Only include gurl in NPAPI plugin builds.
-ifeq ($(USING_NPAPI),1)
+# Only include gurl in builds that use ICU.
+ifeq ($(USING_ICU),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
 		$(NULL)
@@ -678,7 +678,7 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
-		url_utils_ff.cc \
+		url_utils_np.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
