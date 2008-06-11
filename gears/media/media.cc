@@ -28,42 +28,48 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
 
-GearsMedia::GearsMedia() {
+GearsMedia::GearsMedia()
+    : last_error_(MediaConstants::MEDIA_NO_ERROR),
+      loaded_first_frame_(false),
+      ready_state_(MediaConstants::READY_STATE_DATA_UNAVAILABLE),
+      seeking_(false),
+      cur_playback_position_(0.0),
+      paused_(true),
+      default_playback_rate_(1.0),
+      autoplaying_(true),
+      start_(0),
+      loop_start_(0),
+      play_count_(1),
+      current_loop_(0),
+      volume_(0.5),
+      muted_(false),
+      src_(STRING16(L"")) {
 }
 
 GearsMedia::~GearsMedia() {
 }
 
-// constants
-const int GearsMedia::NETWORK_STATE_EMPTY = 0;
-const int GearsMedia::NETWORK_STATE_LOADING = 1;
-const int GearsMedia::NETWORK_STATE_LOADED_METADATA = 2;
-const int GearsMedia::NETWORK_STATE_LOADED_FIRST_FRAME = 3;
-const int GearsMedia::NETWORK_STATE_LOADED = 4;
-const int GearsMedia::READY_STATE_DATA_UNAVAILABLE = 0;
-const int GearsMedia::READY_STATE_CAN_SHOW_CURRENT_FRAME = 1;
-const int GearsMedia::READY_STATE_CAN_PLAY = 2;
-const int GearsMedia::READY_STATE_CAN_PLAY_THROUGH = 3;
 
 // API methods
 void GearsMedia::GetError(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  // Nothing to do. Implementation overridden in sub class.
 }
 
 void GearsMedia::GetSrc(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_STRING16, &src_);
 }
 
 void GearsMedia::SetSrc(JsCallContext *context) {
-  std::string16 value;
+  std::string16 proposed_src;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &value }
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &proposed_src }
   };
   context->GetArguments(argc, argv);
-  if (context->is_exception_set()) return;
-
-  // TODO(aprasath): Implement me
+  if (context->is_exception_set()) {
+    return;
+  }
+  src_ = proposed_src;
 }
 
 void GearsMedia::GetCurrentSrc(JsCallContext *context) {
@@ -91,11 +97,11 @@ void GearsMedia::Load(JsCallContext *context) {
 }
 
 void GearsMedia::GetReadyState(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_INT, &ready_state_);
 }
 
 void GearsMedia::IsSeeking(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_BOOL, &seeking_);
 }
 
 // The name 'GetCurrentTime' collides with macro of similar name from winbase.h
@@ -119,37 +125,52 @@ void GearsMedia::GetDuration(JsCallContext *context) {
 }
 
 void GearsMedia::IsPaused(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_BOOL, &paused_);
 }
 
 void GearsMedia::GetDefaultPlaybackRate(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_DOUBLE, &default_playback_rate_);
 }
 
 void GearsMedia::SetDefaultPlaybackRate(JsCallContext *context) {
-  double value;
+  double proposed_rate;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &proposed_rate },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
+
+  if (proposed_rate == 0.0) {
+    // TODO(aprasath): Throw an object with code NOT_SUPPORTED_ERR
+    context->SetException(STRING16(L"Cannot set defaultPlaybackRate to 0"));
+    return;
+  }
+  default_playback_rate_ = proposed_rate;
 }
 
 void GearsMedia::GetPlaybackRate(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_DOUBLE, &playback_rate_);
 }
 
 void GearsMedia::SetPlaybackRate(JsCallContext *context) {
-  double value;
+  double proposed_rate;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &proposed_rate }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
+
+  if (proposed_rate == 0.0) {
+    // TODO(aprasath): Throw an object with code NOT_SUPPORTED_ERR
+    context->SetException(STRING16(L"Cannot set playbackRate to zero"));
+    return;
+  }
+  playback_rate_ = proposed_rate;
+
+  // TODO(aprasath): Implement fast-forward or slow-mo if
+  // playback_rate_ != default_playback_rate
 }
 
 void GearsMedia::GetPlayedTimeRanges(JsCallContext *context) {
@@ -165,18 +186,16 @@ void GearsMedia::IsEnded(JsCallContext *context) {
 }
 
 void GearsMedia::IsAutoPlay(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_BOOL, &autoplaying_);
 }
 
 void GearsMedia::SetAutoPlay(JsCallContext *context) {
-  bool value;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &autoplaying_ },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
 }
 
 void GearsMedia::Play(JsCallContext *context) {
@@ -256,29 +275,26 @@ void GearsMedia::SetLoopEnd(JsCallContext *context) {
 }
 
 void GearsMedia::GetPlayCount(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_INT64, &play_count_);
 }
 
 void GearsMedia::SetPlayCount(JsCallContext *context) {
-  int64 value;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT64, &value }
+    { JSPARAM_REQUIRED, JSPARAM_INT64, &play_count_ }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
 }
 
 void GearsMedia::GetCurrentLoop(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_INT64, &current_loop_);
 }
 
 void GearsMedia::SetCurrentLoop(JsCallContext *context) {
-  int64 value;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT64, &value }
+    { JSPARAM_REQUIRED, JSPARAM_INT64, &current_loop_ }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
@@ -329,33 +345,47 @@ void GearsMedia::SetControls(JsCallContext *context) {
 }
 
 void GearsMedia::GetVolume(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_DOUBLE, &volume_);
 }
 
 void GearsMedia::SetVolume(JsCallContext *context) {
-  double value;
+  double proposed_volume;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &proposed_volume }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
+  if (proposed_volume < 0.0 || proposed_volume > 1.0) {
+    // TODO(aprasath): Throw an object with code INDEX_SIZE_ERR
+    context->SetException(STRING16(L"Cannot set volume. Out-of-range value."));
+    return;
+  }
+  volume_ = proposed_volume;
+  // TODO(aprasath): Fire 'volumechange' event.
 }
 
 void GearsMedia::IsMuted(JsCallContext *context) {
-  // TODO(aprasath): Implement me
+  context->SetReturnValue(JSPARAM_BOOL, &muted_);
 }
 
 void GearsMedia::SetMuted(JsCallContext *context) {
-  bool value;
+  bool proposed_value;
   const int argc = 1;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &proposed_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
+
+  if (proposed_value == muted_) return;
+  muted_ = proposed_value;
+  if (muted_) {
+    // TODO(aprasath): Implement 'mute'.
+  } else {
+    // TODO(aprasath): Implement 'unmute'.
+  }
+  // TODO(aprasath): Fire 'volumechange' event.
 }
 
 void GearsMedia::GetMediaBlob(JsCallContext *context) {

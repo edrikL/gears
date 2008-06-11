@@ -1703,10 +1703,10 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
-		media.cc \
-		media_recorder.cc \
 		audio.cc \
 		audio_recorder.cc \
+		media.cc \
+		media_recorder.cc \
 		time_ranges.cc \
 		$(NULL)
 

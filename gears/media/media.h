@@ -34,6 +34,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/media/media_constants.h"
 
 // This represents a list of time periods.
 struct TimeRanges {
@@ -50,15 +51,6 @@ struct TimeRanges {
     // TODO(aprasath): implement me
   }
   DISALLOW_EVIL_CONSTRUCTORS(TimeRanges);
-};
-
-struct MediaError {
-  MediaError() : code(0) {}
-  uint16 code;
-  static const uint16 MEDIA_ERR_ABORTED = 1;
-  static const uint16 MEDIA_ERR_NETWORK = 2;
-  static const uint16 MEDIA_ERR_DECODE = 3;
-  DISALLOW_EVIL_CONSTRUCTORS(MediaError);
 };
 
 // The main Media class that exposes playback functionality.
@@ -79,26 +71,24 @@ class GearsMedia {
   void GetCurrentSrc(JsCallContext *context);
 
   // const unsigned short EMPTY = 0;
-  static const int NETWORK_STATE_EMPTY;
-  DEFINE_CONSTANT(EMPTY, int, JSPARAM_INT, NETWORK_STATE_EMPTY);
+  DEFINE_CONSTANT(EMPTY, int, JSPARAM_INT,
+                  MediaConstants::NETWORK_STATE_EMPTY);
 
   // const unsigned short LOADING = 1;
-  static const int NETWORK_STATE_LOADING;
-  DEFINE_CONSTANT(LOADING, int, JSPARAM_INT, NETWORK_STATE_LOADING);
+  DEFINE_CONSTANT(LOADING, int, JSPARAM_INT,
+                  MediaConstants::NETWORK_STATE_LOADING);
 
   // const unsigned short LOADED_METADATA = 2;
-  static const int NETWORK_STATE_LOADED_METADATA;
   DEFINE_CONSTANT(LOADED_METADATA, int, JSPARAM_INT,
-                  NETWORK_STATE_LOADED_METADATA);
+                  MediaConstants::NETWORK_STATE_LOADED_METADATA);
 
   // const unsigned short LOADED_FIRST_FRAME = 3;
-  static const int NETWORK_STATE_LOADED_FIRST_FRAME;
   DEFINE_CONSTANT(LOADED_FIRST_FRAME, int, JSPARAM_INT,
-                  NETWORK_STATE_LOADED_FIRST_FRAME);
+                  MediaConstants::NETWORK_STATE_LOADED_FIRST_FRAME);
 
   // const unsigned short LOADED = 4;
-  static const int NETWORK_STATE_LOADED;
-  DEFINE_CONSTANT(LOADED, int, JSPARAM_INT, NETWORK_STATE_LOADED);
+  DEFINE_CONSTANT(LOADED, int, JSPARAM_INT,
+                  MediaConstants::NETWORK_STATE_LOADED);
 
   // readonly attribute unsigned short networkState;
   void GetNetworkState(JsCallContext *context);
@@ -111,23 +101,20 @@ class GearsMedia {
 
   // ---- READY STATE ----
   // const unsigned short DATA_UNAVAILABLE = 0;
-  static const int READY_STATE_DATA_UNAVAILABLE;
   DEFINE_CONSTANT(DATA_UNAVAILABLE, int, JSPARAM_INT,
-                  READY_STATE_DATA_UNAVAILABLE);
+                  MediaConstants::READY_STATE_DATA_UNAVAILABLE);
 
   // const unsigned short CAN_SHOW_CURRENT_FRAME = 1;
-  static const int READY_STATE_CAN_SHOW_CURRENT_FRAME;
   DEFINE_CONSTANT(CAN_SHOW_CURRENT_FRAME, int, JSPARAM_INT,
-                  READY_STATE_CAN_SHOW_CURRENT_FRAME);
+                  MediaConstants::READY_STATE_CAN_SHOW_CURRENT_FRAME);
 
   // const unsigned short CAN_PLAY = 2;
-  static const int READY_STATE_CAN_PLAY;
-  DEFINE_CONSTANT(CAN_PLAY, int, JSPARAM_INT, READY_STATE_CAN_PLAY);
+  DEFINE_CONSTANT(CAN_PLAY, int, JSPARAM_INT,
+                  MediaConstants::READY_STATE_CAN_PLAY);
 
   // const unsigned short CAN_PLAY_THROUGH = 3;
-  static const int READY_STATE_CAN_PLAY_THROUGH;
   DEFINE_CONSTANT(CAN_PLAY_THROUGH, int, JSPARAM_INT,
-                  READY_STATE_CAN_PLAY_THROUGH);
+                  MediaConstants::READY_STATE_CAN_PLAY_THROUGH);
 
   // readonly attribute unsigned short readyState;
   void GetReadyState(JsCallContext *context);
@@ -273,7 +260,38 @@ class GearsMedia {
  protected:
   virtual ~GearsMedia();
 
+  // error state
+  int last_error_;
+
+  // network state
+  bool loaded_first_frame_;
+
+  // ready state
+  int ready_state_;
+  bool seeking_;
+
+  // playback state
+  double cur_playback_position_;
+  bool paused_;
+  double default_playback_rate_;
+  double playback_rate_;
+  bool autoplaying_;
+
+  // looping
+  double start_;
+  double end_;
+  double loop_start_;
+  double loop_end_;
+  uint64 play_count_;
+  uint64 current_loop_;
+
+  // controls
+  double volume_;
+  bool muted_;
+
  private:
+  // network state
+  std::string16 src_;
   DISALLOW_EVIL_CONSTRUCTORS(GearsMedia);
 };
 
@@ -314,7 +332,7 @@ class GearsMedia {
                      &GearsMediaType::GetDefaultPlaybackRate,                 \
                      &GearsMediaType::SetDefaultPlaybackRate);                \
     RegisterProperty("playbackRate", &GearsMediaType::GetPlaybackRate,        \
-                     &GearsMediaType::GetDefaultPlaybackRate);                \
+                     &GearsMediaType::SetPlaybackRate);                       \
     RegisterProperty("played", &GearsMediaType::GetPlayedTimeRanges,          \
                      NULL);                                                   \
     RegisterProperty("seekable", &GearsMediaType::GetSeekableTimeRanges,      \

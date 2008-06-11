@@ -30,111 +30,50 @@ if (isOfficial) {
   var recorder = google.gears.factory.create('beta.audiorecorder');
 }
 
-function testAudioPlayerStub() {
+function testDefaultsAndGetterSetters() {
   if (isOfficial) {
   // Audio API is not available on official builds yet.
   } else {
-    // error state
-    var err = player.error;
-    assertEqual(1, err.MEDIA_ERR_ABORTED);
-    assertEqual(2, err.MEDIA_ERR_NETWORK);
-    assertEqual(3, err.MEDIA_ERR_DECODE);
+    var aud1 = google.gears.factory.create('beta.audio');
 
-    // network state
-    player.src = "http://testurl";
-    var currentSrc = player.currentSrc;
-    assertEqual(0, player.EMPTY);
-    assertEqual(1, player.LOADING);
-    assertEqual(2, player.LOADED_METADATA);
-    assertEqual(3, player.LOADED_FIRST_FRAME);
-    assertEqual(4, player.LOADED);
-    var networkState = player.networkState;
-    var bufferingRate = player.bufferingRate;
-    var tRanges = player.buffered;
-    var numRanges = tRanges.length;
-    var startIndex = tRanges.start(4);
-    var endIndex = tRanges.end(4);
-    player.load();
+    // error conditions
+    assertError(function() {
+      aud1.volume = 5.0;
+    }, null, 'INDEX_SIZE_ERR');
 
-    // ready state
-    assertEqual(0, player.DATA_UNAVAILABLE);
-    assertEqual(1, player.CAN_SHOW_CURRENT_FRAME);
-    assertEqual(2, player.CAN_PLAY);
-    assertEqual(3, player.CAN_PLAY_THROUGH);
-    var readyState = player.readyState;
-    var seek = player.isSeeking;
+    assertError(function() {
+      aud1.defaultPlaybackRate = 0.0;
+    }, null, 'NOT_SUPPORTED_ERR');
 
-    // playback state
-    player.currentTime = 20.5;
-    var duration = player.duration;
-    var paused = player.paused;
-    player.defaultPlaybackRate = 20.5;
-    player.playbackRate = 20.5;
-    var played = player.played;
-    var seekable = player.seekable;
-    var ended = player.ended;
-    player.autoplay = true;
-    player.play();
-    player.pause();
+    assertError(function() {
+      aud1.playbackRate = 0.0;
+    }, null, 'NOT_SUPPORTED_ERR');
 
-    // looping
-    player.start = 1.0;
-    player.end = 3.5;
-    player.loopStart = 5.0;
-    player.loopEnd = 6.0;
-    player.playCount = 100;
-    player.currentLoop = 5;
+    // defaults
+    assert(!aud1.error);
+    assertEqual(0.5, aud1.volume);
+    assertEqual(1.0, aud1.defaultPlaybackRate);
+    assertEqual(aud1.DATA_UNAVAILABLE, aud1.readyState);
+    assertEqual(false, aud1.seeking);
+    assertEqual(true, aud1.paused);
+    assertEqual(true, aud1.autoplay);
+    assertEqual(1, aud1.playCount);
+    assertEqual(false, aud1.muted);
 
-    // cue ranges
-    var enterCallback = function() { alert('Hello, from the future!'); }
-    var exitCallback = function() { alert('Hello, from the future!'); }
-    player.addCueRange("myCue", 1.0, 5.0, true, enterCallback, exitCallback);
-    player.removeCueRanges("myCue");
-
-    //controls
-    player.volume = 5.0;
-    player.muted = false;
-
-    // blob
-    var blob = player.getMediaBlob(); 
+    // getters and setters
+    aud1.volume = 0.9;
+    assertEqual(0.9, aud1.volume);
+    aud1.defaultPlaybackRate = 0.5;
+    assertEqual(0.5, aud1.defaultPlaybackRate);
+    aud1.playbackRate = 0.7;
+    assertEqual(0.7, aud1.playbackRate);
+    aud1.playCount = 5;
+    assertEqual(5, aud1.playCount);
+    aud1.currentLoop = 4;
+    assertEqual(4, aud1.currentLoop);
+    aud1.muted = true;
+    assertEqual(true, aud1.muted);
+    aud1.autoplay = false;
+    assertEqual(false, aud1.autoplay);
   }
 }
-
-function testAudioRecorderStub() {
-  if (isOfficial) {
-  // Audio API is not available on official builds yet.
-  } else {
-    // error state
-    var error = recorder.error;
-
-    // recording state
-    var recording = recorder.recording;
-    recorder.bitRate = 4;
-    recorder.format = 3;
-    recorder.bitsPerSample = 64;
-    recorder.autoStream = false;
-    recorder.record();
-    recorder.stop();
-    recorder.pause();
-
-    // controls
-    recorder.volume = 5.0;
-    var pos = recorder.position;
-    recorder.muted = false;
-    var paused = recorder.paused;
-
-    // cue ranges
-    var enterCallback = function() { alert('Hello, from the future!'); }
-    var exitCallback = function() { alert('Hello, from the future!'); }
-    player.addCueRange("myCue", 1.0, 5.0, true, enterCallback, exitCallback);
-    player.removeCueRanges("myCue");
-
-    // blob
-    var blob = recorder.getMediaBlob(); 
-
-    // audio specific
-    var activityLevel = recorder.activityLevel;
-    recorder.silenceLevel = 3;
-  }
-}
-
