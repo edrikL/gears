@@ -369,7 +369,7 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
   // Check that the version string matches the proper Firefox
   const nsCString::char_type *begin, *end;
   version.BeginReading(&begin, &end);
-  if (strcmp(begin, "3.0b5")) {
+  if (strcmp(begin, "3.0")) {
     return NS_ERROR_FAILURE;
   }
 #endif
