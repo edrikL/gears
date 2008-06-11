@@ -111,7 +111,8 @@ var browser = {};
   var ua = navigator.userAgent;
   browser.opera = typeof opera != "undefined";
   browser.ie = !browser.opera && ua.indexOf("MSIE") > -1;
-  browser.ie_mobile = ua.indexOf("IEMobile") > -1;
+  browser.ie_mobile = (ua.indexOf("Windows CE") > -1) &&
+      (ua.indexOf("MSIE") > -1);
   browser.webkit = ua.indexOf("WebKit") > -1;
   // WebKit also gives product == "gecko".
   browser.mozilla = !browser.webkit && navigator.product == "Gecko";

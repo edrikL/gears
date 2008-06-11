@@ -326,7 +326,7 @@ m4_include(ui/common/button.js)
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
   setButtonLabel("string-deny", "deny-button", "string-deny-accesskey");
 
-  if (!browser.ie_mbile) {
+  if (!browser.ie_mobile) {
     CustomButton.initializeAll();
   }
 
