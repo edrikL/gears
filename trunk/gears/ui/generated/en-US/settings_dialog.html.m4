@@ -32,6 +32,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <head>
   <title>PRODUCT_FRIENDLY_NAME_UQ Settings</title>
   <style type="text/css">
+    .text-alignment {
+      /* This is modified via a script for rtl languages. */
+      text-align:left;
+    }
+
 m4_include(ui/common/button.css)
 m4_include(ui/common/html_dialog.css)
     h1 {
@@ -135,13 +140,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="middle">
+        <td class="text-alignment" valign="middle">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td width="100%" align="left" valign="middle">
+        <td width="100%" class="text-alignment" valign="middle">
           <h1>
           <TRANS_BLOCK>
           PRODUCT_FRIENDLY_NAME_UQ Settings
@@ -200,7 +205,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
           <div id="div-buttons">
-            <td width="50%" align="left" valign="middle">
+            <td width="50%" class="text-alignment" valign="middle">
               <input type="BUTTON" id="cancel-button"
                onclick="saveAndClose(null); return false;"></input>
             </td>
