@@ -121,6 +121,7 @@ void Dispatcher<GearsTest>::Init() {
 // from blob_input_stream_ff_test.cc
 bool TestBlobInputStreamFf(std::string16 *error);
 #endif
+bool TestByteStore(std::string16 *error);  // from byte_store_test.cc
 bool TestHttpCookies(BrowsingContext *context, std::string16 *error);
 bool TestHttpRequest(BrowsingContext *context, std::string16 *error);
 bool TestManifest(std::string16 *error);
@@ -237,6 +238,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   std::string16 error;
   bool ok = true;
   BrowsingContext *browsing_context = EnvPageBrowsingContext();
+  ok &= TestByteStore(&error);
   ok &= TestStringUtils(&error);
   ok &= TestFileUtils(&error);
   ok &= TestUrlUtils(&error);
