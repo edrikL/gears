@@ -276,11 +276,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
 
   std::string16 error;
   JsContextPtr cx = GetJsRunner()->GetContext();
-#if BROWSER_NPAPI
-  // TODO(nigeltao): implement Marshal/Unmarshal on NPAPI, which probably
-  // involves implementing things like BoolToJsToken in js_types.cc.
-  MarshaledJsToken *mjt = NULL;
-#else
+
   MarshaledJsToken *mjt = MarshaledJsToken::Marshal(
       message_body, GetJsRunner(), cx, &error);
   if (!mjt) {
@@ -289,7 +285,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
         : error.c_str());
     return;
   }
-#endif
+
   // We also keep the old string-only message.text for backwards compatability.
   std::string16 text;
   if (message_body_type == JSPARAM_STRING16) {
