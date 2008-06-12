@@ -124,7 +124,12 @@ class AndroidMessageLoop {
  public:
   // Starts the message loop for the calling thread.
   static void Start();
-  // Stops the message loop for the given thread.
+  // Run the message loop once. If the queue is empty when called,
+  // this blocks until at least one message is received. This
+  // processes all messages in the queue and then returns.
+  static void RunOnce();
+  // Stops the message loop for the given thread. The target thread
+  // must be looping in Start().
   static void Stop(ThreadId thread_id);
 
  private:
