@@ -56,6 +56,12 @@ class NineGrid : public Node {
   virtual Bitmap* GetGridImage();
 
   Bitmap* nine_grid() { return nine_grid_; }
+  // Takes ownership of passed Bitmap. Caller should not delete it.
+  void set_nine_grid(Bitmap* nine_grid) {
+    ReleaseBitmap();
+    nine_grid_ = nine_grid;
+    Invalidate();
+  }
   bool ReplaceImage(const std::string& file_name);
 
   //  Width of a center cutout of a 9-grid. By default, it is '1'.
