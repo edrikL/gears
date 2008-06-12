@@ -35,7 +35,7 @@ const std::string
 const std::string16 GearsCanvasRenderingContext2D::kCompositeOpSourceOver(
     STRING16(L"source-over"));
 const std::string16 GearsCanvasRenderingContext2D::kCompositeOpCopy(
-    STRING16(L"copy"));  // the right values as per the canvas spec.
+    STRING16(L"copy"));  // The right values as per the canvas spec.
 const std::string16 GearsCanvasRenderingContext2D::kTextAlignLeft(
     STRING16(L"left"));
 const std::string16 GearsCanvasRenderingContext2D::kTextAlignCenter(
@@ -47,7 +47,7 @@ GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
     : ModuleImplBaseClassVirtual(kModuleName),
     canvas_(NULL),
     alpha_(1.0),
-    composite_op_(kCompositeOpSourceOver),
+    composite_operation_(kCompositeOpSourceOver),
     fill_style_(STRING16(L"#000000")),
     font_(STRING16(L"10px sans-serif")),
     text_align_(STRING16(L"left")) {
@@ -91,8 +91,6 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
   RegisterMethod("convolutionTransform",
       &GearsCanvasRenderingContext2D::ConvolutionTransform);
   RegisterMethod("medianFilter", &GearsCanvasRenderingContext2D::MedianFilter);
-  RegisterMethod("drawImageData",
-      &GearsCanvasRenderingContext2D::DrawImageData);
   RegisterMethod("adjustBrightness",
       &GearsCanvasRenderingContext2D::AdjustBrightness);
   RegisterMethod("adjustContrast",
@@ -140,8 +138,9 @@ void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
   if (context->is_exception_set())
     return;
   if (context->GetArgumentType(1) == JSPARAM_UNDEFINED) {
+    // If only one scale argument is supplied, use it for both dimensions:
     y = x;
-    // TODO(kart): test this.
+    // TODO(kart): Test this.
   }
   context->SetException(STRING16(L"Unimplemented"));
 }
@@ -216,14 +215,14 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
   if (context->is_exception_set())
     return;
   if (new_alpha < 0.0 || new_alpha > 1.0) {
-    return;  // as per canvas spec.
+    return;  // As per canvas spec.
   }
   alpha_ = new_alpha;
 }
 
 void GearsCanvasRenderingContext2D::GetGlobalCompositeOperation(
     JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &composite_op_);
+  context->SetReturnValue(JSPARAM_STRING16, &composite_operation_);
 }
 
 void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
@@ -237,11 +236,11 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
     return;
   if (new_composite_op != kCompositeOpCopy &&
       new_composite_op != kCompositeOpCopy)
-    return;  // as per canvas spec.
+    return;  // As per canvas spec.
 
-  // TODO(kart): if we're given a composite mode that Canvas supports but we
+  // TODO(kart): If we're given a composite mode that Canvas supports but we
   // don't, raise an Unsupported exception.
-  composite_op_ = new_composite_op;
+  composite_operation_ = new_composite_op;
 }
 
 void GearsCanvasRenderingContext2D::GetFillStyle(
@@ -256,13 +255,13 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
     {JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style}
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  // TODO(kart): do not generate error on type mismatch.
+  // TODO(kart): Do not generate error on type mismatch.
   if (context->is_exception_set())
     return;
 
   // TODO(kart):
   // if (new_fill_style is not a valid CSS color)
-  //  return; // as per canvas spec.
+  //  return; // As per canvas spec.
   fill_style_ = new_fill_style;
 }
 
@@ -343,9 +342,10 @@ void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
     return;
   if (new_align != kTextAlignLeft && new_align != kTextAlignCenter
       && new_align != kTextAlignRight) {
-    context->SetException(STRING16(L"Unrecognized text alignment"));
-    return;
+    return;  // As per the spec.
   }
+  // TODO(kart): If given a mode that canvas supports but we don't, raise
+  // an exception.
   text_align_ = new_align;
   context->SetException(STRING16(L"Unimplemented"));
 }
@@ -389,8 +389,8 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  // TODO(kart): make sure that if only 2 or 4 args are given,
-  // they are the dest args.
+  // TODO(kart): Make sure that if only 2 or 4 args are given,
+  // they are treated as the dest args.
   context->SetException(STRING16(L"Unimplemented"));
 }
 
@@ -469,26 +469,6 @@ void GearsCanvasRenderingContext2D::MedianFilter(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::DrawImageData(JsCallContext *context) {
-  JsObject image;
-  int sx, sy, sw, sh, dx, dy;
-  JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_OBJECT, &image},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sx},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sy},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sw},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sh},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &dx},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &dy}
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  // TODO(kart): make sure that if only 2 or 4 args are given,
-  // they are the dest args.
   context->SetException(STRING16(L"Unimplemented"));
 }
 

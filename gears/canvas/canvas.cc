@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image API has not been finalized for official builds.
 
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
@@ -169,6 +169,7 @@ void GearsCanvas::SetColorMode(JsCallContext *context) {
 }
 
 void GearsCanvas::ResetToBlankPixels() {
+  // TODO(kart): Implement this.
 }
 
 void GearsCanvas::GetContext(JsCallContext *context) {
@@ -181,13 +182,15 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     return;
   if (contextId != STRING16(L"gears-2d")) {
     context->SetReturnValue(JSPARAM_NULL, 0);
-    return;  // as per the canvas spec.
+    return;  // As per the canvas spec.
   }
   if (rendering_context_.get() == NULL) {
     CreateModule<GearsCanvasRenderingContext2D>(GetJsRunner(),
         &rendering_context_);
     if (!rendering_context_->InitBaseFromSibling(this)) {
       context->SetException(STRING16(L"Initializing base class failed."));
+      // Don't return a broken object the next time this function is called:
+      rendering_context_.reset(NULL);
       return;
     }
     rendering_context_->InitCanvasField(this);

@@ -31,47 +31,68 @@
 #include "gears/base/common/common.h"
 #include "gears/canvas/canvas.h"
 
+// 2D Context to manipulate the canvas.
+// See http://code.google.com/p/google-gears/wiki/ImagingAPI for more detailed
+// documentation.
 class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
  public:
   static const std::string kModuleName;
 
   GearsCanvasRenderingContext2D();
 
-  // Initialize the canvas field. Must be called only once.
-  // This is not exposed to Javascript and exists only for internal use.
+  // Initializes the canvas backreference from this object.
+  // This function must be called only once.
+  // This function is not exposed to Javascript and exists only for internal
+  // use.
   void InitCanvasField(GearsCanvas *canvas);
 
+  // Returns a backreference to the canvas this context was created from.
   // IN: -
   // OUT: Canvas
   void GetCanvas(JsCallContext *context);
 
+  // Pushes the current state on the state stack.
   // IN: -
   // OUT: -
   void Save(JsCallContext *context);
 
+  // Restores the current state by popping the state stack.
   // IN: -
   // OUT: -
   void Restore(JsCallContext *context);
 
+  // Sets the geometry transformation matrix to scale future drawing operations.
+  // If only one scale argument is supplied, we use it for both dimensions.
   // IN: double x, double y
   // OUT: -
   void Scale(JsCallContext *context);
 
+  // Sets the geometry transformation matrix to rotate future drawing
+  // operations by the given angle, in radians.
   // IN: double angle
   // OUT: -
   void Rotate(JsCallContext *context);
 
+  // Sets the geometry transformation matrix to translate future drawing
+  // operations by the specified amount.
   // IN: int x, int y
   // OUT: -
   void Translate(JsCallContext *context);
 
+  // Multiplies the current geometry transformation matrix by the given
+  // matrix.
   // IN: float m11, float m12, float m21, float m22, float dx, float dy
   // OUT: -
   void Transform(JsCallContext *context);
 
+  // Sets the current geometry transformation matrix to the given matrix.
   // IN: float m11, float m12, float m21, float m22, float dx, float dy
   // OUT: -
   void SetTransform(JsCallContext *context);
+
+
+  // The following items constitute the state of the context.
+  // They affect future operations on the canvas.
 
   // IN: -
   // OUT: double
@@ -97,38 +118,62 @@ class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
   // OUT: -
   void SetFillStyle(JsCallContext *context);
 
+  // Rectangle operations.
   // IN: int x, int y, int width, int height
   // OUT: -
+  // Clears the specified rectangle (sets it to transparent black).
   void ClearRect(JsCallContext *context);
+  // Fills the specified rectangle by the current fill color.
   void FillRect(JsCallContext *context);
+  // Strokes the rectangle with a one-pixel think border.
+  // TODO(kart): Define stroke color.
   void StrokeRect(JsCallContext *context);
 
+  // These affect future text rendering-related
+  // operations (FillText and MeasureText).
   void GetFont(JsCallContext *context);
   void SetFont(JsCallContext *context);
   void GetTextAlign(JsCallContext *context);
   void SetTextAlign(JsCallContext *context);
 
+  // Renders filled text at the specified point (baseline left).
+  // If a maxWidth is specified and the text exceeds the width, it is
+  // truncated, unless wrap is specified, in which case it's wrapped.
+  // The text may exceed the height of the canvas (especially with
+  // wrapping) in which case it's truncated vertically.
   // IN: string text, float x, float y, optional float maxWidth
   // OUT: -
   void FillText(JsCallContext *context);
 
+  // Returns a text metrics object with information about the given text.
   // IN: string text
   // OUT: TextMetrics
   void MeasureText(JsCallContext *context);
 
+  // Draws a canvas onto this canvas. sx, sy, sw, and sh identify a rectangular
+  // subset of the source canvas, and dx, dy, dw, dh identify the target area
+  // in the destination canvas (this canvas) into which pixels from the source
+  // rectangle are drawn, with resizing if necessary.
   // IN: Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw,
   //     int dh
   // OUT: -
   void DrawImage(JsCallContext *context);
 
+  // Creates an ImageData object, used for pixel manipulation.
   // IN: int sw, int sh
   // OUT: ImageData
   void CreateImageData(JsCallContext *context);
 
+  // Reads pixels from the specified rectangular portion of the canvas, copies
+  // them into a new ImageData object and returns it.
   // IN: int sx, int sy, int sw, int sh
   // OUT: ImageData
   void GetImageData(JsCallContext *context);
 
+  // Copies pixels from the given ImageData object into the canvas at a
+  // specified (x, y) offset. If the 'dirty' arguments are supplied, they
+  // identify a rectangular subset of the given ImageData; only those pixels
+  // are copied into the canvas.
   // Overloaded:
   // IN: ImageData imagedata, int dx, int dy
   // IN: ImageData imagedata, int dx, int dy, int dirtyX, int dirtyY,
@@ -136,66 +181,75 @@ class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
   // OUT: -
   void PutImageData(JsCallContext *context);
 
+  // Performs a color transformation on the canvas with the given matrix.
   // IN: double[] colorMatrix
   // OUT: -
   void ColorTransform(JsCallContext *context);
 
+  // Performs a convolution transformation on the canvas with the given matrix.
   // IN: double[] convolutionMatrix, optional float bias,
   //     optional boolean applyToAlpha
   // OUT: -
   void ConvolutionTransform(JsCallContext *context);
 
+  // Performs a median filter with the given radius, which can be fractional.
   // IN: double radius
   // OUT: -
   void MedianFilter(JsCallContext *context);
 
-  // IN: ImageData imagedata, int sx, int sy, int sw, int sh, int dx, int dy
-  // OUT: -
-  void DrawImageData(JsCallContext *context);
-
+  // Adjusts brigthness by the given amount, which is between -1.0 and +1.0
   // IN: double delta.
   // OUT: -
   void AdjustBrightness(JsCallContext *context);
 
+  // Adjusts contrast by the given amount.
   // IN: double contrast.
   // OUT: -
   void AdjustContrast(JsCallContext *context);
 
+  // Adjusts saturation by the given amount, while preserving luminance.
   // IN: double saturation
   // OUT: -
   void AdjustSaturation(JsCallContext *context);
 
+  // Rotates hue on the color wheel by the given amount, while preserving
+  // luminance.
   // IN: double angle
   // OUT: -
   void AdjustHue(JsCallContext *context);
 
+  // Performs a blur by taking a weighted mean of pixels within the
+  // specified radius.
   // IN: double factor, int radius.
   // OUT: -
   void Blur(JsCallContext *context);
 
+  // Inverse of Blur().
   // IN: double factor, int radius.
   // OUT: -
   void Sharpen(JsCallContext *context);
 
+  // Resets the transformation matrix to the identity matrix.
   // IN: -
   // OUT: -
   void ResetTransform(JsCallContext *context);
 
  private:
-  // TODO(kart): Probably use scoped_refptr, but what about cycle
-  // (canvas -> context -> canvas)?
-  GearsCanvas *canvas_;
-
-  double alpha_;
-  std::string16 composite_op_;
   static const std::string16 kCompositeOpCopy;
   static const std::string16 kCompositeOpSourceOver;
-  std::string16 fill_style_;
-  std::string16 font_;
-  std::string16 text_align_;
   static const std::string16 kTextAlignLeft;
   static const std::string16 kTextAlignRight;
   static const std::string16 kTextAlignCenter;
+
+  // TODO(kart): Probably use scoped_refptr, but that forms a
+  // garbage collection cycle (canvas -> context -> canvas).
+  GearsCanvas *canvas_;
+
+  double alpha_;
+  std::string16 composite_operation_;
+  std::string16 fill_style_;
+  std::string16 font_;
+  std::string16 text_align_;
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvasRenderingContext2D);
 };
 
