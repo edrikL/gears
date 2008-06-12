@@ -29,7 +29,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/localserver/npapi/managed_resource_store_np.h"
+#include "gears/localserver/managed_resource_store_module.h"
 #include "gears/localserver/npapi/resource_store_np.h"
 
 DECLARE_GEARS_WRAPPER(GearsLocalServer);

@@ -47,7 +47,6 @@
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
-#include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/ui/firefox/ui_utils.h"
 
@@ -133,10 +132,6 @@ NS_DOMCI_EXTENSION(Scour)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsLocalServerInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsLocalServer, PR_TRUE,
                                              &kGearsLocalServerClassId)
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsManagedResourceStore)
-     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsManagedResourceStoreInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsManagedResourceStore, PR_TRUE,
-                                             &kGearsManagedResourceStoreClassId)
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsResourceStore)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsResourceStoreInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResourceStore, PR_TRUE,
@@ -180,8 +175,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     // localserver
     { kGearsLocalServerClassName, "GearsLocalServerInterface",
       GEARSLOCALSERVERINTERFACE_IID_STR },
-    { kGearsManagedResourceStoreClassName, "GearsManagedResourceStoreInterface",
-      GEARSMANAGEDRESOURCESTOREINTERFACE_IID_STR },
     { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
@@ -216,7 +209,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
 NS_DECL_DOM_CLASSINFO(GearsFactory)
 // localserver
 NS_DECL_DOM_CLASSINFO(GearsLocalServer)
-NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
@@ -237,7 +229,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFactory));
   // localserver
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
 
 #ifdef DEBUG

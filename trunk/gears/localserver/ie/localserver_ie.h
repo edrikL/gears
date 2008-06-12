@@ -61,12 +61,12 @@ class ATL_NO_VTABLE GearsLocalServer
   virtual HRESULT STDMETHODCALLTYPE createManagedStore(
       /* [in] */ const BSTR name,
       /* [optional][in] */ const VARIANT *required_cookie,
-      /* [retval][out] */ GearsManagedResourceStoreInterface **application);
+      /* [retval][out] */ IDispatch **application);
 
   virtual HRESULT STDMETHODCALLTYPE openManagedStore(
       /* [in] */ const BSTR name,
       /* [optional][in] */ const VARIANT *required_cookie,
-      /* [retval][out] */ GearsManagedResourceStoreInterface **application);
+      /* [retval][out] */ IDispatch **application);
 
   virtual HRESULT STDMETHODCALLTYPE removeManagedStore(
       /* [in] */ const BSTR name,

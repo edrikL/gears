@@ -57,12 +57,12 @@ class GearsLocalServer
   NS_IMETHOD CreateManagedStore(
       //const nsAString &name
       //OPTIONAL in AString required_cookie
-      GearsManagedResourceStoreInterface **retval
+      nsISupports **retval
       );
   NS_IMETHOD OpenManagedStore(
       //const nsAString &name
       //OPTIONAL in AString required_cookie
-      GearsManagedResourceStoreInterface **retval
+      nsISupports **retval
       );
   NS_IMETHOD RemoveManagedStore(
       //const nsAString &name

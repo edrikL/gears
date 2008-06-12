@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/npapi/managed_resource_store_np.h"
+#include "gears/localserver/managed_resource_store_module.h"
 
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
