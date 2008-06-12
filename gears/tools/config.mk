@@ -203,6 +203,7 @@ CC = gcc
 CXX = g++
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+ECHO=@echo
 
 CPPFLAGS += -DLINUX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -274,6 +275,7 @@ CC = gcc -arch ppc -arch i386
 CXX = g++ -arch ppc -arch i386
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+ECHO=@echo
 
 CPPFLAGS += -DOS_MACOSX
 
@@ -388,6 +390,13 @@ CC = cl
 CXX = cl
 OBJ_SUFFIX = .obj
 MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$(*F).pp
+
+# echo.exe outputs "Echo on." (or "Echo off.") if it is called with no
+# arguments. This is no good for us because sometimes we mean to call it with
+# no arguments and have it output empty string. The workaround is to call it
+# with a trailing dot. For more info, see:
+# http://blogs.msdn.com/oldnewthing/archive/2008/04/03/8352719.aspx
+ECHO=@echo.
 
 # Most Windows headers use the cross-platform NDEBUG and DEBUG #defines
 # (handled later).  But a few Windows files look at _DEBUG instead.

@@ -213,7 +213,6 @@ WINCE_INSTALLER_CAB    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
 INFSRC_BASE_NAME = wince_cab
 INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
 
-
 # BUILD TARGETS
 
 default::
@@ -361,10 +360,10 @@ else
 endif
 
 help::
-	@echo "Usage: make [MODE=dbg|opt] [BROWSER=FF|IE|NPAPI] [OS=wince]"
-	@echo
-	@echo "  If you omit MODE, the default is dbg."
-	@echo "  If you omit BROWSER, all browsers available on the current OS are built."
+	$(ECHO) "Usage: make [MODE=dbg|opt] [BROWSER=FF|IE|NPAPI] [OS=wince]"
+	$(ECHO)
+	$(ECHO) "  If you omit MODE, the default is dbg."
+	$(ECHO) "  If you omit BROWSER, all browsers available on the current OS are built."
 
 .PHONY: prereqs genheaders modules clean help
 
@@ -572,8 +571,11 @@ $(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJ
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
-	@echo $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
@@ -582,8 +584,11 @@ $(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJ
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
-	@echo $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
@@ -592,8 +597,11 @@ $(FF3_MODULE_TYPELIB): $(FF3_GEN_TYPELIBS)
 	$(GECKO_BIN)/xpt_link $@ $^
 
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
-	@echo $(IE_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(IE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
@@ -604,18 +612,23 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 ifneq ($(OS),android)
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
-	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
-	@echo $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 endif
 
 $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
-	@echo $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS)| $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(MOZJS_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(MOZJS_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
@@ -639,7 +652,7 @@ $(PERF_TOOL_EXE): $(PERF_TOOL_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(PERF_TOOL_OBJS)
 
 $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BROKER_OUTDIR)/vista_broker.res
-	@echo $(VISTA_BROKER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(VISTA_BROKER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(MKEXE) $(EXEFLAGS) $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
@@ -656,7 +669,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 .PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 
 $(SF_INSTALLER): $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
-	@echo "TODO(playmobil): Create Safari Installer pkg"
+	$(ECHO) "TODO(playmobil): Create Safari Installer pkg"
 
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
