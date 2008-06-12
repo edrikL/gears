@@ -72,6 +72,9 @@ ByteStore::~ByteStore() {
 bool ByteStore::AddData(const void *data, int64 length) {
   if (length < 0) return false;
   if (length == 0) return true;
+
+  MutexLock lock(&mutex_);
+
   if (!file_.get() && (length + data_.size() <= kMaxBufferSize)) {
     data_.insert(data_.end(), static_cast<const uint8*>(data),
                  static_cast<const uint8*>(data) + length);
@@ -114,6 +117,8 @@ void ByteStore::CreateBlob(scoped_refptr<BlobInterface> *blob) {
 }
 
 int64 ByteStore::Length() const {
+  MutexLock lock(&mutex_);
+
   if (!file_.get()) {
     return data_.size();
   }
@@ -130,6 +135,9 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   if (offset < 0 || max_bytes < 0) {
     return -1;
   }
+
+  MutexLock lock(&mutex_);
+
   if (!file_.get()) {
     if (data_.size() <= offset) {
       return 0;
@@ -141,7 +149,7 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
       max_bytes = std::numeric_limits<size_t>::max();
     }
   
-    assert(offset < kint32max);
+    assert(offset <= kint32max);
     memcpy(destination, &data_[static_cast<int>(offset)],
                         static_cast<size_t>(max_bytes));
     return max_bytes;
