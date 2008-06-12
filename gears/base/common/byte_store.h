@@ -29,6 +29,7 @@
 #include <vector>
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -38,7 +39,6 @@ class BlobInterface;
 class ByteStore : public RefCounted {
  public:
   ByteStore();
-  ~ByteStore();
 
   // Appends raw data.  Returns false if the data could not be added.
   bool AddData(const void *data, int64 length);
@@ -57,9 +57,12 @@ class ByteStore : public RefCounted {
   int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
  private:
+  ~ByteStore();
+
   std::vector<uint8> data_;
   scoped_ptr<File> file_;
   mutable File::OpenAccessMode file_op_;
+  mutable Mutex mutex_;
   DISALLOW_EVIL_CONSTRUCTORS(ByteStore);
 };
 
