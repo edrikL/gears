@@ -145,10 +145,11 @@ a typical example.
   </ol>
 </ol>
 
+
   <h4>Communication</h4>
 
-<p>Workers send strings to each other using <code>sendMessage()</code>.
-Any member of a particular WorkerPool can communicate with any other member.  
+<p>Workers send messages to each other using <code>sendMessage()</code>.
+Any member of a particular WorkerPool can communicate with any other member.
   
 <p>Each sent message triggers the receiver's <code>onmessage</code> handler.
 Message events are handled like all other JavaScript events.  In particular,
@@ -351,6 +352,7 @@ up to the parent.</td>
   </tr>
 </table>
 
+<a name="sendmessage"></a>
 <table>
   <tr class="odd">
     <th colspan="2"><code>void sendMessage(message, destWorkerId)</code></th>
@@ -365,7 +367,10 @@ up to the parent.</td>
     <td>Parameters:</td>
     <td class="odd">
       <code>message</code>
-      - The message body to send.  Can be string, boolean, number, array or object.
+      - The message to send. A message can be a boolean, string, number, array,
+      or object. Array and object messages can contain booleans, strings, 
+      numbers, nulls, or references to other arrays and objects which also 
+      follow these rules.
       <br>
       <code>destWorkerId</code>
       - ID of the destination worker.
@@ -377,6 +382,9 @@ up to the parent.</td>
       Messages sent from worker 1 to worker 2 in a particular order will be received in the same order.
       <br><br>
       Messages can be sent and received only between members of the same WorkerPool.
+      <br><br>
+      Messages are copied between workers. Changes to a message received in one 
+      worker will not be reflected in the sending worker.
     </td>
   </tr>
 </table>
