@@ -63,6 +63,7 @@ class AndroidThreadMessageQueue : public ThreadMessageQueue {
 
   void InitThreadEndHook();
   static void ThreadEndHook(void* value);
+  static ThreadSpecificQueue* GetQueue(ThreadId thread_id);
 
   static Mutex queue_mutex_;  // Protects the message_queues_ map.
   typedef std::map<ThreadId, linked_ptr<ThreadSpecificQueue> > QueueMap;
@@ -76,16 +77,16 @@ class AndroidThreadMessageQueue : public ThreadMessageQueue {
 // A message queue for a thread.
 class ThreadSpecificQueue {
  public:
+  ThreadSpecificQueue(ThreadId thread_id) : thread_id_(thread_id) { }
   // Sends the message to the thread owning this queue.
-  virtual void SendMessage(int message_type, MessageData* message_data) = 0;
+  void SendMessage(int message_type, MessageData* message_data);
+  // Dispatches messages in a loop until exit_type is received.
+  void GetAndDispatchMessages(int exit_type);
+  // Waits for one or messages to arrive and dispatches them to the
+  // appropriate handlers.
+  void RunOnce();
 
-  virtual ~ThreadSpecificQueue() {}
  protected:
-  ThreadSpecificQueue() {}
-  Mutex* GetAndroidMessageQueueMutex() {
-    return &AndroidThreadMessageQueue::queue_mutex_;
-  }
-
   struct Message {
     Message(int type, MessageData* data)
         : message_type(type),
@@ -97,32 +98,26 @@ class ThreadSpecificQueue {
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(ThreadSpecificQueue);
-};
 
-class BackgroundThreadQueue : public ThreadSpecificQueue {
- public:
-  BackgroundThreadQueue() {}
-  virtual ~BackgroundThreadQueue() {}
-  // Waits for a message to arrive and dispatches them to the
-  // appropriate handlers.
-  void GetAndDispatchMessages(int exit_type);
-
-  // ThreadSpecificQueue
-  virtual void SendMessage(int message_type, MessageData* message_data);
-
- private:
+  // The ThreadId owning this queue.
+  ThreadId thread_id_;
+  // Protects event_queue_.
+  Mutex event_queue_mutex_;
+  // Queue of messages for this thread.
   std::deque<Message> event_queue_;
+  // Event signalled when the queue is filled.
   Event event_;
-};
-
-class MainThreadQueue : public ThreadSpecificQueue {
- public:
-  static void Dispatch(void* instance);
-  MainThreadQueue() {}
-  virtual ~MainThreadQueue() {}
-
-  // MessageQueue
-  virtual void SendMessage(int message_type, MessageData* message_data);
+  // Keep track of whether a call to NPN_PluginThreadAsyncCall is
+  // in-flight, to prevent spamming the browser's message queue.
+  static Mutex async_mutex_;
+  static bool async_in_flight_;
+  
+  // Atomically move all messages from the queue to the return structure.
+  void PopMessages(std::deque<Message> *messages);
+  // Asynchronous callback on the main thread after
+  // NPN_PluginThreadAsyncCall. This calls RunOnce() on the main
+  // thread's message queue.
+  static void AsyncCallback(void* instance);
 };
 
 // The thread message queue singleton.
@@ -152,13 +147,8 @@ bool AndroidThreadMessageQueue::InitThreadMessageQueue() {
   MutexLock lock(&queue_mutex_);
   ThreadId thread_id = GetCurrentThreadId();
   if (message_queues_.find(thread_id) == message_queues_.end()) {
-    ThreadSpecificQueue* queue = NULL;
-    if (thread_id == MainThreadId()) {
-      // We are initializing the main thread.
-      queue = new MainThreadQueue();
-    } else {
-      // We are initializing a worker.
-      queue = new BackgroundThreadQueue();
+    ThreadSpecificQueue* queue = new ThreadSpecificQueue(thread_id);
+    if (thread_id != MainThreadId()) {
       InitThreadEndHook();
     }
     message_queues_[thread_id] = linked_ptr<ThreadSpecificQueue>(queue);
@@ -214,6 +204,20 @@ void AndroidThreadMessageQueue::InitThreadEndHook() {
   }
 }
 
+ThreadSpecificQueue* AndroidThreadMessageQueue::GetQueue(ThreadId id) {
+  ThreadSpecificQueue* queue = NULL;
+  {
+    MutexLock lock(&queue_mutex_);
+    // Find the queue for this thread.
+    QueueMap::iterator queue_iter;
+    queue_iter = message_queues_.find(id);
+    assert (queue_iter != message_queues_.end());
+    queue = queue_iter->second.get();
+  }
+  assert(queue);
+  return queue;
+}
+
 // static
 void AndroidThreadMessageQueue::ThreadEndHook(void* value) {
   ThreadId *id = reinterpret_cast<ThreadId*>(value);
@@ -229,51 +233,86 @@ void AndroidThreadMessageQueue::ThreadEndHook(void* value) {
 
 // static
 void AndroidMessageLoop::Start() {
-  // TODO(andreip): Fix this for timer API.
-  BackgroundThreadQueue* queue = NULL;
-  {
-    MutexLock lock(&AndroidThreadMessageQueue::queue_mutex_);
-    // Find the queue for this thread.
-    AndroidThreadMessageQueue::QueueMap::iterator queue_iter;
-    queue_iter = AndroidThreadMessageQueue::message_queues_.find(
-        ThreadMessageQueue::GetInstance()->GetCurrentThreadId());
-    assert (queue_iter != AndroidThreadMessageQueue::message_queues_.end());
-    queue = static_cast<BackgroundThreadQueue*>(queue_iter->second.get());
-  }
-  assert(queue);
-  // Start the loop.
-  queue->GetAndDispatchMessages(kAndroidLoop_Exit);
+  // Start the loop on the current thread.
+  ThreadId thread_id =
+      AndroidThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+  AndroidThreadMessageQueue::GetQueue(thread_id)->GetAndDispatchMessages(
+      kAndroidLoop_Exit);
 }
 
-//static
+// static
+void AndroidMessageLoop::RunOnce() {
+  // Run the loop once on the current thread.
+  ThreadId thread_id =
+      AndroidThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+  AndroidThreadMessageQueue::GetQueue(thread_id)->RunOnce();
+}
+
+// static
 void AndroidMessageLoop::Stop(ThreadId thread_id) {
-  ThreadMessageQueue::GetInstance()->Send(thread_id, kAndroidLoop_Exit, NULL);
+  // Stop the target thread's loop.
+  AndroidThreadMessageQueue::GetQueue(thread_id)->SendMessage(kAndroidLoop_Exit,
+                                                              NULL);
 }
 
 //------------------------------------------------------------------------------
-// BackgroundThreadQueue
+// ThreadSpecificQueue
 
-void BackgroundThreadQueue::SendMessage(int message_type,
-                                        MessageData* message_data) {
+Mutex ThreadSpecificQueue::async_mutex_;
+bool ThreadSpecificQueue::async_in_flight_ = false;
+
+void ThreadSpecificQueue::SendMessage(int message_type,
+                                      MessageData* message_data) {
   // Put a message in the queue. Note that the Message object
   // takes ownership of message_data.
-  event_queue_.push_back(Message(message_type, message_data));
+  {
+    MutexLock lock(&event_queue_mutex_);
+    event_queue_.push_back(Message(message_type, message_data));
+  }
   event_.Signal();
+  if (thread_id_ == g_instance.MainThreadId()) {
+    // If sending to the main thread, also put a message into the
+    // browser's message loop so this mechanism still works if the
+    // main thread is sat waiting in the browser's idle loop. It is
+    // harmless if the queue clears before this callback occurs - it
+    // just runs an empty queue.
+    MutexLock lock(&async_mutex_);
+    if (!async_in_flight_) {
+      // At most only one outstanding NPN_PluginThreadAsyncCall
+      // scheduled on the browser's message queue.
+      async_in_flight_ = true;
+      NPN_PluginThreadAsyncCall(NULL, AsyncCallback, this);
+    }
+  }
 }
 
-void BackgroundThreadQueue::GetAndDispatchMessages(int exit_type) {
+void ThreadSpecificQueue::AsyncCallback(void* instance) {
+  // Callback from the browser's message queue.
+  ThreadSpecificQueue* queue =
+      reinterpret_cast<ThreadSpecificQueue *>(instance);
+  {
+    MutexLock lock(&async_mutex_);
+    async_in_flight_ = false;
+  }
+  queue->RunOnce();
+}
+
+void ThreadSpecificQueue::PopMessages(std::deque<Message> *messages) {
+  // Get and removes all messages from the queue.
+  messages->clear();
+  {
+    MutexLock lock(&event_queue_mutex_);
+    event_queue_.swap(*messages);
+  }
+}
+
+void ThreadSpecificQueue::GetAndDispatchMessages(int exit_type) {
   bool done = false;
   while(!done) {
     event_.Wait();
     // Move existing messages to a local queue.
     std::deque<Message> local_event_queue;
-    {
-      MutexLock lock(GetAndroidMessageQueueMutex());
-      assert(event_queue_.size() > 0);
-      event_queue_.swap(local_event_queue);
-      // Unlock the mutex before invoking any callbacks.
-    }
-
+    PopMessages(&local_event_queue);
     // Dispatch the local events
     while (!local_event_queue.empty()) {
       Message msg = local_event_queue.front();
@@ -287,20 +326,17 @@ void BackgroundThreadQueue::GetAndDispatchMessages(int exit_type) {
   }
 }
 
-//------------------------------------------------------------------------------
-// MainThreadQueue
-
-void MainThreadQueue::SendMessage(int message_type,
-                                  MessageData* message_data) {
-  NPN_PluginThreadAsyncCall(
-      NULL, Dispatch, new Message(message_type, message_data));
-}
-
-// static
-void MainThreadQueue::Dispatch(void* instance) {
-  Message* msg = reinterpret_cast<Message*>(instance);
-  g_instance.HandleThreadMessage(msg->message_type, msg->message_data.get());
-  delete msg;
+void ThreadSpecificQueue::RunOnce() {
+  event_.Wait();
+  // Move existing messages to a local queue.
+  std::deque<Message> local_event_queue;
+  PopMessages(&local_event_queue);
+  // Dispatch the local events
+  while (!local_event_queue.empty()) {
+    Message msg = local_event_queue.front();
+    local_event_queue.pop_front();
+    g_instance.HandleThreadMessage(msg.message_type, msg.message_data.get());
+  }
 }
 
 //------------------------------------------------------------------------------
