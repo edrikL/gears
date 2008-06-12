@@ -356,6 +356,7 @@ bool Row::ReplaceDistribution(std::string distribution) {
     return false;
 
   parsed_distributions_.Swap(&parsed_values);
+  distribution_ = distribution;
   Invalidate();
   return true;
 }
