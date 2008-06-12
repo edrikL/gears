@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
-#define GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
+#ifndef GEARS_LOCALSERVER_NPAPI_ASYNC_TASK_NP_H__
+#define GEARS_LOCALSERVER_NPAPI_ASYNC_TASK_NP_H__
 
 // This is a hack because something in the ATL headers prevents the gecko SDK
 // from defining int32, so we include it first.
@@ -186,4 +186,4 @@ class AsyncTask : protected HttpRequest::HttpListener,
   ThreadId task_thread_id_;
 };
 
-#endif  // GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
+#endif  // GEARS_LOCALSERVER_NPAPI_ASYNC_TASK_NP_H__

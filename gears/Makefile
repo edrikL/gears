@@ -1384,6 +1384,7 @@ $(BROWSER)_CPPSRCS += \
 # localserver/common (built for all browsers)
 
 $(BROWSER)_VPATH += \
+		localserver \
 		localserver/common \
 		$(NULL)
 
@@ -1396,6 +1397,7 @@ $(BROWSER)_CPPSRCS += \
 		localserver.cc \
 		localserver_db.cc \
 		managed_resource_store.cc \
+		managed_resource_store_module.cc \
 		manifest.cc \
 		resource_store.cc \
 		update_task.cc \
@@ -1423,7 +1425,6 @@ FF3_CPPSRCS	+= \
 		file_submitter_ff.cc \
 		http_request_ff.cc \
 		localserver_ff.cc \
-		managed_resource_store_ff.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ff.cc \
@@ -1446,7 +1447,6 @@ IE_CPPSRCS	+= \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_ie.cc \
-		managed_resource_store_ie.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ie.cc \
@@ -1483,7 +1483,6 @@ NPAPI_CPPSRCS	+= \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_np.cc \
-		managed_resource_store_np.cc \
 		update_task_np.cc \
 		urlmon_utils.cc \
 		resource_store_np.cc \
@@ -1505,7 +1504,6 @@ SF_CPPSRCS	+= \
 		http_request_sf.mm \
 		localserver_db_proxy.mm \
 		localserver_np.cc \
-		managed_resource_store_np.cc \
 		progress_event.cc \
 		progress_input_stream.mm \
 		resource_store_np.cc \

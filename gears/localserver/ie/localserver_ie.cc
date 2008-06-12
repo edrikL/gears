@@ -27,13 +27,14 @@
 
 #include "gears/localserver/ie/localserver_ie.h"
 
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/localserver/ie/managed_resource_store_ie.h"
+#include "gears/localserver/managed_resource_store_module.h"
 #include "gears/localserver/ie/resource_store_ie.h"
 
 
@@ -70,7 +71,7 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
 STDMETHODIMP GearsLocalServer::createManagedStore(
     /* [in] */ const BSTR name,
     /* [optional][in] */ const VARIANT *required_cookie,
-    /* [retval][out] */ GearsManagedResourceStoreInterface **store_out) {
+    /* [retval][out] */ IDispatch **store_out) {
   if (!store_out) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
@@ -90,13 +91,8 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
   LOG16((L"LocalServer::createManagedStore( %s, %s )\n",
          name, required_cookie_bstr.m_str));
 
-  CComObject<GearsManagedResourceStore> *store;
-  HRESULT hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
-  }
-
-  CComPtr< CComObject<GearsManagedResourceStore> > reference_adder(store);
+  scoped_refptr<GearsManagedResourceStore> store;
+  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
 
   if (!store->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
@@ -107,11 +103,8 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ManagedResourceStore."));
   }
 
-  hr = store->QueryInterface(store_out);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to QueryInterface for"
-                              L" GearsManagedResourceStoreInterface."));
-  }
+  *store_out = store->GetWrapperToken().pdispVal;
+  (*store_out)->AddRef();
 
   RETURN_NORMAL();
 }
@@ -122,7 +115,7 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
 STDMETHODIMP GearsLocalServer::openManagedStore(
     /* [in] */ const BSTR name,
     /* [optional][in] */ const VARIANT *required_cookie,
-    /* [retval][out] */ GearsManagedResourceStoreInterface **store_out) {
+    /* [retval][out] */ IDispatch **store_out) {
   if (!store_out) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
@@ -145,13 +138,8 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
     RETURN_NORMAL();
   }
 
-  CComObject<GearsManagedResourceStore> *store;
-  HRESULT hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
-  }
-
-  CComPtr< CComObject<GearsManagedResourceStore> > reference_adder(store);
+  scoped_refptr<GearsManagedResourceStore> store;
+  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
 
   if (!store->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
@@ -161,11 +149,8 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ManagedResourceStore."));
   }
 
-  hr = store->QueryInterface(store_out);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to QueryInterface for"
-                              L" GearsManagedResourceStoreInterface."));
-  }
+  *store_out = store->GetWrapperToken().pdispVal;
+  (*store_out)->AddRef();
 
   RETURN_NORMAL();
 }
