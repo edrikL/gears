@@ -29,6 +29,12 @@ static const char zMagicHeader[] = SQLITE_FILE_HEADER;
 */
 static const char zPoisonHeader[] = "SQLite poison 3";
 
+/*
+** The user cookie position in the database meta information
+** (see prepare.c#215), incremented by one, because first position is actually
+** the number of free pages in Btree (see vdbe.c#2521)
+*/
+static const int kUserCookie = 6;
 
 /*
 ** Set this global variable to 1 to enable tracing using the TRACE
@@ -6422,3 +6428,31 @@ int sqlite3Poison(sqlite3 *db){
 }
 
 #endif
+
+int sqlite3_get_user_version(sqlite3 *db, unsigned int *piUserVersion) {
+  Btree *bt;
+
+  if( db==NULL ) return SQLITE_ERROR;
+  if( db->nDb<1 ) return SQLITE_ERROR;
+
+  /* Grab main database. */
+  bt = db->aDb[0].pBt;
+  /* Because sqlite3BtreeGetMeta sets a table read lock, it is safe to use
+  ** without explicit read transaction.
+  */
+  return sqlite3BtreeGetMeta(bt, kUserCookie, piUserVersion);
+}
+
+int sqlite3_set_user_version(sqlite3 *db, unsigned int iUserVersion) {
+  Btree *bt;
+
+  if( db==NULL ) return SQLITE_ERROR;
+  if( db->nDb<1 ) return SQLITE_ERROR;
+
+  bt = db->aDb[0].pBt;
+
+  /* If called outside of a transaction, report misuse. */
+  if( bt->inTrans!=TRANS_WRITE ) return SQLITE_MISUSE;
+
+  return sqlite3BtreeUpdateMeta(bt, kUserCookie, iUserVersion);
+}

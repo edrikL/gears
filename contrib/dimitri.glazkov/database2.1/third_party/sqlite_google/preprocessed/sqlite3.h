@@ -2666,6 +2666,25 @@ int sqlite3_blob_read(sqlite3_blob *, void *z, int n, int iOffset);
 int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 
 /*
+** Gears-specific: Read User Version Value
+**
+** This function reads the user version cookie and sets the value of 
+** user_version to it.
+**
+** Returns SQLITE_OK on success. Otherwise, an error code is returned
+*/
+int sqlite3_get_user_version(sqlite3*, unsigned int *piUserVersion);
+ 
+/*
+** Gears-specific: Write User Version Value
+**
+** This function writes the user version cookie.
+**
+** returns SQLITE_OK on success. Otherwise, an error code is returned
+*/
+int sqlite3_set_user_version(sqlite3*, unsigned int iUserVersion);
+
+/*
 ** Undo the hack that converts floating point types to integer for
 ** builds on processors without floating point support.
 */
