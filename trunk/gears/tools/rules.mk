@@ -47,6 +47,7 @@ INSTALLERS_OUTDIR          = $(OUTDIR)/installers
 FF2_OUTDIR                 = $(OUTDIR)/$(OS)-$(ARCH)/ff2
 FF3_OUTDIR                 = $(OUTDIR)/$(OS)-$(ARCH)/ff3
 IE_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/ie
+NONE_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/none
 NPAPI_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/npapi
 SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
@@ -233,6 +234,10 @@ else
 	$(MAKE) genheaders BROWSER=FF3
 	$(MAKE) modules    BROWSER=FF3
 
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
+
 	$(MAKE) installers
 
   else
@@ -249,6 +254,10 @@ else
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
 
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
+
 	$(MAKE) installers
 
   else
@@ -256,6 +265,10 @@ else
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
+
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
 
 	$(MAKE) installers
   else
@@ -272,6 +285,10 @@ else
 	$(MAKE) prereqs    BROWSER=SF
 	$(MAKE) genheaders BROWSER=SF
 	$(MAKE) modules    BROWSER=SF
+
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
 
 	$(MAKE) installers
   endif
@@ -318,37 +335,43 @@ modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE)
 endif
 
 # OS-specific targets.
-ifeq ($(OS),linux)
-installers:: $(FFMERGED_INSTALLER_XPI)
-endif
-
-ifeq ($(OS),osx)
-prereqs:: $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(OSX_LAUNCHURL_EXE)
-installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
-endif
-
+# Note that the 'prereqs' and 'modules' targets should only be built
+# when BROWSER is 'NONE'. 'installers' targets are built without any
+# BROWSER value set.
+ifeq ($(BROWSER), NONE)
 ifeq ($(OS),win32)
-installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
-endif
-
-ifeq ($(OS),wince)
-installers:: $(WINCE_INSTALLER_CAB)
-endif
-
-# All-platform targets.
-ifneq ($(OS),wince)
-ifneq ($(OS),android)
-# TODO(cprince): Get tools to link on WinCE.
-modules:: $(NOTIFIER_TEST_EXE) $(PERF_TOOL_EXE)
-endif
-endif
-
+modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
 # TODO(jianli): Extend notifier building to other platforms.
+modules:: $(CRASH_SENDER_EXE)
+endif
+ifneq ($(OS),wince)
+ifneq ($(OS),android)
+# TODO(cprince): Get tools to link on WinCE.
+modules:: $(PERF_TOOL_EXE)
+endif
+endif
+ifeq ($(OS),osx)
+prereqs:: $(OSX_LAUNCHURL_OUTDIR)
+modules:: $(OSX_LAUNCHURL_EXE)
+endif
+endif
+
+ifeq ($(OS),linux)
+installers:: $(FFMERGED_INSTALLER_XPI)
+else
+ifeq ($(OS),osx)
+installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
+else
 ifeq ($(OS),win32)
-modules:: $(CRASH_SENDER_EXE) $(NOTIFIER_EXE)
+installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
+else
+ifeq ($(OS),wince)
+installers:: $(WINCE_INSTALLER_CAB)
+endif
+endif
+endif
 endif
 
 clean::
@@ -458,7 +481,7 @@ $(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.m
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
 $(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.mm
 	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
 $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
@@ -506,6 +529,9 @@ $(FF3_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
+
+$(COMMON_OUTDIR)/%.res: %.rc
+	$(RC) $(RCFLAGS) $<
 
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
@@ -635,11 +661,11 @@ $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(TH
 $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) advapi32.lib shell32.lib wininet.lib
 
-$(NOTIFIER_EXE): $(NOTIFIER_OBJS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) gdiplus.lib
+$(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
 
 $(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS) $(NOTIFIER_LIBS)
 
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
@@ -752,7 +778,6 @@ $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
 # Copy the InputManager.
 	cp "$(SF_INPUTMANAGER_EXE)" "$@/GearsEnabler.bundle/Contents/MacOS/"
 	/usr/bin/touch -c $@/GearsEnabler.bundle
-
 
 WIN32_INSTALLER_WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
 $(WIN32_INSTALLER_MSI): $(WIN32_INSTALLER_WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_INSTALLER_XPI)

@@ -45,6 +45,7 @@ class Notification : public Serializable {
   void CopyFrom(const Notification& from) {
     version_ = from.version_;
     title_ = from.title_;
+    subtitle_ = from.subtitle_;
     icon_ = from.icon_;
     service_ = from.service_;
     id_ = from.id_;
@@ -60,6 +61,7 @@ class Notification : public Serializable {
   virtual bool Serialize(Serializer *out) {
     out->WriteInt(version_);
     out->WriteString(title_.c_str());
+    out->WriteString(subtitle_.c_str());
     out->WriteString(icon_.c_str());
     out->WriteString(service_.c_str());
     out->WriteString(id_.c_str());
@@ -73,6 +75,7 @@ class Notification : public Serializable {
     if (!in->ReadInt(&version_) ||
         version_ != kNotificationVersion ||
         !in->ReadString(&title_) ||
+        !in->ReadString(&subtitle_) ||
         !in->ReadString(&icon_) ||
         !in->ReadString(&service_) ||
         !in->ReadString(&id_) ||
@@ -98,6 +101,7 @@ class Notification : public Serializable {
   }
 
   const std::string16& title() const { return title_; }
+  const std::string16& subtitle() const { return subtitle_; }
   const std::string16& icon() const { return icon_; }
   const std::string16& service() const { return service_; }
   const std::string16& id() const { return id_; }
@@ -106,6 +110,7 @@ class Notification : public Serializable {
   int64 display_until_time_ms() const { return display_until_time_ms_; }
 
   void set_title(const std::string16& title) { title_ = title; }
+  void set_subtitle(const std::string16& subtitle) { subtitle_ = subtitle; }
   void set_icon(const std::string16& icon) { icon_ = icon; }
   void set_service(const std::string16& service) { service_ = service; }
   void set_id(const std::string16& id) { id_ = id; }
@@ -120,18 +125,23 @@ class Notification : public Serializable {
   }
 
  private:
-  // Bump up the following version number if you make any change to the
-  // Notification class.
-  static const int kNotificationVersion = 1;
+  static const int kNotificationVersion = 3;
 
+  // NOTE: Increase the kNotificationVersion every time the serialization is
+  // going to produce different result. This most likely includes any change
+  // to data members below.
   int version_;
   std::string16 title_;
+  std::string16 subtitle_;
   std::string16 icon_;
   std::string16 id_;
   std::string16 service_;
   std::string16 description_;
   int64 display_at_time_ms_;
   int64 display_until_time_ms_;
+  // NOTE: Increase the kNotificationVersion every time the serialization is
+  // going to produce different result. This most likely includes any change
+  // to data members above.
 
   DISALLOW_EVIL_CONSTRUCTORS(Notification);
 };

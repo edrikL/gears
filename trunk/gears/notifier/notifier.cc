@@ -63,17 +63,6 @@ bool Notifier::Initalize() {
   return true;
 }
 
-int Notifier::Run() {
-  while (running_) {
-#if defined(WIN32) || defined(WINCE)
-    Sleep(100);
-#elif defined(LINUX) || defined(MAC)
-    sched_yield();
-#endif
-  }
-  return 0;
-}
-
 void Notifier::Terminate() {
 }
 
@@ -111,27 +100,6 @@ void Notifier::AddNotification(const Notification *notification) {
 
 void Notifier::RemoveNotification(const std::string16 &notification_id) {
   LOG(("Remove notification %S\n", notification_id.c_str()));
-}
-
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
-  int argc;
-  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-  if (!argv) { return __LINE__; }  // return line as a ghetto error code
-  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
-
-  LOG(("Gears Notifier started.\n"));
-
-  Notifier notifier;
-
-  int retval = -1;
-  if (notifier.Initalize()) {
-    retval = notifier.Run();
-    notifier.Terminate();
-  }
-
-  LOG(("Gears Notifier terminated.\n"));
-
-  return retval;
 }
 
 #endif  // OFFICIAL_BUILD

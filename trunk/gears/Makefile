@@ -1107,6 +1107,9 @@ NOTIFIER_CORE	+= \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		system_linux.cc \
+		system_osx.cc \
+		system_win32.cc \
 		$(NULL)
 
 
@@ -1114,16 +1117,35 @@ NOTIFIER_CPPSRCS += \
 		$(GLINT_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		notifier.cc \
+		notifier_linux.cc \
+		notifier_osx.cc \
+		notifier_win32.cc \
 		$(NULL)
 
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 
+ifeq ($(OS),win32)
+COMMON_VPATH	+= \
+		notifier/resources \
+		$(NULL)
+
+NOTIFIER_LINK_EXTRAS += \
+		$(COMMON_OUTDIR)/notifier.res \
+		$(NULL)
+
+NOTIFIER_LIBS 	+= \
+		gdiplus.lib \
+		$(NULL)
+
+endif
+
 #-----------------------------------------------------------------------------
 # notifier_test
 
 NOTIFIER_TEST_CPPSRCS += \
+		$(GLINT_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		balloon_collection_test.cc \
 		notification_manager_test.cc \
