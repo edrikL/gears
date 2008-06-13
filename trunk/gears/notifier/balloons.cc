@@ -86,7 +86,7 @@ Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
   return NULL;
 }
 
-void BalloonCollection::Show(const Notification &notification) {
+void BalloonCollection::Show(const GearsNotification &notification) {
   Balloon *balloon = FindBalloon(notification.service(),
                                  notification.id(),
                                  false);  // no remove
@@ -101,7 +101,7 @@ void BalloonCollection::Show(const Notification &notification) {
   observer_->OnBalloonSpaceChanged();
 }
 
-bool BalloonCollection::Update(const Notification &notification) {
+bool BalloonCollection::Update(const GearsNotification &notification) {
   Balloon *balloon = FindBalloon(notification.service(),
                                  notification.id(),
                                  false);  // no remove
@@ -161,7 +161,7 @@ void BalloonCollection::RemoveFromUI(Balloon *balloon) {
   container->RemoveNode(balloon->ui_root());
 }
 
-Balloon::Balloon(const Notification &from) : ui_root_(NULL) {
+Balloon::Balloon(const GearsNotification &from) : ui_root_(NULL) {
   notification_.CopyFrom(from);
 }
 

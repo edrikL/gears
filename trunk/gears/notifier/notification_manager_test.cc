@@ -75,7 +75,7 @@ BalloonCollectionMock::~BalloonCollectionMock() {
               STRING16(L"Not enough delete calls done."));
 }
 
-void BalloonCollectionMock::Show(const Notification &notification) {
+void BalloonCollectionMock::Show(const GearsNotification &notification) {
   NotificationId id(notification.service(), notification.id());
   TEST_ASSERT(displayed_.find(id) == displayed_.end(),
               STRING16(L"Already showing notification."));
@@ -86,7 +86,7 @@ void BalloonCollectionMock::Show(const Notification &notification) {
   displayed_[id] = 1;
 }
 
-bool BalloonCollectionMock::Update(const Notification &notification) {
+bool BalloonCollectionMock::Update(const GearsNotification &notification) {
   NotificationId id(notification.service(), notification.id());
   if (displayed_.find(id) == displayed_.end()) {
     return false;
@@ -161,7 +161,7 @@ void TestNotificationManager() {
   balloon_collection->set_has_space(false);
 
   // Add a notification when there is no space.
-  Notification notification1;
+  GearsNotification notification1;
   notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
   notification1.set_id(STRING16(L"1"));
   manager.Add(notification1);
@@ -180,7 +180,7 @@ void TestNotificationManager() {
   balloon_collection->set_has_space(true);
   activity.set_user_mode(USER_AWAY_MODE);
 
-  Notification notification2;
+  GearsNotification notification2;
   notification2.set_service(STRING16(L"http://gears.google.com/MyService"));
   notification2.set_id(STRING16(L"2"));
   manager.Add(notification2);
@@ -244,7 +244,7 @@ void TestNotificationManagerDelay() {
   balloon_collection->set_has_space(true);
 
   // Add a notification when there is no space.
-  Notification notification1;
+  GearsNotification notification1;
   notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
   notification1.set_id(STRING16(L"1"));
   notification1.set_display_at_time_ms(GetCurrentTimeMillis() + 500);

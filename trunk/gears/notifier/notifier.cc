@@ -46,7 +46,7 @@ Notifier::Notifier()
 }
 
 bool Notifier::Initalize() {
-  Notification::RegisterAsSerializable();
+  GearsNotification::RegisterAsSerializable();
   IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
   if (!ipc_message_queue) {
     return false;
@@ -71,15 +71,15 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
                                 const IpcMessageData *message_data) {
   switch (message_type) {
     case kDesktop_AddNotification: {
-      const Notification *notification =
-          static_cast<const Notification*>(message_data);
+      const GearsNotification *notification =
+          static_cast<const GearsNotification*>(message_data);
       AddNotification(notification);
       break;
     }
 
     case kDesktop_RemoveNotification: {
-      const Notification *notification =
-          static_cast<const Notification*>(message_data);
+      const GearsNotification *notification =
+          static_cast<const GearsNotification*>(message_data);
       RemoveNotification(notification->id());
       break;
     }
@@ -90,7 +90,7 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
   }
 }
 
-void Notifier::AddNotification(const Notification *notification) {
+void Notifier::AddNotification(const GearsNotification *notification) {
   assert(notification);
 
   LOG(("Add notification %S - %S\n",

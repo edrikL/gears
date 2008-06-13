@@ -47,7 +47,7 @@ typedef std::deque<QueuedNotification*> QueuedNotifications;
 // notification is waiting to be displayed.
 class QueuedNotification {
  public:
-  QueuedNotification(const Notification &notification)
+  QueuedNotification(const GearsNotification &notification)
       : manager_(NULL),
         user_delayed_(false) {
     notification_.CopyFrom(notification);
@@ -57,8 +57,8 @@ class QueuedNotification {
     // TODO(levin): cancel the timer here
   }
 
-  const Notification &notification() const { return notification_; }
-  Notification *mutable_notification()  { return &notification_; }
+  const GearsNotification &notification() const { return notification_; }
+  GearsNotification *mutable_notification()  { return &notification_; }
 
   bool is_user_delayed() const { return user_delayed_; }
 
@@ -90,7 +90,7 @@ class QueuedNotification {
         reinterpret_cast<QueuedNotification*>(cookie);
     assert(queued_notification && queued_notification->manager_);
 
-    const Notification &notification = queued_notification->notification();
+    const GearsNotification &notification = queued_notification->notification();
 
     queued_notification->manager_->MoveFromDelayedToShowQueue(
         notification.service(),
@@ -100,7 +100,7 @@ class QueuedNotification {
     queued_notification->CancelTimer();
   }
 
-  Notification notification_;
+  GearsNotification notification_;
   NotificationManager *manager_;
   bool user_delayed_;
   DISALLOW_EVIL_CONSTRUCTORS(QueuedNotification);
@@ -160,14 +160,14 @@ QueuedNotification *NotificationManager::Find(
   return FindNotification(service, id, and_remove, &delayed_queue_);
 }
 
-void NotificationManager::AddWithDelay(const Notification &notification,
+void NotificationManager::AddWithDelay(const GearsNotification &notification,
                                        int delay_ms) {
   QueuedNotification *queued_notification =
       new QueuedNotification(notification);
   AddToDelayedQueue(queued_notification, delay_ms, true);
 }
 
-void NotificationManager::Add(const Notification &notification) {
+void NotificationManager::Add(const GearsNotification &notification) {
   LOG_F(("service: %s, id: %s", notification.service().c_str(),
          notification.id().c_str()));
   // First, try to update the notification in the display

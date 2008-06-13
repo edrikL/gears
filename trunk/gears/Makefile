@@ -1078,6 +1078,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notification.cc \
 		$(NULL)
 
 SF_CPPSRCS += \
@@ -1101,6 +1102,7 @@ NOTIFIER_CORE	+= \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notification.cc \
 		serialization.cc \
 		stopwatch.cc \
 		stopwatch_posix.cc \
