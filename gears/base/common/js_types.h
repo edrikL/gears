@@ -325,6 +325,7 @@ bool StringToJsToken(JsContextPtr context, const char16 *value,
                      JsScopedToken *out);
 bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out);
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out);
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out);
 
 #if BROWSER_FF
 

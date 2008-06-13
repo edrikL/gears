@@ -1263,6 +1263,11 @@ bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   *out = JSVAL_NULL;
   return true;
 }
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  *out = JSVAL_VOID;
+  return true;
+}
 #elif BROWSER_IE
 
 bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out) {
@@ -1507,6 +1512,13 @@ bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   VARIANT null_variant;
   null_variant.vt = VT_NULL;
   *out = null_variant;
+  return true;
+}
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  VARIANT undefined_variant;
+  undefined_variant.vt = VT_EMPTY;
+  *out = undefined_variant;
   return true;
 }
 
@@ -1782,6 +1794,11 @@ bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
 
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   out->ResetToNull();
+  return true;
+}
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  out->Reset();
   return true;
 }
 
