@@ -22,6 +22,10 @@ out of scope, instead of doing a delete or delete[], it calls free().
 scoped_ptr_malloc<char> is likely to see much more use than any other
 specializations.
 
+"typedef char type_must_be_complete[sizeof(T)];" was removed from 
+scoped_ptr_malloc because this condition interfered with using scoped_ptr_malloc
+in places, and this condition isn't necessary.
+
 release() added in by Spencer Kimball of Google. Use this to conditionally
 transfer ownership of a heap-allocated object to the caller, usually on
 method success.
