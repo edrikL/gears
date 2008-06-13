@@ -54,6 +54,13 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 var TEST_TIMEOUT_SECONDS = 4 * 60 * 1000;
 var suites = [];
 
+if (!isSafari && !isWince) {
+  var audioSuite = new TestSuite('Audio');
+  audioSuite.addFile('../testcases/audio_tests.js', 
+                     {useWorker: true, useIFrame: true});
+  suites.push(audioSuite);
+}
+
 if (!isWince && !isOfficial) {
   var consoleSuite = new TestSuite('Console');
   consoleSuite.addFile('../testcases/console_tests.js',
@@ -96,6 +103,13 @@ if (!isSafari & !isWince) {
   suites.push(imagingSuite);
 }
 
+var internalTestSuite = new TestSuite('Internal_Tests');
+internalTestSuite.addFile('../testcases/internal_tests.js',
+                          {useWorker: true, useIFrame: true});
+internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
+                          {useWorker: true, useIFrame: true});
+suites.push(internalTestSuite);
+
 var localServerSuite = new TestSuite('LocalServer');
 localServerSuite.addFile('../testcases/localserver_tests.js',
                          {useWorker: true, useIFrame: true});
@@ -103,24 +117,17 @@ localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
 suites.push(localServerSuite);
 
+if (!isOfficial && !isSafari & !isWince) {
+  var notifierSuite = new TestSuite('Notifier');
+  notifierSuite.addFile('../testcases/notifier_tests.js',
+      {useWorker: false, useIFrame: true});
+  suites.push(notifierSuite);
+}
+
 var timerSuite = new TestSuite('Timer');
 timerSuite.addFile('../testcases/timer_tests.js', 
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
-
-if (!isSafari && !isWince) {
-  var audioSuite = new TestSuite('Audio');
-  audioSuite.addFile('../testcases/audio_tests.js', 
-                     {useWorker: true, useIFrame: true});
-  suites.push(audioSuite);
-}
-
-var internalTestSuite = new TestSuite('Internal_Tests');
-internalTestSuite.addFile('../testcases/internal_tests.js',
-                          {useWorker: true, useIFrame: true});
-internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
-                          {useWorker: true, useIFrame: true});
-suites.push(internalTestSuite);
 
 var workerPoolSuite = new TestSuite('WorkerPool');
 workerPoolSuite.addFile('../testcases/workerpool_tests.js',
