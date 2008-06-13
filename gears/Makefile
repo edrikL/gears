@@ -159,7 +159,7 @@ GLINT_VPATH += \
 		../third_party/glint/posix \
 		$(NULL)
 
-GLINT_CPPSRCS = \
+GLINT_CPPSRCS += \
 		linux.cc \
 		posix.cc \
 		formatted_text.cc \

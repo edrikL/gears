@@ -248,7 +248,7 @@ DLLFLAGS += -lpthread -lm
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS)
+EXEFLAGS = $(SHARED_LINKFLAGS)  `pkg-config --libs gtk+-2.0`
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
