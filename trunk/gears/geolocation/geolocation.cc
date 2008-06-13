@@ -32,6 +32,7 @@
 
 #include "gears/geolocation/geolocation.h"
 
+#include <math.h>
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
@@ -751,10 +752,6 @@ static bool IsBetterFix(const Position &old_position,
   return new_position.horizontal_accuracy < old_position.horizontal_accuracy;
 }
 
-static double abs(double x) {
-  return x >= 0.0 ? x : -x;
-}
-
 // TODO(steveblock): Do something more intelligent here.
 static bool PositionHasChanged(const Position &old_position,
                                const Position &new_position) {
@@ -767,8 +764,8 @@ static bool PositionHasChanged(const Position &old_position,
   }
   // Correctly calculating the distance between two positions isn't necessary
   // given the small distances we're interested in.
-  double delta = abs(new_position.latitude - old_position.latitude) +
-                 abs(new_position.longitude - old_position.longitude);
+  double delta = fabs(new_position.latitude - old_position.latitude) +
+                 fabs(new_position.longitude - old_position.longitude);
   // Convert to metres. 1 second of arc of latitude (or longitude at the
   // equator) is 1 nautical mile or 1852m.
   delta *= 60 * 1852;
