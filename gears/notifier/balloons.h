@@ -68,23 +68,37 @@ class BalloonCollectionInterface {
 // Glint classes
 namespace glint {
 class Node;
-class Row;
+class RootUI;
 }
 
 // Represents a Notification on the screen.
-// TODO(dimich): actually add UI
 class Balloon {
  public:
   explicit Balloon(const Notification &from);
   ~Balloon();
-  const Notification &notification() {
+
+  const Notification &notification() const {
     return notification_;
   }
+
   Notification *mutable_notification() {
     return &notification_;
   }
+
+  glint::Node *ui_root() {
+    if (!ui_root_) {
+      ui_root_ = CreateTree();
+    }
+    return ui_root_;
+  }
+
+  void UpdateUI();
+
  private:
+  glint::Node *CreateTree();
+  bool SetTextField(const char *id, const std::string16 &text);
   Notification notification_;
+  glint::Node *ui_root_;
   DISALLOW_EVIL_CONSTRUCTORS(Balloon);
 };
 
@@ -106,11 +120,13 @@ class BalloonCollection : public BalloonCollectionInterface {
   Balloon *FindBalloon(const std::string16 &service,
                        const std::string16 &id,
                        bool and_remove);
+  void AddToUI(Balloon *balloon);
+  void RemoveFromUI(Balloon *balloon);
+  void EnsureRoot();
 
   Balloons balloons_;
   BalloonCollectionObserver *observer_;
-  glint::Node *root_node_;
-  glint::Row *balloon_container_;
+  glint::RootUI *root_ui_;
   bool has_space_;
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollection);
 };
