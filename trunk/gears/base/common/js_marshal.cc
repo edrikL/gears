@@ -213,6 +213,11 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
       mjt->type_ = JSPARAM_NULL;
       break;
     }
+    case JSPARAM_UNDEFINED: {
+      mjt.reset(new MarshaledJsToken());
+      mjt->type_ = JSPARAM_UNDEFINED;
+      break;
+    }
     default: {
       *error_message_out = STRING16(L"Cannot marshal an arbitrary token.");
       break;
@@ -287,6 +292,10 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_NULL: {
       success = NullToJsToken(js_runner->GetContext(), out);
+      break;
+    }
+    case JSPARAM_UNDEFINED: {
+      success = UndefinedToJsToken(js_runner->GetContext(), out);
       break;
     }
     case JSPARAM_UNKNOWN: {
