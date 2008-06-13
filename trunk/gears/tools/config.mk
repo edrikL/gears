@@ -368,7 +368,8 @@ EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
-TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
+# We also filter out empty lines since ld chokes on them.
+TRANSLATE_LINKER_FILE_LIST = egrep '.+' | tr " " "\n"
 EXT_LINKER_CMD_FLAG = -filelist 
 
 GECKO_SDK = $(GECKO_BASE)/osx
