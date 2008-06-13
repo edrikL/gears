@@ -33,6 +33,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #endif  // !BROWSER_NONE
+#include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
 
 #if !BROWSER_NONE
