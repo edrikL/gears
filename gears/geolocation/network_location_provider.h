@@ -50,9 +50,8 @@ class NetworkLocationProvider
   virtual ~NetworkLocationProvider();
 
   // LocationProviderBase implementation.
-  virtual void SetListener(
-      LocationProviderBase::ListenerInterface *listener);
   virtual bool GetCurrentPosition();
+  virtual void GetPosition(Position *position);
 
  private:
   // DeviceDataProviderBase::ListenerInterface implementation.
@@ -73,8 +72,8 @@ class NetworkLocationProvider
   // MakeRequestIfDataNowAvailable.
   bool MakeRequestImpl();
 
+  Mutex listeners_mutex_;
   NetworkLocationRequest *request_;
-  LocationProviderBase::ListenerInterface *listener_;
   RadioData radio_data_;
   WifiData wifi_data_;
   Mutex data_mutex_;
@@ -88,6 +87,9 @@ class NetworkLocationProvider
   std::string16 address_language_;
   AsyncWait *wait_;
   Mutex wait_mutex_;
+  bool is_in_progress_;
+  Mutex is_in_progress_mutex_;
+  Position position_;
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
 

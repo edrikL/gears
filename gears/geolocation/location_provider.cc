@@ -34,6 +34,30 @@
 
 #include "gears/geolocation/network_location_provider.h"
 
+void LocationProviderBase::AddListener(ListenerInterface *listener) {
+  assert(listener);
+  MutexLock lock(&listeners_mutex_);
+  listeners_.insert(listener);
+}
+
+void LocationProviderBase::RemoveListener(ListenerInterface *listener) {
+  assert(listener);
+  MutexLock lock(&listeners_mutex_);
+  ListenerSet::iterator iter = listeners_.find(listener);
+  if (iter != listeners_.end()) {
+    listeners_.erase(iter);
+  }
+}
+
+void LocationProviderBase::UpdateListeners() {
+  MutexLock lock(&listeners_mutex_);
+  for (ListenerSet::const_iterator iter = listeners_.begin();
+       iter != listeners_.end();
+       ++iter) {
+    (*iter)->LocationUpdateAvailable(this);
+  }
+}
+
 #ifdef USING_CCTESTS
 #include "gears/base/common/common.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
@@ -45,21 +69,19 @@ class MockLocationProvider : public LocationProviderBase {
   MockLocationProvider() {}
   virtual ~MockLocationProvider() {}
   // LocationProviderBase implementation.
-  virtual void SetListener(ListenerInterface *listener) {
-    assert(listener);
-    listener_ = listener;
-  }
   virtual bool GetCurrentPosition() {
-    Position position;
-    position.latitude = 54.0;
-    position.longitude = 0.0;
-    position.altitude = 0;
-    position.horizontal_accuracy = 1000;
-    position.vertical_accuracy = 10;
-    position.timestamp = GetCurrentTimeMillis();
     assert(listener_);
-    listener_->LocationUpdateAvailable(this, position);
+    listener_->LocationUpdateAvailable(this);
     return true;
+  }
+  virtual void GetPosition(Position *position) {
+    assert(position);
+    position->latitude = 54.0;
+    position->longitude = 0.0;
+    position->altitude = 0;
+    position->horizontal_accuracy = 1000;
+    position->vertical_accuracy = 10;
+    position->timestamp = GetCurrentTimeMillis();
   }
  private:
   LocationProviderBase::ListenerInterface *listener_;
