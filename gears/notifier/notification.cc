@@ -65,6 +65,7 @@ const std::string GearsNotification::kModuleName("Notification");
 #endif  // !BROWSER_NONE
 
 // TODO (jianli): use the one from cf_string_utils.h
+#ifdef OS_MACOSX
 bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   if (!str || !out16)
     return false;
@@ -83,6 +84,7 @@ bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   
   return true;
 }
+#endif  // OS_MACOSX
 
 std::string16 GenerateGuid() {
   std::string16 wide_guid_str;
