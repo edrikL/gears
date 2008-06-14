@@ -34,11 +34,22 @@
 #include <assert.h>
 
 #include "gears/notifier/balloons.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/notifier/system.h"
+#include "third_party/glint/include/color.h"
+#include "third_party/glint/include/column.h"
+#include "third_party/glint/include/nine_grid.h"
+#include "third_party/glint/include/root_ui.h"
+#include "third_party/glint/include/row.h"
+#include "third_party/glint/include/simple_text.h"
+
+static const char *kTitleId = "title_text";
+static const char *kSubtitleId = "subtitle_text";
+static const char *kBalloonContainer = "balloon_container";
 
 BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
   : observer_(observer),
-    root_node_(NULL),
-    balloon_container_(NULL),
+    root_ui_(NULL),
     has_space_(true) {
   assert(observer);
   observer_->OnBalloonSpaceChanged();
@@ -75,7 +86,7 @@ Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
   return NULL;
 }
 
-void BalloonCollection::Show(const Notification &notification) {
+void BalloonCollection::Show(const GearsNotification &notification) {
   Balloon *balloon = FindBalloon(notification.service(),
                                  notification.id(),
                                  false);  // no remove
@@ -84,17 +95,20 @@ void BalloonCollection::Show(const Notification &notification) {
   if (balloon)
     return;
 
-  balloons_.push_front(new Balloon(notification));
+  Balloon *new_balloon = new Balloon(notification);
+  balloons_.push_front(new_balloon);
+  AddToUI(new_balloon);
   observer_->OnBalloonSpaceChanged();
 }
 
-bool BalloonCollection::Update(const Notification &notification) {
+bool BalloonCollection::Update(const GearsNotification &notification) {
   Balloon *balloon = FindBalloon(notification.service(),
                                  notification.id(),
                                  false);  // no remove
   if (!balloon)
     return false;
   balloon->mutable_notification()->CopyFrom(notification);
+  balloon->UpdateUI();
   return true;
 }
 
@@ -106,18 +120,106 @@ bool BalloonCollection::Delete(const std::string16 &service,
   if (!balloon)
     return false;
 
+  RemoveFromUI(balloon);
   delete balloon;
 
   observer_->OnBalloonSpaceChanged();
   return true;
 }
 
-Balloon::Balloon(const Notification &from) {
+void BalloonCollection::EnsureRoot() {
+  if (root_ui_)
+    return;
+
+  root_ui_ = new glint::RootUI(true);  // topmost window
+  glint::Row *container = new glint::Row();
+  container->set_direction(glint::Row::BOTTOM_TO_TOP);
+  container->ReplaceDistribution("natural");
+  container->set_background(glint::Color(0x44444444));
+  container->set_id(kBalloonContainer);
+  root_ui_->set_root_node(container);
+}
+
+void BalloonCollection::AddToUI(Balloon *balloon) {
+  assert(balloon);
+  EnsureRoot();
+  glint::Row *container = static_cast<glint::Row*>(
+      root_ui_->FindNodeById(kBalloonContainer));
+  if (!container)
+    return;
+  container->AddChild(balloon->ui_root());
+}
+
+void BalloonCollection::RemoveFromUI(Balloon *balloon) {
+  assert(balloon);
+  if (!root_ui_)
+    return;
+  glint::Row *container = static_cast<glint::Row*>(
+      root_ui_->FindNodeById(kBalloonContainer));
+  if (!container)
+    return;
+  container->RemoveNode(balloon->ui_root());
+}
+
+Balloon::Balloon(const GearsNotification &from) : ui_root_(NULL) {
   notification_.CopyFrom(from);
 }
 
 Balloon::~Balloon() {
 }
 
+glint::Node *Balloon::CreateTree() {
+  glint::Node *root = new glint::Node();
+  root->set_min_width(300);
+  root->set_min_height(100);
+  glint::Transform offset;
+  offset.AddOffset(glint::Vector(250.0f, 250.0f));
+  root->set_transform(offset);
+
+  glint::NineGrid *background = new glint::NineGrid();
+  background->ReplaceImage("background.png");
+  background->set_center_height(10);
+  background->set_center_width(10);
+  background->set_shadow(true);
+  root->AddChild(background);
+
+  glint::Column *column = new glint::Column();
+  column->set_background(glint::Color(0xFFFF00));
+  root->AddChild(column);
+
+  glint::SimpleText *text = new glint::SimpleText();
+  text->set_id(kTitleId);
+  text->set_font_size(14);
+  glint::Rectangle margin;
+  margin.Set(10, 10, 10, 10);
+  text->set_margin(margin);
+  column->AddChild(text);
+
+  text = new glint::SimpleText();
+  text->set_id(kSubtitleId);
+  margin.Set(2, 3, 2, 3);
+  text->set_margin(margin);
+  column->AddChild(text);
+
+  return root;
+}
+
+bool Balloon::SetTextField(const char *id, const std::string16 &text) {
+  assert(id);
+  glint::SimpleText *text_node = static_cast<glint::SimpleText*>(
+      ui_root_->FindNodeById(id));
+  if (!text_node)
+    return false;
+  std::string text_utf8;
+  if (!String16ToUTF8(text.c_str(), &text_utf8))
+    return false;
+  text_node->set_text(text_utf8);
+  return true;
+}
+
+void Balloon::UpdateUI() {
+  SetTextField(kTitleId, notification_.title());
+  SetTextField(kSubtitleId, notification_.subtitle());
+}
 
 #endif  // OFFICIAL_BULID

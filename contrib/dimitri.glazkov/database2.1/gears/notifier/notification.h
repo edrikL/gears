@@ -29,83 +29,142 @@
   // The notification API has not been finalized for official builds.
 #else
 
+#include <vector>
+#if !BROWSER_NONE
+#include "gears/base/common/base_class.h"
+#endif
 #include "gears/base/common/serialization.h"
+#include "gears/base/common/string16.h"
+
+struct NotificationAction {
+  std::string16 text;
+  std::string16 url;
+};
 
 // Describes the information about a notification.
 // Note: do not forget to increase kNotificationVersion if you make any change
 // to this class.
-class Notification : public Serializable {
+class GearsNotification :
+#if !BROWSER_NONE
+    public ModuleImplBaseClassVirtual,
+#endif
+    public Serializable {
  public:
-  Notification()
-      : version_(kNotificationVersion),
-        display_at_time_ms_(0),
-        display_until_time_ms_(0) {
-  }
+  static const std::string kModuleName;
 
-  void CopyFrom(const Notification& from) {
-    version_ = from.version_;
-    title_ = from.title_;
-    icon_ = from.icon_;
-    service_ = from.service_;
-    id_ = from.id_;
-    description_ = from.description_;
-    display_at_time_ms_ = from.display_at_time_ms_;
-    display_until_time_ms_ = from.display_until_time_ms_;
-  }
+  GearsNotification();
+
+  //
+  // For JavaScript API
+  //
+
+#if !BROWSER_NONE
+  // IN: nothing
+  // OUT: string
+  void GetTitle(JsCallContext *context);
+
+  // IN: string
+  // OUT: nothing
+  void SetTitle(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: string
+  void GetIcon(JsCallContext *context);
+
+  // IN: string
+  // OUT: nothing
+  void SetIcon(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: string
+  void GetId(JsCallContext *context);
+
+  // IN: string
+  // OUT: nothing
+  void SetId(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: string
+  void GetSubtitle(JsCallContext *context);
+
+  // IN: string
+  // OUT: nothing
+  void SetSubtitle(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: string
+  void GetDescription(JsCallContext *context);
+
+  // IN: string
+  // OUT: nothing
+  void SetDescription(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: date
+  void GetDisplayAtTime(JsCallContext *context);
+
+  // IN: date
+  // OUT: nothing
+  void SetDisplayAtTime(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: date
+  void GetDisplayUntilTime(JsCallContext *context);
+
+  // IN: date
+  // OUT: nothing
+  void SetDisplayUntilTime(JsCallContext *context);
+
+  // IN: string text and string url
+  // OUT: nothing
+  void AddAction(JsCallContext *context);
+#endif  // !BROWSER_NONE
+
+  //
+  // Serializable interface
+  //
 
   virtual SerializableClassId GetSerializableClassId() {
     return SERIALIZABLE_DESKTOP_NOTIFICATION;
   }
+  virtual bool Serialize(Serializer *out);
 
-  virtual bool Serialize(Serializer *out) {
-    out->WriteInt(version_);
-    out->WriteString(title_.c_str());
-    out->WriteString(icon_.c_str());
-    out->WriteString(service_.c_str());
-    out->WriteString(id_.c_str());
-    out->WriteString(description_.c_str());
-    out->WriteInt64(display_at_time_ms_);
-    out->WriteInt64(display_until_time_ms_);
-    return true;
-  }
-
-  virtual bool Deserialize(Deserializer *in) {
-    if (!in->ReadInt(&version_) ||
-        version_ != kNotificationVersion ||
-        !in->ReadString(&title_) ||
-        !in->ReadString(&icon_) ||
-        !in->ReadString(&service_) ||
-        !in->ReadString(&id_) ||
-        !in->ReadString(&description_) ||
-        !in->ReadInt64(&display_at_time_ms_) ||
-        !in->ReadInt64(&display_until_time_ms_)) {
-      return false;
-    }
-    return true;
-  }
+  virtual bool Deserialize(Deserializer *in);
 
   static Serializable *New() {
-    return new Notification;
+    return new GearsNotification;
   }
 
   static void RegisterAsSerializable() {
     Serializable::RegisterClass(SERIALIZABLE_DESKTOP_NOTIFICATION, New);
   }
 
-  bool Matches(const std::string16 &service,
-               const std::string16 &id) const {
+  //
+  // Helpers
+  //
+
+  void CopyFrom(const GearsNotification& from);
+
+  bool Matches(const std::string16 &service, const std::string16 &id) const {
     return service_ == service && id_ == id;
   }
 
+  //
+  // Accessors
+  //
+
   const std::string16& title() const { return title_; }
+  const std::string16& subtitle() const { return subtitle_; }
   const std::string16& icon() const { return icon_; }
   const std::string16& service() const { return service_; }
   const std::string16& id() const { return id_; }
   const std::string16& description() const { return description_; }
   int64 display_at_time_ms() const { return display_at_time_ms_; }
   int64 display_until_time_ms() const { return display_until_time_ms_; }
+  const std::vector<NotificationAction> &actions() const { return actions_; }
 
   void set_title(const std::string16& title) { title_ = title; }
+  void set_subtitle(const std::string16& subtitle) { subtitle_ = subtitle; }
   void set_icon(const std::string16& icon) { icon_ = icon; }
   void set_service(const std::string16& service) { service_ = service; }
   void set_id(const std::string16& id) { id_ = id; }
@@ -118,22 +177,29 @@ class Notification : public Serializable {
   void set_display_until_time_ms(int64 display_until_time_ms) {
     display_until_time_ms_ = display_until_time_ms;
   }
+  std::vector<NotificationAction> *mutable_actions() { return &actions_; }
 
  private:
-  // Bump up the following version number if you make any change to the
-  // Notification class.
-  static const int kNotificationVersion = 1;
+  static const int kNotificationVersion = 4;
 
+  // NOTE: Increase the kNotificationVersion every time the serialization is
+  // going to produce different result. This most likely includes any change
+  // to data members below.
   int version_;
   std::string16 title_;
+  std::string16 subtitle_;
   std::string16 icon_;
   std::string16 id_;
   std::string16 service_;
   std::string16 description_;
   int64 display_at_time_ms_;
   int64 display_until_time_ms_;
+  std::vector<NotificationAction> actions_;
+  // NOTE: Increase the kNotificationVersion every time the serialization is
+  // going to produce different result. This most likely includes any change
+  // to data members above.
 
-  DISALLOW_EVIL_CONSTRUCTORS(Notification);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsNotification);
 };
 
 #endif  // OFFICIAL_BUILD

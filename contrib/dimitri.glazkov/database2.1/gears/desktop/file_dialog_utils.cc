@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// File picker is not ready for official builds
-#else
-
 #include "gears/desktop/file_dialog_utils.h"
 
 #include "gears/base/common/base_class.h"
@@ -113,9 +109,6 @@ bool FileDialogUtils::FilesToJsObjectArray(
       return false;
     }
 
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
     scoped_refptr<GearsBlob> gears_blob;
     CreateModule<GearsBlob>(module.GetJsRunner(), &gears_blob);
     if (!gears_blob->InitBaseFromSibling(&module)) {
@@ -128,7 +121,6 @@ bool FileDialogUtils::FilesToJsObjectArray(
       return false;
     }
     gears_blob->Reset(blobs[i].get());
-#endif  // OFFICIAL_BUILD
 
     // JsArray takes the javascript token out of JsObject. Hence, the JsObject
     // wrapper around the token still needs to be deleted. This is why obj.get()
@@ -141,5 +133,3 @@ bool FileDialogUtils::FilesToJsObjectArray(
 
   return true;
 }
-
-#endif  // OFFICIAL_BUILD

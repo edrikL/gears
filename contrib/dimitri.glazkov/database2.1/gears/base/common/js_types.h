@@ -33,6 +33,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"  // for string16
 
+class JsRunnerInterface;
 // TODO(michaeln): Split into multiple browser specific files.
 
 #if BROWSER_FF
@@ -54,7 +55,9 @@ typedef nsresult JsNativeMethodRetval;
 typedef nsISupports IScriptable;
 
 // TODO(michaeln): compare string values rather than pointers?
-typedef std::equal_to<JsToken> JsTokenEqualTo;
+struct JsTokenEqualTo : public std::equal_to<JsToken> {
+  JsTokenEqualTo(JsRunnerInterface *js_runner) {}
+};
 
 #elif BROWSER_IE
 
@@ -75,6 +78,7 @@ typedef IDispatch IScriptable;
 // operator== is fine.  On IE, JsToken is a VARIANT, which does not have a
 // natural operator==, so we have to make one here.
 struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
+  JsTokenEqualTo(JsRunnerInterface *js_runner) {}
   bool operator()(const JsToken &x, const JsToken &y) const {
     // All we are looking for in this comparator is that different VARIANTs
     // will compare differently, but that the same IDispatch* (wrapped as a
@@ -175,6 +179,9 @@ typedef NPError JsNativeMethodRetval;
 typedef void* IScriptable;
 
 struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
+  JsTokenEqualTo(JsRunnerInterface *js_runner);
+  ~JsTokenEqualTo();
+
   bool operator()(const JsToken &x, const JsToken &y) const  {
     // All we are looking for in this comparator is that different NPVariants
     // will compare differently, but that the same NPObject* (wrapped as a
@@ -205,7 +212,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
                y.value.stringValue.UTF8Characters;
         break;
       case NPVariantType_Object:
-        return x.value.objectValue == y.value.objectValue;
+        return CompareObjects(x, y);
         break;
       default:
         // do nothing
@@ -213,6 +220,11 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
     }
     return false;
   }
+ private:
+  bool CompareObjects(const JsToken &x, const JsToken &y) const;
+
+  JsRunnerInterface *js_runner_;
+  NPObject *compare_func_;
 };
 
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
@@ -313,6 +325,7 @@ bool StringToJsToken(JsContextPtr context, const char16 *value,
                      JsScopedToken *out);
 bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out);
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out);
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out);
 
 #if BROWSER_FF
 
@@ -410,7 +423,6 @@ typedef void  JsNativeMethodRetval;
 
 class JsObject;
 struct JsParamToSend;
-class JsRunnerInterface;
 class ModuleImplBaseClass;
 
 class JsArray {

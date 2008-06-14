@@ -31,6 +31,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
 <head>
   <style type="text/css">
+    .text-alignment {
+      /* This is modified via a script for rtl languages. */
+      text-align:left;
+    }
+
 m4_include(ui/common/button.css)
 m4_include(ui/common/html_dialog.css)
     #icon {
@@ -122,13 +127,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="top">
+        <td class="text-alignment" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td id="header" width="100%" align="left" valign="middle"></td>
+        <td id="header" width="100%" class="text-alignment" valign="middle"></td>
       </tr>
     </table>
   </div>
@@ -174,7 +179,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="button-row-smartphone">
       <table cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="middle">
+        <td class="text-alignment" valign="middle">
           <a href="#" id="deny-permanently-link" onclick="denyShortcutPermanently(); return false;"></a>
         </td>
       </tr>
@@ -191,7 +196,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           does not support them.
           -->
 
-          <td width="50%" align="left" valign="middle">
+          <td width="50%" class="text-alignment" valign="middle">
             <input type="BUTTON" id="deny-permanently-button" onclick="denyShortcutPermanently(); return false;"></input>
           </td>
 
@@ -202,7 +207,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </td>
           </div>
 ~,~
-          <td width="100%" align="left" valign="middle">
+          <td width="100%" class="text-alignment" valign="middle">
             <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
           <td nowrap="true" align="right" valign="middle">

@@ -57,10 +57,17 @@
 #include "gears/geolocation/wifi_data_provider_win32.h"
 
 #include <windows.h>
-#include "gears/geolocation/wifi_data_provider_common.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/geolocation/wifi_data_provider_windows_common.h"
 
 // The time period, in milliseconds, between successive polls of the wifi data.
 static const int kPollingInterval = 1000;
+
+// Local function
+
+// Extracts data for an access point and converts to Gears format.
+static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
+                           AccessPointData *access_point_data);
 
 // DeviceDataProviderBase<WifiData>
 
@@ -212,15 +219,118 @@ void Win32WifiDataProvider::GetInterfaceDataWZC(
 
 void Win32WifiDataProvider::GetWLANFunctions(HINSTANCE wlan_library) {
   assert(wlan_library);
-  // TODO(steveblock): Implement this.
+  WlanOpenHandle_function_ = reinterpret_cast<WlanOpenHandleFunction>(
+      GetProcAddress(wlan_library, "WlanOpenHandle"));
+  WlanEnumInterfaces_function_ = reinterpret_cast<WlanEnumInterfacesFunction>(
+      GetProcAddress(wlan_library, "WlanEnumInterfaces"));
+  WlanGetNetworkBssList_function_ =
+      reinterpret_cast<WlanGetNetworkBssListFunction>(
+      GetProcAddress(wlan_library, "WlanGetNetworkBssList"));
+  WlanFreeMemory_function_ = reinterpret_cast<WlanFreeMemoryFunction>(
+      GetProcAddress(wlan_library, "WlanFreeMemory"));
+  WlanCloseHandle_function_ = reinterpret_cast<WlanCloseHandleFunction>(
+      GetProcAddress(wlan_library, "WlanCloseHandle"));
+  assert(WlanOpenHandle_function_ &&
+         WlanEnumInterfaces_function_ &&
+         WlanGetNetworkBssList_function_ &&
+         WlanFreeMemory_function_ &&
+         WlanCloseHandle_function_);
 }
 
 bool Win32WifiDataProvider::GetAccessPointDataWLAN(
     std::vector<AccessPointData> *data) {
   assert(data);
-  // TODO(steveblock): Implement this.
-  assert(false);
-  return false;
+
+  // Get the handle to the WLAN API.
+  DWORD negotiated_version;
+  HANDLE wlan_handle;
+  // We could be executing on either Windows XP or Windows Vista, so use the
+  // lower version of the client WLAN API. It seems that the negotiated version
+  // is the Vista version irrespective of what we pass!
+  static const int kXpWlanClientVersion = 1;
+  if ((*WlanOpenHandle_function_)(kXpWlanClientVersion,
+                                  NULL,
+                                  &negotiated_version,
+                                  &wlan_handle) != ERROR_SUCCESS) {
+    return false;
+  }
+
+  // Get the list of interfaces. WlanEnumInterfaces allocates interface_list.
+  WLAN_INTERFACE_INFO_LIST *interface_list;
+  if ((*WlanEnumInterfaces_function_)(wlan_handle, NULL, &interface_list) !=
+      ERROR_SUCCESS) {
+    return false;
+  }
+
+  // Go through the list of interfaces and get the data for each.
+  for (int i = 0; i < static_cast<int>(interface_list->dwNumberOfItems); ++i) {
+    if (!GetInterfaceDataWLAN(wlan_handle,
+                              interface_list->InterfaceInfo[i].InterfaceGuid,
+                              data)) {
+      return false;
+    }
+  }
+
+  // Free interface_list. 
+  (*WlanFreeMemory_function_)(interface_list);
+
+  // Close the handle.
+  if ((*WlanCloseHandle_function_)(wlan_handle, NULL) != ERROR_SUCCESS) {
+    return false;
+  }
+
+  return true;
+}
+
+// Appends the data for a single interface to the data vector. Returns the
+// number of access points found, or -1 on error.
+int Win32WifiDataProvider::GetInterfaceDataWLAN(
+    const HANDLE wlan_handle,
+    const GUID &interface_id,
+    std::vector<AccessPointData> *data) {
+  assert(data);
+  // WlanGetNetworkBssList allocates bss_list.
+  WLAN_BSS_LIST *bss_list;
+  if ((*WlanGetNetworkBssList_function_)(wlan_handle,
+                                         &interface_id,
+                                         NULL,   // Use all SSIDs.
+                                         DOT11_BSS_TYPE_UNUSED,
+                                         false,  // bSecurityEnabled - unused
+                                         NULL,   // reserved
+                                         &bss_list) != ERROR_SUCCESS) {
+    return -1;
+  }
+
+  int found = 0;
+  for (int i = 0; i < static_cast<int>(bss_list->dwNumberOfItems); ++i) {
+    AccessPointData access_point_data;
+    if (GetNetworkData(bss_list->wlanBssEntries[i], &access_point_data)) {
+      ++found;
+      data->push_back(access_point_data);
+    }
+  }
+
+  (*WlanFreeMemory_function_)(bss_list);
+
+  return found;
+}
+
+// Local function
+
+static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
+                           AccessPointData *access_point_data) {
+  assert(access_point_data);
+  access_point_data->mac_address = MacAddressAsString16(bss_entry.dot11Bssid);
+  access_point_data->radio_signal_strength = bss_entry.lRssi;
+  // bss_entry.dot11Ssid.ucSSID is not null-terminated.
+  UTF8ToString16(reinterpret_cast<const char*>(bss_entry.dot11Ssid.ucSSID),
+                 static_cast<ULONG>(bss_entry.dot11Ssid.uSSIDLength),
+                 &access_point_data->ssid);
+  // TODO(steveblock): Is it possible to get the following?
+  //access_point_data->signal_to_noise
+  //access_point_data->age
+  //access_point_data->channel
+  return true;
 }
 
 #endif  // WIN32 && !WINCE

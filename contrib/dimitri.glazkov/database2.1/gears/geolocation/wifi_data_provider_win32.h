@@ -30,6 +30,7 @@
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/thread.h"
 #include "gears/geolocation/wzcsapi.h"
+#include "gears/geolocation/wlanapi.h"
 
 class Win32WifiDataProvider
     : public DeviceDataProviderBase<WifiData>,
@@ -59,16 +60,26 @@ class Win32WifiDataProvider
   // Appends the data for a single interface to the data vector.
   void GetInterfaceDataWZC(const char16 *interface_guid,
                            std::vector<AccessPointData> *data);
-  
+
   // WLAN methods
   // Loads the required functions from the DLL.
   void GetWLANFunctions(HINSTANCE wlan_library);
   // Gets wifi data for all visible access points.
   bool GetAccessPointDataWLAN(std::vector<AccessPointData> *data);
+  int GetInterfaceDataWLAN(HANDLE wlan_handle,
+                           const GUID &interface_id,
+                           std::vector<AccessPointData> *data);
 
   // Function pointers for WZC
   WZCEnumInterfacesFunction WZCEnumInterfaces_function_;
   WZCQueryInterfaceFunction WZCQueryInterface_function_;
+
+  // Function pointers for WLAN
+  WlanOpenHandleFunction WlanOpenHandle_function_;
+  WlanEnumInterfacesFunction WlanEnumInterfaces_function_;
+  WlanGetNetworkBssListFunction WlanGetNetworkBssList_function_;
+  WlanFreeMemoryFunction WlanFreeMemory_function_;
+  WlanCloseHandleFunction WlanCloseHandle_function_;
 
   WifiData wifi_data_;
   Mutex data_mutex_;

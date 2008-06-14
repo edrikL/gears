@@ -519,9 +519,14 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     // For URL params we start an async fetch here.  The created thread will
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
-
+#ifdef OS_ANDROID
+    // TODO(jripley): remove once HTTP request is in.
+    LOG(("createWorkerFromUrl() doesn't yet work on Android"));
+    assert(false);
+    return false;
+#else
     if (!HttpRequest::Create(&wi->http_request)) { return false; }
-
+#endif
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
@@ -557,7 +562,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
       NULL));                 // variable to receive thread ID
   // 0 means thread creation error
   bool thread_succesfully_created = wi->thread_handle != 0;
-#elif defined(OS_MACOSX) || defined(LINUX)
+#elif defined(OS_MACOSX) || defined(LINUX) || defined(OS_ANDROID)
  bool thread_succesfully_created = true;
  if (pthread_create(&(wi->thread_id), NULL, JavaScriptThreadEntry, wi)) {
    thread_succesfully_created = false;
@@ -585,7 +590,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 // Creates the JS engine, then pumps messages for the thread.
 #ifdef WIN32
 unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
-#elif defined(OS_MACOSX) || defined(LINUX)
+#elif defined(OS_MACOSX) || defined(LINUX) || defined (OS_ANDROID)
 void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 #endif
   assert(args);
@@ -652,6 +657,8 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
       break;
     }
   }
+#elif defined(OS_ANDROID)
+  AndroidMessageLoop::Start();
 #elif defined(LINUX)
 #error "Not implemented for Linux yet"
 #endif
@@ -919,11 +926,15 @@ void PoolThreadsManager::ShutDown() {
         wi->script_signalled = true;
         wi->script_mutex.Unlock();
 
+#ifdef OS_ANDROID
+        AndroidMessageLoop::Stop(wi->thread_id);
+#else
         // Ensure the thread sees 'is_shutting_down_' by sending a dummy 
         // message, in case it is blocked waiting for messages.
         AsyncRouter::GetInstance()->CallAsync(
             wi->thread_id,
             new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
+#endif
       }
       // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
       // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt

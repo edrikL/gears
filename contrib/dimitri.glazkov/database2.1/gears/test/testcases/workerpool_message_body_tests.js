@@ -68,6 +68,13 @@ function testFundamentalTypeMessages() {
   wp.onmessage = function(text, sender, message) {
     assertEqual(testCases[numMessagesReceived], message.body,
                 'Incorrect message body');
+    // Regardless of the original type of the message sent, text (as in the
+    // first arg to onmessage) and message.text (the text property of the
+    // third arg to onmessage) should be a string, for backwards compatability.
+    assertEqual('string', typeof(text),
+                'Incorrect type for text');
+    assertEqual('string', typeof(message.text),
+                'Incorrect type for message.text');
     numMessagesReceived++;
     if (numMessagesReceived == testCases.length) {
       completeAsync();
@@ -252,18 +259,21 @@ function testNullElementMessageSucceeds() {
   wp.sendMessage([null, 1337, null], childId);
 }
 
-function testUndefinedElementMessageFails() {
+function testUndefinedElementMessageSucceeds() {
   startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
+  var undefined_value;
   wp.onmessage = function(text, sender, message) {
-    assert(false, 'Undefined element should not be sendable');
+    var mb = message.body;
+    assertEqual(3, mb.length, 'Incorrect message body');
+    assertEqual(undefined_value, mb[0], 'Incorrect message body');
+    assertEqual(1337, mb[1], 'Incorrect message body');
+    assertEqual(undefined_value, mb[2], 'Incorrect message body');
+    completeAsync();
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
-    wp.sendMessage([0, 1, 2, 3, , 5], childId);
-  }, null, 'Undefined element should not be sendable');
-  completeAsync();
+  wp.sendMessage([undefined_value, 1337, undefined_value], childId);
 }
 
 function testBlobMessageSucceeds() {

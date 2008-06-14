@@ -40,21 +40,24 @@ GearsAudio::~GearsAudio() {
 }
 
 void GearsAudio::GetError(JsCallContext *context) {
-  // TODO(aprasath): Right now gets only a stub error object.
-  // Implement module to get correct error state.
-  struct MediaError* error = new struct MediaError();
+  if (last_error_ == MediaConstants::MEDIA_NO_ERROR) {
+    context->SetReturnValue(JSPARAM_NULL, MediaConstants::MEDIA_NO_ERROR);
+    return;
+  }
+
   JsRunnerInterface* js_runner = this->GetJsRunner();
   scoped_ptr<JsObject> error_object(js_runner->NewObject());
   if (!error_object.get()) {
     context->SetException(STRING16(L"Failed to create new javascript object."));
   }
-  error_object->SetPropertyInt(STRING16(L"code"), error->code);
+
+  error_object->SetPropertyInt(STRING16(L"code"), last_error_);
   error_object->SetPropertyInt(STRING16(L"MEDIA_ERR_ABORTED"),
-                               error->MEDIA_ERR_ABORTED);
+                               MediaConstants::MEDIA_ERR_ABORTED);
   error_object->SetPropertyInt(STRING16(L"MEDIA_ERR_NETWORK"),
-                               error->MEDIA_ERR_NETWORK);
+                               MediaConstants::MEDIA_ERR_NETWORK);
   error_object->SetPropertyInt(STRING16(L"MEDIA_ERR_DECODE"),
-                               error->MEDIA_ERR_DECODE);
+                               MediaConstants::MEDIA_ERR_DECODE);
   context->SetReturnValue(JSPARAM_OBJECT, error_object.get());
 }
 

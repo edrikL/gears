@@ -109,7 +109,8 @@ private:
 
   MarshaledJsToken();
 
-  static bool CausesCycle(const JsToken &token,
+  static bool CausesCycle(JsRunnerInterface *js_runner,
+                          const JsToken &token,
                           JsTokenVector *object_stack,
                           std::string16 *error_message_out);
 

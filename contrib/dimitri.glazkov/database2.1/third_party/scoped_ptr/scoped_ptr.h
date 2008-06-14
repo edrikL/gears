@@ -285,13 +285,10 @@ class scoped_ptr_malloc {
   explicit scoped_ptr_malloc(T* p = 0): ptr(p) {}
 
   ~scoped_ptr_malloc() {
-    typedef char type_must_be_complete[sizeof(T)];
     free_((void*) ptr);
   }
 
   void reset(T* p = 0) {
-    typedef char type_must_be_complete[sizeof(T)];
-
     if (ptr != p) {
       free_((void*) ptr);
       ptr = p;

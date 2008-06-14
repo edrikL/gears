@@ -25,12 +25,8 @@
 
 #include "gears/base/common/http_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
-#ifdef OFFICIAL_BUILD
-// Blobs are not yet supported within official builds.
-#else  // OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
-#endif  // OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #import "gears/localserver/safari/http_request_delegate.h"
 

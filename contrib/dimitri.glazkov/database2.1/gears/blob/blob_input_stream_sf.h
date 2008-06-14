@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else  // OFFICIAL_BUILD
-
 #import <Foundation/NSStream.h>
 
 #include "gears/base/common/common.h"
@@ -63,5 +59,3 @@ class BlobInterface;
 - (BOOL)hasBytesAvailable;
 
 @end
-
-#endif  // OFFICIAL_BUILD

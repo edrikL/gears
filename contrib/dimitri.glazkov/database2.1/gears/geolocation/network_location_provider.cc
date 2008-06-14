@@ -82,7 +82,8 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
     : timestamp_(-1),
       is_radio_data_complete_(false),
       is_wifi_data_complete_(false),
-      wait_(NULL) {
+      wait_(NULL),
+      is_in_progress_(false) {
   request_ = NetworkLocationRequest::Create(url, host_name, this);
   assert(request_);
   // Get the device data providers. The first call to Register will create the
@@ -108,18 +109,25 @@ NetworkLocationProvider::~NetworkLocationProvider() {
   wifi_data_provider_->Unregister(this);
 }
 
-// LocationProviderInterface implementation.
-
-void NetworkLocationProvider::SetListener(
-    LocationProviderBase::ListenerInterface *listener) {
-  assert(listener);
-  listener_ = listener;
-}
+// LocationProviderBase implementation.
 
 bool NetworkLocationProvider::GetCurrentPosition() {
   {
+    MutexLock lock(&is_in_progress_mutex_);
+    if (is_in_progress_) {
+      // We already have a fix request in progress. The caller will be called
+      // back when the current request returns, so there's nothing to do.
+      return true;
+    }
+    is_in_progress_ = true;
+  }
+  {
     MutexLock data_mutex_lock(&data_mutex_);
-    // If we already have a complete set of device data, make the request.
+    // Get the device data.
+    is_radio_data_complete_ = radio_data_provider_->GetData(&radio_data_);
+    is_wifi_data_complete_ = wifi_data_provider_->GetData(&wifi_data_);
+    timestamp_ = GetCurrentTimeMillis();
+    // If we have a complete set of device data, make the request.
     if (is_radio_data_complete_ && is_wifi_data_complete_) {
       if (!MakeRequestImpl()) {
         // This should only fail if a request is already in progress. This
@@ -140,6 +148,11 @@ bool NetworkLocationProvider::GetCurrentPosition() {
   assert(!wait_);
   wait_ = new AsyncWait(this);
   return true;
+}
+
+void NetworkLocationProvider::GetPosition(Position *position) {
+  assert(position);
+  *position = position_;
 }
 
 // DeviceDataProviderInterface::ListenerInterface implementation.
@@ -166,10 +179,15 @@ void NetworkLocationProvider::DeviceDataUpdateAvailable(
 
 void NetworkLocationProvider::LocationResponseAvailable(
     const Position &position) {
-  // If we have a listener, let them know that we now have a position available.
-  if (listener_) {
-    listener_->LocationUpdateAvailable(this, position);
-  }
+  // Set is_in_progress_ to false before we call back, so that the callback can
+  // make the next fix request.
+  is_in_progress_mutex_.Lock();
+  is_in_progress_ = false;
+  is_in_progress_mutex_.Unlock();
+  // Cache the position
+  position_ = position;
+  // Let listeners know that we now have a position available.
+  UpdateListeners();
 }
 
 // Other methods.
@@ -182,11 +200,6 @@ bool NetworkLocationProvider::MakeRequest() {
   // and have just deleted the wait object. In this case, there's nothing to do.
   if (wait_) {
     wait_ = NULL;
-    if (-1 == timestamp_) {
-      // If we've never received a callback from either the radio or wifi device
-      // data provider, the timestamp won't be set. In this case, set it here.
-      timestamp_ = GetCurrentTimeMillis();
-    }
     if (!MakeRequestImpl()) {
       LOG(("MakeRequest() : Failed to make position request.\n"));
       return false;

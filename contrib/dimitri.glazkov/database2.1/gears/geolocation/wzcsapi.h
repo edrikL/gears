@@ -26,6 +26,8 @@
 // Replicates missing wzcsapi.h. Taken from
 // http://msdn.microsoft.com/en-us/library/ms706587(VS.85).aspx
 
+// TODO(steveblock): Change naming convention to follow correct style.
+
 #ifndef GEARS_GEOLOCATION_WZCSAPI_H__
 #define GEARS_GEOLOCATION_WZCSAPI_H__
 

@@ -28,13 +28,14 @@
 
 #include "gears/localserver/firefox/localserver_ff.h"
 
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
+#include "gears/localserver/managed_resource_store_module.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -99,7 +100,7 @@ NS_IMETHODIMP GearsLocalServer::CanServeLocally(//const nsAString &url,
 NS_IMETHODIMP GearsLocalServer::CreateManagedStore(
                   //const nsAString &name,
                   //OPTIONAL in AString required_cookie
-                  GearsManagedResourceStoreInterface **retval) {
+                  nsISupports **retval) {
   std::string16 name;
   std::string16 required_cookie;
   std::string16 error_message;
@@ -116,16 +117,15 @@ NS_IMETHODIMP GearsLocalServer::CreateManagedStore(
   //LOG(_T("LocalServer::CreateManagedStore( %s, %s )\n"),
   //       name, required_cookie_bstr.m_str);
 
-  nsCOMPtr<GearsManagedResourceStore> store(new GearsManagedResourceStore());
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
-  }
-  if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
+  scoped_refptr<GearsManagedResourceStore> store;
+  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
+  if (!store->InitBaseFromSibling(this) ||
+      !store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
                                   name.c_str(), required_cookie.c_str())) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
   }
-
-  NS_ADDREF(*retval = store);
+  JsParamFetcher js_params(this);
+  js_params.SetReturnValue(store->GetWrapperToken());
   RETURN_NORMAL();
 }
 
@@ -135,7 +135,7 @@ NS_IMETHODIMP GearsLocalServer::CreateManagedStore(
 NS_IMETHODIMP GearsLocalServer::OpenManagedStore(
                   //const nsAString &name,
                   //OPTIONAL in AString required_cookie
-                  GearsManagedResourceStoreInterface **retval) {
+                  nsISupports **retval) {
   std::string16 name;
   std::string16 required_cookie;
   std::string16 error_message;
@@ -155,15 +155,14 @@ NS_IMETHODIMP GearsLocalServer::OpenManagedStore(
     RETURN_NORMAL();
   }
 
-  nsCOMPtr<GearsManagedResourceStore> store(new GearsManagedResourceStore());
-  if (!store->InitBaseFromSibling(this)) {
+  scoped_refptr<GearsManagedResourceStore> store;
+  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
+  if (!store->InitBaseFromSibling(this) ||
+      !store->store_.Open(existing_store_id)) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
   }
-  if (!store->store_.Open(existing_store_id)) {
-    RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
-  }
-
-  NS_ADDREF(*retval = store);
+  JsParamFetcher js_params(this);
+  js_params.SetReturnValue(store->GetWrapperToken());
   RETURN_NORMAL();
 }
 

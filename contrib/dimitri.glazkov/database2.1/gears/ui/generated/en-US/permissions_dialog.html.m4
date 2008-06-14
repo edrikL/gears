@@ -32,6 +32,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <head>
   <title>PRODUCT_FRIENDLY_NAME_UQ Security Warning</title>
   <style type="text/css">
+    .text-alignment {
+      /* This is modified via a script for rtl languages. */
+      text-align:left;
+    }
+
 m4_include(ui/common/button.css)
 m4_include(ui/common/html_dialog.css)
     #content {
@@ -181,13 +186,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="top">
+        <td class="text-alignment" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td width="100%" align="left" valign="middle">
+        <td width="100%" class="text-alignment" valign="middle">
           <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
           will be able to store and access information on your computer.
@@ -202,10 +207,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       <div id="yellowbox-inner">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td id="yellowbox-left" align="left" valign="top">
+            <td id="yellowbox-left" class="text-alignment" valign="top">
               <img id="custom-icon" width="0" height="0">
             </td>
-            <td id="yellowbox-right" width="100%" align="left" valign="middle">
+            <td id="yellowbox-right" width="100%" class="text-alignment" valign="middle">
               <div id="custom-name"></div>
               <div id="origin"></div>
               <div id="origin-only"></div>
@@ -250,7 +255,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="button-row-smartphone">
       <table cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="middle">
+        <td class="text-alignment" valign="middle">
           <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
               Never allow this site
@@ -270,7 +275,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           does not support them.
           -->
 
-          <td width="50%" align="left" valign="middle">
+          <td width="50%" class="text-alignment" valign="middle">
             <input type="BUTTON" id="never-allow-button" onclick="denyAccessPermanently(); return false;"></input>
           </td>
 
@@ -281,7 +286,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </td>
           </div>
 ~,~           
-          <td width="100%" align="left" valign="middle">
+          <td width="100%" class="text-alignment" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
               Never allow this site

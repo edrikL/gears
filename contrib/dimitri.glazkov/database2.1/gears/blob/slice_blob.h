@@ -26,10 +26,6 @@
 #ifndef GEARS_BLOB_SLICE_BLOB_H__
 #define GEARS_BLOB_SLICE_BLOB_H__
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include "gears/blob/blob_interface.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -50,5 +46,4 @@ class SliceBlob : public BlobInterface {
   DISALLOW_EVIL_CONSTRUCTORS(SliceBlob);
 };
 
-#endif  // not OFFICIAL_BUILD
 #endif  // GEARS_BLOB_SLICE_BLOB_H__

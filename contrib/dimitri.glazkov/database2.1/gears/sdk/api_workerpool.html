@@ -145,10 +145,11 @@ a typical example.
   </ol>
 </ol>
 
+
   <h4>Communication</h4>
 
-<p>Workers send strings to each other using <code>sendMessage()</code>.
-Any member of a particular WorkerPool can communicate with any other member.  
+<p>Workers send messages to each other using <code>sendMessage()</code>.
+Any member of a particular WorkerPool can communicate with any other member.
   
 <p>Each sent message triggers the receiver's <code>onmessage</code> handler.
 Message events are handled like all other JavaScript events.  In particular,
@@ -216,7 +217,7 @@ void <b>allowCrossOrigin</b>()
         <br>&nbsp; &nbsp; &bull; <code>sender</code> - ID of the source worker.
         <br>&nbsp; &nbsp; &bull; <code>origin</code> - The sender's origin, represented as a string of the form: SCHEME://DOMAIN[:PORT].
         <br>&nbsp; &nbsp; The port is omitted for standard ports (http port 80, https port 443).
-        <br>&nbsp; &nbsp; &bull; <code>text</code> - The message content string <i>(Deprecated. Prefer <code>message.body</code> instead. If the message sent was a string, this property contains the message. If the message sent was some other type, it contains null.</i>)
+        <br>&nbsp; &nbsp; &bull; <code>text</code> - The message content string <i>(Deprecated. Prefer <code>message.body</code> instead. If the message sent was a string, this property contains the message. If the message sent was some other type, it will be the empty string.</i>)
     </td>
   </tr>
 </table>
@@ -351,6 +352,7 @@ up to the parent.</td>
   </tr>
 </table>
 
+<a name="sendmessage"></a>
 <table>
   <tr class="odd">
     <th colspan="2"><code>void sendMessage(message, destWorkerId)</code></th>
@@ -358,14 +360,17 @@ up to the parent.</td>
   <tr class="odd">
     <td width="113">Summary:</td>
     <td width="550" class="odd">
-      Sends <code>messageObject</code> to the worker specified by <code>destWorkerId</code>.
+      Sends <code>message</code> to the worker specified by <code>destWorkerId</code>.
     </td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-      <code>messageObject</code>
-      - The message object to send.  Can be string, boolean, number, array or object.
+      <code>message</code>
+      - The message to send. A message can be a boolean, string, number, array,
+      or object. Array and object messages can contain booleans, strings, 
+      numbers, nulls, or references to other arrays and objects which also 
+      follow these rules.
       <br>
       <code>destWorkerId</code>
       - ID of the destination worker.
@@ -377,6 +382,9 @@ up to the parent.</td>
       Messages sent from worker 1 to worker 2 in a particular order will be received in the same order.
       <br><br>
       Messages can be sent and received only between members of the same WorkerPool.
+      <br><br>
+      Messages are copied between workers. Changes to a message received in one 
+      worker will not be reflected in the sending worker.
     </td>
   </tr>
 </table>

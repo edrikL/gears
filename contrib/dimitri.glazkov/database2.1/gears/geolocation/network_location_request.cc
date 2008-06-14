@@ -125,16 +125,10 @@ void NetworkLocationRequest::Run() {
       // If the response was bad, we call back with an invalid position.
       LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
     }
-    // The listener callback may trigger the cleaning up of the request that
-    // contains the network location provider, which may cause
-    // StopThreadAndDelete to be called on this object. So we must signal
-    // completion before we make the call.
-    run_complete_event_.Signal();
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     listener_->LocationResponseAvailable(position);
-  } else {
-    run_complete_event_.Signal();
   }
+  run_complete_event_.Signal();
 }
 
 void NetworkLocationRequest::StopThreadAndDelete() {

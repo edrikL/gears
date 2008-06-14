@@ -29,35 +29,6 @@
 interface nsIVariant;
 
 //------------------------------------------------------------------------------
-// GearsManagedResourceStoreInterface
-//------------------------------------------------------------------------------
-[scriptable, uuid(813CBD00-743C-449e-99ED-2749D8B053D1)]
-interface GearsManagedResourceStoreInterface : GearsBaseClassInterface {
-  // Identifying properties
-  readonly attribute AString name;
-  readonly attribute AString requiredCookie;
-
-  // Enable/disable local serving
-  attribute boolean enabled;
-
-  // Auto-updating
-  attribute AString manifestUrl;
-  readonly attribute long lastUpdateCheckTime;
-  readonly attribute long updateStatus;
-  readonly attribute AString lastErrorMessage;
-
-  // Callbacks for update events.
-  attribute nsIVariant onerror;
-  attribute nsIVariant onprogress;
-  attribute nsIVariant oncomplete;
-
-  void checkForUpdate();
-
-  // Version information
-  readonly attribute AString currentVersion;
-};
-
-//------------------------------------------------------------------------------
 // GearsFileSubmitterInterface
 // Facilitates the inclusion of resources into form submissions
 // as the file parts of multipart/form-data encoded POSTs
@@ -109,14 +80,9 @@ interface GearsResourceStoreInterface : GearsBaseClassInterface {
 
   AString getAllHeaders(in AString url);
 
-m4_changequote(`^',`^')m4_dnl
-m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
-  ^^, m4_dnl Do not declare anything for OFFICIAL_BUILDs - Blobs are not ready
-  ^m4_dnl Else:
-  void captureBlob(//in ModuleImplBaseClass blob,
-                   //in AString url
-                   );
-^)
+  void captureBlob(// in ModuleImplBaseClass blob,
+                   // in AString url
+                  );
 
   void captureFile(in nsISupports file_input_element, in AString url);
 
@@ -133,11 +99,11 @@ interface GearsLocalServerInterface : GearsBaseClassInterface {
   boolean canServeLocally();
       // in AString url
 
-  GearsManagedResourceStoreInterface createManagedStore();
+  nsISupports createManagedStore();
       // in AString name
       // [optional] in AString requiredCookie
 
-  GearsManagedResourceStoreInterface openManagedStore();
+  nsISupports openManagedStore();
       // in AString name
       // [optional] in AString requiredCookie
 

@@ -26,10 +26,6 @@
 #ifndef GEARS_OPENSOURCE_GEARS_BLOB_BLOB_BUILDER_H__
 #define GEARS_OPENSOURCE_GEARS_BLOB_BLOB_BUILDER_H__
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include <vector>
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/scoped_refptr.h"
@@ -71,7 +67,5 @@ class BlobBuilder {
   scoped_ptr<File> file_;
   DISALLOW_EVIL_CONSTRUCTORS(BlobBuilder);
 };
-
-#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_OPENSOURCE_GEARS_BLOB_BLOB_BUILDER_H__

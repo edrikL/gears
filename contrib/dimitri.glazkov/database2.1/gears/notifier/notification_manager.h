@@ -42,7 +42,7 @@
 #if USING_CCTESTS
 class BalloonCollectionMock;
 #endif  // USING_CCTESTS
-class Notification;
+class GearsNotification;
 class QueuedNotification;
 class UserActivityInterface;
 
@@ -55,11 +55,11 @@ class NotificationManager : public BalloonCollectionObserver {
   // Adds/Updates a notification (which may already be displayed).
   // If a notification has already been displayed and is gone, then
   // this will put it in the queue to show it again.
-  void Add(const Notification &notification);
+  void Add(const GearsNotification &notification);
 
   // Adds the notifications to be displayed in the future.  Used for
   // snooze operations.
-  void AddWithDelay(const Notification &notification, int delay_ms);
+  void AddWithDelay(const GearsNotification &notification, int delay_ms);
 
   // Returns
   //   True if a match for the notification information was found

@@ -38,10 +38,8 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
-#ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
-#endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/safari/http_request_delegate.h"
 #include "gears/localserver/safari/progress_input_stream.h"
@@ -338,8 +336,6 @@ bool SFHttpRequest::SendString(const char16 *data) {
   return SendImpl(stream);
 }
 
-#ifndef OFFICIAL_BUILD
-
 bool SFHttpRequest::SendBlob(BlobInterface *blob) {
   if (was_sent_) {
     return false;
@@ -364,7 +360,6 @@ bool SFHttpRequest::SendBlob(BlobInterface *blob) {
   }
   return SendImpl(stream);
 }
-#endif
 
 bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
 

@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// File picker is not ready for official builds
-#else
-
 #ifndef GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
 #define GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
 
@@ -59,5 +55,3 @@ class FileDialogWin32 : public FileDialog {
 #endif  // WIN32
 
 #endif  // GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
-
-#endif  // OFFICIAL_BUILD

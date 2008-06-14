@@ -29,32 +29,52 @@
 //
 // This file declares a base class to be used by all location providers.
 // Primarily, this class declares interface methods to be implemented by derived
-// classes. It also provides ref-counting.
+// classes.
 
 #ifndef GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 #define GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 
-#include "gears/base/common/scoped_refptr.h"
+#include <set>
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 
 struct Position;
 
 // The base class used by all location providers.
-class LocationProviderBase : public RefCounted {
+class LocationProviderBase {
  public:
   class ListenerInterface {
    public:
-    virtual bool LocationUpdateAvailable(LocationProviderBase *provider,
-                                         const Position &position) = 0;
+    virtual bool LocationUpdateAvailable(LocationProviderBase *provider) = 0;
     virtual ~ListenerInterface() {}
   };
 
   virtual ~LocationProviderBase() {}
 
+  // Adds a listener, which will be called back with
+  // ListenerInterface::LocationUpdateAvailable once a request to
+  // GetCurrentPosition completes.
+  void AddListener(ListenerInterface *listener);
+  // Removes a listener. In particular, once this method returns, no further
+  // calls to ListenerInterface::LocationUpdateAvailable will be made for this
+  // listener. It may block if a callback is in progress.
+  void RemoveListener(ListenerInterface *listener);
+
   // Interface methods.
-  virtual void SetListener(ListenerInterface *listener) = 0;
   // This should call back to ListenerInterface::LocationUpdateAvailable.
   virtual bool GetCurrentPosition() = 0;
+  // Gets the current best position estimate.
+  virtual void GetPosition(Position *position) = 0;
+
+ protected:
+  void UpdateListeners();
+
+ private:
+  // The listeners registered to this provider. We use a set to avoid
+  // duplicates.
+  typedef std::set<ListenerInterface*> ListenerSet;
+  ListenerSet listeners_;
+  Mutex listeners_mutex_;
 };
 
 // Factory functions for the various types of location provider to abstract over

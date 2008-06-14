@@ -70,7 +70,7 @@ void TestBalloonCollection() {
   BalloonCollectionObserverMock observer;
   BalloonCollection balloons(&observer);
 
-  Notification notification1;
+  GearsNotification notification1;
   notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
   notification1.set_id(STRING16(L"1"));
   balloons.Show(notification1);

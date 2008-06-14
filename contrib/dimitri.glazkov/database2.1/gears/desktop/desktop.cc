@@ -50,27 +50,19 @@
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#if defined(OFFICIAL_BUILD) || BROWSER_NPAPI
-#define USE_FILE_PICKER 0
-#else
-#define USE_FILE_PICKER 1
-#endif
-
 DECLARE_GEARS_WRAPPER(GearsDesktop);
 
 template<>
 void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
-#if USE_FILE_PICKER
   RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
-#else
-  // File picker is not ready for this build
-#endif  // USE_FILE_PICKER
 
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-  RegisterMethod("addNotification", &GearsDesktop::AddNotification);
+  RegisterMethod("createNotification", &GearsDesktop::CreateNotification);
+  RegisterMethod("removeNotification", &GearsDesktop::RemoveNotification);
+  RegisterMethod("showNotification", &GearsDesktop::ShowNotification);
 #endif  // OFFICIAL_BUILD
 }
 
@@ -93,7 +85,7 @@ GearsDesktop::GearsDesktop()
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-  Notification::RegisterAsSerializable();
+  GearsNotification::RegisterAsSerializable();
   ipc_message_queue_ = IpcMessageQueue::GetSystemQueue();
 #endif  // OFFICIAL_BUILD
 }
@@ -366,8 +358,6 @@ bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
   return allow_shortcut_creation;
 }
 
-#if USE_FILE_PICKER
-
 // Display an open file dialog returning the selected files.
 // Parameters:
 //  filters - in - a vector of filters
@@ -438,10 +428,6 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 
   context->SetReturnValue(JSPARAM_ARRAY, files_array.get());
 }
-
-#else
-// File picker is not ready for this build
-#endif  // USE_FILE_PICKER
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
@@ -733,22 +719,28 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   // The notification API has not been finalized for official builds.
 #else
 
-void GearsDesktop::AddNotification(JsCallContext *context) {
-  JsObject props;
+void GearsDesktop::CreateNotification(JsCallContext *context) {
+  scoped_refptr<GearsNotification> notification;
+  if (!CreateModule<GearsNotification>(GetJsRunner(), &notification))
+    return;  // Create function sets an error message.
+  if (!notification->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
+  }
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, notification.get());
+}
 
-  // TODO (jianli): this is a preliminary API.
-
+void GearsDesktop::ShowNotification(JsCallContext *context) {
+  ModuleImplBaseClass *module = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &props },
+    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &module },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
-
-  std::string16 title;
-  props.GetPropertyAsString(STRING16(L"Title"), &title);
-
-  std::string16 text;
-  props.GetPropertyAsString(STRING16(L"Text"), &text);
+  if (GearsNotification::kModuleName != module->get_module_name()) {
+    context->SetException(STRING16(L"First argument must be a notification."));
+    return;
+  }
 
   // Try to find the process of Desktop Notifier.
   uint32 process_id = NotifierProcess::FindProcess();
@@ -761,12 +753,42 @@ void GearsDesktop::AddNotification(JsCallContext *context) {
   // Send the IPC message to the process of Desktop Notifier.
   assert(ipc_message_queue_);
   if (ipc_message_queue_) {
-    Notification *notification = new Notification();
-    notification->set_title(title);
-    notification->set_description(text);
     ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
                              kDesktop_AddNotification,
-                             notification);
+                             static_cast<GearsNotification*>(module));
+  }
+}
+
+void GearsDesktop::RemoveNotification(JsCallContext *context) {
+  std::string16 id;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &id },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  if (id.empty()) {
+    context->SetException(
+        STRING16(L"Cannot remove the notification with empty id."));
+    return;
+  }
+
+  // Try to find the process of Desktop Notifier.
+  uint32 process_id = NotifierProcess::FindProcess();
+  if (!process_id) {
+    // TODO (jianli): Do we need to start the process if not found?
+    context->SetException(STRING16(L"notifier process not found"));
+    return;
+  }
+
+  // Send the IPC message to the process of Desktop Notifier.
+  assert(ipc_message_queue_);
+  if (ipc_message_queue_) {
+    GearsNotification notification;
+    notification.set_id(id);
+    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
+                             kDesktop_RemoveNotification,
+                             &notification);
   }
 }
 

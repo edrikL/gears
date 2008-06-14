@@ -32,7 +32,7 @@
 
 #include "gears/base/common/ipc_message_queue.h"
 
-class Notification;
+class GearsNotification;
 
 class Notifier : public IpcMessageQueue::HandlerInterface {
  public:
@@ -48,7 +48,7 @@ class Notifier : public IpcMessageQueue::HandlerInterface {
                                 const IpcMessageData *message_data);
 
  private:
-  void AddNotification(const Notification *notification);
+  void AddNotification(const GearsNotification *notification);
   void RemoveNotification(const std::string16 &notification_id);
 
   bool running_;

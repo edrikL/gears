@@ -92,12 +92,12 @@ class PoolThreadsManager
                             JavaScriptWorkerInfo *wi);
 #ifdef WIN32
   static unsigned __stdcall JavaScriptThreadEntry(void *args); 
-#elif OS_MACOSX
+#elif defined(OS_MACOSX) || defined(OS_ANDROID)
   static void *JavaScriptThreadEntry(void *args);
 #else
-#error "ThreadProc only implemented for Mac & Windows at the moment."
+#error "ThreadProc only implemented for Mac, Windows and Android at the moment."
 #endif
-  
+
   static void OnReceiveThreadsEvent(ThreadsEvent *event);
 
   // Helpers for processing events received from other workers.

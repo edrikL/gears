@@ -36,7 +36,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
 
-class Notification;
+class GearsNotification;
 
 class BalloonCollectionObserver {
  public:
@@ -51,11 +51,11 @@ class BalloonCollectionInterface {
   // Adds a new balloon for the specified notification. Does not check for
   // already showing notifications with the same service and id. Asserts if
   // there is already a notification with the same service/id.
-  virtual void Show(const Notification &notification) = 0;
+  virtual void Show(const GearsNotification &notification) = 0;
   // Updates the existing balloon with notification that matches service and id
   // of the specified one. In case there is no balloon showing the matching
   // notification, returns 'false'.
-  virtual bool Update(const Notification &notification) = 0;
+  virtual bool Update(const GearsNotification &notification) = 0;
   // Immediately "expires" any notification with the same service and id from
   // the screen display. Returns 'false' if there is no such notification.
   virtual bool Delete(const std::string16 &service,
@@ -68,23 +68,37 @@ class BalloonCollectionInterface {
 // Glint classes
 namespace glint {
 class Node;
-class Row;
+class RootUI;
 }
 
 // Represents a Notification on the screen.
-// TODO(dimich): actually add UI
 class Balloon {
  public:
-  explicit Balloon(const Notification &from);
+  explicit Balloon(const GearsNotification &from);
   ~Balloon();
-  const Notification &notification() {
+
+  const GearsNotification &notification() const {
     return notification_;
   }
-  Notification *mutable_notification() {
+
+  GearsNotification *mutable_notification() {
     return &notification_;
   }
+
+  glint::Node *ui_root() {
+    if (!ui_root_) {
+      ui_root_ = CreateTree();
+    }
+    return ui_root_;
+  }
+
+  void UpdateUI();
+
  private:
-  Notification notification_;
+  glint::Node *CreateTree();
+  bool SetTextField(const char *id, const std::string16 &text);
+  GearsNotification notification_;
+  glint::Node *ui_root_;
   DISALLOW_EVIL_CONSTRUCTORS(Balloon);
 };
 
@@ -96,8 +110,8 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual ~BalloonCollection();
 
   // BalloonCollectionInterface overrides
-  virtual void Show(const Notification &notification);
-  virtual bool Update(const Notification &notification);
+  virtual void Show(const GearsNotification &notification);
+  virtual bool Update(const GearsNotification &notification);
   virtual bool Delete(const std::string16 &service, const std::string16 &id);
   virtual bool has_space() { return has_space_; }
 
@@ -106,11 +120,13 @@ class BalloonCollection : public BalloonCollectionInterface {
   Balloon *FindBalloon(const std::string16 &service,
                        const std::string16 &id,
                        bool and_remove);
+  void AddToUI(Balloon *balloon);
+  void RemoveFromUI(Balloon *balloon);
+  void EnsureRoot();
 
   Balloons balloons_;
   BalloonCollectionObserver *observer_;
-  glint::Node *root_node_;
-  glint::Row *balloon_container_;
+  glint::RootUI *root_ui_;
   bool has_space_;
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollection);
 };

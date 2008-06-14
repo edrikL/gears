@@ -39,7 +39,7 @@
 #include <windows.h>
 #include <winioctl.h>  // For IOCTL_NDISUIO_QUERY_OID_VALUE
 #include "gears/base/common/string_utils.h"  // For UTF8ToString16()
-#include "gears/geolocation/wifi_data_provider_common.h"
+#include "gears/geolocation/wifi_data_provider_windows_common.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // The time period, in milliseconds, between successive polls of the wifi data.

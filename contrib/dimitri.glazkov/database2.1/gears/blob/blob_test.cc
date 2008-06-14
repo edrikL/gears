@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #ifdef USING_CCTESTS
 
 #include <cstring>
@@ -148,6 +144,8 @@ bool TestFileBlob(std::string16 *error) {
   blob.reset(new FileBlob(filepath));
   TEST_ASSERT(blob->Length() == 0);
   TEST_ASSERT(0 == blob->Read(buffer, 0, sizeof(buffer)));
+  // This will close filepath, which is necessary before writing to it on win32.
+  blob.reset();
 
   // Test FileBlob construction given a file name.
   File::WriteBytesToFile(filepath.c_str(), vec_contents, 6);
@@ -347,4 +345,3 @@ bool TestJoinBlob(std::string16 *error) {
 }
 
 #endif  // USING_CCTESTS
-#endif  // not OFFICIAL_BUILD

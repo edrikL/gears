@@ -27,44 +27,6 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 
-//
-// GearsManagedResourceStoreInterface
-//
-
-[
-  object,
-  uuid(990DC8DD-A97D-4701-962A-53721251821C),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsManagedResourceStoreInterface : IDispatch {
-  // Identifying properties
-  [propget] HRESULT name([out, retval] BSTR *name);
-  [propget] HRESULT requiredCookie([out, retval] BSTR *required_cookie);
-
-  // Enable/disable local serving
-  [propget] HRESULT enabled([out, retval] VARIANT_BOOL *enabled);
-  [propput] HRESULT enabled([in] VARIANT_BOOL enabled);
-
-  // Auto-updating
-  [propget] HRESULT manifestUrl([out, retval] BSTR *manifestUrl);
-  [propput] HRESULT manifestUrl([in] const BSTR manifestUrl);
-  [propget] HRESULT lastUpdateCheckTime([out, retval] long *time);
-  [propget] HRESULT updateStatus([out, retval] int *status);
-  [propget] HRESULT lastErrorMessage([out, retval] BSTR *last_error_message);
-
-  [propput] HRESULT onerror([in] const VARIANT *handler);
-  [propput] HRESULT onprogress([in] const VARIANT *handler);
-  [propput] HRESULT oncomplete([in] const VARIANT *handler);
-
-  HRESULT checkForUpdate();
-   
-  // Version information 
-  [propget] HRESULT currentVersion([out, retval] BSTR *ver);
-};
-
-
 #ifdef WINCE
   // FileSubmitter is not implemented for WinCE.
 #else
@@ -143,13 +105,9 @@ interface GearsResourceStoreInterface : IDispatch {
 #ifdef WINCE
   // No BLOB support on WINCE yet
 #else
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
   HRESULT captureBlob(
       [in] IUnknown *blob,
       [in] const BSTR url);
-#endif  // OFFICIAL_BUILD
 #endif  // WINCE
   
   HRESULT captureFile(
@@ -188,12 +146,12 @@ interface GearsLocalServerInterface : IDispatch {
   HRESULT createManagedStore(
       [in] const BSTR name,
       [in, optional] const VARIANT *required_cookie,
-      [out, retval] GearsManagedResourceStoreInterface **store);
+      [out, retval] IDispatch **store);
 
   HRESULT openManagedStore(
       [in] const BSTR name,
       [in, optional] const VARIANT *required_cookie,
-      [out, retval] GearsManagedResourceStoreInterface **store);
+      [out, retval] IDispatch **store);
 
   HRESULT removeManagedStore(
       [in] const BSTR name,

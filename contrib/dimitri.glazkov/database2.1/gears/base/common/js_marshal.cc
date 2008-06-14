@@ -92,13 +92,14 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
 // and popped off upon completion of the object/array. Prior to marshalling
 // nested objects/array, we look for them on that stack.
 // static
-bool MarshaledJsToken::CausesCycle(const JsToken &token,
+bool MarshaledJsToken::CausesCycle(JsRunnerInterface *js_runner,
+                                   const JsToken &token,
                                    JsTokenVector *object_stack,
-                                   std::string16 *error_message_out) { 
+                                   std::string16 *error_message_out) {
   JsTokenVector::iterator found = std::find_if(
                               object_stack->begin(),
                               object_stack->end(),
-                              std::bind2nd(JsTokenEqualTo(), token));
+                              std::bind2nd(JsTokenEqualTo(js_runner), token));
   if (found != object_stack->end()) {
     *error_message_out = STRING16(
         L"Cannot marshal an object that contains a cycle.");
@@ -173,7 +174,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
         }
       } else {
         // else it's a regular JavaScript object (that isn't a Gears module).
-        if (!CausesCycle(token, object_stack, error_message_out)) {
+        if (!CausesCycle(js_runner, token, object_stack, error_message_out)) {
           object_stack->push_back(token);
           JsObject value;
           if (value.SetObject(token, js_context)) {
@@ -189,7 +190,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
       break;
     }
     case JSPARAM_ARRAY: {
-      if (!CausesCycle(token, object_stack, error_message_out)) {
+      if (!CausesCycle(js_runner, token, object_stack, error_message_out)) {
         object_stack->push_back(token);
         JsArray value;
         if (value.SetArray(token, js_context)) {
@@ -210,6 +211,11 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
     case JSPARAM_NULL: {
       mjt.reset(new MarshaledJsToken());
       mjt->type_ = JSPARAM_NULL;
+      break;
+    }
+    case JSPARAM_UNDEFINED: {
+      mjt.reset(new MarshaledJsToken());
+      mjt->type_ = JSPARAM_UNDEFINED;
       break;
     }
     default: {
@@ -286,6 +292,10 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_NULL: {
       success = NullToJsToken(js_runner->GetContext(), out);
+      break;
+    }
+    case JSPARAM_UNDEFINED: {
+      success = UndefinedToJsToken(js_runner->GetContext(), out);
       break;
     }
     case JSPARAM_UNKNOWN: {

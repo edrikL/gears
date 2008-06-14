@@ -29,9 +29,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
-#ifndef OFFICIAL_BUILD
 #include "gears/blob/blob.h"
-#endif
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -70,11 +68,9 @@ class GearsHttpRequest
   // OUT: string
   void GetResponseHeader(JsCallContext *context);
 
-#ifndef OFFICIAL_BUILD
   // IN: -
   // OUT: GearsBlob
   void GetResponseBlob(JsCallContext *context);
-#endif
 
   // IN: -
   // OUT: string
@@ -112,9 +108,7 @@ class GearsHttpRequest
   scoped_ptr<JsEventMonitor> unload_monitor_;
   scoped_refptr<GearsHttpRequestUpload> upload_;
   scoped_ptr<std::string16> response_text_;
-#ifndef OFFICIAL_BUILD
   scoped_refptr<GearsBlob> response_blob_;
-#endif
 
   void AbortRequest();
   void CreateRequest();

@@ -83,6 +83,90 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/glint
+# Note: Glint is only needed in NOTIFIER_EXE, not in MODULE_DLL,
+# so we don't add Glint to THIRD_PARTY_CPPSRCS - that would increase the size
+# of of MODULE_DLL unnecessarily.
+GLINT_VPATH += \
+		../third_party/glint/crossplatform \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		allocator.cc \
+		animation_timeline.cc \
+		base_object.cc \
+		bitmap.cc \
+		button.cc \
+		color.cc \
+		column.cc \
+		core.cc \
+		current_time.cc \
+		draw_stack.cc \
+		image_node.cc \
+		lexer.cc \
+		message.cc \
+		nine_grid.cc \
+		node.cc \
+		rectangle.cc \
+		root_ui.cc \
+		row.cc \
+		simple_text.cc \
+		size.cc \
+		snapshot_stack.cc \
+		tile_plane.cc \
+		transform.cc \
+		$(NULL)
+
+# Glint Win32 files
+ifeq ($(OS),win32)
+GLINT_VPATH += \
+		../third_party/glint/win \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		formatted_text.cc \
+		win32.cc \
+		$(NULL)
+endif
+
+# Glint OSX files
+ifeq ($(OS),osx)
+GLINT_VPATH += \
+		../third_party/glint/mac \
+		../third_party/glint/posix \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		darwin_platform_bitmaps.mm \
+		darwin_platform_fonttext.mm \
+		darwin_platform_misc.mm \
+		darwin_platform_windows.mm \
+		glint_bitmap_view.mm \
+		glint_window.mm \
+		glint_work_item_dispatcher.mm \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		posix.cc \
+		formatted_text.cc \
+		$(NULL)
+endif
+
+# Glint Linux files
+ifeq ($(OS),linux)
+GLINT_VPATH += \
+		../third_party/glint/linux \
+		../third_party/glint/posix \
+		$(NULL)
+
+GLINT_CPPSRCS += \
+		linux.cc \
+		posix.cc \
+		formatted_text.cc \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # third_party/googleurl
 
 # Only include gurl in builds that use ICU.
@@ -620,6 +704,8 @@ $(BROWSER)_CPPSRCS	+= \
 		async_router.cc \
 		base_class.cc \
 		base64.cc \
+		byte_store.cc \
+		byte_store_test.cc \
 		circular_buffer_test.cc \
 		database_name_table.cc \
 		event.cc \
@@ -975,8 +1061,6 @@ $(BROWSER)_CPPSRCS += \
 		shortcut_utils_win32.cc \
 		$(NULL)
 
-# TODO: Implement file dialogs for NPAPI
-ifneq ($(BROWSER),NPAPI)
 $(BROWSER)_CPPSRCS += \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
@@ -984,7 +1068,6 @@ $(BROWSER)_CPPSRCS += \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
 		$(NULL)
-endif
 
 # The browser module also needs these files, to communicate with the notifier.
 $(BROWSER)_VPATH += \
@@ -995,6 +1078,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notification.cc \
 		$(NULL)
 
 SF_CPPSRCS += \
@@ -1006,6 +1090,7 @@ SF_CPPSRCS += \
 COMMON_VPATH	+= \
 		notifier \
 		../third_party/convert_utf \
+		$(GLINT_VPATH) \
 		$(NULL)
 
 NOTIFIER_CORE	+= \
@@ -1017,27 +1102,52 @@ NOTIFIER_CORE	+= \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notification.cc \
 		serialization.cc \
 		stopwatch.cc \
 		stopwatch_posix.cc \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		system_linux.cc \
+		system_osx.cc \
+		system_win32.cc \
 		$(NULL)
 
+
 NOTIFIER_CPPSRCS += \
+		$(GLINT_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		notifier.cc \
+		notifier_linux.cc \
+		notifier_osx.cc \
+		notifier_win32.cc \
 		$(NULL)
 
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 
+ifeq ($(OS),win32)
+COMMON_VPATH	+= \
+		notifier/resources \
+		$(NULL)
+
+NOTIFIER_LINK_EXTRAS += \
+		$(COMMON_OUTDIR)/notifier.res \
+		$(NULL)
+
+NOTIFIER_LIBS 	+= \
+		gdiplus.lib \
+		$(NULL)
+
+endif
+
 #-----------------------------------------------------------------------------
 # notifier_test
 
 NOTIFIER_TEST_CPPSRCS += \
+		$(GLINT_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		balloon_collection_test.cc \
 		notification_manager_test.cc \
@@ -1310,6 +1420,7 @@ $(BROWSER)_CPPSRCS += \
 # localserver/common (built for all browsers)
 
 $(BROWSER)_VPATH += \
+		localserver \
 		localserver/common \
 		$(NULL)
 
@@ -1322,6 +1433,7 @@ $(BROWSER)_CPPSRCS += \
 		localserver.cc \
 		localserver_db.cc \
 		managed_resource_store.cc \
+		managed_resource_store_module.cc \
 		manifest.cc \
 		resource_store.cc \
 		update_task.cc \
@@ -1349,7 +1461,6 @@ FF3_CPPSRCS	+= \
 		file_submitter_ff.cc \
 		http_request_ff.cc \
 		localserver_ff.cc \
-		managed_resource_store_ff.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ff.cc \
@@ -1372,7 +1483,6 @@ IE_CPPSRCS	+= \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_ie.cc \
-		managed_resource_store_ie.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
 		resource_store_ie.cc \
@@ -1409,7 +1519,6 @@ NPAPI_CPPSRCS	+= \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_np.cc \
-		managed_resource_store_np.cc \
 		update_task_np.cc \
 		urlmon_utils.cc \
 		resource_store_np.cc \
@@ -1431,7 +1540,6 @@ SF_CPPSRCS	+= \
 		http_request_sf.mm \
 		localserver_db_proxy.mm \
 		localserver_np.cc \
-		managed_resource_store_np.cc \
 		progress_event.cc \
 		progress_input_stream.mm \
 		resource_store_np.cc \
@@ -1452,7 +1560,6 @@ $(BROWSER)_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # blob
 
-ifneq ($(OFFICIAL_BUILD),1)
 # (built for all browsers)
 $(BROWSER)_VPATH += \
 		blob \
@@ -1477,7 +1584,6 @@ FF3_CPPSRCS	+= \
 SF_CPPSRCS += \
 		blob_input_stream_sf.mm \
 		$(NULL)
-endif # not OFFICIAL_BUILD
 
 
 #-----------------------------------------------------------------------------
@@ -1606,13 +1712,15 @@ $(BROWSER)_CPPSRCS	+= \
 		geolocation.cc \
 		geolocation_test.cc \
 		location_provider.cc \
+		location_provider_pool.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
 		radio_data_provider_wince.cc \
 		thread.cc \
-		wifi_data_provider_common.cc \
-		wifi_data_provider_wince.cc \
+		wifi_data_provider_linux.cc \
 		wifi_data_provider_win32.cc \
+		wifi_data_provider_wince.cc \
+		wifi_data_provider_windows_common.cc \
 		$(NULL)
 endif
 
@@ -1627,10 +1735,10 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
-		media.cc \
-		media_recorder.cc \
 		audio.cc \
 		audio_recorder.cc \
+		media.cc \
+		media_recorder.cc \
 		time_ranges.cc \
 		$(NULL)
 

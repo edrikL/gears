@@ -76,13 +76,9 @@ class GearsResourceStore
   NS_IMETHOD GetHeader(const nsAString &url, const nsAString &header_in,
                        nsAString &retval);
   NS_IMETHOD GetAllHeaders(const nsAString &url, nsAString &retval);
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
   NS_IMETHOD CaptureBlob(// ModuleImplBaseClass *blob,
                          // const nsAString &url
                          );
-#endif  // OFFICIAL_BUILD
   NS_IMETHOD CaptureFile(nsISupports *file_input_element, const nsAString &url);
   NS_IMETHOD GetCapturedFileName(const nsAString &url,
                                  nsAString &file_name_retval);

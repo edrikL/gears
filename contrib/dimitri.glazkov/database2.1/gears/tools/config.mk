@@ -1,9 +1,9 @@
 # Copyright 2005, Google Inc.
 #
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
-#  1. Redistributions of source code must retain the above copyright notice, 
+#  1. Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
 #  2. Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 #     specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 # SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 # PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 # OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #-----------------------------------------------------------------------------
@@ -203,6 +203,7 @@ CC = gcc
 CXX = g++
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+ECHO=@echo
 
 CPPFLAGS += -DLINUX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -219,11 +220,11 @@ CPPFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
 # we figure out the argument ordering bug.
 # for PortAudio: disable some warnings
 THIRD_PARTY_CFLAGS += -Wno-unused-variable
-# for PortAudio: enable multithreading support with pthread library 
+# for PortAudio: enable multithreading support with pthread library
 THIRD_PARTY_CFLAGS += -pthread
 
 # all the GTK headers using includes relative to this directory
-GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include 
+GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include
 CPPFLAGS += $(GTK_CFLAGS)
 
 COMPILE_FLAGS_dbg = -g -O0
@@ -235,7 +236,7 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
-SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic 
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic
 
 MKDLL = g++
 DLL_PREFIX = lib
@@ -247,7 +248,7 @@ DLLFLAGS += -lpthread -lm
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS)
+EXEFLAGS = $(SHARED_LINKFLAGS)  `pkg-config --libs gtk+-2.0`
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
@@ -274,6 +275,7 @@ CC = gcc -arch ppc -arch i386
 CXX = g++ -arch ppc -arch i386
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+ECHO=@echo
 
 CPPFLAGS += -DOS_MACOSX
 
@@ -316,7 +318,7 @@ CPPFLAGS += -DPA_USE_COREAUDIO
 # TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
 # we figure out the argument ordering bug.
 # for PortAudio: disable some warnings
-THIRD_PARTY_CFLAGS += -Wno-unused-variable -Wno-uninitialized 
+THIRD_PARTY_CFLAGS += -Wno-unused-variable -Wno-uninitialized
 # for PortAudio: enable multithreading support with pthread library
 # gcc/g++ for OSX doesn't seem to know this flag
 #THIRD_PARTY_CFLAGS += -pthread
@@ -366,8 +368,13 @@ EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
-TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
-EXT_LINKER_CMD_FLAG = -filelist 
+# We also filter out empty lines since ld chokes on them.
+TRANSLATE_LINKER_FILE_LIST = egrep '.+' | tr " " "\n"
+# Use '\' at the end of line to preserve the line trailing space from editors
+# that remove them automatically. This particular space is important.
+EXT_LINKER_CMD_FLAG = -filelist \
+
+# Empty comment to accompany the trailing '\' above.
 
 GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
@@ -389,12 +396,19 @@ CXX = cl
 OBJ_SUFFIX = .obj
 MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$(*F).pp
 
+# echo.exe outputs "Echo on." (or "Echo off.") if it is called with no
+# arguments. This is no good for us because sometimes we mean to call it with
+# no arguments and have it output empty string. The workaround is to call it
+# with a trailing dot. For more info, see:
+# http://blogs.msdn.com/oldnewthing/archive/2008/04/03/8352719.aspx
+ECHO=@echo.
+
 # Most Windows headers use the cross-platform NDEBUG and DEBUG #defines
 # (handled later).  But a few Windows files look at _DEBUG instead.
 CPPFLAGS_dbg = -D_DEBUG=1
 CPPFLAGS_opt =
 CPPFLAGS += /nologo -DSTRICT -D_UNICODE -DUNICODE -D_USRDLL -DWIN32 -D_WINDLL \
-            -D_CRT_SECURE_NO_DEPRECATE -DNOMINMAX 
+            -D_CRT_SECURE_NO_DEPRECATE -DNOMINMAX
 # TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
 # we figure out the argument ordering bug.
 # PortAudio assumes it is in the include path
@@ -454,7 +468,7 @@ SQLITE_CFLAGS += /wd4146
 endif
 
 THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
-# for PortAudio: 
+# for PortAudio:
 #   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'
 #   warning C4101: 'identifier' : unreferenced local variable
 THIRD_PARTY_CPPFLAGS += /wd4133 /wd4101
@@ -526,7 +540,7 @@ EXE_PREFIX =
 EXE_SUFFIX = .exe
 # Note: cannot use *F because that only works when the rule uses patterns.
 EXEFLAGS = $(SHARED_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
-
+NOTIFIER_EXEFLAGS = /SUBSYSTEM:WINDOWS
 
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
@@ -540,7 +554,7 @@ IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib she
 else # wince
 IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib iphlpapi.lib
 endif
-NPAPI_LIBS = 
+NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
 
 # Other tools specific to win32/wince builds.
 RC = rc

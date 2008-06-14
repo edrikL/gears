@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#else
-
 #include <algorithm>
 #include <cassert>
 #include <limits>
@@ -66,5 +62,3 @@ int64 BufferBlob::Read(uint8 *destination, int64 offset,
 int64 BufferBlob::Length() const {
   return buffer_.size();
 }
-
-#endif  // not OFFICIAL_BUILD

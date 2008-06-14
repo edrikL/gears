@@ -58,6 +58,58 @@ static inline bool DoubleIsInt32(double val) {
   return val >= kint32min && val <= kint32max && floor(val) == val;
 }
 
+#if BROWSER_NPAPI
+JsTokenEqualTo::JsTokenEqualTo(JsRunnerInterface *js_runner)
+  : js_runner_(js_runner), compare_func_(NULL) {
+  // NPAPI doesn't guarantee that a Javascript object will have only one
+  // NPObject representation, so we need to let the scripting engine compare
+  // objects.
+  const char kCompareFunc[] = "(function (a, b) { return a === b; })";
+
+  NPObject *global;
+  if (NPN_GetValue(js_runner->GetContext(), NPNVWindowNPObject,
+                   &global) != NPERR_NO_ERROR)
+    return;
+  ScopedNPObject global_scoped(global);
+  NPString np_script = { kCompareFunc, ARRAYSIZE(kCompareFunc) - 1};
+  ScopedNPVariant compare_func;
+  if (!NPN_Evaluate(js_runner->GetContext(), global, &np_script,
+                    &compare_func) ||
+      !NPVARIANT_IS_OBJECT(compare_func)) {
+    assert(false);
+    return;
+  }
+
+  compare_func_ = NPVARIANT_TO_OBJECT(compare_func);
+  compare_func.Release();  // give ownership to compare_func_.
+}
+
+JsTokenEqualTo::~JsTokenEqualTo() {
+  if (compare_func_) {
+    NPN_ReleaseObject(compare_func_);
+  }
+}
+
+bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
+  assert(compare_func_);
+
+  NPVariant args[] = {x, y};
+
+  // Invoke the method.
+  ScopedNPVariant result;
+  bool rv = NPN_InvokeDefault(js_runner_->GetContext(), compare_func_,
+                              args, 2, &result);
+  if (!rv) { return false; }
+
+  if (!NPVARIANT_IS_BOOLEAN(result)) {
+    assert(false);
+    return false;
+  }
+
+  return result.value.boolValue;
+}
+
+#endif
 
 // Special conversion functions for FireFox
 #if BROWSER_FF
@@ -762,8 +814,33 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
-  // TODO(nigeltao): implement
+#if BROWSER_WEBKIT
+  // TODO(playmobil): implement.
   return false;
+#else
+  NPIdentifier *identifiers;
+  uint32 count;
+
+  NPObject *object = NPVARIANT_TO_OBJECT(js_object_);
+  if (!NPN_Enumerate(js_context_, object, &identifiers, &count)) {
+    return false;
+  }
+
+  for (unsigned int i = 0; i < count; ++i) {
+    NPUTF8 *utf8_name = NPN_UTF8FromIdentifier(identifiers[i]);
+    std::string16 name;
+
+    bool success = UTF8ToString16(utf8_name, &name);
+
+    NPN_MemFree(utf8_name);
+
+    if (!success) {
+      return false;
+    }
+    out->push_back(name);
+  }
+  return true;
+#endif
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
@@ -1186,6 +1263,11 @@ bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   *out = JSVAL_NULL;
   return true;
 }
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  *out = JSVAL_VOID;
+  return true;
+}
 #elif BROWSER_IE
 
 bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out) {
@@ -1430,6 +1512,13 @@ bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   VARIANT null_variant;
   null_variant.vt = VT_NULL;
   *out = null_variant;
+  return true;
+}
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  VARIANT undefined_variant;
+  undefined_variant.vt = VT_EMPTY;
+  *out = undefined_variant;
   return true;
 }
 
@@ -1705,6 +1794,11 @@ bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
 
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   out->ResetToNull();
+  return true;
+}
+
+bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
+  out->Reset();
   return true;
 }
 

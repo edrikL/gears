@@ -161,9 +161,17 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-  // IN: object with named properties
+  // IN: void
   // OUT: void
-  void AddNotification(JsCallContext *context);
+  void CreateNotification(JsCallContext *context);
+
+  // IN: notification object
+  // OUT: void
+  void ShowNotification(JsCallContext *context);
+
+  // IN: string id
+  // OUT: void
+  void RemoveNotification(JsCallContext *context);
 #endif  // OFFICIAL_BUILD
 
  private:
