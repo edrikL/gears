@@ -28,6 +28,9 @@
 #else
 
 #include <stdio.h>
+#ifdef OS_MACOSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 #if !BROWSER_NONE
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
@@ -61,6 +64,26 @@ void Dispatcher<GearsNotification>::Init() {
 const std::string GearsNotification::kModuleName("Notification");
 #endif  // !BROWSER_NONE
 
+// TODO (jianli): use the one from cf_string_utils.h
+bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
+  if (!str || !out16)
+    return false;
+  
+  unsigned long length = CFStringGetLength(str);
+  const UniChar *outStr = CFStringGetCharactersPtr(str);
+
+  if (!outStr) {
+    scoped_array<UniChar> buffer(new UniChar[length + 1]);
+    CFStringGetCharacters(str, CFRangeMake(0, length), buffer.get());
+    buffer[length] = 0;
+    out16->assign(buffer.get());
+  } else {
+    out16->assign(outStr, length);
+  }
+  
+  return true;
+}
+
 std::string16 GenerateGuid() {
   std::string16 wide_guid_str;
 #ifdef WIN32
@@ -79,19 +102,14 @@ std::string16 GenerateGuid() {
   assert(fptr);
   if (fptr) {
     char guid_str[37] = {0};
-    char *s = fgets(guid_str, sizeof(guid_str) - 1, fptr);
-    assert(s);
+    fgets(guid_str, sizeof(guid_str) - 1, fptr);
     fclose(fptr);
     UTF8ToString16(guid_str, &wide_guid_str);
   }
 #elif defined(OS_MACOSX)
   CFUUIDRef guid = CFUUIDCreate(NULL);
   CFStringRef guid_cfstr = CFUUIDCreateString(NULL, guid);
-  wide_guid_str.resize(37);
-  CFStringGetCString(guid_cfstr,
-                     wide_guid_str.at(0),
-                     wide_guid_str.size(),
-                     kCFStringEncodingUTF16);
+  CFStringRefToString16Helper(guid_cfstr, &wide_guid_str);
   CFRelease(guid);
   CFRelease(guid_cfstr);
 #else
