@@ -73,7 +73,7 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: object created_object
   // throws exception on failure
   void TestCreateError(JsCallContext *context);
-  
+
   // IN: nothing
   // OUT: nothing
   // throws exception on failure
@@ -147,6 +147,16 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // The resultant Blob's contents will the input string in UTF-8 format.
   void CreateBlobFromString(JsCallContext *context);
 
+#ifdef OFFICIAL_BUILD
+  // The Notification API has not been finalized for official builds.
+#else
+  // Notification internal tests.
+
+  // IN: nothing
+  // OUT: nothing
+  void TestNotifier(JsCallContext *context);
+#endif  // OFFICIAL_BUILD
+
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
@@ -159,6 +169,6 @@ INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url);
 bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info);
 #endif
 
-#endif // GEARS_CCTESTS_TEST_H__
+#endif  // GEARS_CCTESTS_TEST_H__
 
-#endif // USING_CCTESTS
+#endif  // USING_CCTESTS
