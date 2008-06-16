@@ -40,7 +40,7 @@ The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/c
 = JS interface =
 
 *_Media_ class (borrowed from HTML5 spec):*
-We model the API based on _HTMLAudioElement_ in the HTML5 spec. Look at http://www.whatwg.org/specs/web-apps/current-work/#media5 for an explanation of the members of this class. We include an additional method to get a handle to the MediaBlob, and an additional metadata field.
+We model the API based on _HTMLAudioElement_ in the HTML5 spec. Look at http://www.whatwg.org/specs/web-apps/current-work/#media5 for an explanation of the members of this class. We include an additional method to get a handle to the Blob, and an additional metadata field.
 {{{
 Media class
 {  
@@ -101,8 +101,8 @@ Media class
            attribute boolean muted;
 
   // access blob
-  // Returns: the handle to the media blob object containing the media data
-  MediaBlob getMediaBlob();
+  // Returns: the handle to the blob object containing the media data
+  Blob getBlob();
 
   // metadata
            attribute map metadata;
@@ -112,19 +112,6 @@ Media class
 *_Events from Media class:_*
 The media class also fires the following events (HTML5 does not exactly define some of these events and the handling framework yet). Section _'3.2.9.12 - Event summary'_ in http://www.whatwg.org/specs/web-apps/current-work/ helps understand what these events are, and when they are fired. Handlers of these events can decide what to do on event notifications:
 _begin, progress, loadedmetadata, loadedfirstframe, load, abort, error, emptied, stalled, play, pause, waiting, timeupdate, ended, dataunavailable, canshowcurrentframe, canplay, canplaythrough, ratechange, durationchange, volumechange_
-
-*_MediaError class_*
-
-{{{
-MediaError class {
-  const unsigned short MEDIA_ERR_ABORTED = 1;
-  const unsigned short MEDIA_ERR_NETWORK = 2;
-  const unsigned short MEDIA_ERR_DECODE = 3;
-  const unsigned short MEDIA_ERR_ENCODE = 4;
-  const unsigned short MEDIA_ERR_DEVICE_UNAVAILABLE = 5;
-  readonly attribute unsigned short code;
-};
-}}}
 
 *_Audio class : Media_*
 
@@ -166,118 +153,125 @@ Audio class : Media
 };
 }}}
 
-*_MediaRecorder class_*
+*_AudioRecorder class_*
 {{{
-MediaRecorder class
+// an object of this class can be got from 
+// google.gears.factory.create('beta.audiorecorder')
+AudioRecorder class
 {
-  // ------ error state ------
-  readonly attribute MediaError error;
-
-  // -------- network state --------
-  // holds the HTTP post URL to send the recorded data to  
-           attribute DOMString destination;
-  const unsigned short EMPTY = 0;
-  const unsigned short SENDING = 1;
-  const unsigned short SENT = 2;
-  readonly attribute unsigned short networkState;
+  // ---- error state ----
+  readonly attribute AudioRecorderError error;
  
-  // ----- recording state ------
+  // ---- recording state ----
   // says whether recorder is currently recording or not
   readonly attribute boolean recording;
-  // channel type
+  // says whether recorder is paused or not
+  readonly attribute boolean paused;
+  // the amount of sound detected by the microphone
+  // 0 - no sound detected to 100 - maximum sound detected
+  readonly attribute int activityLevel;
+  // specifies the length (in milli seconds) of the audio recorded
+  readonly attribute float duration;
+
+  // ---- channel type ----
   const unsigned short MONO = 1;
   const unsigned short STEREO = 2;
            attribute short channelType;
-  // bit rate for the recording.
-           attribute int bitRate;
-  // format is an int. Possible values need to be defined.
-           attribute int format; 
-  // The number of bits per sample.
+  // sample rate for the recording
+           attribute int sampleRate;
+  // the number of bits per sample
            attribute int bitsPerSample;
-  // specifies if blob is streamed as and when it is written to, or not.
-           attribute boolean autoStream;
-  // specifies the length (in milli seconds) of the media recorded.
-  readonly attribute float position;
+  // possible values need to be defined
+           attribute string format; 
 
   void record();
   void pause();
   void unpause();
-  void mute();
-  void unmute();
   void stop();
 
-  // ------- controls ---------
-  // self explanatory
+  // ---- controls ----
+  // 0.0 - silent to 1.0 - loudest
            attribute float volume;
   readonly attribute boolean muted;
-  readonly attribute boolean paused;
+  // the amount of sound required to activate the microphone
+  // 0 - capture even minutest sound to 100 - capture only loudest sound
+  attribute int silenceLevel;
 
-
-  // -------- cue ranges --------
-  // Provides ability to set callbacks at specific points in playback time.
+  // ---- cue ranges ----
+  // provides ability to set callbacks at specific points in playback time.
   // similar to API in Audio class. Look at HTML5 spec for explanation.
   void addCueRange(in DOMString className, in float start, in float end, 
                   in boolean pauseOnExit,
                   in VoidCallback enterCallback, in VoidCallback exitCallback);
   void removeCueRanges(in DOMString className);
 
-  // -------- access blob -------
-  // Returns: the handle to the media blob object containing the media data
-  MediaBlob getMediaBlob();
+  // ---- access blob ----
+  // returns handle to the blob object containing the audio data
+  Blob getBlob();
 };     
 }}}
 
-*_Events from MediaRecorder class:_*
-The MediaRecorder class throws the following events, under the stated preconditions:
-   * _record_ - Recording starts.
-   * _pause_ - Paused.
-   * _unpause_ - Unpaused.
-   * _mute_ - Muted.
-   * _unmute_ - Unmuted.
-   * _ended_ - Finished recording.
-
-*_AudioRecorder class : MediaRecorder _*
+*_AudioRecorderError class_*
 {{{
-// an object of this class can be got from 
-// google.gears.factory.create('beta.audiorecorder')
-AudioRecorder class : MediaRecorder
+AudioRecorderError class
 {
-  // the amount of sound detected by the microphone - [0 - 100]
-  readonly attribute int activityLevel;
-  // the amount of sound required to activate the microphone - [0-100] 
-  attribute int silenceLevel;
-};
+  // could not record with the specified recording state (channelType, ...)
+  const unsigned short AUDIO_RECORDER_ERR_ENCODE = 1;
+  // there is problem accessing the device or there is no device
+  const unsigned short AUDIO_RECORDER_ERR_DEVICE = 2;
+  readonly attribute unsigned short code;
+}
 }}}
+
+*_Events from AudioRecorder class:_*
+The AudioRecorder class throws the following events, under the stated preconditions:
+   * _record_ - recording started
+   * _progress_ - is fired periodically during recording
+   * _error_ - an error occurred while recording
+   * _pause_ - when recorder becomes paused
+   * _unpause_ - when recorder becomes unpaused
+   * _volumechange_ - either the recorder's volume is changed or is muted/unmuted
+   * _ended_ - finished recording
+
+*_Recording the audio_*
+
+The *recording* attribute represents whether the audio recorder is recording or not.
+The *paused* attribute represents whether the audio recorder is paused or not.
+The *muted* attribute indicates whether the audio recorder is capturing silence.
+
+The audio data that is captured by the audio recorder is according to the recording-
+state (channelType, sampleRate, bitsPerSample, format) and the recording controls
+(volume, muted).
+
+*record()*
+  # If audio recorder is already recording, it has to be aborted and all the audio data that is already recorded can be discarded.
+  # Check that recording can be done according to the given recording state (channelType, ...) else set error to AUDIO_RECORDER_ERR_ENCODE and return.
+  # Get handle to the recording device. If failed to get the device set error to AUDIO_RECORDER_ERR_DEVICE and return.
+  # The recording attribute should be set to true, paused attribute should be set to false, duration should to set to 0, muted attribute should be set to false. [ the 'record' event is fired, 'progress' starts firing periodically ]
+  # The audio recorder starts capturing the audio data.
+
+*pause()*
+  # If the audio recorder is not recording, then return.
+  # If the audio recorder is already paused, then return.
+  # The paused attribute should be set to true. [ the 'pause' event is fired]
+  # The audio recorder stops capturing the audio data.
+
+*unpause()*
+  # If the audio recorder is not recording, the return.
+  # If the audio recorder is not paused, the return.
+  # The paused attribute should be set to false. [ the 'unpause' event is fired ]
+  # The audio recorder starts capturing the audio data again.
+
+*stop()*
+  # If the audio recorder is not recording, then return.
+  # The audio recorder stops capturing the audio data.
+  # The recording attribute should be set to false. [ the 'ended' event is fired ]
+  # Release the recording device.
+
 We want to be able to support the following use-cases w.r.t. recording:
   * Send the recorded audio to a HTTP post URL/webservice (upload) - The destination attribute can be used to set the post URL to which the recorded data need to be streamed to.
   * Save the recorded audio to a local file (after compressing to some format specified) - One can get a handle to the blob and export it to a local file (using the export method in the blob class below).
   * Add the recorded audio as an attachment in a mail - The mail application should be able to access the blob data in chunks through XHR calls that invoke the slice() method (after it is compressed and uuencoded). 
-
-*_MediaBlob class :  Blob_*
-{{{
-MediaBlob class : Blob
-{  
-  // ---- properties
-  // The type attribute gives the type of the media resource to help the user agent 
-  // determine if it can play this resource before downloading it. The format is same as 
-  // what is recommended in HTML5 - eg., "audio/ogg; codecs=speex"
-  readonly attribute String type;
-  // Holds a map of name value pairs, name and value being String types.
-           attribute map metadata;
-
-  // Encodes the blob in the mentioned format, and returns a new blob. 
-  // Supported formats to be added here in an enum.
-  MediaBlob encodeToFormat(in int encodeFormat); 
-};
-}}}
-
-*_AudioBlob class : MediaBlob _*
-{{{
-AudioBlob class : MediaBlob
-{
-   // no new members
-};
-}}}
 
 *_Others (borrowed from HTML5 spec):_*
 
@@ -287,7 +281,6 @@ interface TimeRanges {
   float start(in unsigned long index);
   float end(in unsigned long index);
 };
-
 
 interface VoidCallback {
   void handleEvent();
@@ -309,15 +302,16 @@ audio.load();
 audio.play();
 
 //a handle to the blob can be got by invoking, if needed.
-var blob = audio.getMediaBlob();
+var blob = audio.getBlob();
 }}}
 
 *_Simple example - 2D record flow_*:
 {{{
 var recorder = google.gears.factory.create('beta.audiorecorder');
-recorder.destination = <http post url>
-recorder.autoStream = true;
 recorder.record(); //asynchronous call
+...
+recorder.stop();
+var audiodata = recorder.getBlob();
 }}}
 
 = Advanced topics =
@@ -381,15 +375,15 @@ interface MediaUtils
   // extracts segment @copyStartTime to @copyEndTime of the @sourceBlob
   // and inserts that into @insertTime of @destBlob
   // supported only on raw uncompressed media
-  void insert(in MediaBlob sourceBlob,
-              in MediaBlob destBlob, 
+  void insert(in Blob sourceBlob,
+              in Blob destBlob, 
               in int insertTime,
               in int copyStartTime, 
               in int copyEndTime);
 
   // deletes segment @startTime to @endTime in the @sourceBlob
   // supported only on raw uncompressed media
-  void delete(in MediaBlob sourceBlob,
+  void delete(in Blob sourceBlob,
               in int startTime,
               in int endTime); 
 
