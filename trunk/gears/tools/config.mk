@@ -313,6 +313,8 @@ SQLITE_CFLAGS += -DHAVE_USLEEP=1
 THIRD_PARTY_CFLAGS = -Wno-main
 # TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
 # we figure out the argument ordering bug.
+# PortAudio assumes it is in the include path 
+CPPFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the CoreAudio hostapi for osx
 CPPFLAGS += -DPA_USE_COREAUDIO
 # TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
@@ -358,8 +360,8 @@ DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
 else
 DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
-# for PortAudio: need pthread and math
-DLLFLAGS += -lpthread -lm
+# for PortAudio: need CoreAudio, AudioToolbox, AudioUnit, Carbon frameworks
+DLLFLAGS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
 
 MKEXE = g++
 EXE_PREFIX =
