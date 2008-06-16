@@ -334,7 +334,6 @@
 		B58727C50DD4EE49001E4E0B /* serialization_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C40DD4EE49001E4E0B /* serialization_test.cc */; };
 		B58727C90DD4EE54001E4E0B /* sqlite_wrapper_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C70DD4EE54001E4E0B /* sqlite_wrapper_test.cc */; };
 		B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */; };
-		B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */; };
 		B58939380DB66FA900BD56A0 /* launch_url_in_browser.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */; };
 		B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
 		B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */; };
@@ -362,11 +361,7 @@
 		B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5D0D529ACB00B0A65D /* capture_task.cc */; };
 		B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE700D529AEA00B0A65D /* resource_store_np.cc */; };
 		B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */; };
-		B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */; };
 		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
-		B5924A580DDA0A2900F9CD2B /* notifier_process_win32.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */; };
-		B5924A5A0DDA0A2900F9CD2B /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */; };
-		B5924A5D0DDA0A2900F9CD2B /* notifier_process_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */; };
 		B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A620DDA0A4100F9CD2B /* event_test.cc */; };
 		B5924A660DDA0A4100F9CD2B /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A630DDA0A4100F9CD2B /* event.cc */; };
 		B5950B550DDE014100D54424 /* device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B4D0DDE014100D54424 /* device_data_provider.cc */; };
@@ -378,6 +373,26 @@
 		B5950BA10DDE033500D54424 /* blob_input_stream_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */; };
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
+		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
+		B5A9BD1F0E06C00B00DCA259 /* managed_resource_store_module.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */; };
+		B5A9BD300E06C0CE00DCA259 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */; };
+		B5A9BD310E06C0CE00DCA259 /* balloons.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD2D0E06C0CE00DCA259 /* balloons.h */; };
+		B5A9BD320E06C0CE00DCA259 /* balloons.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */; };
+		B5A9BD330E06C0CE00DCA259 /* system_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */; };
+		B5A9BD3E0E06C10900DCA259 /* notification_manager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD3A0E06C10900DCA259 /* notification_manager.h */; };
+		B5A9BD3F0E06C10900DCA259 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */; };
+		B5A9BD400E06C10900DCA259 /* notification.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD3C0E06C10900DCA259 /* notification.h */; };
+		B5A9BD410E06C10900DCA259 /* notification.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3D0E06C10900DCA259 /* notification.cc */; };
+		B5A9BD460E06C16400DCA259 /* geolocation_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD440E06C16400DCA259 /* geolocation_test.h */; };
+		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
+		B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */; };
+		B5A9BD4C0E06C18900DCA259 /* location_provider_pool.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */; };
+		B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD4D0E06C1A200DCA259 /* thread.cc */; };
+		B5A9BD500E06C1A200DCA259 /* thread.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD4E0E06C1A200DCA259 /* thread.h */; };
+		B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD530E06C23800DCA259 /* byte_store_test.cc */; };
+		B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD540E06C23800DCA259 /* byte_store.cc */; };
+		B5A9BD580E06C23800DCA259 /* byte_store.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD550E06C23800DCA259 /* byte_store.h */; };
+		B5A9BD990E06CC7600DCA259 /* safari_workaround.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD980E06CC7600DCA259 /* safari_workaround.h */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
 		B5AC85E00DCBBA5F00C62010 /* pldhash.c in Sources */ = {isa = PBXBuildFile; fileRef = B5AC85DE0DCBBA5F00C62010 /* pldhash.c */; };
 		B5AC85E10DCBBA5F00C62010 /* pldhash.h in Headers */ = {isa = PBXBuildFile; fileRef = B5AC85DF0DCBBA5F00C62010 /* pldhash.h */; };
@@ -408,9 +423,6 @@
 		B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
-		B5FEB24C0DDBA35A001DBEE5 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */; };
-		B5FEB24F0DDBA35A001DBEE5 /* unit_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */; };
-		B5FEB2500DDBA35A001DBEE5 /* notification_manager_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */; };
 		B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */; };
 		B5FEB9BE0DDCE58C001DBEE5 /* mozjs_npruntime.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B80DDCE58C001DBEE5 /* mozjs_npruntime.cc */; };
 		B5FF55DA0DDB75DA0058E403 /* update_task_single_process.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FF55D80DDB75DA0058E403 /* update_task_single_process.cc */; };
@@ -519,6 +531,15 @@
 				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
 				B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */,
 				B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */,
+				B5A9BD1F0E06C00B00DCA259 /* managed_resource_store_module.h in CopyFiles */,
+				B5A9BD310E06C0CE00DCA259 /* balloons.h in CopyFiles */,
+				B5A9BD3E0E06C10900DCA259 /* notification_manager.h in CopyFiles */,
+				B5A9BD400E06C10900DCA259 /* notification.h in CopyFiles */,
+				B5A9BD460E06C16400DCA259 /* geolocation_test.h in CopyFiles */,
+				B5A9BD4C0E06C18900DCA259 /* location_provider_pool.h in CopyFiles */,
+				B5A9BD500E06C1A200DCA259 /* thread.h in CopyFiles */,
+				B5A9BD580E06C23800DCA259 /* byte_store.h in CopyFiles */,
+				B5A9BD990E06CC7600DCA259 /* safari_workaround.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -906,8 +927,6 @@
 		B58727C60DD4EE53001E4E0B /* sqlite_wrapper_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = sqlite_wrapper_test.h; path = ../../base/common/sqlite_wrapper_test.h; sourceTree = SOURCE_ROOT; };
 		B58727C70DD4EE54001E4E0B /* sqlite_wrapper_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = sqlite_wrapper_test.cc; path = ../../base/common/sqlite_wrapper_test.cc; sourceTree = SOURCE_ROOT; };
 		B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = string_utils_test.cc; path = ../../base/common/string_utils_test.cc; sourceTree = SOURCE_ROOT; };
-		B58727CD0DD4EE84001E4E0B /* geolocation_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = geolocation_test.h; path = ../../geolocation/geolocation_test.h; sourceTree = SOURCE_ROOT; };
-		B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
 		B58939320DB66F4D00BD56A0 /* launch_url_with_browser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = launch_url_with_browser; sourceTree = BUILT_PRODUCTS_DIR; };
 		B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = launch_url_in_browser.cc; path = ../../base/safari/launch_url_in_browser.cc; sourceTree = SOURCE_ROOT; };
 		B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest_upload.h; path = ../../httprequest/httprequest_upload.h; sourceTree = SOURCE_ROOT; };
@@ -960,18 +979,11 @@
 		B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = resource_store_np.h; path = ../../localserver/npapi/resource_store_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE700D529AEA00B0A65D /* resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = resource_store_np.cc; path = ../../localserver/npapi/resource_store_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_submitter_np.cc; path = ../../localserver/npapi/file_submitter_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_np.cc; path = ../../localserver/npapi/managed_resource_store_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE740D529AEA00B0A65D /* managed_resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store_np.h; path = ../../localserver/npapi/managed_resource_store_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE770D529AEA00B0A65D /* capture_task_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = capture_task_np.h; path = ../../localserver/npapi/capture_task_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE780D529AEA00B0A65D /* localserver_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_np.cc; path = ../../localserver/npapi/localserver_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE790D529AEA00B0A65D /* file_submitter_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_submitter_np.h; path = ../../localserver/npapi/file_submitter_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFEB70D529D5900B0A65D /* message_queue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = message_queue.h; path = ../../base/common/message_queue.h; sourceTree = SOURCE_ROOT; };
 		B58EFF630D52A5DC00B0A65D /* common_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = common_sf.h; path = ../../base/common/common_sf.h; sourceTree = SOURCE_ROOT; };
-		B5924A500DDA0A2900F9CD2B /* notification.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
-		B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_win32.cc; path = ../../notifier/notifier_process_win32.cc; sourceTree = SOURCE_ROOT; };
-		B5924A520DDA0A2900F9CD2B /* notifier_process.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notifier_process.h; path = ../../notifier/notifier_process.h; sourceTree = SOURCE_ROOT; };
-		B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
-		B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_linux.cc; path = ../../notifier/notifier_process_linux.cc; sourceTree = SOURCE_ROOT; };
 		B5924A610DDA0A4100F9CD2B /* event.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
 		B5924A620DDA0A4100F9CD2B /* event_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = event_test.cc; path = ../../base/common/event_test.cc; sourceTree = SOURCE_ROOT; };
 		B5924A630DDA0A4100F9CD2B /* event.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = event.cc; path = ../../base/common/event.cc; sourceTree = SOURCE_ROOT; };
@@ -993,6 +1005,26 @@
 		B59CE65C0DD8EC24000B31AE /* httprequest.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest.h; path = ../../httprequest/httprequest.h; sourceTree = SOURCE_ROOT; };
 		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_module.cc; path = ../../localserver/managed_resource_store_module.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store_module.h; path = ../../localserver/managed_resource_store_module.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD2D0E06C0CE00DCA259 /* balloons.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = balloons.h; path = ../../notifier/balloons.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = balloons.cc; path = ../../notifier/balloons.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = system_osx.cc; path = ../../notifier/system_osx.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD3A0E06C10900DCA259 /* notification_manager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager.h; path = ../../notifier/notification_manager.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager.cc; path = ../../notifier/notification_manager.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD3C0E06C10900DCA259 /* notification.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD3D0E06C10900DCA259 /* notification.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification.cc; path = ../../notifier/notification.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD440E06C16400DCA259 /* geolocation_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = geolocation_test.h; path = ../../geolocation/geolocation_test.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD450E06C16400DCA259 /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = location_provider_pool.cc; path = ../../geolocation/location_provider_pool.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = location_provider_pool.h; path = ../../geolocation/location_provider_pool.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD4D0E06C1A200DCA259 /* thread.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cc; path = ../../geolocation/thread.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD4E0E06C1A200DCA259 /* thread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread.h; path = ../../geolocation/thread.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD530E06C23800DCA259 /* byte_store_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store_test.cc; path = ../../base/common/byte_store_test.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD540E06C23800DCA259 /* byte_store.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store.cc; path = ../../base/common/byte_store.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD550E06C23800DCA259 /* byte_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = byte_store.h; path = ../../base/common/byte_store.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD980E06CC7600DCA259 /* safari_workaround.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = safari_workaround.h; path = ../../base/safari/safari_workaround.h; sourceTree = SOURCE_ROOT; };
 		B5AB77DF0D9FDC2F001EE5D5 /* async_router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_router.h; path = ../../base/common/async_router.h; sourceTree = SOURCE_ROOT; };
 		B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_router.cc; path = ../../base/common/async_router.cc; sourceTree = SOURCE_ROOT; };
 		B5AC85DE0DCBBA5F00C62010 /* pldhash.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pldhash.c; path = ../../../third_party/spidermonkey/xpcom/glue/pldhash.c; sourceTree = SOURCE_ROOT; };
@@ -1038,13 +1070,6 @@
 		B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = async_task_sf.mm; path = ../../localserver/safari/async_task_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_sf.h; path = ../../localserver/safari/async_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_test.cc; path = ../../base/common/url_utils_test.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2430DDBA35A001DBEE5 /* unit_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = unit_test.h; path = ../../notifier/unit_test.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2440DDBA35A001DBEE5 /* notification_manager_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager_test.h; path = ../../notifier/notification_manager_test.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager.cc; path = ../../notifier/notification_manager.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2460DDBA35A001DBEE5 /* user_activity.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = user_activity.h; path = ../../notifier/user_activity.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2470DDBA35A001DBEE5 /* notification_manager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager.h; path = ../../notifier/notification_manager.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = unit_test.cc; path = ../../notifier/unit_test.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager_test.cc; path = ../../notifier/notification_manager_test.cc; sourceTree = SOURCE_ROOT; };
 		B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mozjs_npapi_storage.cc; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.cc; sourceTree = SOURCE_ROOT; };
 		B5FEB9B60DDCE58C001DBEE5 /* mozjs_npapi_storage.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = mozjs_npapi_storage.h; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h; sourceTree = SOURCE_ROOT; };
 		B5FEB9B80DDCE58C001DBEE5 /* mozjs_npruntime.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mozjs_npruntime.cc; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime.cc; sourceTree = SOURCE_ROOT; };
@@ -1202,16 +1227,20 @@
 				B5950B4D0DDE014100D54424 /* device_data_provider.cc */,
 				B5950B4E0DDE014100D54424 /* empty_device_data_provider.h */,
 				B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */,
-				B5950B500DDE014100D54424 /* network_location_request.h */,
-				B5950B510DDE014100D54424 /* network_location_request.cc */,
-				B5950B520DDE014100D54424 /* network_location_provider.h */,
-				B5950B530DDE014100D54424 /* network_location_provider.cc */,
 				79272FDD0DC2141700CDF577 /* geolocation.cc */,
 				79272FDE0DC2141800CDF577 /* geolocation.h */,
-				B58727CD0DD4EE84001E4E0B /* geolocation_test.h */,
-				B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */,
+				B5A9BD440E06C16400DCA259 /* geolocation_test.h */,
+				B5A9BD450E06C16400DCA259 /* geolocation_test.cc */,
 				79272FDF0DC2141800CDF577 /* location_provider.cc */,
 				79272FE00DC2141800CDF577 /* location_provider.h */,
+				B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */,
+				B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */,
+				B5950B520DDE014100D54424 /* network_location_provider.h */,
+				B5950B530DDE014100D54424 /* network_location_provider.cc */,
+				B5950B500DDE014100D54424 /* network_location_request.h */,
+				B5950B510DDE014100D54424 /* network_location_request.cc */,
+				B5A9BD4E0E06C1A200DCA259 /* thread.h */,
+				B5A9BD4D0E06C1A200DCA259 /* thread.cc */,
 			);
 			name = geolocation;
 			sourceTree = "<group>";
@@ -1357,6 +1386,8 @@
 		B544D9630D2EE5D000D30561 /* localserver */ = {
 			isa = PBXGroup;
 			children = (
+				B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */,
+				B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */,
 				B544D9640D2EE5D000D30561 /* common */,
 				B544DCC10D35789D00D30561 /* safari */,
 				B58EFE430D529A9A00B0A65D /* npapi */,
@@ -1424,6 +1455,7 @@
 				B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */,
 				B57A58530DA92C6A001B0CC6 /* loader.mm */,
 				B5D8D3380DB9320800C257AA /* nsstring_utils.mm */,
+				B5A9BD980E06CC7600DCA259 /* safari_workaround.h */,
 				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
 				B5B305160DB503DA00A206B8 /* scoped_cf.h */,
 			);
@@ -1459,6 +1491,9 @@
 				B56F677E0DAE009B00A5D6C5 /* base64.h */,
 				B544D97E0D2EE5D000D30561 /* base_class.cc */,
 				B55F243C0DB3DD3B00AF44E2 /* basictypes.h */,
+				B5A9BD540E06C23800DCA259 /* byte_store.cc */,
+				B5A9BD550E06C23800DCA259 /* byte_store.h */,
+				B5A9BD530E06C23800DCA259 /* byte_store_test.cc */,
 				B55D10DF0D992C3F00B405E4 /* common.h */,
 				B58EFF630D52A5DC00B0A65D /* common_sf.h */,
 				B544D97D0D2EE5D000D30561 /* common_sf.mm */,
@@ -2034,14 +2069,12 @@
 		B58EFE430D529A9A00B0A65D /* npapi */ = {
 			isa = PBXGroup;
 			children = (
+				B58EFE770D529AEA00B0A65D /* capture_task_np.h */,
 				B58EFE6D0D529AEA00B0A65D /* localserver_np.h */,
+				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
 				B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */,
 				B58EFE700D529AEA00B0A65D /* resource_store_np.cc */,
 				B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */,
-				B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */,
-				B58EFE740D529AEA00B0A65D /* managed_resource_store_np.h */,
-				B58EFE770D529AEA00B0A65D /* capture_task_np.h */,
-				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
 				B58EFE790D529AEA00B0A65D /* file_submitter_np.h */,
 			);
 			name = npapi;
@@ -2060,18 +2093,14 @@
 		B5924A480DDA0A0600F9CD2B /* notifier */ = {
 			isa = PBXGroup;
 			children = (
-				B5924A500DDA0A2900F9CD2B /* notification.h */,
-				B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */,
-				B5924A520DDA0A2900F9CD2B /* notifier_process.h */,
-				B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */,
-				B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */,
-				B5FEB2430DDBA35A001DBEE5 /* unit_test.h */,
-				B5FEB2440DDBA35A001DBEE5 /* notification_manager_test.h */,
-				B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */,
-				B5FEB2460DDBA35A001DBEE5 /* user_activity.h */,
-				B5FEB2470DDBA35A001DBEE5 /* notification_manager.h */,
-				B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */,
-				B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */,
+				B5A9BD2D0E06C0CE00DCA259 /* balloons.h */,
+				B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */,
+				B5A9BD3C0E06C10900DCA259 /* notification.h */,
+				B5A9BD3D0E06C10900DCA259 /* notification.cc */,
+				B5A9BD3A0E06C10900DCA259 /* notification_manager.h */,
+				B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */,
+				B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */,
+				B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */,
 			);
 			name = notifier;
 			sourceTree = "<group>";
@@ -2576,7 +2605,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GoogleGearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
+			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
 		};
 		B5B307500DB5753600A206B8 /* Generate UI files */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2645,7 +2674,6 @@
 				B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */,
 				B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */,
 				B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */,
-				B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */,
 				B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */,
 				B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */,
 				B58E005B0D5BB2A600B0A65D /* permissions_db.cc in Sources */,
@@ -2714,17 +2742,10 @@
 				B58727C50DD4EE49001E4E0B /* serialization_test.cc in Sources */,
 				B58727C90DD4EE54001E4E0B /* sqlite_wrapper_test.cc in Sources */,
 				B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */,
-				B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */,
 				B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */,
-				B5924A580DDA0A2900F9CD2B /* notifier_process_win32.cc in Sources */,
-				B5924A5A0DDA0A2900F9CD2B /* notifier_process_osx.cc in Sources */,
-				B5924A5D0DDA0A2900F9CD2B /* notifier_process_linux.cc in Sources */,
 				B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */,
 				B5924A660DDA0A4100F9CD2B /* event.cc in Sources */,
 				B5FF55DA0DDB75DA0058E403 /* update_task_single_process.cc in Sources */,
-				B5FEB24C0DDBA35A001DBEE5 /* notification_manager.cc in Sources */,
-				B5FEB24F0DDBA35A001DBEE5 /* unit_test.cc in Sources */,
-				B5FEB2500DDBA35A001DBEE5 /* notification_manager_test.cc in Sources */,
 				B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */,
 				B5FEB9BE0DDCE58C001DBEE5 /* mozjs_npruntime.cc in Sources */,
 				B5950B550DDE014100D54424 /* device_data_provider.cc in Sources */,
@@ -2774,6 +2795,17 @@
 				B55FDA010DF71B8F007FC7E1 /* html_modeless_dialog_sf.mm in Sources */,
 				B55FDB690DF88766007FC7E1 /* ConvertUTF.c in Sources */,
 				B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */,
+				B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */,
+				B5A9BD300E06C0CE00DCA259 /* notifier_process_osx.cc in Sources */,
+				B5A9BD320E06C0CE00DCA259 /* balloons.cc in Sources */,
+				B5A9BD330E06C0CE00DCA259 /* system_osx.cc in Sources */,
+				B5A9BD3F0E06C10900DCA259 /* notification_manager.cc in Sources */,
+				B5A9BD410E06C10900DCA259 /* notification.cc in Sources */,
+				B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */,
+				B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */,
+				B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */,
+				B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */,
+				B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
