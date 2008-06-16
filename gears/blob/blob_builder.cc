@@ -25,19 +25,14 @@
 
 #include "gears/blob/blob_builder.h"
 
-#include <limits>
-#include "gears/base/common/file.h"
-#include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_interface.h"
-#include "gears/blob/buffer_blob.h"
-#include "gears/blob/file_blob.h"
 #include "gears/blob/join_blob.h"
 
 namespace {
 const int64 kMaxBufferSize = 1024 * 1024; // 1MB
 }
 
-BlobBuilder::BlobBuilder() {
+BlobBuilder::BlobBuilder() : byte_store_(new ByteStore) {
 }
 
 BlobBuilder::~BlobBuilder() {
@@ -46,79 +41,55 @@ BlobBuilder::~BlobBuilder() {
 bool BlobBuilder::AddBlob(BlobInterface *blob) {
   if (blob->Length() < 0) return false;
   if (blob->Length() == 0) return true;
-  PushDataAsBlob();
+  if (byte_store_->Length()) {
+    scoped_refptr<BlobInterface> byte_store_blob;
+    byte_store_->CreateBlob(&byte_store_blob);
+    blob_list_.push_back(byte_store_blob.get());
+    byte_store_.reset(new ByteStore);
+  }
   blob_list_.push_back(blob);
   return true;
 }
 
 bool BlobBuilder::AddData(const void *data, int64 length) {
-  if (length < 0) return false;
-  if (length == 0) return true;
-  if (!file_.get() && (length + data_.size() > kMaxBufferSize)) {
-    file_.reset(File::CreateNewTempFile());
-    if (!data_.empty()) {
-      int64 result = file_->Write(&data_[0], data_.size());
-      if (result != length) return false;
-      data_.clear();
-    }
-  }
-
-  if (file_.get()) {
-    int64 pos = file_->Tell();
-    int64 result = file_->Write(static_cast<const uint8*>(data), length);
-    if (result != length) {
-      file_->Truncate(pos);
-      file_->Seek(pos, File::SEEK_FROM_START);
-      return false;
-    }
-  } else {
-    data_.insert(data_.end(), static_cast<const uint8*>(data),
-                 static_cast<const uint8*>(data) + length);
-  }
-  return true;
+  return byte_store_->AddData(data, length);
 }
 
 bool BlobBuilder::AddString(const std::string16 &data) {
-  std::string utf8_string;
-  String16ToUTF8(data.c_str(), &utf8_string);
-  return AddData(utf8_string.c_str(), utf8_string.length());
+  return byte_store_->AddString(data);
 }
 
 void BlobBuilder::CreateBlob(scoped_refptr<BlobInterface> *blob) {
-  PushDataAsBlob();
-  if (blob_list_.size() == 0) {
+  bool appended_bytes = false;
+  if (byte_store_->Length()) {
+    scoped_refptr<BlobInterface> byte_store_blob;
+    byte_store_->CreateBlob(&byte_store_blob);
+    blob_list_.push_back(byte_store_blob.get());
+    appended_bytes = true;
+  }
+
+  if (blob_list_.empty()) {
     *blob = new EmptyBlob;
   } else if (blob_list_.size() == 1) {
     *blob = blob_list_.back();
-    blob_list_.pop_back();
   } else {
     *blob = new JoinBlob(blob_list_);
-    blob_list_.clear();
+  }
+
+  if (appended_bytes) {
+    blob_list_.pop_back();
   }
 }
 
 int64 BlobBuilder::Length() const {
-  int64 length(0);
-  if (file_.get()) {
-    length = file_->Size();
-    // TODO(bgarcia): If something bad happened to the file, is there
-    //                anything we can do to recover from this situation?
-    assert(length != -1);
-  }
-  length += data_.size();
+  int64 length(byte_store_->Length());
   for (unsigned i = 0; i < blob_list_.size();  ++i) {
     length += blob_list_[i]->Length();
   }
   return length;
 }
 
-void BlobBuilder::PushDataAsBlob() {
-  if (!data_.empty()) {
-    assert(!file_.get());
-    blob_list_.push_back(new BufferBlob(&data_));
-    data_.clear();
-  } else if (file_.get()) {
-    file_->Flush();
-    blob_list_.push_back(new FileBlob(file_.release()));
-  }
+void  BlobBuilder::Reset() {
+  byte_store_.reset(new ByteStore);
+  blob_list_.clear();
 }
