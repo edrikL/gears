@@ -244,7 +244,7 @@ The AudioRecorder class throws the following events, under the stated preconditi
 || channelType   || based on device       || previous channelType  ||
 || sampleRate    || based on device       || previous sampleRate   ||
 || bitsPerSample || based on device       || previous bitsPerSample||
-|| format        || ogg/speex ??          || previous format       ||
+|| format        || audio/wav             || previous format       ||
 || volume        || 0.5                   || previous volume       ||
 || muted         || false                 || false                 ||
 || silenceLevel  || 0                     || previous silenceLevel ||
@@ -306,7 +306,7 @@ interface VoidCallback {
 = Deviations from HTML5 =
    * an additional metadata field in Media class
    * additional channel properties specified in the Audio class
-   * separate class for MediaRecorder
+   * separate class for AudioRecorder
 
 = Sample code =
 
