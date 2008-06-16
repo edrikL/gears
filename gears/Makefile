@@ -618,6 +618,7 @@ ifeq ($(OS),osx)
 THIRD_PARTY_VPATH	+= \
 		../third_party/portaudio/src/hostapi/coreaudio \
 		../third_party/portaudio/src/os/mac_osx \
+		../third_party/portaudio/src/os/unix \
 		$(NULL)
 endif
 
@@ -657,6 +658,7 @@ THIRD_PARTY_CSRCS	+= \
 		pa_mac_core_blocking.c \
 		pa_mac_core_utilities.c \
 		pa_mac_hostapis.c \
+		pa_unix_util.c \
 		$(NULL)
 endif
 
