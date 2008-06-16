@@ -416,6 +416,12 @@ function testGeolocationGetLocationFromResponse() {
   }
 }
 
+function testNotifier() {
+  if (isUsingCCTests && !isOfficial) {
+    internalTests.testNotifier();
+  }
+}
+
 // Helper functions
 
 function createTestArray(length) {
