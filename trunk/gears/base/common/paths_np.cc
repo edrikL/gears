@@ -69,7 +69,7 @@ bool GetComponentDirectory(std::string16 *path) {
   if (!GetCurrentModuleFilename(path)) {
     return false;
   }
-  RemoveName(&path);
+  RemoveName(path);
   return true;
 }
 
