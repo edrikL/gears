@@ -99,7 +99,7 @@ std::string16 GenerateGuid() {
   assert(num);
   wide_guid_str = wide_guid_buf + 1;                // remove opening bracket
   wide_guid_str.erase(wide_guid_str.length() - 1);  // remove closing bracket
-#elif defined(LINUX) && !defined(OS_MACOSX)
+#elif defined(OS_ANDROID) || (defined(LINUX) && !defined(OS_MACOSX))
   FILE *fptr = fopen("/proc/sys/kernel/random/uuid", "r");
   assert(fptr);
   if (fptr) {
