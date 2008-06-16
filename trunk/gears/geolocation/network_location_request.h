@@ -55,6 +55,11 @@ class NetworkLocationRequest : public AsyncTask {
                    double latitude,
                    double longitude,
                    int64 timestamp);
+  // This method aborts any pending request and instructs the worker thread to
+  // terminate. The object is destructed once the thread terminates. This
+  // method blocks until the AsyncTask::Run() implementation is complete, after
+  // which the thread will not attempt to access external resources such as the
+  // listener.
   void StopThreadAndDelete();
  private:
   // Private constructor and destructor. Callers should use Create() and
@@ -71,7 +76,9 @@ class NetworkLocationRequest : public AsyncTask {
   ListenerInterface *listener_;
   std::string16 url_;
   std::string16 host_name_;
-  Event run_complete_event_;
+
+  Mutex is_processing_response_mutex_;
+
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationRequest);
 };
 
