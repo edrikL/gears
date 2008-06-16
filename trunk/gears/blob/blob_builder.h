@@ -28,12 +28,12 @@
 
 #include <vector>
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/byte_store.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class BlobInterface;
-class File;
 
 // Creates a Blob from multiple data sources.
 class BlobBuilder {
@@ -53,18 +53,17 @@ class BlobBuilder {
   bool AddString(const std::string16 &data);
 
   // Returns a Blob instance containing all the data added.
-  // It also has the side-effect of resetting the BlobBuilder.
   void CreateBlob(scoped_refptr<BlobInterface> *blob);
 
   // Returns the current total length of all data.
   int64 Length() const;
 
- private:
-  void PushDataAsBlob();
+  // Removes all data from the BlobBuilder.
+  void Reset();
 
+ private:
   std::vector<scoped_refptr<BlobInterface> > blob_list_;
-  std::vector<uint8> data_;
-  scoped_ptr<File> file_;
+  scoped_refptr<ByteStore> byte_store_;
   DISALLOW_EVIL_CONSTRUCTORS(BlobBuilder);
 };
 
