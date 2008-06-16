@@ -26,11 +26,6 @@
 // This file contains workarounds and documentation for issues with WebKit and
 // OSX that affect Gears.
 
-// Hopefully these issues will be resolved before launch.
-
-// In the meantime, lets mark this whole file as temporary:
-// SAFARI-TEMP
-
 // OS X Bugs affecting Gears:
 
 // -----------------------------------------------------------------------------
@@ -85,8 +80,20 @@
 // Workaround: We manually check if a double fits in the bounds of an int, and
 // if so we manually report it's type as an int, see JsTokenGetType() in
 // js_types.cc.
+// -----------------------------------------------------------------------------
+// Webkit bug 18941: If you display a Modal Webview from inside a JS timer
+//                   callback, then WebKit's native timers don't fire.
+//                   Since these are used for things like layout, nothing
+//                   is displayed.
+//
+// Workaround: Call WebCore::TimerBase::fireTimersInNestedEventLoop() which
+// enables timers in a nexted runloop which makes the WebView display content.
+// See proposed patch for this bug:
+// https://bugs.webkit.org/attachment.cgi?id=21681&action=prettypatch
 
+#include <dlfcn.h>
 #import <Cocoa/Cocoa.h>
+#include <mach-o/nlist.h>
 
 // Workaround for rdar://5817126
 // In the meantime we return an empty set of headers and requests that always
@@ -102,3 +109,55 @@
 }
 
 @end
+
+// Workaround for Webkit bug 18941. 
+// Returns address of WebCore::TimerBase::fireTimersInNestedEventLoop() static
+// function defined in WebCore library.
+// Returns NULL on error.
+static void *GetFireTimerFunc() {
+  // Find the base address of the WebCore library.
+  // The WebScriptObject class is defined in the library.
+  Class c =  NSClassFromString(@"WebScriptObject");
+  Dl_info addr;
+  if (dladdr(c, &addr) == 0) return NULL;
+
+  // Open the library binary and find the address of the symbol.
+  // dli_fname contains the full path of the WebCore library.
+  const char *module_name = addr.dli_fname;
+  struct nlist nl[2];
+  memset(&nl, 0, sizeof(nl));
+  // Mangled version of WebCore::TimerBase::fireTimersInNestedEventLoop() as
+  // reported by nm.
+  nl[0].n_un.n_name = "__ZN7WebCore9TimerBase27fireTimersInNestedEventLoopEv";
+ 
+  if (nlist(module_name, nl) != 0) return NULL;
+  if (nl[0].n_type == N_UNDF) return NULL;
+  vm_offset_t relative_address = (vm_offset_t)nl[0].n_value;
+  
+  SInt32 os_version;
+  if (Gestalt(gestaltSystemVersion, &os_version) != noErr) return NULL;
+  
+  // It seems that on 10.4 nlist returns an absolute address, while on
+  // 10.5 a relative address from the start of the module is returned.
+  void *webcore_base_addr = 0;
+  if (os_version >= 0x1050) {
+    webcore_base_addr = addr.dli_fbase;
+  }
+  
+  return webcore_base_addr + relative_address;
+}
+
+// Calls through WebCore::TimerBase::fireTimersInNestedEventLoop() in WebCore.
+void EnableWebkitTimersForNestedRunloop() {
+  static void *func_ptr = 0;
+  
+  if (!func_ptr) {
+    func_ptr = GetFireTimerFunc();
+  }
+  
+  // Call through to function if it's defined.
+  if (func_ptr) {
+    void (* fireTimersInNestedEventLoop)() = func_ptr;
+    fireTimersInNestedEventLoop();
+  }
+}

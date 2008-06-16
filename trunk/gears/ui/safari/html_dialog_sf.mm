@@ -32,6 +32,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
+#include "gears/base/safari/safari_workaround.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
 #import  "gears/ui/safari/html_dialog_sf.h"
@@ -127,23 +128,28 @@
   if (![self createWindow:window_style]) {
     return false;
   }
+  
+  // See gears/base/safari/safari_workaround.m for details.
+  EnableWebkitTimersForNestedRunloop();
 
   // Display window as sheet.
   NSWindow *front_window = [NSApp keyWindow];
   [NSApp beginSheet:window_ 
      modalForWindow:front_window 
       modalDelegate:nil 
-     didEndSelector:nil 
+     didEndSelector:nil
         contextInfo:nil];
   
-  // Credit goes to David Sinclair of Dejal software for this method of running
-  // a modal WebView.
-  NSModalSession session = [NSApp beginModalSessionForWindow:front_window];
-  while (!window_dismissed_ && 
-         [NSApp runModalSession:session] == NSRunContinuesResponse) {
-    [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
+  // Spin until the sheet is closed.
+  while (!window_dismissed_) {
+    [NSApp setWindowsNeedUpdate:YES];
+    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                        untilDate:[NSDate distantFuture]
+                                           inMode:NSDefaultRunLoopMode
+                                          dequeue:YES];
+    [NSApp sendEvent:event];
   }
-  [NSApp endModalSession:session];
+  
   [NSApp endSheet:window_];
   [window_ close];
   window_ = nil;
