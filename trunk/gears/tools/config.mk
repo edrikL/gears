@@ -593,11 +593,15 @@ endif
 # Add USING_CCTESTS in debug builds and non-official opt builds.
 # This adds the GearsTest object (gears/cctest), which can be
 # used to access a perf timer and run the C++ unit tests.
+# It also adds notifier_test to run tests for the notifier
+# application.
 ifeq ($(MODE),dbg)
 CPPFLAGS += -DUSING_CCTESTS=1
+M4FLAGS  += -DUSING_CCTESTS=1
 else
 ifneq ($(OFFICIAL_BUILD),1)
 CPPFLAGS += -DUSING_CCTESTS=1
+M4FLAGS  += -DUSING_CCTESTS=1
 endif
 endif
 

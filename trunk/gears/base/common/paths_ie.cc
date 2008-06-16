@@ -68,6 +68,10 @@ bool GetInstallDirectory(std::string16 *path) {
 #endif
 }
 
+bool GetComponentDirectory(std::string16 *path) {
+  return GetInstallDirectory(path);
+}
+
 bool GetBaseResourcesDirectory(std::string16 *path) {
   // TODO(nigeltao): implement.
   return false;

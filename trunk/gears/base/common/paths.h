@@ -61,8 +61,25 @@ extern const size_t kFileExtensionMaxChars;
 // Returns true if the function succeeds.  'path' is unmodified on failure.
 bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path);
 
+// Removes the last folder/file name from 'path'.
+// There is no trailing path separator and the path passed in should not
+// have a trailing separator.
+//
+// Name is assumed to have been validated before
+// being passed into this function.
+void RemoveName(std::string16 *path);
+
+// Appends to the 'path', suitable for a data file or dir.
+// There is no trailing path separator and the path passed in should not
+// have a trailing separator.
+//
+// Name is assumed to have been validated before
+// being passed into this function.
+void AppendName(const char16 *name, std::string16 *path);
+
 // Appends a module-specific name to 'path', suitable for a data file or dir.
-// There is no trailing path separator.
+// There is no trailing path separator and the path passed in should not
+// have a trailing separator.
 //
 // Both name & module_suffix are assumed to have been validated before
 // being passed into this function.
@@ -93,10 +110,14 @@ bool GetUmbrellaInstallDirectory(std::string16 *path);
 // Returns the path to install directory for the current browser.
 bool GetInstallDirectory(std::string16 *path);
 
+// Returns the path to directory containing plugins/exe's
+// for the current browser.
+bool GetComponentDirectory(std::string16 *path);
+
 // Checks that an unsanitized string from the user is valid for use as part
 // of a path component. 'error_message' is optional and can be NULL.
-// 
-// Returns true if the function succeeds. 'error_message' is unmodified on 
+//
+// Returns true if the function succeeds. 'error_message' is unmodified on
 // success.
 bool IsUserInputValidAsPathComponent(const std::string16 &user_input,
                                      std::string16 *error_message);

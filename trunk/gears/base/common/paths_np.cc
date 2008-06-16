@@ -30,6 +30,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/vista_utils.h"
 
@@ -47,6 +48,30 @@ static const char16 *kComponentsSubdir = STRING16(L"Google\\"
                                                   PRODUCT_FRIENDLY_NAME L"\\"
                                                   L"Shared\\"
                                                   PRODUCT_VERSION_STRING);
+
+// Get the current module path. This is the path where the module of the
+// currently running code sits.
+static bool GetCurrentModuleFilename(std::string16 *path) {
+  assert(path);
+
+  // Get the path of the loaded module
+  wchar_t buffer[MAX_PATH + 1] = {0};
+  if (!::GetModuleFileName(GetGearsModuleHandle(), buffer,
+                           ARRAYSIZE(buffer))) {
+    return false;
+  }
+  path->assign(std::string16(buffer));
+  return true;
+}
+
+bool GetComponentDirectory(std::string16 *path) {
+  assert(path);
+  if (!GetCurrentModuleFilename(path)) {
+    return false;
+  }
+  RemoveName(&path);
+  return true;
+}
 
 bool GetInstallDirectory(std::string16 *path) {
   // TODO(aa): Implement me when needed.

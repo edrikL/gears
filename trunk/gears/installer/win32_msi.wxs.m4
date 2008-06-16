@@ -128,6 +128,10 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='vista_broker_pdb' Name='vista_broker.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.pdb" />
 `~)
+m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
+                  <File Id='ie_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/notifier_test.exe" />
+`~)
                 </Component>
               </Directory>
             </Directory>
@@ -165,6 +169,10 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
 m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
+`~)
+m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
+                  <File Id='ff_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/notifier_test.exe" />
 `~)
                 </Component>
               </Directory>
