@@ -391,13 +391,9 @@ bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
         STRING16(L"errorMessage"), STRING16(L"Failed to get valid position."));
   }
   JsParamToSend argv[] = { JSPARAM_OBJECT, callback_param.get() };
-  if (!GetJsRunner()->InvokeCallback(fix_info->callback.get(),
-                                     ARRAYSIZE(argv), argv, NULL)) {
-    LOG(("GearsGeolocation::MakeCallback() : Callback to JavaScript "
-         "failed.\n"));
-    assert(false);
-    return false;
-  }
+  // InvokeCallback returns false if the callback enounters an error.
+  GetJsRunner()->InvokeCallback(fix_info->callback.get(),
+                                ARRAYSIZE(argv), argv, NULL);
   fix_info->last_position = last_position_;
   fix_info->last_callback_time = GetCurrentTimeMillis();
   return true;
