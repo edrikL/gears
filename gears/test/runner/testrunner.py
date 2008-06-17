@@ -12,7 +12,7 @@ class TestRunner:
     test_server: instance of testwebserver
   """
   
-  TIMEOUT = 5 * 60 #seconds
+  TIMEOUT = 8 * 60 #seconds
     
   def __init__(self, browser_launchers, web_servers, test_url):
     if not browser_launchers or len(browser_launchers) < 1:
