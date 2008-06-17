@@ -252,15 +252,13 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     watches_[next_watch_id_++] = info;
   }
 
-  // Instruct all providers to get a new position fix.
-  for (ProviderVector::iterator iter = info->providers.begin();
-       iter != info->providers.end();
-       ++iter) {
-    if (!(*iter)->GetCurrentPosition()) {
-      LOG(("GearsGeolocation::GetPositionFix() : Failed to get current "
-           "position.\n"));
-      assert(false);
-      return;
+  // If this is a non-repeating request, hint to all providers that new data is
+  // required ASAP.
+  if (!info->repeats) {
+    for (ProviderVector::iterator iter = info->providers.begin();
+         iter != info->providers.end();
+         ++iter) {
+      (*iter)->UpdatePosition();
     }
   }
 }
@@ -299,14 +297,6 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(
       // TODO(steveblock): Start a timer and call back exactly when the
       // minimum time period has elapsed.
     }
-  }
-  // Instruct the provider to get a new fix. The provider may throttle the
-  // rate of requests.
-  if (!provider->GetCurrentPosition()) {
-    LOG(("GearsGeolocation::LocationUpdateAvailableImpl() : Failed to "
-         "get current position.\n"));
-    assert(false);
-    return;
   }
 }
 
