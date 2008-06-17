@@ -542,7 +542,6 @@ EXE_PREFIX =
 EXE_SUFFIX = .exe
 # Note: cannot use *F because that only works when the rule uses patterns.
 EXEFLAGS = $(SHARED_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
-NOTIFIER_EXEFLAGS = /SUBSYSTEM:WINDOWS
 
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
