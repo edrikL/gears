@@ -335,6 +335,9 @@ endif
 # when BROWSER is 'NONE'. 'installers' targets are built without any
 # BROWSER value set.
 ifeq ($(BROWSER), NONE)
+ifeq ($(OS),linux)
+modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
+endif
 ifeq ($(OS),win32)
 modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 # TODO(aa): Should this run on wince too?
@@ -743,6 +746,13 @@ else
 	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
 	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 endif
+ifeq ($(OS),osx)
+    # notifier_test isn't yet supported on OSX.
+else
+ifeq ($(USING_CCTESTS),1)
+	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+endif
+endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
@@ -765,7 +775,7 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # resources to the en-US directory.
 	mkdir -p $@/Contents/Resources/en-US
 	cp $(COMMON_RESOURCES) $@/Contents/Resources/en-US/
-# Copy luanch_url
+# Copy launch_url
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 
