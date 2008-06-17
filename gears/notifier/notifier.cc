@@ -93,7 +93,7 @@ Notifier::Notifier()
 Notifier::~Notifier() {
 }
 
-bool Notifier::Initalize() {
+bool Notifier::Initialize() {
   GearsNotification::RegisterAsSerializable();
   IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
   if (!ipc_message_queue) {

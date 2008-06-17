@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
   MacNotifier notifier;
 
   int retval = -1;
-  if (notifier.Initalize()) {
+  if (notifier.Initialize()) {
     retval = notifier.Run();
     notifier.Terminate();
   }

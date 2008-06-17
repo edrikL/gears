@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 class LinuxNotifier : public Notifier {
  public:
   LinuxNotifier();
-  virtual bool Initalize();
+  virtual bool Initialize();
   virtual int Run();
   virtual void Terminate();
 
@@ -46,8 +46,8 @@ class LinuxNotifier : public Notifier {
 LinuxNotifier::LinuxNotifier() {
 }
 
-bool LinuxNotifier::Initalize() {
-  return Notifier::Initalize();
+bool LinuxNotifier::Initialize() {
+  return Notifier::Initialize();
 }
 
 void LinuxNotifier::Terminate() {
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   LinuxNotifier notifier;
 
   int retval = -1;
-  if (notifier.Initalize()) {
+  if (notifier.Initialize()) {
     retval = notifier.Run();
     notifier.Terminate();
   }
