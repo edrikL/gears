@@ -688,6 +688,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # dependencies, we list it as a phony target, so it's always rebuilt.
 .PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER_PKG)
 
+ifeq ($(OS),osx)
 ifeq ($(HAVE_ICEBERG),1)
 # This rule generates a package installer for the Plugin and InputManager.
 $(SF_INSTALLER_PKG): 
@@ -696,6 +697,7 @@ else
 $(warning To create a Safari installer for Gears, you must install Iceberg \
   from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
   Safari version manually by running tools/osx/install_gears.sh script)
+endif
 endif
 
 ifeq ($(OS),osx)
