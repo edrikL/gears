@@ -101,7 +101,7 @@ class BaseInstaller:
         build = os.path.join(directory, item)
         build = build.replace('/', os.sep).replace('\\', os.sep)
         return build
-    raise "Can't locate build of type: %s" % type
+    raise "Can't locate build of type '%s' in '%s'" % (type, directory)
 
   def _saveInstalledBuild(self):
     """ Copies given build to the "current build" location. """
@@ -198,11 +198,15 @@ class BaseWin32Installer(BaseInstaller):
     """ Do installation.  """
     # First, uninstall current installed build, if any exists
     if os.path.exists(self.current_build):
-      build_path = self._buildPath(self.current_build)
-      print 'Uninstalling build %s' % build_path
-      c = ['msiexec', '/passive', '/uninstall', build_path]
-      p = subprocess.Popen(c)
-      p.wait()
+      # Supress exceptions if uninstall fails or no build present.
+      try:
+        build_path = self._buildPath(self.current_build)
+        print 'Uninstalling build %s' % build_path
+        c = ['msiexec', '/passive', '/uninstall', build_path]
+        p = subprocess.Popen(c)
+        p.wait()
+      except:
+        print 'Uninstall unsuccessful.'
 
     # Now install new build
     build_path = self._buildPath(BaseInstaller.BUILDS)
@@ -244,9 +248,6 @@ class WinXpInstaller(BaseWin32Installer):
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'permissions'
 
-  def type(self):
-    return 'WinXpInstaller'
-
   def _buildPath(self, directory):
     return self._findBuildPath('msi', directory)
 
@@ -260,9 +261,6 @@ class WinVistaInstaller(BaseWin32Installer):
     self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'permissions'
-
-  def type(self):
-    return 'WinVistaInstaller'
 
   def _buildPath(self, directory):
     return self._findBuildPath('msi', directory)
@@ -334,8 +332,8 @@ class WinCeInstaller(BaseInstaller):
     p.wait()
 
 
-class BaseMacFirefoxInstaller(BaseInstaller):
-  """ Base class for Mac installers. """
+class BaseFirefoxMacInstaller(BaseInstaller):
+  """ Abstract base class for Mac firefox installers. """
   
   def __init__(self, profile_name, firefox_bin, profile_loc):
     self.profile = profile_name
@@ -380,51 +378,62 @@ class BaseMacFirefoxInstaller(BaseInstaller):
     self._copyAndChmod(ffprofile_cache, gears_folder)
 
 
-class MacFirefox2Installer(BaseMacFirefoxInstaller):
+class Firefox2MacInstaller(BaseFirefoxMacInstaller):
   """ Firefox 2 installer for Mac OS X. """
 
   FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile_name):
-    firefox_bin = MacFirefox2Installer.FIREFOX_PATH
-    BaseMacFirefoxInstaller.__init__(self, profile_name, firefox_bin, 'ff2profile-mac')
+    firefox_bin = Firefox2MacInstaller.FIREFOX_PATH
+    BaseFirefoxMacInstaller.__init__(self, profile_name, firefox_bin, 'ff2profile-mac')
   
-  def type(self):
-    return 'MacFirefox2Installer'
 
-
-class MacFirefox3Installer(BaseMacFirefoxInstaller):
+class Firefox3MacInstaller(BaseFirefoxMacInstaller):
   """ Firefox 3 installer for Mac OS X. """
 
   FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile_name):
-    firefox_bin = MacFirefox3Installer.FIREFOX_PATH
-    BaseMacFirefoxInstaller.__init__(self, profile_name, firefox_bin, 'ff3profile-mac')
+    firefox_bin = Firefox3MacInstaller.FIREFOX_PATH
+    BaseFirefoxMacInstaller.__init__(self, profile_name, firefox_bin, 'ff3profile-mac')
   
-  def type(self):
-    return 'MacFirefox3Installer'
 
-
-class MacSafariInstaller(BaseInstaller):
+class SafariMacInstaller(BaseInstaller):
   """ Safari installer for Mac OS X. """
+  
+  ROOT_PASSWORD = 'test'
 
-  def __init__(self):
+  def __init__(self, build_type):
     self._prepareProfiles()
+    self.build_type = build_type
     home = os.getenv('HOME')
+    self.current_build = os.path.join(home, 'current_gears_build')
     self.profile_path = os.path.join(home, 'Library/Application Support/Google')
     self.profile_name = 'Google Gears for Safari'
     self.src_profile = 'permissions'
   
+  def _RunAsRoot(self, root_cmd):
+    import pexpect
+    p = pexpect.spawn('sudo %s' % root_cmd)
+    try:
+      p.expect('Password:')
+      p.sendline(MacSafariInstaller.ROOT_PASSWORD)
+    except:
+      print 'Was not prompted for root password'
+  
   def install(self):
     """ Copy extension and profile for Safari. """
-    # TODO(ace): install extension
+    print 'Running Safari install script'
+    install_command = 'tools/osx/install_gears.sh %s' % self.build_type
+    os.chdir('../..')
+    self._RunAsRoot(install_command)    
+    os.chdir('test/runner')
     self._copyProfile(self.src_profile, self.profile_path, self.profile_name)
     self._saveInstalledBuild()
 
 
-class LinuxInstaller(BaseInstaller):
-  """ Installer for linux, extends Installer. """
+class BaseFirefoxLinuxInstaller(BaseInstaller):
+  """ Abstract base class for Linux firefox installers. """
 
   def __init__(self, profile_name):
     self.profile = profile_name
@@ -433,14 +442,10 @@ class LinuxInstaller(BaseInstaller):
     self.current_build = os.path.join(home, 'current_gears_build')
     self.ffprofile_path = os.path.join(home, '.mozilla/firefox')
     self.firefox_bin = 'firefox'
-    self.ffprofile = 'ff2profile-linux'
     self.profile_arg = '-CreateProfile %s' % self.profile
 
   def _buildPath(self, directory):
     return self._findBuildPath('xpi', directory)
-
-  def type(self):
-    return 'LinuxInstaller'
 
   def install(self):
     """ Do installation. """
@@ -449,3 +454,19 @@ class LinuxInstaller(BaseInstaller):
     os.system('%s %s' % (self.firefox_bin, self.profile_arg))
     self._installExtension(build_path)
     self._saveInstalledBuild()
+
+
+class Firefox2LinuxInstaller(BaseFirefoxLinuxInstaller):
+  """ Firefox 2 installer for linux. """
+
+  def __init__(self, profile_name):
+    self.ffprofile = 'ff2profile-linux'
+    BaseFirefoxLinuxInstaller.__init__(self, profile_name)
+
+
+class Firefox3LinuxInstaller(BaseFirefoxLinuxInstaller):
+  """ Firefox 3 installer for linux. """
+  
+  def __init__(self, profile_name):
+    self.ffprofile = 'ff3profile-linux'
+    BaseFirefoxLinuxInstaller.__init__(self, profile_name)

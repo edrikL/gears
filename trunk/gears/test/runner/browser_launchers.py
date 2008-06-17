@@ -139,7 +139,8 @@ class BasePosixLauncher(BaseBrowserLauncher):
     """
     print 'Attempting to kill all processes named %s' % process_name
     kill_cmd = ['killall', process_name]
-    subprocess.Popen(kill_cmd)
+    p = subprocess.Popen(kill_cmd)
+    p.wait()
 
 
 class SafariMacLauncher(BasePosixLauncher):
@@ -201,18 +202,36 @@ class Firefox3MacLauncher(BaseFirefoxMacLauncher):
     return 'Firefox3Mac'
 
 
-class FirefoxLinuxLauncher(BasePosixLauncher):
-  """ Launcher for firefox on linux, extends BrowserLauncher. """
+class BaseFirefoxLinuxLauncher(BasePosixLauncher):
+  """ Abstract base class for firefox launchers on linux. """
 
   def __init__(self, profile, automated=True):
     self.killAllInstances()
     home = os.getenv('HOME')
-    self.browser_command = ['firefox']
     if automated:
       self.browser_command.extend(['-P', profile])
     
   def killAllInstances(self):
     self._killInstancesByName('firefox-bin')
 
+
+class Firefox2LinuxLauncher(BaseFirefoxLinuxLauncher):
+  """ Launcher for firefox2 on linux, extends BaseFirefoxLinuxLauncher. """
+
+  def __init__(self, profile, automated=True):
+    self.browser_command = ['firefox2']
+    BaseFirefoxLinuxLauncher.__init__(self, profile, automated)
+
   def type(self):
-    return 'FirefoxLinux'
+    return 'Firefox2Linux'
+
+
+class Firefox3LinuxLauncher(BaseFirefoxLinuxLauncher):
+  """ Launcher for firefox3 on linux, extends BaseFirefoxLinuxLauncher. """
+
+  def __init__(self, profile, automated=True):
+    self.browser_command = ['firefox3']
+    BaseFirefoxLinuxLauncher.__init__(self, profile, automated)
+
+  def type(self):
+    return 'Firefox3Linux'

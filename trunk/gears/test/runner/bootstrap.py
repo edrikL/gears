@@ -20,7 +20,6 @@ class Bootstrap:
   OUTPUT_DIR = 'output'
   INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
   
-  
   def __init__(self, gears_binaries, installers, testrunner, suites_report):
     """ Set test objects. 
     
@@ -43,7 +42,6 @@ class Bootstrap:
     self.startTesting()
     self.writeResultsToFile()
 
-
   def copyFilesLocally(self):
     """ Poll until directory with installers/binaries are available.
 
@@ -59,27 +57,22 @@ class Bootstrap:
       shutil.rmtree(Bootstrap.INSTALLER_DIR)
     shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
 
-  
   def install(self):
     for installer in self.__installers:
       installer.install()
   
-
   def startTesting(self):
     self.test_results = self.__testrunner.runTests()
     
-  
   def writeResultsToFile(self):
     self.__createOutputDir(True)
     stream = open('output/TESTS-TestSuites.xml', 'w')
     self.__suites_report.writeReport(self.test_results, stream)
     stream.close()
 
-
   def clean(self):
     if os.path.exists(Bootstrap.OUTPUT_DIR):
       shutil.rmtree(Bootstrap.OUTPUT_DIR)
-
 
   def __createOutputDir(self, force_recreate=False):
     if os.path.exists(Bootstrap.OUTPUT_DIR):
@@ -118,6 +111,13 @@ if __name__ == '__main__':
   installers = []
   launchers = []
   
+  if ('bin-dbg' in sys.argv[1]):
+    build_type = 'dbg'
+  elif ('bin-opt' in sys.argv[1]):
+    build_type = 'opt'
+  else:
+    build_type = ''
+
   # Adding second webserver for cross domain tests.
   test_servers.append(TestWebserver(serverRootDir(), port=8001))
   test_servers.append(TestWebserver(serverRootDir(), port=8002))
@@ -141,11 +141,16 @@ if __name__ == '__main__':
     if osutils.osIsMac():
       launchers.append(browser_launchers.Firefox2MacLauncher('gears-ff2'))
       launchers.append(browser_launchers.Firefox3MacLauncher('gears-ff3'))
-      installers.append(installer.MacFirefox2Installer('gears-ff2'))
-      installers.append(installer.MacFirefox3Installer('gears-ff3'))
+      installers.append(installer.Firefox2MacInstaller('gears-ff2'))
+      installers.append(installer.Firefox3MacInstaller('gears-ff3'))
+      # TODO(ace): uncomment safari when working
+      #launchers.append(browser_launchers.SafariMacLauncher())
+      #installers.append(installer.SafariMacInstaller(build_type))
     else:
-      launchers.append(browser_launchers.FirefoxLinuxLauncher('gears-ff2'))
-      installers.append(installer.LinuxInstaller('gears-ff2'))
+      launchers.append(browser_launchers.Firefox2LinuxLauncher('gears-ff2'))
+      launchers.append(browser_launchers.Firefox3LinuxLauncher('gears-ff3'))
+      installers.append(installer.Firefox2LinuxInstaller('gears-ff2'))
+      installers.append(installer.Firefox3LinuxInstaller('gears-ff3'))
       
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)
