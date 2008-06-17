@@ -42,7 +42,7 @@ class Notifier : public IpcMessageQueue::HandlerInterface {
   Notifier();
   virtual ~Notifier();
 
-  virtual bool Initalize();
+  virtual bool Initialize();
   virtual int Run() = 0;
   virtual void Terminate();
 
