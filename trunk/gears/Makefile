@@ -1130,6 +1130,13 @@ NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 
+ifeq ($(OS),linux)
+NOTIFIER_LIBS 	+= \
+		-lgtk-x11-2.0 \
+		-L../third_party/gtk/linux/lib \
+		$(NULL)
+endif
+
 ifeq ($(OS),win32)
 COMMON_VPATH	+= \
 		notifier/resources \

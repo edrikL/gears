@@ -248,7 +248,7 @@ DLLFLAGS += -lpthread -lm
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS)  `pkg-config --libs gtk+-2.0`
+EXEFLAGS = $(SHARED_LINKFLAGS)
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
@@ -609,14 +609,18 @@ endif
 # used to access a perf timer and run the C++ unit tests.
 # It also adds notifier_test to run tests for the notifier
 # application.
+USING_CCTESTS = 0
 ifeq ($(MODE),dbg)
-CPPFLAGS += -DUSING_CCTESTS=1
-M4FLAGS  += -DUSING_CCTESTS=1
+USING_CCTESTS = 1
 else
 ifneq ($(OFFICIAL_BUILD),1)
+USING_CCTESTS = 1
+endif
+endif
+
+ifeq ($(USING_CCTESTS),1)
 CPPFLAGS += -DUSING_CCTESTS=1
 M4FLAGS  += -DUSING_CCTESTS=1
-endif
 endif
 
 # Additional values needed for M4 preprocessing
