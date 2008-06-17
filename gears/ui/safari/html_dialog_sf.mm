@@ -106,7 +106,9 @@
     NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
     pluginPath = [pluginPath stringByAppendingPathComponent:tmp];
-    window_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath]; 
+    window_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath];
+    window_url_ = [window_url_ stringByAddingPercentEscapesUsingEncoding:
+                                   NSUTF8StringEncoding];
     [window_url_ retain];
     arguments_ = [[NSString stringWithString16:arguments.c_str()] retain];
     width_ = width;
