@@ -32,25 +32,20 @@
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/network_location_request.h"
-
-// An implementation detail of NetworkLocationProvider. Defined in
-// network_location_provider.cc
-class AsyncWait;
+#include "gears/geolocation/thread.h"
 
 class NetworkLocationProvider
     : public LocationProviderBase,
       public DeviceDataProviderBase<RadioData>::ListenerInterface,
       public DeviceDataProviderBase<WifiData>::ListenerInterface,
-      public NetworkLocationRequest::ListenerInterface {
+      public NetworkLocationRequest::ListenerInterface,
+      public Thread {
  public:
-  friend class AsyncWait;
-
   NetworkLocationProvider(const std::string16 &url,
                           const std::string16 &host_name);
   virtual ~NetworkLocationProvider();
 
-  // LocationProviderBase implementation.
-  virtual bool GetCurrentPosition();
+  // LocationProviderBase implementation
   virtual void GetPosition(Position *position);
 
  private:
@@ -63,33 +58,52 @@ class NetworkLocationProvider
   // NetworkLocationRequest::ListenerInterface implementation.
   virtual void LocationResponseAvailable(const Position &position);
 
-  // Used by the AsyncWait object to make the request when its wait expires.
-  bool MakeRequest();
-  // Used by the device data provider callbacks to make the request if all
-  // device data is now present and if we're waiting for this to be the case.
-  bool MakeRequestIfDataNowAvailable();
-  // Common implementation used by GetCurrentPosition, MakeRequest and
-  // MakeRequestIfDataNowAvailable.
-  bool MakeRequestImpl();
+  // Thread implementation
+  virtual void Run();
 
-  Mutex listeners_mutex_;
+  // Internal helper used by worker thread to make a network request
+  bool MakeRequest();
+
+  // Internal helper used by DeviceDataProviderBase
+  void DeviceDataUpdateAvailableImpl();
+
+  // The network location request object and the url and host name it will use.
   NetworkLocationRequest *request_;
-  RadioData radio_data_;
-  WifiData wifi_data_;
-  Mutex data_mutex_;
+  std::string16 url_;
+  std::string16 host_name_;
+
+  // The device data providers
   DeviceDataProviderBase<RadioData> *radio_data_provider_;
   DeviceDataProviderBase<WifiData> *wifi_data_provider_;
-  // The timestamp for the latest device data update.
-  int64 timestamp_;
+
+  // The radio and wifi data, flags to indicate if each data set is complete,
+  // and their guarding mutex.
+  RadioData radio_data_;
+  WifiData wifi_data_;
   bool is_radio_data_complete_;
   bool is_wifi_data_complete_;
+  Mutex data_mutex_;
+
+  // The timestamp for the latest device data update.
+  int64 timestamp_;
+
+  // Parameters for the network request
   bool request_address_;
   std::string16 address_language_;
-  AsyncWait *wait_;
-  Mutex wait_mutex_;
-  bool is_in_progress_;
-  Mutex is_in_progress_mutex_;
+
+  // The current best position estimate and its guarding mutex
   Position position_;
+  Mutex position_mutex_;
+
+  // The event used to notify this object's (ie the network location provider)
+  // worker thread about changes in available data, the network request status
+  // and whether we're shutting down. The booleans are used to indicate what the
+  // event signals.
+  Event thread_notification_event_;
+  bool is_shutting_down_;
+  bool is_new_data_available_;
+  bool is_last_request_complete_;
+
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
 

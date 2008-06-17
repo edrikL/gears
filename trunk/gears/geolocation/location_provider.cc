@@ -69,11 +69,6 @@ class MockLocationProvider : public LocationProviderBase {
   MockLocationProvider() {}
   virtual ~MockLocationProvider() {}
   // LocationProviderBase implementation.
-  virtual bool GetCurrentPosition() {
-    assert(listener_);
-    listener_->LocationUpdateAvailable(this);
-    return true;
-  }
   virtual void GetPosition(Position *position) {
     assert(position);
     position->latitude = 54.0;
