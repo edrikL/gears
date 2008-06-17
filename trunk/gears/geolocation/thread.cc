@@ -50,32 +50,20 @@ static bool CreateThread(ThreadStartData* thread_data);
 //------------------------------------------------------------------------------
 // Thread
 
-Thread::Thread() {
-#ifdef DEBUG
-  is_running_ = false;
-#endif
+Thread::Thread()
+  : run_complete_event_(),
+    is_running_(false) {
 }
 
 Thread::~Thread() {
-#ifdef DEBUG
-  MutexLock lock(&is_running_mutex_);
   assert(!is_running_);
-#endif
 }
 
 ThreadId Thread::Start() {
-
-#ifdef DEBUG
-  MutexLock lock(&is_running_mutex_);
   assert(!is_running_);
-#endif
-
   ThreadStartData thread_data(this);
 
   if (CreateThread(&thread_data)) {
-#ifdef DEBUG
-    is_running_ = true;
-#endif
     thread_data.started_event.Wait();
   } else {
     LOG(("Failed to start thread."));
@@ -106,21 +94,13 @@ void ThreadMain(void *user_data) {
   // The Thread pointer, on the other hand, is guaranteed
   // to be valid for the entire lifetime of this function.
   Thread* thread = thread_data->self;
+  thread->is_running_ = true;
   thread_data->started_event.Signal();
   // Do the actual work.
   thread->Run();
-
-#ifdef DEBUG
-  thread->is_running_mutex_.Lock();
   thread->is_running_ = false;
-#endif
   // Let our creator know we're about to exit.
   thread->run_complete_event_.Signal();
-
-#ifdef DEBUG
-  thread->is_running_mutex_.Unlock();
-#endif
-
   thread->CleanUp();
 }
 
