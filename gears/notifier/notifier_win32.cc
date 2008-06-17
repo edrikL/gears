@@ -51,8 +51,10 @@ Win32Notifier::Win32Notifier() {
 
 int Win32Notifier::Run() {
   running_ = true;
-  while (running_) {
-    Sleep(100);
+  MSG msg;
+  while (running_ && ::GetMessage(&msg, NULL, 0, 0)) {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
   }
   return 0;
 }

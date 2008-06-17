@@ -25,24 +25,72 @@
 
 #ifdef OFFICIAL_BUILD
 // The notification API has not been finalized for official builds.
-
-int main(int, char **) {
-  return 0;
-}
 #else
 #include "gears/notifier/notifier.h"
 
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
+#include "gears/notifier/notification_manager.h"
 #include "gears/notifier/notifier_process.h"
+#include "gears/notifier/user_activity.h"
 #if USING_CCTESTS
 #include "gears/notifier/unit_test.h"
 #endif  // USING_CCTESTS
+#include "third_party/glint/include/platform.h"
+#include "third_party/glint/include/work_item.h"
 
+// TODO(dimich): implement this.
+class UserActivityMonitor : public UserActivityInterface {
+ public:
+  UserActivityMonitor() {
+  }
+  virtual UserMode CheckUserActivity() {
+    return USER_NORMAL_MODE;
+  }
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(UserActivityMonitor);
+};
+
+// Posted as workitem from IPC worker thread to main UI thread.
+class NotificationTask : public glint::WorkItem {
+ public:
+  enum Action { ACTION_ADD, ACTION_DELETE };
+  NotificationTask(Notifier *notifier,
+                   const GearsNotification &notification,
+                   Action action)
+    : action_(action),
+      notifier_(notifier) {
+    assert(notifier);
+    notification_.CopyFrom(notification);
+  }
+
+  void Post() {
+    glint::platform()->PostWorkItem(NULL, this);
+  }
+
+  virtual void Run() {
+    if (action_ == ACTION_ADD) {
+      notifier_->AddNotification(notification_);
+    } else if (action_ == ACTION_DELETE) {
+      notifier_->RemoveNotification(notification_.service(),
+                                    notification_.id());
+    } else {
+      assert(false);
+    }
+  }
+ private:
+  Action action_;
+  Notifier *notifier_;
+  GearsNotification notification_;
+};
 
 Notifier::Notifier()
-  : running_(false) {
+  : running_(false),
+    notification_manager_(new NotificationManager(new UserActivityMonitor())) {
+}
+
+Notifier::~Notifier() {
 }
 
 bool Notifier::Initalize() {
@@ -66,6 +114,9 @@ bool Notifier::Initalize() {
 void Notifier::Terminate() {
 }
 
+// This call comes on a worker thread that services the inter-process
+// communication mechanism. So we need to make copies of all receipts and
+// ship over by FedEx.
 void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
                                 int message_type,
                                 const IpcMessageData *message_data) {
@@ -73,14 +124,18 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
     case kDesktop_AddNotification: {
       const GearsNotification *notification =
           static_cast<const GearsNotification*>(message_data);
-      AddNotification(notification);
+      (new NotificationTask(this,
+                            *notification,
+                            NotificationTask::ACTION_ADD))->Post();
       break;
     }
 
     case kDesktop_RemoveNotification: {
       const GearsNotification *notification =
           static_cast<const GearsNotification*>(message_data);
-      RemoveNotification(notification->id());
+      (new NotificationTask(this,
+                            *notification,
+                            NotificationTask::ACTION_DELETE))->Post();
       break;
     }
 
@@ -90,16 +145,18 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
   }
 }
 
-void Notifier::AddNotification(const GearsNotification *notification) {
-  assert(notification);
-
-  LOG(("Add notification %S - %S\n",
-       notification->id().c_str(),
-       notification->title().c_str()));
+void Notifier::AddNotification(const GearsNotification &notification) {
+  LOG(("Add notification %S - %S ($S)\n",
+       notification.service().c_str(),
+       notification.id().c_str(),
+       notification.title().c_str()));
+  notification_manager_->Add(notification);
 }
 
-void Notifier::RemoveNotification(const std::string16 &notification_id) {
-  LOG(("Remove notification %S\n", notification_id.c_str()));
+void Notifier::RemoveNotification(const std::string16 &service,
+                                  const std::string16 &id) {
+  LOG(("Remove notification %S - %S\n", service.c_str(), id.c_str()));
+  notification_manager_->Delete(service, id);
 }
 
 #endif  // OFFICIAL_BUILD

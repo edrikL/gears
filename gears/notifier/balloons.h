@@ -71,10 +71,13 @@ class Node;
 class RootUI;
 }
 
+class BalloonCollection;
+
 // Represents a Notification on the screen.
 class Balloon {
  public:
-  explicit Balloon(const GearsNotification &from);
+  explicit Balloon(const GearsNotification &from,
+                   BalloonCollection *collection);
   ~Balloon();
 
   const GearsNotification &notification() const {
@@ -97,8 +100,10 @@ class Balloon {
  private:
   glint::Node *CreateTree();
   bool SetTextField(const char *id, const std::string16 &text);
+  static void OnCloseButton(const std::string &button_id, void *user_info);
   GearsNotification notification_;
   glint::Node *ui_root_;
+  BalloonCollection *collection_;
   DISALLOW_EVIL_CONSTRUCTORS(Balloon);
 };
 
@@ -115,13 +120,15 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual bool Delete(const std::string16 &service, const std::string16 &id);
   virtual bool has_space() { return has_space_; }
 
+  bool StartBalloonClose(Balloon *balloon, bool user_initiated);
+
  private:
   void Clear();  // clears balloons_
   Balloon *FindBalloon(const std::string16 &service,
                        const std::string16 &id,
                        bool and_remove);
-  void AddToUI(Balloon *balloon);
-  void RemoveFromUI(Balloon *balloon);
+  bool AddToUI(Balloon *balloon);
+  bool RemoveFromUI(Balloon *balloon);
   void EnsureRoot();
 
   Balloons balloons_;

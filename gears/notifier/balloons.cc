@@ -36,9 +36,11 @@
 #include "gears/notifier/balloons.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/system.h"
+#include "third_party/glint/include/button.h"
 #include "third_party/glint/include/color.h"
 #include "third_party/glint/include/column.h"
 #include "third_party/glint/include/nine_grid.h"
+#include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/root_ui.h"
 #include "third_party/glint/include/row.h"
 #include "third_party/glint/include/simple_text.h"
@@ -52,6 +54,7 @@ BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
     root_ui_(NULL),
     has_space_(true) {
   assert(observer);
+  EnsureRoot();
   observer_->OnBalloonSpaceChanged();
 }
 
@@ -95,7 +98,7 @@ void BalloonCollection::Show(const GearsNotification &notification) {
   if (balloon)
     return;
 
-  Balloon *new_balloon = new Balloon(notification);
+  Balloon *new_balloon = new Balloon(notification, this);
   balloons_.push_front(new_balloon);
   AddToUI(new_balloon);
   observer_->OnBalloonSpaceChanged();
@@ -116,14 +119,13 @@ bool BalloonCollection::Delete(const std::string16 &service,
                                const std::string16 &id) {
   Balloon *balloon = FindBalloon(service,
                                  id,
-                                 true);  // remove from list
+                                 false);  // don't remove from list yet
   if (!balloon)
     return false;
 
-  RemoveFromUI(balloon);
-  delete balloon;
+  if (!StartBalloonClose(balloon, false))  // not user-initiated.
+    return false;
 
-  observer_->OnBalloonSpaceChanged();
   return true;
 }
 
@@ -137,31 +139,59 @@ void BalloonCollection::EnsureRoot() {
   container->ReplaceDistribution("natural");
   container->set_background(glint::Color(0x44444444));
   container->set_id(kBalloonContainer);
+  glint::Transform offset;
+  offset.AddOffset(glint::Vector(500.0f, 250.0f));
+  container->set_transform(offset);
   root_ui_->set_root_node(container);
+  root_ui_->Show();
 }
 
-void BalloonCollection::AddToUI(Balloon *balloon) {
+bool BalloonCollection::AddToUI(Balloon *balloon) {
   assert(balloon);
   EnsureRoot();
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
   if (!container)
-    return;
+    return false;
   container->AddChild(balloon->ui_root());
+  balloon->UpdateUI();
+  return true;
 }
 
-void BalloonCollection::RemoveFromUI(Balloon *balloon) {
+bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   assert(balloon);
-  if (!root_ui_)
-    return;
+  Balloon *found = FindBalloon(balloon->notification().service(),
+                               balloon->notification().id(),
+                               true);  // remove from list
+  if (!found || !root_ui_)
+    return false;
+
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
   if (!container)
-    return;
+    return false;
+
   container->RemoveNode(balloon->ui_root());
+  observer_->OnBalloonSpaceChanged();
+  return true;
 }
 
-Balloon::Balloon(const GearsNotification &from) : ui_root_(NULL) {
+bool BalloonCollection::StartBalloonClose(Balloon *balloon,
+                                          bool user_initiated) {
+  assert(balloon);
+  // TODO(dimich): set up alpha transition and do interruptible alpha animation.
+  // At the end of animation, signal to the collection.
+  // Do this when animation completes:
+  if (!RemoveFromUI(balloon))
+    return false;
+  delete balloon;
+  return true;
+}
+
+Balloon::Balloon(const GearsNotification &from, BalloonCollection *collection)
+  : ui_root_(NULL),
+    collection_(collection)  {
+  assert(collection);
   notification_.CopyFrom(from);
 }
 
@@ -172,12 +202,9 @@ glint::Node *Balloon::CreateTree() {
   glint::Node *root = new glint::Node();
   root->set_min_width(300);
   root->set_min_height(100);
-  glint::Transform offset;
-  offset.AddOffset(glint::Vector(250.0f, 250.0f));
-  root->set_transform(offset);
 
   glint::NineGrid *background = new glint::NineGrid();
-  background->ReplaceImage("background.png");
+  background->ReplaceImage("res://background.png");
   background->set_center_height(10);
   background->set_center_width(10);
   background->set_shadow(true);
@@ -201,7 +228,57 @@ glint::Node *Balloon::CreateTree() {
   text->set_margin(margin);
   column->AddChild(text);
 
+  glint::Row *buttons = new glint::Row();
+  margin.Set(5, 5, 5, 5);
+  buttons->set_margin(margin);
+  buttons->set_horizontal_alignment(glint::X_RIGHT);
+  column->AddChild(buttons);
+
+  glint::Button *close_button = new glint::Button();
+  close_button->ReplaceImage("res://button_strip.png");
+  close_button->set_min_height(22);
+  close_button->set_min_width(70);
+  buttons->AddChild(close_button);
+  text = new glint::SimpleText();
+  text->set_text("Close");
+  margin.Set(3, 3, 3, 3);
+  text->set_margin(margin);
+  close_button->AddChild(text);
+  close_button->SetClickHandler(Balloon::OnCloseButton, this);
+
   return root;
+}
+
+class CloseButtonAction : public glint::WorkItem {
+ public:
+  CloseButtonAction(BalloonCollection *collection,
+                    Balloon *balloon_to_close,
+                    bool by_user)
+    : collection_(collection),
+      balloon_to_close_(balloon_to_close),
+      by_user_(by_user) {
+    assert(collection && balloon_to_close);
+  }
+  virtual void Run() {
+    collection_->StartBalloonClose(balloon_to_close_, by_user_);
+  }
+ private:
+  BalloonCollection *collection_;
+  Balloon *balloon_to_close_;
+  bool by_user_;
+};
+
+void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
+  Balloon *this_ = reinterpret_cast<Balloon*>(user_info);
+  assert(this_);
+  assert(this_->collection_);
+  CloseButtonAction *async_work_item =
+      new CloseButtonAction(this_->collection_,
+                            this_,
+                            true);  // true == 'user-initiated'
+  if (!async_work_item)
+    return;
+  glint::platform()->PostWorkItem(NULL, async_work_item);
 }
 
 bool Balloon::SetTextField(const char *id, const std::string16 &text) {
