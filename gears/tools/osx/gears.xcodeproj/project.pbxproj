@@ -336,7 +336,6 @@
 		B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */; };
 		B58939380DB66FA900BD56A0 /* launch_url_in_browser.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */; };
 		B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
-		B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */; };
 		B58D65F40DF45FDD0059CB14 /* httprequest_upload.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58D65F20DF45FDD0059CB14 /* httprequest_upload.cc */; };
 		B58E004B0D5BB19200B0A65D /* libjsoncpp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B58E000B0D53F47B00B0A65D /* libjsoncpp.a */; };
 		B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E00550D5BB28900B0A65D /* name_value_table.cc */; };
@@ -374,25 +373,16 @@
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
 		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
-		B5A9BD1F0E06C00B00DCA259 /* managed_resource_store_module.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */; };
 		B5A9BD300E06C0CE00DCA259 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */; };
-		B5A9BD310E06C0CE00DCA259 /* balloons.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD2D0E06C0CE00DCA259 /* balloons.h */; };
 		B5A9BD320E06C0CE00DCA259 /* balloons.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */; };
 		B5A9BD330E06C0CE00DCA259 /* system_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */; };
-		B5A9BD3E0E06C10900DCA259 /* notification_manager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD3A0E06C10900DCA259 /* notification_manager.h */; };
 		B5A9BD3F0E06C10900DCA259 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */; };
-		B5A9BD400E06C10900DCA259 /* notification.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD3C0E06C10900DCA259 /* notification.h */; };
 		B5A9BD410E06C10900DCA259 /* notification.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3D0E06C10900DCA259 /* notification.cc */; };
-		B5A9BD460E06C16400DCA259 /* geolocation_test.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD440E06C16400DCA259 /* geolocation_test.h */; };
 		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
 		B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */; };
-		B5A9BD4C0E06C18900DCA259 /* location_provider_pool.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */; };
 		B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD4D0E06C1A200DCA259 /* thread.cc */; };
-		B5A9BD500E06C1A200DCA259 /* thread.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD4E0E06C1A200DCA259 /* thread.h */; };
 		B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD530E06C23800DCA259 /* byte_store_test.cc */; };
 		B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD540E06C23800DCA259 /* byte_store.cc */; };
-		B5A9BD580E06C23800DCA259 /* byte_store.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD550E06C23800DCA259 /* byte_store.h */; };
-		B5A9BD990E06CC7600DCA259 /* safari_workaround.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5A9BD980E06CC7600DCA259 /* safari_workaround.h */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
 		B5AC85E00DCBBA5F00C62010 /* pldhash.c in Sources */ = {isa = PBXBuildFile; fileRef = B5AC85DE0DCBBA5F00C62010 /* pldhash.c */; };
 		B5AC85E10DCBBA5F00C62010 /* pldhash.h in Headers */ = {isa = PBXBuildFile; fileRef = B5AC85DF0DCBBA5F00C62010 /* pldhash.h */; };
@@ -407,7 +397,6 @@
 		B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307650DB578D900A206B8 /* icon_48x48.png */; };
 		B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307660DB578D900A206B8 /* icon_merged.ico */; };
 		B5BAFE8B0DF07411001DD3BD /* curl_icon_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */; };
-		B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */; };
 		B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */; };
 		B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8600D8E8223001A4916 /* http_request_sf.mm */; };
 		B5BBD8640D8E822E001A4916 /* http_request_delegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8630D8E822E001A4916 /* http_request_delegate.mm */; };
@@ -529,17 +518,6 @@
 				B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */,
 				B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */,
 				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
-				B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */,
-				B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */,
-				B5A9BD1F0E06C00B00DCA259 /* managed_resource_store_module.h in CopyFiles */,
-				B5A9BD310E06C0CE00DCA259 /* balloons.h in CopyFiles */,
-				B5A9BD3E0E06C10900DCA259 /* notification_manager.h in CopyFiles */,
-				B5A9BD400E06C10900DCA259 /* notification.h in CopyFiles */,
-				B5A9BD460E06C16400DCA259 /* geolocation_test.h in CopyFiles */,
-				B5A9BD4C0E06C18900DCA259 /* location_provider_pool.h in CopyFiles */,
-				B5A9BD500E06C1A200DCA259 /* thread.h in CopyFiles */,
-				B5A9BD580E06C23800DCA259 /* byte_store.h in CopyFiles */,
-				B5A9BD990E06CC7600DCA259 /* safari_workaround.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2588,11 +2566,11 @@
 				"$(SRCROOT)/../../tools/version.mk",
 			);
 			outputPaths = (
-				"$(SRCROOT)/../../bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h",
+				"$(PROJECT_TEMP_DIR)/genfiles/product_constants.h",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n \n# Ensure that the directory for the generated files exists\n/bin/mkdir -p bin-dbg/osx-$CURRENT_ARCH/common/genfiles/\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nFRIENDLY_NAME=\"Google Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h\n\necho \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h\" built.\n\nexit 0\n";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\nGEN_FILE_DIR=\"$BUILD_DIR/genfiles\"\n# Ensure that the directory for the generated files exists\n/bin/mkdir -p $GEN_FILE_DIR\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > \"$GEN_FILE_DIR/GearsVersion\"\nsource \"$GEN_FILE_DIR/GearsVersion\"\n\nFRIENDLY_NAME=\"Google Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > \"$GEN_FILE_DIR/product_constants.h\"\n\necho \"$GEN_FILE_DIR/product_constants.h\" built.\n\nexit 0\n";
 		};
 		B57A583E0DA9292C001B0CC6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2625,7 +2603,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\n\n# SAFARI-TEMP\n# Add support for localizations.\nmkdir -p \"$RESOURCES_DIR/en-US\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > $RESOURCES_DIR/en-US/settings_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > $RESOURCES_DIR/en-US/permissions_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > $RESOURCES_DIR/en-US/shortcuts_dialog.html\n\nexit 0;";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"$BUILD_DIR/genfiles/GearsVersion\"\n\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\n\n# SAFARI-TEMP\n# Add support for localizations.\nmkdir -p \"$RESOURCES_DIR/en-US\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > $RESOURCES_DIR/en-US/settings_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > $RESOURCES_DIR/en-US/permissions_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > $RESOURCES_DIR/en-US/shortcuts_dialog.html\n\nexit 0;";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3158,7 +3136,7 @@
 				OTHER_LDFLAGS = "-lcurl";
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
 				WRAPPER_EXTENSION = plugin;
 				ZERO_LINK = NO;
 			};
@@ -3212,7 +3190,7 @@
 				OTHER_LDFLAGS = "-lcurl";
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
 				WRAPPER_EXTENSION = plugin;
 			};
 			name = Release;
