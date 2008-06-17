@@ -350,16 +350,12 @@ endif
 endif
 endif
 
-ifeq ($(OS),osx)
-prereqs:: $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(OSX_LAUNCHURL_EXE)
-installers:: $(SF_INSTALLER_PKG) $(FFMERGED_INSTALLER_XPI)
-endif
-
 ifeq ($(OS),linux)
 installers:: $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),osx)
+prereqs:: $(OSX_LAUNCHURL_OUTDIR)
+modules:: $(OSX_LAUNCHURL_EXE)
 installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
