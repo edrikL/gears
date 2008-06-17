@@ -40,9 +40,9 @@ static const int kMinimumRequestInterval = 1000 * 5;  // 5 seconds
 
 NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &host_name)
-    : is_shutting_down_(false),
-      url_(url),
-      host_name_(host_name) {
+    : url_(url),
+      host_name_(host_name),
+      is_shutting_down_(false) {
   // Get the device data providers. The first call to Register will create the
   // provider and it will be deleted by ref counting.
   radio_data_provider_ = DeviceDataProviderBase<RadioData>::Register(this);
