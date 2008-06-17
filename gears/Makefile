@@ -1680,8 +1680,18 @@ IE_LINK_EXTRAS += \
 IE_CPPSRCS += \
 		cab_updater.cc \
 		$(NULL)
-
 endif # wince
+
+#-----------------------------------------------------------------------------
+# installer/safari
+
+SF_VPATH	+= \
+		installer/safari \
+		$(NULL)
+
+SF_M4SRCS	+= \
+		installer.packproj.m4 \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # geolocation
@@ -1743,13 +1753,17 @@ FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
 FF2_IDLSRCS += $(FF3_IDLSRCS)
 FF2_CPPSRCS += $(FF3_CPPSRCS)
 
+#-----------------------------------------------------------------------------
+# Include site-specific build rules, evaluated before our built-in build rules.
+ifneq ($(wildcard site-prerules.mk),)  # if file exists
+include site-prerules.mk
+endif
 
 #-----------------------------------------------------------------------------
 include tools/rules.mk
 
 #-----------------------------------------------------------------------------
-# You can add your own site-specific build rules by creating a file called
-# 'site-build.mk' alongside the Makefile.
-ifneq ($(wildcard site-build.mk),)  # if site-build.mk exists.
-include site-build.mk
+# Include site-specific build rules, evaluated after our built-in build rules.
+ifneq ($(wildcard site-postrules.mk),)  # if site-postrules.mk exists.
+include site-postrules.mk
 endif

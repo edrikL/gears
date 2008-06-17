@@ -7,7 +7,7 @@
 SCRIPT_DIR=`pwd`/`dirname $0`
 SOURCE_DIR="$1"
 if [ ! -n "$1" ]; then
-    SOURCE_DIR=$SCRIPT_DIR/build/Release/GoogleGearsEnabler
+    SOURCE_DIR=$SCRIPT_DIR/build/Release/GearsEnabler
 fi
 
 # Sanity Check.
@@ -28,7 +28,7 @@ if [ $USER != 'root' ]; then
 fi
 
 INPUT_MGR_DIR="/Library/InputManagers/"
-BUNDLE_DESTINATION="$INPUT_MGR_DIR/GoogleGearsEnabler"
+BUNDLE_DESTINATION="$INPUT_MGR_DIR/GearsEnabler"
 
 echo "Installing InputManager from \"$SOURCE_DIR\"."
 

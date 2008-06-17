@@ -97,7 +97,6 @@ IE_WINCESETUP_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(IE_OUTDIR), $(IE_WINC
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
 VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS) $(VISTA_BROKER_CSRCS))
 
-
 # IMPORTANT: If you change these lists, you need to change the corresponding
 # files in win32_msi.wxs.m4 as well.
 # TODO(aa): We should somehow generate win32_msi.wxs because it is lame to
@@ -105,12 +104,10 @@ VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR),
 #
 # Begin: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 COMMON_RESOURCES = \
-	ui/common/button.css \
 	ui/common/button_bg.gif \
 	ui/common/button_corner_black.gif \
 	ui/common/button_corner_blue.gif \
 	ui/common/button_corner_grey.gif \
-	ui/common/html_dialog.css \
 	ui/common/icon_32x32.png
 
 FF3_RESOURCES = \
@@ -201,11 +198,10 @@ PERF_TOOL_EXE     = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 # TODO(aa): This can move to common_outdir like crash_sender.exe
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
-SF_PLUGIN_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
-SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GoogleGearsEnabler
+SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/$(SHORT_NAME).plugin
+SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 
-# TODO(playmobil): Actually create a Safari Installer.
-SF_INSTALLER           = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).pkg
+SF_INSTALLER_PKG       = $(INSTALLERS_OUTDIR)/Safari/$(SHORT_NAME).pkg
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
 WIN32_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
@@ -331,7 +327,7 @@ endif
 
 ifeq ($(BROWSER),SF)
 prereqs:: $(MOZJS_OUTDIR)
-modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE)
+modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 endif
 
 # OS-specific targets.
@@ -352,10 +348,12 @@ ifneq ($(OS),android)
 modules:: $(PERF_TOOL_EXE)
 endif
 endif
+endif
+
 ifeq ($(OS),osx)
 prereqs:: $(OSX_LAUNCHURL_OUTDIR)
 modules:: $(OSX_LAUNCHURL_EXE)
-endif
+installers:: $(SF_INSTALLER_PKG) $(FFMERGED_INSTALLER_XPI)
 endif
 
 ifeq ($(OS),linux)
@@ -688,14 +686,21 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
 # For $(FFMERGED_INSTALLER_XPI):
 #   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
-# For $(SF_PLUGIN_BUNDLE):
-#   $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
+# For $(SF_INSTALLER_PKG):
+#   $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 # In order to make sure the Installer is always up to date despite these missing
 # dependencies, we list it as a phony target, so it's always rebuilt.
-.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
+.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER_PKG)
 
-$(SF_INSTALLER): $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
-	$(ECHO) "TODO(playmobil): Create Safari Installer pkg"
+ifeq ($(HAVE_ICEBERG),1)
+# This rule generates a package installer for the Plugin and InputManager.
+$(SF_INSTALLER_PKG): 
+	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
+else
+$(warning To create a Safari installer for Gears, you must install Iceberg \
+  from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
+  Safari version manually by running tools/osx/install_gears.sh script)
+endif
 
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
@@ -744,7 +749,7 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
+$(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@

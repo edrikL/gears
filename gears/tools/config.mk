@@ -293,6 +293,10 @@ else
 CPPFLAGS += -DLINUX
 endif
 
+# Needed for the Safari package installer.
+M4FLAGS += -DGEARS_ENABLER_PATH='$(PWD)/$(SF_INPUTMANAGER_BUNDLE)' -DGEARS_PLUGIN_PATH="$(PWD)/$(SF_PLUGIN_BUNDLE)"
+M4FLAGS += -DGEARS_INSTALLER_OUT_DIR='$(PWD)/$(INSTALLERS_OUTDIR)/Safari'
+
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 
 # JS_THREADSAFE *MUST* be kept in sync wuith $(BROWSER)_CPPFLAGS.
@@ -387,6 +391,17 @@ FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 # Append differences here:
 FF2_LIBS +=  -lxpcom_core
 FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
+
+# Iceberg command line tool.
+ICEBERG = /usr/local/bin/freeze
+
+# Iceberg may not be present. Record whether it exists, so we can skip targets
+# that need it.
+ifeq ($(wildcard $(ICEBERG)),)
+else
+HAVE_ICEBERG = 1
+endif
+
 endif
 
 ######################################################################

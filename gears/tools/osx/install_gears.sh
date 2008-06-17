@@ -20,4 +20,4 @@ fi
 
 rm -Rf "$GEARS_PLUGIN_PATH"
 ln -sf "$BASE_DIR/Gears.plugin" "$GEARS_PLUGIN_PATH"
-"$SCRIPT_DIR/install_inputmanager.sh" "$BASE_DIR/GoogleGearsEnabler"
+"$SCRIPT_DIR/install_inputmanager.sh" "$BASE_DIR/GearsEnabler"
