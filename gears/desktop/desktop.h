@@ -175,12 +175,6 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
 #endif  // OFFICIAL_BUILD
 
  private:
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-  IpcMessageQueue *ipc_message_queue_;
-#endif  // OFFICIAL_BUILD
-
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };
 

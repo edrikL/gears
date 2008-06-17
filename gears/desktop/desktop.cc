@@ -75,18 +75,11 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
 
 GearsDesktop::GearsDesktop()
-    : ModuleImplBaseClassVirtual("GearsDesktop")
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-    , ipc_message_queue_(NULL)
-#endif  // OFFICIAL_BUILD
-{
+    : ModuleImplBaseClassVirtual("GearsDesktop") {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
   GearsNotification::RegisterAsSerializable();
-  ipc_message_queue_ = IpcMessageQueue::GetSystemQueue();
 #endif  // OFFICIAL_BUILD
 }
 
@@ -751,11 +744,15 @@ void GearsDesktop::ShowNotification(JsCallContext *context) {
   }
 
   // Send the IPC message to the process of Desktop Notifier.
-  assert(ipc_message_queue_);
-  if (ipc_message_queue_) {
-    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
-                             kDesktop_AddNotification,
-                             static_cast<GearsNotification*>(module));
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+  assert(ipc_message_queue);
+  if (ipc_message_queue) {
+    GearsNotification *notification = new GearsNotification();
+    notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
+    // IpcMessageQueue is responsible to delete the message data.
+    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                            kDesktop_AddNotification,
+                            notification);
   }
 }
 
@@ -782,13 +779,15 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   }
 
   // Send the IPC message to the process of Desktop Notifier.
-  assert(ipc_message_queue_);
-  if (ipc_message_queue_) {
-    GearsNotification notification;
-    notification.set_id(id);
-    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
-                             kDesktop_RemoveNotification,
-                             &notification);
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+  assert(ipc_message_queue);
+  if (ipc_message_queue) {
+    GearsNotification *notification = new GearsNotification();
+    notification->set_id(id);
+    // IpcMessageQueue is responsible to delete the message data.
+    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                            kDesktop_RemoveNotification,
+                            notification);
   }
 }
 
