@@ -37,7 +37,20 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
 
 #include "gears/notifier/notifier.h"
 
-int Notifier::Run() {
+class Win32Notifier : public Notifier {
+ public:
+  Win32Notifier();
+  virtual int Run();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(Win32Notifier);
+};
+
+Win32Notifier::Win32Notifier() {
+}
+
+int Win32Notifier::Run() {
+  running_ = true;
   while (running_) {
     Sleep(100);
   }
@@ -52,7 +65,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
 
   LOG(("Gears Notifier started.\n"));
 
-  Notifier notifier;
+  Win32Notifier notifier;
 
   int retval = -1;
   if (notifier.Initalize()) {

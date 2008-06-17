@@ -32,7 +32,20 @@ int main(int argc, char *argv[]) {
 #else
 #include "gears/notifier/notifier.h"
 
-int Notifier::Run() {
+class MacNotifier : public Notifier {
+ public:
+  MacNotifier();
+  virtual int Run();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(MacNotifier);
+};
+
+MacNotifier::MacNotifier() {
+}
+
+int MacNotifier::Run() {
+  running_ = true;
   while (running_) {
     sched_yield();
   }
@@ -41,7 +54,7 @@ int Notifier::Run() {
 
 int main(int argc, char *argv[]) {
   LOG(("Gears Notifier started.\n"));
-  Notifier notifier;
+  MacNotifier notifier;
 
   int retval = -1;
   if (notifier.Initalize()) {

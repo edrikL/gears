@@ -38,20 +38,20 @@ class Notifier : public IpcMessageQueue::HandlerInterface {
  public:
   Notifier();
 
-  bool Initalize();
-  int Run();
-  void Terminate();
+  virtual bool Initalize();
+  virtual int Run() = 0;
+  virtual void Terminate();
 
   // IpcMessageQueue::HandlerInterface interface.
   virtual void HandleIpcMessage(IpcProcessId source_process_id,
                                 int message_type,
                                 const IpcMessageData *message_data);
+ protected:
+  bool running_;
 
  private:
   void AddNotification(const GearsNotification *notification);
   void RemoveNotification(const std::string16 &notification_id);
-
-  bool running_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Notifier);
 };
