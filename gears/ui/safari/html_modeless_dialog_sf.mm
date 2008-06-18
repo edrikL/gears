@@ -93,6 +93,7 @@
   [window_ setDelegate:self];
   [window_ setTitle:title];
   [window_ center];
+  [window_ setFrameUsingName:web_archive_filename_];
   
   // Display sheet.
   [window_ makeKeyAndOrderFront:nil];
@@ -104,6 +105,8 @@
 // JS callback for setting the result string.
 - (void)setResults: (NSString *)window_results {
   [super setResults:window_results];
+  // Save current location and size of window.
+  [window_ saveFrameUsingName:web_archive_filename_];
   [window_ close];
 
   std::string16 results;
@@ -117,6 +120,8 @@
 @implementation HTMLModelessDialogImp(GearsNSWindowDelegateMethods)
 - (BOOL)windowShouldClose:(id)sender {
   callback_(NULL, callback_closure_);
+  // Save current location and size of window.
+  [window_ saveFrameUsingName:web_archive_filename_];
   [self release];
   return YES;
 }
