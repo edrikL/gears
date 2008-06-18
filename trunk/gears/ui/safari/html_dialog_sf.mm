@@ -67,11 +67,11 @@
   // The user agent string is initialized by the plugin's NP_Initialize
   // function, but the settings dialog may be displayed before that's
   // been called, in which case we just use a default string.
-  NSURL *url = [NSURL URLWithString:window_url_];
+  NSURL *tmp_url = [NSURL URLWithString:@""];
   NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
   if (ua_str16.length() == 0) { 
     user_agent = [NSString stringWithFormat:@"%@ Safari",
-                          [webview userAgentForURL:url]];
+                          [webview userAgentForURL:tmp_url]];
   }
   [webview setCustomUserAgent:user_agent];
 
@@ -83,9 +83,13 @@
   [webview setFrameLoadDelegate: self];
   
   // Load in the dialog's contents.
-  NSURLRequest *url_request = [NSURLRequest requestWithURL:url]; 
   WebFrame *frame = [webview mainFrame];
-  [frame loadRequest: url_request];
+  
+  // Read in WebArchive.
+  NSData *archive_data = [NSData dataWithContentsOfFile:web_archive_filename_];
+  WebArchive *webarchive = [[WebArchive alloc] initWithData:archive_data];
+  
+  [frame loadArchive:webarchive];
   
   // Turn off scrollbars.
   [[frame frameView] setAllowsScrolling:NO];
@@ -105,11 +109,12 @@
     localized_html_file += html_filename;
     NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
-    pluginPath = [pluginPath stringByAppendingPathComponent:tmp];
-    window_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath];
-    window_url_ = [window_url_ stringByAddingPercentEscapesUsingEncoding:
-                                   NSUTF8StringEncoding];
-    [window_url_ retain];
+    tmp = [pluginPath stringByAppendingPathComponent:tmp];
+    tmp = [tmp stringByDeletingPathExtension];
+    tmp = [tmp stringByAppendingPathExtension:@"webarchive"];
+    web_archive_filename_ =
+        [tmp stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    [web_archive_filename_ retain];
     arguments_ = [[NSString stringWithString16:arguments.c_str()] retain];
     width_ = width;
     height_ = height;
@@ -118,7 +123,7 @@
 }
 
 - (void)dealloc {
-  [window_url_ release];
+  [web_archive_filename_ release];
   [arguments_ release];
   [result_string_ release];
   [super dealloc];
@@ -134,23 +139,33 @@
   // See gears/base/safari/safari_workaround.m for details.
   EnableWebkitTimersForNestedRunloop();
 
-  // Display window as sheet.
+  // Display the dialog.
   NSWindow *front_window = [NSApp keyWindow];
   [NSApp beginSheet:window_ 
      modalForWindow:front_window 
       modalDelegate:nil 
      didEndSelector:nil
         contextInfo:nil];
-  
-  // Spin until the sheet is closed.
-  while (!window_dismissed_) {
-    [NSApp setWindowsNeedUpdate:YES];
-    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                        untilDate:[NSDate distantFuture]
-                                           inMode:NSDefaultRunLoopMode
-                                          dequeue:YES];
-    [NSApp sendEvent:event];
+ 
+ // Spin until the sheet is closed.
+ // Credit goes to David Sinclair of Dejal software for this method of running
+ // a modal WebView.
+ NSModalSession session = [NSApp beginModalSessionForWindow:window_];
+  while (!window_dismissed_ && 
+          [NSApp runModalSession:session] == NSRunContinuesResponse) {
+     [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
   }
+  [NSApp endModalSession:session];
+  
+// Display Document-Modal dialog, this doesn't work on 10.4.
+//  while (!window_dismissed_) {
+//    [NSApp setWindowsNeedUpdate:YES];
+//    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+//                                        untilDate:[NSDate distantFuture]
+//                                           inMode:NSDefaultRunLoopMode
+//                                          dequeue:YES];
+//    [NSApp sendEvent:event];
+//  }  
   
   [NSApp endSheet:window_];
   [window_ close];
