@@ -29,11 +29,12 @@
 // OS X Bugs affecting Gears:
 
 // -----------------------------------------------------------------------------
-// rdar://5830581 - NSURLProtocol not called on redirect.
+// rdar://problem/5830581 - NSURLProtocol not called on redirect.
 //  Our NSURLProtocol handler isn't called if a URL redirects to another URL
 // in the Gears Cache.
 // -----------------------------------------------------------------------------
-// rdar://5817126 - NSURLProtocol can't return NSHTTPURLResponse under Leopard.
+// rdar://problem/5817126 - NSURLProtocol can't return NSHTTPURLResponse under
+//                          Leopard.
 //  This is a regression in Leopard (works fine in Tiger) - If a NSURLProtocol
 // returns a class other than NSURLResponse, the system casts it down to a plain
 // NSURLResponse.  This means that we can't feed custom HTTP data to Safari.
@@ -87,28 +88,13 @@
 //                   is displayed.
 //
 // Workaround: Call WebCore::TimerBase::fireTimersInNestedEventLoop() which
-// enables timers in a nexted runloop which makes the WebView display content.
+// enables timers in a nested runloop which makes the WebView display content.
 // See proposed patch for this bug:
 // https://bugs.webkit.org/attachment.cgi?id=21681&action=prettypatch
 
 #include <dlfcn.h>
 #import <Cocoa/Cocoa.h>
 #include <mach-o/nlist.h>
-
-// Workaround for rdar://5817126
-// In the meantime we return an empty set of headers and requests that always
-// succeed.
-@implementation NSURLResponse(GearsNSURLResponse)
-
-- (NSDictionary *)allHeaderFields {
-  return [[NSDictionary alloc] init];
-}
-
-- (int)statusCode {
-  return 200;
-}
-
-@end
 
 // Workaround for Webkit bug 18941. 
 // Returns address of WebCore::TimerBase::fireTimersInNestedEventLoop() static

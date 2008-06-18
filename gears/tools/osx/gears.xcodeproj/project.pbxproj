@@ -55,8 +55,8 @@
 		B507A4050DEC70FD00DC9D6A /* commands.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FB0DEC70FD00DC9D6A /* commands.cc */; };
 		B507A4060DEC70FD00DC9D6A /* database2_common.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */; };
 		B507A4070DEC70FD00DC9D6A /* transaction.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FE0DEC70FD00DC9D6A /* transaction.cc */; };
+		B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */ = {isa = PBXBuildFile; fileRef = B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
-		B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */ = {isa = PBXBuildFile; fileRef = B535DDC40DA951A000B49CDF /* safari_workaround.m */; };
 		B544D9A00D2EE5D000D30561 /* paths_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B544D9580D2EE5D000D30561 /* paths_sf.mm */; };
 		B544D9A10D2EE5D000D30561 /* paths_sf_more.mm in Sources */ = {isa = PBXBuildFile; fileRef = B544D95A0D2EE5D000D30561 /* paths_sf_more.mm */; };
 		B544D9AA0D2EE5D000D30561 /* module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D96F0D2EE5D000D30561 /* module.cc */; };
@@ -571,9 +571,10 @@
 		B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2_common.cc; path = ../../database2/database2_common.cc; sourceTree = SOURCE_ROOT; };
 		B507A3FD0DEC70FD00DC9D6A /* manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = manager.h; path = ../../database2/manager.h; sourceTree = SOURCE_ROOT; };
 		B507A3FE0DEC70FD00DC9D6A /* transaction.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transaction.cc; path = ../../database2/transaction.cc; sourceTree = SOURCE_ROOT; };
+		B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = safari_workarounds.h; path = ../../base/safari/safari_workarounds.h; sourceTree = SOURCE_ROOT; };
+		B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workarounds.m; path = ../../base/safari/safari_workarounds.m; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
-		B535DDC40DA951A000B49CDF /* safari_workaround.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workaround.m; path = ../../base/safari/safari_workaround.m; sourceTree = SOURCE_ROOT; };
 		B54499DF0DCBDA8B0096E4C9 /* scoped_token.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scoped_token.h; path = ../../base/common/scoped_token.h; sourceTree = SOURCE_ROOT; };
 		B544D9580D2EE5D000D30561 /* paths_sf.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = paths_sf.mm; path = ../../base/common/paths_sf.mm; sourceTree = SOURCE_ROOT; };
 		B544D9590D2EE5D000D30561 /* paths_sf_more.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = paths_sf_more.h; path = ../../base/common/paths_sf_more.h; sourceTree = SOURCE_ROOT; };
@@ -1002,7 +1003,6 @@
 		B5A9BD530E06C23800DCA259 /* byte_store_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store_test.cc; path = ../../base/common/byte_store_test.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD540E06C23800DCA259 /* byte_store.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store.cc; path = ../../base/common/byte_store.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD550E06C23800DCA259 /* byte_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = byte_store.h; path = ../../base/common/byte_store.h; sourceTree = SOURCE_ROOT; };
-		B5A9BD980E06CC7600DCA259 /* safari_workaround.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = safari_workaround.h; path = ../../base/safari/safari_workaround.h; sourceTree = SOURCE_ROOT; };
 		B5AB77DF0D9FDC2F001EE5D5 /* async_router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_router.h; path = ../../base/common/async_router.h; sourceTree = SOURCE_ROOT; };
 		B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_router.cc; path = ../../base/common/async_router.cc; sourceTree = SOURCE_ROOT; };
 		B5AC85DE0DCBBA5F00C62010 /* pldhash.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pldhash.c; path = ../../../third_party/spidermonkey/xpcom/glue/pldhash.c; sourceTree = SOURCE_ROOT; };
@@ -1432,9 +1432,9 @@
 				B57A58330DA9288B001B0CC6 /* enabler.h */,
 				B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */,
 				B57A58530DA92C6A001B0CC6 /* loader.mm */,
+				B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */,
+				B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */,
 				B5D8D3380DB9320800C257AA /* nsstring_utils.mm */,
-				B5A9BD980E06CC7600DCA259 /* safari_workaround.h */,
-				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
 				B5B305160DB503DA00A206B8 /* scoped_cf.h */,
 			);
 			name = safari;
@@ -2672,7 +2672,6 @@
 				B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */,
 				B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */,
 				B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */,
-				B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */,
 				B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */,
 				B5AFB32C0DAD233D0058E178 /* permissions_dialog.cc in Sources */,
 				B5AFB32D0DAD233D0058E178 /* settings_dialog.cc in Sources */,
@@ -2784,6 +2783,7 @@
 				B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */,
 				B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */,
 				B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */,
+				B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3133,7 +3133,11 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "-lcurl";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+				);
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
@@ -3187,7 +3191,11 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "-lcurl";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+				);
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";

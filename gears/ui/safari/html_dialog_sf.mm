@@ -32,7 +32,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
-#include "gears/base/safari/safari_workaround.h"
+#include "gears/base/safari/safari_workarounds.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
 #import  "gears/ui/safari/html_dialog_sf.h"
@@ -136,7 +136,7 @@
     return false;
   }
   
-  // See gears/base/safari/safari_workaround.m for details.
+  // See gears/base/safari/safari_workarounds.m for details.
   EnableWebkitTimersForNestedRunloop();
 
   // Display the dialog.

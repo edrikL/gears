@@ -26,6 +26,7 @@
 #include "gears/base/common/common.h"
 #import "gears/ui/safari/settings_menu.h"
 #import "gears/base/safari/browser_load_hook.h"
+#import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
 
 @implementation GearsBrowserLoadHook
@@ -38,6 +39,8 @@
   if (![GearsSettingsMenuEnabler installHook]) {
     return NO;
   }
+  
+  ApplyProtocolWorkaround();
   
   LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
   return YES;
