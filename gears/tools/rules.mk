@@ -768,13 +768,12 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
 # Copy the actual plugin.
 	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
-# Copy localized UI.
-	cp -R $(SF_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
-# Copy over all resources.
-# Todo(playmobil): Handle localization correctly - currently we copy all
-# resources to the en-US directory.
+# Create webarchives for all dialogs.
+# Todo(playmobil): Handle localization correctly.
 	mkdir -p $@/Contents/Resources/en-US
-	cp $(COMMON_RESOURCES) $@/Contents/Resources/en-US/
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/permissions_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/settings_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/shortcuts_dialog.html $(COMMON_RESOURCES)
 # Copy launch_url
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@

@@ -26,7 +26,7 @@
 // Class to display a Modal dialog in WebKit.
 @interface HTMLDialogImp : NSObject {
  @protected
-  NSString *window_url_;
+  NSString *web_archive_filename_;
   NSString *arguments_; 
   int width_;
   int height_;
