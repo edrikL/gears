@@ -124,7 +124,7 @@ dom.removeClass = function(elm, className) {
 };
 
 /**
- * Gets the text (non-html) content of the element.
+ * Gets the text (non-html) content of an element.
  */
 dom.getTextContent = function(elm) {
   if (isDefined(typeof elm.textContent)) {
@@ -133,5 +133,18 @@ dom.getTextContent = function(elm) {
     return elm.innerText;
   } else {
     throw new Error("Could not find a property to get text content.");
+  }
+};
+
+/**
+ * Sets the text (non-html) contents of an element.
+ */
+dom.setTextContent = function(elm, text) {
+  if (isDefined(typeof elm.textContent)) {
+    elm.textContent = text;
+  } else if (isDefined(typeof elm.innerText)) {
+    elm.innerText = text;
+  } else {
+    throw new Error("Could not find a property to set text content.");
   }
 };
