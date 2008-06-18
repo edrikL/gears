@@ -58,6 +58,8 @@ if (!isSafari && !isWince) {
   var audioSuite = new TestSuite('Audio');
   audioSuite.addFile('../testcases/audio_tests.js', 
                      {useWorker: true, useIFrame: true});
+  audioSuite.addFile('../testcases/audio_recorder_tests.js',
+                     {useWorker: true, useIFrame: true});
   suites.push(audioSuite);
 }
 
