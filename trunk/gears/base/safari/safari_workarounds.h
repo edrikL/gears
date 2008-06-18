@@ -26,8 +26,8 @@
 // This file contains workarounds for issues with WebKit and OSX that affect 
 // Gears.  See source file for full details.
 
-#ifndef GEARS_BASE_SAFARI_SAFARI_WORKAROUND_H__
-#define GEARS_BASE_SAFARI_SAFARI_WORKAROUND_H__
+#ifndef GEARS_BASE_SAFARI_SAFARI_WORKAROUNDS_H__
+#define GEARS_BASE_SAFARI_SAFARI_WORKAROUNDS_H__
 
 #if defined(__cplusplus)
 extern "C" {
@@ -35,9 +35,17 @@ extern "C" {
 
 // Enables timers in nested runloops, see comments in .m file for full details.
 void EnableWebkitTimersForNestedRunloop();
-
 #if defined(__cplusplus)
 }
 #endif
 
-#endif  // GEARS_BASE_SAFARI_SAFARI_WORKAROUND_H__
+// Functions defined in tools/osx/libleopard_support.a.
+
+// Apply workaround for rdar://problem/5830581
+void ApplyProtocolWorkaround();
+
+// Workaround for rdar://problem/5817126 
+NSURLResponse *LeopardCreateNSURLResponse(NSURL *url, int status_code,
+                                          NSDictionary *headers);
+
+#endif  // GEARS_BASE_SAFARI_SAFARI_WORKAROUNDS_H__

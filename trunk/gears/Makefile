@@ -912,7 +912,7 @@ SF_CPPSRCS	+= \
 		paths_sf.mm \
 		paths_sf_more.mm \
 		plugin.cc \
-		safari_workaround.m \
+		safari_workarounds.m \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
