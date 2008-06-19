@@ -335,11 +335,11 @@ endif
 # when BROWSER is 'NONE'. 'installers' targets are built without any
 # BROWSER value set.
 ifeq ($(BROWSER), NONE)
-ifeq ($(OS),linux)
+# If one of these OS names matches, the 'findstring' result is not empty.
+ifneq ($(findstring $(OS),linux|osx|win32),)
 modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 endif
 ifeq ($(OS),win32)
-modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
 modules:: $(CRASH_SENDER_EXE)
@@ -699,7 +699,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 ifeq ($(OS),osx)
 ifeq ($(HAVE_ICEBERG),1)
 # This rule generates a package installer for the Plugin and InputManager.
-$(SF_INSTALLER_PKG): 
+$(SF_INSTALLER_PKG):
 	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
 else
 $(warning To create a Safari installer for Gears, you must install Iceberg \

@@ -317,7 +317,7 @@ SQLITE_CFLAGS += -DHAVE_USLEEP=1
 THIRD_PARTY_CFLAGS = -Wno-main
 # TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
 # we figure out the argument ordering bug.
-# PortAudio assumes it is in the include path 
+# PortAudio assumes it is in the include path
 CPPFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the CoreAudio hostapi for osx
 CPPFLAGS += -DPA_USE_COREAUDIO
@@ -371,7 +371,8 @@ DLLFLAGS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -f
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
+EXEFLAGS += $(SHARED_LINKFLAGS) -framework Carbon -framework CoreServices
+EXEFLAGS += -framework Cocoa -mmacosx-version-min=10.4
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
