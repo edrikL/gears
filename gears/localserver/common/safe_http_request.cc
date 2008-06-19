@@ -206,26 +206,14 @@ bool SafeHttpRequest::SetRequestHeader(const char16 *name,
   return true;
 }
 
-bool SafeHttpRequest::Send() {
-  assert(IsApartmentThread());
-  MutexLock locker(&request_info_lock_);
-  return SendImpl();
-}
 
-bool SafeHttpRequest::SendBlob(BlobInterface *blob) {
+bool SafeHttpRequest::Send(BlobInterface *blob) {
   assert(IsApartmentThread());
   MutexLock locker(&request_info_lock_);
-  if (was_sent_) return false;
+  if (was_sent_ || GetState() != OPEN) return false;
   request_info_.post_data_blob = blob;
-  return SendImpl();
-}
-
-bool SafeHttpRequest::SendString(const char16 *name) {
-  assert(IsApartmentThread());
-  MutexLock locker(&request_info_lock_);
-  if (was_sent_) return false;
-  request_info_.post_data_string = name;
-  return SendImpl();
+  was_sent_ = true;
+  return CallSendOnSafeThread();
 }
 
 bool SafeHttpRequest::Abort() {
@@ -379,16 +367,7 @@ void SafeHttpRequest::OnSendCall() {
     // members are not modified after was_sent_ is set.
     assert(was_sent_);
     request_info_lock_.Unlock();
-
-    if (!request_info_.post_data_string.empty()) {
-      ok = native_http_request_->SendString(
-          request_info_.post_data_string.c_str());
-    } else if (request_info_.post_data_blob.get()) {
-      ok = native_http_request_->SendBlob(
-          request_info_.post_data_blob.get());
-    } else {
-      ok = native_http_request_->Send();
-    }
+    ok = native_http_request_->Send(request_info_.post_data_blob.get());
 
     // Relock so the MutexLock on the stack is balanced
     request_info_lock_.Lock();  
@@ -610,18 +589,6 @@ bool SafeHttpRequest::IsValidResponse() {
   ReadyState state = GetState();
   return (!was_aborted_ && (state == INTERACTIVE || state == COMPLETE)) &&
       (::IsValidResponseCode(request_info_.response.status));
-}
-
-
-bool SafeHttpRequest::SendImpl() {
-  assert(IsApartmentThread());
-  if (was_sent_ || GetState() != OPEN)
-    return false;
-  was_sent_ = true;
-  if (!CallSendOnSafeThread()) {
-    return false;
-  }
-  return true;
 }
 
 void SafeHttpRequest::CreateNativeRequest() {

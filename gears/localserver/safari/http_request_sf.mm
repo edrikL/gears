@@ -288,84 +288,36 @@ bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 }
 
 //------------------------------------------------------------------------------
-// Send, SendString, SendBlob, SendImpl
+// Send
 //------------------------------------------------------------------------------
 
-bool SFHttpRequest::Send() {
+bool SFHttpRequest::Send(BlobInterface *blob) {
+  NSInputStream *post_data_stream(nil);
   if (IsPostOrPut()) {
-    return SendString(STRING16(L""));
-  } else {
-    return SendImpl(nil);
-  }
-}
-
-
-bool SFHttpRequest::SendString(const char16 *data) {
-  if (was_sent_ || !data) {
+    if (!blob) {
+      blob = new EmptyBlob;
+    }
+    // It appears that the OS defaults to sending out the request with
+    // chunked encoding if we assign it an inputstream. To solve this we
+    // need to explicitly set the Content-length header.
+    std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
+    headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
+                                          content_length_as_string));
+    BlobInputStream *blob_stream =
+        [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
+    if (!blob_stream) {
+      return false;
+    }
+    post_data_stream = [[[ProgressInputStream alloc]
+                         initFromStream:blob_stream
+                                request:this
+                                  total:blob->Length()] autorelease];
+    if (!post_data_stream) {
+      return false;
+    }
+  } else if (blob) {
     return false;
   }
-  if (!IsPostOrPut()) {
-    return false;
-  }
-  NSString *post_data_string = [NSString stringWithString16:data];
-  NSData *post_data = [post_data_string dataUsingEncoding:NSUTF8StringEncoding];
-
-  // It appears that the OS defaults to sending out the request with
-  // chunked encoding if we assign it an inputstream.  To solve this we
-  // need to explicitly set the Content-length header.
-  std::string16 content_length_as_string(
-      IntegerToString16([post_data length]));
-  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
-                                        content_length_as_string));
-  NSInputStream *post_data_stream = [NSInputStream
-                                     inputStreamWithData:post_data];
-  if (!post_data_stream) {
-    return false;
-  }
-  ProgressInputStream *stream = [[[ProgressInputStream alloc]
-                                  initFromStream:post_data_stream
-                                         request:this
-                                           total:[post_data length]]
-                                 autorelease];
-  if (!stream) {
-    return false;
-  }
-  // The following line works around an OSX 10.4 bug.
-  // See declaration of ProgressInputStream setData for details.
-  [stream setData:post_data];
-  return SendImpl(stream);
-}
-
-bool SFHttpRequest::SendBlob(BlobInterface *blob) {
-  if (was_sent_) {
-    return false;
-  }
-  // It appears that the OS defaults to sending out the request with
-  // chunked encoding if we assign it an inputstream.  To solve this we
-  // need to explicitly set the Content-length header.
-  std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
-  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
-                                        content_length_as_string));
-  NSInputStream *post_data_stream =
-      [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
-  if (!post_data_stream) {
-    return false;
-  }
-  NSInputStream *stream = [[[ProgressInputStream alloc]
-                            initFromStream:post_data_stream
-                                   request:this
-                                     total:blob->Length()] autorelease];
-  if (!stream) {
-    return false;
-  }
-  return SendImpl(stream);
-}
-
-bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
-
-headers_to_send_.push_back(
-        HttpHeader(STRING16(L"GEARS"),
-                   STRING16(L"1")));
 
 #ifdef DEBUG
   std::string url;
@@ -376,23 +328,23 @@ headers_to_send_.push_back(
   if (!IsOpen()) {
     return false;
   }
-  
+
   if (was_sent_) {
     return false;
   }
   was_sent_ = true;
-  
+
   std::string16 user_agent;
   if (!BrowserUtils::GetUserAgentString(&user_agent)) {
     return false;
   }
-  
+
   if (ShouldBypassLocalServer()) {
     headers_to_send_.push_back(
         HttpHeader(HttpConstants::kXGoogleGearsBypassLocalServer,
                    STRING16(L"1")));
   }
-  
+
   if (![delegate_holder_->delegate send:post_data_stream
                               userAgent:user_agent
                                 headers:headers_to_send_
@@ -400,27 +352,27 @@ headers_to_send_.push_back(
      Reset();
      return false;
   }
-  
+
   // Although the name of this status code is "SENT" which would appear to mean
   // that the request has been sent, the standard defines this state as
-  // signifying that headers have been received for the request, so it's wrong 
-  // to change the state here.  We do so later, only after headedrs have been 
+  // signifying that headers have been received for the request, so it's wrong
+  // to change the state here.  We do so later, only after headedrs have been
   // received.
   // scoped_refptr<SFHttpRequest> reference(this);
   // SetReadyState(SENT);
-  
+
   // Block until completion on synchronous requests.
   if (!async_) {
     // NSURLConnection has a default idle timeout of 60 seconds after which the
     // connection should be terminated, we rely on this to ensure that the
     // loop exits.
     const CFTimeInterval kTenMilliseconds = 10*10e-3;
-    
-    
+
+
     // TODO(playmobil): Reexamine this code when implementing Worker pools, and
     // consider logging cases in which NSURLConnection blocks for longer than
     // we expect.
-    
+
     // Make sure the object isn't deleted while waiting for the request to
     // finish.
     scoped_refptr<HttpRequest> hold(this);
@@ -428,7 +380,7 @@ headers_to_send_.push_back(
       CFRunLoopRunInMode(kCFRunLoopDefaultMode, kTenMilliseconds, false);
     }
   }
-  
+
   return true;
 }
 
