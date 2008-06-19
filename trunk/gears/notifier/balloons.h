@@ -88,22 +88,38 @@ class Balloon {
     return &notification_;
   }
 
-  glint::Node *ui_root() {
-    if (!ui_root_) {
-      ui_root_ = CreateTree();
+  glint::Node *root() {
+    if (!root_) {
+      root_ = CreateTree();
     }
-    return ui_root_;
+    return root_;
   }
 
+  bool InitializeUI(glint::Node *container);
   void UpdateUI();
+  bool InitiateClose(bool user_initiated);
+  void OnAnimationCompleted();
+  void OnMouseOut();
+  void OnMouseIn();
 
  private:
+  enum BalloonState {
+    OPENING_BALLOON,
+    SHOWING_BALLOON,
+    AUTO_CLOSING_BALLOON,
+    USER_CLOSING_BALLOON,
+    RESTORING_BALLOON,
+  };
+
   glint::Node *CreateTree();
   bool SetTextField(const char *id, const std::string16 &text);
   static void OnCloseButton(const std::string &button_id, void *user_info);
+  static bool SetAlphaTransition(glint::Node *node, double transition_duration);
+
   GearsNotification notification_;
-  glint::Node *ui_root_;
+  glint::Node *root_;
   BalloonCollection *collection_;
+  BalloonState state_;
   DISALLOW_EVIL_CONSTRUCTORS(Balloon);
 };
 
@@ -120,15 +136,14 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual bool Delete(const std::string16 &service, const std::string16 &id);
   virtual bool has_space() { return has_space_; }
 
-  bool StartBalloonClose(Balloon *balloon, bool user_initiated);
+  bool AddToUI(Balloon *balloon);
+  bool RemoveFromUI(Balloon *balloon);
 
  private:
   void Clear();  // clears balloons_
   Balloon *FindBalloon(const std::string16 &service,
                        const std::string16 &id,
                        bool and_remove);
-  bool AddToUI(Balloon *balloon);
-  bool RemoveFromUI(Balloon *balloon);
   void EnsureRoot();
 
   Balloons balloons_;
