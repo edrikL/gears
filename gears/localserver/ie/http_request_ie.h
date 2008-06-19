@@ -92,7 +92,9 @@ class IEHttpRequest
   virtual bool Open(const char16 *method, const char16* url, bool async,
                     BrowsingContext *browsing_context);
   virtual bool SetRequestHeader(const char16* name, const char16* value);
-  virtual bool Send(BlobInterface *data);
+  virtual bool Send();
+  virtual bool SendString(const char16 *data);
+  virtual bool SendBlob(BlobInterface *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
   virtual bool Abort();
@@ -177,6 +179,7 @@ class IEHttpRequest
   // ProgressEvent::Listener implementation
   virtual void OnUploadProgress(int64 position, int64 total);
 
+  bool SendImpl(BlobInterface *data);
   HRESULT OnRedirect(const char16 *redirect_url);
   void SetReadyState(ReadyState state);
   bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }

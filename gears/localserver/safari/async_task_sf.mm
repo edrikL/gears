@@ -341,7 +341,12 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
 
   // Rely on logic inside HttpRequest to check for valid combinations of
   // method and presence of body.
-  bool result = http_request->Send(post_body);
+  bool result = false;
+  if (post_body) {
+    result = http_request->SendBlob(post_body);
+  } else {
+    result = http_request->Send();
+  }
   if (!result) {
     return false;
   }

@@ -887,7 +887,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     bool is_async = true;
     if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
                                 is_async, browsing_context()) ||
-        !wi->http_request->Send(NULL)) {
+        !wi->http_request->Send()) {
       wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
       return false;

@@ -48,9 +48,15 @@
   return self;
 }
 
+- (void)setData:(id)data {
+  [data_ autorelease];
+  data_ = [data retain];
+}
+
 - (void)dealloc {
   request_->Unref();
   [input_stream_ release];
+  [data_ release];
   [super dealloc];
 }
 
