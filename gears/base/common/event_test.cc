@@ -44,8 +44,10 @@ class AsyncTaskImpl : public AsyncTask {
     if (!have_result_event_.WaitWithTimeout(1000)) {
       return false;
     }
+    bool result = result_;
     DeleteWhenDone();
-    return result_;
+    // Use a local variable since the class has been deleted.
+    return result;
   }
  private:
   // Deleted with GetResultAndDelete().
