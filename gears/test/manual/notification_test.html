@@ -38,10 +38,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1>Gears Notification Test Page</h1>
 
     <div>
-      <p>Notification Title: <input id="title" value="Test title"/>
-        Counter: <span id="counter"></span></p>
-      <p>Notificaiton Description:</p>
-      <textarea id="description" rows="2" cols="80">Keep it simple!</textarea>
+      <p>Title: <input id="title" value="Goog morning!"/> Counter: <span
+        id="counter"></span></p>
+      <p>Subtitle:
+        <input id="subtitle" value="Breakfast:"/></p>
+      <p>Description:
+        <input id="description" value="cheese, eggs and jam!"/></p>
       <p><button onclick="onPost()">Post</button></p>
     </div>
     <label for="status">Posted Notifications:</label>
@@ -69,13 +71,13 @@ function addStatus(msg) {
       document.getElementById('status').firstChild);
 }
 
-function sendNotification(id, title, description) {
+function sendNotification(id, title, subtitle, description) {
 	try {
 		var notification = desktop.createNotification();
 		notification.id = "foo" + id;
 		notification.title = title;
 		notification.icon = 'http://mail.google.com/mail.gif';
-		notification.subtitle = 'Test subtitle';
+		notification.subtitle = subtitle;
 		notification.description = description;
 		desktop.showNotification(notification);
 	} catch (ex) {
@@ -86,18 +88,24 @@ function sendNotification(id, title, description) {
 }
 
 function deleteNotification(id) {
-	addStatus('** Delete is not yet impelmented **');
+  try {
+			desktop.removeNotification("foo" + id);
+	} catch (ex) {
+		addStatus('Error: ' + ex.description);
+		return false;
+	}
+	addStatus('Deleted notification with id=' + id);
 }
 
-function updateNotification(id, title, description) {
-	if (!sendNotification(id, title, description)) {
+function updateNotification(id, title, subtitle, description) {
+	if (!sendNotification(id, title, subtitle, description)) {
 		return;
 	}
-	addStatus('Updated: ' + title + ', ' + description);
+	addStatus('Updated: ' + title + '/' + subtitle + '/' + description);
 }
 
-function postNotification(id, title, description) {
-  if (!sendNotification(id, title, description)) {
+function postNotification(id, title, subtitle, description) {
+  if (!sendNotification(id, title, subtitle, description)) {
 		return;
 	}
 	// Add the notificaiton to the 'posted list' so it can be later
@@ -106,13 +114,18 @@ function postNotification(id, title, description) {
 		'Notificaiton: id=' +
 		id +
 		'&nbsp;<input id="title' +
-		id + '" value="' +
-		title + '"/>&nbsp;<input id="description' +
+		id +
+	  '" value="' +
+		title + '"/>&nbsp;<input id="subtitle' +
+		id +
+		'" value="' +
+		subtitle + '"/>&nbsp;<input id="description' +
 		id +
 		'" value="' +
 		description + '"/>&nbsp;' +
   	'<button onclick=\'updateNotification(' +
 	  id + ', document.getElementById("title' +
+		id + '").value, document.getElementById("subtitle' +
 		id + '").value, document.getElementById("description' +
 		id + '").value)\'>Update</button>&nbsp;' +
 		'<button onclick="deleteNotification(' +
@@ -129,9 +142,10 @@ function postNotification(id, title, description) {
 
 function onPost() {
   var title = document.getElementById('title').value;
+	var subtitle = document.getElementById('subtitle').value;
 	var description = document.getElementById('description').value;
 	description += ' (' + counter + ')';
-	postNotification(counter, title, description);
+	postNotification(counter, title, subtitle, description);
 	++counter;
 	document.getElementById('counter').innerText = counter;
 }
