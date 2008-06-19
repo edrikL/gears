@@ -753,7 +753,7 @@ bool TestIpcMessageQueue(std::string16 *error) {
               kManySlavesCount);
   TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   TEST_ASSERT(registered_processes.size() == kManySlavesCount + 1);
-  for (int i = 1; i <= kManySlavesCount; ++i) {
+  for (int i = 0; i < kManySlavesCount; ++i) {
     TEST_ASSERT(2 == g_master_handler.CountSavedMessages(
                                           many_slaves[i].id, NULL));
   } 
