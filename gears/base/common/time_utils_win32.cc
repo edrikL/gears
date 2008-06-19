@@ -42,4 +42,4 @@ int64 FiletimeToMilliseconds(const FILETIME &filetime) {
   return (filetime_int64 - kOffset) / 10000;
 }
 
-#endif WIN32
+#endif  // WIN32
