@@ -324,20 +324,47 @@ bool FFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 }
 
 //------------------------------------------------------------------------------
-// Send
+// Send, SendString, SendImpl
 //------------------------------------------------------------------------------
+// TODO(bgarcia): Consolidate all of these internal Send functions into a
+//                a single one that takes a blob.
 
-bool FFHttpRequest::Send(BlobInterface *blob) {
-  if (!IsOpen()) return false;
+bool FFHttpRequest::Send() {
   if (IsPostOrPut()) {
-    nsCOMPtr<BlobInputStream> blob_stream(
-        new BlobInputStream(blob ? blob : new EmptyBlob));
-    post_data_stream_ = new ProgressInputStream(this, blob_stream,
-                                                blob ? blob->Length() : 0);
-  } else if (blob) {
+    return SendString(STRING16(L""));
+  } else {
+    return SendImpl();
+  }
+}
+
+bool FFHttpRequest::SendString(const char16 *data) {
+  if (was_sent_ || !data) return false;
+  if (!IsPostOrPut())
+    return false;
+
+  String16ToUTF8(data, &post_data_string_);
+  nsCOMPtr<nsIInputStream> string_stream;
+  if (!NewByteInputStream(getter_AddRefs(string_stream),
+                          post_data_string_.data(),
+                          post_data_string_.size())) {
     return false;
   }
+  post_data_stream_ = new ProgressInputStream(this, string_stream,
+                                              post_data_string_.size());
+  return SendImpl();
+}
 
+bool FFHttpRequest::SendBlob(BlobInterface *blob) {
+  if (was_sent_) {
+    return false;
+  }
+  nsCOMPtr<BlobInputStream> blob_stream(new BlobInputStream(blob));
+  post_data_stream_ = new ProgressInputStream(this, blob_stream,
+                                              blob->Length());
+  return SendImpl();
+}
+
+bool FFHttpRequest::SendImpl() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
   nsresult rv = NS_OK;
   was_sent_ = true;

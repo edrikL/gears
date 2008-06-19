@@ -90,7 +90,9 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   virtual bool Open(const char16 *method, const char16 *url, bool async,
                     BrowsingContext *browsing_context);
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
-  virtual bool Send(BlobInterface *data);
+  virtual bool Send();
+  virtual bool SendString(const char16 *data);
+  virtual bool SendBlob(BlobInterface *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
@@ -136,6 +138,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
            method_ == HttpConstants::kHttpPUT;
   }
   
+  bool SendImpl(NSInputStream *post_data_stream);
   void Reset();
 
   HttpRequest::HttpListener *listener_;

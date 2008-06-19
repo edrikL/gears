@@ -435,7 +435,12 @@ bool AsyncTask::OnStartHttpGet() {
 
   // Rely on logic inside HttpRequest to check for valid combinations of
   // method and presence of body.
-  bool result = http_request->Send(params_->post_body);
+  bool result = false;
+  if (params_->post_body) {
+    result = http_request->SendBlob(params_->post_body);
+  } else {
+    result = http_request->Send();
+  }
   if (!result) {
     http_request->SetListener(NULL, false);
     http_request_.reset(NULL);
