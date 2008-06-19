@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if !defined(WIN32) || defined(WINCE)
+#if defined(OS_MACOSX) || defined(WINCE)
 
 #include "gears/base/common/ipc_message_queue.h"
 

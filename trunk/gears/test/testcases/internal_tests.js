@@ -29,7 +29,7 @@ if (isUsingCCTests) {
 
 function testInternal() {
   if (isUsingCCTests) {
-    internalTests.runTests();
+    internalTests.runTests(google.gears.workerPool ? true : false);
   }
 }
 
