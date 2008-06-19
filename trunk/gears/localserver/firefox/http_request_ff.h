@@ -110,9 +110,7 @@ class FFHttpRequest : public HttpRequest,
   virtual bool Open(const char16 *method, const char16 *url, bool async,
                     BrowsingContext *browsing_context);
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
-  virtual bool Send();
-  virtual bool SendString(const char16 *data);
-  virtual bool SendBlob(BlobInterface *blob);
+  virtual bool Send(BlobInterface *blob);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
@@ -139,7 +137,6 @@ class FFHttpRequest : public HttpRequest,
   bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
   bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
 
-  bool SendImpl();
   bool NewByteInputStream(nsIInputStream **stream,
                           const char *data,
                           int data_size);
@@ -158,7 +155,6 @@ class FFHttpRequest : public HttpRequest,
   bool async_;
   std::string16 method_;
   nsCOMPtr<nsIInputStream> post_data_stream_;
-  std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
   std::string16 url_;
   SecurityOrigin origin_;

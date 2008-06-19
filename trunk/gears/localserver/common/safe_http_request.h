@@ -87,9 +87,7 @@ class SafeHttpRequest
 
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
 
-  virtual bool Send();
-  virtual bool SendBlob(BlobInterface* blob);
-  virtual bool SendString(const char16 *name);
+  virtual bool Send(BlobInterface* blob);
 
   virtual bool Abort();
 
@@ -137,7 +135,6 @@ class SafeHttpRequest
     std::vector< std::pair<std::string16, std::string16> > headers;
     scoped_refptr<BrowsingContext> browsing_context;
 
-    std::string16 post_data_string;
     scoped_refptr<BlobInterface> post_data_blob;
     ProgressInfo upload_progress;
     ResponseInfo response;
@@ -197,7 +194,6 @@ class SafeHttpRequest
   // Other private methods
   ReadyState GetState();
   bool IsValidResponse();
-  bool SendImpl();
   void CreateNativeRequest();
   void RemoveNativeRequest();
 
