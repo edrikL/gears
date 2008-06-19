@@ -197,10 +197,10 @@ AudioRecorder class
   // ---- controls ----
   // 0.0 - silent to 1.0 - loudest
            attribute float volume;
-  readonly attribute boolean muted;
+           attribute boolean muted;
   // the amount of sound required to activate the microphone
   // 0 - capture even minutest sound to 100 - capture only loudest sound
-  attribute int silenceLevel;
+           attribute int silenceLevel;
  
   // ---- cue ranges ----
   // provides ability to set callbacks at specific points in playback time.
