@@ -39,6 +39,8 @@ The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/c
 
 = JS interface =
 
+== Audio Playback ==
+
 *_Media_ class (borrowed from HTML5 spec):*
 We model the API based on _HTMLAudioElement_ in the HTML5 spec. Look at http://www.whatwg.org/specs/web-apps/current-work/#media5 for an explanation of the members of this class. We include an additional method to get a handle to the Blob, and an additional metadata field.
 {{{
@@ -153,6 +155,8 @@ Audio class : Media
 };
 }}}
 
+== Audio Recording ==
+
 *_AudioRecorder class_*
 {{{
 // an object of this class can be got from 
@@ -172,23 +176,24 @@ AudioRecorder class
   readonly attribute int activityLevel;
   // specifies the length (in milli seconds) of the audio recorded
   readonly attribute float duration;
-
-  // ---- channel type ----
+ 
+  // channel type
   const unsigned short MONO = 1;
   const unsigned short STEREO = 2;
            attribute short channelType;
   // sample rate for the recording
-           attribute int sampleRate;
-  // the number of bits per sample
-           attribute int bitsPerSample;
-  // possible values need to be defined
-           attribute string format; 
-
+           attribute float sampleRate;
+  // sample type for the recording, possible values need to be defined
+  const unsigned int S16_LE = 0;
+           attribute int sampleFormat;
+  // audio file type (container and codec), possible values need to be defined
+           attribute string type; 
+ 
   void record();
   void pause();
   void unpause();
   void stop();
-
+ 
   // ---- controls ----
   // 0.0 - silent to 1.0 - loudest
            attribute float volume;
@@ -196,7 +201,7 @@ AudioRecorder class
   // the amount of sound required to activate the microphone
   // 0 - capture even minutest sound to 100 - capture only loudest sound
   attribute int silenceLevel;
-
+ 
   // ---- cue ranges ----
   // provides ability to set callbacks at specific points in playback time.
   // similar to API in Audio class. Look at HTML5 spec for explanation.
@@ -204,7 +209,7 @@ AudioRecorder class
                   in boolean pauseOnExit,
                   in VoidCallback enterCallback, in VoidCallback exitCallback);
   void removeCueRanges(in DOMString className);
-
+ 
   // ---- access blob ----
   // returns handle to the blob object containing the audio data
   Blob getBlob();
@@ -233,6 +238,18 @@ The AudioRecorder class throws the following events, under the stated preconditi
    * _volumechange_ - either the recorder's volume is changed or is muted/unmuted
    * _ended_ - finished recording
 
+*_Description of the various attributes_*
+
+  TODO: Describe other attributes also.
+
+  * _sampleRate_ - sample rate for recording specified in kHz. On setting with an arbitrary value, the AudioRecorder tries to pick the nearest possible sample rate. On getting returns the sample rate actually set. Cannot be modified while recording.
+
+  * _sampleFormat_ - Possible values need to be defined. Currently, only S16_LE (signed 16 bit little endian linear PCM) is supported. Cannot be modified while recording.
+
+  * _type_ - Possible values need to be defined. Currenlty, only "audio/wav" is supported. Cannot be modified while recording.
+
+  * _volume_ - volume ranges from 0.0 (silent) to 1.0 (loudest) and intialized to 0.5 by default. The range, 0.0 - 1.0, and the default value, 0.5, have been taken from HTML5 spec. Note that this is a soft volume and is no way concerned with system/device volume. Can be modified while recording.
+
 *_Default values for the various attributes_*
 
 || *Attribute*   || *New recorder object* || *Previously recorded* ||
@@ -243,8 +260,8 @@ The AudioRecorder class throws the following events, under the stated preconditi
 || duration      || 0ms                   || 0ms                   ||
 || channelType   || based on device       || previous channelType  ||
 || sampleRate    || based on device       || previous sampleRate   ||
-|| bitsPerSample || based on device       || previous bitsPerSample||
-|| format        || audio/wav             || previous format       ||
+|| sampleFormat  || based on device       || previous sampleFormat ||
+|| type          || audio/wav             || previous type         ||
 || volume        || 0.5                   || previous volume       ||
 || muted         || false                 || false                 ||
 || silenceLevel  || 0                     || previous silenceLevel ||
@@ -284,12 +301,22 @@ state (channelType, sampleRate, bitsPerSample, format) and the recording control
   # The recording attribute should be set to false. [ the 'ended' event is fired ]
   # Release the recording device.
 
+*_Privacy_*
+
+It must be clear to users when an application is using the AudioRecorder API. We could implement one or both of the following UI elements:
+
+  # _A separate dialog from the Gears security dialog to enable the AudioRecorder API._ If the general-purpose dialog gave access to the microphone, it would be easy for users to forget they allowed access to Gears, or to fail to realize enabling Gears also gives access to their microphone.
+
+  # _Some persistent UI that indicates the AudioRecorder API is being used._ For example, there could be a large red dot across the bottom of the browser. Perhaps this red dot should blink, indicating that the audio is being recorded, so that the user cannot forget it is being used.
+
+*_Use cases_*
+
 We want to be able to support the following use-cases w.r.t. recording:
   * Send the recorded audio to a HTTP post URL/webservice (upload) - The destination attribute can be used to set the post URL to which the recorded data need to be streamed to.
   * Save the recorded audio to a local file (after compressing to some format specified) - One can get a handle to the blob and export it to a local file (using the export method in the blob class below).
   * Add the recorded audio as an attachment in a mail - The mail application should be able to access the blob data in chunks through XHR calls that invoke the slice() method (after it is compressed and uuencoded). 
 
-*_Others (borrowed from HTML5 spec):_*
+== Others (borrowed from HTML5 spec) ==
 
 {{{
 interface TimeRanges {
