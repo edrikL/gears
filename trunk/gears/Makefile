@@ -780,6 +780,7 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
+		time_utils_win32.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -814,6 +815,7 @@ IE_CPPSRCS	+= \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
+		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
 ifeq ($(OS),win32)
@@ -863,6 +865,7 @@ NPAPI_CPPSRCS	+= \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		plugin.cc \
+		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -1118,6 +1121,7 @@ NOTIFIER_CORE	+= \
 		system_linux.cc \
 		system_osx.cc \
 		system_win32.cc \
+		time_utils_win32.cc \
 		$(NULL)
 
 
