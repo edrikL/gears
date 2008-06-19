@@ -23,30 +23,87 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// TODO: Add tests for other build targets, like FF browser.
-#if defined(WIN32) && !defined(WINCE) && BROWSER_IE
+// Enable testing for Win32
+#if defined(WIN32) && !defined(WINCE)
+#if BROWSER_IE
+#define TEST_IPC_MESSAGE_QUEUE 1    // Test peer queue
+#else
+#define TEST_IPC_MESSAGE_QUEUE 2    // Test system queue
+#endif
+#endif
+
+// Enable testing for Linux
+#if defined(LINUX) && !defined(OS_MACOSX)
+#define TEST_IPC_MESSAGE_QUEUE 2    // Test system queue
+#endif
+
+#ifdef TEST_IPC_MESSAGE_QUEUE
 
 #ifdef USING_CCTESTS
 
 #include <algorithm>
+#include <list>
 #include <set>
+#include <vector>
+#if defined(LINUX) && !defined(OS_MACOSX)
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 #include "gears/base/common/ipc_message_queue.h"
+#include "gears/base/common/mutex.h"
+#ifdef WIN32
 #include "gears/base/common/process_utils_win32.h"
+#endif
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
+#ifdef WIN32
+#include <atlbase.h>
+#include <windows.h>
+#endif
+
+#if TEST_IPC_MESSAGE_QUEUE == 1
+#define GetIpcMessageQueue     IpcMessageQueue::GetPeerQueue
+#define TEST_SEND_TO_ALL       1
+const bool kAsPeer = true;
+#elif TEST_IPC_MESSAGE_QUEUE == 2
+#define GetIpcMessageQueue     IpcMessageQueue::GetSystemQueue
+const bool kAsPeer = false;
+#else
+#error "Invalid TEST_IPC_MESSAGE_QUEUE."
+#endif
 
 //-----------------------------------------------------------------------------
-// Functions defined in ipc_message_queue_win32.cc to facillitate testing
+// Functions defined in ipc_message_queue_***.cc to facilitate testing
 //-----------------------------------------------------------------------------
 
+#ifdef WIN32
 void TestingIpcMessageQueueWin32_GetAllProcesses(
-                                    std::vector<IpcProcessId> *processes);
-void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(IpcProcessId id);
-void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock();
-void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock();
+        bool as_peer, std::vector<IpcProcessId> *processes);
+void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(
+        IpcMessageQueue *ipc_message_queue, IpcProcessId id);
+void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock(
+        IpcMessageQueue *ipc_message_queue);
+void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock(
+        IpcMessageQueue *ipc_message_queue);
 void TestingIpcMessageQueueWin32_GetCounters(IpcMessageQueueCounters *counters,
                                              bool reset);
+#endif
+
+//-----------------------------------------------------------------------------
+// Forward declarations
+//-----------------------------------------------------------------------------
+
+#if defined(LINUX) && !defined(OS_MACOSX)
+bool InitIpcSlave();
+void RunIpcSlave();
+#endif
 
 //-----------------------------------------------------------------------------
 // Constants, functions, and classes used by test code in both the master
@@ -65,8 +122,13 @@ static const int kManyBigPings = 100;
 static const int kManySlavesCount = 10; 
 #endif
 
-// we want this larger than the capacity of the io buffer, ~8K
+// we want this larger than the capacity of the packet
+// (~8K for WIN32, ~2K for Linux)
+#ifdef WIN32
 static const int kBigPingLength = 18000;
+#elif defined(LINUX) && !defined(OS_MACOSX)
+static const int kBigPingLength = 5000;
+#endif
 
 
 static const char16 *kHello = STRING16(L"hello");
@@ -75,16 +137,18 @@ static const char16 *kQuit = STRING16(L"quit");
 static const char16 *kBigPing = STRING16(L"bigPing");
 static const char16 *kSendManyPings = STRING16(L"sendManyPings");
 static const char16 *kSendManyBigPings = STRING16(L"sendManyBigPings");
-static const char16 *kDieWhileHoldingWriteLock = STRING16(L"dieWithWriteLock");
-static const char16 *kDieWhileHoldingRegistryLock =
-                         STRING16(L"dieWithRegistryLock");
-static const char16* kQuitWhileHoldingRegistryLock =
-                         STRING16(L"quitWithRegistryLock");
 static const char16 *kError = STRING16(L"error");
 static const char16 *kDoChitChat = STRING16(L"doChitChat");
 static const char16 *kChit = STRING16(L"chit");
 static const char16 *kChat = STRING16(L"chat");
 static const char16 *kDidChitChat = STRING16(L"didChitChat");
+#ifdef WIN32
+static const char16 *kDieWhileHoldingWriteLock = STRING16(L"dieWithWriteLock");
+static const char16 *kDieWhileHoldingRegistryLock =
+                         STRING16(L"dieWithRegistryLock");
+static const char16* kQuitWhileHoldingRegistryLock =
+                         STRING16(L"quitWithRegistryLock");
+#endif
 
 // Allocates block of memory using malloc and initializes the memory
 // with an easy to verify pattern 
@@ -118,7 +182,9 @@ class IpcTestMessage : public Serializable {
   std::string16 string_;
   int bytes_length_;
   scoped_ptr_malloc<uint8> bytes_;
+#ifdef WIN32
   IpcMessageQueueCounters counters_;
+#endif
 
   virtual SerializableClassId GetSerializableClassId() {
     return SERIALIZABLE_IPC_TEST_MESSAGE;
@@ -126,8 +192,10 @@ class IpcTestMessage : public Serializable {
   virtual bool Serialize(Serializer *out) {
     out->WriteString(string_.c_str());
 
+#ifdef WIN32
     TestingIpcMessageQueueWin32_GetCounters(&counters_, false);
     out->WriteBytes(&counters_, sizeof(counters_));
+#endif
 
     out->WriteInt(bytes_length_);
     if (bytes_length_) {
@@ -137,7 +205,9 @@ class IpcTestMessage : public Serializable {
   }
   virtual bool Deserialize(Deserializer *in) {
     if (!in->ReadString(&string_) ||
+#ifdef WIN32
         !in->ReadBytes(&counters_, sizeof(counters_)) ||
+#endif
         !in->ReadInt(&bytes_length_)) {
       return false;
     }
@@ -161,11 +231,12 @@ class IpcTestMessage : public Serializable {
 // Helpers for use in the "master" process
 //-----------------------------------------------------------------------------
 
+#ifdef WIN32
 static bool WaitForRegisteredProcesses(int n, int timeout) {
   int64 start_time = GetCurrentTimeMillis();
   std::vector<IpcProcessId> registered_processes;
   while (true) {
-    TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+    TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
     if (registered_processes.size() == n)
       return true;
     if (!timeout || GetCurrentTimeMillis() - start_time > timeout)
@@ -174,15 +245,21 @@ static bool WaitForRegisteredProcesses(int n, int timeout) {
   }
   return false;
 }
+#endif
+
+std::list<IpcProcessId> g_slave_processes;
 
 struct SlaveProcess {
   IpcProcessId id;
+#ifdef WIN32
   CHandle handle;
+#endif
 
   SlaveProcess() : id(0) {}
 
   // Start a slave process via rundll32.exe
   bool Start() {
+#ifdef WIN32
     wchar_t module_path[MAX_PATH];  // folder + filename
     if (0 == GetModuleFileNameW(GetGearsModuleHandle(),
                                 module_path, MAX_PATH)) {
@@ -211,17 +288,39 @@ struct SlaveProcess {
     CloseHandle(pi.hThread);
     handle.m_h = pi.hProcess;
     id = pi.dwProcessId;
+    g_slave_processes.push_back(id);
     return true;
+#elif defined(LINUX) && !defined(OS_MACOSX)
+    pid_t pid = fork();
+    if (pid == -1) {
+      LOG(("fork failed with errno=%d\n", errno));
+      return false;
+    } else if (pid == 0) {
+      // Child process
+      if (!InitIpcSlave()) {
+        return false;
+      }
+      RunIpcSlave();
+      return true;
+    } else {
+      // Parent process
+      id = pid;
+      g_slave_processes.push_back(id);
+      return true;
+    }
+#endif
   }
 
   // Waits until the slave's process id is in the IPCQueue registry
   bool WaitTillRegistered(int timeout) {
+#ifdef WIN32
     assert(id);
     assert(handle.m_h);
     int64 start_time = GetCurrentTimeMillis();
     std::vector<IpcProcessId> registered_processes;
     while (true) {
-      TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+      TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer,
+                                                  &registered_processes);
       if (std::find(registered_processes.begin(),
                     registered_processes.end(),
                     id) !=
@@ -232,13 +331,30 @@ struct SlaveProcess {
         return false;
       Sleep(1);
     }
+#elif defined(LINUX) && !defined(OS_MACOSX)
+    return true;
+#endif
   }
 
   // Waits until the slave process terminates
   bool WaitForExit(int timeout) {
+    g_slave_processes.remove(id);
+#ifdef WIN32
     assert(id);
     assert(handle.m_h);
     return WaitForSingleObject(handle, timeout) == WAIT_OBJECT_0;
+#elif defined(LINUX) && !defined(OS_MACOSX)
+    assert(id);
+    LOG(("Waiting for process %u\n", id));
+    while (timeout > 0) {
+      if (waitpid(id, NULL, WNOHANG) > 0) {
+        return true;
+      }
+      usleep(1000);
+      timeout--;
+    }
+    return false;
+#endif
   }
 };
 
@@ -256,11 +372,15 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
                 static_cast<const IpcTestMessage*>(message_data);
       ++num_received_messages_;
 
-      LOG(("master received %S\n", test_message->string_.c_str()));
+      std::string narrow_string;
+      String16ToUTF8(test_message->string_.c_str(), &narrow_string);
+      LOG(("master received %s\n", narrow_string.c_str()));
 
       source_ids_.push_back(source_process_id);
       message_strings_.push_back(test_message->string_);
+#ifdef WIN32
       last_received_counters_ = test_message->counters_;
+#endif
 
       if (test_message->string_ == kBigPing &&
           !VerifyTestData(test_message->bytes_.get(),
@@ -291,7 +411,9 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
     message_strings_.clear();
     num_received_messages_ = 0;
     num_invalid_big_pings_ = 0;
+#ifdef WIN32
     TestingIpcMessageQueueWin32_GetCounters(NULL, true);
+#endif
   }
 
   void SetSaveMessages(bool save) {
@@ -323,7 +445,9 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
   int num_invalid_big_pings_;
   std::vector<IpcProcessId> source_ids_;
   std::vector<std::string16> message_strings_;
+#ifdef WIN32
   IpcMessageQueueCounters last_received_counters_;
+#endif
 
  private:
   int64 wait_for_messages_start_time_;
@@ -333,48 +457,63 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
 
 static MasterMessageHandler g_master_handler;
 
+void QuitAllSlaveProcesses(IpcMessageQueue* ipc_message_queue) {
+  g_master_handler.SetSaveMessages(false);
+  g_master_handler.ClearSavedMessages();
+  if (ipc_message_queue) {
+    for (std::list<IpcProcessId>::const_iterator iter = 
+              g_slave_processes.begin();
+         iter != g_slave_processes.end();
+         ++iter) {
+      ipc_message_queue->Send(*iter,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kQuit));
+    }
+  }
+}
+
 bool TestIpcMessageQueue(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestIpcMessageQueue - failed (%d)\n", __LINE__)); \
-    g_master_handler.SetSaveMessages(false); \
-    g_master_handler.ClearSavedMessages(); \
-    if (ipc_message_queue) \
-      ipc_message_queue->SendToAll(kIpcQueue_TestMessage, \
-                                   new IpcTestMessage(kQuit), \
-                                   false); \
-    assert(error); \
+    QuitAllSlaveProcesses(ipc_message_queue); \
     *error += STRING16(L"TestIpcMessageQueue - failed. "); \
     return false; \
   } \
 }
 
+  assert(error);
+
   // Register our message class and handler
   IpcTestMessage::RegisterAsSerializable();
-  g_master_handler.SetSaveMessages(false);
-  g_master_handler.ClearSavedMessages();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetPeerQueue();
+  IpcMessageQueue *ipc_message_queue = GetIpcMessageQueue();
   TEST_ASSERT(ipc_message_queue);
   ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_master_handler);
 
   // Tell any straglers from a previous run to quit
+#ifdef TEST_SEND_TO_ALL
+  g_master_handler.SetSaveMessages(false);
+  g_master_handler.ClearSavedMessages();
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kQuit),
                                false);
   TEST_ASSERT(WaitForRegisteredProcesses(1, 2000));
+#endif
 
   g_master_handler.SetSaveMessages(true);
   g_master_handler.ClearSavedMessages();
 
   // These test assume that the current process is the only process with an
   // ipc queue that is currently executing.
+#ifdef WIN32
   std::vector<IpcProcessId> registered_processes;
-  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+  TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   TEST_ASSERT(registered_processes.size() == 1);
   TEST_ASSERT(registered_processes[0] == 
               ipc_message_queue->GetCurrentIpcProcessId());
+#endif
   
   // Start two slave processes, a and b
   SlaveProcess process_a, process_b;
@@ -384,12 +523,14 @@ bool TestIpcMessageQueue(std::string16 *error) {
   TEST_ASSERT(process_b.WaitTillRegistered(30000));
 
   // The registry should now contain three processes
-  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+#ifdef WIN32
+  TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   TEST_ASSERT(registered_processes.size() == 3);
   TEST_ASSERT(registered_processes[0] ==
               ipc_message_queue->GetCurrentIpcProcessId());
   TEST_ASSERT(registered_processes[1] == process_a.id);
   TEST_ASSERT(registered_processes[2] == process_b.id);
+#endif
 
   // Each should send a "hello" message on startup, we wait for that to know
   // that they are ready to receive IpcTestMessages.
@@ -399,18 +540,36 @@ bool TestIpcMessageQueue(std::string16 *error) {
 
   // Broadcast a "ping" and wait for expected responses
   g_master_handler.ClearSavedMessages();
+#ifdef TEST_SEND_TO_ALL
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kPing),
                                false);
+#else
+  ipc_message_queue->Send(process_a.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kPing));
+  ipc_message_queue->Send(process_b.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kPing));
+#endif
   TEST_ASSERT(g_master_handler.WaitForMessages(2));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_a.id, kPing) == 1);
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_b.id, kPing) == 1);
 
   // Broadcast a "bigPing" and wait for expected responses
   g_master_handler.ClearSavedMessages();
+#ifdef TEST_SEND_TO_ALL
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kBigPing, kBigPingLength),
                                false);
+#else
+  ipc_message_queue->Send(process_a.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kBigPing, kBigPingLength));
+  ipc_message_queue->Send(process_b.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kBigPing, kBigPingLength));
+#endif
   TEST_ASSERT(g_master_handler.WaitForMessages(2));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_a.id, kBigPing) ==
               1);
@@ -419,12 +578,23 @@ bool TestIpcMessageQueue(std::string16 *error) {
 
   // Tell them to quit, wait for them to do so, and verify they are no
   // longer in the registry
+#ifdef TEST_SEND_TO_ALL
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kQuit),
                                false);
+#else
+  ipc_message_queue->Send(process_a.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kQuit));
+  ipc_message_queue->Send(process_b.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kQuit));
+#endif
   TEST_ASSERT(process_a.WaitForExit(30000));
   TEST_ASSERT(process_b.WaitForExit(30000));
+#ifdef WIN32
   TEST_ASSERT(WaitForRegisteredProcesses(1, 30000));
+#endif
 
   // Start a new process c
   g_master_handler.ClearSavedMessages();
@@ -448,9 +618,9 @@ bool TestIpcMessageQueue(std::string16 *error) {
   // Flood it with a smaller number of large messages.
   g_master_handler.ClearSavedMessages();
   for (int i = 0; i < kManyBigPings; ++i) {
-    ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
-                                 new IpcTestMessage(kBigPing, kBigPingLength),
-                                 false);
+    ipc_message_queue->Send(process_c.id,
+                            kIpcQueue_TestMessage,
+                            new IpcTestMessage(kBigPing, kBigPingLength));
   }
   TEST_ASSERT(g_master_handler.WaitForMessages(kManyBigPings));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id, kBigPing) ==
@@ -467,9 +637,18 @@ bool TestIpcMessageQueue(std::string16 *error) {
 
   // Tell c and d to send us many small pings at the same time.
   g_master_handler.ClearSavedMessages();
+#ifdef TEST_SEND_TO_ALL
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kSendManyPings),
                                false);
+#else
+  ipc_message_queue->Send(process_c.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kSendManyPings));
+  ipc_message_queue->Send(process_d.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kSendManyPings));
+#endif
   TEST_ASSERT(g_master_handler.WaitForMessages(kManyPings * 2));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id, kPing) ==
              kManyPings);
@@ -478,9 +657,18 @@ bool TestIpcMessageQueue(std::string16 *error) {
 
   // Tell c and d to send us many big pings at the same time.
   g_master_handler.ClearSavedMessages();
+#ifdef TEST_SEND_TO_ALL
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kSendManyBigPings),
                                false);
+#else
+  ipc_message_queue->Send(process_c.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kSendManyBigPings));
+  ipc_message_queue->Send(process_d.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kSendManyBigPings));
+#endif
   TEST_ASSERT(g_master_handler.WaitForMessages(kManyBigPings * 2));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id, kBigPing) ==
               kManyBigPings);
@@ -503,6 +691,7 @@ bool TestIpcMessageQueue(std::string16 *error) {
               kManyPings);
   TEST_ASSERT(g_master_handler.num_invalid_big_pings_ == 0);
 
+#ifdef WIN32
   // Tell 'd' to die while it has the write lock on our queue    
   ipc_message_queue->Send(process_d.id,
                           kIpcQueue_TestMessage,
@@ -526,8 +715,20 @@ bool TestIpcMessageQueue(std::string16 *error) {
   // Test that a running process, ours, will cleanup the registry after others
   // have crashed without removing themselves from the registry.
   TEST_ASSERT(WaitForRegisteredProcesses(1, 30000));
+#else
+  // Tell 'c' and 'd' to die.
+  ipc_message_queue->Send(process_c.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kQuit));
+  ipc_message_queue->Send(process_d.id,
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kQuit));
+  TEST_ASSERT(process_c.WaitForExit(30000));
+  TEST_ASSERT(process_d.WaitForExit(30000));
+#endif
 
   // Start many processes
+#if defined(WIN32) && BROWSER_IE
   g_master_handler.ClearSavedMessages();
   SlaveProcess many_slaves[kManySlavesCount];
   for (int i = 0; i < kManySlavesCount; ++i) {
@@ -550,11 +751,11 @@ bool TestIpcMessageQueue(std::string16 *error) {
               kManySlavesCount);
   TEST_ASSERT(g_master_handler.CountSavedMessages(0, kDidChitChat) ==
               kManySlavesCount);
-  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+  TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   TEST_ASSERT(registered_processes.size() == kManySlavesCount + 1);
   for (int i = 1; i <= kManySlavesCount; ++i) {
     TEST_ASSERT(2 == g_master_handler.CountSavedMessages(
-                                          registered_processes[i], NULL));
+                                          many_slaves[i].id, NULL));
   } 
 
   // Tell the first to quit in a would be dead lock situation
@@ -569,10 +770,12 @@ bool TestIpcMessageQueue(std::string16 *error) {
   for (int i = 0; i < kManySlavesCount; ++i) {
     TEST_ASSERT(many_slaves[i].WaitForExit(30000));
   }
+
   TEST_ASSERT(WaitForRegisteredProcesses(1, 30000));
-  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+  TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   TEST_ASSERT(registered_processes[0] ==
               ipc_message_queue->GetCurrentIpcProcessId());
+#endif
 
   TEST_ASSERT(g_master_handler.CountSavedMessages(0, kError) == 0);
 
@@ -609,6 +812,8 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
 static SlaveMessageHandler g_slave_handler;
 
 
+#ifdef WIN32
+
 // This is the function that rundll32 calls when we launch other processes.
 extern "C"
 __declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
@@ -617,11 +822,11 @@ __declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
                                                int command_show) {
   LOG(("RunIpcSlave called\n"));
   IpcTestMessage::RegisterAsSerializable();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetPeerQueue();
+  IpcMessageQueue *ipc_message_queue = GetIpcMessageQueue();
   ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_slave_handler);
 
   std::vector<IpcProcessId> registered_processes;
-  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
+  TestingIpcMessageQueueWin32_GetAllProcesses(kAsPeer, &registered_processes);
   assert(registered_processes.size() > 0);
   g_slave_handler.parent_process_id_ = registered_processes[0];
   ipc_message_queue->Send(g_slave_handler.parent_process_id_,
@@ -640,6 +845,42 @@ __declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
   LOG(("RunIpcSlave exitting\n"));
 }
 
+#elif defined(LINUX) && !defined(OS_MACOSX)
+
+bool InitIpcSlave() {
+  LOG(("Slave process %u is started\n", getpid()));
+
+  // Create the new ipc message queue for the child process.
+  IpcTestMessage::RegisterAsSerializable();
+  IpcMessageQueue *ipc_message_queue = GetIpcMessageQueue();
+  if (!ipc_message_queue) {
+    return false;
+  }
+  ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_slave_handler);
+
+  // Send a hello message to the parent process to tell that the child process
+  // has been started.
+  ipc_message_queue->Send(getppid(),
+                          kIpcQueue_TestMessage,
+                          new IpcTestMessage(kHello));
+
+  LOG(("Slave process %u sent hello message to master process\n", getpid()));
+
+  return true;
+}
+
+void RunIpcSlave() {
+  while (kill(getppid(), 0) != -1 && !g_slave_handler.done_) {
+    usleep(1000);
+  }
+
+  LOG(("Slave process %u exitting\n", getpid()));
+
+  raise(SIGTERM);
+}
+
+#endif
+
 
 void SlaveMessageHandler::HandleIpcMessage(
                               IpcProcessId source_process_id,
@@ -649,99 +890,108 @@ void SlaveMessageHandler::HandleIpcMessage(
   const IpcTestMessage *test_message = static_cast<const IpcTestMessage*>
                                           (message_data);
 
-   LOG(("slave received %S\n", test_message->string_.c_str()));
+  std::string narrow_string;
+  String16ToUTF8(test_message->string_.c_str(), &narrow_string);
+  LOG(("slave received %s\n", narrow_string.c_str()));
+
+  IpcMessageQueue *ipc_message_queue = GetIpcMessageQueue();
 
   if (test_message->string_ == kPing) {
-    IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                         kIpcQueue_TestMessage,
-                                         new IpcTestMessage(kPing));
+    ipc_message_queue->Send(source_process_id,
+                            kIpcQueue_TestMessage,
+                            new IpcTestMessage(kPing));
 
   } else if (test_message->string_ == kQuit) {
     done_ = true;
 
+#ifdef WIN32
   } else if (test_message->string_ == kQuitWhileHoldingRegistryLock) {
     done_ = true;
-    TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock();
+    TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock(
+        ipc_message_queue);
 
   } else if (test_message->string_ == kDieWhileHoldingWriteLock) {
-    TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(source_process_id);
+    TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(ipc_message_queue,
+                                                         source_process_id);
 
   } else if (test_message->string_ == kDieWhileHoldingRegistryLock) {
-    TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock();
+    TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock(ipc_message_queue);
+#endif
 
   } else if (test_message->string_ == kBigPing) {
     if (test_message->bytes_length_ == kBigPingLength &&
         VerifyTestData(test_message->bytes_.get(),
                        test_message->bytes_length_)) {
-      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kBigPing,
-                                                              kBigPingLength));
+      ipc_message_queue->Send(source_process_id,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kBigPing,
+                                                 kBigPingLength));
     } else {
-      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kError));
+      ipc_message_queue->Send(source_process_id,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kError));
     }
 
 
   } else if (test_message->string_ == kSendManyPings) {
     for (int i = 0; i < kManyPings; ++i) {
-      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kPing));
+      ipc_message_queue->Send(source_process_id,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kPing));
     }
 
   } else if (test_message->string_ == kSendManyBigPings) {
     for (int i = 0; i < kManyBigPings; ++i) {
-      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kBigPing,
-                                                              kBigPingLength));
+      ipc_message_queue->Send(source_process_id,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kBigPing,
+                                                 kBigPingLength));
     }
 
   } else if (test_message->string_ == kDoChitChat) {
-    IpcMessageQueue::GetPeerQueue()->SendToAll(kIpcQueue_TestMessage,
-                                              new IpcTestMessage(kChit),
-                                              false);
+    ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
+                                 new IpcTestMessage(kChit),
+                                 false);
 
   } else if (test_message->string_ == kChit) {
     ++chits_received_;
     chit_sources_.insert(source_process_id);
-    IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
-                                         kIpcQueue_TestMessage,
-                                         new IpcTestMessage(kChat));
+    ipc_message_queue->Send(source_process_id,
+                            kIpcQueue_TestMessage,
+                            new IpcTestMessage(kChat));
     if (chits_received_ > kManySlavesCount - 1) {
-      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kError));
+      ipc_message_queue->Send(parent_process_id_,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kError));
     } else if ((chats_received_ == kManySlavesCount - 1) &&
                (chits_received_ == kManySlavesCount - 1) &&
                (chat_sources_.size() == kManySlavesCount - 1) &&
                (chit_sources_.size() == kManySlavesCount - 1)) {
-      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kDidChitChat));
+      ipc_message_queue->Send(parent_process_id_,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kDidChitChat));
     }
 
   } else if (test_message->string_ == kChat) {
     ++chats_received_;
     chat_sources_.insert(source_process_id);
     if (chits_received_ > kManySlavesCount - 1) {
-      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kError));
+      ipc_message_queue->Send(parent_process_id_,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kError));
     } else if ((chats_received_ == kManySlavesCount - 1) &&
                (chits_received_ == kManySlavesCount - 1) &&
                (chat_sources_.size() == kManySlavesCount - 1) &&
                (chit_sources_.size() == kManySlavesCount - 1)) {
-      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
-                                           kIpcQueue_TestMessage,
-                                           new IpcTestMessage(kDidChitChat));
+      ipc_message_queue->Send(parent_process_id_,
+                              kIpcQueue_TestMessage,
+                              new IpcTestMessage(kDidChitChat));
     }
 
   }
 }
 
-#endif
+#endif  // USING_CCTESTS
 
-#endif  // defined(WIN32) && !defined(WINCE) && BROWSER_IE
+#endif  // TEST_IPC_MESSAGE_QUEUE
+

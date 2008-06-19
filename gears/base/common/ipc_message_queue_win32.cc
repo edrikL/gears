@@ -1541,17 +1541,18 @@ void Win32IpcMessageQueue::RemoveOutboundQueue(OutboundQueue *queue) {
 #ifdef USING_CCTESTS
 
 void TestingIpcMessageQueueWin32_GetAllProcesses(
-                                     std::vector<IpcProcessId> *processes) {
-  assert(g_peer_queue_instance);
+        bool as_peer, std::vector<IpcProcessId> *processes) {
   IpcProcessRegistry registry;
-  registry.Open(true);
+  registry.Open(as_peer);
   registry.GetAll(processes);
 }
 
-void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock() {
+void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock(
+        IpcMessageQueue *ipc_message_queue) {
   // Must be called on the IPC IO thread.
-  assert(g_peer_queue_instance);
-  g_peer_queue_instance->process_registry_.SleepWhileHoldingRegistryLock();
+  Win32IpcMessageQueue *win32_ipc_message_queue =
+      reinterpret_cast<Win32IpcMessageQueue*>(ipc_message_queue);
+  win32_ipc_message_queue->process_registry_.SleepWhileHoldingRegistryLock();
 }
 
 void IpcProcessRegistry::SleepWhileHoldingRegistryLock() {
@@ -1559,10 +1560,12 @@ void IpcProcessRegistry::SleepWhileHoldingRegistryLock() {
   Sleep(INFINITE);
 }
 
-void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock() {
+void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock(
+        IpcMessageQueue *ipc_message_queue) {
   // Must be called on the IPC IO thread.
-  assert(g_peer_queue_instance);
-  g_peer_queue_instance->process_registry_.DieWhileHoldingRegistryLock();
+  Win32IpcMessageQueue *win32_ipc_message_queue =
+      reinterpret_cast<Win32IpcMessageQueue*>(ipc_message_queue);
+  win32_ipc_message_queue->process_registry_.DieWhileHoldingRegistryLock();
 }
 
 
@@ -1572,10 +1575,12 @@ void IpcProcessRegistry::DieWhileHoldingRegistryLock() {
 }
 
 
-void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(IpcProcessId id) {
+void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(
+        IpcMessageQueue *ipc_message_queue, IpcProcessId id) {
   // Must be called on the IPC IO thread.
-  assert(g_peer_queue_instance);
-  OutboundQueue *queue = g_peer_queue_instance->GetOutboundQueue(id);
+  Win32IpcMessageQueue *win32_ipc_message_queue =
+      reinterpret_cast<Win32IpcMessageQueue*>(ipc_message_queue);
+  OutboundQueue *queue = win32_ipc_message_queue->GetOutboundQueue(id);
   assert(queue);
   queue->DieWhileHoldingWriteLock();
 }

@@ -149,8 +149,9 @@ bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
 bool TestFileBlob(std::string16 *error);  // from blob_test.cc
 bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
 bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
-#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-// from ipc_message_queue_win32_test.cc
+#if (defined(WIN32) && !defined(WINCE)) || \
+    (defined(LINUX) && !defined(OS_MACOSX))
+// from ipc_message_queue_test.cc
 bool TestIpcMessageQueue(std::string16 *error);
 #endif
 #ifdef OS_ANDROID
@@ -231,6 +232,13 @@ void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
 }
 
 void GearsTest::RunTests(JsCallContext *context) {
+  bool is_worker = false;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_BOOL, &is_worker},
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
   // We need permissions to use the localserver.
   SecurityOrigin cc_tests_origin;
   cc_tests_origin.InitFromUrl(STRING16(L"http://cc_tests/"));
@@ -271,8 +279,21 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestJoinBlob(&error);
   ok &= TestSliceBlob(&error);
 
-#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-  ok &= TestIpcMessageQueue(&error);
+#if (defined(WIN32) && !defined(WINCE)) || \
+    (defined(LINUX) && !defined(OS_MACOSX))
+  bool run_ipc_test = true;
+  // TODO (jianli): Under Linux, we use fork() to create slave process. When
+  // running as worker, the slave process might not terminate correctly.
+  // Enable the test for worker when we figure out another way to start slave
+  // process.
+#if defined(LINUX) && !defined(OS_MACOSX)
+  if (is_worker) {
+    run_ipc_test = false;
+  }
+#endif  
+  if (run_ipc_test) {
+    ok &= TestIpcMessageQueue(&error);
+  }
 #endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);

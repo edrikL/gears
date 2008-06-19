@@ -236,7 +236,7 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
-SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -pthread
 
 MKDLL = g++
 DLL_PREFIX = lib

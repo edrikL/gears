@@ -770,9 +770,10 @@ FF3_CPPSRCS	+= \
 		file_posix.cc \
 		file_win32.cc \
 		html_event_monitor_ff.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		message_queue_ff.cc \
@@ -804,9 +805,10 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
 		detect_version_collision.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_ie.cc \
 		message_queue_ie.cc \
 		module.cc \
@@ -851,9 +853,10 @@ NPAPI_IDLSRCS	+= \
 NPAPI_CPPSRCS	+= \
 		browser_utils.cc \
 		html_event_monitor_np.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_np.cc \
 		module.cc \
 		np_utils.cc \
@@ -1097,6 +1100,7 @@ COMMON_VPATH	+= \
 
 NOTIFIER_CORE	+= \
 		balloons.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
