@@ -23,13 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
+#if defined(OFFICIAL_BUILD) || !defined(USING_CCTESTS)
+// The notification API has not been finalized for official builds.
 int main(int, char **) {
   return 0;
 }
 #else
-#if USING_CCTESTS
 #include <string>
 
 #include "gears/notifier/unit_test.h"
@@ -99,7 +98,7 @@ const std::string16& GetTestLog() {
   return UnitTest::instance()->log();
 }
 
-int main(int, char **) {
+int RunTests(int argc, char **argv) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
@@ -113,9 +112,12 @@ int main(int, char **) {
 
   return 0;
 }
-#else
-int main(int, char **) {
-  return 0;
+
+// For OSX, 'main' is defined in unit_test_osx.mm.
+#ifndef OS_MACOSX
+int main(int argc, char **argv) {
+  return RunTests(argc, argv);
 }
-#endif  // USING_CCTESTS
-#endif  // OFFICIAL_BUILD
+#endif  // OS_MACOSX
+#endif  // defined(OFFICIAL_BUILD) || !defined(USING_CCTESTS)
+

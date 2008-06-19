@@ -1,3 +1,4 @@
+
 // Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,50 +24,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OS_MACOSX
 #ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-int main(int argc, char *argv[]) {
-  return 0;
-}
+// The notification API has not been finalized for official builds.
 #else
-#include "gears/notifier/notifier.h"
+#if defined(USING_CCTESTS) && defined(OS_MACOSX)
+#import "gears/notifier/unit_test.h"
+#import <Cocoa/Cocoa.h>
 
-class MacNotifier : public Notifier {
- public:
-  MacNotifier();
-  virtual int Run();
+extern "C" {
 
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(MacNotifier);
-};
-
-MacNotifier::MacNotifier() {
-}
-
-int MacNotifier::Run() {
-  running_ = true;
-  while (running_) {
-    sched_yield();
-  }
-  return 0;
-}
-
-int main(int argc, char *argv[]) {
-  LOG(("Gears Notifier started.\n"));
-  MacNotifier notifier;
-
-  int retval = -1;
-  if (notifier.Initialize()) {
-    retval = notifier.Run();
-    notifier.Terminate();
-  }
-
-  LOG(("Gears Notifier terminated.\n"));
+int main(int argc, char** argv) {
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  int retval = RunTests(argc, argv);
+  [pool release];
   return retval;
 }
 
+}  // extern "C"
+
+#endif  // defined(USING_CCTESTS) && defined(OS_MACOSX)
 #endif  // OFFICIAL_BUILD
-#endif  // OS_MACOSX
 
 

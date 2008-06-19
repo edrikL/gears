@@ -38,6 +38,7 @@
 #endif  // !BROWSER_NONE
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if !BROWSER_NONE
 DECLARE_GEARS_WRAPPER(GearsNotification);
@@ -69,8 +70,8 @@ const std::string GearsNotification::kModuleName("Notification");
 bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   if (!str || !out16)
     return false;
-  
-  unsigned long length = CFStringGetLength(str);
+
+  size_t length = CFStringGetLength(str);
   const UniChar *outStr = CFStringGetCharactersPtr(str);
 
   if (!outStr) {
@@ -81,7 +82,7 @@ bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   } else {
     out16->assign(outStr, length);
   }
-  
+
   return true;
 }
 #endif  // OS_MACOSX
@@ -121,7 +122,7 @@ std::string16 GenerateGuid() {
 }
 
 GearsNotification::GearsNotification()
-    : 
+    :
 #if !BROWSER_NONE
       ModuleImplBaseClassVirtual(kModuleName),
 #endif

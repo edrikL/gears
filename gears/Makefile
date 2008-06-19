@@ -1130,9 +1130,13 @@ NOTIFIER_CPPSRCS += \
 		$(NOTIFIER_CORE) \
 		notifier.cc \
 		notifier_linux.cc \
-		notifier_osx.cc \
 		notifier_win32.cc \
 		$(NULL)
+
+ifeq ($(OS),osx)
+NOTIFIER_CPPSRCS += \
+		notifier_osx.mm
+endif
 
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
@@ -1170,6 +1174,11 @@ NOTIFIER_TEST_CPPSRCS += \
 		notification_manager_test.cc \
 		unit_test.cc \
 		$(NULL)
+
+ifeq ($(OS),osx)
+NOTIFIER_TEST_CPPSRCS += \
+		unit_test_osx.mm
+endif
 
 NOTIFIER_TEST_CSRCS += \
 		ConvertUTF.c \
