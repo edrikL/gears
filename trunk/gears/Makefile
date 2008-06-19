@@ -1582,10 +1582,10 @@ FF3_CPPSRCS	+= \
 		blob_input_stream_ff_test.cc \
 		$(NULL)
 
-SF_CPPSRCS += \
+SF_CPPSRCS 	+= \
 		blob_input_stream_sf.mm \
+		blob_input_stream_sf_test.mm \
 		$(NULL)
-
 
 #-----------------------------------------------------------------------------
 # image

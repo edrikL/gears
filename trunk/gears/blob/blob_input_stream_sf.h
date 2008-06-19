@@ -30,10 +30,16 @@
 class BlobInterface;
 
 // BlobInputStream provides an NSInputStream interface for blobs.
-@interface BlobInputStream: NSInputStream {
+@interface BlobInputStream : NSInputStream {
  @private
   BlobInterface* blob_;
   int64 offset_;
+  id delegate_;  // WEAK, not retained
+
+  // Since various undocumented methods get called on a stream, we'll
+  // use a 1-byte dummy stream object to handle all unexpected messages.
+  NSInputStream *dummy_stream_;
+  NSData *dummy_data_;
 }
 
 #pragma mark Public Instance methods
@@ -44,18 +50,5 @@ class BlobInterface;
 // Replaces the stream's current blob (if any) with the argument.
 // The argument can be NULL.
 - (void)reset:(BlobInterface *)blob;
-
-#pragma mark NSInputStream function overrides.
-
-// From the current offset, take up to the number of bytes specified in |len|
-// from the stream and place them in the client-supplied |buffer|.
-// Return the actual number of bytes placed in the buffer.
-- (NSInteger)read:(uint8_t *)buffer maxLength:(NSUInteger)len;
-
-// This method is not appropriate to BlobInputStream, so we always return NO.
-- (BOOL)getBuffer:(uint8_t **)buffer length:(NSUInteger *)len;
-
-// Return YES if there is more data to read in the stream, NO if there is not.
-- (BOOL)hasBytesAvailable;
 
 @end
