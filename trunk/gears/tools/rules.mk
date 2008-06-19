@@ -342,7 +342,6 @@ ifeq ($(OS),win32)
 modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
-# TODO(jianli): Extend notifier building to other platforms.
 modules:: $(CRASH_SENDER_EXE)
 endif
 ifneq ($(OS),wince)
@@ -555,6 +554,10 @@ OUR_COMPONENT_GUID_IE_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_FILES-$(VERSION))
 OUR_COMPONENT_GUID_IE_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_REGISTRY-$(VERSION))
+OUR_COMPONENT_GUID_SHARED_FILES = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_FILES-$(VERSION))
+OUR_COMPONENT_GUID_SHARED_REGISTRY = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_REGISTRY-$(VERSION))
 
 OUR_NPAPI_PRODUCT_ID = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_2ND_PRODUCT_ID-$(VERSION))
@@ -578,6 +581,8 @@ $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	  -dOurComponentGUID_FFRegistry=$(OUR_COMPONENT_GUID_FF_REGISTRY) \
 	  -dOurComponentGUID_IEFiles=$(OUR_COMPONENT_GUID_IE_FILES) \
 	  -dOurComponentGUID_IERegistry=$(OUR_COMPONENT_GUID_IE_REGISTRY) \
+	  -dOurComponentGUID_SharedFiles=$(OUR_COMPONENT_GUID_SHARED_FILES) \
+	  -dOurComponentGUID_SharedRegistry=$(OUR_COMPONENT_GUID_SHARED_REGISTRY) \
 	  -dOurNpapiProductId=$(OUR_NPAPI_PRODUCT_ID) \
 	  -dOurNpapiPath=$(OUTDIR)/$(OS)-$(ARCH)/npapi \
 	  -dOurComponentGUID_NpapiFiles=$(OUR_COMPONENT_GUID_NPAPI_FILES) \

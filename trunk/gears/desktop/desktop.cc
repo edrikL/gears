@@ -712,6 +712,23 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   // The notification API has not been finalized for official builds.
 #else
 
+uint32 FindNotifierProcess(JsCallContext *context) {
+  uint32 process_id = NotifierProcess::FindProcess();
+  if (!process_id) {
+    // TODO (jianli): Add the async start support.
+    if (!NotifierProcess::StartProcess()) {
+      context->SetException(STRING16(L"Failed to start notifier process."));
+      return 0;
+    }
+    process_id = NotifierProcess::FindProcess();
+    if (!process_id) {
+      context->SetException(STRING16(L"Failed to find notifier process."));
+      return 0;
+    }
+  }
+  return process_id;
+}
+
 void GearsDesktop::CreateNotification(JsCallContext *context) {
   scoped_refptr<GearsNotification> notification;
   if (!CreateModule<GearsNotification>(GetJsRunner(), &notification))
@@ -736,10 +753,8 @@ void GearsDesktop::ShowNotification(JsCallContext *context) {
   }
 
   // Try to find the process of Desktop Notifier.
-  uint32 process_id = NotifierProcess::FindProcess();
+  uint32 process_id = FindNotifierProcess(context);
   if (!process_id) {
-    // TODO (jianli): Do we need to start the process if not found?
-    context->SetException(STRING16(L"notifier process not found"));
     return;
   }
 
@@ -771,10 +786,8 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   }
 
   // Try to find the process of Desktop Notifier.
-  uint32 process_id = NotifierProcess::FindProcess();
+  uint32 process_id = FindNotifierProcess(context);
   if (!process_id) {
-    // TODO (jianli): Do we need to start the process if not found?
-    context->SetException(STRING16(L"notifier process not found"));
     return;
   }
 
