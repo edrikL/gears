@@ -207,13 +207,14 @@ bool BalloonCollection::Delete(const std::string16 &service,
                                const std::string16 &id) {
   Balloon *balloon = FindBalloon(service,
                                  id,
-                                 false);  // don't remove from list yet
+                                 true);  // remove from list immediately
   if (!balloon)
     return false;
 
   if (!balloon->InitiateClose(false))  // not user-initiated.
     return false;
 
+  observer_->OnBalloonSpaceChanged();
   return true;
 }
 
@@ -246,11 +247,15 @@ bool BalloonCollection::AddToUI(Balloon *balloon) {
 
 bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   assert(balloon);
-  Balloon *found = FindBalloon(balloon->notification().service(),
-                               balloon->notification().id(),
-                               true);  // remove from list
-  if (!found || !root_ui_)
+  if (!root_ui_)
     return false;
+
+  // Ignore return value. The balloon could already be removed from balloons_
+  // by Delete method - we only keep balloons for longer if it was a
+  // user-initiated 'close' operation or auto-expiration.
+  FindBalloon(balloon->notification().service(),
+              balloon->notification().id(),
+              true);  // remove from list
 
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
