@@ -37,6 +37,7 @@
 #include <atlbase.h>
 #include <atlwin.h>
 #include <objbase.h>
+#include <windows.h>
 
 static const char16 *kNotifierDummyWndClassName =
     L"DAAC6F7D-4BAB-403b-AC79-D09E165BC509";
@@ -108,7 +109,7 @@ class NotifierSyncGate {
 
   bool Wait(int timeout_ms) {
     assert(handle_);
-    return ::WaitForSingleObjectEx(handle_, timeout_ms, TRUE) == WAIT_OBJECT_0;
+    return ::WaitForSingleObject(handle_, timeout_ms) == WAIT_OBJECT_0;
   }
 
  private:
