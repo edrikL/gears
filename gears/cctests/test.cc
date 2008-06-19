@@ -129,6 +129,10 @@ void Dispatcher<GearsTest>::Init() {
 // from blob_input_stream_ff_test.cc
 bool TestBlobInputStreamFf(std::string16 *error);
 #endif
+#if BROWSER_WEBKIT
+// from blob_input_stream_sf_test.cc
+bool TestBlobInputStreamSf(std::string16 *error);
+#endif
 bool TestByteStore(std::string16 *error);  // from byte_store_test.cc
 bool TestHttpCookies(BrowsingContext *context, std::string16 *error);
 bool TestHttpRequest(BrowsingContext *context, std::string16 *error);
@@ -300,6 +304,9 @@ void GearsTest::RunTests(JsCallContext *context) {
 #endif
 #if BROWSER_FF
   ok &= TestBlobInputStreamFf(&error);
+#endif
+#if BROWSER_WEBKIT
+  ok &= TestBlobInputStreamSf(&error);
 #endif
   ok &= TestStopwatch(&error);
   ok &= TestJsonEscaping(&error);
