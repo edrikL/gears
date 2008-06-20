@@ -37,6 +37,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/location_provider_pool.h"
+#include "gears/geolocation/device_data_provider.h"
 #include "third_party/googleurl/src/gurl.h"
 
 // TODO(steveblock): Update default URL when finalized.

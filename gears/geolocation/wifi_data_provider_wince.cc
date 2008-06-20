@@ -49,14 +49,12 @@ static const int kPollingInterval = 1000;
 static bool GetAccessPointData(const HANDLE &ndis_handle,
                                std::vector<AccessPointData> *access_points);
 
-// DeviceDataProviderBase<WifiData>
-
 // static
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+template<>
+WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
   return new WinceWifiDataProvider();
 }
 
-// WinceWifiDataProvider
 
 WinceWifiDataProvider::WinceWifiDataProvider() {
   // Start the polling thread.
@@ -189,7 +187,7 @@ static int GetCardAccessPointData(const HANDLE &ndis_handle,
   // Cast the data to a list of BSS IDs.
   NDIS_802_11_BSSID_LIST *bss_id_list =
       reinterpret_cast<NDIS_802_11_BSSID_LIST*>(&oid_response_data[0]);
-  
+
   return GetDataFromBssIdList(*bss_id_list,
                               oid_response_data.size(),
                               access_points);
@@ -212,7 +210,7 @@ static bool GetAccessPointData(const HANDLE &ndis_handle,
   // Walk through the list of adapters.
   while (adapter_info) {
     std::string16 adapter_name;
-    if(UTF8ToString16(adapter_info->AdapterName, &adapter_name)) {
+    if (UTF8ToString16(adapter_info->AdapterName, &adapter_name)) {
       GetCardAccessPointData(ndis_handle, adapter_name, access_points);
     }
     adapter_info = adapter_info->Next;

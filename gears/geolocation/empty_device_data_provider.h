@@ -28,26 +28,23 @@
 
 #include "gears/geolocation/device_data_provider.h"
 
-// An implementation of DeviceDataProviderBase that does not provide any data.
-// Used on platforms where a given data type is not available.
+// An implementation of DeviceDataProviderImplBase that does not provide any
+// data. Used on platforms where a given data type is not available.
 
 template<typename DataType>
-class EmptyDeviceDataProvider : public DeviceDataProviderBase<DataType> {
+class EmptyDeviceDataProvider : public DeviceDataProviderImplBase<DataType> {
  public:
-  // Allow DeviceDataProviderBase<DataType>::Create() to access our private
-  // constructor.
-  friend class DeviceDataProviderBase<DataType>;
-  // DeviceDataProviderBase<DataType> implementation.
+  EmptyDeviceDataProvider() {}
+  virtual ~EmptyDeviceDataProvider() {}
+
+  // DeviceDataProviderImplBase implementation
   virtual bool GetData(DataType *data) {
     assert(data);
     // This is all the data we can get - nothing.
     return true;
   }
+
  private:
-  // Private constructor and destructor, callers must use Register and
-  // Unregister.
-  EmptyDeviceDataProvider() {}
-  virtual ~EmptyDeviceDataProvider() {}
   DISALLOW_EVIL_CONSTRUCTORS(EmptyDeviceDataProvider);
 };
 

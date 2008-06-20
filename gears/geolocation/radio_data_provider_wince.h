@@ -35,14 +35,13 @@
 #include "gears/geolocation/thread.h"
 
 class WinceRadioDataProvider
-    : public DeviceDataProviderBase<RadioData>,
+    : public RadioDataProviderImplBase,
       public Thread {
  public:
-  // Allow DeviceDataProviderBase<RadioData>::Create() to access our private
-  // constructor.
-  friend DeviceDataProviderBase<RadioData>;
+  WinceRadioDataProvider();
+  virtual ~WinceRadioDataProvider();
 
-  // DeviceDataProviderBase<RadioData> implementation.
+  // RadioDataProviderImplBase implementation
   virtual bool GetData(RadioData *data);
 
   // Used to handle result callbacks from RIL requests.
@@ -53,11 +52,6 @@ class WinceRadioDataProvider
                  DWORD dwParam);
 
  private:
-  // Private constructor and destructor, callers must use Register and
-  // Unregister.
-  WinceRadioDataProvider();
-  virtual ~WinceRadioDataProvider();
-
   // AsyncThread implementation.
   virtual void Run();
   bool Init();
@@ -87,8 +81,10 @@ class WinceRadioDataProvider
 
   // Event signalled in response to a RILResult callback.
   CEvent result_event_;
-  // Events signalled to shut down the thread that polls the RIL.
+
+  // Event signalled to shut down the thread that polls the RIL.
   CEvent stop_event_;
+
   DISALLOW_EVIL_CONSTRUCTORS(WinceRadioDataProvider);
 };
 

@@ -43,4 +43,11 @@ void TestGeolocationFormRequestBody(JsCallContext *context);
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                             JsRunnerInterface *js_runner);
 
+// Sets the device data provider factories to use mock radio and WiFi device
+// data providers. This means that subsequent calls to the methods of the
+// Geolocation API will return constant data, thus allowing it to be tested.
+// IN: nothing
+// OUT: nothing
+void ConfigureGeolocationForTest(JsCallContext *context);
+
 #endif  // GEARS_GEOLOCATION_GEOLOCATION_TEST_H__

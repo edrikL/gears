@@ -1813,7 +1813,6 @@ $(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
-		device_data_provider.cc \
 		empty_device_data_provider.cc \
 		geolocation.cc \
 		geolocation_test.cc \

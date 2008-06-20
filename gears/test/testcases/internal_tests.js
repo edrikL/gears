@@ -422,6 +422,22 @@ function testNotifier() {
   }
 }
 
+// Tests GearsGeolocation::GetCurrentPosition, using mock radio and WiFi device
+// data providers.
+function testGeolocationGetCurrentPosition() {
+  if (isUsingCCTests && !isOfficial) {
+    internalTests.configureGeolocationForTest();
+    // TODO(steveblock): Complete this test once the Geolocation API is
+    // complete.
+    //var geolocation = google.gears.factory.create('beta.geolocation');
+    //var locationAvailable = function(position) {
+    //  completeAsync();
+    //};
+    //startAsync();
+    //geolocation.getCurrentPosition(locationAvailable);
+  }
+}
+
 // Helper functions
 
 function createTestArray(length) {

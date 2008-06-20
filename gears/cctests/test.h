@@ -140,6 +140,12 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // IN: string response_body
   // OUT: object position
   void TestGeolocationGetLocationFromResponse(JsCallContext *context);
+
+  // Sets the device data provider factories to use mock radio and WiFi device
+  // data providers.
+  // IN: nothing
+  // OUT: nothing
+  void ConfigureGeolocationForTest(JsCallContext *context);
 #endif
 
   // IN: string input

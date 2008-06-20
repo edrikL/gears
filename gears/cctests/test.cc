@@ -76,6 +76,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestGeolocationFormRequestBody);
   RegisterMethod("testGeolocationGetLocationFromResponse",
                  &GearsTest::TestGeolocationGetLocationFromResponse);
+  RegisterMethod("configureGeolocationForTest",
+                 &GearsTest::ConfigureGeolocationForTest);
 #endif
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
 #ifdef OFFICIAL_BUILD
@@ -106,7 +108,6 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/base/common/string_utils.h"
 #ifdef WINCE
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/wince_compatibility.h"
@@ -148,7 +149,7 @@ bool TestUrlUtils(std::string16 *error);  // from url_utils_test.cc
 bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
 bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
-bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
+bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
 bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
 bool TestFileBlob(std::string16 *error);  // from blob_test.cc
 bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
@@ -1177,7 +1178,7 @@ bool TestParseHttpStatusLine(std::string16 *error) {
   TEST_ASSERT(ParseHttpStatusLine(good, NULL, NULL, &text));
 
   const char16 *acceptable[] = {
-    STRING16(L"HTTP/1.0 200"), // no status
+    STRING16(L"HTTP/1.0 200"),  // no status
     STRING16(L"HTTP 200 ABBREVIATED VERSION"),
     STRING16(L"HTTP/1.1 500 REASON: CONTAINING COLON")
   };
@@ -1193,8 +1194,8 @@ bool TestParseHttpStatusLine(std::string16 *error) {
     STRING16(L"HTTP/1.0 2000 CODE TOO BIG"),
     STRING16(L"HTTP/1.0 NO CODE"),
     STRING16(L"complete_gibberish"),
-    STRING16(L""), // an empty string
-    STRING16(L"    \t \t  "), // whitespace only
+    STRING16(L""),  // an empty string
+    STRING16(L"    \t \t  "),  // whitespace only
   };
   for (size_t i = 0; i < ARRAYSIZE(bad); ++i) {
     std::string16 bad_str(bad[i]);
@@ -1207,7 +1208,7 @@ bool TestParseHttpStatusLine(std::string16 *error) {
 
 class TestHttpRequestListener : public HttpRequest::HttpListener {
  public:
-  TestHttpRequestListener(HttpRequest *request): request_(request) {}
+  explicit TestHttpRequestListener(HttpRequest *request) : request_(request) {}
 
   virtual void ReadyStateChanged(HttpRequest *source) {
     HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
@@ -1288,7 +1289,11 @@ bool TestStopwatch(std::string16 *error) {
 #ifdef WIN32
 #define SleepForMilliseconds Sleep
 #else
-#define SleepForMilliseconds(x) { assert(x < 1000); usleep(x * 1000); }
+#define SleepForMilliseconds(x) \
+{ \
+  assert(x < 1000); \
+  usleep(x * 1000); \
+}
 #endif
 
   // Test initialized to zero.
@@ -1325,6 +1330,7 @@ bool TestStopwatch(std::string16 *error) {
   //TEST_ASSERT(sw4.GetElapsed() > 0);
 
   // Test scoped stopwatch.
+  // TODO(steveblock): Address this failing test and uncomment
   //Stopwatch sw5;
   //{
   //  ScopedStopwatch scopedStopwatch(&sw5);
@@ -2089,6 +2095,10 @@ void GearsTest::TestGeolocationFormRequestBody(JsCallContext *context) {
 void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
   ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
 }
+
+void GearsTest::ConfigureGeolocationForTest(JsCallContext *context) {
+  ::ConfigureGeolocationForTest(context);
+}
 #endif
 
 void GearsTest::CreateBlobFromString(JsCallContext *context) {
@@ -2129,11 +2139,9 @@ class ProcessCreator {
 
  private:
 #if defined(WIN32)
-  ProcessCreator(HANDLE process) : process_(process) {
-  }
+  explicit ProcessCreator(HANDLE process) : process_(process) {}
 #else
-  ProcessCreator(pid_t pid) : child_process_pid_(pid) {
-  }
+  explicit ProcessCreator(pid_t pid) : child_process_pid_(pid) {}
 #endif  // WIN32
 
 
@@ -2147,7 +2155,6 @@ class ProcessCreator {
 
 #if defined(WIN32)
 ProcessCreator* ProcessCreator::Create(const char16 *full_filepath) {
-
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(STARTUPINFO);
   PROCESS_INFORMATION process_information = {0};

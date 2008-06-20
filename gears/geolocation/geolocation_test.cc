@@ -29,12 +29,15 @@
 
 #if USING_CCTESTS
 
+#include <assert.h>
+#include "gears/base/common/event.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/thread.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // From network_location_request.cc
@@ -48,6 +51,92 @@ bool FormRequestBodyTest(const std::string16 &host_name,
                          scoped_refptr<BlobInterface> *blob);
 bool GetLocationFromResponseTest(const std::vector<uint8> &response,
                                  Position *position);
+
+// A mock implementation of DeviceDataProviderImplBase for testing. It simply
+// calls back once every second with constant data.
+template<typename DataType>
+class MockDeviceDataProviderImpl
+    : public DeviceDataProviderImplBase<DataType>,
+      public Thread {
+ public:
+  MockDeviceDataProviderImpl() {
+    Start();
+  }
+  virtual ~MockDeviceDataProviderImpl() {
+    stop_event_.Signal();
+    Join();
+  }
+
+ private:
+  // Thread implementation.
+  virtual void Run() {
+    while (!stop_event_.WaitWithTimeout(1000)) {
+      DeviceDataProviderImplBase<DataType>::NotifyListeners();
+    }
+  }
+
+  Event stop_event_;
+  DISALLOW_EVIL_CONSTRUCTORS(MockDeviceDataProviderImpl);
+};
+
+// Implements MockDeviceDataProviderImpl for RadioData and provides sample data.
+class MockRadioDataProviderImpl : public MockDeviceDataProviderImpl<RadioData> {
+ public:
+  MockRadioDataProviderImpl() {}
+  virtual ~MockRadioDataProviderImpl() {}
+
+  // Factory method for use with DeviceDataProviderBase::SetFactory.
+  static DeviceDataProviderImplBase<RadioData> *Create() {
+    return new MockRadioDataProviderImpl();
+  }
+
+  virtual bool GetData(RadioData *data) {
+    assert(data);
+    // The following are real-world values, captured in May 2008.
+    CellData cell_data;
+    cell_data.cell_id = 23874;
+    cell_data.location_area_code = 98;
+    cell_data.mobile_network_code = 15;
+    cell_data.mobile_country_code = 234;
+    cell_data.radio_signal_strength = -65;
+    data->cell_data.clear();
+    data->cell_data.push_back(cell_data);
+    data->radio_type = RADIO_TYPE_GSM;
+    // We always have all the data we can get, so return true.
+    return true;
+  }
+  DISALLOW_EVIL_CONSTRUCTORS(MockRadioDataProviderImpl);
+};
+
+// Implements MockDeviceDataProviderImpl for WifiData and provides sample data.
+class MockWifiDataProviderImpl : public MockDeviceDataProviderImpl<WifiData> {
+ public:
+  MockWifiDataProviderImpl() {}
+  virtual ~MockWifiDataProviderImpl() {}
+
+  // Factory method for use with DeviceDataProviderBase::SetFactory.
+  static DeviceDataProviderImplBase<WifiData> *Create() {
+    return new MockWifiDataProviderImpl();
+  }
+
+  virtual bool GetData(WifiData *data) {
+    assert(data);
+    // The following are real-world values, captured in May 2008.
+    AccessPointData access_point_data;
+    data->access_point_data.clear();
+    access_point_data.mac_address = STRING16(L"00-0b-86-ca-bb-c8");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0b-86-ca-bb-c9");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0b-86-ce-51-80");
+    data->access_point_data.push_back(access_point_data);
+    access_point_data.mac_address = STRING16(L"00-0d-97-04-85-9d");
+    data->access_point_data.push_back(access_point_data);
+    // We always have all the data we can get, so return true.
+    return true;
+  }
+  DISALLOW_EVIL_CONSTRUCTORS(MockWifiDataProviderImpl);
+};
 
 void TestParseGeolocationOptions(JsCallContext *context,
                                  JsRunnerInterface *js_runner) {
@@ -138,7 +227,7 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
     return;
   }
   context->SetReturnValue(JSPARAM_STRING16, &request_body);
-} 
+}
 
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                             JsRunnerInterface *js_runner) {
@@ -174,7 +263,14 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
     return;
   }
   context->SetReturnValue(JSPARAM_OBJECT, position_object.get());
-} 
+}
+
+void ConfigureGeolocationForTest(JsCallContext *context) {
+  DeviceDataProviderBase<RadioData>::SetFactory(
+      MockRadioDataProviderImpl::Create);
+  DeviceDataProviderBase<WifiData>::SetFactory(
+      MockWifiDataProviderImpl::Create);
+}
 
 #endif  // USING_CCTESTS
 

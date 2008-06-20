@@ -29,10 +29,13 @@
 // instance of the device data provider, which is used by multiple
 // NetworkLocationProvider objects.
 //
-// This file implements a base class to be used by all device data providers.
-// Primarily, this class declares interface methods to be implemented by derived
-// classes. It also provides static methods to access the singleton instance and
-// implements ref-counting for the singleton.
+// This file providers DeviceDataProviderBase, which provides static methods to
+// access the singleton instance. The singleton instance uses a private
+// implementation to abstract across platforms and also to allow mock providers
+// to be used for testing.
+//
+// This file also provides DeviceDataProviderImplBase, a base class which
+// provides commom functionality for the private implementations.
 //
 // This file also declares the data structures used to represent cell radio data
 // and wifi data.
@@ -48,6 +51,7 @@
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_refptr.h"  // For RefCount
 #include "gears/base/common/string16.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // The following data structures are used to store cell radio data and wifi
 // data. See the Geolocation API design document at
@@ -141,7 +145,7 @@ struct AccessPointData {
   }
 
   std::string16 mac_address;
-  int radio_signal_strength; // Measured in dBm
+  int radio_signal_strength;  // Measured in dBm
   int age;              // Milliseconds since this access point was detected
   int channel;
   int signal_to_noise;  // Ratio in dB
@@ -153,7 +157,7 @@ static bool AccessPointDataMatches(const AccessPointData &data1,
   return data1.Matches(data2);
 }
 
-// All data for wifi. 
+// All data for wifi.
 struct WifiData {
   bool Matches(const WifiData &other) const {
     if (access_point_data.size() != other.access_point_data.size()) {
@@ -169,11 +173,76 @@ struct WifiData {
   std::vector<AccessPointData> access_point_data;
 };
 
-// A base class for all device data providers. This class is templated on the
-// type of data it provides.
+template<typename DataType>
+class DeviceDataProviderBase;
+
+// Implementations of DeviceDataProviderBase use a containment to hide
+// platform-specific implementation details from common code. This class
+// provides common functionality for these contained implementation classes.
+template<typename DataType>
+class DeviceDataProviderImplBase {
+ public:
+  DeviceDataProviderImplBase() : container_(NULL) {}
+  virtual ~DeviceDataProviderImplBase() {}
+
+  virtual bool GetData(DataType *data) = 0;
+
+  // Sets the container of this class, which is of type DeviceDataProviderBase.
+  // This is required to pass as a parameter when making the callback to
+  // listeners.
+  void SetContainer(DeviceDataProviderBase<DataType> *container) {
+    container_ = container;
+  }
+
+  typedef typename DeviceDataProviderBase<DataType>::ListenerInterface
+          ListenerInterface;
+  void AddListener(ListenerInterface *listener) {
+    MutexLock mutex(&listeners_mutex_);
+    listeners_.insert(listener);
+  }
+  bool RemoveListener(ListenerInterface *listener) {
+    MutexLock mutex(&listeners_mutex_);
+    typename ListenersSet::iterator iter = find(listeners_.begin(),
+                                                listeners_.end(),
+                                                listener);
+    if (iter == listeners_.end()) {
+      return false;
+    }
+    listeners_.erase(iter);
+    return true;
+  }
+
+ protected:
+  // Calls DeviceDataUpdateAvailable() on all registered listeners.
+  typedef std::set<ListenerInterface*> ListenersSet;
+  void NotifyListeners() {
+    MutexLock lock(&listeners_mutex_);
+    for (typename ListenersSet::const_iterator iter = listeners_.begin();
+         iter != listeners_.end();
+         ++iter) {
+      (*iter)->DeviceDataUpdateAvailable(container_);
+    }
+  }
+
+ private:
+  DeviceDataProviderBase<DataType> *container_;
+
+  // The listeners to this class and their mutex.
+  ListenersSet listeners_;
+  Mutex listeners_mutex_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(DeviceDataProviderImplBase);
+};
+
+typedef DeviceDataProviderImplBase<RadioData> RadioDataProviderImplBase;
+typedef DeviceDataProviderImplBase<WifiData> WifiDataProviderImplBase;
+
+// A device data provider
+// TODO(steveblock): Rename to DeviceDataProvider.
 //
-// This class implements reference counting to allow a single device data
-// provider to be shared by multiple network location providers.
+// We use a singleton instance of this class which is shared by multiple network
+// location providers. These location providers access the instance through the
+// Register and Unregister methods.
 template<typename DataType>
 class DeviceDataProviderBase {
  public:
@@ -184,6 +253,15 @@ class DeviceDataProviderBase {
         DeviceDataProviderBase<DataType> *provider) = 0;
     virtual ~ListenerInterface() {}
   };
+
+  // Sets the factory function which will be used by Register to create the
+  // implementation used by the singleton instance. This factory approach is
+  // used to abastract accross both platform-specific implementation and to
+  // inject mock implementations for testing.
+  typedef DeviceDataProviderImplBase<DataType> *(*ImplFactoryFunction)(void);
+  static void SetFactory(ImplFactoryFunction factory_function_in) {
+    factory_function = factory_function_in;
+  }
 
   // Adds a listener, which will be called back with DeviceDataUpdateAvailable
   // whenever new data is available. Returns the singleton instance.
@@ -196,7 +274,7 @@ class DeviceDataProviderBase {
     // NetworkLocationProvider HTTP request has completed.
     MutexLock mutex(&instance_mutex);
     if (!instance) {
-      instance = Create();
+      instance = new DeviceDataProviderBase();
     }
     assert(instance);
     instance->Ref();
@@ -221,34 +299,20 @@ class DeviceDataProviderBase {
   // Provides whatever data the provider has, which may be nothing. Return
   // value indicates whether this is all the data the provider could ever
   // obtain.
-  virtual bool GetData(DataType *data) = 0;
-
- protected:
-  // Protected constructor and destructor, callers access singleton through
-  // Register and Unregister.
-  DeviceDataProviderBase() {}
-  virtual ~DeviceDataProviderBase() {}
-
-  // Provides access to listeners for use in derived classes.
-  typedef std::set<ListenerInterface*> ListenersSet;
-  ListenersSet *listeners() {
-    return &listeners_;
-  }
-  Mutex *listeners_mutex() {
-    return &listeners_mutex_;
-  }
-
-  // Calls DeviceDataUpdateAvailable() on all registered listeners.
-  void NotifyListeners() {
-  MutexLock lock(&listeners_mutex_);
-    for (typename ListenersSet::const_iterator iter = listeners_.begin();
-         iter != listeners_.end();
-         ++iter) {
-      (*iter)->DeviceDataUpdateAvailable(this);
-    }
+  bool GetData(DataType *data) {
+    return impl_->GetData(data);
   }
 
  private:
+  // Private constructor and destructor, callers access singleton through
+  // Register and Unregister.
+  DeviceDataProviderBase() {
+    assert(factory_function);
+    impl_.reset((*factory_function)());
+    impl_->SetContainer(this);
+  }
+  virtual ~DeviceDataProviderBase() {}
+
   void Ref() {
     count_.Ref();
   }
@@ -258,42 +322,45 @@ class DeviceDataProviderBase {
   }
 
   void AddListener(ListenerInterface *listener) {
-    MutexLock mutex(&listeners_mutex_);
-    listeners_.insert(listener);
-  }
-  bool RemoveListener(ListenerInterface *listener) {
-    MutexLock mutex(&listeners_mutex_);
-    typename ListenersSet::iterator iter = find(listeners_.begin(),
-                                                listeners_.end(),
-                                                listener);
-    if (iter == listeners_.end()) {
-      return false;
-    }
-    listeners_.erase(iter);
-    return true;
+    impl_->AddListener(listener);
   }
 
-  // Factory constructor.
-  static DeviceDataProviderBase* Create();
+  bool RemoveListener(ListenerInterface *listener) {
+    return impl_->RemoveListener(listener);
+  }
+
+  static DeviceDataProviderImplBase<DataType> *DefaultFactoryFunction();
 
   // The singleton instance of this class and its mutex.
   static DeviceDataProviderBase *instance;
   static Mutex instance_mutex;
+
+  // The factory function used to create the singleton instance.
+  static ImplFactoryFunction factory_function;
+
+  // The internal implementation.
+  scoped_ptr<DeviceDataProviderImplBase<DataType> > impl_;
+
   RefCount count_;
 
-  // The listeners to this class and their mutex.
-  ListenersSet listeners_;
-  Mutex listeners_mutex_;
   DISALLOW_EVIL_CONSTRUCTORS(DeviceDataProviderBase);
 };
 
 // static
-template <typename DataType>
+template<typename DataType>
 Mutex DeviceDataProviderBase<DataType>::instance_mutex;
 
 // static
-template <typename DataType>
-DeviceDataProviderBase<DataType>* DeviceDataProviderBase<DataType>::instance =
+template<typename DataType>
+DeviceDataProviderBase<DataType> *DeviceDataProviderBase<DataType>::instance =
     NULL;
+
+// static
+template<typename DataType>
+typename DeviceDataProviderBase<DataType>::ImplFactoryFunction
+    DeviceDataProviderBase<DataType>::factory_function = DefaultFactoryFunction;
+
+typedef DeviceDataProviderBase<RadioData> RadioDataProviderBase;
+typedef DeviceDataProviderBase<WifiData> WifiDataProviderBase;
 
 #endif  // GEARS_GEOLOCATION_DEVICE_DATA_PROVIDER_H__
