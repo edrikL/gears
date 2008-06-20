@@ -1526,6 +1526,7 @@ $(BROWSER)_CPPSRCS += \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
+		localserver_perf_test.cc \
 		managed_resource_store.cc \
 		managed_resource_store_module.cc \
 		manifest.cc \

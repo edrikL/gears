@@ -80,6 +80,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::ConfigureGeolocationForTest);
 #endif
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
+  RegisterMethod("testLocalServerPerformance",
+                 &GearsTest::TestLocalServerPerformance);
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
@@ -207,6 +209,29 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj);
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base);
+
+// from localserver_perf_test.cc
+bool RunLocalServerPerfTests(int num_origins, int num_stores, int num_items,
+                             std::string16 *results);
+
+void GearsTest::TestLocalServerPerformance(JsCallContext *context) {
+  int num_origins = 1;
+  int num_stores = 10;
+  int num_items = 100;
+  JsArgument argv[] = {
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_origins},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_stores},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_items}
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+
+  std::string16 results;
+  RunLocalServerPerfTests(num_origins, num_stores, num_items, &results);
+  context->SetReturnValue(JSPARAM_STRING16, &results);
+}
 
 // Return the system time as a double (we can't return int64).
 void GearsTest::GetSystemTime(JsCallContext *context) {
