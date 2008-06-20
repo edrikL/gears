@@ -46,8 +46,9 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
-#elif BROWSER_SAFARI
-#include "gears/base/safari/browser_utils.h"
+#endif
+#if BROWSER_WEBKIT
+#include "gears/base/safari/npapi_patches.h"
 #endif
 
 static inline bool DoubleIsInt64(double val) {
@@ -814,15 +815,11 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
-#if BROWSER_WEBKIT
-  // TODO(playmobil): implement.
-  return false;
-#else
   NPIdentifier *identifiers;
   uint32 count;
 
   NPObject *object = NPVARIANT_TO_OBJECT(js_object_);
-  if (!NPN_Enumerate(js_context_, object, &identifiers, &count)) {
+  if (!NPN_Enumerate(js_context_, object, &identifiers, (uint32_t *)&count)) {
     return false;
   }
 
@@ -840,7 +837,6 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
     out->push_back(name);
   }
   return true;
-#endif
 }
 
 bool JsObject::GetProperty(const std::string16 &name,

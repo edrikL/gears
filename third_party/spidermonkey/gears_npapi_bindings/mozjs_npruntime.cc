@@ -81,9 +81,33 @@ bool NPN_IdentifierIsString(NPIdentifier identifier) {
 }
 
 NPUTF8 *NPN_UTF8FromIdentifier(NPIdentifier identifier) {
-  // Unused in Gears codebase.
-  assert(false); 
-  return NULL;
+  if (!identifier)
+    return NULL;
+
+  jsval v = (jsval)identifier;
+
+  if (!JSVAL_IS_STRING(v)) {
+    return NULL;
+  }
+
+  JSString *str = JSVAL_TO_STRING(v);
+  char16 *str_utf16 = ::JS_GetStringChars(str);
+  size_t len = JS_GetStringLength(str);
+  
+  std::string str_utf8;
+  if (!String16ToUTF8(str_utf16, len, &str_utf8)) {
+    return NULL;
+  }
+  
+  size_t ret_num_bytes = str_utf8.length() + 1;
+  NPUTF8 *ret = (NPUTF8 *)NPN_MemAlloc(ret_num_bytes);
+  if (!ret) {
+    return NULL;
+  }
+  memset(ret, 0, ret_num_bytes);
+  str_utf8.copy(ret, ret_num_bytes, 0);
+
+  return ret;
 }
 
 int32_t NPN_IntFromIdentifier(NPIdentifier identifier) {
@@ -298,6 +322,25 @@ bool NPN_HasMethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
   NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->hasProperty(npobj, methodName);
+}
+
+bool NPN_Enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
+                   uint32_t *count)
+{
+  if (!npp || !npobj || !npobj->_class)
+    return false;
+
+  if (!NP_CLASS_STRUCT_VERSION_HAS_ENUM(((MozNPClass *)npobj->_class)) ||
+      !((MozNPClass *)npobj->_class)->enumerate) {
+    *identifier = 0;
+    *count = 0;
+    return true;
+  }
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
+
+  return ((MozNPClass *)npobj->_class)->enumerate(npobj, identifier, count);
 }
 
 NPError NPN_GetValue(NPP npp, NPNVariable variable, void *result)

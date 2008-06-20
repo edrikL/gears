@@ -239,7 +239,7 @@ protected:
 
 MozNPClass nsJSObjWrapper::sJSObjWrapperNPClass =
   {
-    NP_CLASS_STRUCT_VERSION,
+    NP_CLASS_STRUCT_VERSION_ENUM,
     nsJSObjWrapper::NP_Allocate,
     nsJSObjWrapper::NP_Deallocate,
     nsJSObjWrapper::NP_Invalidate,

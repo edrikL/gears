@@ -64,6 +64,8 @@ bool NPN_HasProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
 bool NPN_HasMethod(NPP npp, NPObject *npobj, NPIdentifier methodName);
 void NPN_SetException(NPObject *obj, const NPUTF8 *message);
 NPError NPN_GetValue(NPP npp, NPNVariable variable, void *value);
+bool NPN_Enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
+                   uint32_t *count);
 } // namespace SpiderMonkeyNPAPIBindings
 
 #endif GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_H__

@@ -50,6 +50,9 @@
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/safari/npapi_patches.h" 
+#endif
 
 extern const std::string kNPNFuncsKey;
 
@@ -395,13 +398,18 @@ class JsRunnerBase : public JsRunnerInterface {
 class JsRunner : public JsRunnerBase {
  public:
   JsRunner() {
+#ifdef BROWSER_WEBKIT
+    static GearsNPNetscapeFuncs browser_callbacks;
+#else
     static NPNetscapeFuncs browser_callbacks;
+#endif
     static bool initialized = false;
     static Mutex browser_callbacks_mutex;
     
     if (!initialized) {
       MutexLock lock(&browser_callbacks_mutex); 
-      JSStandaloneEngine::GetNPNEntryPoints(&browser_callbacks);
+      JSStandaloneEngine::GetNPNEntryPoints(
+          (NPNetscapeFuncs *)&browser_callbacks);
       initialized = true;
     }
     
