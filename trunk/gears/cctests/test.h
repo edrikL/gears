@@ -153,6 +153,12 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // The resultant Blob's contents will the input string in UTF-8 format.
   void CreateBlobFromString(JsCallContext *context);
 
+  // IN: optional int numOrigs
+  //     optional int numStoresPerOrigin
+  //     optional int numItemsPerStore
+  // OUT: string, timing results
+  void TestLocalServerPerformance(JsCallContext *context);
+
 #ifdef OFFICIAL_BUILD
   // The Notification API has not been finalized for official builds.
 #else
