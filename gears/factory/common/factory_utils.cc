@@ -23,12 +23,19 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef BROWSER_WEBKIT
+#include <sys/time.h>
+#endif
 #ifdef WIN32
 #include <windows.h>
 #endif
 #include "genfiles/product_constants.h"
+#include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/ui/common/permissions_dialog.h"
 
@@ -55,8 +62,14 @@ const char16 *kAllowedClassVersion = STRING16(L"1.0");
 
 const char16 *kGoogleUpdateClientsRegKey =
                   STRING16(L"Software\\Google\\Update\\ClientState");
+#ifdef WIN32
 const char16 *kGoogleUpdateGearsClientGuid =
                   STRING16(L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}");
+#endif
+#ifdef BROWSER_WEBKIT
+const char16 *kGoogleUpdateGearsClientGuid =
+                  STRING16(L"{0006FF50-C0C0-4B9B-973C-4CF98BF4EA9D}");
+#endif
 const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 
 
@@ -212,7 +225,37 @@ void SetActiveUserFlag() {
     }
     RegCloseKey(reg_client_state);
   }
-#endif  // #ifdef WIN32
+#elif defined(BROWSER_WEBKIT)
+  // Not more than once an hour.
+  static const int64 kRateLimitMillis = 60 * 60 * 1000;
+  
+  // Perform rate-limiting.
+  static int64 last_called_timestamp = 0;
+  int64 now = GetCurrentTimeMillis();
+  if ((now - last_called_timestamp) < kRateLimitMillis) return;
+  last_called_timestamp = now;
+  
+  std::string16 home_dir;
+  if (!GetUserHomeDirectory(&home_dir)) return;
+  
+  std::string16 keystone_dir = home_dir +
+                    STRING16(L"/Library/Google/GoogleSoftwareUpdate/Actives/");
+  // Keystone should create this directory for us, but we defensively create
+  // it in case it doesn't exist.
+  if (!File::RecursivelyCreateDir(keystone_dir.c_str())) return;
+  
+  std::string16 active_file = keystone_dir + kGoogleUpdateGearsClientGuid;
+  if (!File::Exists(active_file.c_str())) {
+    File::CreateNewFile(active_file.c_str());
+    return;
+  }
+  
+  std::string path_utf8;
+  String16ToUTF8(active_file.c_str(), active_file.size(), &path_utf8);
+  
+  // Touch file - NULL means now.
+  utimes(path_utf8.c_str(), NULL);
+#endif  // #ifdef BROWSER_WEBKIT
 }
 
 bool RequiresPermissionToUseGears(const std::string16 &module_name) {

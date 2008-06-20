@@ -43,3 +43,7 @@ bool GetBaseResourcesDirectory(std::string16 *path) {
   NSString *dir = [GearsPathUtilities gearsResourcesDirectory];
   return CFStringRefToString16((CFStringRef)dir, path);
 }
+
+bool GetUserHomeDirectory(std::string16 *home_dir) {
+  return [[@"~" stringByExpandingTildeInPath] string16:home_dir];
+}
