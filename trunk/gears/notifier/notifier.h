@@ -36,6 +36,7 @@
 
 class GearsNotification;
 class NotificationManager;
+class SecurityOrigin;
 
 class Notifier : public IpcMessageQueue::HandlerInterface {
  public:
@@ -52,7 +53,7 @@ class Notifier : public IpcMessageQueue::HandlerInterface {
                                 const IpcMessageData *message_data);
 
   void AddNotification(const GearsNotification &notification);
-  void RemoveNotification(const std::string16 &service,
+  void RemoveNotification(const SecurityOrigin &security_origin,
                           const std::string16 &id);
  protected:
   bool running_;

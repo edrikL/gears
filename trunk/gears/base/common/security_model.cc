@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
@@ -35,6 +35,20 @@
 
 const char16* kUnknownDomain      = STRING16(L"_null_.localdomain");
 const char*   kUnknownDomainAscii =           "_null_.localdomain";
+
+
+//------------------------------------------------------------------------------
+// CopyFrom
+//------------------------------------------------------------------------------
+void SecurityOrigin::CopyFrom(const SecurityOrigin &security_origin) {
+  initialized_ = security_origin.initialized_;
+  url_ = security_origin.url_;
+  full_url_ = security_origin.full_url_;
+  scheme_ = security_origin.scheme_;
+  host_ = security_origin.host_;
+  port_ = security_origin.port_;
+  port_string_ = security_origin.port_string_;
+}
 
 //------------------------------------------------------------------------------
 // Init
@@ -53,7 +67,7 @@ bool SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
   port_string_ = IntegerToString16(port_);
   LowerString(scheme_);
   LowerString(host_);
-  
+
   url_ = scheme_;
   url_ += STRING16(L"://");
   url_ += host;

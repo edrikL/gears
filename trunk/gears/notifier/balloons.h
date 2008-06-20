@@ -49,16 +49,18 @@ class BalloonCollectionInterface {
  public:
   virtual ~BalloonCollectionInterface() {}
   // Adds a new balloon for the specified notification. Does not check for
-  // already showing notifications with the same service and id. Asserts if
-  // there is already a notification with the same service/id.
+  // already showing notifications with the same security_origin and id.
+  // Asserts if there is already a notification with the same
+  // security_origin/id.
   virtual void Show(const GearsNotification &notification) = 0;
-  // Updates the existing balloon with notification that matches service and id
-  // of the specified one. In case there is no balloon showing the matching
-  // notification, returns 'false'.
+  // Updates the existing balloon with notification that matches
+  // security_origin and id of the specified one. In case there is no
+  // balloon showing the matching notification, returns 'false'.
   virtual bool Update(const GearsNotification &notification) = 0;
-  // Immediately "expires" any notification with the same service and id from
-  // the screen display. Returns 'false' if there is no such notification.
-  virtual bool Delete(const std::string16 &service,
+  // Immediately "expires" any notification with the same security_origin
+  // and id from the screen display. Returns 'false' if there is no such
+  // notification.
+  virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &id) = 0;
 
   // Is there room to add another notification?
@@ -133,7 +135,8 @@ class BalloonCollection : public BalloonCollectionInterface {
   // BalloonCollectionInterface overrides
   virtual void Show(const GearsNotification &notification);
   virtual bool Update(const GearsNotification &notification);
-  virtual bool Delete(const std::string16 &service, const std::string16 &id);
+  virtual bool Delete(const SecurityOrigin &security_origin,
+                      const std::string16 &id);
   virtual bool has_space() { return has_space_; }
 
   bool AddToUI(Balloon *balloon);
@@ -141,7 +144,7 @@ class BalloonCollection : public BalloonCollectionInterface {
 
  private:
   void Clear();  // clears balloons_
-  Balloon *FindBalloon(const std::string16 &service,
+  Balloon *FindBalloon(const SecurityOrigin &security_origin,
                        const std::string16 &id,
                        bool and_remove);
   void EnsureRoot();

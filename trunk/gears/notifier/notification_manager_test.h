@@ -43,7 +43,7 @@ class BalloonCollectionMock : public BalloonCollectionInterface {
 
   virtual void Show(const GearsNotification &notification);
   virtual bool Update(const GearsNotification &notification);
-  virtual bool Delete(const std::string16 &service,
+  virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &bare_id);
 
   virtual bool has_space();

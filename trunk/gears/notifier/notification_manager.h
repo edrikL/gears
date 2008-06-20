@@ -65,7 +65,8 @@ class NotificationManager : public BalloonCollectionObserver {
   //   True if a match for the notification information was found
   //     (either in the queue or on the display).
   //   False if no match was found.
-  bool Delete(const std::string16 &service, const std::string16 &id);
+  bool Delete(const SecurityOrigin &security_origin,
+              const std::string16 &id);
 
   // Handles adjusting notifications when any of display settings is changed.
   void OnDisplaySettingsChanged();
@@ -79,7 +80,7 @@ class NotificationManager : public BalloonCollectionObserver {
   // Should only be used by QueuedNotification to move itself
   // from being delayed to being ready to show (as a result of
   // "showAtTime" arriving or a snooze period being over).
-  void MoveFromDelayedToShowQueue(const std::string16 &service,
+  void MoveFromDelayedToShowQueue(const SecurityOrigin &security_origin,
                                   const std::string16 &id);
 
   // BalloonCollectionObserver implementation.
@@ -93,10 +94,10 @@ class NotificationManager : public BalloonCollectionObserver {
   // Attempts to display notifications from the show_queue.
   void ShowNotifications();
 
-  // Finds a notification with the given service/id and optionally
+  // Finds a notification with the given security_origin/id and optionally
   // removes it (if "and_remove"), which would transfer ownership
   // to the caller.
-  QueuedNotification *Find(const std::string16 &service,
+  QueuedNotification *Find(const SecurityOrigin &security_origin,
                            const std::string16 &id,
                            bool and_remove);
 
@@ -104,22 +105,24 @@ class NotificationManager : public BalloonCollectionObserver {
   // Takes ownership of "queued_notification" (and ensures that no
   // timer is set-up for the queued_notification).
   //
-  // A notification with the same service/id shouldn't be in any queues.
+  // A notification with the same security_origin/id shouldn't
+  // be in any queues.
   void AddToShowQueue(QueuedNotification *queued_notification);
 
   // Puts the notification in the delayed queue and sets-up a timer for it.
   // Takes ownership of "queued_notification".
   //
-  // A notification with the same service/id shouldn't be in any queues.
+  // A notification with the same security_origin/id shouldn't
+  // be in any queues.
   void AddToDelayedQueue(QueuedNotification *queued_notification,
                          int64 delay_ms,
                          bool user_delayed);
 
-  // Find the notification with the given service/id and move it to
+  // Find the notification with the given security_origin/id and move it to
   // the delayed queue and sets-up a timer for it.
   //
-  // A notification with the same service/id must be in a queue.
-  void MoveToDelayedQueue(const std::string16 &service,
+  // A notification with the same security_origin/id must be in a queue.
+  void MoveToDelayedQueue(const SecurityOrigin &security_origin,
                           const std::string16 &id,
                           int64 delay_ms,
                           bool user_delayed);

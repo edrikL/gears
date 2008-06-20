@@ -62,9 +62,9 @@ class QueuedNotification {
 
   bool is_user_delayed() const { return user_delayed_; }
 
-  bool Matches(const std::string16 &service,
+  bool Matches(const SecurityOrigin &security_origin,
                const std::string16 &id) const {
-    return notification_.Matches(service, id);
+    return notification_.Matches(security_origin, id);
   }
 
   void ShowWithDelay(NotificationManager *manager,
@@ -93,7 +93,7 @@ class QueuedNotification {
     const GearsNotification &notification = queued_notification->notification();
 
     queued_notification->manager_->MoveFromDelayedToShowQueue(
-        notification.service(),
+        notification.security_origin(),
         notification.id());
 
     // Clean up state associated with the timer.
@@ -128,7 +128,7 @@ NotificationManager::~NotificationManager() {
 }
 
 QueuedNotification* FindNotification(
-    const std::string16 &service,
+    const SecurityOrigin &security_origin,
     const std::string16 &id,
     bool and_remove,
     QueuedNotifications *queue) {
@@ -136,7 +136,7 @@ QueuedNotification* FindNotification(
   for (QueuedNotifications::iterator it = queue->begin();
        it != queue->end();
        ++it) {
-    if ((*it)->notification().Matches(service, id)) {
+    if ((*it)->notification().Matches(security_origin, id)) {
       QueuedNotification *queued_notification = *it;
       if (and_remove) {
         queue->erase(it);
@@ -148,16 +148,16 @@ QueuedNotification* FindNotification(
 }
 
 QueuedNotification *NotificationManager::Find(
-    const std::string16 &service,
+    const SecurityOrigin &security_origin,
     const std::string16 &id,
     bool and_remove) {
 
   QueuedNotification *queued_notification = FindNotification(
-      service, id, and_remove, &show_queue_);
+      security_origin, id, and_remove, &show_queue_);
   if (queued_notification) {
     return queued_notification;
   }
-  return FindNotification(service, id, and_remove, &delayed_queue_);
+  return FindNotification(security_origin, id, and_remove, &delayed_queue_);
 }
 
 void NotificationManager::AddWithDelay(const GearsNotification &notification,
@@ -168,7 +168,8 @@ void NotificationManager::AddWithDelay(const GearsNotification &notification,
 }
 
 void NotificationManager::Add(const GearsNotification &notification) {
-  LOG_F(("service: %s, id: %s", notification.service().c_str(),
+  LOG_F(("security_origin.url: %s, id: %s",
+         notification.security_origin().url().c_str(),
          notification.id().c_str()));
   // First, try to update the notification in the display
   // in case it is already showing.
@@ -178,9 +179,10 @@ void NotificationManager::Add(const GearsNotification &notification) {
 
   // Next, see if it is already queued up (and update it).
   QueuedNotification *queued_notification =
-      Find(notification.service(), notification.id(), false);
+      Find(notification.security_origin(), notification.id(), false);
   if (queued_notification) {
-    LOG_F(("Updated. service: %s, id: %s", notification.service().c_str(),
+    LOG_F(("Updated. security_origin.url: %s, id: %s",
+           notification.security_origin().url().c_str(),
            notification.id().c_str()));
     int64 now = GetCurrentTimeMillis();
     int64 previous_display_at_time_ms =
@@ -197,7 +199,7 @@ void NotificationManager::Add(const GearsNotification &notification) {
         } else {
           // The previous time is in the future.  The new time is in the past.
           //     Result: Move it to the display queue.
-          MoveFromDelayedToShowQueue(notification.service(),
+          MoveFromDelayedToShowQueue(notification.security_origin(),
                                      notification.id());
         }
       } else {
@@ -210,7 +212,7 @@ void NotificationManager::Add(const GearsNotification &notification) {
           } else {
             //    2. waiting to be displayed
             //       Result: Delay the notification.
-            MoveToDelayedQueue(notification.service(),
+            MoveToDelayedQueue(notification.security_origin(),
                                notification.id(),
                                notification.display_at_time_ms() - now,
                                false);
@@ -228,7 +230,8 @@ void NotificationManager::Add(const GearsNotification &notification) {
   }
 
   // It appears that this is a new notification so add it.
-  LOG_F(("Added. service: %s, id: %s", notification.service().c_str(),
+  LOG_F(("Added. security_origin.url: %s, id: %s",
+         notification.security_origin().url().c_str(),
          notification.id().c_str()));
   queued_notification = new QueuedNotification(notification);
 
@@ -262,10 +265,10 @@ void NotificationManager::AddToShowQueue(
 }
 
 void NotificationManager::MoveFromDelayedToShowQueue(
-    const std::string16 &service,
+    const SecurityOrigin &security_origin,
     const std::string16 &id) {
   QueuedNotification *queued_notification =
-      FindNotification(service, id, true, &delayed_queue_);
+      FindNotification(security_origin, id, true, &delayed_queue_);
   // This should only be called when it is known that the notification is
   // in the delayed queue.
   assert(queued_notification);
@@ -274,34 +277,36 @@ void NotificationManager::MoveFromDelayedToShowQueue(
 }
 
 void NotificationManager::MoveToDelayedQueue(
-    const std::string16 &service,
+    const SecurityOrigin &security_origin,
     const std::string16 &id,
     int64 delay_ms,
     bool user_delayed) {
-  QueuedNotification *queued_notification = Find(service, id, true);
+  QueuedNotification *queued_notification = Find(security_origin, id, true);
   // This should only be called when it is known that the notification is
   // in a queue.
   assert(queued_notification);
   AddToDelayedQueue(queued_notification, delay_ms, user_delayed);
 }
 
-bool NotificationManager::Delete(const std::string16 &service,
+bool NotificationManager::Delete(const SecurityOrigin &security_origin,
                                  const std::string16 &id) {
-  LOG_F(("Deleting. service: %s, id: %s", service.c_str(), id.c_str()));
+  LOG_F(("Deleting. security_origin.url: %s, id: %s",
+         security_origin.url().c_str(), id.c_str()));
 
   // If displayed, then delete it.
-  if (balloon_collection_->Delete(service, id)) {
+  if (balloon_collection_->Delete(security_origin, id)) {
     return true;
   }
 
-  QueuedNotification *queued_notification = Find(service, id, true);
+  QueuedNotification *queued_notification = Find(security_origin, id, true);
   if (queued_notification) {
     delete queued_notification;
     return true;
   }
 
   // Not found.
-  LOG_F(("Not found. service: %s, id: %s", service.c_str(), id.c_str()));
+  LOG_F(("Not found. security_origin.url: %s, id: %s",
+         security_origin.url().c_str(), id.c_str()));
   return false;
 }
 

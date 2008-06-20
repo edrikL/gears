@@ -33,6 +33,7 @@
 #if !BROWSER_NONE
 #include "gears/base/common/base_class.h"
 #endif
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string16.h"
 
@@ -145,29 +146,34 @@ class GearsNotification :
 
   void CopyFrom(const GearsNotification& from);
 
-  bool Matches(const std::string16 &service, const std::string16 &id) const {
-    return service_ == service && id_ == id;
+  bool Matches(const SecurityOrigin &security_origin,
+               const std::string16 &id) const {
+    return security_origin_.IsSameOrigin(security_origin) && id_ == id;
   }
 
   //
   // Accessors
   //
 
+  const SecurityOrigin &security_origin() const {
+    return security_origin_;
+  }
+  const std::string16& id() const { return id_; }
   const std::string16& title() const { return title_; }
   const std::string16& subtitle() const { return subtitle_; }
   const std::string16& icon() const { return icon_; }
-  const std::string16& service() const { return service_; }
-  const std::string16& id() const { return id_; }
   const std::string16& description() const { return description_; }
   int64 display_at_time_ms() const { return display_at_time_ms_; }
   int64 display_until_time_ms() const { return display_until_time_ms_; }
   const std::vector<NotificationAction> &actions() const { return actions_; }
 
+  void set_security_origin(const SecurityOrigin& security_origin) {
+    security_origin_.CopyFrom(security_origin);
+  }
+  void set_id(const std::string16& id) { id_ = id; }
   void set_title(const std::string16& title) { title_ = title; }
   void set_subtitle(const std::string16& subtitle) { subtitle_ = subtitle; }
   void set_icon(const std::string16& icon) { icon_ = icon; }
-  void set_service(const std::string16& service) { service_ = service; }
-  void set_id(const std::string16& id) { id_ = id; }
   void set_description(const std::string16& description) {
     description_ = description;
   }
@@ -186,11 +192,11 @@ class GearsNotification :
   // going to produce different result. This most likely includes any change
   // to data members below.
   int version_;
+  SecurityOrigin security_origin_;
+  std::string16 id_;
   std::string16 title_;
   std::string16 subtitle_;
   std::string16 icon_;
-  std::string16 id_;
-  std::string16 service_;
   std::string16 description_;
   int64 display_at_time_ms_;
   int64 display_until_time_ms_;

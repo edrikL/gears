@@ -34,6 +34,7 @@
 #include <assert.h>
 
 #include "gears/notifier/balloons.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/system.h"
 #include "third_party/glint/include/animation_timeline.h"
@@ -160,13 +161,14 @@ void BalloonCollection::Clear() {
   }
 }
 
-Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
-                                        const std::string16 &id,
-                                        bool and_remove) {
+Balloon *BalloonCollection::FindBalloon(
+    const SecurityOrigin &security_origin,
+    const std::string16 &id,
+    bool and_remove) {
   for (Balloons::iterator it = balloons_.begin();
        it != balloons_.end();
        ++it) {
-    if ((*it)->notification().Matches(service, id)) {
+    if ((*it)->notification().Matches(security_origin, id)) {
       Balloon *result = *it;
       if (and_remove) {
         balloons_.erase(it);
@@ -178,7 +180,7 @@ Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
 }
 
 void BalloonCollection::Show(const GearsNotification &notification) {
-  Balloon *balloon = FindBalloon(notification.service(),
+  Balloon *balloon = FindBalloon(notification.security_origin(),
                                  notification.id(),
                                  false);  // no remove
   assert(!balloon);
@@ -193,7 +195,7 @@ void BalloonCollection::Show(const GearsNotification &notification) {
 }
 
 bool BalloonCollection::Update(const GearsNotification &notification) {
-  Balloon *balloon = FindBalloon(notification.service(),
+  Balloon *balloon = FindBalloon(notification.security_origin(),
                                  notification.id(),
                                  false);  // no remove
   if (!balloon)
@@ -203,9 +205,9 @@ bool BalloonCollection::Update(const GearsNotification &notification) {
   return true;
 }
 
-bool BalloonCollection::Delete(const std::string16 &service,
+bool BalloonCollection::Delete(const SecurityOrigin &security_origin,
                                const std::string16 &id) {
-  Balloon *balloon = FindBalloon(service,
+  Balloon *balloon = FindBalloon(security_origin,
                                  id,
                                  true);  // remove from list immediately
   if (!balloon)
@@ -253,7 +255,7 @@ bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   // Ignore return value. The balloon could already be removed from balloons_
   // by Delete method - we only keep balloons for longer if it was a
   // user-initiated 'close' operation or auto-expiration.
-  FindBalloon(balloon->notification().service(),
+  FindBalloon(balloon->notification().security_origin(),
               balloon->notification().id(),
               true);  // remove from list
 

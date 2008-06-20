@@ -175,7 +175,7 @@ THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
 		$(NULL)
 
-THIRD_PARTY_CPPSRCS	+= \
+URL_PARSING_CPPSRCS	+= \
 		gurl.cc \
 		url_canon_etc.cc \
 		url_canon_fileurl.cc \
@@ -191,6 +191,10 @@ THIRD_PARTY_CPPSRCS	+= \
 		url_parse_file.cc \
 		url_util.cc \
 		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		$(URL_PARSING_CPPSRCS) \
+		$(NULL)
 endif
 
 #-----------------------------------------------------------------------------
@@ -201,8 +205,12 @@ THIRD_PARTY_VPATH	+= \
 		../third_party/icu38/source/common \
 		$(NULL)
 
-THIRD_PARTY_CPPSRCS	+= \
+ICU_CPPSRCS	+= \
 		utf_impl.cc \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		$(ICU_CPPSRCS) \
 		$(NULL)
 endif
 
@@ -1102,7 +1110,11 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_CORE	+= \
+		$(ICU_CPPSRCS) \
+		$(URL_PARSING_CPPSRCS) \
 		balloons.cc \
+		http_constants.cc \
+		http_utils.cc \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
@@ -1112,6 +1124,7 @@ NOTIFIER_CORE	+= \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
 		notification.cc \
+		security_model.cc \
 		serialization.cc \
 		stopwatch.cc \
 		stopwatch_posix.cc \
