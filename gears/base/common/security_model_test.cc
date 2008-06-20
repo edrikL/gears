@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USING_CCTESTS
@@ -92,7 +92,7 @@ bool TestSecurityModel(std::string16 *error) {
 
   SecurityOrigin origin2;
   const char16 *kScheme = STRING16(L"http");
-  const char16 *kHost = STRING16(L"file");  
+  const char16 *kHost = STRING16(L"file");
   const char16 *kFullUrl = STRING16(L"http://dummy.url.not.used/");
   const int kPort = 1;
   // We use a value for kHost that is a supported scheme to avoid an
@@ -112,6 +112,23 @@ bool TestSecurityModel(std::string16 *error) {
 
   origin2.Init(kFullUrl, kScheme, kScheme, kPort);
   ASSERT_FALSE(origin.IsSameOrigin(origin2));
+
+  // Verify that copy works.
+  SecurityOrigin copy;
+  copy.CopyFrom(origin2);
+  ASSERT_TRUE(copy.IsSameOrigin(origin2));
+
+  copy.CopyFrom(origin);
+  ASSERT_TRUE(copy.IsSameOrigin(origin));
+
+  ASSERT_TRUE(origin2.InitFromUrl(STRING16(L"http://www.google.com:99/")));
+  copy.CopyFrom(origin2);
+  ASSERT_TRUE(origin2.InitFromUrl(STRING16(L"HTTPS://www.GOOGLE.com/")));
+  ASSERT_TRUE(copy.full_url() == STRING16(L"http://www.google.com:99/"));
+  ASSERT_TRUE(copy.url() == STRING16(L"http://www.google.com:99"));
+  ASSERT_TRUE(copy.scheme() == STRING16(L"http"));
+  ASSERT_TRUE(copy.host() == STRING16(L"www.google.com"));
+  ASSERT_TRUE(copy.port() == 99);
 
   LOG(("TestSecurityModel - passed\n"));
   return true;

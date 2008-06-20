@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_BASE_COMMON_SECURITY_MODEL_H__
@@ -41,6 +41,9 @@ class SecurityOrigin {
  public:
   SecurityOrigin() : initialized_(false), port_(0) {}
 
+  // Makes a copy of the given security origin.
+  void CopyFrom(const SecurityOrigin &security_origin);
+
   // Extacts the scheme, host, and port of the 'full_url'.
   // Returns true if successful. Only "file","http", and "https"
   // urls are supported. In the case of a file url, the host will
@@ -57,7 +60,7 @@ class SecurityOrigin {
   // The full url the origin was initialized with.
   // TODO(michaeln): Remove this convenience. Callers that need it should
   // pass it around rather than having it piggyback on this class.
-  const std::string16 &full_url() const 
+  const std::string16 &full_url() const
       { assert(initialized_); return full_url_; }
 
   const std::string16 &scheme() const
@@ -65,14 +68,14 @@ class SecurityOrigin {
 
   const std::string16 &host() const
       { assert(initialized_); return host_; }
-  
+
   int port() const
       { assert(initialized_); return port_; }
-  
+
   const std::string16 &port_string() const
       { assert(initialized_); return port_string_; }
 
-  // Returns true if 'other' and 'this' represent the same origin. If 
+  // Returns true if 'other' and 'this' represent the same origin. If
   // either origin is not initalized, returns false.
   bool IsSameOrigin(const SecurityOrigin &other) const {
     assert(initialized_);

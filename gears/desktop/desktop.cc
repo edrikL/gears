@@ -325,7 +325,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
-   return false;
+    return false;
   }
 
   std::string16 app_url;
@@ -764,6 +764,7 @@ void GearsDesktop::ShowNotification(JsCallContext *context) {
   if (ipc_message_queue) {
     GearsNotification *notification = new GearsNotification();
     notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
+    notification->set_security_origin(EnvPageSecurityOrigin());
     // IpcMessageQueue is responsible for deleting the message data.
     ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
                             kDesktop_AddNotification,
@@ -797,6 +798,7 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   if (ipc_message_queue) {
     GearsNotification *notification = new GearsNotification();
     notification->set_id(id);
+    notification->set_security_origin(EnvPageSecurityOrigin());
     // IpcMessageQueue is responsible for deleting the message data.
     ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
                             kDesktop_RemoveNotification,

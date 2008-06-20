@@ -28,6 +28,7 @@
 #else
 #include "gears/notifier/notifier.h"
 
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
@@ -73,7 +74,7 @@ class NotificationTask : public glint::WorkItem {
     if (action_ == ACTION_ADD) {
       notifier_->AddNotification(notification_);
     } else if (action_ == ACTION_DELETE) {
-      notifier_->RemoveNotification(notification_.service(),
+      notifier_->RemoveNotification(notification_.security_origin(),
                                     notification_.id());
     } else {
       assert(false);
@@ -147,16 +148,17 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
 
 void Notifier::AddNotification(const GearsNotification &notification) {
   LOG(("Add notification %S - %S ($S)\n",
-       notification.service().c_str(),
+       notification.security_origin().url().c_str(),
        notification.id().c_str(),
        notification.title().c_str()));
   notification_manager_->Add(notification);
 }
 
-void Notifier::RemoveNotification(const std::string16 &service,
+void Notifier::RemoveNotification(const SecurityOrigin &security_origin,
                                   const std::string16 &id) {
-  LOG(("Remove notification %S - %S\n", service.c_str(), id.c_str()));
-  notification_manager_->Delete(service, id);
+  LOG(("Remove notification %S - %S\n", security_origin.url().c_str(),
+       id.c_str()));
+  notification_manager_->Delete(security_origin, id);
 }
 
 #endif  // OFFICIAL_BUILD
