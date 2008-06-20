@@ -121,19 +121,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
                   <File Id='ie_crash_sender' Name='crash_sender.exe' DiskId='1'
                     Source="$(var.OurCommonPath)/crash_sender.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ie_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
                     Source="$(var.OurCommonPath)/crash_sender.pdb" />
 `~)
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost='1' />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
                   <File Id='vista_broker' Name='vista_broker.exe' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='vista_broker_pdb' Name='vista_broker.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.pdb" />
 `~)
@@ -153,7 +156,8 @@ m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
                   Source="$(var.OurFFPath)/chrome.manifest" />
                 <File Id='ff_crash_sender' Name='crash_sender.exe' DiskId='1'
                   Source="$(var.OurCommonPath)/crash_sender.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                 <File Id='ff_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
                   Source="$(var.OurCommonPath)/crash_sender.pdb" />
 `~)
@@ -169,13 +173,15 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                   <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.dll" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
 `~)
                   <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
