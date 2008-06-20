@@ -50,6 +50,37 @@ static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 
+// Temporarily define DeviceDataProviderBase::DefaultFactoryFunction() here for
+// platforms where the device data provider is not yet implemented.
+// TODO(steveblock): Implement device data providers for remaining platforms.
+#if defined(WINCE)
+// WinCE uses WinceRadioDataProvider.
+#elif (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
+// Win32, Linux and OSX use EmptyDeviceDataProvider<RadioData>.
+#else
+// static
+template<>
+RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
+  assert(false);
+  return NULL;
+}
+#endif
+
+#if defined(WINCE)
+// WinCE uses WinceWifiDataProvider.
+#elif defined(WIN32) && !defined(WINCE)
+// Win32 uses Win32WifiDataProvider.
+#elif defined(LINUX) && !defined(OS_MACOSX)
+// Linux uses LinuxWifiDataProvider.
+#else
+// static
+template<>
+WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+  assert(false);
+  return NULL;
+}
+#endif
+
 // Data structure for use with ThreadMessageQueue.
 struct LocationAvailableMessageData : public MessageData {
  public:
