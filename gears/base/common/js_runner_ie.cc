@@ -83,7 +83,7 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   JsObject *NewDate(int64 milliseconds_since_epoch) {
-    JsParamToSend argv[] = { {JSPARAM_INT, &milliseconds_since_epoch} };
+    JsParamToSend argv[] = { {JSPARAM_INT64, &milliseconds_since_epoch} };
     return NewObjectWithArguments(STRING16(L"Date"), ARRAYSIZE(argv), argv,
                                   false);
   }
