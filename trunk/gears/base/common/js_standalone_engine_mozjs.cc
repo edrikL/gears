@@ -29,6 +29,9 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_token.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/safari/npapi_patches.h" 
+#endif
 #include "third_party/spidermonkey/gears_include/mozjs_api.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime.h"
@@ -195,8 +198,13 @@ bool JSStandaloneEngine::InitEngine(JsRunner *js_runner,
 
 void JSStandaloneEngine::GetNPNEntryPoints(NPNetscapeFuncs *browser_funcs) {
   assert(browser_funcs);
+#ifdef BROWSER_WEBKIT
+  memset(browser_funcs, 0, sizeof(GearsNPNetscapeFuncs));
+  browser_funcs->size = sizeof(GearsNPNetscapeFuncs);
+#else
   memset(browser_funcs, 0, sizeof(NPNetscapeFuncs));
   browser_funcs->size = sizeof(browser_funcs);
+#endif
   browser_funcs->version = 1;
   browser_funcs->memalloc = SpiderMonkeyNPAPIBindings::NPN_MemAlloc;
   browser_funcs->memfree = SpiderMonkeyNPAPIBindings::NPN_MemFree;
@@ -226,6 +234,12 @@ void JSStandaloneEngine::GetNPNEntryPoints(NPNetscapeFuncs *browser_funcs) {
   browser_funcs->hasproperty = SpiderMonkeyNPAPIBindings::NPN_HasProperty;
   browser_funcs->hasmethod = SpiderMonkeyNPAPIBindings::NPN_HasMethod;
   browser_funcs->setexception = SpiderMonkeyNPAPIBindings::NPN_SetException;
+#ifdef BROWSER_WEBKIT
+  ((GearsNPNetscapeFuncs *)browser_funcs)->enumerate = 
+                              SpiderMonkeyNPAPIBindings::NPN_Enumerate;
+#else
+  browser_funcs->enumerate = SpiderMonkeyNPAPIBindings::NPN_Enumerate;
+#endif
 }
 
 bool JSStandaloneEngine::TerminateEngine() {
