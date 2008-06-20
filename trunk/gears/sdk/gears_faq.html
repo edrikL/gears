@@ -218,12 +218,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           &nbsp;<br/>
         </span>
 
-        <a href="#whichLocalServerToUse">What LocalServer store do you use when?</a>
-        <br/>
-        <span style="line-height:4px">
-          &nbsp;<br/>
-        </span>
-
         <a href="#howToOfflineCrossOrigin">How do I 'offline' a cross-origin resource?</a>
         <br/>
         <span style="line-height:4px">
@@ -288,9 +282,70 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     </p>
 
+    <a name="Best__Practices"></a>
+    <h1>Best Practices</h1>
 
-
-
+    <p>
+      <div style="padding:0px 40px 0px 40px">
+        
+        
+        <a href="#useMRS">Use Managed Resource Store, not Resource Store</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        <a href="#syncing">Syncing design tips</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        <a href="#performanceGain">Use Gears for performance gains</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        <a href="#dontHost">Don't host your own version of the plugin</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        <a href="#goodUsesForLS">Good uses for LocalServer</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        <a href="#goodUsesForDB">Good uses for Database</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        <a href="#goodUsesForWP">Good uses for WorkerPool</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        <a href="#webAppAsDesktop">Create a web application with the look and feel of a desktop application</a>
+        <br/>
+        <span style="line-height:4px">
+          &nbsp;<br/>
+        </span>
+        
+        
+        
+      </div>
+    </p>
 
 
 
@@ -1058,21 +1113,6 @@ wp.onmessage = function(a,b,messageObject) {
 
 
 
-    <dt id="whichLocalServerToUse">
-      What LocalServer store do you use when?
-    </dt>
-
-    <dd>
-      <p>
-        In most cases, use the <a href="http://code.google.com/apis/gears/api_localserver.html#ManagedResourceStore">ManagedResourceStore</a>. It is meant to be used for application resources such as CSS, HTML, JavaScript, and images. It is good because it enables you to push your updated application in one step to the clients.
-      </p>
-      <p>
-        The <a href="http://code.google.com/apis/gears/api_localserver.html#ResourceStore">ResourceStore</a> is meant to be more of a specialized tool and should be used accordingly. For instance, if your application has user-generated content or user-specific data then it would be difficult to control it with a ManagedResourceStore. Using a ResourceStore to handle this dynamic content is ideal.
-      </p>
-    </dd>
-
-
-
     <dt id="howToOfflineCrossOrigin">
       How do I 'offline' a cross-origin resource?
     </dt>
@@ -1546,6 +1586,215 @@ echo( curl_exec($ch) );
         - This is a folder that contains files cached by either type of LocalServer store, a ResourceStore or a ManagedResourceStore, created by &lt;<em>domain</em>
         &gt;
       </p>
+    </dd>
+    
+    
+    <hr>
+
+    <a name="Best__Practices">
+    </a>
+    <h2>Best Practices</h2>
+
+
+
+
+    <dt id="useMRS">
+      Use Managed Resource Store, not Resource Store
+    </dt>
+
+    <dd>
+      <p>
+        In most cases, use the <a href="http://code.google.com/apis/gears/api_localserver.html#ManagedResourceStore">ManagedResourceStore</a>. It is meant to be used for application resources such as CSS, HTML, JavaScript, and images. It is good because it enables you to push your updated application in one step to the clients.
+      </p>
+      <p>
+        The <a href="http://code.google.com/apis/gears/api_localserver.html#ResourceStore">ResourceStore</a> is meant to be more of a specialized tool and should be used accordingly. For instance, if your application has user-generated content or user-specific data then it would be difficult to control it with a ManagedResourceStore. Using a ResourceStore to handle this dynamic content is ideal.
+      </p>
+    </dd>
+
+
+
+
+    <dt id="syncing">
+      Syncing design tips
+    </dt>
+
+    <dd>
+      <ul>
+        <li>
+          Users will be going back and forth frequently, and at times they may 
+          encounter spotty network connections that drop them into offline mode.
+          Try to be as transparent as possible but don't disrupt the experience.
+          For example, a pop-up that appears saying "you're now in offline mode"
+          will quickly frustrate users.  Our advice: make the transition between
+          offline and online as non-disruptive as possible.
+        </li>
+        <li>
+          Detect the offline state automatically - don't require the user to
+          explicitly change modes.  Forcing the user to explicitly change to 
+          "offline mode" can be disruptive.  Furthermore, many times users lose 
+          a network connection unintentionally.  If you're only synchronizing 
+          when a user explicitly goes offline, you'll frustrate users.  The 
+          "about to go on a plane" scenario comes along less frequently than the
+          "what happened to my wifi connection?" scenario.  Advice for 
+          developers: sync regularly, detect the loss of connectivity 
+          automatically, and fail over to offline mode without user interaction.
+        </li>
+        <li>
+          Make the offline experience match the online as much as possible, and 
+          use a consistent UI convention for disabling functionality.  With 
+          Docs, we don't have an "offline editor" we have an offline mode.  When
+          offline, certain features necessarily won't work.  But rather than 
+          hiding them or replacing them with a distinct UI, we simply gray them
+          out.  That provides another clue to the user that they are in 
+          offline mode while retaining the familiarity of the app. 
+        </li>
+        <li>
+          In some applications the best approach is to always operate with 
+          local data and sync periodically.  A great example of this is 
+          <a href="http://gdata-javascript-client.googlecode.com/svn/trunk/samples/blogger/bloggears/bloggears.html">Blog.Gears</a>.
+        </li>
+        <li>Take a look at existing synchronizing frameworks:</li>
+        <ul>
+          <li><a href="http://dojotoolkit.org/offline">Dojo Offline Toolkit</a></li>
+          <li><a href="http://code.google.com/p/trimpath/wiki/TrimJunction">Trimpath Junction</a></li>
+        </ul>
+      </ul>
+    </dd>
+
+
+
+
+    <dt id="performanceGain">
+      Use Gears for performance gains
+    </dt>
+
+    <dd>
+      <ul>
+        <li>
+          Consider cacheing all application data in the local database.  
+          Then when a user needs to perform a query it can be performed locally.
+          MySpace has implemented this technique in users' inboxes.
+        </li>
+        <li>
+          Use the database to cache data queries.  If the data is prone to 
+          going stale, then you can serve cached data for immediate population 
+          of results while grabbing fresh data in the background.  Here is an 
+          <a href="http://google-ajax-examples.googlecode.com/svn/trunk/presidentialwithgears/election2008.html">example</a>.
+        </li>
+        <li>
+          Store all resource files locally whether you plan on creating an 
+          offline experience or not.  If you use ManagedResourceStore to capture
+          all commonly-accessed files (such as JavaScript, CSS, HTML) then 
+          users can save time and bandwidth when visiting your site.  This can
+          provide huge benefits in cases where users have high-latency 
+          connections (think mobile).
+        </li>
+      </ul>  
+    </dd>
+
+
+    <dt id="dontHost">
+      Don't host your own version of the plugin
+    </dt>
+
+    <dd>
+      <p>
+        This is an open source project and we highly encourage contribution.  
+        However, we must discourage hosting your own versions of Gears because
+        the auto-updating mechanism will not work properly.  It's best for users
+        if Gears provides a consistent user experience and can push any 
+        critical updates to all installs.
+      </p>
+    </dd>
+
+
+
+
+    <dt id="goodUsesForLS">
+      Good uses for LocalServer
+    </dt>
+
+    <dd>
+      <ul>
+        <li>
+          Caching all application resources for faster performance or offline 
+          experience
+        </li>
+        <li>
+          Enabling <a href="http://code.google.com/apis/gears/api_localserver.html#FileSubmitter">"offline uploads"</a>
+        </li>
+        <li>
+          Caching media files
+        </li>
+      </ul>  
+    </dd>
+
+
+
+    <dt id="goodUsesForDB">
+      Good uses for Database
+    </dt>
+
+    <dd>
+      <ul>
+        <li>Cache previous internet queries</li>
+        <li>
+          Store copy of remote database locally for faster performance on 
+          client and fewer remote server operations
+        </li>
+      </ul>  
+    </dd>
+
+
+
+    <dt id="goodUsesForWP">
+      Good uses for Workerpool
+    </dt>
+
+    <dd>
+      <ul>
+        <li>Complex computations in the background, so as not to affect UI</li>
+        <li>Allow cross-domain AJAX Requests</li>
+        <li>Do all database interaction in the background</li>
+        <li>Keep data syncing in the background</li>
+      </ul>
+    </dd>
+
+
+
+    <dt id="webAppAsDesktop">
+      Create a web application with the look and feel of a desktop application
+    </dt>
+
+    <dd>
+      <ul>
+        <li>
+          Use the 
+          <a href="http://code.google.com/apis/gears/api_desktop.html">Desktop API</a>
+          to have an icon to your application
+        </li>
+        <li>
+          Refer to the <a href="#syncing">syncing best practices</a> to create a
+          seamless data syncing experience
+        </li>
+        <li>Operate on local data so the application is snappy</li>
+        <li>
+          Use ManagedResourceStore to provide an auto-update mechanism for your
+          application
+        </li>
+        <li>Benefits of a web app as a desktop app:</li>
+        <ul>
+          <li>
+            One codebase vs. a desktop application's various client 
+            (OS X, Linux, Windows) codebases
+          </li>
+          <li>
+            Easy auto-update mechanism 
+            (updating JavaScript, HTML, CSS, manifest version number) vs. desktop
+            application's complicated software update process
+          </li>
+        </ul>
+      </ul>  
     </dd>
   </body>
 
