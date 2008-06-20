@@ -114,6 +114,11 @@ bool GetInstallDirectory(std::string16 *path);
 // for the current browser.
 bool GetComponentDirectory(std::string16 *path);
 
+#ifdef BROWSER_WEBKIT
+// Returns the user's home directory.
+bool GetUserHomeDirectory(std::string16 *home_dir);
+#endif
+
 // Checks that an unsanitized string from the user is valid for use as part
 // of a path component. 'error_message' is optional and can be NULL.
 //
