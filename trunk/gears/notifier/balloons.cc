@@ -41,6 +41,7 @@
 #include "third_party/glint/include/button.h"
 #include "third_party/glint/include/color.h"
 #include "third_party/glint/include/column.h"
+#include "third_party/glint/include/current_time.h"
 #include "third_party/glint/include/nine_grid.h"
 #include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/root_ui.h"
@@ -53,7 +54,33 @@ static const char *kBalloonContainer = "balloon_container";
 
 const double kAlphaTransitionDuration = 1.0;
 const double kAlphaTransitionDurationShort = 0.3;
-const double kAlphaTransitionDurationForRestore = 0.0;
+const double kAlphaTransitionDurationForRestore = 0.2;
+const double kExpirationTime = 5.0;
+const double kExpirationTimeSlice = 0.25;
+
+class TimerHandler : public glint::MessageHandler {
+ public:
+  TimerHandler(BalloonCollection *collection)
+    : collection_(collection) {
+    assert(collection);
+    time_stamp_ = glint::CurrentTime::Seconds();
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    if (message.code == glint::GL_MSG_IDLE) {
+      double current_time = glint::CurrentTime::Seconds();
+      if (current_time - time_stamp_ > kExpirationTimeSlice) {
+        collection_->OnTimer(current_time);
+        time_stamp_ = current_time;
+      }
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+ private:
+  BalloonCollection *collection_;
+  double time_stamp_;
+  DISALLOW_EVIL_CONSTRUCTORS(TimerHandler);
+};
 
 class AnimationCompletedHandler : public glint::MessageHandler {
  public:
@@ -142,6 +169,9 @@ class MouseWithinDetector : public glint::MessageHandler {
 BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
   : observer_(observer),
     root_ui_(NULL),
+    expiration_suspended_counter_(0),
+    last_time_(-1),
+    elapsed_time_(0),
     has_space_(true) {
   assert(observer);
   EnsureRoot();
@@ -189,7 +219,6 @@ void BalloonCollection::Show(const GearsNotification &notification) {
     return;
 
   Balloon *new_balloon = new Balloon(notification, this);
-  balloons_.push_front(new_balloon);
   AddToUI(new_balloon);
   observer_->OnBalloonSpaceChanged();
 }
@@ -233,6 +262,7 @@ void BalloonCollection::EnsureRoot() {
   glint::Transform offset;
   offset.AddOffset(glint::Vector(500.0f, 250.0f));
   container->set_transform(offset);
+  container->AddHandler(new TimerHandler(this));
   root_ui_->set_root_node(container);
   root_ui_->Show();
 }
@@ -240,6 +270,10 @@ void BalloonCollection::EnsureRoot() {
 bool BalloonCollection::AddToUI(Balloon *balloon) {
   assert(balloon);
   EnsureRoot();
+
+  ResetExpirationTimer();
+  balloons_.push_front(balloon);
+
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
   if (!container)
@@ -252,6 +286,7 @@ bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   if (!root_ui_)
     return false;
 
+  ResetExpirationTimer();
   // Ignore return value. The balloon could already be removed from balloons_
   // by Delete method - we only keep balloons for longer if it was a
   // user-initiated 'close' operation or auto-expiration.
@@ -267,6 +302,51 @@ bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   container->RemoveNode(balloon->root());
   observer_->OnBalloonSpaceChanged();
   return true;
+}
+
+void BalloonCollection::SuspendExpirationTimer() {
+  ++expiration_suspended_counter_;
+}
+
+void BalloonCollection::RestoreExpirationTimer() {
+  --expiration_suspended_counter_;
+}
+
+void BalloonCollection::ResetExpirationTimer() {
+  last_time_ = -1;
+}
+
+void BalloonCollection::OnTimer(double current_time) {
+  if (balloons_.empty())
+    return;
+
+  // Timer was reset - start it.
+  if (last_time_ < 0) {
+    last_time_ = current_time;
+    elapsed_time_ = 0;
+    return;
+  }
+
+  double delta = current_time - last_time_;
+  last_time_ = current_time;
+
+  if (expiration_suspended()) {
+    // Set elapsed time to half of expiration time so the balloon does
+    // not go away immediately after mouse goes away.
+    elapsed_time_ = kExpirationTime / 2;
+    return;
+  }
+
+  elapsed_time_ += delta;
+
+  if (elapsed_time_ > kExpirationTime) {
+    // Expire the bottom-most balloon.
+    Balloon *balloon = balloons_.front();
+    if (!balloon)
+      return;
+    balloon->InitiateClose(false);  // 'false' == not initiated by the user.
+    ResetExpirationTimer();
+  }
 }
 
 Balloon::Balloon(const GearsNotification &from, BalloonCollection *collection)
@@ -366,8 +446,7 @@ bool Balloon::SetAlphaTransition(glint::Node *node,
     return false;
 
   glint::AnimationTimeline *timeline = NULL;
-  // Consider transition with suration <0.1s an abrupt transition.
-  if (transition_duration > 0.1) {
+  if (transition_duration > 0) {
     timeline = new glint::AnimationTimeline();
 
     glint::AlphaAnimationSegment *segment = new glint::AlphaAnimationSegment();
@@ -386,9 +465,6 @@ bool Balloon::SetAlphaTransition(glint::Node *node,
 }
 
 bool Balloon::InitiateClose(bool user_initiated) {
-  if (state_ != SHOWING_BALLOON)
-    return true;
-
   state_ = user_initiated ? USER_CLOSING_BALLOON : AUTO_CLOSING_BALLOON;
 
   // If closed by user, set shorter transition.
@@ -438,18 +514,17 @@ void Balloon::OnMouseIn() {
     // Cancel current animation
     SetAlphaTransition(root_, 0);
 
-    // Restore the alpha to opaque immediately
+    // Restore the alpha to opaque, fast.
     SetAlphaTransition(root_, kAlphaTransitionDurationForRestore);
     root_->set_alpha(glint::colors::kOpaqueAlpha);
 
     state_ = RESTORING_BALLOON;
   }
-
-  // TODO(dimich): collection_->SuspendExpirationTimer();
+  collection_->SuspendExpirationTimer();
 }
 
 void Balloon::OnMouseOut() {
-  // TODO(dimich): collection_->RestoreExpirationTimer();
+  collection_->RestoreExpirationTimer();
 }
 
 bool Balloon::InitializeUI(glint::Node *container) {
