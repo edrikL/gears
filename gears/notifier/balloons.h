@@ -139,8 +139,23 @@ class BalloonCollection : public BalloonCollectionInterface {
                       const std::string16 &id);
   virtual bool has_space() { return has_space_; }
 
+  // Adds and removes the balloons to this collection (to both internal
+  // list and UI tree).
   bool AddToUI(Balloon *balloon);
   bool RemoveFromUI(Balloon *balloon);
+
+  // Suspends expiration of the balloons.
+  void SuspendExpirationTimer();
+  // Restores expiration of the balloons.
+  void RestoreExpirationTimer();
+  // Resets expiration timer - done on changes in balloon set to allow
+  // user to observe new state of the notification stack.
+  void ResetExpirationTimer();
+  // If true, the balloons do not expire and disappear but stay on screen.
+  bool expiration_suspended() {
+    return expiration_suspended_counter_ > 0;
+  }
+  void OnTimer(double current_time);
 
  private:
   void Clear();  // clears balloons_
@@ -152,6 +167,9 @@ class BalloonCollection : public BalloonCollectionInterface {
   Balloons balloons_;
   BalloonCollectionObserver *observer_;
   glint::RootUI *root_ui_;
+  int expiration_suspended_counter_;
+  double last_time_;
+  double elapsed_time_;
   bool has_space_;
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollection);
 };
