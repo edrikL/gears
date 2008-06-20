@@ -27,9 +27,8 @@
 // The Geolocation API has not been finalized for official builds.
 #else
 
-#ifdef WINCE
-// WinCE uses WinceRadioDataProvider.
-#else
+// Win32, Linux and OSX use the empty device data provider for radio data.
+#if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
 
 #include "gears/geolocation/empty_device_data_provider.h"
 
@@ -39,6 +38,6 @@ RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
   return new EmptyDeviceDataProvider<RadioData>();
 }
 
-#endif
+#endif  // (WIN32 && !WINCE) || LINUX || OS_MACOSX
 
 #endif  // OFFICIAL_BUILD
