@@ -60,6 +60,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 var selectedSuite = '';
 var ifc = top.ifc;
+var startTime = new Date().getTime();
 window.onload = init;
 
 /**
@@ -163,6 +164,9 @@ function shouldSkipTestcase(suiteName) {
 function runNextTestFile() {
   // If we're done, post results.
   if (suiteIndex == suites.length) {
+    ifc.log('All test suites complete. Elapsed time: ' +
+            ((new Date().getTime() - startTime) / 1000) + 's');
+    
     var publisher = ifc.getResultsPublisher();
     publisher.allAvailableTestsStarted = true;
     publisher.postbackTestResults();
