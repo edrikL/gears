@@ -32,12 +32,26 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
+#include "gears/base/safari/curl_downloader.h"
 #include "gears/base/safari/safari_workarounds.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
 #import  "gears/ui/safari/html_dialog_sf.h"
 
 @implementation HTMLDialogImp
+
+static NSDictionary *ScriptableMethods() {
+  // In order to create a static objective-c object we need to create it after
+  // the runtime is initialized.
+  static const NSDictionary *scriptable_methods = 
+      [[NSDictionary dictionaryWithObjectsAndKeys:
+                         @"setResults",
+                         @"setResults:",
+                         @"loadImageIntoElement",
+                         @"loadImageIntoElement:top:left:width:height:",
+                         nil] retain];
+  return scriptable_methods;
+}
 
 #pragma mark Private Instance methods
 // Creates a window and places a pointer to it in the |window_| ivar.
@@ -68,12 +82,12 @@
   // function, but the settings dialog may be displayed before that's
   // been called, in which case we just use a default string.
   NSURL *tmp_url = [NSURL URLWithString:@""];
-  NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
+  user_agent_ = [[NSString stringWithString16:ua_str16.c_str()] retain];
   if (ua_str16.length() == 0) { 
-    user_agent = [NSString stringWithFormat:@"%@ Safari",
-                          [webview userAgentForURL:tmp_url]];
+    user_agent_ = [NSString stringWithFormat:@"%@ Safari",
+                    [webview userAgentForURL:tmp_url]];
   }
-  [webview setCustomUserAgent:user_agent];
+  [webview setCustomUserAgent:user_agent_];
 
   [content_view addSubview:webview];
   [webview release]; // addSubView retains webView.
@@ -125,6 +139,7 @@
 - (void)dealloc {
   [web_archive_filename_ release];
   [arguments_ release];
+  [user_agent_ release];
   [result_string_ release];
   [super dealloc];
 }
@@ -191,25 +206,97 @@
 // Called by WebView to determine which of this object's selectors can be called
 // from JS.
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)selector {
-  // Only allow calls to setResults:.
-  if (selector == @selector(setResults:)) {
-    return NO;
-  }
-  return YES;
+  NSString *sel = [NSString stringWithCString:sel_getName(selector)
+                                     encoding:NSUTF8StringEncoding];
+  BOOL is_selector_scriptable = [ScriptableMethods() objectForKey:sel] != nil;
+  return !is_selector_scriptable;
 }
 
-+ (NSString *)webScriptNameForSelector:(SEL)sel {
-  if (sel == @selector(setResults:)) {
-    return @"setResults";
-  } else {
-    return nil;
-  }
++ (NSString *)webScriptNameForSelector:(SEL)selector {
+  NSString *sel = [NSString stringWithCString:sel_getName(selector)
+                                     encoding:NSUTF8StringEncoding];
+  return [ScriptableMethods() objectForKey:sel];
+}
+
+// JS callback for asynchronously loading an image.
+- (void)loadImageIntoElement: (NSString *)url
+                         top: (int)top
+                        left: (int)left
+                       width: (int)width
+                      height: (int)height {
+  NSString *frame_rect = NSStringFromRect(NSMakeRect(left, top, width, height));
+  NSArray *args = [NSArray arrayWithObjects:url, frame_rect, nil];
+  
+  // detachNewThreadSelector will retain self until after the thread exits.
+  [NSThread detachNewThreadSelector:@selector(loadURL:)
+                         toTarget:self
+                       withObject:args];
 }
 
 // JS callback for setting the result string.
 - (void)setResults: (NSString *)window_results {
   result_string_ = [window_results copy];
   window_dismissed_ = true;
+}
+
+#pragma mark Methods for dynamic image loading.
+
+// This selector is launched as a thread, it loads the URL with CURL
+// and then calls back to displayImage: when done.
+- (void)loadURL:(NSArray *)arguments {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  assert([arguments count] == 2);
+  NSString *url = [arguments objectAtIndex:0];
+  NSRect frame = NSRectFromString([arguments objectAtIndex:1]);
+  
+  // Make sure URL is escaped.
+  url = [url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+  
+  // Download Icon Data.
+  std::string16 url_utf16;
+  [url string16:&url_utf16];
+  std::string16 user_agent_utf16;
+  [user_agent_ string16:&user_agent_utf16];
+  
+  NSMutableData *icon_data = [[[NSMutableData alloc] init] autorelease];
+  if (!GetURLDataAsNSData(url_utf16, user_agent_utf16, icon_data)) return;
+  
+  NSArray *args = [NSArray arrayWithObjects:icon_data, NSStringFromRect(frame),
+                                            nil];
+  // args is retained until the selector returns.
+  [self performSelectorOnMainThread:@selector(displayImage:)
+                                withObject:args
+                            waitUntilDone:false];
+  [pool release];
+}
+
+// Called asynchronously when image data is loaded, this displays the image
+// data in the WebView.
+- (void)displayImage:(NSArray *)arguments {
+  // If the window was closed, don't do anything.
+  if (window_dismissed_) return;
+  
+  assert([arguments count] == 2);
+  NSData *image_data = [arguments objectAtIndex:0];
+  NSRect frame = NSRectFromString([arguments objectAtIndex:1]);
+  NSView *content_view = [window_ contentView];
+  
+  // Translate from DOM->NSView coordinates.
+  NSRect bounds = [content_view bounds];
+  frame.origin.y = bounds.size.height - frame.origin.y - frame.size.height;
+  
+  NSImageView *iv = [[NSImageView alloc] initWithFrame:frame];
+  NSImage *img = [[NSImage alloc] initWithData:image_data];
+  [iv setImage:img];
+  [img release];
+  [content_view addSubview:iv];
+  
+  // Anchor the image view to the top left of the image contents.
+  // TODO(playmobil): reposition the image view on screen resize from JS
+  // to get more consistent results.
+  [iv setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
+  [iv release];
 }
 @end
 

@@ -370,7 +370,7 @@ m4_include(ui/common/button.js)
     var nameElement = dom.getElementById("shortcut-name");
     var descriptionElement = dom.getElementById("shortcut-description");
     
-    iconElement.src = pickIconToRender(shortcutData);
+    loadImage(iconElement, pickIconToRender(shortcutData));
     dom.setTextContent(nameElement.firstChild, shortcutData.name);
 
     if (isDefined(typeof shortcutData.description) &&

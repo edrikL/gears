@@ -43,6 +43,30 @@ dom.getElementById = function(id) {
 };
 
 /**
+ * Gets the position and dimensions of an element in pixels in relation
+ * to the window origin.
+ */
+dom.getPosition = function(elem) {
+  var ret = { 'left'   : 0,
+              'top'    : 0,
+              'width'  : elem.width,
+              'height' : elem.height };
+  
+  if (!elem.offsetParent) return ret;
+  
+  var left = 0;
+  var top = 0;
+  while (elem) {
+    left += elem.offsetLeft;
+    top += elem.offsetTop;
+    elem = elem.offsetParent
+  }
+  ret.left = left;
+  ret.top = top;
+  return ret;
+};
+
+/**
  * Returns the height of the inside of the window.
  */
 dom.getWindowInnerHeight = function() {

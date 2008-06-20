@@ -23,17 +23,29 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Workaround for a bug in OSX 10.4 which doesn't allow us to perform
-// a synchronous HTTP connection while a page is loading.
+// Utilities for fetching URLs using the OS X libcurl library. Typically, OS X
+// callers should use NSURLConnection for HttpRequests because they will use 
+// the Safari cache and cookie store. But in some cases, we have had to use a 
+// different utility to work around Safari bugs in OSX 10.4.
 // Here we use libcurl to perform the request and thus bypass OS X's mechanism
 // entirely.
-// The downside of this is that we can't use SAFARI's cache.
+// The downside of this is that we can't use Safari's cache.
 
-#ifndef GEARS_DESKTOP_CURL_ICON_DOWNLOADER_H__
-#define GEARS_DESKTOP_CURL_ICON_DOWNLOADER_H__
+#ifndef GEARS_BASE_SAFARI_CURL_DOWNLOADER_H__
+#define GEARS_BASE_SAFARI_CURL_DOWNLOADER_H__
 
-// Synchronously download icon_url and return it's data in icon_data.
+// Synchronously download url and return it's data.
 // Returns true on success.
-bool GetURLData(const std::string16 &url, std::vector<uint8> *data);
+bool GetURLDataAsVector(const std::string16 &url, 
+                        const std::string16 &user_agent,
+                        std::vector<uint8> *data);
 
-#endif  // GEARS_DESKTOP_CURL_ICON_DOWNLOADER_H__
+#ifdef __OBJC__
+// Synchronously download url and return it's data.
+// Returns true on success.
+bool GetURLDataAsNSData(const std::string16 &url, 
+                        const std::string16 &user_agent,
+                        NSMutableData *data);
+#endif
+
+#endif  // GEARS_BASE_SAFARI_CURL_DOWNLOADER_H__
