@@ -600,7 +600,7 @@ endif # USING_ZLIB
 
 #-----------------------------------------------------------------------------
 # third_party/portaudio
-
+ifeq ($(USING_PORTAUDIO),1)
 ifeq ($(OFFICIAL_BUILD),1)
 # PortAudio is for the Audio API which has not been finalized for official
 # builds.
@@ -630,7 +630,7 @@ THIRD_PARTY_VPATH	+= \
 		$(NULL)
 endif
 
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_allocation.c \
 		pa_converters.c \
 		pa_cpuload.c \
@@ -643,9 +643,8 @@ THIRD_PARTY_CSRCS	+= \
 		pa_trace.c \
 		$(NULL)
 
-
 ifeq ($(IS_WIN32_OR_WINCE),1)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_win_wmme.c \
 		pa_win_hostapis.c \
 		pa_win_util.c \
@@ -653,14 +652,14 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 endif
 ifeq ($(OS),linux)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_unix_oss.c \
 		pa_unix_hostapis.c \
 		pa_unix_util.c \
 		$(NULL)
 endif
 ifeq ($(OS),osx)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_ringbuffer.c \
 		pa_mac_core.c \
 		pa_mac_core_blocking.c \
@@ -671,7 +670,77 @@ THIRD_PARTY_CSRCS	+= \
 endif
 
 endif # not OFFICIAL_BUILD
+endif # USING_PORTAUDIO
+#-----------------------------------------------------------------------------
+# third_party/libspeex
+ifeq ($(USING_LIBSPEEX),1)
+ifneq ($(OFFICIAL_BUILD),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/speex/libspeex \
+		$(NULL)
 
+LIBSPEEX_CSRCS	+= \
+		bits.c \
+		cb_search.c \
+		exc_10_16_table.c \
+		exc_10_32_table.c \
+		exc_20_32_table.c \
+		exc_5_256_table.c \
+		exc_5_64_table.c \
+		exc_8_128_table.c \
+		filters.c \
+		gain_table.c \
+		gain_table_lbr.c \
+		hexc_10_32_table.c \
+		hexc_table.c \
+		high_lsp_tables.c \
+		lpc.c \
+		lsp.c \
+		lsp_tables_nb.c \
+		ltp.c \
+		modes.c \
+		modes_wb.c \
+		nb_celp.c \
+		quant_lsp.c \
+		sb_celp.c \
+		speex.c \
+		speex_callbacks.c \
+		speex_header.c \
+		stereo.c \
+		vbr.c \
+		vq.c \
+		window_spx.c \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
+endif # USING_LIBSPEEX
+#-----------------------------------------------------------------------------
+# third_party/libtremor
+ifeq ($(USING_LIBTREMOR),1)
+ifneq ($(OFFICIAL_BUILD),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/tremor \
+		$(NULL)
+
+LIBTREMOR_CSRCS	+= \
+		bitwise.c \
+		block.c \
+		codebook.c \
+		floor0.c \
+		floor1.c \
+		framing.c \
+		info.c \
+		mapping0.c \
+		mdct.c \
+		registry.c \
+		res012.c \
+		sharedbook.c \
+		synthesis.c \
+		window_tremor.c \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
+endif # USING_LIBTREMOR
 #-----------------------------------------------------------------------------
 # base/common
 
