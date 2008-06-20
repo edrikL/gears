@@ -41,10 +41,9 @@ gecko_internal can be updated by running the following from a cygwin bash prompt
   cp `ls | xargs -I{} /usr/bin/find /cygdrive/c/firefox-3.0rc1-source/mozilla/ -name {}` ./
 nsIDOMClassInfo.h will then need to be updated by removing "nsCRT::" in NS_DOMCI_EXTENSION_ENTRY_BEGIN(_class)
 
-Note: the xpidl.exe for Win32 was modified to run on systems without
-vs2005 runtime installed. It was apparently built with default vs2005 project
-settings that embeds a manifest for Microsoft.VC80.CRT, but it turns out xpidl
-does not use it. So I opened it up in SlickEdit and blanked out part of manifest
-with spaces.
+Note: the Win32 xpidl.exe and xpt_link.exe were apparently built with default
+vs2005 project settings that embeds a manifest for Microsoft.VC80.CRT, and they
+try to load msvcr80.dll in runtime. Added a DLL and manifests to make it work
+on a machine without VS2005 runtime installed.
 
 
