@@ -82,11 +82,12 @@ static NSDictionary *ScriptableMethods() {
   // function, but the settings dialog may be displayed before that's
   // been called, in which case we just use a default string.
   NSURL *tmp_url = [NSURL URLWithString:@""];
-  user_agent_ = [[NSString stringWithString16:ua_str16.c_str()] retain];
+  user_agent_ = [NSString stringWithString16:ua_str16.c_str()];
   if (ua_str16.length() == 0) { 
     user_agent_ = [NSString stringWithFormat:@"%@ Safari",
                     [webview userAgentForURL:tmp_url]];
   }
+  [user_agent_ retain];
   [webview setCustomUserAgent:user_agent_];
 
   [content_view addSubview:webview];
@@ -125,9 +126,9 @@ static NSDictionary *ScriptableMethods() {
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
     tmp = [pluginPath stringByAppendingPathComponent:tmp];
     tmp = [tmp stringByDeletingPathExtension];
-    tmp = [tmp stringByAppendingPathExtension:@"webarchive"];
-    web_archive_filename_ =
-        [tmp stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    // If we ever go back to file urls, rather than loading the data directly
+    // from disk, we need to escape web_archive_filename_ here.
+    web_archive_filename_ = [tmp stringByAppendingPathExtension:@"webarchive"];
     [web_archive_filename_ retain];
     arguments_ = [[NSString stringWithString16:arguments.c_str()] retain];
     width_ = width;
