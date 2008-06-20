@@ -26,6 +26,7 @@
 #ifndef GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WIN32_H__
 #define GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WIN32_H__
 
+#include <vector>
 #include "gears/base/common/common.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/thread.h"
@@ -33,22 +34,16 @@
 #include "gears/geolocation/wlanapi.h"
 
 class Win32WifiDataProvider
-    : public DeviceDataProviderBase<WifiData>,
+    : public WifiDataProviderImplBase,
       public Thread {
  public:
-  // Allow DeviceDataProviderBase<WifiData>::Create() to access our private
-  // constructor.
-  friend DeviceDataProviderBase<WifiData>;
-
-  // DeviceDataProviderBase<WifiData> implementation
-  virtual bool GetData(WifiData *data);
-
- private:
-  // Private constructor and destructor, callers must use Register and
-  // Unregister
   Win32WifiDataProvider();
   virtual ~Win32WifiDataProvider();
 
+  // WifiDataProviderImplBase implementation
+  virtual bool GetData(WifiData *data);
+
+ private:
   // Thread implementation
   virtual void Run();
 

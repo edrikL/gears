@@ -34,8 +34,8 @@
 #include "gears/geolocation/empty_device_data_provider.h"
 
 // static
-template <>
-DeviceDataProviderBase<RadioData>* DeviceDataProviderBase<RadioData>::Create() {
+template<>
+RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
   return new EmptyDeviceDataProvider<RadioData>();
 }
 

@@ -56,14 +56,12 @@ static void RILResultCallback(DWORD dwCode,
 // zero. This method converts to our format.
 static int FromDeviceDataFormat(const int &value);
 
-// DeviceDataProviderBase<RadioData>
-
 // static
-DeviceDataProviderBase<RadioData>* DeviceDataProviderBase<RadioData>::Create() {
+template<>
+RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
   return new WinceRadioDataProvider();
 }
 
-// WinceRadioDataProvider
 
 WinceRadioDataProvider::WinceRadioDataProvider() {
   if (!Init()) {

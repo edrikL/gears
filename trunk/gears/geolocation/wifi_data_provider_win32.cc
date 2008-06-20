@@ -64,20 +64,16 @@
 static const int kPollingInterval = 1000;
 
 // Local function
-
 // Extracts data for an access point and converts to Gears format.
 static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
                            AccessPointData *access_point_data);
 
-// DeviceDataProviderBase<WifiData>
-
 // static
-template <>
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+template<>
+WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
   return new Win32WifiDataProvider();
 }
 
-// Win32WifiDataProvider
 
 Win32WifiDataProvider::Win32WifiDataProvider() {
   // Start the polling thread.
@@ -103,7 +99,7 @@ bool Win32WifiDataProvider::GetData(WifiData *data) {
 // Thread implementation
 void Win32WifiDataProvider::Run() {
   // Use the WLAN interface if possible, otherwise use WZC.
-  typedef bool(Win32WifiDataProvider::*GetAccessPointDataFunction)(
+  typedef bool (Win32WifiDataProvider::*GetAccessPointDataFunction)(
       std::vector<AccessPointData> *data);
   GetAccessPointDataFunction get_access_point_data_function = NULL;
   HINSTANCE library = LoadLibrary(L"wlanapi");
@@ -122,7 +118,7 @@ void Win32WifiDataProvider::Run() {
       return;
     }
   }
-   
+
   // Regularly get the access point data.
   do {
     WifiData new_data;
@@ -213,7 +209,7 @@ void Win32WifiDataProvider::GetInterfaceDataWZC(
   GetDataFromBssIdList(*bss_id_list,
                        interface_data.rdBSSIDList.dwDataLen,
                        data);
-                              
+
   LocalFree(interface_data.rdBSSIDList.pData);
 }
 
@@ -271,7 +267,7 @@ bool Win32WifiDataProvider::GetAccessPointDataWLAN(
     }
   }
 
-  // Free interface_list. 
+  // Free interface_list.
   (*WlanFreeMemory_function_)(interface_list);
 
   // Close the handle.
