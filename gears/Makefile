@@ -980,6 +980,7 @@ SF_CPPSRCS	+= \
 		browser_utils_sf.cc \
 		common_sf.mm \
 		cf_string_utils.cc \
+		curl_downloader.mm \
 		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
@@ -1165,10 +1166,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_win32.cc \
 		notification.cc \
 		$(NULL)
-
-SF_CPPSRCS += \
-		curl_icon_downloader.mm \
-		$(NULL)
+		
 #-----------------------------------------------------------------------------
 # notifier
 

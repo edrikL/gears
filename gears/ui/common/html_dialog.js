@@ -333,3 +333,19 @@ function resizeDialogToFitContent(opt_minDialogInnerHeight) {
   }
 }
 
+/**
+ * Safari running on OSX 10.4 can't load images dynamically from the network,
+ * this helper function calls gears-specific code to work around this
+ * limitation.
+ */
+function loadImage(elem, image_url) {
+  if (browser.safari) {
+    var position = dom.getPosition(elem);
+    window.gears_dialog.loadImageIntoElement(image_url, position.top,
+                                             position.left,
+                                             position.width,
+                                             position.height);
+  } else {
+    elem.src = image_url;
+  }
+}

@@ -424,9 +424,9 @@ m4_include(ui/common/button.js)
     if (customIcon) {
       elem = dom.getElementById("custom-icon");
       elem.style.display = "inline";
-      elem.src = customIcon;
       elem.height = 32;
       elem.width = 32;
+      loadImage(elem, customIcon);
     }
 
     if (customName) {

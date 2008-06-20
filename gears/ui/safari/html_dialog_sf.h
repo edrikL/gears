@@ -28,6 +28,7 @@
  @protected
   NSString *web_archive_filename_;
   NSString *arguments_; 
+  NSString *user_agent_;
   int width_;
   int height_;
   bool window_dismissed_;

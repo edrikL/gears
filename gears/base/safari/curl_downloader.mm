@@ -29,14 +29,15 @@
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/npapi/browser_utils.h"
-#include "gears/desktop/curl_icon_downloader.h"
+#include "gears/base/safari/curl_downloader.h"
 #include "gears/localserver/common/http_cookies.h"
 
 static bool curl_was_initialised = false;
+static Mutex curl_init_mutex;
 
 // Called by CURL when new data is available.
 static size_t write_data_callback(void *buffer, size_t size, size_t nmemb, 
-                           void *closure) {
+                                  void *closure) {
   NSMutableData *response_bytes = (NSMutableData *)closure;
   [response_bytes appendBytes:buffer length:nmemb*size];
   return nmemb;
@@ -50,10 +51,27 @@ class CloseCURLHandleFuctor {
 };
 typedef scoped_token<CURL *, CloseCURLHandleFuctor> ScopedCURLHandle;
 
-bool GetURLData(const std::string16 &url, std::vector<uint8> *data) {
+bool GetURLDataAsVector(const std::string16 &url, 
+                         const std::string16 &user_agent,
+                         std::vector<uint8> *data) {
   assert(data);
   assert(!url.empty());
-  ASSERT_IS_RUNNING_ON_MAIN_THREAD();
+  
+  NSMutableData *response_bytes = [[[NSMutableData alloc] init] autorelease];
+  
+  if (!GetURLDataAsNSData(url, user_agent, response_bytes)) return false;
+  
+  // Copy out data.
+  data->resize([response_bytes length]);  
+  [response_bytes getBytes:&((*data)[0])];
+  return true;
+}
+
+bool GetURLDataAsNSData(const std::string16 &url,
+                        const std::string16 &user_agent,
+                        NSMutableData *data) {
+  assert(data);
+  assert(!url.empty());
   
   std::string url_utf8;
   if (!String16ToUTF8(url.c_str(), url.length(), &url_utf8)) {
@@ -61,15 +79,18 @@ bool GetURLData(const std::string16 &url, std::vector<uint8> *data) {
   }
   
   // Set user_agent, cookies, and headers.
-  NSMutableData *response_bytes = [[[NSMutableData alloc] init] autorelease];
+  NSMutableData *response_bytes = data;
 
   CURLcode ret = CURLE_OK;
-  // Initialize CURL on first run, no need for locking because it is assumed
-  // this code will always be run from the  main thread.
-  if (!curl_was_initialised) {
-      ret = curl_global_init(CURL_GLOBAL_SSL);
-      if (ret != CURLE_OK) return false;
-      curl_was_initialised = true;
+  // Initialize CURL on first run, this code may be called from HTMLDialog
+  // which means it must be threadsafe.
+  {
+    MutexLock lock(&curl_init_mutex);
+    if (!curl_was_initialised) {
+        ret = curl_global_init(CURL_GLOBAL_SSL);
+        if (ret != CURLE_OK) return false;
+        curl_was_initialised = true;
+    }
   }
   
   // Create a CURL Handle for this request.
@@ -87,14 +108,8 @@ bool GetURLData(const std::string16 &url, std::vector<uint8> *data) {
   ret = curl_easy_setopt(handle.get(), CURLOPT_WRITEDATA, response_bytes);
   if (ret != CURLE_OK) return false;
   
-  // Get user agent.
-  std::string16 user_agent_utf16;
-  if (!BrowserUtils::GetUserAgentString(&user_agent_utf16)) {
-    return false;
-  }
-  
   std::string user_agent_utf8;
-  if (!String16ToUTF8(user_agent_utf16.c_str(), user_agent_utf16.length(), 
+  if (!String16ToUTF8(user_agent.c_str(), user_agent.length(), 
                       &user_agent_utf8)) {
     return false;
   }
@@ -126,10 +141,6 @@ bool GetURLData(const std::string16 &url, std::vector<uint8> *data) {
   // Perform request.
   ret = curl_easy_perform(handle.get());
   if (ret != CURLE_OK) return false;
-  
-  // Copy out data.
-  data->resize([response_bytes length]);  
-  [response_bytes getBytes:&((*data)[0])];
 
   return true;
 }
