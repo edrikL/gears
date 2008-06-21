@@ -738,12 +738,12 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 ifeq ($(OS),osx)
 ifeq ($(HAVE_ICEBERG),1)
 # This rule generates a package installer for the Plugin and InputManager.
-$(SF_INSTALLER_PKG):
-	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
-else
-$(warning To create a Safari installer for Gears, you must install Iceberg \
-  from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
-  Safari version manually by running tools/osx/install_gears.sh script)
+#$(SF_INSTALLER_PKG):
+#	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
+#else
+#$(warning To create a Safari installer for Gears, you must install Iceberg \
+#  from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
+#  Safari version manually by running tools/osx/install_gears.sh script)
 endif
 endif
 
