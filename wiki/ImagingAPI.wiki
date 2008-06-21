@@ -130,6 +130,7 @@ CanvasRenderingContext2D class
   TextMetrics measureText(string text);
 
   // drawing images
+  // If the source rectangle stretches beyond the bounds of its canvas or has zero width or height, an error is generated, as per the HTML canvas spec. We also generate an error if the destination rectangle is invalid (i.e., stretches beyond the bounds of its canvas or has zero width or height).
   void drawImage(Canvas image, int dx, int dy);
   void drawImage(Canvas image, int dx, int dy, int dw, int dh);
   void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
