@@ -27,3 +27,15 @@
 
 const char16 *kInvalidStateError = STRING16(L"Database version mismatch.");
 const char16 *kTransactionClosed = STRING16(L"Transaction closed.");
+const char16 *kPrepareError = STRING16(L"Could not prepare the statement.");
+const char16 *kBindError =
+                  STRING16(L"Could not bind arguments to the statement.");
+const char16 *kStepError = STRING16(L"Database operation failed.");
+const char16 *kResultSetError = 
+                  STRING16(L"Unexpected data type in result set.");
+const char16 *kLastRowIdOutOfRangeError =
+                  STRING16(L"Last inserted row id is out of range.");
+
+const int kUnknownNonDatabaseError = 0;
+const int kOtherDatabaseError = 1;
+const int kDatabaseVersionMismatch = 2;

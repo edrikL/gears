@@ -29,6 +29,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/database2/result_set2.h"
 #include "gears/database2/statement.h"
 #include "gears/database2/transaction.h"
 
@@ -71,12 +72,16 @@ class Database2BeginCommand : public Database2Command {
 // asynchronously executes a SQL statement
 class Database2AsyncExecuteCommand : public Database2Command {
  public:
-  Database2AsyncExecuteCommand(Database2Transaction *tx)
-      : Database2Command(tx) {}
+  Database2AsyncExecuteCommand(Database2Transaction *tx,
+                               Database2Statement *statement)
+      : Database2Command(tx), statement_(statement) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
  private:
+  scoped_ptr<Database2BufferingRowHandler> results_;
+  scoped_ptr<Database2Statement> statement_;
+
   DISALLOW_EVIL_CONSTRUCTORS(Database2AsyncExecuteCommand);
 };
 
@@ -94,6 +99,7 @@ class Database2SyncExecuteCommand : public Database2Command {
 
  private:
   JsCallContext *context_;
+  scoped_refptr<Database2ResultSet> result_set_;
   scoped_ptr<Database2Statement> statement_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2SyncExecuteCommand);

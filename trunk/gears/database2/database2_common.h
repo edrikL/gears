@@ -32,5 +32,23 @@
 // INVALID_STATE_ERR (per spec) exception
 extern const char16 *kInvalidStateError;
 extern const char16 *kTransactionClosed;
+extern const char16 *kPrepareError;
+extern const char16 *kBindError;
+extern const char16 *kStepError;
+extern const char16 *kResultSetError;
+extern const char16 *kLastRowIdOutOfRangeError;
+
+// HTML5 spec error codes
+// The transaction failed for reasons unrelated to the database itself and not
+// covered by any other error code.
+extern const int kUnknownNonDatabaseError;
+
+// The statement failed for database reasons not covered by any other error
+// code.
+extern const int kOtherDatabaseError;
+
+// The statement failed because the expected version of the database didn't
+// match the actual database version.
+extern const int kDatabaseVersionMismatch;
 
 #endif // GEARS_DATABASE2_COMMON_H__

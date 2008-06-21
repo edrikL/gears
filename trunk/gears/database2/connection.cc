@@ -24,12 +24,14 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/connection.h"
-#include "gears/database2/statement.h"
+
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 // TODO(aa): Refactor so we don't have to rely on code from database1.
 #include "gears/database/database_utils.h"
+#include "gears/database2/database2_common.h"
+#include "gears/database2/statement.h"
 
 // Open filename as a SQLite database, and setup appropriately for Gears use. 
 // Returns SQLITE_OK in case of success, otherwise returns the error code sqlite
@@ -71,18 +73,151 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
 }
 
 bool Database2Connection::Execute(const std::string16 &statement,
-                                  Database2Values *arguments,
+                                  int num_arguments,
+                                  Database2Variant *arguments,
                                   Database2RowHandlerInterface *row_handler) {
+  assert(row_handler);
   if (!OpenIfNecessary()) return false;
+  int sqlite_status;
 
-  // if (bogus_version_) {
-   // set error code to "version mismatch" (error code 2)
-  // }
-  // prepare
-  // step, for each row, call row_handler->HandleRow(..);
-   // if error, set error code and message, return false;
-  // return true upon success
+  if (bogus_version_) {
+    SetAndHandleError(kDatabaseVersionMismatch, kInvalidStateError, SQLITE_OK);
+    return false;
+  }
+
+  // prepare statement
+  scoped_sqlite3_stmt_ptr stmt;
+  sqlite_status = sqlite3_prepare16_v2(handle_, statement.c_str(), -1, &stmt,
+                                       NULL);
+  if (sqlite_status != SQLITE_OK) {
+    SetAndHandleError(kOtherDatabaseError, kPrepareError, sqlite_status);
+    return false;
+  }
+
+  if (stmt.get() == NULL) {
+    error_message_ = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+
+  // bind arguments
+  for(int i = 0; i < num_arguments; ++i) {
+    int sql_index = i + 1;  // sql parameters are 1-based
+    switch(arguments[i].type) {
+      case JSPARAM_INT: {
+        sqlite_status = sqlite3_bind_int(stmt.get(), sql_index,
+                                         arguments[i].int_value);
+        break;
+      }
+      case JSPARAM_DOUBLE: {
+        sqlite_status = sqlite3_bind_double(stmt.get(), sql_index,
+                                 arguments[i].double_value);
+        break;
+      }
+      case JSPARAM_STRING16: {
+        sqlite_status = sqlite3_bind_text16(
+            stmt.get(), sql_index,
+            arguments[i].string_value->c_str(), -1,
+            SQLITE_STATIC);
+        break;
+      }
+      case JSPARAM_NULL: {
+        sqlite_status = sqlite3_bind_null(stmt.get(), sql_index);
+        break;
+      }
+      default: {
+        // This should never occur, because Database2Variant only handles the
+        // four types above by design.
+        assert(false);
+        return false;
+      }
+    }
+    if (sqlite_status != SQLITE_OK) {
+      SetAndHandleError(kOtherDatabaseError, kBindError, sqlite_status);
+      return false;
+    }
+  }
+
+  // get number of columns
+  int column_count = sqlite3_column_count(stmt.get());
+  scoped_array<std::string16> column_names(new std::string16[column_count]);
+
+  // read column names
+  for(int i = 0; i < column_count; ++i) {
+    const void *column_name = sqlite3_column_name16(stmt.get(), i);
+    column_names[i] = std::string16(static_cast<const char16 *>(column_name));
+  }
+
+  // row_handler takes ownership of the column names
+  row_handler->Init(column_count, column_names.release());
+
+  // read values
+  while(true) {
+    sqlite_status = sqlite3_step(stmt.get());
+    if (sqlite_status == SQLITE_DONE) {
+      break;
+    }
+    if (sqlite_status != SQLITE_ROW) {
+      // an error has occured
+      SetAndHandleError(kOtherDatabaseError, kStepError, sqlite_status);
+      return false;
+    }
+    row_handler->HandleNewRow();
+    for (int i = 0; i < column_count; ++i) {
+      switch(sqlite3_column_type(stmt.get(), i)) {
+        case SQLITE_INTEGER: {
+          row_handler->HandleColumnInt(i, sqlite3_column_int(stmt.get(), i));
+          break;
+        }
+        case SQLITE_FLOAT: {
+          row_handler->HandleColumnDouble(i, 
+                           sqlite3_column_double(stmt.get(), i));
+          break;
+        }
+        case SQLITE_TEXT: {
+          std::string16 value(
+              static_cast<const char16*>(sqlite3_column_text16(stmt.get(), i)));
+          row_handler->HandleColumnString(i, value);
+          break;
+        }
+        case SQLITE_NULL: {
+          row_handler->HandleColumnNull(i);
+          break;
+        }
+        default: {
+          // the only remaining SQLite type would be SQLITE_BLOB, which is not
+          // supported
+          SetAndHandleError(kOtherDatabaseError, kResultSetError, SQLITE_OK);
+          return false;
+        }
+      }
+    }
+  }
+
+  // read last inserted rowid
+  sqlite_int64 rowid = sqlite3_last_insert_rowid(handle_);
+  if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
+    SetAndHandleError(kOtherDatabaseError,
+                      kLastRowIdOutOfRangeError, SQLITE_OK);
+    return false;
+  }
+
+  int rows_affected = sqlite3_changes(handle_);
+
+  row_handler->HandleStats(static_cast<int64>(rowid), rows_affected);
   return true;
+}
+
+void Database2Connection::SetAndHandleError(int error_code,
+                                            const char16 *summary,
+                                            int sqlite_status) {
+  // TODO(dimitri.glazkov): add poisoning in case of corruption
+  error_code_ = error_code;
+  if (sqlite_status == SQLITE_OK) {
+    // not a SQLite error
+    error_message_ = summary;
+    return;
+  }
+  BuildSqliteErrorString(summary, sqlite_status, handle_, &error_message_);
 }
 
 bool Database2Connection::Begin() {
@@ -94,6 +229,69 @@ bool Database2Connection::Begin() {
     // set bogus_version_ flag
   // return true upon success
   return true;
+}
+
+void Database2BufferingRowHandler::Init(int column_count,
+                                        std::string16 *column_names) {
+  assert(column_count >= 0);
+  // at this time, we only support invoking this method on a new instance
+  assert(column_count_ == 0 && rows_.size() == 0);
+  column_count_ = column_count;
+  column_names_.reset(column_names);
+}
+
+void Database2BufferingRowHandler::HandleNewRow() {
+  rows_.push_back(new Database2Variant[column_count_]);
+}
+
+bool Database2BufferingRowHandler::HandleColumnInt(int index, int value) {
+  assert(index >=0 && index < column_count_);
+  assert(rows_.size() > 0);
+  Database2Variant *row = rows_.back();
+  row[index].type = JSPARAM_INT;
+  row[index].int_value = value;
+  return true;
+}
+
+bool Database2BufferingRowHandler::HandleColumnDouble(int index, double value) {
+  assert(index >=0 && index < column_count_);
+  assert(rows_.size() > 0);
+  Database2Variant *row = rows_.back();
+  row[index].type = JSPARAM_DOUBLE;
+  row[index].double_value = value;
+  return true;
+}
+
+bool Database2BufferingRowHandler::HandleColumnString(
+                                       int index,
+                                       const std::string16 &value) {
+  assert(index >=0 && index < column_count_);
+  assert(rows_.size() > 0);
+  Database2Variant *row = rows_.back();
+  row[index].type = JSPARAM_STRING16;
+  row[index].string_value = new std::string16(value);
+  return true;
+}
+
+bool Database2BufferingRowHandler::HandleColumnNull(int index) {
+  assert(index >=0 && index < column_count_);
+  assert(rows_.size() > 0);
+  Database2Variant *row = rows_.back();
+  row[index].type = JSPARAM_NULL;
+  return true;
+}
+
+void Database2BufferingRowHandler::HandleStats(int64 last_insert_rowid,
+                                               int rows_affected) {
+  last_insert_rowid_ = last_insert_rowid;
+  rows_affected_ = rows_affected;
+}
+
+bool Database2BufferingRowHandler::CopyTo(
+                                       Database2RowHandlerInterface *target) {
+  // TODO(dimitri.glazkov): implement copying contents of this instance into
+  // target
+  return false;
 }
 
 void Database2Connection::Rollback() {

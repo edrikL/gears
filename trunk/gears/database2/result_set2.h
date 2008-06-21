@@ -29,14 +29,19 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/string16.h"
+#include "gears/database2/connection.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // interface SQLResultSet
-class Database2ResultSet : public ModuleImplBaseClassVirtual {
+class Database2ResultSet : public ModuleImplBaseClassVirtual,
+                           public Database2RowHandlerInterface,
+                           public JsEventHandlerInterface {
  public:
   ~Database2ResultSet() {}
-  // creates an instance, returns true if successful
-  // TODO(dimitri.glazkov): Add more parameters
+  // Creates an instance, returns true if successful.
   static bool Create(const ModuleImplBaseClass *sibling,
                      scoped_refptr<Database2ResultSet> *instance);
 
@@ -44,15 +49,43 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual {
   void GetInsertId(JsCallContext *context);
   // OUT: int
   void GetRowsAffected(JsCallContext *context);
-  // we return a JS array full of result objects
-  // OUT: SQLResultSetRowList
+  // We return a JS array full of result objects.
+  // OUT: JsArray
   void GetRows(JsCallContext *context);
+
+    // Database2RowHandlerInterface
+  virtual void Init(int column_count, std::string16 *column_names);
+  virtual void HandleNewRow();
+  virtual bool HandleColumnInt(int index, int value);
+  virtual bool HandleColumnDouble(int index, double value);
+  virtual bool HandleColumnString(int index, const std::string16 &value);
+  virtual bool HandleColumnNull(int index);
+  virtual void HandleStats(int64 last_insert_rowid, int rows_affected);
+
+
+  // Handles the unload event, cleans up the callbacks to prevent crashes 
+  // in Firefox.
+  virtual void HandleEvent(JsEventType event_type);
 
  private:
   friend bool CreateModule<Database2ResultSet, Database2ResultSet>(
                   JsRunnerInterface *js_runner,
                   scoped_refptr<Database2ResultSet>* module);
   Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
+
+  int rows_affected_;
+  int64 last_insert_rowid_;
+  int column_count_;
+  scoped_array<std::string16> column_names_;
+  scoped_ptr<JsArray> rows_;
+
+  // keeps track of the current number of rows
+  int row_count_;
+  // current row cursor, points to the current row object in the rows_ array
+  scoped_ptr<JsObject> current_row_;
+
+  // monitors JSEVENT_UNLOAD
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ResultSet);
 };
