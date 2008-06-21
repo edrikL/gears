@@ -69,7 +69,7 @@ void Database2ResultSet::Init(int column_count, std::string16 *column_names) {
 void Database2ResultSet::HandleNewRow() {
   // Array must be initialized when this method is called.
   assert(rows_.get());
-  current_row_.reset(GetJsRunner()->NewObject(NULL));
+  current_row_.reset(GetJsRunner()->NewObject(false));
   rows_->SetElementObject(row_count_, current_row_.get());
   ++row_count_;
 }
