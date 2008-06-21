@@ -271,7 +271,7 @@ void LocalServerPerfTests::AppendResults(std::string16 *results) {
       { STRING16(L"total:               "), &total_stats_ },
     };
 
-  for (int i = 0; i < ARRAYSIZE(stats); ++i) {
+  for (size_t i = 0; i < ARRAYSIZE(stats); ++i) {
     *results += stats[i].label;
     stats[i].stats->AppendResults(results);
   }
