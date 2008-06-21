@@ -40,26 +40,38 @@ void Database2BeginCommand::HandleResults() {
 }
 
 void Database2AsyncExecuteCommand::Execute(bool *has_results) {
-  // conn_->Execute(stmt, this);
-  // if success and no success callback:
-    // tx->ExecuteNextStatement();
-    // *has_results = false;
-    // return
-  // otherwise, delegate to foreground thread (by default)
+  results_.reset(new Database2BufferingRowHandler());
+  SetResult(connection()->Execute(statement_->sql(),
+      statement_->num_arguments(), statement_->arguments(), results_.get()));
+  if (success() && !statement_->HasCallback()) {
+    // execute next statement
+    tx()->ExecuteNextStatement(NULL);
+    *has_results = false;
+  }
 }
 
 void Database2AsyncExecuteCommand::HandleResults() {
   // create JS objects from collected rows
-  // stmt_->InvokeCallback(collected_rows);
+  // create Database2ResultSet
+  // results_.CopyTo(result_set);
+  // stmt_->InvokeCallback(result_set);
   // if statement succeeded and callback failed, queue rollback op
   // else if statement failed and there is no callback, or callback did
   // not return false, queue rollback op
 }
 
 void Database2SyncExecuteCommand::Execute(bool *has_results) {
-  // TODO(dimitri.glazkov): Collect row results
+  // Since this is a sync operation, this method is invoked on the main thread,
+  // thus we can create a Database2ResultSet instance here.
+  if (!Database2ResultSet::Create(tx(), &result_set_)) {
+    // unable to create a result_set
+    context_->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+
+  // Execute statement, using Database2ResultSet as Database2RowHandleInterface.
   bool result = connection()->Execute(statement_->sql(),
-      statement_->arguments(), NULL);
+      statement_->num_arguments(), statement_->arguments(), result_set_.get());
   SetResult(result);
   if (!result) {
     connection()->Rollback();
@@ -70,21 +82,11 @@ void Database2SyncExecuteCommand::Execute(bool *has_results) {
 void Database2SyncExecuteCommand::HandleResults() {
   if (!success()) {
     // throw SQL error as an exception
-    // TODO(dimitri.glazkov): Consider formatting the message to include error
-    // code
     context_->SetException(connection()->error_message());
     return;
   }
 
-  scoped_refptr<Database2ResultSet> result_set;
-  // TODO(dimitri.glazkov): Pass collected row results
-  if (!Database2ResultSet::Create(tx(), &result_set)) {
-    // unable to create a result_set
-    context_->SetException(GET_INTERNAL_ERROR_MESSAGE());
-    return;
-  }
-
-  context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
+  context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set_.get());
 }
 
 void Database2CommitCommand::Execute(bool *has_results) {

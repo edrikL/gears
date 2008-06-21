@@ -26,16 +26,14 @@
 #ifndef GEARS_DATABASE2_STATEMENT_H__
 #define GEARS_DATABASE2_STATEMENT_H__
 
-#include <vector>
-
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/database2/connection.h"
 
 // forward declarations
 class Database2;
 class Database2Transaction;
-class Database2Values;
 
 // represents statement, for both synchronous and asynchronous operations
 class Database2Statement {
@@ -59,75 +57,21 @@ class Database2Statement {
                      JsRootedCallback *error_callback,
                      Database2Statement **instance);
 
-  std::string16 sql() const { return sql_statement_; }
-  Database2Values *arguments() const { return arguments_.get(); }
+  const std::string16 &sql() const { return sql_statement_; }
+  Database2Variant *arguments() const { return arguments_.get(); }
+  int num_arguments() const { return num_arguments_; }
  private:
   Database2Statement() {}
   // if true, the statement has invalid arguments
   bool bogus_;
   std::string16 sql_statement_;
-  scoped_ptr<Database2Values> arguments_;
+  scoped_array<Database2Variant> arguments_;
+  int num_arguments_;
+
   scoped_ptr<JsRootedCallback> callback_;
   scoped_ptr<JsRootedCallback> error_callback_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Statement);
-};
-
-// Used for marshaling statement arguments to the database thread and results to
-// the main thread. A union-based structure is used to store value-type pairs.
-// TODO(dimitri.glazkov): Clean me up
-class Database2Values {
- public:
-  Database2Values() {}
-  ~Database2Values() {
-    // remove all rows
-    for(unsigned int i = 0; i < rows_.size(); i++) {
-      delete[] rows_[i];
-    }
-  }
-
-  static bool CreateFromJsArray(const JsArray *js_array,
-                                Database2Values **instance);
-
-  // methods for reading values
-  int length() const { return length_; }
-  void Reset() { current_row_ = 0; }
-  bool Next();
-  JsParamType GetType(int index) const;
-  bool GetElementAsInt(int index, int *value);
-  bool GetElementAsDouble(int index, double *value);
-  bool GetElementAsString(int index, std::string16 *value);
-
- private:
-  void StartNewRow();
-
-  // used to store value-type pairs
-  struct Variant {
-    Variant() : type(JSPARAM_NULL) {}
-    ~Variant() {
-      if (type == JSPARAM_STRING16) { delete string_value; }
-    }
-
-    JsParamType type;
-    union {
-      int int_value;
-      double double_value;
-      std::string16 *string_value;
-    };
-  };
-
-  inline Variant &current(int index) const {
-    assert(index >= 0 && index < length_);
-    assert(current_row_ < length_);
-    return rows_[current_row_][index];
-  }
-
-  friend class vector;
-  std::vector<Variant*> rows_;
-  int length_;
-  int current_row_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(Database2Values);
 };
 
 #endif // GEARS_DATABASE2_STATEMENT_H__
