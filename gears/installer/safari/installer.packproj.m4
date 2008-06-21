@@ -521,7 +521,7 @@
 							<key>International</key>
 							<dict>
 								<key>MessageKey</key>
-								<string>PRODUCT_FRIENDLY_NAME_UQ requires Safari 3.1.1 or later.</string>
+								<string>PRODUCT_FRIENDLY_NAME_NEW_UQ requires Safari 3.1.1 or later.</string>
 								<key>TitleKey</key>
 								<string>Please Upgrade Safari</string>
 							</dict>
@@ -558,7 +558,7 @@
 						<key>IFPkgDescriptionDescription</key>
 						<string></string>
 						<key>IFPkgDescriptionTitle</key>
-						<string>PRODUCT_FRIENDLY_NAME_UQ</string>
+						<string>PRODUCT_FRIENDLY_NAME_NEW_UQ</string>
 						<key>IFPkgDescriptionVersion</key>
 						<string>PRODUCT_VERSION</string>
 					</dict>
@@ -566,7 +566,7 @@
 				<key>Display Information</key>
 				<dict>
 					<key>CFBundleGetInfoString</key>
-					<string>PRODUCT_FRIENDLY_NAME_UQ Version PRODUCT_VERSION</string>
+					<string>PRODUCT_FRIENDLY_NAME_NEW_UQ Version PRODUCT_VERSION</string>
 					<key>CFBundleIconFile</key>
 					<string></string>
 					<key>CFBundleIconFile Path Type</key>
@@ -574,7 +574,7 @@
 					<key>CFBundleIdentifier</key>
 					<string>com.google.gears.pkg.installer</string>
 					<key>CFBundleName</key>
-					<string>PRODUCT_FRIENDLY_NAME_UQ Installer</string>
+					<string>PRODUCT_FRIENDLY_NAME_NEW_UQ Installer</string>
 					<key>CFBundleShortVersionString</key>
 					<string>PRODUCT_VERSION</string>
 				</dict>
