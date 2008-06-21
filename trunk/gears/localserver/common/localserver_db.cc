@@ -51,6 +51,7 @@
 #include "gears/localserver/common/update_task.h"
 
 const char16 *WebCacheDB::kFilename = STRING16(L"localserver.db");
+const int64 WebCacheDB::kInvalidID = 0;   // SQLITE rowids start at 1
 
 // Name of NameValueTable created to store version and browser information
 const char16 *kSystemInfoTableName = STRING16(L"SystemInfo");
