@@ -71,7 +71,7 @@ class WebCacheDB : SQLTransactionListener {
   static WebCacheDB *GetDB();
 
   static const char16 *kFilename;      // the name of the database file
-  static const int64 kInvalidID = 0;   // SQLITE rowids start at 1
+  static const int64 kInvalidID;
 
   enum ServerType {
     MANAGED_RESOURCE_STORE = 0,
