@@ -39,7 +39,7 @@
 	<key>CFPlugInUnloadFunction</key>
 	<string></string>
 	<key>WebPluginDescription</key>
-	<string>Google Gears for Safari</string>
+	<string>Gears for Safari</string>
 	<key>WebPluginMIMETypes</key>
 	<dict>
 		<key>application/x-googlegears</key>
@@ -47,10 +47,10 @@
       <key>WebPluginExtensions</key>
 			<array/>
 			<key>WebPluginTypeDescription</key>
-			<string>Google Gears</string>
+			<string>Gears</string>
 		</dict>
 	</dict>
 	<key>WebPluginName</key>
-	<string>Google Gears</string>
+	<string>Gears</string>
 </dict>
 </plist>

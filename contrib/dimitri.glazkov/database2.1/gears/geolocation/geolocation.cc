@@ -37,6 +37,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/location_provider_pool.h"
+#include "gears/geolocation/device_data_provider.h"
 #include "third_party/googleurl/src/gurl.h"
 
 // TODO(steveblock): Update default URL when finalized.
@@ -48,6 +49,37 @@ static const char16 *kAddressLanguage = STRING16(L"addressLanguage");
 static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
+
+// Temporarily define DeviceDataProviderBase::DefaultFactoryFunction() here for
+// platforms where the device data provider is not yet implemented.
+// TODO(steveblock): Implement device data providers for remaining platforms.
+#if defined(WINCE)
+// WinCE uses WinceRadioDataProvider.
+#elif (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
+// Win32, Linux and OSX use EmptyDeviceDataProvider<RadioData>.
+#else
+// static
+template<>
+RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
+  assert(false);
+  return NULL;
+}
+#endif
+
+#if defined(WINCE)
+// WinCE uses WinceWifiDataProvider.
+#elif defined(WIN32) && !defined(WINCE)
+// Win32 uses Win32WifiDataProvider.
+#elif defined(LINUX) && !defined(OS_MACOSX)
+// Linux uses LinuxWifiDataProvider.
+#else
+// static
+template<>
+WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+  assert(false);
+  return NULL;
+}
+#endif
 
 // Data structure for use with ThreadMessageQueue.
 struct LocationAvailableMessageData : public MessageData {
@@ -252,15 +284,13 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     watches_[next_watch_id_++] = info;
   }
 
-  // Instruct all providers to get a new position fix.
-  for (ProviderVector::iterator iter = info->providers.begin();
-       iter != info->providers.end();
-       ++iter) {
-    if (!(*iter)->GetCurrentPosition()) {
-      LOG(("GearsGeolocation::GetPositionFix() : Failed to get current "
-           "position.\n"));
-      assert(false);
-      return;
+  // If this is a non-repeating request, hint to all providers that new data is
+  // required ASAP.
+  if (!info->repeats) {
+    for (ProviderVector::iterator iter = info->providers.begin();
+         iter != info->providers.end();
+         ++iter) {
+      (*iter)->UpdatePosition();
     }
   }
 }
@@ -299,14 +329,6 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(
       // TODO(steveblock): Start a timer and call back exactly when the
       // minimum time period has elapsed.
     }
-  }
-  // Instruct the provider to get a new fix. The provider may throttle the
-  // rate of requests.
-  if (!provider->GetCurrentPosition()) {
-    LOG(("GearsGeolocation::LocationUpdateAvailableImpl() : Failed to "
-         "get current position.\n"));
-    assert(false);
-    return;
   }
 }
 
@@ -391,13 +413,9 @@ bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
         STRING16(L"errorMessage"), STRING16(L"Failed to get valid position."));
   }
   JsParamToSend argv[] = { JSPARAM_OBJECT, callback_param.get() };
-  if (!GetJsRunner()->InvokeCallback(fix_info->callback.get(),
-                                     ARRAYSIZE(argv), argv, NULL)) {
-    LOG(("GearsGeolocation::MakeCallback() : Callback to JavaScript "
-         "failed.\n"));
-    assert(false);
-    return false;
-  }
+  // InvokeCallback returns false if the callback enounters an error.
+  GetJsRunner()->InvokeCallback(fix_info->callback.get(),
+                                ARRAYSIZE(argv), argv, NULL);
   fix_info->last_position = last_position_;
   fix_info->last_callback_time = GetCurrentTimeMillis();
   return true;

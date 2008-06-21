@@ -33,6 +33,7 @@
 
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
@@ -53,7 +54,7 @@ BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
   do {                                                                  \
     if (!(test)) {                                                      \
       std::string16 final_message(                                      \
-          STRING16(L"Notifier Test Failed"));       \
+          STRING16(L"Notifier Test Failed"));                           \
       final_message.append(message);                                    \
       LogTestError(final_message);                                      \
     }                                                                   \
@@ -76,7 +77,7 @@ BalloonCollectionMock::~BalloonCollectionMock() {
 }
 
 void BalloonCollectionMock::Show(const GearsNotification &notification) {
-  NotificationId id(notification.service(), notification.id());
+  NotificationId id(notification.security_origin().url(), notification.id());
   TEST_ASSERT(displayed_.find(id) == displayed_.end(),
               STRING16(L"Already showing notification."));
   TEST_ASSERT(show_call_count_ > 0,
@@ -87,7 +88,7 @@ void BalloonCollectionMock::Show(const GearsNotification &notification) {
 }
 
 bool BalloonCollectionMock::Update(const GearsNotification &notification) {
-  NotificationId id(notification.service(), notification.id());
+  NotificationId id(notification.security_origin().url(), notification.id());
   if (displayed_.find(id) == displayed_.end()) {
     return false;
   }
@@ -96,9 +97,9 @@ bool BalloonCollectionMock::Update(const GearsNotification &notification) {
   return true;
 }
 
-bool BalloonCollectionMock::Delete(const std::string16 &service,
+bool BalloonCollectionMock::Delete(const SecurityOrigin &security_origin,
                                    const std::string16 &bare_id) {
-  NotificationId id(service, bare_id);
+  NotificationId id(security_origin.url(), bare_id);
   if (displayed_.find(id) == displayed_.end()) {
     return false;
   }
@@ -162,7 +163,9 @@ void TestNotificationManager() {
 
   // Add a notification when there is no space.
   GearsNotification notification1;
-  notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
+  SecurityOrigin security_origin;
+  security_origin.InitFromUrl(STRING16(L"http://gears.google.com/MyService"));
+  notification1.set_security_origin(security_origin);
   notification1.set_id(STRING16(L"1"));
   manager.Add(notification1);
 
@@ -181,7 +184,8 @@ void TestNotificationManager() {
   activity.set_user_mode(USER_AWAY_MODE);
 
   GearsNotification notification2;
-  notification2.set_service(STRING16(L"http://gears.google.com/MyService"));
+  security_origin.InitFromUrl(STRING16(L"http://gears.google.com/MyService"));
+  notification2.set_security_origin(security_origin);
   notification2.set_id(STRING16(L"2"));
   manager.Add(notification2);
 
@@ -245,7 +249,9 @@ void TestNotificationManagerDelay() {
 
   // Add a notification when there is no space.
   GearsNotification notification1;
-  notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
+  SecurityOrigin security_origin;
+  security_origin.InitFromUrl(STRING16(L"http://gears.google.com/MyService"));
+  notification1.set_security_origin(security_origin);
   notification1.set_id(STRING16(L"1"));
   notification1.set_display_at_time_ms(GetCurrentTimeMillis() + 500);
   manager.Add(notification1);

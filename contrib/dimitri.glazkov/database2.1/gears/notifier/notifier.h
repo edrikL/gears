@@ -31,28 +31,35 @@
 #else
 
 #include "gears/base/common/ipc_message_queue.h"
+#include "gears/notifier/notification_manager.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsNotification;
+class NotificationManager;
+class SecurityOrigin;
 
 class Notifier : public IpcMessageQueue::HandlerInterface {
  public:
   Notifier();
+  virtual ~Notifier();
 
-  bool Initalize();
-  int Run();
-  void Terminate();
+  virtual bool Initialize();
+  virtual int Run() = 0;
+  virtual void Terminate();
 
   // IpcMessageQueue::HandlerInterface interface.
   virtual void HandleIpcMessage(IpcProcessId source_process_id,
                                 int message_type,
                                 const IpcMessageData *message_data);
 
- private:
-  void AddNotification(const GearsNotification *notification);
-  void RemoveNotification(const std::string16 &notification_id);
-
+  void AddNotification(const GearsNotification &notification);
+  void RemoveNotification(const SecurityOrigin &security_origin,
+                          const std::string16 &id);
+ protected:
   bool running_;
 
+ private:
+  scoped_ptr<NotificationManager> notification_manager_;
   DISALLOW_EVIL_CONSTRUCTORS(Notifier);
 };
 

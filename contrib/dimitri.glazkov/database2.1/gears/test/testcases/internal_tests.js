@@ -29,7 +29,7 @@ if (isUsingCCTests) {
 
 function testInternal() {
   if (isUsingCCTests) {
-    internalTests.runTests();
+    internalTests.runTests(google.gears.workerPool ? true : false);
   }
 }
 
@@ -413,6 +413,28 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.timestamp = new Date(42);
     correctPosition.errorMessage = 'test error';
     assertObjectEqual(correctPosition, position);
+  }
+}
+
+function testNotifier() {
+  if (isUsingCCTests && !isOfficial) {
+    internalTests.testNotifier();
+  }
+}
+
+// Tests GearsGeolocation::GetCurrentPosition, using mock radio and WiFi device
+// data providers.
+function testGeolocationGetCurrentPosition() {
+  if (isUsingCCTests && !isOfficial) {
+    internalTests.configureGeolocationForTest();
+    // TODO(steveblock): Complete this test once the Geolocation API is
+    // complete.
+    //var geolocation = google.gears.factory.create('beta.geolocation');
+    //var locationAvailable = function(position) {
+    //  completeAsync();
+    //};
+    //startAsync();
+    //geolocation.getCurrentPosition(locationAvailable);
   }
 }
 

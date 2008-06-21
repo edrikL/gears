@@ -27,7 +27,6 @@ if (isOfficial) {
 // Audio API is not available on official builds yet.
 } else {
   var player = google.gears.factory.create('beta.audio');
-  var recorder = google.gears.factory.create('beta.audiorecorder');
 }
 
 function testDefaultsAndGetterSetters() {

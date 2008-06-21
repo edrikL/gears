@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/connection.h"
+
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"

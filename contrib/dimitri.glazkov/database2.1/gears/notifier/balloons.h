@@ -49,16 +49,18 @@ class BalloonCollectionInterface {
  public:
   virtual ~BalloonCollectionInterface() {}
   // Adds a new balloon for the specified notification. Does not check for
-  // already showing notifications with the same service and id. Asserts if
-  // there is already a notification with the same service/id.
+  // already showing notifications with the same security_origin and id.
+  // Asserts if there is already a notification with the same
+  // security_origin/id.
   virtual void Show(const GearsNotification &notification) = 0;
-  // Updates the existing balloon with notification that matches service and id
-  // of the specified one. In case there is no balloon showing the matching
-  // notification, returns 'false'.
+  // Updates the existing balloon with notification that matches
+  // security_origin and id of the specified one. In case there is no
+  // balloon showing the matching notification, returns 'false'.
   virtual bool Update(const GearsNotification &notification) = 0;
-  // Immediately "expires" any notification with the same service and id from
-  // the screen display. Returns 'false' if there is no such notification.
-  virtual bool Delete(const std::string16 &service,
+  // Immediately "expires" any notification with the same security_origin
+  // and id from the screen display. Returns 'false' if there is no such
+  // notification.
+  virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &id) = 0;
 
   // Is there room to add another notification?
@@ -71,10 +73,13 @@ class Node;
 class RootUI;
 }
 
+class BalloonCollection;
+
 // Represents a Notification on the screen.
 class Balloon {
  public:
-  explicit Balloon(const GearsNotification &from);
+  explicit Balloon(const GearsNotification &from,
+                   BalloonCollection *collection);
   ~Balloon();
 
   const GearsNotification &notification() const {
@@ -85,20 +90,38 @@ class Balloon {
     return &notification_;
   }
 
-  glint::Node *ui_root() {
-    if (!ui_root_) {
-      ui_root_ = CreateTree();
+  glint::Node *root() {
+    if (!root_) {
+      root_ = CreateTree();
     }
-    return ui_root_;
+    return root_;
   }
 
+  bool InitializeUI(glint::Node *container);
   void UpdateUI();
+  bool InitiateClose(bool user_initiated);
+  void OnAnimationCompleted();
+  void OnMouseOut();
+  void OnMouseIn();
 
  private:
+  enum BalloonState {
+    OPENING_BALLOON,
+    SHOWING_BALLOON,
+    AUTO_CLOSING_BALLOON,
+    USER_CLOSING_BALLOON,
+    RESTORING_BALLOON,
+  };
+
   glint::Node *CreateTree();
   bool SetTextField(const char *id, const std::string16 &text);
+  static void OnCloseButton(const std::string &button_id, void *user_info);
+  static bool SetAlphaTransition(glint::Node *node, double transition_duration);
+
   GearsNotification notification_;
-  glint::Node *ui_root_;
+  glint::Node *root_;
+  BalloonCollection *collection_;
+  BalloonState state_;
   DISALLOW_EVIL_CONSTRUCTORS(Balloon);
 };
 
@@ -112,21 +135,41 @@ class BalloonCollection : public BalloonCollectionInterface {
   // BalloonCollectionInterface overrides
   virtual void Show(const GearsNotification &notification);
   virtual bool Update(const GearsNotification &notification);
-  virtual bool Delete(const std::string16 &service, const std::string16 &id);
+  virtual bool Delete(const SecurityOrigin &security_origin,
+                      const std::string16 &id);
   virtual bool has_space() { return has_space_; }
+
+  // Adds and removes the balloons to this collection (to both internal
+  // list and UI tree).
+  bool AddToUI(Balloon *balloon);
+  bool RemoveFromUI(Balloon *balloon);
+
+  // Suspends expiration of the balloons.
+  void SuspendExpirationTimer();
+  // Restores expiration of the balloons.
+  void RestoreExpirationTimer();
+  // Resets expiration timer - done on changes in balloon set to allow
+  // user to observe new state of the notification stack.
+  void ResetExpirationTimer();
+  // If true, the balloons do not expire and disappear but stay on screen.
+  bool expiration_suspended() {
+    return expiration_suspended_counter_ > 0;
+  }
+  void OnTimer(double current_time);
 
  private:
   void Clear();  // clears balloons_
-  Balloon *FindBalloon(const std::string16 &service,
+  Balloon *FindBalloon(const SecurityOrigin &security_origin,
                        const std::string16 &id,
                        bool and_remove);
-  void AddToUI(Balloon *balloon);
-  void RemoveFromUI(Balloon *balloon);
   void EnsureRoot();
 
   Balloons balloons_;
   BalloonCollectionObserver *observer_;
   glint::RootUI *root_ui_;
+  int expiration_suspended_counter_;
+  double last_time_;
+  double elapsed_time_;
   bool has_space_;
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollection);
 };

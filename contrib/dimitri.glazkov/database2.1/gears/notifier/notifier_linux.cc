@@ -32,7 +32,30 @@ int main(int argc, char *argv[]) {
 #else
 #include "gears/notifier/notifier.h"
 
-int Notifier::Run() {
+class LinuxNotifier : public Notifier {
+ public:
+  LinuxNotifier();
+  virtual bool Initialize();
+  virtual int Run();
+  virtual void Terminate();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(LinuxNotifier);
+};
+
+LinuxNotifier::LinuxNotifier() {
+}
+
+bool LinuxNotifier::Initialize() {
+  return Notifier::Initialize();
+}
+
+void LinuxNotifier::Terminate() {
+  return Notifier::Terminate();
+}
+
+int LinuxNotifier::Run() {
+  running_ = true;
   while (running_) {
     sched_yield();
   }
@@ -41,10 +64,10 @@ int Notifier::Run() {
 
 int main(int argc, char *argv[]) {
   LOG(("Gears Notifier started.\n"));
-  Notifier notifier;
+  LinuxNotifier notifier;
 
   int retval = -1;
-  if (notifier.Initalize()) {
+  if (notifier.Initialize()) {
     retval = notifier.Run();
     notifier.Terminate();
   }

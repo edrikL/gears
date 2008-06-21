@@ -41,6 +41,15 @@ endif
 ifeq ($(USING_ZLIB),)
   USING_ZLIB = 1
 endif
+ifeq ($(USING_PORTAUDIO),)
+  USING_PORTAUDIO = 1
+endif
+ifeq ($(USING_LIBSPEEX),)
+  USING_LIBSPEEX = 1
+endif
+ifeq ($(USING_LIBTREMOR),)
+  USING_LIBTREMOR = 1
+endif
 
 # Make-ish way of saying: if (browser == SF || browser == NPAPI)
 ifneq ($(findstring $(BROWSER), SF|NPAPI),)
@@ -187,10 +196,10 @@ ifeq ($(USING_LIBGD),1)
 CPPFLAGS += -I../third_party/libgd
 endif
 
-# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
-# PortAudio assumes it is in the include path
-CPPFLAGS += -I../third_party/portaudio/src/common -I../third_party/portaudio/include
+PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/common -I../third_party/portaudio/include
+LIBSPEEX_CFLAGS += -I../third_party/speex/include
+LIBSPEEX_CFLAGS += -DFIXED_POINT -DDISABLE_FLOAT_API -DHAVE_CONFIG_H
+LIBTREMOR_CFLAGS += -I../third_party/tremor/include -I../third_party/tremor/lib
 
 # Common items, like notifier, is not related to any browser.
 COMMON_CPPFLAGS += -DBROWSER_NONE=1
@@ -210,18 +219,19 @@ LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
-# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
-# PortAudio assumes it is in the include path
-CPPFLAGS += -I../third_party/portaudio/src/os/unix
+
+PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the OSS hostapi for linux
-CPPFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
-# TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
+PORTAUDIO_CFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
 # for PortAudio: disable some warnings
-THIRD_PARTY_CFLAGS += -Wno-unused-variable
-# for PortAudio: enable multithreading support with pthread library
-THIRD_PARTY_CFLAGS += -pthread
+PORTAUDIO_CFLAGS += -Wno-unused-variable
+# for PortAudio: enable multithreading support with pthread library 
+PORTAUDIO_CFLAGS += -pthread
+
+# for Speex:
+LIBSPEEX_CFLAGS += -Wno-unused-variable
+# for Tremor:
+LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
 
 # all the GTK headers using includes relative to this directory
 GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include
@@ -236,7 +246,7 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
-SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -pthread
 
 MKDLL = g++
 DLL_PREFIX = lib
@@ -248,7 +258,7 @@ DLLFLAGS += -lpthread -lm
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS)  `pkg-config --libs gtk+-2.0`
+EXEFLAGS = $(SHARED_LINKFLAGS)
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
@@ -293,6 +303,10 @@ else
 CPPFLAGS += -DLINUX
 endif
 
+# Needed for the Safari package installer.
+M4FLAGS += -DGEARS_ENABLER_PATH='$(PWD)/$(SF_INPUTMANAGER_BUNDLE)' -DGEARS_PLUGIN_PATH="$(PWD)/$(SF_PLUGIN_BUNDLE)"
+M4FLAGS += -DGEARS_INSTALLER_OUT_DIR='$(PWD)/$(INSTALLERS_OUTDIR)/Safari'
+
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 
 # JS_THREADSAFE *MUST* be kept in sync wuith $(BROWSER)_CPPFLAGS.
@@ -311,17 +325,21 @@ SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
-# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
+
+PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the CoreAudio hostapi for osx
-CPPFLAGS += -DPA_USE_COREAUDIO
-# TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
+PORTAUDIO_CFLAGS += -DPA_USE_COREAUDIO
 # for PortAudio: disable some warnings
-THIRD_PARTY_CFLAGS += -Wno-unused-variable -Wno-uninitialized
-# for PortAudio: enable multithreading support with pthread library
-# gcc/g++ for OSX doesn't seem to know this flag
-#THIRD_PARTY_CFLAGS += -pthread
+PORTAUDIO_CFLAGS += -Wno-unused-variable -Wno-uninitialized 
+
+# for Ogg:
+LIBOGG_CFLAGS += -D__MACOSX__
+
+# for Speex:
+LIBSPEEX_CFLAGS += -Wno-unused-variable
+
+# for Tremor:
+LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
 
 # COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
 COMMON_CPPFLAGS += -fvisibility=hidden
@@ -355,16 +373,18 @@ DLL_SUFFIX = .dylib
 DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
 ifeq ($(BROWSER),SF)
 DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
+DLLFLAGS += -Ltools/osx -lleopard_support
 else
 DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
-# for PortAudio: need pthread and math
-DLLFLAGS += -lpthread -lm
+# for PortAudio: need CoreAudio, AudioToolbox, AudioUnit, Carbon frameworks
+DLLFLAGS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
 
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
+EXEFLAGS += $(SHARED_LINKFLAGS) -framework Carbon -framework CoreServices
+EXEFLAGS += -framework Cocoa -mmacosx-version-min=10.4
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
@@ -385,6 +405,17 @@ FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 # Append differences here:
 FF2_LIBS +=  -lxpcom_core
 FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
+
+# Iceberg command line tool.
+ICEBERG = /usr/local/bin/freeze
+
+# Iceberg may not be present. Record whether it exists, so we can skip targets
+# that need it.
+ifeq ($(wildcard $(ICEBERG)),)
+else
+HAVE_ICEBERG = 1
+endif
+
 endif
 
 ######################################################################
@@ -409,12 +440,11 @@ CPPFLAGS_dbg = -D_DEBUG=1
 CPPFLAGS_opt =
 CPPFLAGS += /nologo -DSTRICT -D_UNICODE -DUNICODE -D_USRDLL -DWIN32 -D_WINDLL \
             -D_CRT_SECURE_NO_DEPRECATE -DNOMINMAX
-# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
-# we figure out the argument ordering bug.
+
 # PortAudio assumes it is in the include path
-CPPFLAGS += -I../third_party/portaudio/src/os/win
+PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/win
 # for PortAudio: build only the MME hostapi for win32/wince
-CPPFLAGS += -DPA_NO_DS -DPA_NO_ASIO
+PORTAUDIO_CFLAGS += -DPA_NO_DS -DPA_NO_ASIO
 
 ifeq ($(OS),win32)
 # We require APPVER=5.0 for things like HWND_MESSAGE.
@@ -468,10 +498,22 @@ SQLITE_CFLAGS += /wd4146
 endif
 
 THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
-# for PortAudio:
+# for PortAudio: 
 #   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'
 #   warning C4101: 'identifier' : unreferenced local variable
-THIRD_PARTY_CPPFLAGS += /wd4133 /wd4101
+PORTAUDIO_CFLAGS += /wd4133 /wd4101
+
+# for Speex:
+LIBSPEEX_CFLAGS += -I../third_party/speex/win32
+#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
+#   warning C4305: truncation from 'type1' to 'type2'
+LIBSPEEX_CFLAGS += /wd4244 /wd4305
+
+# for Tremor:
+#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
+#   warning C4305: truncation from 'type1' to 'type2'
+#   warning C4005: macro redefinition
+LIBTREMOR_CFLAGS += /wd4244 /wd4305 /wd4005
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
 COMPILE_FLAGS_opt = /MT  /Zi /Zc:wchar_t- /O2
@@ -540,7 +582,6 @@ EXE_PREFIX =
 EXE_SUFFIX = .exe
 # Note: cannot use *F because that only works when the rule uses patterns.
 EXEFLAGS = $(SHARED_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
-NOTIFIER_EXEFLAGS = /SUBSYSTEM:WINDOWS
 
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
@@ -591,12 +632,20 @@ endif
 # Add USING_CCTESTS in debug builds and non-official opt builds.
 # This adds the GearsTest object (gears/cctest), which can be
 # used to access a perf timer and run the C++ unit tests.
+# It also adds notifier_test to run tests for the notifier
+# application.
+USING_CCTESTS = 0
 ifeq ($(MODE),dbg)
-CPPFLAGS += -DUSING_CCTESTS=1
+USING_CCTESTS = 1
 else
 ifneq ($(OFFICIAL_BUILD),1)
-CPPFLAGS += -DUSING_CCTESTS=1
+USING_CCTESTS = 1
 endif
+endif
+
+ifeq ($(USING_CCTESTS),1)
+CPPFLAGS += -DUSING_CCTESTS=1
+M4FLAGS  += -DUSING_CCTESTS=1
 endif
 
 # Additional values needed for M4 preprocessing
@@ -629,7 +678,28 @@ M4FLAGS  += -DI18N_LANGUAGES="($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS)))
 # "UQ" means "un-quoted".
 # IMPORTANT: these values affect most visible names, but there are exceptions.
 # If you change a name below, also search the code for "[naming]"
+
+# We temporarily change the name only when compiling for Safari, because
+# changing it for other platforms would break a bunch of stuff (win32 
+# intaller, location of data directory, etc.)
+# TODO(playmobil): Change this globally to 'Gears', once surrounding issues
+#  have been resolved.
+FRIENDLY_NAME_NEW=Gears
 FRIENDLY_NAME=Google Gears
 SHORT_NAME=gears
+
+# TODO(playmobil): Remove along with the above, need to grep for
+# DPRODUCT_FRIENDLY_NAME_NEW_UQ and change all instances to 
+# PRODUCT_FRIENDLY_NAME_UQ
+# We need this because when building the installer, BROWSER isn't
+# defined.
+ifeq ($(OS),osx)
+M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_NEW_UQ="$(FRIENDLY_NAME_NEW)"
+endif
+
+ifeq ($(BROWSER),SF)
+M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME_NEW)"
+else
 M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME)"
+endif
 M4FLAGS  += -DPRODUCT_SHORT_NAME_UQ="$(SHORT_NAME)"

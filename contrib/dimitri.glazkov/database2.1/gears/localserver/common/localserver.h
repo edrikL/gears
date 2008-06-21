@@ -67,19 +67,19 @@ class LocalServer {
   }
 
   // Returns a copy of the SecurityOrigin that was passed into Init
-  const SecurityOrigin &GetSecurityOrigin() {
+  const SecurityOrigin &GetSecurityOrigin() const {
     assert(is_initialized_);
     return security_origin_;
   }
 
   // Returns the name passed into Init
-  const char16* GetName() {
+  const char16* GetName() const {
     assert(is_initialized_);
     return name_.c_str();
   }
 
   // Returns the required_cookie passed into Init
-  const char16* GetRequiredCookie() {
+  const char16* GetRequiredCookie() const  {
     assert(is_initialized_);
     return required_cookie_.c_str();
   }

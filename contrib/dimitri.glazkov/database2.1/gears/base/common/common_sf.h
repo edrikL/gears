@@ -104,6 +104,9 @@ void *InitAutoReleasePool();
 // Destroys an autoreleas pool, passing in NULL is legal and is a no-op.
 void DestroyAutoReleasePool(void *pool);
 
+// Check system version.
+bool IsLeopardOrGreater();
+
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.

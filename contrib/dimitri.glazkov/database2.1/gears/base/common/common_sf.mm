@@ -110,3 +110,24 @@ void DestroyAutoReleasePool(void *pool) {
   assert(pool);
   [(NSAutoreleasePool *)pool release];
 }
+
+//------------------------------------------------------------------------------
+// Returns 0 if there was an error.
+// Otherwise output is as returned from gestaltSystemVersion.
+static SInt32 SystemVersion() {
+  static SInt32 os_version = 0;
+  if (os_version) return os_version;
+  
+  if (Gestalt(gestaltSystemVersion, &os_version) == noErr) {
+    // Do nothing if an error occured.
+  }
+  
+  return os_version;
+}
+
+//------------------------------------------------------------------------------
+bool IsLeopardOrGreater() {
+  // We only support Leopard >= 10.5.3.
+  return SystemVersion() >= 0x1053; // 10.5.3
+}
+

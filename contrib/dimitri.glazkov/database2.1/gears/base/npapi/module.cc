@@ -43,6 +43,9 @@
 #include "gears/base/common/common_sf.h"
 #endif
 #include "gears/base/common/thread_locals.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/safari/npapi_patches.h" 
+#endif
 #include "gears/base/npapi/module.h"
 
 #ifndef HIBYTE
@@ -97,7 +100,13 @@ void ShutdownThreadMessageQueue();
 
 // Store the browser functions in thread local storage to avoid calling the
 // functions on a different thread.
+#ifdef BROWSER_WEBKIT
+// Work around a bug in the WebKit NPAPI headers, see 
+// gears/base/safari/npapi_patches.h for details.
+static GearsNPNetscapeFuncs g_browser_funcs;
+#else
 static NPNetscapeFuncs g_browser_funcs;
+#endif
 const std::string kNPNFuncsKey("base:NPNetscapeFuncs");
 
 NPError STDCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
@@ -158,7 +167,12 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
   if (funcs->size < sizeof(NPNetscapeFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
+#ifdef BROWSER_WEBKIT
+  assert(funcs->size >= sizeof(g_browser_funcs));
+  g_browser_funcs = *(GearsNPNetscapeFuncs *)funcs;
+#else
   g_browser_funcs = *funcs;
+#endif
 
 // NPN_SetException is buggy in WebKit, see 
 // http://bugs.webkit.org/show_bug.cgi?id=16829

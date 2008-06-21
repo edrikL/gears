@@ -37,9 +37,19 @@
 
 - (id)initFromBlob:(BlobInterface *)blob {
   self = [super init];
-  if (self != nil) {
+  if (self) {
     blob->Ref();
     blob_ = blob;
+
+    [self setDelegate:self];
+
+    // We use a dummy input stream to handle all the various undocumented
+    // messages the system sends to an input stream.
+
+    // Contrary to documentation, inputStreamWithData neither copies nor
+    // retains the data in Mac OS X 10.4, so we must retain it.
+    dummy_data_ = [[NSData alloc] initWithBytes:"x" length:1];
+    dummy_stream_ = [[NSInputStream alloc] initWithData:dummy_data_];
   }
   return self;
 }
@@ -48,6 +58,8 @@
   if (blob_) {
     blob_->Unref();
   }
+  [dummy_stream_ release];
+  [dummy_data_ release];
   [super dealloc];
 }
 
@@ -60,6 +72,13 @@
   }
   blob_ = blob;
   offset_ = 0;
+
+  // Create a new dummy stream, in case the old one is in the fully-read state.
+  if (!dummy_data_) {
+    dummy_data_ = [[NSData alloc] initWithBytes:"x" length:1];
+  }
+  [dummy_stream_ release];
+  dummy_stream_ = [[NSInputStream alloc] initWithData:dummy_data_];
 }
 
 #pragma mark NSInputStream function overrides.
@@ -68,7 +87,6 @@
 //------------------------------------------------------------------------------
 
 - (NSInteger)read:(uint8_t *)buffer maxLength:(NSUInteger)len {
-  assert(blob_ != NULL);
   if (blob_ == NULL) {
     return 0;
   }
@@ -80,6 +98,12 @@
   // Confirm that BlobInterface::Read returned <= bytes requested
   assert(numBytesRead <= static_cast<int64>(len));
   offset_ += numBytesRead;
+  if (numBytesRead == 0) {
+    // We are at the end our our stream, so we read all of the data on our
+    // dummy input stream to make sure it is in the "fully read" state.
+    uint8_t buffer[2];
+    (void) [dummy_stream_ read:buffer maxLength:sizeof(buffer)];
+  }
   return static_cast<NSInteger>(numBytesRead);
 }
 
@@ -99,6 +123,80 @@
     return NO;
   }
   return YES;
+}
+
+#pragma mark -
+// Pass other expected messages on to the dummy input stream.
+
+- (void)open {
+  [dummy_stream_ open];
+}
+
+- (void)close {
+  [dummy_stream_ close];
+}
+
+- (void)stream:(NSStream *)theStream handleEvent:(NSStreamEvent)streamEvent {
+  if (delegate_ != self) {
+    [delegate_ stream:self handleEvent:streamEvent];
+  }
+}
+
+- (id)delegate {
+  return delegate_;
+}
+
+- (void)setDelegate:(id)delegate {
+  if (delegate == nil) {
+    delegate_ = self;
+    [dummy_stream_ setDelegate:nil];
+  } else {
+    delegate_ = delegate;
+    [dummy_stream_ setDelegate:self];
+  }
+}
+
+- (id)propertyForKey:(NSString *)key {
+  return [dummy_stream_ propertyForKey:key];
+}
+
+- (BOOL)setProperty:(id)property forKey:(NSString *)key {
+  return [dummy_stream_ setProperty:property forKey:key];
+}
+
+- (void)scheduleInRunLoop:(NSRunLoop *)aRunLoop forMode:(NSString *)mode {
+  [dummy_stream_ scheduleInRunLoop:aRunLoop forMode:mode];
+}
+
+- (void)removeFromRunLoop:(NSRunLoop *)aRunLoop forMode:(NSString *)mode {
+  [dummy_stream_ removeFromRunLoop:aRunLoop forMode:mode];
+}
+
+- (NSStreamStatus)streamStatus {
+  return [dummy_stream_ streamStatus];
+}
+- (NSError *)streamError {
+  return [dummy_stream_ streamError];
+}
+
+#pragma mark -
+
+// We'll forward all unexpected messages to our dummy stream
+
++ (NSMethodSignature*)methodSignatureForSelector:(SEL)selector {
+  return [NSInputStream methodSignatureForSelector:selector];
+}
+
++ (void)forwardInvocation:(NSInvocation*)invocation {
+  [invocation invokeWithTarget:[NSInputStream class]];
+}
+
+- (NSMethodSignature*)methodSignatureForSelector:(SEL)selector {
+  return [dummy_stream_ methodSignatureForSelector:selector];
+}
+
+- (void)forwardInvocation:(NSInvocation*)invocation {
+  [invocation invokeWithTarget:dummy_stream_];
 }
 
 @end

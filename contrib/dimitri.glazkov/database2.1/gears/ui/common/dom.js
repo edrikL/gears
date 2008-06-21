@@ -43,6 +43,30 @@ dom.getElementById = function(id) {
 };
 
 /**
+ * Gets the position and dimensions of an element in pixels in relation
+ * to the window origin.
+ */
+dom.getPosition = function(elem) {
+  var ret = { 'left'   : 0,
+              'top'    : 0,
+              'width'  : elem.width,
+              'height' : elem.height };
+  
+  if (!elem.offsetParent) return ret;
+  
+  var left = 0;
+  var top = 0;
+  while (elem) {
+    left += elem.offsetLeft;
+    top += elem.offsetTop;
+    elem = elem.offsetParent
+  }
+  ret.left = left;
+  ret.top = top;
+  return ret;
+};
+
+/**
  * Returns the height of the inside of the window.
  */
 dom.getWindowInnerHeight = function() {
@@ -124,7 +148,7 @@ dom.removeClass = function(elm, className) {
 };
 
 /**
- * Gets the text (non-html) content of the element.
+ * Gets the text (non-html) content of an element.
  */
 dom.getTextContent = function(elm) {
   if (isDefined(typeof elm.textContent)) {
@@ -133,5 +157,18 @@ dom.getTextContent = function(elm) {
     return elm.innerText;
   } else {
     throw new Error("Could not find a property to get text content.");
+  }
+};
+
+/**
+ * Sets the text (non-html) contents of an element.
+ */
+dom.setTextContent = function(elm, text) {
+  if (isDefined(typeof elm.textContent)) {
+    elm.textContent = text;
+  } else if (isDefined(typeof elm.innerText)) {
+    elm.innerText = text;
+  } else {
+    throw new Error("Could not find a property to set text content.");
   }
 };

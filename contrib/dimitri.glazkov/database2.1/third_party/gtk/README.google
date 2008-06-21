@@ -17,7 +17,10 @@ Packages retrieved:
   dependencies/cairo-1.0.2.tar.gz
 
 Local Modifications:
-  Only header files extracted. Firefox requires GTK+ 2 therefore the library
-  will be on the system. GTK has only been used with Firefox thus far. If
-  you need to use it with another browser you will have to consider the
-  dependency upon the GTK+ 2 binaries (shared library).
+  Header files were extracted for use in Firefox. Firefox requires GTK+ 2
+  therefore the library will be on the system.
+
+  The library for GTK+ 2 was made for use by notifer_test and notifier
+  daemon. The code downloaded from the above site was build on Ubuntu 6.06.
+  The resulting library "libgtk-x11-2.0.so" was copied from
+  gtk+-2.8.20/gtk/.libs to linux/lib.

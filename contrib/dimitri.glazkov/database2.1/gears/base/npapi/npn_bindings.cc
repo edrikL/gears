@@ -42,6 +42,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/module.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/safari/npapi_patches.h" 
+#endif
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
@@ -359,9 +362,10 @@ bool NPN_Enumerate(NPP npp, NPObject *obj, NPIdentifier **identifier,
                    uint32_t *count)
 {
 #ifdef BROWSER_WEBKIT
-  // TODO(playmobil): enable when the headers are fixed.
-  assert(false);
-  return false;
+  // See gears/base/safari/npapi_patches.h for details.
+  const NPNetscapeFuncs &tmp = GetNPNFuncs();
+  const GearsNPNetscapeFuncs *funcs = (const GearsNPNetscapeFuncs *)&tmp;
+  return funcs->enumerate(npp, obj, identifier, count);
 #else
   return GetNPNFuncs().enumerate(npp, obj, identifier, count);
 #endif

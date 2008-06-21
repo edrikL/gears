@@ -51,8 +51,7 @@
 #include "gears/localserver/common/update_task.h"
 
 const char16 *WebCacheDB::kFilename = STRING16(L"localserver.db");
-
-// TODO(michaeln): indexes and enforce constraints
+const int64 WebCacheDB::kInvalidID = 0;   // SQLITE rowids start at 1
 
 // Name of NameValueTable created to store version and browser information
 const char16 *kSystemInfoTableName = STRING16(L"SystemInfo");
@@ -67,6 +66,14 @@ const char *kResponseBodiesTable = "ResponseBodies";
 // Key used to store cache instances in ThreadLocals
 const std::string kThreadLocalKey("localserver:db");
 
+// TODO(michaeln): VS2005 for windows has redefined ARRAYSIZE in a
+// fashion that is not equivalent with the macro we use elsewhere.
+// Specifically, MS's macro doesn't work well with anonymous types.
+// Switch common.h to use the simple macro and change usages throughout
+// our project.
+#define SIMPLEARRAYSIZE(a) \
+  ((sizeof(a) / sizeof(*(a))) / \
+   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
 static const struct {
     const char *table_name;
@@ -115,7 +122,45 @@ static const struct {
         " Data BLOB)" }    // discrete files, otherwise as blobs in the DB
     };
 
-static const int kWebCacheTableCount = ARRAYSIZE(kWebCacheTables);
+static const int kWebCacheTableCount = SIMPLEARRAYSIZE(kWebCacheTables);
+
+static const struct {
+    const char *index_name;
+    const char *table_name;
+    const char *columns;
+    bool unique;
+} kWebCacheIndexes[] =
+    {
+      { "ServersOriginIndex",
+        kServersTable,
+        "(SecurityOriginUrl,"
+        " Name,"
+        " RequiredCookie,"
+        " ServerType)",
+        true },
+
+      { "VersionsServerIndex",
+        kVersionsTable,
+        "(ServerID)",
+        false },
+
+      { "EntriesUrlIndex",
+        kEntriesTable,
+        "(Url)",
+        false },
+
+      { "EntriesVersionIndex",
+        kEntriesTable,
+        "(VersionID)",
+        false },
+
+      { "EntriesPayloadIndex",
+        kEntriesTable,
+        "(PayloadID)",
+        false }
+    };
+
+static const int kWebCacheIndexCount = SIMPLEARRAYSIZE(kWebCacheIndexes);
 
 /* Schema version history
 
@@ -142,6 +187,7 @@ static const int kWebCacheTableCount = ARRAYSIZE(kWebCacheTables);
               PERMISSION_ALLOWED, the DB should not contain anything for that
               origin. The version was bumped to trigger an upgrade script which
               removes existing data that should not be there.
+  version 12: Added indexes
 */
 
 // The names of values stored in the system_info table
@@ -149,7 +195,7 @@ static const char16 *kSchemaVersionName = STRING16(L"version");
 static const char16 *kSchemaBrowserName = STRING16(L"browser");
 
 // The values stored in the system_info table
-const int kCurrentVersion = 11;
+const int kCurrentVersion = 12;
 #if BROWSER_IE
 static const char16 *kCurrentBrowser = STRING16(L"ie");
 #elif BROWSER_FF
@@ -283,6 +329,13 @@ bool WebCacheDB::CreateOrUpgradeDatabase() {
           return false;
         }
         // fallthru...
+      case 11:
+        if (!UpgradeFrom11To12()) {
+          LOG(("WebCache: UpgradeFrom11To12 failed\n"));
+          db_.Close();
+          return false;
+        }
+        // fallthru...
 
       // additional upgrades here...
     }
@@ -368,20 +421,72 @@ bool WebCacheDB::CreateDatabase() {
 //------------------------------------------------------------------------------
 bool WebCacheDB::CreateTables() {
   ASSERT_SINGLE_THREAD();
+  // TODO(michaeln):  assert(db_.IsInTransaction());
 
   if (!system_info_table_.MaybeCreateTable()) {
     return false;
   }
 
-  int rv = SQLITE_OK;
   for (int i = 0; i < kWebCacheTableCount; ++i) {
     std::string sql("CREATE TABLE ");
     sql += kWebCacheTables[i].table_name;
     sql += kWebCacheTables[i].columns;
-    rv |= db_.Execute(sql.c_str());
+    if (db_.Execute(sql.c_str()) != SQLITE_OK) {
+      return false;
+    }
   }
-  return (rv == SQLITE_OK);
+
+  return CreateIndexes();
 }
+
+
+bool WebCacheDB::CreateIndexes() {
+  ASSERT_SINGLE_THREAD();
+
+  SQLTransaction transaction(&db_, "CreateIndexes");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  for (int i = 0; i < kWebCacheIndexCount; ++i) {
+    std::string sql;
+    if (kWebCacheIndexes[i].unique)
+      sql += "CREATE UNIQUE INDEX ";
+    else
+      sql += "CREATE INDEX ";
+    sql += kWebCacheIndexes[i].index_name;
+    sql += " ON ";
+    sql += kWebCacheIndexes[i].table_name;
+    sql += kWebCacheIndexes[i].columns;
+    if (db_.Execute(sql.c_str()) != SQLITE_OK) {
+      return false;
+    }
+  }
+
+  return transaction.Commit();
+}
+
+#ifdef USING_CCTESTS
+bool WebCacheDB::DropIndexes() {
+  ASSERT_SINGLE_THREAD();
+
+  SQLTransaction transaction(&db_, "DropIndexes");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  for (int i = 0; i < kWebCacheIndexCount; ++i) {
+    std::string sql;
+    sql += "DROP INDEX IF EXISTS ";
+    sql += kWebCacheIndexes[i].index_name;
+    if (db_.Execute(sql.c_str()) != SQLITE_OK) {
+      return false;
+    }
+  }
+
+  return transaction.Commit();
+}
+#endif
 
 /*
 Sample upgrade function
@@ -405,8 +510,9 @@ bool WebCacheDB::UpgradeFromXToY() {
 //------------------------------------------------------------------------------
 bool WebCacheDB::UpgradeFrom10To11() {
   SQLTransaction transaction(&db_, "UpgradeFrom10To11");
-  if (!transaction.Begin())
+  if (!transaction.Begin()) {
     return false;
+  }
 
   // NOTE: This upgrade depends on aspects of the current WebCacheDB impl
   // being compatible with the version 10/11 schema. Specifically, the
@@ -466,15 +572,41 @@ bool WebCacheDB::UpgradeFrom10To11() {
 }
 
 //------------------------------------------------------------------------------
+// UpgradeFrom11To12
+//------------------------------------------------------------------------------
+bool WebCacheDB::UpgradeFrom11To12() {
+  const char *kUpgradeCommands[] = {
+      "CREATE UNIQUE INDEX ServersOriginIndex ON "
+          "Servers (SecurityOriginUrl,"
+                   "Name,"
+                   "RequiredCookie,"
+                   "ServerType)",
+      "CREATE INDEX VersionsServerIndex ON "
+          "Versions (ServerID)",
+      "CREATE INDEX EntriesUrlIndex ON "
+          "Entries (Url)",
+      "CREATE INDEX EntriesVersionIndex ON "
+          "Entries (VersionID)",
+      "CREATE INDEX EntriesPayloadIndex ON "
+          "Entries (PayloadID)",
+      "UPDATE SystemInfo SET value=12 WHERE name='version'"
+  };
+  const int kUpgradeCommandsCount = ARRAYSIZE(kUpgradeCommands);
+  return ExecuteSqlCommands(kUpgradeCommands, kUpgradeCommandsCount);
+}
+
+//------------------------------------------------------------------------------
 // ExecuteSqlCommandsInTransaction
 //------------------------------------------------------------------------------
 bool WebCacheDB::ExecuteSqlCommandsInTransaction(const char *commands[],
                                                  int count) {
   SQLTransaction transaction(&db_, "ExecuteSqlCommandsInTransaction");
-  if (!transaction.Begin())
+  if (!transaction.Begin()) {
     return false;
-  if (!ExecuteSqlCommands(commands, count))
+  }
+  if (!ExecuteSqlCommands(commands, count)) {
     return false;
+  }
   return transaction.Commit();
 }
 
@@ -502,7 +634,7 @@ bool WebCacheDB::CanService(const char16 *url, BrowsingContext *context) {
   // TODO(aa): Clean up this hook at some point. Use gears:// scheme? Other
   // options?
   return ServiceGearsInspectorUrl(url, NULL) ||  // Hook for Gears inspector
-         Service(url, context, &payload_id, &redirect_url);
+         ServiceImpl(url, context, &payload_id, &redirect_url);
 }
 
 
@@ -523,7 +655,7 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
 
   int64 payload_id = kInvalidID;
   std::string16 redirect_url;
-  if (!Service(url, context, &payload_id, &redirect_url)) {
+  if (!ServiceImpl(url, context, &payload_id, &redirect_url)) {
     return false;
   }
 
@@ -542,12 +674,12 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
 
 
 //------------------------------------------------------------------------------
-// Service
+// ServiceImpl
 //------------------------------------------------------------------------------
-bool WebCacheDB::Service(const char16 *url,
-                         BrowsingContext *context,
-                         int64 *payload_id_out,
-                         std::string16 *redirect_url_out) {
+bool WebCacheDB::ServiceImpl(const char16 *url,
+                             BrowsingContext *context,
+                             int64 *payload_id_out,
+                             std::string16 *redirect_url_out) {
   ASSERT_SINGLE_THREAD();
   assert(url);
   assert(payload_id_out);
@@ -579,126 +711,32 @@ bool WebCacheDB::Service(const char16 *url,
     url_length = url_without_fragment.length();
   }
 
+  // State shared across our two queries
+  bool loaded_cookie_map = false;  // we defer reading cookies until needed
+  bool loaded_cookie_map_ok = false;
+  CookieMap cookie_map;
+  std::string16 possible_redirect;
+
+  // First we run a query that looks for exact matches against entries not
+  // intended to ignore query arguments.
+  if (DoServiceQuery(url, true, context,
+                     url, &loaded_cookie_map, &loaded_cookie_map_ok,
+                     &cookie_map, &possible_redirect, payload_id_out)) {
+    return true;
+  }
+
   // If the requested url contains query parameters, we have to do additional
   // work to respect the 'ignoreQuery' attribute which allows an entry to
   // be hit for a url plus arbitrary query parameters. We do an additional
   // search with the query parameters removed from the requested url.
   const char16 *query = std::char_traits<char16>::find(url, url_length, '?');
-  std::string16 url_without_query;
   if (query) {
-    url_without_query.assign(url, query);
-  }
-
-  // Select possible matching entries for this url. Our select statement picks
-  // up entries with the requested url from all current versions.
-
-#define SQL_PREFIX \
-    L"SELECT s.ServerID, s.RequiredCookie, s.ServerType, " \
-    L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID " \
-    L"FROM Entries e, Versions v, Servers s "
-
-#define SQL_POSTFIX \
-    L"      v.VersionID = e.VersionID AND " \
-    L"      v.ReadyState = ? AND " \
-    L"      s.ServerID = v.ServerID AND " \
-    L"      s.Enabled = 1"
-
-  const char16* sql;
-  if (query)
-    // look for a hit with and without the url query string
-    sql = STRING16(
-            SQL_PREFIX
-            L"WHERE (e.Url = ? OR (e.Url = ? AND e.IgnoreQuery = 1)) AND "
-            SQL_POSTFIX);
-  else
-    sql = STRING16(
-            SQL_PREFIX
-            L"WHERE e.Url = ? AND "
-            SQL_POSTFIX);
-
-  SQLStatement stmt;
-  int rv = stmt.prepare16(&db_, sql);
-  if (rv != SQLITE_OK) {
-    LOG(("WebCacheDB.Service failed\n"));
-    return false;
-  }
-  int param = 0;
-  rv |= stmt.bind_text16(param++, url);
-  if (query)
-    rv |= stmt.bind_text16(param++, url_without_query.c_str());
-  rv |= stmt.bind_int(param++, VERSION_CURRENT);
-  if (rv != SQLITE_OK) {
-    return false;
-  }
-
-  // Iterate looking for an entry with no cookie required or with the required
-  // cookie present.
-
-  bool loaded_cookie_map = false;  // we defer reading cookies until needed
-  bool loaded_cookie_map_ok = false;
-  CookieMap cookie_map;
-
-  std::string16 possible_redirect;
-  int64 possible_ignored_query_payload_id = kInvalidID;
-  while (stmt.step() == SQLITE_ROW) {
-    const int64 server_id = stmt.column_int64(0);
-    const std::string16 required_cookie(stmt.column_text16_safe(1));
-    const ServerType server_type = static_cast<ServerType>(stmt.column_int(2));
-    const char16 *redirect = stmt.column_text16_safe(3);
-    const bool ignore_query = (stmt.column_int(4) == 1);
-    const int64 payload_id = stmt.column_int64(5);
-
-    std::string16 cookie_name;
-    std::string16 cookie_value;
-    bool is_cookie_required = !required_cookie.empty();
-    bool has_required_cookie = false;
-    if (is_cookie_required) {
-      if (!loaded_cookie_map) {
-        loaded_cookie_map = true;
-        loaded_cookie_map_ok = cookie_map.LoadMapForUrl(url, context);
-      }
-
-      if (!loaded_cookie_map_ok) {
-        LOG(("WebCacheDB.Service failed to read cookies\n"));
-        continue;
-      }
-
-      ParseCookieNameAndValue(required_cookie, &cookie_name, &cookie_value);
-      has_required_cookie = cookie_map.HasLocalServerRequiredCookie(
-                                           required_cookie);
+    std::string16 url_without_query(url, query);
+    if (DoServiceQuery(url_without_query.c_str(), false, context,
+                       url, &loaded_cookie_map, &loaded_cookie_map_ok,
+                       &cookie_map, &possible_redirect, payload_id_out)) {
+      return true;
     }
-
-    if (!is_cookie_required || has_required_cookie) {
-      if (server_type == MANAGED_RESOURCE_STORE) {
-        // We found a match from a managed store, try to update it
-        // Note that a failure does not prevent servicing the request
-        MaybeInitiateUpdateTask(server_id, context);
-      }
-
-      if (ignore_query) {
-        possible_ignored_query_payload_id = payload_id;
-        // Continue iterating to give preference to exact matches
-      } else {
-        *payload_id_out = payload_id;
-        return true;
-      }
-    }
-
-    if (is_cookie_required && redirect && redirect[0] &&
-        (cookie_value != kNegatedRequiredCookieValue) &&
-        !cookie_map.HasCookie(cookie_name)) {
-      if (!possible_redirect.empty() && (possible_redirect != redirect)) {
-        LOG(("WebCacheDB.Service conflicting possible redirects\n"));
-      }
-      possible_redirect = redirect;
-    }
-  }
-
-  // If we did not find an exact match but did find a match after ignoring
-  // the requested url's query parameters, return it
-  if (possible_ignored_query_payload_id != kInvalidID) {
-    *payload_id_out = possible_ignored_query_payload_id;
-    return true;
   }
 
   // If we found an entry that requires a cookie, and no cookie exists, and
@@ -711,12 +749,130 @@ bool WebCacheDB::Service(const char16 *url,
   return false;
 }
 
+bool WebCacheDB::DoServiceQuery(
+                     const char16 *url,
+                     bool exact_match,
+                     BrowsingContext *context,
+                     const char16 *cookie_url,
+                     bool *loaded_cookie_map,
+                     bool *loaded_cookie_map_ok,
+                     CookieMap *cookie_map,
+                     std::string16 *possible_redirect,
+                     int64 *payload_id_out) {
+  // Select possible matching entries for this url from all current versions.
+  const char16 *sql = STRING16(
+      L"SELECT s.ServerID, s.RequiredCookie, s.ServerType, "
+      L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID "
+      L"FROM Entries e, Versions v, Servers s "
+      L"WHERE e.Url = ? AND IFNULL(?, e.IgnoreQuery) AND "
+      L"      v.VersionID = e.VersionID AND "
+      L"      v.ReadyState = ? AND "
+      L"      s.ServerID = v.ServerID AND "
+      L"      s.Enabled = 1 ");
+
+  SQLStatement stmt;
+  int rv = stmt.prepare16(&db_, sql);
+  if (rv != SQLITE_OK) {
+    LOG(("WebCacheDB.Service failed\n"));
+    return false;
+  }
+  int param = 0;
+  rv |= stmt.bind_text16(param++, url);
+  if (exact_match) {
+    // select entries with any IgnoreQuery value
+    rv |= stmt.bind_int(param++, 1);  
+  } else {
+    // select entries with IgnoreQuery = 1
+    rv |= stmt.bind_null(param++);  
+  }
+  rv |= stmt.bind_int(param++, VERSION_CURRENT);
+  if (rv != SQLITE_OK) {
+    return false;
+  }
+
+  // We can select mulitple candidates for a url. We give preference to entries
+  // from stores that are guarded by a required cookie, and within a store, we
+  // give preference to entries that don't have the ignore query flag set.
+  // The most specific entry is returned.
+  const int kBaseRank = 1;
+  const int kRequiredCookieBoost = 10;
+  const int kNoIgnoreQueryBoost = 1;
+  int max_possible_rank = kBaseRank + kRequiredCookieBoost;
+  if (exact_match) max_possible_rank += kNoIgnoreQueryBoost;
+
+  int hit_rank = 0;
+  int64 hit_server_id = kInvalidID;
+
+  while ((hit_rank < max_possible_rank) && (stmt.step() == SQLITE_ROW)) {
+    const int64 server_id = stmt.column_int64(0);
+    const std::string16 required_cookie(stmt.column_text16_safe(1));
+    const ServerType server_type = static_cast<ServerType>(stmt.column_int(2));
+    const char16 *redirect = stmt.column_text16_safe(3);
+    const bool ignore_query = (stmt.column_int(4) != 0);
+    const int64 payload_id = stmt.column_int64(5);
+    bool is_cookie_required = !required_cookie.empty();
+
+    // Compute this entry's rank up front and compare to the rank of the
+    // best candidate thus far so we can avoid executing the bulk of the
+    // loop's body early on.
+    int rank = kBaseRank;
+    if (is_cookie_required) rank += kRequiredCookieBoost;
+    if (exact_match && !ignore_query) rank += kNoIgnoreQueryBoost;
+    if (rank <= hit_rank) { 
+      continue;
+    }
+
+    if (is_cookie_required) {
+      if (!(*loaded_cookie_map)) {
+        *loaded_cookie_map = true;
+        *loaded_cookie_map_ok = cookie_map->LoadMapForUrl(cookie_url, context);
+        if (!(*loaded_cookie_map_ok)) {
+          LOG(("WebCacheDB.Service failed to read cookies\n"));
+        }
+      }
+
+      if (!(*loaded_cookie_map_ok)) {
+        continue;
+      }
+
+      std::string16 cookie_name;
+      std::string16 cookie_value;
+      ParseCookieNameAndValue(required_cookie, &cookie_name, &cookie_value);
+      bool has_required_cookie = cookie_map->HasLocalServerRequiredCookie(
+                                                 required_cookie);
+      if (!has_required_cookie && redirect && redirect[0] &&
+          (cookie_value != kNegatedRequiredCookieValue) &&
+          !cookie_map->HasCookie(cookie_name)) {
+        if (!possible_redirect->empty() && ((*possible_redirect) != redirect)) {
+          LOG(("WebCacheDB.Service conflicting possible redirects\n"));
+        }
+        *possible_redirect = redirect;
+      }
+
+      if (!has_required_cookie) {
+        continue;
+      }
+    }
+
+    *payload_id_out = payload_id;
+    hit_rank = rank;
+    hit_server_id = (server_type == MANAGED_RESOURCE_STORE) ? server_id 
+                                                            : kInvalidID;
+  }
+
+  if (hit_server_id != kInvalidID) {
+    // We found a match from a managed store, try to update it.
+    // Note that a failure does not prevent servicing the request.
+    MaybeInitiateUpdateTask(hit_server_id, context);
+  }
+  return hit_rank > 0;
+}
+
 //------------------------------------------------------------------------------
 // ServiceGearsInspectorUrl
 //------------------------------------------------------------------------------
 bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
                                           PayloadInfo *payload) {
-
 #ifdef WIN32
   // TODO(aa): Not yet supported on WIN32. The only missing piece is to add a
   // section to the Wix installer to lay down the files in gears/inspector/ to
@@ -814,7 +970,6 @@ bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
 //------------------------------------------------------------------------------
 // MaybeInitiateUpdateTask
 //------------------------------------------------------------------------------
-
 void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id,
                                          BrowsingContext *context) {
   scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask(context));
@@ -2014,6 +2169,8 @@ bool WebCacheDB::UpdateEntriesWithNewPayload(int64 version_id,
   assert(url);
   assert(payload_id != kInvalidID);
 
+  // TODO(michaeln): I think this is linear with regard to the number of
+  // entries in a version, could be improved.
   const char16* sql = STRING16(
                         L"UPDATE Entries SET PayloadId=?, Redirect=? "
                         L"WHERE VersionId=? AND PayloadId IS NULL AND "
@@ -2052,6 +2209,7 @@ bool WebCacheDB::FindMostRecentPayload(int64 server_id,
   assert(url);
   assert(payload);
 
+  // TODO(michaeln): This looks like a full table scan!
   const char16* sql = STRING16(
       L"SELECT p.PayloadID, p.CreationDate, p.Headers, "
       L"       p.StatusLine, p.StatusCode "
@@ -2059,7 +2217,7 @@ bool WebCacheDB::FindMostRecentPayload(int64 server_id,
       L"WHERE v.ServerID=? AND v.VersionID=e.VersionID AND "
       L"      e.PayloadID=p.PayloadID AND "
       L"      (e.Src=? OR (e.Src IS NULL AND e.Url=?)) "
-      L"ORDER BY p.CreationDate LIMIT 1");
+      L"ORDER BY p.CreationDate DESC LIMIT 1");
 
   SQLStatement stmt;
   int rv = stmt.prepare16(&db_, sql);

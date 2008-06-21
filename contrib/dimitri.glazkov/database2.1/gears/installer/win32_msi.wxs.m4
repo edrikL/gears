@@ -100,11 +100,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 Action='write' Type='string' />
             </Component>
 
+            <!-- [naming] --> 
+            <Component Id='OurSharedRegistry' Guid='$(var.OurComponentGUID_SharedRegistry)'>
+              <RegistryValue
+                Root='HKLM' Key='Software\Google\Gears'
+                Name='install_dir' Value='[ProductDir]'
+                Action='write' Type='string' />
+            </Component>
+
             <!-- IMPORTANT: the OurShared* 'Name' fields MUST match the WIN32 paths in /{firefox,ie}/PathUtils.cc -->
             <Directory Id='OurSharedDir' Name='Shared'>
-              <Directory Id='OurSharedVersionedDir' Name='PRODUCT_VERSION'>
-                <!-- Not used right now -->
-              </Directory>
+               <Component Id='OurSharedDirFiles' Guid='$(var.OurComponentGUID_SharedFiles)'>
+                <File Id='notifier_exe' Name='notifier.exe' DiskId='1'
+                  Source="$(var.OurCommonPath)/notifier.exe" />
+               </Component>
             </Directory>
 
             <Directory Id='OurIEDir' Name='Internet Explorer'>
@@ -112,21 +121,28 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
                   <File Id='ie_crash_sender' Name='crash_sender.exe' DiskId='1'
                     Source="$(var.OurCommonPath)/crash_sender.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ie_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
                     Source="$(var.OurCommonPath)/crash_sender.pdb" />
 `~)
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost='1' />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
                   <File Id='vista_broker' Name='vista_broker.exe' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='vista_broker_pdb' Name='vista_broker.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.pdb" />
+`~)
+m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
+                  <File Id='ie_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/notifier_test.exe" />
 `~)
                 </Component>
               </Directory>
@@ -140,7 +156,8 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                   Source="$(var.OurFFPath)/chrome.manifest" />
                 <File Id='ff_crash_sender' Name='crash_sender.exe' DiskId='1'
                   Source="$(var.OurCommonPath)/crash_sender.exe" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                 <File Id='ff_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
                   Source="$(var.OurCommonPath)/crash_sender.pdb" />
 `~)
@@ -156,15 +173,21 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                   <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.dll" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
 `~)
                   <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
-m4_ifdef(~`DEBUG`~,~`m4_dnl
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
                   <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
+`~)
+m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
+                  <File Id='ff_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/notifier_test.exe" />
 `~)
                 </Component>
               </Directory>
@@ -228,11 +251,13 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
     <Feature Id='PRODUCT_SHORT_NAME_UQ' Title='PRODUCT_FRIENDLY_NAME_UQ' Level='1'>
       <ComponentRef Id='OurIERegistry' />
       <ComponentRef Id='OurFFRegistry' />
+      <ComponentRef Id='OurSharedRegistry' />
       <ComponentRef Id='OurIEDirFiles' />
       <ComponentRef Id='OurFFDirFiles' />
       <ComponentRef Id='OurFFComponentsDirFiles' />
       <ComponentRef Id='OurFFLibDirFiles' />
       <ComponentRef Id='OurFFContentDirFiles' />
+      <ComponentRef Id='OurSharedDirFiles' />
 m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='~`OurFF`~m4_underscore(LANG)~`DirFiles`~' />
 `~)m4_dnl

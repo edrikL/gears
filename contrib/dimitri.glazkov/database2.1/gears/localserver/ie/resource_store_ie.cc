@@ -553,7 +553,7 @@ STDMETHODIMP GearsResourceStore::captureFile(
   // 'file', then accept it.
   CComQIPtr<IPIEHTMLInputTextElement> input(file_input_element);
   CComBSTR type;
-  if (FAILED(input->get_type(&type)) || type != L"file") {
+  if (input && (FAILED(input->get_type(&type)) || type != L"file")) {
     input.Release();
   }
 #else

@@ -51,28 +51,24 @@ function testPost200() {
 }
 
 function testPostBlob200() {
-  // TODO(nigeltao): Enable this test on all browsers (e.g. NPAPI), not just
-  // IE and Firefox.
-  if (!isOfficial && (isIE || isFirefox)) {
-    startAsync();
+  startAsync();
 
-    var data = 'This is not a valid manifest!\n';
-    var headers = [["Name1", "Value1"],
-                   ["Name2", "Value2"]];
-    var expectedHeaders = getExpectedEchoHeaders(headers);
-    expectedHeaders.push(["echo-Content-Type", "application/octet-stream"]);
+  var data = 'This is not a valid manifest!\n';
+  var headers = [["Name1", "Value1"],
+                 ["Name2", "Value2"]];
+  var expectedHeaders = getExpectedEchoHeaders(headers);
+  expectedHeaders.push(["echo-Content-Type", "application/octet-stream"]);
 
-    // Obtain a blob so that we can upload it.
-    httpGetAsRequest('/testcases/manifest-ugly.txt', function(request) {
-      assertEqual(200, request.status, 'Failed to locate test blob');
-      assert(isObject(request.responseBlob), 'Failed to download test blob');
-      assertEqual(data.length, request.responseBlob.length,
-                  'Unexpected length of test blob');
-            
-      doRequest('testcases/cgi/echo_request.py', 'POST', request.responseBlob,
-                headers, 200, data, expectedHeaders, data.length); 
-    });
-  }
+  // Obtain a blob so that we can upload it.
+  httpGetAsRequest('/testcases/manifest-ugly.txt', function(request) {
+    assertEqual(200, request.status, 'Failed to locate test blob');
+    assert(isObject(request.responseBlob), 'Failed to download test blob');
+    assertEqual(data.length, request.responseBlob.length,
+                'Unexpected length of test blob');
+
+    doRequest('testcases/cgi/echo_request.py', 'POST', request.responseBlob,
+              headers, 200, data, expectedHeaders, data.length);
+  });
 }
 
 function testPost302_200() {
@@ -83,7 +79,7 @@ function testPost302_200() {
   var expectedHeaders = [["echo-Method", "GET"]];
 
   doRequest('/testcases/cgi/server_redirect.py?location=/testcases/cgi/echo_request.py', 'POST', data,
-            null, 200, null, expectedHeaders, null); 
+            null, 200, null, expectedHeaders, null);
 }
 
 function testGet404() {
@@ -339,12 +335,8 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
            'Should be able to call getAllResponseHeaders() after request');
     assert(isString(request.responseText),
            'Should be able to get responseText after request');
-
-    // blob not in non-official builds yet
-    if (!isOfficial && !isNPAPI && !isSafari) {
-      assert(isObject(request.responseBlob),
-             'Should be able to get responseBlob after request');
-    }
+    assert(isObject(request.responseBlob),
+           'Should be able to get responseBlob after request');
 
     // see if we got what we expected to get
     if (expectedStatus != null) {
@@ -367,11 +359,8 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      // blob not in non-official builds yet
-      if (!isOfficial && !isNPAPI && !isSafari) {
-        assertEqual(expectedResponseLength, request.responseBlob.length,
-                    'Wrong expectedResponseLength');
-      }
+      assertEqual(expectedResponseLength, request.responseBlob.length,
+                  'Wrong expectedResponseLength');
     }
 
     if (expectedResponse != null) {
@@ -380,11 +369,8 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      // blob not in non-official builds yet
-      if (!isOfficial && !isNPAPI && !isSafari) {
-        assert(isObject(request.responseBlob),
-               'Should be able to get responseBlob repeatedly');
-      }
+      assert(isObject(request.responseBlob),
+             'Should be able to get responseBlob repeatedly');
     }
     if (method == 'POST' || method == 'PUT') {
       // It appears that the timing can work out so that the progress
@@ -429,13 +415,10 @@ function testSetGetOnreadystatechange() {
 }
 
 function testSetGetOnprogress() {
-  // TODO(bgarcia): Activate for other browsers when ready.
-  if (isFirefox || isSafari) {
-    var request = google.gears.factory.create('beta.httprequest');
-    var handleProgress = function() {
-      return 'this is a test';
-    };
-    request.upload.onprogress = handleProgress;
-    assertEqual(handleProgress, request.upload.onprogress);
-  }
+  var request = google.gears.factory.create('beta.httprequest');
+  var handleProgress = function() {
+    return 'this is a test';
+  };
+  request.upload.onprogress = handleProgress;
+  assertEqual(handleProgress, request.upload.onprogress);
 }

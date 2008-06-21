@@ -33,31 +33,26 @@
 #include "gears/geolocation/thread.h"
 
 class WinceWifiDataProvider
-    : public DeviceDataProviderBase<WifiData>,
+    : public WifiDataProviderImplBase,
       public Thread {
  public:
-  // Allow DeviceDataProviderBase<WifiData>::Create() to access our private
-  // constructor.
-  friend DeviceDataProviderBase<WifiData>;
-
-  // DeviceDataProviderBase<WifiData> implementation.
-  virtual bool GetData(WifiData *data);
-
- private:
-  // Private constructor and destructor, callers must use
-  // DeviceDataProviderBase<RadioData>::Register and
-  // DeviceDataProviderBase<RadioData>::Unregister.
   WinceWifiDataProvider();
   virtual ~WinceWifiDataProvider();
 
+  // WifiDataProviderImplBase implementation
+  virtual bool GetData(WifiData *data);
+
+ private:
   // Thread implementation.
   virtual void Run();
 
   WifiData wifi_data_;
   Mutex data_mutex_;
-  // Events signalled to shut down the thread that polls for wifi data.
+
+  // Event signalled to shut down the thread that polls for wifi data.
   Event stop_event_;
   bool is_polling_thread_running_;
+
   DISALLOW_EVIL_CONSTRUCTORS(WinceWifiDataProvider);
 };
 

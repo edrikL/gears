@@ -250,6 +250,7 @@ bool TestJoinBlob(std::string16 *error) {
 
   // JoinBlob with no content.
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 0);
   TEST_ASSERT(0 == blob->Read(buffer, 0, sizeof(buffer)));
 
@@ -258,6 +259,7 @@ bool TestJoinBlob(std::string16 *error) {
   scoped_refptr<BlobInterface> blob1(new BufferBlob(data1, strlen(data1)));
   builder.AddBlob(blob1.get());
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == strlen(data1));
   TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
@@ -267,6 +269,7 @@ bool TestJoinBlob(std::string16 *error) {
   builder.AddString(STRING16(L"burp"));
   builder.AddData("ahh", 3);
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 10);
   TEST_ASSERT(10 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "nomburpahh", 10));
@@ -279,6 +282,7 @@ bool TestJoinBlob(std::string16 *error) {
   builder.AddBlob(blob1.get());
   builder.AddData("ahh", 3);
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 9);
   TEST_ASSERT(9 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "ahhnomahh", 9));
@@ -290,6 +294,7 @@ bool TestJoinBlob(std::string16 *error) {
   builder.AddData("", 0);
   builder.AddBlob(new EmptyBlob);
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == strlen(data1));
   TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
@@ -297,6 +302,7 @@ bool TestJoinBlob(std::string16 *error) {
   // JoinBlob containing a string with non-ascii data.
   builder.AddString(STRING16(L"\xFFFF\x0080"));
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 5);
   TEST_ASSERT(5 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "\xef\xbf\xbf\xc2\x80", 5));
@@ -306,6 +312,7 @@ bool TestJoinBlob(std::string16 *error) {
     builder.AddBlob(blob1.get());
   }
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 9);
   TEST_ASSERT(9 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "nomnomnom", 7));
@@ -322,6 +329,7 @@ bool TestJoinBlob(std::string16 *error) {
   builder.AddBlob(blob2.get());
   builder.AddString(STRING16(L"burp"));
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 12);
   TEST_ASSERT(12 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "nommnomnburp", 12));
@@ -337,6 +345,7 @@ bool TestJoinBlob(std::string16 *error) {
   builder.AddBlob(blob3.get());
   builder.AddString(STRING16(L"three"));
   builder.CreateBlob(&blob);
+  builder.Reset();
   TEST_ASSERT(blob->Length() == 17);
   TEST_ASSERT(17 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, "onetwoabcdefthree", 17));

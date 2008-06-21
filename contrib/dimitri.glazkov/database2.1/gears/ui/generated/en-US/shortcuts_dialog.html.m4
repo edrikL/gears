@@ -74,6 +74,11 @@ m4_include(ui/common/html_dialog.css)
       margin-bottom:2px;
     }
 
+    #shortcut-description {
+      /* We turn this on only when there is a description */
+      display:none;
+    }
+
     #locations {
       margin-top:1.2em;
       display:none;
@@ -142,6 +147,15 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="highlightbox">
       <div id="highlightbox-inner">
         <div id="scroll">
+          <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="top"><img id="shortcut-icon" width="32" height="32"></td>
+              <td align="left" width="100%" valign="middle">
+                <div id="shortcut-name"><b></b></div
+                ><div id="shortcut-description"></div>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>
@@ -240,8 +254,6 @@ m4_include(ui/common/button.js)
 
 <script>
   var debug = false;
-  var iconHeight = 32;
-  var iconWidth = 32;
   var dialogMinHeight = 200;
 
   // We currently only support custom locations for desktop windows.
@@ -353,36 +365,21 @@ m4_include(ui/common/button.js)
   /**
    * Populate the shortcuts UI based on the data passed in from C++.
    */
-  function initShortcuts(args) {
-    // Populate the icon information
-    var content = createShortcutRow(args);
-    dom.getElementById("scroll").innerHTML =
-        "<table cellpadding='0' cellspacing='0' border='0'><tbody>" +
-        content +
-        "</tbody></table>";
-    preloadIcons(args);
-  }
+  function initShortcuts(shortcutData) {
+    var iconElement = dom.getElementById("shortcut-icon");
+    var nameElement = dom.getElementById("shortcut-name");
+    var descriptionElement = dom.getElementById("shortcut-description");
+    
+    loadImage(iconElement, pickIconToRender(shortcutData));
+    dom.setTextContent(nameElement.firstChild, shortcutData.name);
 
-  /**
-   * Helper function. Creates a row for the shortcut list from the specified
-   * data object.
-   */
-  function createShortcutRow(shortcutData) {
-    var content = "<tr>";
-    content += "<td valign='top'><img width='" + iconWidth + "px' " +
-               "height='" + iconHeight + "px' " +
-               "src='" + pickIconToRender(shortcutData) + "'>";
-    content += "</td>";
-    content += "<td align='left' width='100%' valign='middle'>";
-    content += "<div id='shortcut-name'><b>";
-    content += shortcutData.name;
-    content += "</b></div>";
-    if (isDefined(typeof shortcutData.description)) {
-      content += "<div>" + shortcutData.description + "</div>";
+    if (isDefined(typeof shortcutData.description) &&
+        shortcutData.description) {
+      dom.setTextContent(descriptionElement, shortcutData.description);
+      descriptionElement.style.display = "block";
     }
-    content += "</td>";
-    content += "</tr>";
-    return content;
+
+    preloadIcons(shortcutData);
   }
 
   /**

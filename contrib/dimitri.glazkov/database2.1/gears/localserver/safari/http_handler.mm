@@ -23,7 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/common_sf.h"
 #import "gears/base/safari/loader.h"
+#import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
 
 // The NSHTTPURLResponse doesn't have a way to set the status code or headers, 
@@ -116,15 +118,28 @@
   if (!mimeType)
     mimeType = @"text/html";
   // Create a HTTP response with the cached status code
-  GearsNSHTTPURLResponse *response =
-    [[GearsNSHTTPURLResponse alloc] initWithURL:url MIMEType:mimeType
-                 expectedContentLength:[data length] textEncodingName:nil];
+  NSURLResponse *response;
   
-  [response setStatusCode:statusCode];
-  
-  // WebCache should always contain some content for the headers.
-  assert(headers);
-  [response setHeaders:headers];
+  // Workaround for rdar://problem/5817126 see base/safari/safari_workaround.m
+  // for more details.
+  if (IsLeopardOrGreater()) {
+    NSMutableDictionary *new_headers = [[headers mutableCopy] autorelease];
+    [new_headers setObject:mimeType forKey:@"Content-Type"];
+    response = LeopardCreateNSURLResponse(url, statusCode, new_headers);
+  } else {
+    GearsNSHTTPURLResponse *g_response;
+    g_response = [[GearsNSHTTPURLResponse alloc] initWithURL:url 
+                                                  MIMEType:mimeType
+                                     expectedContentLength:[data length]
+                                          textEncodingName:nil];
+    
+    [g_response setStatusCode:statusCode];
+    
+    // WebCache should always contain some content for the headers.
+    assert(headers);
+    [g_response setHeaders:headers];
+    response = g_response;
+  }
   
   // Notify the client if there was a redirect or just a normal response
   if (redirectURL) {

@@ -36,8 +36,10 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #endif  // !BROWSER_NONE
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if !BROWSER_NONE
 DECLARE_GEARS_WRAPPER(GearsNotification);
@@ -69,8 +71,8 @@ const std::string GearsNotification::kModuleName("Notification");
 bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   if (!str || !out16)
     return false;
-  
-  unsigned long length = CFStringGetLength(str);
+
+  size_t length = CFStringGetLength(str);
   const UniChar *outStr = CFStringGetCharactersPtr(str);
 
   if (!outStr) {
@@ -81,7 +83,7 @@ bool CFStringRefToString16Helper(CFStringRef str, std::string16 *out16) {
   } else {
     out16->assign(outStr, length);
   }
-  
+
   return true;
 }
 #endif  // OS_MACOSX
@@ -99,7 +101,7 @@ std::string16 GenerateGuid() {
   assert(num);
   wide_guid_str = wide_guid_buf + 1;                // remove opening bracket
   wide_guid_str.erase(wide_guid_str.length() - 1);  // remove closing bracket
-#elif defined(LINUX) && !defined(OS_MACOSX)
+#elif defined(OS_ANDROID) || (defined(LINUX) && !defined(OS_MACOSX))
   FILE *fptr = fopen("/proc/sys/kernel/random/uuid", "r");
   assert(fptr);
   if (fptr) {
@@ -121,7 +123,7 @@ std::string16 GenerateGuid() {
 }
 
 GearsNotification::GearsNotification()
-    : 
+    :
 #if !BROWSER_NONE
       ModuleImplBaseClassVirtual(kModuleName),
 #endif
@@ -136,7 +138,7 @@ void GearsNotification::CopyFrom(const GearsNotification& from) {
   title_ = from.title_;
   subtitle_ = from.subtitle_;
   icon_ = from.icon_;
-  service_ = from.service_;
+  security_origin_.CopyFrom(from.security_origin_);
   id_ = from.id_;
   description_ = from.description_;
   display_at_time_ms_ = from.display_at_time_ms_;
@@ -149,7 +151,7 @@ bool GearsNotification::Serialize(Serializer *out) {
   out->WriteString(title_.c_str());
   out->WriteString(subtitle_.c_str());
   out->WriteString(icon_.c_str());
-  out->WriteString(service_.c_str());
+  out->WriteString(security_origin_.url().c_str());
   out->WriteString(id_.c_str());
   out->WriteString(description_.c_str());
   out->WriteInt64(display_at_time_ms_);
@@ -164,12 +166,13 @@ bool GearsNotification::Serialize(Serializer *out) {
 
 bool GearsNotification::Deserialize(Deserializer *in) {
   int action_size = 0;
+  std::string16 security_origin_url;
   if (!in->ReadInt(&version_) ||
       version_ != kNotificationVersion ||
       !in->ReadString(&title_) ||
       !in->ReadString(&subtitle_) ||
       !in->ReadString(&icon_) ||
-      !in->ReadString(&service_) ||
+      !in->ReadString(&security_origin_url) ||
       !in->ReadString(&id_) ||
       !in->ReadString(&description_) ||
       !in->ReadInt64(&display_at_time_ms_) ||
@@ -177,6 +180,10 @@ bool GearsNotification::Deserialize(Deserializer *in) {
       !in->ReadInt(&action_size)) {
     return false;
   }
+  if (!security_origin_.InitFromUrl(security_origin_url.c_str())) {
+    return false;
+  }
+
   for (int i = 0; i < action_size; ++i) {
     NotificationAction action;
     if (!in->ReadString(&action.text) || !in->ReadString(&action.url)) {

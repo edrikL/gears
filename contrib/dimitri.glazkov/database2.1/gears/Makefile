@@ -175,7 +175,7 @@ THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
 		$(NULL)
 
-THIRD_PARTY_CPPSRCS	+= \
+URL_PARSING_CPPSRCS	+= \
 		gurl.cc \
 		url_canon_etc.cc \
 		url_canon_fileurl.cc \
@@ -191,6 +191,10 @@ THIRD_PARTY_CPPSRCS	+= \
 		url_parse_file.cc \
 		url_util.cc \
 		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		$(URL_PARSING_CPPSRCS) \
+		$(NULL)
 endif
 
 #-----------------------------------------------------------------------------
@@ -201,8 +205,12 @@ THIRD_PARTY_VPATH	+= \
 		../third_party/icu38/source/common \
 		$(NULL)
 
-THIRD_PARTY_CPPSRCS	+= \
+ICU_CPPSRCS	+= \
 		utf_impl.cc \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		$(ICU_CPPSRCS) \
 		$(NULL)
 endif
 
@@ -592,7 +600,7 @@ endif # USING_ZLIB
 
 #-----------------------------------------------------------------------------
 # third_party/portaudio
-
+ifeq ($(USING_PORTAUDIO),1)
 ifeq ($(OFFICIAL_BUILD),1)
 # PortAudio is for the Audio API which has not been finalized for official
 # builds.
@@ -618,10 +626,11 @@ ifeq ($(OS),osx)
 THIRD_PARTY_VPATH	+= \
 		../third_party/portaudio/src/hostapi/coreaudio \
 		../third_party/portaudio/src/os/mac_osx \
+		../third_party/portaudio/src/os/unix \
 		$(NULL)
 endif
 
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_allocation.c \
 		pa_converters.c \
 		pa_cpuload.c \
@@ -634,9 +643,8 @@ THIRD_PARTY_CSRCS	+= \
 		pa_trace.c \
 		$(NULL)
 
-
 ifeq ($(IS_WIN32_OR_WINCE),1)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_win_wmme.c \
 		pa_win_hostapis.c \
 		pa_win_util.c \
@@ -644,24 +652,95 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 endif
 ifeq ($(OS),linux)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_unix_oss.c \
 		pa_unix_hostapis.c \
 		pa_unix_util.c \
 		$(NULL)
 endif
 ifeq ($(OS),osx)
-THIRD_PARTY_CSRCS	+= \
+PORTAUDIO_CSRCS	+= \
 		pa_ringbuffer.c \
 		pa_mac_core.c \
 		pa_mac_core_blocking.c \
 		pa_mac_core_utilities.c \
 		pa_mac_hostapis.c \
+		pa_unix_util.c \
 		$(NULL)
 endif
 
 endif # not OFFICIAL_BUILD
+endif # USING_PORTAUDIO
+#-----------------------------------------------------------------------------
+# third_party/libspeex
+ifeq ($(USING_LIBSPEEX),1)
+ifneq ($(OFFICIAL_BUILD),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/speex/libspeex \
+		$(NULL)
 
+LIBSPEEX_CSRCS	+= \
+		bits.c \
+		cb_search.c \
+		exc_10_16_table.c \
+		exc_10_32_table.c \
+		exc_20_32_table.c \
+		exc_5_256_table.c \
+		exc_5_64_table.c \
+		exc_8_128_table.c \
+		filters.c \
+		gain_table.c \
+		gain_table_lbr.c \
+		hexc_10_32_table.c \
+		hexc_table.c \
+		high_lsp_tables.c \
+		lpc.c \
+		lsp.c \
+		lsp_tables_nb.c \
+		ltp.c \
+		modes.c \
+		modes_wb.c \
+		nb_celp.c \
+		quant_lsp.c \
+		sb_celp.c \
+		speex.c \
+		speex_callbacks.c \
+		speex_header.c \
+		stereo.c \
+		vbr.c \
+		vq.c \
+		window_spx.c \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
+endif # USING_LIBSPEEX
+#-----------------------------------------------------------------------------
+# third_party/libtremor
+ifeq ($(USING_LIBTREMOR),1)
+ifneq ($(OFFICIAL_BUILD),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/tremor \
+		$(NULL)
+
+LIBTREMOR_CSRCS	+= \
+		bitwise.c \
+		block.c \
+		codebook.c \
+		floor0.c \
+		floor1.c \
+		framing.c \
+		info.c \
+		mapping0.c \
+		mdct.c \
+		registry.c \
+		res012.c \
+		sharedbook.c \
+		synthesis.c \
+		window_tremor.c \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
+endif # USING_LIBTREMOR
 #-----------------------------------------------------------------------------
 # base/common
 
@@ -768,15 +847,17 @@ FF3_CPPSRCS	+= \
 		file_posix.cc \
 		file_win32.cc \
 		html_event_monitor_ff.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		message_queue_ff.cc \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
+		time_utils_win32.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -802,14 +883,16 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
 		detect_version_collision.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_ie.cc \
 		message_queue_ie.cc \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
+		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
 ifeq ($(OS),win32)
@@ -849,15 +932,17 @@ NPAPI_IDLSRCS	+= \
 NPAPI_CPPSRCS	+= \
 		browser_utils.cc \
 		html_event_monitor_np.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
 		ipc_message_queue_win32.cc \
-		ipc_message_queue_win32_test.cc \
 		js_runner_np.cc \
 		module.cc \
 		np_utils.cc \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		plugin.cc \
+		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -895,6 +980,7 @@ SF_CPPSRCS	+= \
 		browser_utils_sf.cc \
 		common_sf.mm \
 		cf_string_utils.cc \
+		curl_downloader.mm \
 		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
@@ -910,7 +996,7 @@ SF_CPPSRCS	+= \
 		paths_sf.mm \
 		paths_sf_more.mm \
 		plugin.cc \
-		safari_workaround.m \
+		safari_workarounds.m \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1080,10 +1166,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_win32.cc \
 		notification.cc \
 		$(NULL)
-
-SF_CPPSRCS += \
-		curl_icon_downloader.mm \
-		$(NULL)
+		
 #-----------------------------------------------------------------------------
 # notifier
 
@@ -1094,7 +1177,12 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_CORE	+= \
+		$(ICU_CPPSRCS) \
+		$(URL_PARSING_CPPSRCS) \
 		balloons.cc \
+		http_constants.cc \
+		http_utils.cc \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
@@ -1103,6 +1191,7 @@ NOTIFIER_CORE	+= \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
 		notification.cc \
+		security_model.cc \
 		serialization.cc \
 		stopwatch.cc \
 		stopwatch_posix.cc \
@@ -1112,6 +1201,7 @@ NOTIFIER_CORE	+= \
 		system_linux.cc \
 		system_osx.cc \
 		system_win32.cc \
+		time_utils_win32.cc \
 		$(NULL)
 
 
@@ -1120,13 +1210,24 @@ NOTIFIER_CPPSRCS += \
 		$(NOTIFIER_CORE) \
 		notifier.cc \
 		notifier_linux.cc \
-		notifier_osx.cc \
 		notifier_win32.cc \
 		$(NULL)
+
+ifeq ($(OS),osx)
+NOTIFIER_CPPSRCS += \
+		notifier_osx.mm
+endif
 
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
+
+ifeq ($(OS),linux)
+NOTIFIER_LIBS 	+= \
+		-lgtk-x11-2.0 \
+		-L../third_party/gtk/linux/lib \
+		$(NULL)
+endif
 
 ifeq ($(OS),win32)
 COMMON_VPATH	+= \
@@ -1153,6 +1254,11 @@ NOTIFIER_TEST_CPPSRCS += \
 		notification_manager_test.cc \
 		unit_test.cc \
 		$(NULL)
+
+ifeq ($(OS),osx)
+NOTIFIER_TEST_CPPSRCS += \
+		unit_test_osx.mm
+endif
 
 NOTIFIER_TEST_CSRCS += \
 		ConvertUTF.c \
@@ -1432,6 +1538,7 @@ $(BROWSER)_CPPSRCS += \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
+		localserver_perf_test.cc \
 		managed_resource_store.cc \
 		managed_resource_store_module.cc \
 		manifest.cc \
@@ -1581,10 +1688,10 @@ FF3_CPPSRCS	+= \
 		blob_input_stream_ff_test.cc \
 		$(NULL)
 
-SF_CPPSRCS += \
+SF_CPPSRCS 	+= \
 		blob_input_stream_sf.mm \
+		blob_input_stream_sf_test.mm \
 		$(NULL)
-
 
 #-----------------------------------------------------------------------------
 # image
@@ -1690,8 +1797,18 @@ IE_LINK_EXTRAS += \
 IE_CPPSRCS += \
 		cab_updater.cc \
 		$(NULL)
-
 endif # wince
+
+#-----------------------------------------------------------------------------
+# installer/safari
+
+SF_VPATH	+= \
+		installer/safari \
+		$(NULL)
+
+SF_M4SRCS	+= \
+		installer.packproj.m4 \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # geolocation
@@ -1707,7 +1824,6 @@ $(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
-		device_data_provider.cc \
 		empty_device_data_provider.cc \
 		geolocation.cc \
 		geolocation_test.cc \
@@ -1738,7 +1854,6 @@ $(BROWSER)_CPPSRCS += \
 		audio.cc \
 		audio_recorder.cc \
 		media.cc \
-		media_recorder.cc \
 		time_ranges.cc \
 		$(NULL)
 
@@ -1753,13 +1868,17 @@ FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
 FF2_IDLSRCS += $(FF3_IDLSRCS)
 FF2_CPPSRCS += $(FF3_CPPSRCS)
 
+#-----------------------------------------------------------------------------
+# Include site-specific build rules, evaluated before our built-in build rules.
+ifneq ($(wildcard site-prerules.mk),)  # if file exists
+include site-prerules.mk
+endif
 
 #-----------------------------------------------------------------------------
 include tools/rules.mk
 
 #-----------------------------------------------------------------------------
-# You can add your own site-specific build rules by creating a file called
-# 'site-build.mk' alongside the Makefile.
-ifneq ($(wildcard site-build.mk),)  # if site-build.mk exists.
-include site-build.mk
+# Include site-specific build rules, evaluated after our built-in build rules.
+ifneq ($(wildcard site-postrules.mk),)  # if site-postrules.mk exists.
+include site-postrules.mk
 endif

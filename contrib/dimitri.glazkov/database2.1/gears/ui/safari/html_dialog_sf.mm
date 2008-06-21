@@ -32,11 +32,26 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
+#include "gears/base/safari/curl_downloader.h"
+#include "gears/base/safari/safari_workarounds.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
 #import  "gears/ui/safari/html_dialog_sf.h"
 
 @implementation HTMLDialogImp
+
+static NSDictionary *ScriptableMethods() {
+  // In order to create a static objective-c object we need to create it after
+  // the runtime is initialized.
+  static const NSDictionary *scriptable_methods = 
+      [[NSDictionary dictionaryWithObjectsAndKeys:
+                         @"setResults",
+                         @"setResults:",
+                         @"loadImageIntoElement",
+                         @"loadImageIntoElement:top:left:width:height:",
+                         nil] retain];
+  return scriptable_methods;
+}
 
 #pragma mark Private Instance methods
 // Creates a window and places a pointer to it in the |window_| ivar.
@@ -66,13 +81,14 @@
   // The user agent string is initialized by the plugin's NP_Initialize
   // function, but the settings dialog may be displayed before that's
   // been called, in which case we just use a default string.
-  NSURL *url = [NSURL URLWithString:window_url_];
-  NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
+  NSURL *tmp_url = [NSURL URLWithString:@""];
+  user_agent_ = [NSString stringWithString16:ua_str16.c_str()];
   if (ua_str16.length() == 0) { 
-    user_agent = [NSString stringWithFormat:@"%@ Safari",
-                          [webview userAgentForURL:url]];
+    user_agent_ = [NSString stringWithFormat:@"%@ Safari",
+                    [webview userAgentForURL:tmp_url]];
   }
-  [webview setCustomUserAgent:user_agent];
+  [user_agent_ retain];
+  [webview setCustomUserAgent:user_agent_];
 
   [content_view addSubview:webview];
   [webview release]; // addSubView retains webView.
@@ -82,9 +98,13 @@
   [webview setFrameLoadDelegate: self];
   
   // Load in the dialog's contents.
-  NSURLRequest *url_request = [NSURLRequest requestWithURL:url]; 
   WebFrame *frame = [webview mainFrame];
-  [frame loadRequest: url_request];
+  
+  // Read in WebArchive.
+  NSData *archive_data = [NSData dataWithContentsOfFile:web_archive_filename_];
+  WebArchive *webarchive = [[WebArchive alloc] initWithData:archive_data];
+  
+  [frame loadArchive:webarchive];
   
   // Turn off scrollbars.
   [[frame frameView] setAllowsScrolling:NO];
@@ -104,9 +124,12 @@
     localized_html_file += html_filename;
     NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
-    pluginPath = [pluginPath stringByAppendingPathComponent:tmp];
-    window_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath]; 
-    [window_url_ retain];
+    tmp = [pluginPath stringByAppendingPathComponent:tmp];
+    tmp = [tmp stringByDeletingPathExtension];
+    // If we ever go back to file urls, rather than loading the data directly
+    // from disk, we need to escape web_archive_filename_ here.
+    web_archive_filename_ = [tmp stringByAppendingPathExtension:@"webarchive"];
+    [web_archive_filename_ retain];
     arguments_ = [[NSString stringWithString16:arguments.c_str()] retain];
     width_ = width;
     height_ = height;
@@ -115,8 +138,9 @@
 }
 
 - (void)dealloc {
-  [window_url_ release];
+  [web_archive_filename_ release];
   [arguments_ release];
+  [user_agent_ release];
   [result_string_ release];
   [super dealloc];
 }
@@ -127,23 +151,38 @@
   if (![self createWindow:window_style]) {
     return false;
   }
+  
+  // See gears/base/safari/safari_workarounds.m for details.
+  EnableWebkitTimersForNestedRunloop();
 
-  // Display window as sheet.
+  // Display the dialog.
   NSWindow *front_window = [NSApp keyWindow];
   [NSApp beginSheet:window_ 
      modalForWindow:front_window 
       modalDelegate:nil 
-     didEndSelector:nil 
+     didEndSelector:nil
         contextInfo:nil];
-  
-  // Credit goes to David Sinclair of Dejal software for this method of running
-  // a modal WebView.
-  NSModalSession session = [NSApp beginModalSessionForWindow:front_window];
+ 
+ // Spin until the sheet is closed.
+ // Credit goes to David Sinclair of Dejal software for this method of running
+ // a modal WebView.
+ NSModalSession session = [NSApp beginModalSessionForWindow:window_];
   while (!window_dismissed_ && 
-         [NSApp runModalSession:session] == NSRunContinuesResponse) {
-    [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
+          [NSApp runModalSession:session] == NSRunContinuesResponse) {
+     [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
   }
   [NSApp endModalSession:session];
+  
+// Display Document-Modal dialog, this doesn't work on 10.4.
+//  while (!window_dismissed_) {
+//    [NSApp setWindowsNeedUpdate:YES];
+//    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+//                                        untilDate:[NSDate distantFuture]
+//                                           inMode:NSDefaultRunLoopMode
+//                                          dequeue:YES];
+//    [NSApp sendEvent:event];
+//  }  
+  
   [NSApp endSheet:window_];
   [window_ close];
   window_ = nil;
@@ -168,25 +207,97 @@
 // Called by WebView to determine which of this object's selectors can be called
 // from JS.
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)selector {
-  // Only allow calls to setResults:.
-  if (selector == @selector(setResults:)) {
-    return NO;
-  }
-  return YES;
+  NSString *sel = [NSString stringWithCString:sel_getName(selector)
+                                     encoding:NSUTF8StringEncoding];
+  BOOL is_selector_scriptable = [ScriptableMethods() objectForKey:sel] != nil;
+  return !is_selector_scriptable;
 }
 
-+ (NSString *)webScriptNameForSelector:(SEL)sel {
-  if (sel == @selector(setResults:)) {
-    return @"setResults";
-  } else {
-    return nil;
-  }
++ (NSString *)webScriptNameForSelector:(SEL)selector {
+  NSString *sel = [NSString stringWithCString:sel_getName(selector)
+                                     encoding:NSUTF8StringEncoding];
+  return [ScriptableMethods() objectForKey:sel];
+}
+
+// JS callback for asynchronously loading an image.
+- (void)loadImageIntoElement: (NSString *)url
+                         top: (int)top
+                        left: (int)left
+                       width: (int)width
+                      height: (int)height {
+  NSString *frame_rect = NSStringFromRect(NSMakeRect(left, top, width, height));
+  NSArray *args = [NSArray arrayWithObjects:url, frame_rect, nil];
+  
+  // detachNewThreadSelector will retain self until after the thread exits.
+  [NSThread detachNewThreadSelector:@selector(loadURL:)
+                         toTarget:self
+                       withObject:args];
 }
 
 // JS callback for setting the result string.
 - (void)setResults: (NSString *)window_results {
   result_string_ = [window_results copy];
   window_dismissed_ = true;
+}
+
+#pragma mark Methods for dynamic image loading.
+
+// This selector is launched as a thread, it loads the URL with CURL
+// and then calls back to displayImage: when done.
+- (void)loadURL:(NSArray *)arguments {
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  assert([arguments count] == 2);
+  NSString *url = [arguments objectAtIndex:0];
+  NSRect frame = NSRectFromString([arguments objectAtIndex:1]);
+  
+  // Make sure URL is escaped.
+  url = [url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+  
+  // Download Icon Data.
+  std::string16 url_utf16;
+  [url string16:&url_utf16];
+  std::string16 user_agent_utf16;
+  [user_agent_ string16:&user_agent_utf16];
+  
+  NSMutableData *icon_data = [[[NSMutableData alloc] init] autorelease];
+  if (!GetURLDataAsNSData(url_utf16, user_agent_utf16, icon_data)) return;
+  
+  NSArray *args = [NSArray arrayWithObjects:icon_data, NSStringFromRect(frame),
+                                            nil];
+  // args is retained until the selector returns.
+  [self performSelectorOnMainThread:@selector(displayImage:)
+                                withObject:args
+                            waitUntilDone:false];
+  [pool release];
+}
+
+// Called asynchronously when image data is loaded, this displays the image
+// data in the WebView.
+- (void)displayImage:(NSArray *)arguments {
+  // If the window was closed, don't do anything.
+  if (window_dismissed_) return;
+  
+  assert([arguments count] == 2);
+  NSData *image_data = [arguments objectAtIndex:0];
+  NSRect frame = NSRectFromString([arguments objectAtIndex:1]);
+  NSView *content_view = [window_ contentView];
+  
+  // Translate from DOM->NSView coordinates.
+  NSRect bounds = [content_view bounds];
+  frame.origin.y = bounds.size.height - frame.origin.y - frame.size.height;
+  
+  NSImageView *iv = [[NSImageView alloc] initWithFrame:frame];
+  NSImage *img = [[NSImage alloc] initWithData:image_data];
+  [iv setImage:img];
+  [img release];
+  [content_view addSubview:iv];
+  
+  // Anchor the image view to the top left of the image contents.
+  // TODO(playmobil): reposition the image view on screen resize from JS
+  // to get more consistent results.
+  [iv setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
+  [iv release];
 }
 @end
 

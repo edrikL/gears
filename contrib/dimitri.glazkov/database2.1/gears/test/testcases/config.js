@@ -51,12 +51,14 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
-var TEST_TIMEOUT_SECONDS = 4 * 60 * 1000;
+var TEST_TIMEOUT_SECONDS = 6 * 60 * 1000;
 var suites = [];
 
 if (!isSafari && !isWince) {
   var audioSuite = new TestSuite('Audio');
   audioSuite.addFile('../testcases/audio_tests.js', 
+                     {useWorker: true, useIFrame: true});
+  audioSuite.addFile('../testcases/audio_recorder_tests.js',
                      {useWorker: true, useIFrame: true});
   suites.push(audioSuite);
 }

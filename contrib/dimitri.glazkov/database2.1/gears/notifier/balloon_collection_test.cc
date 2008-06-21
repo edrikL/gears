@@ -29,6 +29,7 @@
 #if USING_CCTESTS
 #include "gears/notifier/balloon_collection_test.h"
 
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/balloons.h"
 #include "gears/notifier/notification.h"
@@ -71,7 +72,9 @@ void TestBalloonCollection() {
   BalloonCollection balloons(&observer);
 
   GearsNotification notification1;
-  notification1.set_service(STRING16(L"http://gears.google.com/MyService"));
+  SecurityOrigin security_origin;
+  security_origin.InitFromUrl(STRING16(L"http://gears.google.com/MyService"));
+  notification1.set_security_origin(security_origin);
   notification1.set_id(STRING16(L"1"));
   balloons.Show(notification1);
 
@@ -84,11 +87,11 @@ void TestBalloonCollection() {
 
   balloons.Show(notification1);
 
-  bool deleted = balloons.Delete(notification1.service(),
+  bool deleted = balloons.Delete(notification1.security_origin(),
                                  notification1.id());
   TEST_ASSERT(deleted, STRING16(L"Delete didn't find the notification"));
 
-  deleted = balloons.Delete(notification1.service(),
+  deleted = balloons.Delete(notification1.security_origin(),
                             notification1.id());
   TEST_ASSERT(!deleted, STRING16(L"Delete can delete a notification twice!"));
 
@@ -98,4 +101,3 @@ void TestBalloonCollection() {
 
 #endif  // USING_CCTESTS
 #endif  // OFFICIAL_BUILD
-

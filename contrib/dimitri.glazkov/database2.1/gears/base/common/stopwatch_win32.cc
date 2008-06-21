@@ -29,8 +29,10 @@
 #ifdef WIN32
 
 #include "gears/base/common/stopwatch.h"
+
 #include <assert.h>
 #include <windows.h>
+#include "gears/base/common/time_utils_win32.h"
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
@@ -49,13 +51,7 @@ int64 GetCurrentTimeMillis() {
   FILETIME filetime;
   SystemTimeToFileTime(&systemtime, &filetime);
 
-  // MSDN warns against casting between int64* and FILETIME*. See
-  // http://msdn2.microsoft.com/en-us/library/ms724284(VS.85).aspx.
-  int64 filetime_int64 = (static_cast<int64>(filetime.dwHighDateTime) << 32) |
-                         (static_cast<int64>(filetime.dwLowDateTime));
-
-  const int64 kOffset = 116444736000000000LL;
-  return (filetime_int64 - kOffset) / 10000;
+  return FiletimeToMilliseconds(filetime);
 }
 
 // Returns a monotonically incrementing counter.

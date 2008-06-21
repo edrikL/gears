@@ -57,6 +57,9 @@ VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 LIBGD_OUTDIR               = $(COMMON_OUTDIR)/gd
 SQLITE_OUTDIR              = $(COMMON_OUTDIR)/sqlite
 MOZJS_OUTDIR               = $(COMMON_OUTDIR)/spidermonkey
+PORTAUDIO_OUTDIR           = $(COMMON_OUTDIR)/portaudio
+LIBSPEEX_OUTDIR            = $(COMMON_OUTDIR)/libspeex
+LIBTREMOR_OUTDIR           = $(COMMON_OUTDIR)/tremor
 THIRD_PARTY_OUTDIR         = $(COMMON_OUTDIR)/third_party
 
 
@@ -92,11 +95,13 @@ SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPU
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
 MOZJS_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(MOZJS_OUTDIR), $(MOZJS_CSRCS))
 SQLITE_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(SQLITE_OUTDIR), $(SQLITE_CSRCS))
+PORTAUDIO_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(PORTAUDIO_OUTDIR), $(PORTAUDIO_CSRCS))
+LIBSPEEX_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBSPEEX_OUTDIR), $(LIBSPEEX_CSRCS))
+LIBTREMOR_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBTREMOR_OUTDIR), $(LIBTREMOR_CSRCS))
 PERF_TOOL_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(PERF_TOOL_CPPSRCS))
 IE_WINCESETUP_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(IE_OUTDIR), $(IE_WINCESETUP_CPPSRCS))
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
 VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS) $(VISTA_BROKER_CSRCS))
-
 
 # IMPORTANT: If you change these lists, you need to change the corresponding
 # files in win32_msi.wxs.m4 as well.
@@ -105,12 +110,10 @@ VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR),
 #
 # Begin: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 COMMON_RESOURCES = \
-	ui/common/button.css \
 	ui/common/button_bg.gif \
 	ui/common/button_corner_black.gif \
 	ui/common/button_corner_blue.gif \
 	ui/common/button_corner_grey.gif \
-	ui/common/html_dialog.css \
 	ui/common/icon_32x32.png
 
 FF3_RESOURCES = \
@@ -131,6 +134,9 @@ DEPS = \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(MOZJS_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(PORTAUDIO_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(LIBSPEEX_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(LIBTREMOR_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
 $(BROWSER)_GEN_HEADERS = \
@@ -201,11 +207,10 @@ PERF_TOOL_EXE     = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 # TODO(aa): This can move to common_outdir like crash_sender.exe
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
-SF_PLUGIN_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
-SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GoogleGearsEnabler
+SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/$(FRIENDLY_NAME_SF).plugin
+SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 
-# TODO(playmobil): Actually create a Safari Installer.
-SF_INSTALLER           = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).pkg
+SF_INSTALLER_PKG       = $(INSTALLERS_OUTDIR)/Safari/$(FRIENDLY_NAME_SF).pkg
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
 WIN32_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
@@ -301,7 +306,7 @@ endif
 # Cross-browser targets.
 prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N)
 prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
-prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR)
+prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(PORTAUDIO_OUTDIR) $(LIBSPEEX_OUTDIR) $(LIBTREMOR_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
 genheaders:: $($(BROWSER)_GEN_HEADERS)
 
@@ -331,7 +336,7 @@ endif
 
 ifeq ($(BROWSER),SF)
 prereqs:: $(MOZJS_OUTDIR)
-modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE)
+modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 endif
 
 # OS-specific targets.
@@ -339,11 +344,13 @@ endif
 # when BROWSER is 'NONE'. 'installers' targets are built without any
 # BROWSER value set.
 ifeq ($(BROWSER), NONE)
-ifeq ($(OS),win32)
+# If one of these OS names matches, the 'findstring' result is not empty.
+ifneq ($(findstring $(OS),linux|osx|win32),)
 modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
+endif
+ifeq ($(OS),win32)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
-# TODO(jianli): Extend notifier building to other platforms.
 modules:: $(CRASH_SENDER_EXE)
 endif
 ifneq ($(OS),wince)
@@ -352,17 +359,15 @@ ifneq ($(OS),android)
 modules:: $(PERF_TOOL_EXE)
 endif
 endif
-ifeq ($(OS),osx)
-prereqs:: $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(OSX_LAUNCHURL_EXE)
-endif
 endif
 
 ifeq ($(OS),linux)
 installers:: $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),osx)
-installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
+prereqs:: $(OSX_LAUNCHURL_OUTDIR)
+modules:: $(OSX_LAUNCHURL_EXE)
+installers:: $(SF_INSTALLER)  $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
@@ -411,6 +416,12 @@ $(MOZJS_OUTDIR):
 $(OSX_LAUNCHURL_OUTDIR):
 	"mkdir" -p $@
 $(SQLITE_OUTDIR):
+	"mkdir" -p $@
+$(PORTAUDIO_OUTDIR):
+	"mkdir" -p $@
+$(LIBSPEEX_OUTDIR):
+	"mkdir" -p $@
+$(LIBTREMOR_OUTDIR):
 	"mkdir" -p $@
 $(THIRD_PARTY_OUTDIR):
 	"mkdir" -p $@
@@ -516,6 +527,15 @@ $(LIBGD_OUTDIR)/%$(OBJ_SUFFIX): %.c
 $(SQLITE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SQLITE_CPPFLAGS) $(SQLITE_CFLAGS) $<
 
+$(PORTAUDIO_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(PORTAUDIO_CFLAGS) $<
+
+$(LIBSPEEX_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(CC) $(LIBSPEEX_CFLAGS) $(LIBOGG_CFLAGS) $(CPPFLAGS) $(CFLAGS) $<
+
+$(LIBTREMOR_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(CC) $(LIBTREMOR_CFLAGS) $(LIBOGG_CFLAGS) $(CPPFLAGS) $(CFLAGS) $<
+
 # RESOURCE TARGETS
 
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
@@ -558,6 +578,10 @@ OUR_COMPONENT_GUID_IE_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_FILES-$(VERSION))
 OUR_COMPONENT_GUID_IE_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_REGISTRY-$(VERSION))
+OUR_COMPONENT_GUID_SHARED_FILES = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_FILES-$(VERSION))
+OUR_COMPONENT_GUID_SHARED_REGISTRY = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_REGISTRY-$(VERSION))
 
 OUR_NPAPI_PRODUCT_ID = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_2ND_PRODUCT_ID-$(VERSION))
@@ -581,6 +605,8 @@ $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	  -dOurComponentGUID_FFRegistry=$(OUR_COMPONENT_GUID_FF_REGISTRY) \
 	  -dOurComponentGUID_IEFiles=$(OUR_COMPONENT_GUID_IE_FILES) \
 	  -dOurComponentGUID_IERegistry=$(OUR_COMPONENT_GUID_IE_REGISTRY) \
+	  -dOurComponentGUID_SharedFiles=$(OUR_COMPONENT_GUID_SHARED_FILES) \
+	  -dOurComponentGUID_SharedRegistry=$(OUR_COMPONENT_GUID_SHARED_REGISTRY) \
 	  -dOurNpapiProductId=$(OUR_NPAPI_PRODUCT_ID) \
 	  -dOurNpapiPath=$(OUTDIR)/$(OS)-$(ARCH)/npapi \
 	  -dOurComponentGUID_NpapiFiles=$(OUR_COMPONENT_GUID_NPAPI_FILES) \
@@ -592,28 +618,34 @@ endif
 
 # WARNING: Must keep the following two rules (FF2|FF3_MODULE_DLL) in sync!
 # The only difference should be the rule name.
-$(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+$(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
 	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
-$(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+$(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
 	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
@@ -622,11 +654,14 @@ $(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJ
 $(FF3_MODULE_TYPELIB): $(FF3_GEN_TYPELIBS)
 	$(GECKO_BIN)/xpt_link $@ $^
 
-$(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
+$(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
 	$(ECHO) $(IE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
@@ -637,23 +672,29 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 
 ifneq ($(OS),android)
 
-$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
+$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	$(ECHO) $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 endif
 
-$(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+$(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
 	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(MOZJS_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
@@ -662,7 +703,7 @@ $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) advapi32.lib shell32.lib wininet.lib
 
 $(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
 
 $(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS) $(NOTIFIER_LIBS)
@@ -688,14 +729,23 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
 # For $(FFMERGED_INSTALLER_XPI):
 #   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
-# For $(SF_PLUGIN_BUNDLE):
-#   $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
+# For $(SF_INSTALLER_PKG):
+#   $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 # In order to make sure the Installer is always up to date despite these missing
 # dependencies, we list it as a phony target, so it's always rebuilt.
-.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
+.PHONY: $(FFMERGED_INSTALLER_XPI) $(SF_INSTALLER_PKG)
 
-$(SF_INSTALLER): $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
-	$(ECHO) "TODO(playmobil): Create Safari Installer pkg"
+ifeq ($(OS),osx)
+ifeq ($(HAVE_ICEBERG),1)
+# This rule generates a package installer for the Plugin and InputManager.
+#$(SF_INSTALLER_PKG):
+#	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
+#else
+#$(warning To create a Safari installer for Gears, you must install Iceberg \
+#  from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
+#  Safari version manually by running tools/osx/install_gears.sh script)
+endif
+endif
 
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
@@ -740,11 +790,18 @@ else
 	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
 	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 endif
+ifeq ($(OS),osx)
+    # notifier_test isn't yet supported on OSX.
+else
+ifeq ($(USING_CCTESTS),1)
+	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+endif
+endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
+$(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@
@@ -755,14 +812,13 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE)
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
 # Copy the actual plugin.
 	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
-# Copy localized UI.
-	cp -R $(SF_OUTDIR)/genfiles/i18n/* $@/Contents/Resources/
-# Copy over all resources.
-# Todo(playmobil): Handle localization correctly - currently we copy all
-# resources to the en-US directory.
+# Create webarchives for all dialogs.
+# Todo(playmobil): Handle localization correctly.
 	mkdir -p $@/Contents/Resources/en-US
-	cp $(COMMON_RESOURCES) $@/Contents/Resources/en-US/
-# Copy luanch_url
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/permissions_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/settings_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/shortcuts_dialog.html $(COMMON_RESOURCES)
+# Copy launch_url
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 

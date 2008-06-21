@@ -132,11 +132,6 @@ void GearsFactory::Create(JsCallContext *context) {
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
   
-  std::string tmp;
-  String16ToUTF8( module_name.c_str(),module_name.length(), &tmp);
-  const char *a = tmp.c_str();
-  
-  
   if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.database")) {

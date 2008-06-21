@@ -92,19 +92,25 @@ bool NetworkLocationRequest::MakeRequest(const RadioData &radio_data,
 
 void NetworkLocationRequest::Run() {
   WebCacheDB::PayloadInfo payload;
-  if (!HttpPost(url_.c_str(),
-                false,             // Not capturing, so follow redirects
-                NULL,              // reason_header_value
-                NULL,              // mod_since_date
-                NULL,              // required_cookie
-                post_body_.get(),
-                &payload,
-                NULL,              // was_redirected
-                NULL,              // full_redirect_url
-                NULL)) {           // error_message
-    LOG(("NetworkLocationRequest::Run() : Failed to make HttpPost request.\n"));
+  bool result = HttpPost(url_.c_str(),
+                         false,            // Not capturing, so follow redirects
+                         NULL,             // reason_header_value
+                         NULL,             // mod_since_date
+                         NULL,             // required_cookie
+                         post_body_.get(),
+                         &payload,
+                         NULL,             // was_redirected
+                         NULL,             // full_redirect_url
+                         NULL);            // error_message
+
+  MutexLock lock(&is_processing_response_mutex_);
+  // is_aborted_ may be true even if HttpPost succeeded.
+  if (is_aborted_ || !result) {
+    LOG(("NetworkLocationRequest::Run() : HttpPost request failed or was "
+         "cancelled.\n"));
     return;
   }
+
   if (listener_) {
     Position position;
     if (payload.status_code == HttpConstants::HTTP_OK) {
@@ -128,12 +134,17 @@ void NetworkLocationRequest::Run() {
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     listener_->LocationResponseAvailable(position);
   }
-  run_complete_event_.Signal();
 }
 
 void NetworkLocationRequest::StopThreadAndDelete() {
+  // The FF implementation of AsyncTask::Abort() delivers a message to the UI
+  // thread to cancel the request. So if we call this method on the UI thread,
+  // we must return to the OS before the call to Abort() will take effect. In
+  // particular, we can't call Abort() then block here waiting for HttpPost to
+  // return.
+  is_processing_response_mutex_.Lock();
   Abort();
-  run_complete_event_.Wait();
+  is_processing_response_mutex_.Unlock();
   DeleteWhenDone();
 }
 

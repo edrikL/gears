@@ -39,7 +39,7 @@
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
 #ifdef BROWSER_WEBKIT
-#include "gears/desktop/curl_icon_downloader.h"
+#include "gears/base/safari/curl_downloader.h"
 #endif
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
@@ -75,18 +75,11 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
 
 GearsDesktop::GearsDesktop()
-    : ModuleImplBaseClassVirtual("GearsDesktop")
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-    , ipc_message_queue_(NULL)
-#endif  // OFFICIAL_BUILD
-{
+    : ModuleImplBaseClassVirtual("GearsDesktop") {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
   GearsNotification::RegisterAsSerializable();
-  ipc_message_queue_ = IpcMessageQueue::GetSystemQueue();
 #endif  // OFFICIAL_BUILD
 }
 
@@ -332,7 +325,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
-   return false;
+    return false;
   }
 
   std::string16 app_url;
@@ -605,7 +598,13 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
 #ifdef BROWSER_WEBKIT
   // Workaround for bug in OS X 10.4, see definition of GetURLData() for
   // details.
-  if (!GetURLData(icon->url, &(icon->png_data))) {
+  // Get user agent.
+  std::string16 user_agent;
+  if (!BrowserUtils::GetUserAgentString(&user_agent)) {
+    return false;
+  }
+  
+  if (!GetURLDataAsVector(icon->url, user_agent, &(icon->png_data))) {
     *error = STRING16(L"Could not load icon ");
     *error += icon->url.c_str();
     *error += STRING16(L".");
@@ -719,6 +718,23 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   // The notification API has not been finalized for official builds.
 #else
 
+uint32 FindNotifierProcess(JsCallContext *context) {
+  uint32 process_id = NotifierProcess::FindProcess();
+  if (!process_id) {
+    // TODO (jianli): Add the async start support.
+    if (!NotifierProcess::StartProcess()) {
+      context->SetException(STRING16(L"Failed to start notifier process."));
+      return 0;
+    }
+    process_id = NotifierProcess::FindProcess();
+    if (!process_id) {
+      context->SetException(STRING16(L"Failed to find notifier process."));
+      return 0;
+    }
+  }
+  return process_id;
+}
+
 void GearsDesktop::CreateNotification(JsCallContext *context) {
   scoped_refptr<GearsNotification> notification;
   if (!CreateModule<GearsNotification>(GetJsRunner(), &notification))
@@ -743,19 +759,22 @@ void GearsDesktop::ShowNotification(JsCallContext *context) {
   }
 
   // Try to find the process of Desktop Notifier.
-  uint32 process_id = NotifierProcess::FindProcess();
+  uint32 process_id = FindNotifierProcess(context);
   if (!process_id) {
-    // TODO (jianli): Do we need to start the process if not found?
-    context->SetException(STRING16(L"notifier process not found"));
     return;
   }
 
   // Send the IPC message to the process of Desktop Notifier.
-  assert(ipc_message_queue_);
-  if (ipc_message_queue_) {
-    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
-                             kDesktop_AddNotification,
-                             static_cast<GearsNotification*>(module));
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+  assert(ipc_message_queue);
+  if (ipc_message_queue) {
+    GearsNotification *notification = new GearsNotification();
+    notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
+    notification->set_security_origin(EnvPageSecurityOrigin());
+    // IpcMessageQueue is responsible for deleting the message data.
+    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                            kDesktop_AddNotification,
+                            notification);
   }
 }
 
@@ -774,21 +793,22 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   }
 
   // Try to find the process of Desktop Notifier.
-  uint32 process_id = NotifierProcess::FindProcess();
+  uint32 process_id = FindNotifierProcess(context);
   if (!process_id) {
-    // TODO (jianli): Do we need to start the process if not found?
-    context->SetException(STRING16(L"notifier process not found"));
     return;
   }
 
   // Send the IPC message to the process of Desktop Notifier.
-  assert(ipc_message_queue_);
-  if (ipc_message_queue_) {
-    GearsNotification notification;
-    notification.set_id(id);
-    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
-                             kDesktop_RemoveNotification,
-                             &notification);
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+  assert(ipc_message_queue);
+  if (ipc_message_queue) {
+    GearsNotification *notification = new GearsNotification();
+    notification->set_id(id);
+    notification->set_security_origin(EnvPageSecurityOrigin());
+    // IpcMessageQueue is responsible for deleting the message data.
+    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                            kDesktop_RemoveNotification,
+                            notification);
   }
 }
 

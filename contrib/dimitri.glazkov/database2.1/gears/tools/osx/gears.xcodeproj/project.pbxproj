@@ -44,7 +44,6 @@
 		B507A3E30DEC70AF00DC9D6A /* audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3DA0DEC70AF00DC9D6A /* audio_recorder.cc */; };
 		B507A3E40DEC70AF00DC9D6A /* media.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3DB0DEC70AF00DC9D6A /* media.cc */; };
 		B507A3E50DEC70AF00DC9D6A /* time_ranges.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3DE0DEC70AF00DC9D6A /* time_ranges.cc */; };
-		B507A3E60DEC70AF00DC9D6A /* media_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3E10DEC70AF00DC9D6A /* media_recorder.cc */; };
 		B507A3E70DEC70AF00DC9D6A /* audio.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3E20DEC70AF00DC9D6A /* audio.cc */; };
 		B507A3FF0DEC70FD00DC9D6A /* database2.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3EC0DEC70FD00DC9D6A /* database2.cc */; };
 		B507A4000DEC70FD00DC9D6A /* statement.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3ED0DEC70FD00DC9D6A /* statement.cc */; };
@@ -55,8 +54,8 @@
 		B507A4050DEC70FD00DC9D6A /* commands.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FB0DEC70FD00DC9D6A /* commands.cc */; };
 		B507A4060DEC70FD00DC9D6A /* database2_common.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */; };
 		B507A4070DEC70FD00DC9D6A /* transaction.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FE0DEC70FD00DC9D6A /* transaction.cc */; };
+		B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */ = {isa = PBXBuildFile; fileRef = B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
-		B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */ = {isa = PBXBuildFile; fileRef = B535DDC40DA951A000B49CDF /* safari_workaround.m */; };
 		B544D9A00D2EE5D000D30561 /* paths_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B544D9580D2EE5D000D30561 /* paths_sf.mm */; };
 		B544D9A10D2EE5D000D30561 /* paths_sf_more.mm in Sources */ = {isa = PBXBuildFile; fileRef = B544D95A0D2EE5D000D30561 /* paths_sf_more.mm */; };
 		B544D9AA0D2EE5D000D30561 /* module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D96F0D2EE5D000D30561 /* module.cc */; };
@@ -86,6 +85,7 @@
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
+		B547BF350E098D5900590529 /* curl_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B547BF330E098D5900590529 /* curl_downloader.mm */; };
 		B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54C2E690DF9FCEC005129EE /* database2_metadata.cc */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55E5FEB0DF5EF5100D3DC1F /* http_handler.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD8E0D52925E00B0A65D /* http_handler.mm */; };
@@ -334,10 +334,8 @@
 		B58727C50DD4EE49001E4E0B /* serialization_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C40DD4EE49001E4E0B /* serialization_test.cc */; };
 		B58727C90DD4EE54001E4E0B /* sqlite_wrapper_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727C70DD4EE54001E4E0B /* sqlite_wrapper_test.cc */; };
 		B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */; };
-		B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */; };
 		B58939380DB66FA900BD56A0 /* launch_url_in_browser.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */; };
 		B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
-		B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */; };
 		B58D65F40DF45FDD0059CB14 /* httprequest_upload.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58D65F20DF45FDD0059CB14 /* httprequest_upload.cc */; };
 		B58E004B0D5BB19200B0A65D /* libjsoncpp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B58E000B0D53F47B00B0A65D /* libjsoncpp.a */; };
 		B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E00550D5BB28900B0A65D /* name_value_table.cc */; };
@@ -362,14 +360,9 @@
 		B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5D0D529ACB00B0A65D /* capture_task.cc */; };
 		B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE700D529AEA00B0A65D /* resource_store_np.cc */; };
 		B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */; };
-		B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */; };
 		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
-		B5924A580DDA0A2900F9CD2B /* notifier_process_win32.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */; };
-		B5924A5A0DDA0A2900F9CD2B /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */; };
-		B5924A5D0DDA0A2900F9CD2B /* notifier_process_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */; };
 		B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A620DDA0A4100F9CD2B /* event_test.cc */; };
 		B5924A660DDA0A4100F9CD2B /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A630DDA0A4100F9CD2B /* event.cc */; };
-		B5950B550DDE014100D54424 /* device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B4D0DDE014100D54424 /* device_data_provider.cc */; };
 		B5950B570DDE014100D54424 /* empty_device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */; };
 		B5950B590DDE014100D54424 /* network_location_request.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B510DDE014100D54424 /* network_location_request.cc */; };
 		B5950B5B0DDE014100D54424 /* network_location_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5950B530DDE014100D54424 /* network_location_provider.cc */; };
@@ -378,21 +371,23 @@
 		B5950BA10DDE033500D54424 /* blob_input_stream_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */; };
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
+		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
+		B5A9BD300E06C0CE00DCA259 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */; };
+		B5A9BD320E06C0CE00DCA259 /* balloons.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */; };
+		B5A9BD330E06C0CE00DCA259 /* system_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */; };
+		B5A9BD3F0E06C10900DCA259 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */; };
+		B5A9BD410E06C10900DCA259 /* notification.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD3D0E06C10900DCA259 /* notification.cc */; };
+		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
+		B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */; };
+		B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD4D0E06C1A200DCA259 /* thread.cc */; };
+		B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD530E06C23800DCA259 /* byte_store_test.cc */; };
+		B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD540E06C23800DCA259 /* byte_store.cc */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
 		B5AC85E00DCBBA5F00C62010 /* pldhash.c in Sources */ = {isa = PBXBuildFile; fileRef = B5AC85DE0DCBBA5F00C62010 /* pldhash.c */; };
 		B5AC85E10DCBBA5F00C62010 /* pldhash.h in Headers */ = {isa = PBXBuildFile; fileRef = B5AC85DF0DCBBA5F00C62010 /* pldhash.h */; };
 		B5AFB32C0DAD233D0058E178 /* permissions_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3280DAD233D0058E178 /* permissions_dialog.cc */; };
 		B5AFB32D0DAD233D0058E178 /* settings_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3290DAD233D0058E178 /* settings_dialog.cc */; };
 		B5AFB32E0DAD233D0058E178 /* html_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB32B0DAD233D0058E178 /* html_dialog.cc */; };
-		B5B307670DB578D900A206B8 /* button.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B3075E0DB578D900A206B8 /* button.css */; };
-		B5B307680DB578D900A206B8 /* button_bg.gif in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B3075F0DB578D900A206B8 /* button_bg.gif */; };
-		B5B307690DB578D900A206B8 /* html_dialog.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307600DB578D900A206B8 /* html_dialog.css */; };
-		B5B3076B0DB578D900A206B8 /* icon_16x16.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307630DB578D900A206B8 /* icon_16x16.png */; };
-		B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307640DB578D900A206B8 /* icon_32x32.png */; };
-		B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307650DB578D900A206B8 /* icon_48x48.png */; };
-		B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307660DB578D900A206B8 /* icon_merged.ico */; };
-		B5BAFE8B0DF07411001DD3BD /* curl_icon_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */; };
-		B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */; };
 		B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */; };
 		B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8600D8E8223001A4916 /* http_request_sf.mm */; };
 		B5BBD8640D8E822E001A4916 /* http_request_delegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8630D8E822E001A4916 /* http_request_delegate.mm */; };
@@ -406,11 +401,9 @@
 		B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */; };
 		B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3380DB9320800C257AA /* nsstring_utils.mm */; };
 		B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */; };
+		B5E9135F0E0AF9EA0061880E /* blob_input_stream_sf_test.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
-		B5FEB24C0DDBA35A001DBEE5 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */; };
-		B5FEB24F0DDBA35A001DBEE5 /* unit_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */; };
-		B5FEB2500DDBA35A001DBEE5 /* notification_manager_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */; };
 		B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */; };
 		B5FEB9BE0DDCE58C001DBEE5 /* mozjs_npruntime.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B80DDCE58C001DBEE5 /* mozjs_npruntime.cc */; };
 		B5FF55DA0DDB75DA0058E403 /* update_task_single_process.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FF55D80DDB75DA0058E403 /* update_task_single_process.cc */; };
@@ -503,27 +496,6 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		B5CBD5E70DBCFE7D00B7B3EB /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "en-US";
-			dstSubfolderSpec = 7;
-			files = (
-				B5B307670DB578D900A206B8 /* button.css in CopyFiles */,
-				B5B307680DB578D900A206B8 /* button_bg.gif in CopyFiles */,
-				B5B307690DB578D900A206B8 /* html_dialog.css in CopyFiles */,
-				B5B3076B0DB578D900A206B8 /* icon_16x16.png in CopyFiles */,
-				B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */,
-				B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */,
-				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
-				B5BAFE8C0DF07411001DD3BD /* curl_icon_downloader.h in CopyFiles */,
-				B58D65F30DF45FDD0059CB14 /* httprequest_upload.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
@@ -549,9 +521,7 @@
 		B507A3DC0DEC70AF00DC9D6A /* audio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio.h; path = ../../media/audio.h; sourceTree = SOURCE_ROOT; };
 		B507A3DD0DEC70AF00DC9D6A /* time_ranges.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = time_ranges.h; path = ../../media/time_ranges.h; sourceTree = SOURCE_ROOT; };
 		B507A3DE0DEC70AF00DC9D6A /* time_ranges.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = time_ranges.cc; path = ../../media/time_ranges.cc; sourceTree = SOURCE_ROOT; };
-		B507A3DF0DEC70AF00DC9D6A /* media_recorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_recorder.h; path = ../../media/media_recorder.h; sourceTree = SOURCE_ROOT; };
 		B507A3E00DEC70AF00DC9D6A /* media.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media.h; path = ../../media/media.h; sourceTree = SOURCE_ROOT; };
-		B507A3E10DEC70AF00DC9D6A /* media_recorder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_recorder.cc; path = ../../media/media_recorder.cc; sourceTree = SOURCE_ROOT; };
 		B507A3E20DEC70AF00DC9D6A /* audio.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio.cc; path = ../../media/audio.cc; sourceTree = SOURCE_ROOT; };
 		B507A3EC0DEC70FD00DC9D6A /* database2.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2.cc; path = ../../database2/database2.cc; sourceTree = SOURCE_ROOT; };
 		B507A3ED0DEC70FD00DC9D6A /* statement.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = statement.cc; path = ../../database2/statement.cc; sourceTree = SOURCE_ROOT; };
@@ -572,9 +542,11 @@
 		B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2_common.cc; path = ../../database2/database2_common.cc; sourceTree = SOURCE_ROOT; };
 		B507A3FD0DEC70FD00DC9D6A /* manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = manager.h; path = ../../database2/manager.h; sourceTree = SOURCE_ROOT; };
 		B507A3FE0DEC70FD00DC9D6A /* transaction.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transaction.cc; path = ../../database2/transaction.cc; sourceTree = SOURCE_ROOT; };
+		B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = safari_workarounds.h; path = ../../base/safari/safari_workarounds.h; sourceTree = SOURCE_ROOT; };
+		B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workarounds.m; path = ../../base/safari/safari_workarounds.m; sourceTree = SOURCE_ROOT; };
+		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
-		B535DDC40DA951A000B49CDF /* safari_workaround.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workaround.m; path = ../../base/safari/safari_workaround.m; sourceTree = SOURCE_ROOT; };
 		B54499DF0DCBDA8B0096E4C9 /* scoped_token.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scoped_token.h; path = ../../base/common/scoped_token.h; sourceTree = SOURCE_ROOT; };
 		B544D9580D2EE5D000D30561 /* paths_sf.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = paths_sf.mm; path = ../../base/common/paths_sf.mm; sourceTree = SOURCE_ROOT; };
 		B544D9590D2EE5D000D30561 /* paths_sf_more.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = paths_sf_more.h; path = ../../base/common/paths_sf_more.h; sourceTree = SOURCE_ROOT; };
@@ -625,6 +597,8 @@
 		B544DB710D2EE93800D30561 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		B544DCC40D3578B000D30561 /* http_request_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_request_sf.h; path = ../../localserver/safari/http_request_sf.h; sourceTree = SOURCE_ROOT; };
 		B544FD620D89326D00568660 /* cf_string_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cf_string_utils.cc; path = ../../base/safari/cf_string_utils.cc; sourceTree = SOURCE_ROOT; };
+		B547BF330E098D5900590529 /* curl_downloader.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = curl_downloader.mm; path = ../../base/safari/curl_downloader.mm; sourceTree = SOURCE_ROOT; };
+		B547BF340E098D5900590529 /* curl_downloader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = curl_downloader.h; path = ../../base/safari/curl_downloader.h; sourceTree = SOURCE_ROOT; };
 		B54C2E680DF9FCEC005129EE /* database2_metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database2_metadata.h; path = ../../database2/database2_metadata.h; sourceTree = SOURCE_ROOT; };
 		B54C2E690DF9FCEC005129EE /* database2_metadata.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2_metadata.cc; path = ../../database2/database2_metadata.cc; sourceTree = SOURCE_ROOT; };
 		B54D29110D9287D20029F7EF /* dispatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dispatcher.h; path = ../../base/common/dispatcher.h; sourceTree = SOURCE_ROOT; };
@@ -906,8 +880,6 @@
 		B58727C60DD4EE53001E4E0B /* sqlite_wrapper_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = sqlite_wrapper_test.h; path = ../../base/common/sqlite_wrapper_test.h; sourceTree = SOURCE_ROOT; };
 		B58727C70DD4EE54001E4E0B /* sqlite_wrapper_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = sqlite_wrapper_test.cc; path = ../../base/common/sqlite_wrapper_test.cc; sourceTree = SOURCE_ROOT; };
 		B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = string_utils_test.cc; path = ../../base/common/string_utils_test.cc; sourceTree = SOURCE_ROOT; };
-		B58727CD0DD4EE84001E4E0B /* geolocation_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = geolocation_test.h; path = ../../geolocation/geolocation_test.h; sourceTree = SOURCE_ROOT; };
-		B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
 		B58939320DB66F4D00BD56A0 /* launch_url_with_browser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = launch_url_with_browser; sourceTree = BUILT_PRODUCTS_DIR; };
 		B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = launch_url_in_browser.cc; path = ../../base/safari/launch_url_in_browser.cc; sourceTree = SOURCE_ROOT; };
 		B58D65F10DF45FDD0059CB14 /* httprequest_upload.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest_upload.h; path = ../../httprequest/httprequest_upload.h; sourceTree = SOURCE_ROOT; };
@@ -960,23 +932,15 @@
 		B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = resource_store_np.h; path = ../../localserver/npapi/resource_store_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE700D529AEA00B0A65D /* resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = resource_store_np.cc; path = ../../localserver/npapi/resource_store_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_submitter_np.cc; path = ../../localserver/npapi/file_submitter_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_np.cc; path = ../../localserver/npapi/managed_resource_store_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE740D529AEA00B0A65D /* managed_resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store_np.h; path = ../../localserver/npapi/managed_resource_store_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE770D529AEA00B0A65D /* capture_task_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = capture_task_np.h; path = ../../localserver/npapi/capture_task_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE780D529AEA00B0A65D /* localserver_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_np.cc; path = ../../localserver/npapi/localserver_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE790D529AEA00B0A65D /* file_submitter_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_submitter_np.h; path = ../../localserver/npapi/file_submitter_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFEB70D529D5900B0A65D /* message_queue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = message_queue.h; path = ../../base/common/message_queue.h; sourceTree = SOURCE_ROOT; };
 		B58EFF630D52A5DC00B0A65D /* common_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = common_sf.h; path = ../../base/common/common_sf.h; sourceTree = SOURCE_ROOT; };
-		B5924A500DDA0A2900F9CD2B /* notification.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
-		B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_win32.cc; path = ../../notifier/notifier_process_win32.cc; sourceTree = SOURCE_ROOT; };
-		B5924A520DDA0A2900F9CD2B /* notifier_process.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notifier_process.h; path = ../../notifier/notifier_process.h; sourceTree = SOURCE_ROOT; };
-		B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
-		B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_linux.cc; path = ../../notifier/notifier_process_linux.cc; sourceTree = SOURCE_ROOT; };
 		B5924A610DDA0A4100F9CD2B /* event.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
 		B5924A620DDA0A4100F9CD2B /* event_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = event_test.cc; path = ../../base/common/event_test.cc; sourceTree = SOURCE_ROOT; };
 		B5924A630DDA0A4100F9CD2B /* event.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = event.cc; path = ../../base/common/event.cc; sourceTree = SOURCE_ROOT; };
 		B5950B4C0DDE014100D54424 /* device_data_provider.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = device_data_provider.h; path = ../../geolocation/device_data_provider.h; sourceTree = SOURCE_ROOT; };
-		B5950B4D0DDE014100D54424 /* device_data_provider.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = device_data_provider.cc; path = ../../geolocation/device_data_provider.cc; sourceTree = SOURCE_ROOT; };
 		B5950B4E0DDE014100D54424 /* empty_device_data_provider.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = empty_device_data_provider.h; path = ../../geolocation/empty_device_data_provider.h; sourceTree = SOURCE_ROOT; };
 		B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = empty_device_data_provider.cc; path = ../../geolocation/empty_device_data_provider.cc; sourceTree = SOURCE_ROOT; };
 		B5950B500DDE014100D54424 /* network_location_request.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = network_location_request.h; path = ../../geolocation/network_location_request.h; sourceTree = SOURCE_ROOT; };
@@ -993,6 +957,25 @@
 		B59CE65C0DD8EC24000B31AE /* httprequest.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest.h; path = ../../httprequest/httprequest.h; sourceTree = SOURCE_ROOT; };
 		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_module.cc; path = ../../localserver/managed_resource_store_module.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store_module.h; path = ../../localserver/managed_resource_store_module.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD2D0E06C0CE00DCA259 /* balloons.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = balloons.h; path = ../../notifier/balloons.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = balloons.cc; path = ../../notifier/balloons.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = system_osx.cc; path = ../../notifier/system_osx.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD3A0E06C10900DCA259 /* notification_manager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager.h; path = ../../notifier/notification_manager.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager.cc; path = ../../notifier/notification_manager.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD3C0E06C10900DCA259 /* notification.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD3D0E06C10900DCA259 /* notification.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification.cc; path = ../../notifier/notification.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD440E06C16400DCA259 /* geolocation_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = geolocation_test.h; path = ../../geolocation/geolocation_test.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD450E06C16400DCA259 /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = location_provider_pool.cc; path = ../../geolocation/location_provider_pool.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = location_provider_pool.h; path = ../../geolocation/location_provider_pool.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD4D0E06C1A200DCA259 /* thread.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cc; path = ../../geolocation/thread.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD4E0E06C1A200DCA259 /* thread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread.h; path = ../../geolocation/thread.h; sourceTree = SOURCE_ROOT; };
+		B5A9BD530E06C23800DCA259 /* byte_store_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store_test.cc; path = ../../base/common/byte_store_test.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD540E06C23800DCA259 /* byte_store.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store.cc; path = ../../base/common/byte_store.cc; sourceTree = SOURCE_ROOT; };
+		B5A9BD550E06C23800DCA259 /* byte_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = byte_store.h; path = ../../base/common/byte_store.h; sourceTree = SOURCE_ROOT; };
 		B5AB77DF0D9FDC2F001EE5D5 /* async_router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_router.h; path = ../../base/common/async_router.h; sourceTree = SOURCE_ROOT; };
 		B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_router.cc; path = ../../base/common/async_router.cc; sourceTree = SOURCE_ROOT; };
 		B5AC85DE0DCBBA5F00C62010 /* pldhash.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pldhash.c; path = ../../../third_party/spidermonkey/xpcom/glue/pldhash.c; sourceTree = SOURCE_ROOT; };
@@ -1012,8 +995,6 @@
 		B5B307640DB578D900A206B8 /* icon_32x32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_32x32.png; path = ../../ui/common/icon_32x32.png; sourceTree = SOURCE_ROOT; };
 		B5B307650DB578D900A206B8 /* icon_48x48.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_48x48.png; path = ../../ui/common/icon_48x48.png; sourceTree = SOURCE_ROOT; };
 		B5B307660DB578D900A206B8 /* icon_merged.ico */ = {isa = PBXFileReference; lastKnownFileType = image.ico; name = icon_merged.ico; path = ../../ui/common/icon_merged.ico; sourceTree = SOURCE_ROOT; };
-		B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = curl_icon_downloader.mm; path = ../../desktop/curl_icon_downloader.mm; sourceTree = SOURCE_ROOT; };
-		B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = curl_icon_downloader.h; path = ../../desktop/curl_icon_downloader.h; sourceTree = SOURCE_ROOT; };
 		B5BB92540D47F9AA00FA9651 /* http_cookies_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_cookies_sf.h; path = ../../localserver/safari/http_cookies_sf.h; sourceTree = SOURCE_ROOT; };
 		B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = http_cookies_sf.mm; path = ../../localserver/safari/http_cookies_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5BB93F30D49255E00FA9651 /* cf_string_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = cf_string_utils.h; path = ../../base/safari/cf_string_utils.h; sourceTree = SOURCE_ROOT; };
@@ -1035,16 +1016,10 @@
 		B5D8D3380DB9320800C257AA /* nsstring_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = nsstring_utils.mm; path = ../../base/safari/nsstring_utils.mm; sourceTree = SOURCE_ROOT; };
 		B5D8D3390DB9320800C257AA /* browser_utils_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = browser_utils_sf.h; path = ../../base/safari/browser_utils_sf.h; sourceTree = SOURCE_ROOT; };
 		B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_dialog_sf.mm; path = ../../ui/safari/html_dialog_sf.mm; sourceTree = SOURCE_ROOT; };
+		B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = blob_input_stream_sf_test.mm; path = ../../blob/blob_input_stream_sf_test.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = async_task_sf.mm; path = ../../localserver/safari/async_task_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_sf.h; path = ../../localserver/safari/async_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_test.cc; path = ../../base/common/url_utils_test.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2430DDBA35A001DBEE5 /* unit_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = unit_test.h; path = ../../notifier/unit_test.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2440DDBA35A001DBEE5 /* notification_manager_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager_test.h; path = ../../notifier/notification_manager_test.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager.cc; path = ../../notifier/notification_manager.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2460DDBA35A001DBEE5 /* user_activity.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = user_activity.h; path = ../../notifier/user_activity.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2470DDBA35A001DBEE5 /* notification_manager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notification_manager.h; path = ../../notifier/notification_manager.h; sourceTree = SOURCE_ROOT; };
-		B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = unit_test.cc; path = ../../notifier/unit_test.cc; sourceTree = SOURCE_ROOT; };
-		B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager_test.cc; path = ../../notifier/notification_manager_test.cc; sourceTree = SOURCE_ROOT; };
 		B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mozjs_npapi_storage.cc; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.cc; sourceTree = SOURCE_ROOT; };
 		B5FEB9B60DDCE58C001DBEE5 /* mozjs_npapi_storage.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = mozjs_npapi_storage.h; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h; sourceTree = SOURCE_ROOT; };
 		B5FEB9B80DDCE58C001DBEE5 /* mozjs_npruntime.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mozjs_npruntime.cc; path = ../../../third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime.cc; sourceTree = SOURCE_ROOT; };
@@ -1141,9 +1116,6 @@
 		089C166AFE841209C02AAC07 /* gears */ = {
 			isa = PBXGroup;
 			children = (
-				B566D2550DC79660006BF071 /* CoreServices.framework */,
-				B58E00C20D5BB9AB00B0A65D /* WebKit.framework */,
-				B544DB710D2EE93800D30561 /* Cocoa.framework */,
 				08FB77ADFE841716C02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
@@ -1156,6 +1128,9 @@
 			isa = PBXGroup;
 			children = (
 				08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */,
+				B544DB710D2EE93800D30561 /* Cocoa.framework */,
+				B566D2550DC79660006BF071 /* CoreServices.framework */,
+				B58E00C20D5BB9AB00B0A65D /* WebKit.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -1199,19 +1174,22 @@
 			isa = PBXGroup;
 			children = (
 				B5950B4C0DDE014100D54424 /* device_data_provider.h */,
-				B5950B4D0DDE014100D54424 /* device_data_provider.cc */,
 				B5950B4E0DDE014100D54424 /* empty_device_data_provider.h */,
 				B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */,
-				B5950B500DDE014100D54424 /* network_location_request.h */,
-				B5950B510DDE014100D54424 /* network_location_request.cc */,
-				B5950B520DDE014100D54424 /* network_location_provider.h */,
-				B5950B530DDE014100D54424 /* network_location_provider.cc */,
 				79272FDD0DC2141700CDF577 /* geolocation.cc */,
 				79272FDE0DC2141800CDF577 /* geolocation.h */,
-				B58727CD0DD4EE84001E4E0B /* geolocation_test.h */,
-				B58727CE0DD4EE84001E4E0B /* geolocation_test.cc */,
+				B5A9BD440E06C16400DCA259 /* geolocation_test.h */,
+				B5A9BD450E06C16400DCA259 /* geolocation_test.cc */,
 				79272FDF0DC2141800CDF577 /* location_provider.cc */,
 				79272FE00DC2141800CDF577 /* location_provider.h */,
+				B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */,
+				B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */,
+				B5950B520DDE014100D54424 /* network_location_provider.h */,
+				B5950B530DDE014100D54424 /* network_location_provider.cc */,
+				B5950B500DDE014100D54424 /* network_location_request.h */,
+				B5950B510DDE014100D54424 /* network_location_request.cc */,
+				B5A9BD4E0E06C1A200DCA259 /* thread.h */,
+				B5A9BD4D0E06C1A200DCA259 /* thread.cc */,
 			);
 			name = geolocation;
 			sourceTree = "<group>";
@@ -1226,6 +1204,7 @@
 				79C3E93B0DB8D8E800346806 /* blob_interface.h */,
 				B5950B9E0DDE033500D54424 /* blob_input_stream_sf.h */,
 				B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */,
+				B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */,
 				B563C4900DF5E56E00A145D1 /* blob_test.cc */,
 				79C3E93C0DB8D8E800346806 /* buffer_blob.cc */,
 				79C3E93D0DB8D8E800346806 /* buffer_blob.h */,
@@ -1248,8 +1227,6 @@
 				B507A3DA0DEC70AF00DC9D6A /* audio_recorder.cc */,
 				B507A3E00DEC70AF00DC9D6A /* media.h */,
 				B507A3DB0DEC70AF00DC9D6A /* media.cc */,
-				B507A3DF0DEC70AF00DC9D6A /* media_recorder.h */,
-				B507A3E10DEC70AF00DC9D6A /* media_recorder.cc */,
 				B507A3DD0DEC70AF00DC9D6A /* time_ranges.h */,
 				B507A3DE0DEC70AF00DC9D6A /* time_ranges.cc */,
 			);
@@ -1357,6 +1334,8 @@
 		B544D9630D2EE5D000D30561 /* localserver */ = {
 			isa = PBXGroup;
 			children = (
+				B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */,
+				B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */,
 				B544D9640D2EE5D000D30561 /* common */,
 				B544DCC10D35789D00D30561 /* safari */,
 				B58EFE430D529A9A00B0A65D /* npapi */,
@@ -1418,13 +1397,17 @@
 				B5D8D3390DB9320800C257AA /* browser_utils_sf.h */,
 				B5BB93F30D49255E00FA9651 /* cf_string_utils.h */,
 				B544FD620D89326D00568660 /* cf_string_utils.cc */,
-				B57A58310DA9288B001B0CC6 /* loader.h */,
-				B57A58320DA9288B001B0CC6 /* enabler.m */,
+				B547BF340E098D5900590529 /* curl_downloader.h */,
+				B547BF330E098D5900590529 /* curl_downloader.mm */,
 				B57A58330DA9288B001B0CC6 /* enabler.h */,
+				B57A58320DA9288B001B0CC6 /* enabler.m */,
 				B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */,
+				B57A58310DA9288B001B0CC6 /* loader.h */,
 				B57A58530DA92C6A001B0CC6 /* loader.mm */,
+				B50E5DB00E09F72D00435FF9 /* npapi_patches.h */,
+				B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */,
+				B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */,
 				B5D8D3380DB9320800C257AA /* nsstring_utils.mm */,
-				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
 				B5B305160DB503DA00A206B8 /* scoped_cf.h */,
 			);
 			name = safari;
@@ -1459,6 +1442,9 @@
 				B56F677E0DAE009B00A5D6C5 /* base64.h */,
 				B544D97E0D2EE5D000D30561 /* base_class.cc */,
 				B55F243C0DB3DD3B00AF44E2 /* basictypes.h */,
+				B5A9BD540E06C23800DCA259 /* byte_store.cc */,
+				B5A9BD550E06C23800DCA259 /* byte_store.h */,
+				B5A9BD530E06C23800DCA259 /* byte_store_test.cc */,
 				B55D10DF0D992C3F00B405E4 /* common.h */,
 				B58EFF630D52A5DC00B0A65D /* common_sf.h */,
 				B544D97D0D2EE5D000D30561 /* common_sf.mm */,
@@ -1938,8 +1924,6 @@
 		B56F66000DAD40DE00A5D6C5 /* desktop */ = {
 			isa = PBXGroup;
 			children = (
-				B5BAFE890DF07411001DD3BD /* curl_icon_downloader.mm */,
-				B5BAFE8A0DF07411001DD3BD /* curl_icon_downloader.h */,
 				B56F660E0DAD412400A5D6C5 /* file_dialog.h */,
 				B56F660F0DAD412400A5D6C5 /* file_dialog.cc */,
 				B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */,
@@ -2034,14 +2018,12 @@
 		B58EFE430D529A9A00B0A65D /* npapi */ = {
 			isa = PBXGroup;
 			children = (
+				B58EFE770D529AEA00B0A65D /* capture_task_np.h */,
 				B58EFE6D0D529AEA00B0A65D /* localserver_np.h */,
+				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
 				B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */,
 				B58EFE700D529AEA00B0A65D /* resource_store_np.cc */,
 				B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */,
-				B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */,
-				B58EFE740D529AEA00B0A65D /* managed_resource_store_np.h */,
-				B58EFE770D529AEA00B0A65D /* capture_task_np.h */,
-				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
 				B58EFE790D529AEA00B0A65D /* file_submitter_np.h */,
 			);
 			name = npapi;
@@ -2060,18 +2042,14 @@
 		B5924A480DDA0A0600F9CD2B /* notifier */ = {
 			isa = PBXGroup;
 			children = (
-				B5924A500DDA0A2900F9CD2B /* notification.h */,
-				B5924A510DDA0A2900F9CD2B /* notifier_process_win32.cc */,
-				B5924A520DDA0A2900F9CD2B /* notifier_process.h */,
-				B5924A530DDA0A2900F9CD2B /* notifier_process_osx.cc */,
-				B5924A560DDA0A2900F9CD2B /* notifier_process_linux.cc */,
-				B5FEB2430DDBA35A001DBEE5 /* unit_test.h */,
-				B5FEB2440DDBA35A001DBEE5 /* notification_manager_test.h */,
-				B5FEB2450DDBA35A001DBEE5 /* notification_manager.cc */,
-				B5FEB2460DDBA35A001DBEE5 /* user_activity.h */,
-				B5FEB2470DDBA35A001DBEE5 /* notification_manager.h */,
-				B5FEB2480DDBA35A001DBEE5 /* unit_test.cc */,
-				B5FEB2490DDBA35A001DBEE5 /* notification_manager_test.cc */,
+				B5A9BD2D0E06C0CE00DCA259 /* balloons.h */,
+				B5A9BD2E0E06C0CE00DCA259 /* balloons.cc */,
+				B5A9BD3C0E06C10900DCA259 /* notification.h */,
+				B5A9BD3D0E06C10900DCA259 /* notification.cc */,
+				B5A9BD3A0E06C10900DCA259 /* notification_manager.h */,
+				B5A9BD3B0E06C10900DCA259 /* notification_manager.cc */,
+				B5A9BD2C0E06C0CE00DCA259 /* notifier_process_osx.cc */,
+				B5A9BD2F0E06C0CE00DCA259 /* system_osx.cc */,
 			);
 			name = notifier;
 			sourceTree = "<group>";
@@ -2307,7 +2285,6 @@
 			buildConfigurationList = 4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.plugin" */;
 			buildPhases = (
 				8D01CCC90486CAD60068D4B7 /* Resources */,
-				B5CBD5E70DBCFE7D00B7B3EB /* CopyFiles */,
 				8D01CCCB0486CAD60068D4B7 /* Sources */,
 				8D01CCCD0486CAD60068D4B7 /* Frameworks */,
 				B544D9CC0D2EE68200D30561 /* Install Symlink */,
@@ -2500,15 +2477,15 @@
 			projectRoot = "";
 			targets = (
 				B54E78E80DA3862B00F439C3 /* Gears */,
+				B55F24320DB3DB6700AF44E2 /* Generate Headers */,
 				8D01CCC60486CAD60068D4B7 /* Gears.plugin */,
+				B57A582A0DA927C3001B0CC6 /* InputManager */,
+				B58939310DB66F4D00BD56A0 /* launch_url_with_browser */,
 				B544D9D30D2EE6B600D30561 /* sqlite */,
 				B58E000A0D53F47B00B0A65D /* jsoncpp */,
-				B57A582A0DA927C3001B0CC6 /* InputManager */,
 				B56F661D0DAD427900A5D6C5 /* libpng */,
 				B566D1790DC792E6006BF071 /* nspr */,
 				B56F67820DAE00B300A5D6C5 /* modp_b64 */,
-				B55F24320DB3DB6700AF44E2 /* Generate Headers */,
-				B58939310DB66F4D00BD56A0 /* launch_url_with_browser */,
 				B566D1090DC79113006BF071 /* spidermonkey */,
 				B56F66B10DAD45BB00A5D6C5 /* zlib */,
 			);
@@ -2559,11 +2536,11 @@
 				"$(SRCROOT)/../../tools/version.mk",
 			);
 			outputPaths = (
-				"$(SRCROOT)/../../bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h",
+				"$(PROJECT_TEMP_DIR)/genfiles/product_constants.h",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n \n# Ensure that the directory for the generated files exists\n/bin/mkdir -p bin-dbg/osx-$CURRENT_ARCH/common/genfiles/\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nFRIENDLY_NAME=\"Google Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h\n\necho \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h\" built.\n\nexit 0\n";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\nGEN_FILE_DIR=\"$BUILD_DIR/genfiles\"\n# Ensure that the directory for the generated files exists\n/bin/mkdir -p $GEN_FILE_DIR\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > \"$GEN_FILE_DIR/GearsVersion\"\nsource \"$GEN_FILE_DIR/GearsVersion\"\n\nFRIENDLY_NAME=\"Google Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME_SF\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > \"$GEN_FILE_DIR/product_constants.h\"\n\necho \"$GEN_FILE_DIR/product_constants.h\" built.\n\nexit 0\n";
 		};
 		B57A583E0DA9292C001B0CC6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2576,7 +2553,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GoogleGearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
+			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
 		};
 		B5B307500DB5753600A206B8 /* Generate UI files */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2590,13 +2567,13 @@
 			);
 			name = "Generate UI files";
 			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/settings_dialog.html",
-				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/permissions_dialog.html",
-				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/shortcuts_dialog.html",
+				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/en-US/settings_dialog.webarchive",
+				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/en-US/permissions_dialog.webarchive",
+				"$(TARGET_BUILD_DIR)/$(TARGET_NAME)/Contents/Resources/en-US/shortcuts_dialog.webarchive",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\n\n# SAFARI-TEMP\n# Add support for localizations.\nmkdir -p \"$RESOURCES_DIR/en-US\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > $RESOURCES_DIR/en-US/settings_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > $RESOURCES_DIR/en-US/permissions_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > $RESOURCES_DIR/en-US/shortcuts_dialog.html\n\nexit 0;";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"$BUILD_DIR/genfiles/GearsVersion\"\n\nCOMMON_RESOURCES=\"\tui/common/button_bg.gif ui/common/button_corner_black.gif ui/common/button_corner_blue.gif ui/common/button_corner_grey.gif ui/common/icon_32x32.png\"\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\nGEN_UI_DIR=\"$BUILD_DIR/genfiles/ui\"\n\n# TODO(playmobil):Add support for localizations.\nmkdir -p \"$RESOURCES_DIR/en-US\"\nmkdir -p \"$GEN_UI_DIR/en-US\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > \"$GEN_UI_DIR/en-US/settings_dialog.html\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > \"$GEN_UI_DIR/en-US/permissions_dialog.html\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > \"$GEN_UI_DIR/en-US/shortcuts_dialog.html\"\n\ntools/osx/webarchiver/webarchiver \"$RESOURCES_DIR/en-US/settings_dialog.webarchive\" \"$GEN_UI_DIR/en-US/settings_dialog.html\" $COMMON_RESOURCES\ntools/osx/webarchiver/webarchiver \"$RESOURCES_DIR/en-US/permissions_dialog.webarchive\" \"$GEN_UI_DIR/en-US/permissions_dialog.html\" $COMMON_RESOURCES\ntools/osx/webarchiver/webarchiver \"$RESOURCES_DIR/en-US/shortcuts_dialog.webarchive\" \"$GEN_UI_DIR/en-US/shortcuts_dialog.html\" $COMMON_RESOURCES\n\nexit 0;";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2645,7 +2622,6 @@
 				B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */,
 				B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */,
 				B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */,
-				B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */,
 				B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */,
 				B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */,
 				B58E005B0D5BB2A600B0A65D /* permissions_db.cc in Sources */,
@@ -2666,7 +2642,6 @@
 				B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */,
 				B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */,
 				B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */,
-				B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */,
 				B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */,
 				B5AFB32C0DAD233D0058E178 /* permissions_dialog.cc in Sources */,
 				B5AFB32D0DAD233D0058E178 /* settings_dialog.cc in Sources */,
@@ -2714,20 +2689,12 @@
 				B58727C50DD4EE49001E4E0B /* serialization_test.cc in Sources */,
 				B58727C90DD4EE54001E4E0B /* sqlite_wrapper_test.cc in Sources */,
 				B58727CB0DD4EE61001E4E0B /* string_utils_test.cc in Sources */,
-				B58727D00DD4EE84001E4E0B /* geolocation_test.cc in Sources */,
 				B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */,
-				B5924A580DDA0A2900F9CD2B /* notifier_process_win32.cc in Sources */,
-				B5924A5A0DDA0A2900F9CD2B /* notifier_process_osx.cc in Sources */,
-				B5924A5D0DDA0A2900F9CD2B /* notifier_process_linux.cc in Sources */,
 				B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */,
 				B5924A660DDA0A4100F9CD2B /* event.cc in Sources */,
 				B5FF55DA0DDB75DA0058E403 /* update_task_single_process.cc in Sources */,
-				B5FEB24C0DDBA35A001DBEE5 /* notification_manager.cc in Sources */,
-				B5FEB24F0DDBA35A001DBEE5 /* unit_test.cc in Sources */,
-				B5FEB2500DDBA35A001DBEE5 /* notification_manager_test.cc in Sources */,
 				B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */,
 				B5FEB9BE0DDCE58C001DBEE5 /* mozjs_npruntime.cc in Sources */,
-				B5950B550DDE014100D54424 /* device_data_provider.cc in Sources */,
 				B5950B570DDE014100D54424 /* empty_device_data_provider.cc in Sources */,
 				B5950B590DDE014100D54424 /* network_location_request.cc in Sources */,
 				B5950B5B0DDE014100D54424 /* network_location_provider.cc in Sources */,
@@ -2742,7 +2709,6 @@
 				B507A3E30DEC70AF00DC9D6A /* audio_recorder.cc in Sources */,
 				B507A3E40DEC70AF00DC9D6A /* media.cc in Sources */,
 				B507A3E50DEC70AF00DC9D6A /* time_ranges.cc in Sources */,
-				B507A3E60DEC70AF00DC9D6A /* media_recorder.cc in Sources */,
 				B507A3E70DEC70AF00DC9D6A /* audio.cc in Sources */,
 				B507A3FF0DEC70FD00DC9D6A /* database2.cc in Sources */,
 				B507A4000DEC70FD00DC9D6A /* statement.cc in Sources */,
@@ -2757,7 +2723,6 @@
 				B5D5FC040DEF39A00033ABE2 /* workerpool.cc in Sources */,
 				B5D5FC080DEF3A230033ABE2 /* progress_event.cc in Sources */,
 				B5D5FC0B0DEF3A470033ABE2 /* js_marshal.cc in Sources */,
-				B5BAFE8B0DF07411001DD3BD /* curl_icon_downloader.mm in Sources */,
 				B58D65F40DF45FDD0059CB14 /* httprequest_upload.cc in Sources */,
 				B563C47B0DF5DFE600A145D1 /* database_utils.cc in Sources */,
 				B563C47C0DF5DFE600A145D1 /* result_set.cc in Sources */,
@@ -2774,6 +2739,20 @@
 				B55FDA010DF71B8F007FC7E1 /* html_modeless_dialog_sf.mm in Sources */,
 				B55FDB690DF88766007FC7E1 /* ConvertUTF.c in Sources */,
 				B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */,
+				B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */,
+				B5A9BD300E06C0CE00DCA259 /* notifier_process_osx.cc in Sources */,
+				B5A9BD320E06C0CE00DCA259 /* balloons.cc in Sources */,
+				B5A9BD330E06C0CE00DCA259 /* system_osx.cc in Sources */,
+				B5A9BD3F0E06C10900DCA259 /* notification_manager.cc in Sources */,
+				B5A9BD410E06C10900DCA259 /* notification.cc in Sources */,
+				B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */,
+				B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */,
+				B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */,
+				B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */,
+				B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */,
+				B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */,
+				B547BF350E098D5900590529 /* curl_downloader.mm in Sources */,
+				B5E9135F0E0AF9EA0061880E /* blob_input_stream_sf_test.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3095,7 +3074,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/common/string16.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
 				INFOPLIST_FILE = Info.plist;
@@ -3123,10 +3102,14 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "-lcurl";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+				);
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
 				WRAPPER_EXTENSION = plugin;
 				ZERO_LINK = NO;
 			};
@@ -3150,7 +3133,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/common/string16.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
 				INFOPLIST_FILE = Info.plist;
@@ -3177,10 +3160,14 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
-				OTHER_LDFLAGS = "-lcurl";
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+				);
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
 				WRAPPER_EXTENSION = plugin;
 			};
 			name = Release;
@@ -3723,7 +3710,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = GearsEnabler;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
 			};
@@ -3768,7 +3755,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = GearsEnabler;
-				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
 			};

@@ -40,7 +40,7 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 #ifdef WIN32
 bool GetInstallDirectory(std::string16 *path) {
   if (!GetUmbrellaInstallDirectory(path)) return false;
-  *path += STRING16(L"\\Firefox");
+  (*path) += STRING16(L"\\Firefox");
   return true;
 }
 #else
@@ -67,20 +67,26 @@ bool GetInstallDirectory(std::string16 *path) {
   (*path) = ns_path.get();
   (*path) += kPathSeparator;
   (*path) += kGearsDir;
-  
+
   return true;
 }
 
 #endif
 
+bool GetComponentDirectory(std::string16 *path) {
+  if (!GetInstallDirectory(path)) return false;
+  AppendName(STRING16(L"components"), path);
+  return true;
+}
+
 bool GetBaseResourcesDirectory(std::string16 *path) {
 #if defined(OS_MACOSX) || defined(LINUX)
   std::string16 tmp_path;
-  
+
   if (!GetInstallDirectory(&tmp_path)) {
     return false;
   }
-  
+
   (*path) = tmp_path + kPathSeparator;
   (*path) += STRING16(L"resources");
 

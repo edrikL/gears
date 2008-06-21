@@ -28,14 +28,22 @@
 #else
 #ifdef WIN32
 
-#include <atlbase.h>
-#include <atlwin.h>
-#include <objbase.h>
+#include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
 #include "gears/notifier/notifier_process.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-static const wchar_t kNotifierDummyWndClassName[] =
+// Work around the header including errors.
+#include <atlbase.h>
+#include <atlwin.h>
+#include <objbase.h>
+#include <windows.h>
+
+static const char16 *kNotifierDummyWndClassName =
     L"DAAC6F7D-4BAB-403b-AC79-D09E165BC509";
+static const char16 *kNotifierStartUpSyncGateName =
+    L"C2304258-5112-4fed-B162-FCA6E224F873";
+static const int kNotifierStartUpSyncTimeoutMs = 5000;    // 5s
 
 // Dummy window
 class NotifierDummyWindow :
@@ -72,15 +80,118 @@ class NotifierDummyWindow :
 
 static scoped_ptr<NotifierDummyWindow> g_dummy_wnd;
 
+class NotifierSyncGate {
+ public:
+   NotifierSyncGate(const char16 *name) : handle_(NULL), opened_(false) {
+    handle_ = ::CreateEvent(NULL, true, false, name);
+    assert(handle_);
+  }
+
+  ~NotifierSyncGate() {
+    if (opened_) {
+      BOOL res = ::ResetEvent(handle_);
+      assert(res);
+    }
+    if (handle_) {
+      ::CloseHandle(handle_);
+    }
+  }
+
+  bool Open() {
+    assert(handle_);
+    assert(!opened_);
+    if (!::SetEvent(handle_)) {
+      return false;
+    }
+    opened_ = true;
+    return true;
+  }
+
+  bool Wait(int timeout_ms) {
+    assert(handle_);
+    return ::WaitForSingleObject(handle_, timeout_ms) == WAIT_OBJECT_0;
+  }
+
+ private:
+  HANDLE handle_;
+  bool opened_;
+};
+
+static scoped_ptr<NotifierSyncGate> g_sync_gate;
+
+bool GetNotifierPath(std::string16 *path) {
+  assert(path);
+
+  HKEY hkey;
+  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     L"Software\\Google\\Gears",
+                     0,
+                     KEY_QUERY_VALUE,
+                     &hkey) != ERROR_SUCCESS) {
+    return false;
+  }
+
+  DWORD type = 0;
+  char16 install_dir_value[MAX_PATH + 1];
+  DWORD size = sizeof(install_dir_value) - sizeof(install_dir_value[0]);
+  LONG res = ::RegQueryValueEx(hkey,
+                               L"install_dir",
+                               NULL,
+                               &type,
+                               reinterpret_cast<BYTE*>(install_dir_value),
+                               &size);
+  ::RegCloseKey(hkey);
+  if (res != ERROR_SUCCESS) {
+    return false;
+  }
+
+  install_dir_value[size / sizeof(install_dir_value[0]) + 1] = L'\0';
+  path->assign(install_dir_value);
+  if (path->at(path->length() - 1) != L'\\') {
+    path->append(L"\\");
+  }
+  path->append(L"Shared\\notifier.exe");
+
+  return true;
+}
+
 bool NotifierProcess::StartProcess() {
-  // TODO (jianli): to be implemented.
-  return false;
+  std::string16 notifier_path;
+  if (!GetNotifierPath(&notifier_path)) {
+    return false;
+  }
+
+  STARTUPINFO startup_info = {0};
+  startup_info.cb = sizeof(startup_info);
+  PROCESS_INFORMATION process_info = {0};
+  if (!::CreateProcess(notifier_path.c_str(),
+                       NULL,
+                       NULL,
+                       NULL,
+                       FALSE,
+                       0,
+                       NULL,
+                       NULL,
+                       &startup_info,
+                       &process_info)) {
+    return false;
+  }
+  ::CloseHandle(process_info.hProcess);
+  ::CloseHandle(process_info.hThread);
+
+  NotifierSyncGate gate(kNotifierStartUpSyncGateName);
+  return gate.Wait(kNotifierStartUpSyncTimeoutMs);
 }
 
 bool NotifierProcess::RegisterProcess() {
   assert(g_dummy_wnd.get() == NULL);
   g_dummy_wnd.reset(new NotifierDummyWindow);
-  return g_dummy_wnd->Initialize();
+  if (!g_dummy_wnd->Initialize()) {
+    return false;
+  }
+
+  g_sync_gate.reset(new NotifierSyncGate(kNotifierStartUpSyncGateName));
+  return g_sync_gate->Open();
 }
 
 unsigned int NotifierProcess::FindProcess() {

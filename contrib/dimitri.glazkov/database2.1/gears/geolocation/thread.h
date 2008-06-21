@@ -28,7 +28,6 @@
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/message_queue.h"
-#include "gears/base/common/mutex.h"
 
 // This class abstracts creating a new thread. Derived classes implement the Run
 // method, which is run in a new thread when Start is called. Derived classes
@@ -45,6 +44,8 @@ class Thread {
   // Waits for the Run method to complete. Note that the thread may execute code
   // in CleanUp() after this method has returned.
   virtual void Join();
+  // Returns true if the child thread is running.
+  bool IsRunning() const { return is_running_; }
 
  private:
   // This method is called in the new thread.
@@ -56,12 +57,10 @@ class Thread {
   // does nothing.
   virtual void CleanUp() {}
 
+  // Event signalled from the child thread when Run() has returned.
   Event run_complete_event_;
-
-#ifdef DEBUG
+  // True if the child thread is running.
   bool is_running_;
-  Mutex is_running_mutex_;
-#endif
 
   // Initializes the message queue for this thread and calls Run().
   friend void ThreadMain(void *user_data);

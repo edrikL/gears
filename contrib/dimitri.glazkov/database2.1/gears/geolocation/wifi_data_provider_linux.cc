@@ -41,7 +41,7 @@
 // tools) and parse the output. Sample output is shown below.
 //
 // lo        Interface doesn't support scanning.
-// 
+//
 // ath0      Scan completed :
 //           Cell 01 - Address: 00:24:86:11:4C:42
 //                     ESSID:"Test SSID"
@@ -71,7 +71,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#ifdef LINUX
+#if defined(LINUX) && !defined(OS_MACOSX)
 
 #include "gears/geolocation/wifi_data_provider_linux.h"
 
@@ -84,15 +84,12 @@ static const int kPollingInterval = 1000;
 // Local function
 static bool GetAccessPointData(std::vector<AccessPointData> *access_points);
 
-// DeviceDataProviderBase<WifiData>
-
 // static
-template <>
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+template<>
+WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
   return new LinuxWifiDataProvider();
 }
 
-// LinuxWifiDataProvider
 
 LinuxWifiDataProvider::LinuxWifiDataProvider()
     : is_first_scan_complete_(false) {
@@ -218,6 +215,6 @@ static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
   return true;
 }
 
-#endif  // LINUX
+#endif  // LINUX && !OS_MACOSX
 
 #endif  // OFFICIAL_BUILD

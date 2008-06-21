@@ -49,6 +49,7 @@
 #endif
 
 class BrowsingContext;
+class CookieMap;
 class SecurityOrigin;
 
 //------------------------------------------------------------------------------
@@ -70,7 +71,7 @@ class WebCacheDB : SQLTransactionListener {
   static WebCacheDB *GetDB();
 
   static const char16 *kFilename;      // the name of the database file
-  static const int64 kInvalidID = 0;   // SQLITE rowids start at 1
+  static const int64 kInvalidID;
 
   enum ServerType {
     MANAGED_RESOURCE_STORE = 0,
@@ -351,15 +352,22 @@ class WebCacheDB : SQLTransactionListener {
   bool Init();
 
   // Helpers used by our public Service and CanService methods
-  bool Service(const char16 *url,
-               BrowsingContext *browsing_context,
-               int64 *payload_id,
-               std::string16 *redirect_url);
+  bool ServiceImpl(const char16 *url,
+                   BrowsingContext *browsing_context,
+                   int64 *payload_id,
+                   std::string16 *redirect_url);
+
+  bool DoServiceQuery(const char16 *url,
+                      bool exact_match,
+                      BrowsingContext *context,
+                      const char16 *cookie_url,
+                      bool *loaded_cookie_map,
+                      bool *loaded_cookie_map_ok,
+                      CookieMap *cookie_map,
+                      std::string16 *possible_redirect,
+                      int64 *payload_id_out);
 
   bool ServiceGearsInspectorUrl(const char16 *url, PayloadInfo *payload);
-
-  bool ServiceGearsJsUrl(bool head_only,
-                         PayloadInfo *payload);
 
   // Starts an update task for the specified managed store
   void MaybeInitiateUpdateTask(int64 server_id, BrowsingContext *context);
@@ -381,8 +389,15 @@ class WebCacheDB : SQLTransactionListener {
   bool CreateOrUpgradeDatabase();
   bool CreateDatabase();
   bool CreateTables();
+  bool CreateIndexes();
+
+#ifdef USING_CCTESTS
+  friend bool RunLocalServerPerfTests(int, int, int, std::string16*);
+  bool DropIndexes();
+#endif
 
   bool UpgradeFrom10To11();
+  bool UpgradeFrom11To12();
 
   bool ExecuteSqlCommandsInTransaction(const char *commands[], int count);
   bool ExecuteSqlCommands(const char *commands[], int count);

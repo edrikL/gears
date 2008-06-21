@@ -30,9 +30,11 @@
 #include "third_party/jsoncpp/json.h"
 
 #include "gears/base/common/dispatcher.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
@@ -74,8 +76,17 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestGeolocationFormRequestBody);
   RegisterMethod("testGeolocationGetLocationFromResponse",
                  &GearsTest::TestGeolocationGetLocationFromResponse);
+  RegisterMethod("configureGeolocationForTest",
+                 &GearsTest::ConfigureGeolocationForTest);
 #endif
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
+  RegisterMethod("testLocalServerPerformance",
+                 &GearsTest::TestLocalServerPerformance);
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+  RegisterMethod("testNotifier", &GearsTest::TestNotifier);
+#endif  // OFFICIAL_BUILD
 }
 
 #ifdef WIN32
@@ -91,6 +102,7 @@ void Dispatcher<GearsTest>::Init() {
 #include <sstream>
 #ifdef LINUX
 #include <unistd.h>  // For usleep.
+#include <sys/wait.h>
 #endif
 
 #include "gears/base/common/name_value_table_test.h"
@@ -98,7 +110,6 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/base/common/string_utils.h"
 #ifdef WINCE
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/wince_compatibility.h"
@@ -121,6 +132,10 @@ void Dispatcher<GearsTest>::Init() {
 // from blob_input_stream_ff_test.cc
 bool TestBlobInputStreamFf(std::string16 *error);
 #endif
+#if BROWSER_WEBKIT
+// from blob_input_stream_sf_test.cc
+bool TestBlobInputStreamSf(std::string16 *error);
+#endif
 bool TestByteStore(std::string16 *error);  // from byte_store_test.cc
 bool TestHttpCookies(BrowsingContext *context, std::string16 *error);
 bool TestHttpRequest(BrowsingContext *context, std::string16 *error);
@@ -136,13 +151,14 @@ bool TestUrlUtils(std::string16 *error);  // from url_utils_test.cc
 bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
 bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
-bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
+bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
 bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
 bool TestFileBlob(std::string16 *error);  // from blob_test.cc
 bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
 bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
-#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-// from ipc_message_queue_win32_test.cc
+#if (defined(WIN32) && !defined(WINCE)) || \
+    (defined(LINUX) && !defined(OS_MACOSX))
+// from ipc_message_queue_test.cc
 bool TestIpcMessageQueue(std::string16 *error);
 #endif
 #ifdef OS_ANDROID
@@ -194,6 +210,29 @@ void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base);
 
+// from localserver_perf_test.cc
+bool RunLocalServerPerfTests(int num_origins, int num_stores, int num_items,
+                             std::string16 *results);
+
+void GearsTest::TestLocalServerPerformance(JsCallContext *context) {
+  int num_origins = 1;
+  int num_stores = 10;
+  int num_items = 100;
+  JsArgument argv[] = {
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_origins},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_stores},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &num_items}
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+
+  std::string16 results;
+  RunLocalServerPerfTests(num_origins, num_stores, num_items, &results);
+  context->SetReturnValue(JSPARAM_STRING16, &results);
+}
+
 // Return the system time as a double (we can't return int64).
 void GearsTest::GetSystemTime(JsCallContext *context) {
   double msec = static_cast<double>(GetCurrentTimeMillis());
@@ -223,6 +262,13 @@ void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
 }
 
 void GearsTest::RunTests(JsCallContext *context) {
+  bool is_worker = false;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_BOOL, &is_worker},
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
   // We need permissions to use the localserver.
   SecurityOrigin cc_tests_origin;
   cc_tests_origin.InitFromUrl(STRING16(L"http://cc_tests/"));
@@ -263,14 +309,30 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestJoinBlob(&error);
   ok &= TestSliceBlob(&error);
 
-#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-  ok &= TestIpcMessageQueue(&error);
+#if (defined(WIN32) && !defined(WINCE)) || \
+    (defined(LINUX) && !defined(OS_MACOSX))
+  bool run_ipc_test = true;
+  // TODO (jianli): Under Linux, we use fork() to create slave process. When
+  // running as worker, the slave process might not terminate correctly.
+  // Enable the test for worker when we figure out another way to start slave
+  // process.
+#if defined(LINUX) && !defined(OS_MACOSX)
+  if (is_worker) {
+    run_ipc_test = false;
+  }
+#endif  
+  if (run_ipc_test) {
+    ok &= TestIpcMessageQueue(&error);
+  }
 #endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);
 #endif
 #if BROWSER_FF
   ok &= TestBlobInputStreamFf(&error);
+#endif
+#if BROWSER_WEBKIT
+  ok &= TestBlobInputStreamSf(&error);
 #endif
   ok &= TestStopwatch(&error);
   ok &= TestJsonEscaping(&error);
@@ -384,7 +446,7 @@ void GearsTest::TestObjectProperties(JsCallContext *context) {
   } \
 }
   JsRunnerInterface *js_runner = GetJsRunner();
-  
+
   // Internal tests on JsObject.
   scoped_ptr<JsObject> test_object(js_runner->NewObject());
   JsScopedToken token;
@@ -1141,7 +1203,7 @@ bool TestParseHttpStatusLine(std::string16 *error) {
   TEST_ASSERT(ParseHttpStatusLine(good, NULL, NULL, &text));
 
   const char16 *acceptable[] = {
-    STRING16(L"HTTP/1.0 200"), // no status
+    STRING16(L"HTTP/1.0 200"),  // no status
     STRING16(L"HTTP 200 ABBREVIATED VERSION"),
     STRING16(L"HTTP/1.1 500 REASON: CONTAINING COLON")
   };
@@ -1157,8 +1219,8 @@ bool TestParseHttpStatusLine(std::string16 *error) {
     STRING16(L"HTTP/1.0 2000 CODE TOO BIG"),
     STRING16(L"HTTP/1.0 NO CODE"),
     STRING16(L"complete_gibberish"),
-    STRING16(L""), // an empty string
-    STRING16(L"    \t \t  "), // whitespace only
+    STRING16(L""),  // an empty string
+    STRING16(L"    \t \t  "),  // whitespace only
   };
   for (size_t i = 0; i < ARRAYSIZE(bad); ++i) {
     std::string16 bad_str(bad[i]);
@@ -1171,7 +1233,7 @@ bool TestParseHttpStatusLine(std::string16 *error) {
 
 class TestHttpRequestListener : public HttpRequest::HttpListener {
  public:
-  TestHttpRequestListener(HttpRequest *request): request_(request) {}
+  explicit TestHttpRequestListener(HttpRequest *request) : request_(request) {}
 
   virtual void ReadyStateChanged(HttpRequest *source) {
     HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
@@ -1252,7 +1314,11 @@ bool TestStopwatch(std::string16 *error) {
 #ifdef WIN32
 #define SleepForMilliseconds Sleep
 #else
-#define SleepForMilliseconds(x) { assert(x < 1000); usleep(x * 1000); }
+#define SleepForMilliseconds(x) \
+{ \
+  assert(x < 1000); \
+  usleep(x * 1000); \
+}
 #endif
 
   // Test initialized to zero.
@@ -1266,7 +1332,7 @@ bool TestStopwatch(std::string16 *error) {
   //SleepForMilliseconds(10);
   //sw2.Stop();
   //TEST_ASSERT(sw2.GetElapsed() > 0);
-  
+
 
   // Test small time increment.
   Stopwatch sw3;
@@ -1289,6 +1355,7 @@ bool TestStopwatch(std::string16 *error) {
   //TEST_ASSERT(sw4.GetElapsed() > 0);
 
   // Test scoped stopwatch.
+  // TODO(steveblock): Address this failing test and uncomment
   //Stopwatch sw5;
   //{
   //  ScopedStopwatch scopedStopwatch(&sw5);
@@ -2048,10 +2115,14 @@ void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
 
 void GearsTest::TestGeolocationFormRequestBody(JsCallContext *context) {
   ::TestGeolocationFormRequestBody(context);
-} 
+}
 
 void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
   ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
+}
+
+void GearsTest::ConfigureGeolocationForTest(JsCallContext *context) {
+  ::ConfigureGeolocationForTest(context);
 }
 #endif
 
@@ -2075,5 +2146,143 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
   gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
 }
+
+
+#ifdef OFFICIAL_BUILD
+// The notification API has not been finalized for official builds.
+#else
+
+#if (defined(WIN32) && !defined(WINCE)) || defined(LINUX)
+class ProcessCreator {
+ public:
+  static ProcessCreator* Create(const char16 *full_filepath);
+
+  // Returns the exit code from the process, but only waits
+  // at most wait_seconds for it to finish.  If the process
+  // hasn't exited, then it returns -1;
+  int GetExitCode(int wait_seconds);
+
+ private:
+#if defined(WIN32)
+  explicit ProcessCreator(HANDLE process) : process_(process) {}
+#else
+  explicit ProcessCreator(pid_t pid) : child_process_pid_(pid) {}
+#endif  // WIN32
+
+
+#if defined(WIN32)
+  HANDLE process_;
+#else
+  pid_t child_process_pid_;
+#endif  // WIN32
+  DISALLOW_EVIL_CONSTRUCTORS(ProcessCreator);
+};
+
+#if defined(WIN32)
+ProcessCreator* ProcessCreator::Create(const char16 *full_filepath) {
+  STARTUPINFO startup_info = {0};
+  startup_info.cb = sizeof(STARTUPINFO);
+  PROCESS_INFORMATION process_information = {0};
+  if (!::CreateProcess(full_filepath,
+                       NULL,
+                       NULL,
+                       NULL,
+                       false,
+                       CREATE_NO_WINDOW,
+                       NULL,
+                       NULL,
+                       &startup_info,
+                       &process_information)) {
+    return NULL;
+  }
+  ::CloseHandle(process_information.hThread);
+  return new ProcessCreator(process_information.hProcess);
+}
+
+int ProcessCreator::GetExitCode(int wait_seconds) {
+  // Ensure that the process exited correctly and didn't timeout.
+  if (::WaitForSingleObject(process_, wait_seconds * 1000) != WAIT_OBJECT_0) {
+    return -1;
+  }
+
+  DWORD exit_code = -1;
+  if (!::GetExitCodeProcess(process_, &exit_code)) {
+    return -1;
+  }
+  return exit_code;
+}
+#else
+ProcessCreator* ProcessCreator::Create(const char16 *full_filepath) {
+  pid_t pid = fork();
+  if (pid < 0) {
+    return NULL;
+  }
+  if (pid == 0) {
+    std::string file;
+    if (!String16ToUTF8(full_filepath, &file)) {
+      return NULL;
+    }
+    execl(file.c_str(), "notifier_test", NULL);
+    exit(-1);
+  }
+  return new ProcessCreator(pid);
+}
+
+int ProcessCreator::GetExitCode(int wait_seconds) {
+  // Set up a signal to interrupt waitpid from waiting forever.
+  alarm(wait_seconds);
+  int exit_code = -1;
+  if (waitpid(child_process_pid_, &exit_code, WUNTRACED) == -1) {
+    exit_code = -1;
+  }
+  // Cancel the alarm.
+  alarm(0);
+  return exit_code;
+}
+#endif  // WIN32
+#endif  // (defined(WIN32) && !defined(WINCE)) || defined(LINUX)
+
+#if defined(WIN32)
+const char16* kNotifierTestApp = STRING16(L"notifier_test.exe");
+#else
+const char16* kNotifierTestApp = STRING16(L"notifier_test");
+#endif  // WIN32
+
+void GearsTest::TestNotifier(JsCallContext *context) {
+#if defined(WIN32) && !defined(WINCE)
+  std::string16 component_directory;
+  if (!GetComponentDirectory(&component_directory)) {
+    context->SetException(STRING16(L"Couldn't get install directory."));
+    return;
+  }
+
+  // Find the notifier_test application.
+  std::string16 notifier_test(component_directory);
+  AppendName(kNotifierTestApp, &notifier_test);
+  if (!File::Exists(notifier_test.c_str())) {
+    notifier_test.assign(component_directory);
+    RemoveName(&notifier_test);
+    AppendName(STRING16(L"common"), &notifier_test);
+    AppendName(kNotifierTestApp, &notifier_test);
+  }
+  if (!File::Exists(notifier_test.c_str())) {
+    context->SetException(STRING16(L"Couldn't find notifier_test."));
+    return;
+  }
+
+  scoped_ptr<ProcessCreator> process(
+      ProcessCreator::Create(notifier_test.c_str()));
+  if (!process.get()) {
+    context->SetException(STRING16(L"Couldn't start notifier_test."));
+    return;
+  }
+  if (process->GetExitCode(5 * 60) != 0) {
+    context->SetException(STRING16(L"notifier_test failed.  Run "
+                                   L"notifier_test.exe for more information."));
+    return;
+  }
+#endif  // defined(WIN32) && !defined(WINCE)
+}
+#endif  // OFFICIAL_BUILD
 
 #endif  // USING_CCTESTS

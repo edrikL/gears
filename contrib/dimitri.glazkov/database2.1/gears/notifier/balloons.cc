@@ -34,11 +34,16 @@
 #include <assert.h>
 
 #include "gears/notifier/balloons.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/system.h"
+#include "third_party/glint/include/animation_timeline.h"
+#include "third_party/glint/include/button.h"
 #include "third_party/glint/include/color.h"
 #include "third_party/glint/include/column.h"
+#include "third_party/glint/include/current_time.h"
 #include "third_party/glint/include/nine_grid.h"
+#include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/root_ui.h"
 #include "third_party/glint/include/row.h"
 #include "third_party/glint/include/simple_text.h"
@@ -47,11 +52,129 @@ static const char *kTitleId = "title_text";
 static const char *kSubtitleId = "subtitle_text";
 static const char *kBalloonContainer = "balloon_container";
 
+const double kAlphaTransitionDuration = 1.0;
+const double kAlphaTransitionDurationShort = 0.3;
+const double kAlphaTransitionDurationForRestore = 0.2;
+const double kExpirationTime = 5.0;
+const double kExpirationTimeSlice = 0.25;
+
+class TimerHandler : public glint::MessageHandler {
+ public:
+  TimerHandler(BalloonCollection *collection)
+    : collection_(collection) {
+    assert(collection);
+    time_stamp_ = glint::CurrentTime::Seconds();
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    if (message.code == glint::GL_MSG_IDLE) {
+      double current_time = glint::CurrentTime::Seconds();
+      if (current_time - time_stamp_ > kExpirationTimeSlice) {
+        collection_->OnTimer(current_time);
+        time_stamp_ = current_time;
+      }
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+ private:
+  BalloonCollection *collection_;
+  double time_stamp_;
+  DISALLOW_EVIL_CONSTRUCTORS(TimerHandler);
+};
+
+class AnimationCompletedHandler : public glint::MessageHandler {
+ public:
+  AnimationCompletedHandler(Balloon *balloon) : balloon_(balloon) {
+    assert(balloon);
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    if (message.code == glint::GL_MSG_ANIMATION_COMPLETED) {
+      balloon_->OnAnimationCompleted();
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+
+ private:
+  Balloon *balloon_;
+  DISALLOW_EVIL_CONSTRUCTORS(AnimationCompletedHandler);
+};
+
+class RemoveWorkItem : public glint::WorkItem {
+ public:
+  RemoveWorkItem(BalloonCollection *collection,
+                 Balloon *balloon)
+    : collection_(collection), balloon_(balloon) {
+    assert(collection_);
+    assert(balloon_);
+  }
+  virtual void Run() {
+    collection_->RemoveFromUI(balloon_);
+    delete balloon_;
+  }
+ private:
+  BalloonCollection *collection_;
+  Balloon *balloon_;
+  DISALLOW_EVIL_CONSTRUCTORS(RemoveWorkItem);
+};
+
+class MouseWithinDetector : public glint::MessageHandler {
+ public:
+  MouseWithinDetector(Balloon *balloon, glint::Node *owner)
+    : owner_(owner),
+      balloon_(balloon),
+      mouse_within_(false) {
+  }
+
+  ~MouseWithinDetector() {
+    // Make sure we reset notification expiration counter.
+    if (mouse_within_) {
+      balloon_->OnMouseOut();
+    }
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    bool mouse_within_now = mouse_within_;
+    if (message.code == glint::GL_MSG_MOUSELEAVE) {
+      // Mouse leaves the application's window - signal "mouse out".
+      mouse_within_now = false;
+    } else if (message.code == glint::GL_MSG_MOUSEMOVE_BROADCAST) {
+      // GL_MSG_MOUSEMOVE_BROADCAST comes to all nodes even if the mouse
+      // is outside - we use it to detect the mouse in/out condition.
+      glint::Rectangle bounds(glint::Point(), owner_->final_size());
+      // GL_MSG_MOUSEMOVE_BROADCAST comes with screen coordinate of the
+      // mouse, so transform it first.
+      glint::Point mouse = message.GetLocalPosition(owner_);
+      mouse_within_now = bounds.Contains(mouse);
+    }
+    // Detect change in mouse "withinness".
+    if (mouse_within_now != mouse_within_) {
+      mouse_within_ = mouse_within_now;
+      if (mouse_within_) {
+        balloon_->OnMouseIn();
+      } else {
+        balloon_->OnMouseOut();
+      }
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+
+ private:
+  glint::Node *owner_;
+  Balloon *balloon_;
+  bool mouse_within_;
+  DISALLOW_EVIL_CONSTRUCTORS(MouseWithinDetector);
+};
+
 BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
   : observer_(observer),
     root_ui_(NULL),
+    expiration_suspended_counter_(0),
+    last_time_(-1),
+    elapsed_time_(0),
     has_space_(true) {
   assert(observer);
+  EnsureRoot();
   observer_->OnBalloonSpaceChanged();
 }
 
@@ -64,18 +187,18 @@ void BalloonCollection::Clear() {
        it != balloons_.end();
        ++it) {
     Balloon *removed = *it;
-    // TODO(dimich): Do we need this here? it = balloons_->erase(it);
     delete removed;
   }
 }
 
-Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
-                                        const std::string16 &id,
-                                        bool and_remove) {
+Balloon *BalloonCollection::FindBalloon(
+    const SecurityOrigin &security_origin,
+    const std::string16 &id,
+    bool and_remove) {
   for (Balloons::iterator it = balloons_.begin();
        it != balloons_.end();
        ++it) {
-    if ((*it)->notification().Matches(service, id)) {
+    if ((*it)->notification().Matches(security_origin, id)) {
       Balloon *result = *it;
       if (and_remove) {
         balloons_.erase(it);
@@ -87,7 +210,7 @@ Balloon *BalloonCollection::FindBalloon(const std::string16 &service,
 }
 
 void BalloonCollection::Show(const GearsNotification &notification) {
-  Balloon *balloon = FindBalloon(notification.service(),
+  Balloon *balloon = FindBalloon(notification.security_origin(),
                                  notification.id(),
                                  false);  // no remove
   assert(!balloon);
@@ -95,14 +218,13 @@ void BalloonCollection::Show(const GearsNotification &notification) {
   if (balloon)
     return;
 
-  Balloon *new_balloon = new Balloon(notification);
-  balloons_.push_front(new_balloon);
+  Balloon *new_balloon = new Balloon(notification, this);
   AddToUI(new_balloon);
   observer_->OnBalloonSpaceChanged();
 }
 
 bool BalloonCollection::Update(const GearsNotification &notification) {
-  Balloon *balloon = FindBalloon(notification.service(),
+  Balloon *balloon = FindBalloon(notification.security_origin(),
                                  notification.id(),
                                  false);  // no remove
   if (!balloon)
@@ -112,16 +234,16 @@ bool BalloonCollection::Update(const GearsNotification &notification) {
   return true;
 }
 
-bool BalloonCollection::Delete(const std::string16 &service,
+bool BalloonCollection::Delete(const SecurityOrigin &security_origin,
                                const std::string16 &id) {
-  Balloon *balloon = FindBalloon(service,
+  Balloon *balloon = FindBalloon(security_origin,
                                  id,
-                                 true);  // remove from list
+                                 true);  // remove from list immediately
   if (!balloon)
     return false;
 
-  RemoveFromUI(balloon);
-  delete balloon;
+  if (!balloon->InitiateClose(false))  // not user-initiated.
+    return false;
 
   observer_->OnBalloonSpaceChanged();
   return true;
@@ -137,31 +259,101 @@ void BalloonCollection::EnsureRoot() {
   container->ReplaceDistribution("natural");
   container->set_background(glint::Color(0x44444444));
   container->set_id(kBalloonContainer);
+  glint::Transform offset;
+  offset.AddOffset(glint::Vector(500.0f, 250.0f));
+  container->set_transform(offset);
+  container->AddHandler(new TimerHandler(this));
   root_ui_->set_root_node(container);
+  root_ui_->Show();
 }
 
-void BalloonCollection::AddToUI(Balloon *balloon) {
+bool BalloonCollection::AddToUI(Balloon *balloon) {
   assert(balloon);
   EnsureRoot();
+
+  ResetExpirationTimer();
+  balloons_.push_front(balloon);
+
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
   if (!container)
-    return;
-  container->AddChild(balloon->ui_root());
+    return false;
+  return balloon->InitializeUI(container);
 }
 
-void BalloonCollection::RemoveFromUI(Balloon *balloon) {
+bool BalloonCollection::RemoveFromUI(Balloon *balloon) {
   assert(balloon);
   if (!root_ui_)
-    return;
+    return false;
+
+  ResetExpirationTimer();
+  // Ignore return value. The balloon could already be removed from balloons_
+  // by Delete method - we only keep balloons for longer if it was a
+  // user-initiated 'close' operation or auto-expiration.
+  FindBalloon(balloon->notification().security_origin(),
+              balloon->notification().id(),
+              true);  // remove from list
+
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
   if (!container)
-    return;
-  container->RemoveNode(balloon->ui_root());
+    return false;
+
+  container->RemoveNode(balloon->root());
+  observer_->OnBalloonSpaceChanged();
+  return true;
 }
 
-Balloon::Balloon(const GearsNotification &from) : ui_root_(NULL) {
+void BalloonCollection::SuspendExpirationTimer() {
+  ++expiration_suspended_counter_;
+}
+
+void BalloonCollection::RestoreExpirationTimer() {
+  --expiration_suspended_counter_;
+}
+
+void BalloonCollection::ResetExpirationTimer() {
+  last_time_ = -1;
+}
+
+void BalloonCollection::OnTimer(double current_time) {
+  if (balloons_.empty())
+    return;
+
+  // Timer was reset - start it.
+  if (last_time_ < 0) {
+    last_time_ = current_time;
+    elapsed_time_ = 0;
+    return;
+  }
+
+  double delta = current_time - last_time_;
+  last_time_ = current_time;
+
+  if (expiration_suspended()) {
+    // Set elapsed time to half of expiration time so the balloon does
+    // not go away immediately after mouse goes away.
+    elapsed_time_ = kExpirationTime / 2;
+    return;
+  }
+
+  elapsed_time_ += delta;
+
+  if (elapsed_time_ > kExpirationTime) {
+    // Expire the bottom-most balloon.
+    Balloon *balloon = balloons_.front();
+    if (!balloon)
+      return;
+    balloon->InitiateClose(false);  // 'false' == not initiated by the user.
+    ResetExpirationTimer();
+  }
+}
+
+Balloon::Balloon(const GearsNotification &from, BalloonCollection *collection)
+  : root_(NULL),
+    collection_(collection),
+    state_(OPENING_BALLOON)  {
+  assert(collection_);
   notification_.CopyFrom(from);
 }
 
@@ -172,12 +364,10 @@ glint::Node *Balloon::CreateTree() {
   glint::Node *root = new glint::Node();
   root->set_min_width(300);
   root->set_min_height(100);
-  glint::Transform offset;
-  offset.AddOffset(glint::Vector(250.0f, 250.0f));
-  root->set_transform(offset);
+  root->set_alpha(glint::colors::kTransparentAlpha);
 
   glint::NineGrid *background = new glint::NineGrid();
-  background->ReplaceImage("background.png");
+  background->ReplaceImage("res://background.png");
   background->set_center_height(10);
   background->set_center_width(10);
   background->set_shadow(true);
@@ -201,13 +391,41 @@ glint::Node *Balloon::CreateTree() {
   text->set_margin(margin);
   column->AddChild(text);
 
+  glint::Row *buttons = new glint::Row();
+  margin.Set(5, 5, 5, 5);
+  buttons->set_margin(margin);
+  buttons->set_horizontal_alignment(glint::X_RIGHT);
+  column->AddChild(buttons);
+
+  glint::Button *close_button = new glint::Button();
+  close_button->ReplaceImage("res://button_strip.png");
+  close_button->set_min_height(22);
+  close_button->set_min_width(70);
+  buttons->AddChild(close_button);
+  text = new glint::SimpleText();
+  text->set_text("Close");
+  margin.Set(3, 3, 3, 3);
+  text->set_margin(margin);
+  close_button->AddChild(text);
+  close_button->SetClickHandler(Balloon::OnCloseButton, this);
+
+  root->AddHandler(new AnimationCompletedHandler(this));
+  root->AddHandler(new MouseWithinDetector(this, root));
+  SetAlphaTransition(root, kAlphaTransitionDuration);
+
   return root;
+}
+
+void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
+  Balloon *this_ = reinterpret_cast<Balloon*>(user_info);
+  assert(this_);
+  this_->InitiateClose(true);  // true == 'user_initiated'
 }
 
 bool Balloon::SetTextField(const char *id, const std::string16 &text) {
   assert(id);
   glint::SimpleText *text_node = static_cast<glint::SimpleText*>(
-      ui_root_->FindNodeById(id));
+      root_->FindNodeById(id));
   if (!text_node)
     return false;
   std::string text_utf8;
@@ -221,5 +439,112 @@ void Balloon::UpdateUI() {
   SetTextField(kTitleId, notification_.title());
   SetTextField(kSubtitleId, notification_.subtitle());
 }
+
+bool Balloon::SetAlphaTransition(glint::Node *node,
+                                 double transition_duration) {
+  if (!node)
+    return false;
+
+  glint::AnimationTimeline *timeline = NULL;
+  if (transition_duration > 0) {
+    timeline = new glint::AnimationTimeline();
+
+    glint::AlphaAnimationSegment *segment = new glint::AlphaAnimationSegment();
+    segment->set_type(glint::RELATIVE_TO_START);
+    timeline->AddAlphaSegment(segment);
+
+    segment = new glint::AlphaAnimationSegment();
+    segment->set_type(glint::RELATIVE_TO_FINAL);
+    segment->set_duration(transition_duration);
+    timeline->AddAlphaSegment(segment);
+
+    timeline->RequestCompletionMessage(node);
+  }
+  node->SetTransition(glint::ALPHA_TRANSITION, timeline);
+  return true;
+}
+
+bool Balloon::InitiateClose(bool user_initiated) {
+  state_ = user_initiated ? USER_CLOSING_BALLOON : AUTO_CLOSING_BALLOON;
+
+  // If closed by user, set shorter transition.
+  if (user_initiated) {
+    SetAlphaTransition(root_, kAlphaTransitionDurationShort);
+  }
+
+  root_->set_alpha(glint::colors::kTransparentAlpha);
+  return true;
+}
+
+void Balloon::OnAnimationCompleted() {
+  switch (state_) {
+    case OPENING_BALLOON:
+      state_ = SHOWING_BALLOON;
+      break;
+
+    case AUTO_CLOSING_BALLOON:
+    case USER_CLOSING_BALLOON: {
+      // Need to do this async because 'animation completion' message gets
+      // fired from synchronous tree walk and it's bad to remove part of
+      // the tree during the walk.
+      RemoveWorkItem* remove_work = new RemoveWorkItem(collection_, this);
+      glint::platform()->PostWorkItem(NULL, remove_work);
+      break;
+    }
+
+    case RESTORING_BALLOON:
+      state_ = SHOWING_BALLOON;
+      SetAlphaTransition(root_, kAlphaTransitionDuration);
+      break;
+
+    case SHOWING_BALLOON:
+      // We might be doing some other animation while showing the balloon,
+      // like the scaling animation when the system font changes.
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+}
+
+void Balloon::OnMouseIn() {
+  // If closing it automatically, bring it back
+  if (state_ == AUTO_CLOSING_BALLOON) {
+    // Cancel current animation
+    SetAlphaTransition(root_, 0);
+
+    // Restore the alpha to opaque, fast.
+    SetAlphaTransition(root_, kAlphaTransitionDurationForRestore);
+    root_->set_alpha(glint::colors::kOpaqueAlpha);
+
+    state_ = RESTORING_BALLOON;
+  }
+  collection_->SuspendExpirationTimer();
+}
+
+void Balloon::OnMouseOut() {
+  collection_->RestoreExpirationTimer();
+}
+
+bool Balloon::InitializeUI(glint::Node *container) {
+  assert(container);
+  assert(!root_);
+  // Some operations (triggering animations for example) require node to be
+  // already connected to a RootUI. So first create tree, hook it up to
+  // container and then complete initialization.
+  root_ = CreateTree();
+  if (!root_)
+    return false;
+
+  container->AddChild(root_);
+  UpdateUI();
+
+  // Start revealing animation.
+  state_ = OPENING_BALLOON;
+  root_->set_alpha(glint::colors::kOpaqueAlpha);
+  return true;
+}
+
 
 #endif  // OFFICIAL_BULID

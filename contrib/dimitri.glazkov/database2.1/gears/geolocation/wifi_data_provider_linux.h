@@ -33,23 +33,16 @@
 #include "gears/geolocation/thread.h"
 
 class LinuxWifiDataProvider
-    : public DeviceDataProviderBase<WifiData>,
+    : public WifiDataProviderImplBase,
       public Thread {
  public:
-  // Allow DeviceDataProviderBase<WifiData>::Create() to access our private
-  // constructor.
-  friend class DeviceDataProviderBase<WifiData>;
-
-  // DeviceDataProviderBase<WifiData> implementation.
-  virtual bool GetData(WifiData *data);
-
- private:
-  // Private constructor and destructor, callers must use
-  // DeviceDataProviderBase<WifiData>::Register and
-  // DeviceDataProviderBase<WifiDataa>::Unregister.
   LinuxWifiDataProvider();
   virtual ~LinuxWifiDataProvider();
 
+  // WifiDataProviderImplBase implementation
+  virtual bool GetData(WifiData *data);
+
+ private:
   // Thread implementation.
   virtual void Run();
 
