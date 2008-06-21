@@ -241,7 +241,6 @@ bool RunLocalServerPerfTests(int num_origins, int num_stores, int num_items,
   *results += STRING16(L"\n// With indexes\n");
   ok = RunOnce(num_origins, num_stores, num_items, results);
 
-  LOG16((results->c_str()));
   return ok;
 }
 
