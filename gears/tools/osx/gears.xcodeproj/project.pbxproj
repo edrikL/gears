@@ -86,6 +86,8 @@
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
 		B547BF350E098D5900590529 /* curl_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B547BF330E098D5900590529 /* curl_downloader.mm */; };
+		B54ADBB80E0F074900884C56 /* dummy_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADBB70E0F074900884C56 /* dummy_module.cc */; };
+		B54ADBBC0E0F07A500884C56 /* localserver_perf_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */; };
 		B54C2E6A0DF9FCEC005129EE /* database2_metadata.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54C2E690DF9FCEC005129EE /* database2_metadata.cc */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55E5FEB0DF5EF5100D3DC1F /* http_handler.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD8E0D52925E00B0A65D /* http_handler.mm */; };
@@ -599,6 +601,10 @@
 		B544FD620D89326D00568660 /* cf_string_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cf_string_utils.cc; path = ../../base/safari/cf_string_utils.cc; sourceTree = SOURCE_ROOT; };
 		B547BF330E098D5900590529 /* curl_downloader.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = curl_downloader.mm; path = ../../base/safari/curl_downloader.mm; sourceTree = SOURCE_ROOT; };
 		B547BF340E098D5900590529 /* curl_downloader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = curl_downloader.h; path = ../../base/safari/curl_downloader.h; sourceTree = SOURCE_ROOT; };
+		B54ADBA40E0F054500884C56 /* prefix_header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prefix_header.h; path = ../../base/safari/prefix_header.h; sourceTree = SOURCE_ROOT; };
+		B54ADBB60E0F074900884C56 /* dummy_module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dummy_module.h; path = ../../dummy/dummy_module.h; sourceTree = SOURCE_ROOT; };
+		B54ADBB70E0F074900884C56 /* dummy_module.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dummy_module.cc; path = ../../dummy/dummy_module.cc; sourceTree = SOURCE_ROOT; };
+		B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_perf_test.cc; path = ../../localserver/common/localserver_perf_test.cc; sourceTree = SOURCE_ROOT; };
 		B54C2E680DF9FCEC005129EE /* database2_metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database2_metadata.h; path = ../../database2/database2_metadata.h; sourceTree = SOURCE_ROOT; };
 		B54C2E690DF9FCEC005129EE /* database2_metadata.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database2_metadata.cc; path = ../../database2/database2_metadata.cc; sourceTree = SOURCE_ROOT; };
 		B54D29110D9287D20029F7EF /* dispatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dispatcher.h; path = ../../base/common/dispatcher.h; sourceTree = SOURCE_ROOT; };
@@ -1303,6 +1309,7 @@
 				B56F66000DAD40DE00A5D6C5 /* desktop */,
 				B544D9520D2EE5D000D30561 /* database */,
 				B507A3E90DEC70EE00DC9D6A /* database2 */,
+				B54ADBB50E0F072900884C56 /* dummy */,
 				B544D9950D2EE5D000D30561 /* factory */,
 				79272FD00DC213E900CDF577 /* geolocation */,
 				B54247240D35940600B3D18D /* httprequest */,
@@ -1352,6 +1359,7 @@
 				B58E00A40D5BB54E00B0A65D /* update_task.cc */,
 				B58EFE4C0D529ACB00B0A65D /* localserver_db.h */,
 				B58EFE550D529ACB00B0A65D /* localserver_db.cc */,
+				B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */,
 				B58EFE4D0D529ACB00B0A65D /* critical_section.h */,
 				B58EFE4F0D529ACB00B0A65D /* blob_store.cc */,
 				B58EFE500D529ACB00B0A65D /* http_request.h */,
@@ -1408,6 +1416,7 @@
 				B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */,
 				B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */,
 				B5D8D3380DB9320800C257AA /* nsstring_utils.mm */,
+				B54ADBA40E0F054500884C56 /* prefix_header.h */,
 				B5B305160DB503DA00A206B8 /* scoped_cf.h */,
 			);
 			name = safari;
@@ -1710,6 +1719,15 @@
 				B58EFD9E0D5292C100B0A65D /* localserver_db_proxy.h */,
 			);
 			name = safari;
+			sourceTree = "<group>";
+		};
+		B54ADBB50E0F072900884C56 /* dummy */ = {
+			isa = PBXGroup;
+			children = (
+				B54ADBB60E0F074900884C56 /* dummy_module.h */,
+				B54ADBB70E0F074900884C56 /* dummy_module.cc */,
+			);
+			name = dummy;
 			sourceTree = "<group>";
 		};
 		B55FDB650DF88758007FC7E1 /* convert_utf */ = {
@@ -2540,7 +2558,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\nGEN_FILE_DIR=\"$BUILD_DIR/genfiles\"\n# Ensure that the directory for the generated files exists\n/bin/mkdir -p $GEN_FILE_DIR\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > \"$GEN_FILE_DIR/GearsVersion\"\nsource \"$GEN_FILE_DIR/GearsVersion\"\n\nFRIENDLY_NAME=\"Google Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME_SF\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > \"$GEN_FILE_DIR/product_constants.h\"\n\necho \"$GEN_FILE_DIR/product_constants.h\" built.\n\nexit 0\n";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\nGEN_FILE_DIR=\"$BUILD_DIR/genfiles\"\n# Ensure that the directory for the generated files exists\n/bin/mkdir -p $GEN_FILE_DIR\n\n# Convert the version informaton into a format than can be sourced into this shell script\n/usr/bin/sed -Ee 's/[ ()]//g' -e 's/^#.*//g' tools/version.mk > \"$GEN_FILE_DIR/GearsVersion\"\nsource \"$GEN_FILE_DIR/GearsVersion\"\n\nFRIENDLY_NAME=\"Gears\"\nSHORT_NAME=\"gears\"\n# Create the product_constants.h file\n/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH=\"x86\" -DPRODUCT_GCC_VERSION=\"gcc4\" -DPRODUCT_MAINTAINER=\"google\" -DPRODUCT_TARGET_APPLICATION=\"safari\" -DI18N_LANGUAGES=\"(en-US)\" -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" base/common/product_constants.h.m4 > \"$GEN_FILE_DIR/product_constants.h\"\n\necho \"$GEN_FILE_DIR/product_constants.h\" built.\n\nexit 0\n";
 		};
 		B57A583E0DA9292C001B0CC6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2753,6 +2771,8 @@
 				B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */,
 				B547BF350E098D5900590529 /* curl_downloader.mm in Sources */,
 				B5E9135F0E0AF9EA0061880E /* blob_input_stream_sf_test.mm in Sources */,
+				B54ADBB80E0F074900884C56 /* dummy_module.cc in Sources */,
+				B54ADBBC0E0F07A500884C56 /* localserver_perf_test.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3074,7 +3094,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = ../../base/common/string16.h;
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
 				INFOPLIST_FILE = Info.plist;
@@ -3133,7 +3153,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = ../../base/common/string16.h;
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
 				INFOPLIST_FILE = Info.plist;
@@ -3204,7 +3224,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3242,7 +3262,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3322,7 +3342,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3357,7 +3377,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3392,7 +3412,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SDKROOT)/Developer/Headers/FlatCarbon/";
 				INSTALL_PATH = /usr/local/lib;
@@ -3439,7 +3459,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SDKROOT)/Developer/Headers/FlatCarbon/";
 				INSTALL_PATH = /usr/local/lib;
@@ -3481,7 +3501,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3517,7 +3537,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3553,7 +3573,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3588,7 +3608,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3621,7 +3641,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3657,7 +3677,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
@@ -3816,7 +3836,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = /usr/local/lib;
@@ -3850,7 +3870,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h ../../base/safari/prefix_header.h";
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
 				OTHER_CFLAGS = (
