@@ -1265,6 +1265,18 @@ NOTIFIER_TEST_CSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# dummy_module
+
+$(BROWSER)_VPATH += \
+		dummy \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS += \
+		dummy_module.cc \
+		$(NULL)
+
+
+#-----------------------------------------------------------------------------
 # test
 
 $(BROWSER)_VPATH += \
