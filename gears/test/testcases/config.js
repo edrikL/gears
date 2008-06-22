@@ -86,6 +86,13 @@ if (!isOfficial) {
   suites.push(database2Suite);
 }
 
+if (!isOfficial) {
+  var dummySuite = new TestSuite('Dummy');
+  dummySuite.addFile('../testcases/dummy_tests.js',
+                     {useWorker: true, useIFrame: true});
+  suites.push(dummySuite);
+}
+
 var factorySuite = new TestSuite('Factory');
 factorySuite.addFile('../testcases/factory_tests.js',
                      {useWorker: true, useIFrame: true});
@@ -144,4 +151,5 @@ if (!isSafari) {
                           {useWorker: true, useIFrame: true});
 }
 suites.push(workerPoolSuite);
+
 
