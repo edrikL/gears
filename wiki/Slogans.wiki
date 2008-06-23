@@ -1,5 +1,6 @@
 #summary For t-shirts and such
 
+  * Improving Your Web Browser
   * Triple-oh BEEF (from the FF extension GUID)
   * The gears that power the tubes (from the FF extension description)
   * We loves us some standards!
