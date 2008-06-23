@@ -157,18 +157,19 @@ GearsGeolocation::~GearsGeolocation() {
 // API Methods
 
 void GearsGeolocation::GetLastPosition(JsCallContext *context) {
-  // If there's no valid current position, we simply return null.
+  // If there's no good current position, we simply return null.
   // TODO(steveblock): Cache the last known position in the database to provide
   // state between sessions.
-  if (!last_position_.IsValid()) {
+  if (!last_position_.IsGoodFix()) {
     return;
   }
 
   // Create the object for returning to JavaScript.
   scoped_ptr<JsObject> return_object(GetJsRunner()->NewObject());
   assert(return_object.get());
-  if (!ConvertPositionToJavaScriptObject(last_position_, STRING16(L""),
-                                         GetJsRunner(), return_object.get())) {
+  if (!ConvertPositionToJavaScriptObject(last_position_,
+                                         GetJsRunner(),
+                                         return_object.get())) {
     LOG(("GearsGeolocation::GetLastPosition() : Failed to create position "
          "object.\n"));
     assert(false);
@@ -340,10 +341,10 @@ void GearsGeolocation::HandleSingleRequestUpdate(
   // Geolocation object don't trigger handling for this fix.
   RemoveProvider(provider, fix_info);
   // We callback in two cases ...
-  // - This response gives a valid position
+  // - This response gives a good position
   // - The fix has no remaining providers, so we'll never get a valid position
   // We then cancel any pending requests and delete the fix request.
-  if (last_position_.IsValid() || fix_info->providers.empty()) {
+  if (last_position_.IsGoodFix() || fix_info->providers.empty()) {
     // There should not have been a previous callback.
     assert(fix_info->last_callback_time == 0);
     if (!MakeCallback(fix_info)) {
@@ -397,20 +398,14 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
 
 bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
   scoped_ptr<JsObject> callback_param(GetJsRunner()->NewObject());
-  if (last_position_.IsValid()) {
-    assert(callback_param.get());
-    if (!ConvertPositionToJavaScriptObject(last_position_,
-                                           STRING16(L""),
-                                           GetJsRunner(),
-                                           callback_param.get())) {
-      LOG(("GearsGeolocation::MakeCallback() : Failed to create "
-           "position object.\n"));
-      assert(false);
-      return false;
-    }
-  } else {
-    callback_param.get()->SetPropertyString(
-        STRING16(L"errorMessage"), STRING16(L"Failed to get valid position."));
+  assert(callback_param.get());
+  if (!ConvertPositionToJavaScriptObject(last_position_,
+                                         GetJsRunner(),
+                                         callback_param.get())) {
+    LOG(("GearsGeolocation::MakeCallback() : Failed to create "
+         "position object.\n"));
+    assert(false);
+    return false;
   }
   JsParamToSend argv[] = { JSPARAM_OBJECT, callback_param.get() };
   // InvokeCallback returns false if the callback enounters an error.
@@ -562,12 +557,20 @@ bool GearsGeolocation::ParseLocationProviderUrls(
 
 bool GearsGeolocation::ConvertPositionToJavaScriptObject(
     const Position &position,
-    const char16 *error,
     JsRunnerInterface *js_runner,
     JsObject *js_object) {
   assert(js_object);
-  assert(position.IsValid());
+  assert(position.IsInitialized());
   bool result = true;
+
+  if (!position.IsGoodFix()) {
+    // Position is not a good fix, copy only the error message.
+    assert(!position.error.empty());
+    result &= js_object->SetPropertyString(STRING16(L"errorMessage"),
+                                           position.error);
+    return result;
+  }
+
   // latitude, longitude and date should always be valid.
   result &= js_object->SetPropertyDouble(STRING16(L"latitude"),
                                          position.latitude);
@@ -589,9 +592,6 @@ bool GearsGeolocation::ConvertPositionToJavaScriptObject(
   result &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
                                         position.vertical_accuracy,
                                         js_object);
-  result &= SetObjectPropertyIfValidString(STRING16(L"errorMessage"),
-                                           error,
-                                           js_object);
   // Address
   scoped_ptr<JsObject> address_object(js_runner->NewObject());
   result &= NULL != address_object.get();
@@ -742,15 +742,35 @@ static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
   return true;
 }
 
+// Helper function for IsBetterFix and PositionHasChanged. Checks whether the
+// old or new position is bad or unintialised, in which case the decision of
+// which to use is easy. Return value is true if this is the case detected, in
+// which cases result indicates whether the new position is the better fix.
+static bool CheckForBadPosition(const Position &old_position,
+                                const Position &new_position,
+                                bool *result) {
+  assert(new_position.IsInitialized());
+  assert(result);
+  // If the old position is unitialized or bad, always return true. A newer
+  // bad fix is better because we want the updated error message.
+  if (!old_position.IsInitialized() || !old_position.IsGoodFix()) {
+    *result = true;
+    return true;
+  }
+  // The old position is good, so if the new fix is bad, return false.
+  if (!new_position.IsGoodFix()) {
+    *result = false;
+    return true;
+  }
+  return false;
+}
+
 // TODO(steveblock): Do something more intelligent here.
 static bool IsBetterFix(const Position &old_position,
                         const Position &new_position) {
-  if (!old_position.IsValid() && !new_position.IsValid()) {
-    return false;
-  } else if (!old_position.IsValid()) {
-    return true;
-  } else if (!new_position.IsValid()) {
-    return false;
+  bool result;
+  if (CheckForBadPosition(old_position, new_position, &result)) {
+    return result;
   }
   // Both are valid.
   int64 current_time = GetCurrentTimeMillis();
@@ -773,12 +793,9 @@ static bool IsBetterFix(const Position &old_position,
 // TODO(steveblock): Do something more intelligent here.
 static bool PositionHasChanged(const Position &old_position,
                                const Position &new_position) {
-  if (!new_position.IsValid()) {
-    return false;
-  }
-  // If the old position wasn't valid, any valid position is a change.
-  if (!old_position.IsValid()) {
-    return true;
+  bool result;
+  if (CheckForBadPosition(old_position, new_position, &result)) {
+    return result;
   }
   // Correctly calculating the distance between two positions isn't necessary
   // given the small distances we're interested in.

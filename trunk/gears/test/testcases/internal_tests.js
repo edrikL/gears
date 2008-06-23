@@ -394,7 +394,7 @@ function testGeolocationGetLocationFromResponse() {
                          '}';
     var position =
         internalTests.testGeolocationGetLocationFromResponse(responseString);
-    // timestamp and errorMessage are set on the C++ side.
+    // timestamp is set on the C++ side.
     var correctPosition = new Object();
     correctPosition.latitude = 53.1;
     correctPosition.longitude = -0.1;
@@ -411,7 +411,6 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.address.countryCode = 'US';
     correctPosition.address.postalCode = '94043';
     correctPosition.timestamp = new Date(42);
-    correctPosition.errorMessage = 'test error';
     assertObjectEqual(correctPosition, position);
   }
 }

@@ -47,6 +47,8 @@ static bool FormRequestBody(const std::string16 &host_name,
                             double latitude,
                             double longitude,
                             scoped_refptr<BlobInterface> *blob);
+// Extracts a position from the server repsonse. Returns true if parsing was
+// successful.
 static bool GetLocationFromResponse(const std::vector<uint8> &response,
                                     Position *position);
 
@@ -105,31 +107,52 @@ void NetworkLocationRequest::Run() {
 
   MutexLock lock(&is_processing_response_mutex_);
   // is_aborted_ may be true even if HttpPost succeeded.
-  if (is_aborted_ || !result) {
-    LOG(("NetworkLocationRequest::Run() : HttpPost request failed or was "
-         "cancelled.\n"));
+  if (is_aborted_) {
+    LOG(("NetworkLocationRequest::Run() : HttpPost request was cancelled.\n"));
     return;
   }
 
   if (listener_) {
     Position position;
-    if (payload.status_code == HttpConstants::HTTP_OK) {
+    // HttpPost can fail for a number of reasons. Most likely this is because
+    // we're offline, or there was no response.
+    if (!result) {
+      LOG(("NetworkLocationRequest::Run() : HttpPost request failed.\n"));
+      position.error = STRING16(L"No response from network provider at ");
+      position.error += url_.c_str();
+      position.error += STRING16(L".");
+    } else if (payload.status_code == HttpConstants::HTTP_OK) {
       // If HttpPost succeeded, payload.data is guaranteed to be non-NULL,
       // even if the vector it points to is empty.
       assert(payload.data.get());
       if (GetLocationFromResponse(*payload.data.get(), &position)) {
-        // We use the timestamp from the device data that was used to generate
-        // this position fix.
-        position.timestamp = timestamp_;
+        // The response was successfully parsed, but it may not be a valid
+        // position fix.
+        if (position.IsGoodFix()) {
+          // We use the timestamp from the device data that was used to generate
+          // this position fix.
+          position.timestamp = timestamp_;
+        } else {
+          position.error = STRING16(L"Network provider at ");
+          position.error += url_.c_str();
+          position.error += STRING16(L" did not provide a good position fix.");
+        }
       } else {
-        // If we failed to parse the repsonse, we call back with an invalid
+        // If we failed to parse the repsonse, we call back with a bad
         // position.
-        LOG(("NetworkLocationRequest::Run() : Failed to get location from "
-             "response.\n"));
+        LOG(("NetworkLocationRequest::Run() : Response malformed.\n"));
+        position.error = STRING16(L"Response from network provider at ");
+        position.error += url_.c_str();
+        position.error += STRING16(L" was malformed.");
       }
     } else {
-      // If the response was bad, we call back with an invalid position.
+      // If the response was bad, we call back with a bad position.
       LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
+      position.error = STRING16(L"Network provider at ");
+      position.error += url_.c_str();
+      position.error += STRING16(L" returned error code ");
+      position.error += IntegerToString16(payload.status_code);
+      position.error += STRING16(L".");
     }
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     listener_->LocationResponseAvailable(position);
@@ -337,6 +360,14 @@ static bool GetLocationFromResponse(const std::vector<uint8> &response,
   }
   assert(response_object.isObject());
   Json::Value location = response_object["location"];
+
+  // If the network provider was unable to provide a position fix, it should
+  // return a 200 with location == null.
+  if (location.type() == Json::nullValue) {
+    return true;
+  }
+
+  // If response is not null, it must be an object.
   if (!location.isObject()) {
     return false;
   }

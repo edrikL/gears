@@ -256,8 +256,9 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   scoped_ptr<JsObject> position_object(js_runner->NewObject());
 
   if (!GearsGeolocation::ConvertPositionToJavaScriptObject(
-      position, STRING16(L"test error"),
-      js_runner, position_object.get())) {
+      position,
+      js_runner,
+      position_object.get())) {
     context->SetException(STRING16(L"Failed to convert position to JavaScript"
                                    L"object."));
     return;
