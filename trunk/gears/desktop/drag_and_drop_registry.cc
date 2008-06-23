@@ -180,13 +180,13 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
 
 
 void DragAndDropRegistry::UnregisterDropTarget(DropTarget *drop_target) {
-#if BROWSER_IE && !defined(WINCE)
+#if BROWSER_FF
+  delete drop_target;
+#elif BROWSER_IE && !defined(WINCE)
   // On IE, DropTarget is a COM object, which is ref-counted, so it should
   // automatically delete itself when no longer referred to.
   // In the future, if we allow explicit unregistration of a DropTarget, then
   // we might need to AddRef it during RegisterDropTarget, and Unref it here.
-#else
-  delete drop_target;
 #endif
 }
 #endif  // OFFICIAL_BUILD
