@@ -66,6 +66,8 @@ typedef struct _NDIS_WLAN_BSSID {
 
 typedef struct _NDIS_802_11_BSSID_LIST {
   ULONG NumberOfItems;
+  // Following data is an array of NDIS_WLAN_BSSID objects of length
+  // NumberOfItems.
   NDIS_WLAN_BSSID Bssid[1];
 } NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
 

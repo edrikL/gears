@@ -198,8 +198,8 @@ void Win32WifiDataProvider::GetInterfaceDataWZC(
   // Based on the WinCE equivalent at
   // http://msdn.microsoft.com/en-us/library/aa448306.aspx,
   // INTF_ENTRY::rdBSSIDList::pData points to a NDIS_802_11_BSSID_LIST object.
-  assert(interface_data.rdBSSIDList.dwDataLen >=
-         sizeof(NDIS_802_11_BSSID_LIST));
+  // The first member is of type ULONG, and must be valid.
+  assert(interface_data.rdBSSIDList.dwDataLen >= sizeof(ULONG));
 
   // Cast the data to a list of BSS IDs.
   NDIS_802_11_BSSID_LIST *bss_id_list =
