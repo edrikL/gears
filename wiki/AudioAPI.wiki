@@ -184,6 +184,7 @@ AudioRecorder class
   // sample rate for the recording
            attribute float sampleRate;
   // sample type for the recording, possible values need to be defined
+  // signed 16 bit little endian linear PCM
   const unsigned short S16_LE = 0;
            attribute short sampleFormat;
   // audio file type (container and codec), possible values need to be defined
@@ -354,7 +355,10 @@ var recorder = google.gears.factory.create('beta.audiorecorder');
 recorder.record(); //asynchronous call
 ...
 recorder.stop();
-var audiodata = recorder.getBlob();
+// handle to the blob containing the recorded data can be obtained
+// after the recorder is stopped, the blob may then be uploaded to
+// a server. 
+var blob = recorder.getBlob();
 }}}
 
 = Advanced topics =
