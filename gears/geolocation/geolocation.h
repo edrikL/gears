@@ -43,6 +43,8 @@
 #endif
 #include "third_party/linked_ptr/linked_ptr.h"
 
+static const int kBadLatLng = 200;
+
 // The internal representation of an address.
 struct Address {
   std::string16 street_number; // street number
@@ -62,12 +64,19 @@ struct Address {
 struct Position {
  public:
   Position()
-      : altitude(kint32min),
+      : latitude(kBadLatLng),
+        longitude(kBadLatLng),
+        altitude(kint32min),
         horizontal_accuracy(kint32min),
         vertical_accuracy(kint32min),
         timestamp(-1) {}
-  bool IsValid() const {
-    return -1 != timestamp;
+  bool IsGoodFix() const {
+    // A good fix has a valid latitude and longitude.
+    return latitude >= -90.0 && latitude <= 90.0 &&
+           longitude >= -180.0 && longitude <= 180.0;
+  }
+  bool IsInitialized() const {
+    return IsGoodFix() || !error.empty();
   }
 
   double latitude;          // In degrees
@@ -76,6 +85,7 @@ struct Position {
   int horizontal_accuracy;  // In metres
   int vertical_accuracy;    // In metres
   int64 timestamp;          // Milliseconds since 1st Jan 1970
+  std::string16 error;      // Human-readable error message
   Address address;
 };
 
@@ -196,7 +206,6 @@ class GearsGeolocation
 
   // Converts a Gears position object to a JavaScript object.
   static bool ConvertPositionToJavaScriptObject(const Position &position,
-                                                const char16 *error,
                                                 JsRunnerInterface *js_runner,
                                                 JsObject *js_object);
 
