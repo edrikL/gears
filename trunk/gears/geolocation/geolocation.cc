@@ -660,14 +660,14 @@ void GearsGeolocation::RemoveFixRequest(FixRequestInfo *fix_request) {
     // If we can't find this request in our map, something has gone wrong.
     assert(fix_iterator != fixes->end());
     fixes->erase(fix_iterator);
-    // If this location provider is no longer used in any fixes, we unregister
-    // from it, via the pool, and remove it from our map.
+    // If this location provider is no longer used in any fixes, remove it from
+    // our map.
     if (fixes->empty()) {
-      // This will cancel any pending requests and may block if a callback is
-      // currently in progress.
-      LocationProviderPool::GetInstance()->Unregister(provider, this);
       providers_.erase(provider_iter);
     }
+    // Unregister from the provider, via the pool. This will cancel any pending
+    // requests and may block if a callback is currently in progress.
+    LocationProviderPool::GetInstance()->Unregister(provider, this);
   }
   // Delete the request object itself.
   delete fix_request;
@@ -683,7 +683,7 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
   assert(iter != member_providers->end());
   // Remove the location provider from the fix request.
   member_providers->erase(iter);
-  // Remove this fix request from the map of providers.
+  // Remove this fix request from the provider in the map of providers.
   ProviderMap::iterator provider_iter = providers_.find(provider);
   assert(provider_iter != providers_.end());
   FixVector *fixes = &(provider_iter->second);
@@ -691,14 +691,14 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
       std::find(fixes->begin(), fixes->end(), fix_request);
   assert(fix_iterator != fixes->end());
   fixes->erase(fix_iterator);
-  // If this location provider is no longer used in any fixes, we unregister
-  // from it, via the pool, and remove it from our map.
+  // If this location provider is no longer used in any fixes, remove it from
+  // our map.
   if (fixes->empty()) {
-    // This will cancel any pending requests and may block if a callback is
-    // currently in progress.
-    LocationProviderPool::GetInstance()->Unregister(provider, this);
     providers_.erase(provider_iter);
   }
+  // Unregister from the provider, via the pool. This will cancel any pending
+  // requests and may block if a callback is currently in progress.
+  LocationProviderPool::GetInstance()->Unregister(provider, this);
 }
 
 // Local functions
