@@ -115,6 +115,11 @@
 }
 
 - (BOOL)hasBytesAvailable {
+#if 1
+  // There appears to be a bug in OSX 10.4 that requires us to always return
+  // YES, otherwise the NSURLConnection may not completely read the stream.
+  return YES;
+#else
   if (blob_ == NULL) {
     return NO;
   }
@@ -123,6 +128,7 @@
     return NO;
   }
   return YES;
+#endif
 }
 
 #pragma mark -

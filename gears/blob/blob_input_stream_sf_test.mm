@@ -27,6 +27,7 @@
 
 #import "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/buffer_blob.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -53,8 +54,8 @@ namespace {
 
 // This function assumes that the stream passed in has |data_size|
 // bytes available for reading.
-bool TestBlobInputStreamSfReadFullStream(std::string16 *error,
-                                         NSInputStream *stream) {
+static bool TestBlobInputStreamSfReadFullStream(std::string16 *error,
+                                                NSInputStream *stream) {
   assert(stream);
   BOOL rslt = [stream hasBytesAvailable];
   TEST_ASSERT(rslt == YES);
@@ -74,7 +75,12 @@ bool TestBlobInputStreamSfReadFullStream(std::string16 *error,
   TEST_ASSERT(buffer[data_size - 8] == 0);
 
   rslt = [stream hasBytesAvailable];
-  TEST_ASSERT(rslt == NO);
+  TEST_ASSERT(rslt == YES);  // Testing OSX 10.4 workaround.
+
+  memset(buffer, 0, data_size);
+  numRead = [stream read:buffer maxLength:data_size];
+  TEST_ASSERT(numRead == 0);
+  TEST_ASSERT(buffer[0] == 0);
 
   return true;
 }
@@ -86,8 +92,8 @@ bool TestBlobInputStreamSf(std::string16 *error) {
   bool ok = true;
 
   // Initialize the buffer.
-  assert(buffer == 0);
   buffer = new uint8[data_size];
+  scoped_array<uint8> buffer_cleaner(buffer);
 
   {
     BlobInputStream *stream;
@@ -109,8 +115,7 @@ bool TestBlobInputStreamSf(std::string16 *error) {
 
     [blobStream open];
     BOOL rslt = [blobStream hasBytesAvailable];
-    TEST_ASSERT(rslt == NO);
-    ok &= (rslt == NO);
+    TEST_ASSERT(rslt == YES);  // Testing OSX 10.4 workaround.
 
     memset(buffer, 0, data_size);
     NSInteger numRead = [blobStream read:buffer maxLength:data_size];
@@ -130,10 +135,6 @@ bool TestBlobInputStreamSf(std::string16 *error) {
     ok &= TestBlobInputStreamSfReadFullStream(error, blobStream);
     [blobStream close];
   }
-
-  // Clean up buffer
-  delete [] buffer;
-  buffer = 0;
 
   return ok;
 }

@@ -628,7 +628,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
     int status = 0;
     if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), 
                        async, browsing_context_.get()) ||
-        !request->Send() ||
+        !request->Send(NULL) ||
         (!async && (!request->GetStatus(&status) ||
                     status != HTTPResponse::RC_REQUEST_OK))) {
       *error = STRING16(L"Could not load icon ");
