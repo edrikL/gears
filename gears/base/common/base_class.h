@@ -211,8 +211,10 @@ class ModuleImplBaseClass {
   // TODO(aa): Remove and replace call sites with GetWrapper()->GetToken().
   JsToken GetWrapperToken() const;
 
- private:
+ protected:
   scoped_refptr<ModuleEnvironment> module_environment_;
+
+ private:
   std::string module_name_;
 
 #if BROWSER_FF

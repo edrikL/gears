@@ -1144,6 +1144,7 @@ $(BROWSER)_CPPSRCS += \
 		desktop_osx.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
+		drag_and_drop_registry.cc \
 		shortcut_utils_win32.cc \
 		$(NULL)
 
@@ -1166,7 +1167,15 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_win32.cc \
 		notification.cc \
 		$(NULL)
-		
+
+FF3_CPPSRCS += \
+		drop_target_ff.cc \
+		$(NULL)
+
+IE_CPPSRCS += \
+		drop_target_ie.cc \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # notifier
 

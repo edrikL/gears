@@ -23,40 +23,37 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
-#define GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
+#ifndef GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#define GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#ifdef OFFICIAL_BUILD
+// The Drag-and-Drop API has not been finalized for official builds.
+#else
 
-#include "gears/desktop/file_dialog.h"  // for struct Filter
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/js_types.h"
 
-class JsArray;
+// A DropTarget is an opaque, platform-specific class that represents a DOM
+// element that handles drag and drop events, for example of files dragged
+// from the Desktop to the browser.
+class DropTarget;
 
-struct ModuleEnvironment;
+class DragAndDropRegistry {
+ public:
+  static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
+                                        IScriptable *dom_element,
+                                        JsObject &js_callbacks,
+                                        std::string16 *error_out);
 
-namespace FileDialogUtils {
-  // Validates and places filters in a vector.
-  // Returns: false if input is invalid
-  // Parameters:
-  //  filters - in - An array of pairs of strings (description,filter).
-  //  out - out - The filters are placed in here.
-  //  error - out - error message is placed in here
-  bool FiltersToVector(const JsArray& filters,
-                       std::vector<FileDialog::Filter>* out,
-                       std::string16* error);
+ private:
+  // Currently, a DropTarget automatically unregisters itself, on page unload,
+  // but in the future we might provide a programmatic way to deregister a
+  // drop target via a JavaScript API, and when we do, we'll promote this
+  // method from private to public.
+  static void UnregisterDropTarget(DropTarget *drop_target);
 
-  // Creates an array of javascript objects from files.
-  // Each javascript object has the following properties.
-  //  name - the filename without path
-  //  blob - the blob representing the contents of the file
-  // Returns: false on failure
-  // Parameters:
-  //  selected_files - in - the list of files to process
-  //  module - in - required for constructing new objects
-  //  files - out - the constructed javascript array is placed in here
-  //  error - out - error message is placed in here
-  bool FilesToJsObjectArray(const std::vector<std::string16>& selected_files,
-                            ModuleEnvironment& module_environment,
-                            JsArray* files,
-                            std::string16* error);
-}  // namespace FileDialogUtils
+  friend class DropTarget;
+  DISALLOW_EVIL_CONSTRUCTORS(DragAndDropRegistry);
+};
 
-#endif  // GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
+#endif  // OFFICIAL_BUILD
+#endif  // GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__

@@ -249,6 +249,9 @@ enum JsParamType {
   // and just have JSPARAM_MODULE.
   JSPARAM_COM_MODULE,
   JSPARAM_DISPATCHER_MODULE,
+  // JSPARAM_DOM_ELEMENT should only be used from the main JavaScript thread,
+  // not from worker threads.
+  JSPARAM_DOM_ELEMENT,
   JSPARAM_NULL,
   JSPARAM_UNDEFINED,
   JSPARAM_UNKNOWN,

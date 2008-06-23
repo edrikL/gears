@@ -1067,6 +1067,19 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       }
       break;
     }
+    case JSPARAM_DOM_ELEMENT: {
+#if BROWSER_NPAPI
+      return false;
+#else
+      IScriptable **value = static_cast<IScriptable **>(param->value_ptr);
+      if (!JsTokenToComModule(context->js_context(), variant, value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected DOM element."));
+        return false;
+      }
+#endif
+      break;
+    }
     default:
       assert(false);
       return false;

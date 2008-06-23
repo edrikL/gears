@@ -41,6 +41,7 @@
 #ifdef BROWSER_WEBKIT
 #include "gears/base/safari/curl_downloader.h"
 #endif
+#include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notifier_process.h"
@@ -63,6 +64,12 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createNotification", &GearsDesktop::CreateNotification);
   RegisterMethod("removeNotification", &GearsDesktop::RemoveNotification);
   RegisterMethod("showNotification", &GearsDesktop::ShowNotification);
+#endif  // OFFICIAL_BUILD
+
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+  RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
 #endif  // OFFICIAL_BUILD
 }
 
@@ -413,8 +420,8 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
     context->SetException(STRING16("Failed to create file array."));
     return;
   }
-  if (!FileDialogUtils::FilesToJsObjectArray(files, *this, files_array.get(),
-                                             &error)) {
+  if (!FileDialogUtils::FilesToJsObjectArray(
+          files, *module_environment_, files_array.get(), &error)) {
     context->SetException(error);
     return;
   }
@@ -812,4 +819,34 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   }
 }
 
+#endif  // OFFICIAL_BUILD
+
+#ifdef OFFICIAL_BUILD
+// The Drag-and-Drop API has not been finalized for official builds.
+#else
+void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+                 STRING16(L"registerDropTarget is not supported in workers."));
+    return;
+  }
+
+  IScriptable *dom_element = NULL;
+  JsObject drag_drop_options;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &drag_drop_options },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  std::string16 error;
+  if (!DragAndDropRegistry::RegisterDropTarget(this,
+                                               dom_element,
+                                               drag_drop_options,
+                                               &error)) {
+    context->SetException(error);
+    return;
+  }
+}
 #endif  // OFFICIAL_BUILD
