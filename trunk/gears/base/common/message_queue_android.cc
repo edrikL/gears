@@ -39,6 +39,7 @@
 #include "gears/geolocation/thread.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/npapi/nphostapi.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class ThreadSpecificQueue;
 
@@ -85,6 +86,8 @@ class ThreadSpecificQueue {
   // Waits for one or messages to arrive and dispatches them to the
   // appropriate handlers.
   void RunOnce();
+  // Dispatches them to the appropriate handlers.
+  void DispatchOnce();
 
  protected:
   struct Message {
@@ -111,7 +114,7 @@ class ThreadSpecificQueue {
   // in-flight, to prevent spamming the browser's message queue.
   static Mutex async_mutex_;
   static bool async_in_flight_;
-  
+
   // Atomically move all messages from the queue to the return structure.
   void PopMessages(std::deque<Message> *messages);
   // Asynchronous callback on the main thread after
@@ -294,7 +297,7 @@ void ThreadSpecificQueue::AsyncCallback(void* instance) {
     MutexLock lock(&async_mutex_);
     async_in_flight_ = false;
   }
-  queue->RunOnce();
+  queue->DispatchOnce();
 }
 
 void ThreadSpecificQueue::PopMessages(std::deque<Message> *messages) {
@@ -328,6 +331,10 @@ void ThreadSpecificQueue::GetAndDispatchMessages(int exit_type) {
 
 void ThreadSpecificQueue::RunOnce() {
   event_.Wait();
+  DispatchOnce();
+}
+
+void ThreadSpecificQueue::DispatchOnce() {
   // Move existing messages to a local queue.
   std::deque<Message> local_event_queue;
   PopMessages(&local_event_queue);
@@ -362,7 +369,7 @@ class TestMessage : public MessageData {
 class BackgroundMessageHandler
     : public ThreadMessageQueue::HandlerInterface {
  public:
-  explicit BackgroundMessageHandler(ThreadId sender) 
+  explicit BackgroundMessageHandler(ThreadId sender)
       : sender_(sender),
         count_(0) {}
 
@@ -381,7 +388,7 @@ class BackgroundMessageHandler
       LOG(("Sending to main thread"));
       message = new TestMessage(
           ThreadMessageQueue::GetInstance()->GetCurrentThreadId(), count_);
-      ThreadMessageQueue::GetInstance()->Send(message->Sender(),
+      ThreadMessageQueue::GetInstance()->Send(sender_,
                                               kMessageType3,
                                               message);
     }
@@ -401,6 +408,7 @@ class MainMessageHandler
     TestMessage* message = static_cast<TestMessage*>(message_data);
     assert (message->Data() == 600);
     // The worker must have received all data. Let's stop it.
+    LOG(("Got %d from worker thread", message->Data()));
     AndroidMessageLoop::Stop(message->Sender());
   }
 };
@@ -420,11 +428,7 @@ class TestThread : public Thread {
 
     // Run the message loop
     AndroidMessageLoop::Start();
-  }
-
-  virtual void CleanUp() {
-    LOG(("Test worker finished"));
-    delete this;
+    LOG(("Test thread shutting down."));
   }
 };
 
@@ -440,7 +444,7 @@ bool TestThreadMessageQueue(std::string16* error) {
   queue->RegisterHandler(kMessageType3, &global_handler);
 
   // Start the worker.
-  TestThread *thread = new TestThread;  // deletes itself when the thread exits.
+  scoped_ptr<TestThread> thread(new TestThread);
   ThreadId worker_thread_id = thread->Start();
 
   // Send three messages, sleep, send another three.
@@ -459,6 +463,10 @@ bool TestThreadMessageQueue(std::string16* error) {
   message = new TestMessage(main_thread_id, 300);
   queue->Send(worker_thread_id, kMessageType2, message);
 
+  AndroidMessageLoop::RunOnce();
+  LOG(("Message from worker received."));
+  thread->Join();
+  LOG(("Test thread joined successfuly, test completed."));
   return true;
 }
 

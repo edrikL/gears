@@ -128,6 +128,17 @@ class AndroidMessageLoop {
   // Run the message loop once. If the queue is empty when called,
   // this blocks until at least one message is received. This
   // processes all messages in the queue and then returns.
+  // TODO(jripley): fix the following scenario:
+  // The main thread is waiting in the main browser loop.
+  // The main thread queue's event is signaled.
+  // A message is dispatched on the main thread via
+  // AsyncCallback, so the main thread queue's event is
+  // left in signaled state.
+  // Later RunOnce is called on the main thread.
+  // RunOnce will find the event signaled and will
+  // exit without having processed any messages.
+  // Possible fix: Add Event::Clear() and call it
+  // from AsyncCallback.
   static void RunOnce();
   // Stops the message loop for the given thread. The target thread
   // must be looping in Start().
