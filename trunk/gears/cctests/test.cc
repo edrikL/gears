@@ -1278,7 +1278,7 @@ bool TestHttpRequest(BrowsingContext *context, std::string16 *error) {
   if (ok) {
     // Sync requests are not fully supported yet, when they are revisit
     // note: we leak the request and listener in this case
-    ok = request->Send();
+    ok = request->Send(NULL);
     TEST_ASSERT(ok);
   }
   request.reset(NULL);
@@ -1290,7 +1290,7 @@ bool TestHttpRequest(BrowsingContext *context, std::string16 *error) {
                      STRING16(L"http://www.google.com/"),
                      true, context);
   TEST_ASSERT(ok);
-  ok = request->Send();
+  ok = request->Send(NULL);
   TEST_ASSERT(ok);
   return true;
 }

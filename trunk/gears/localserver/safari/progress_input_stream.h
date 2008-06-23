@@ -36,7 +36,6 @@ class SFHttpRequest;
   NSInputStream *input_stream_;
   int64 position_;
   int64 total_;
-  id data_;
 }
 
 #pragma mark Public instance methods
@@ -46,10 +45,5 @@ class SFHttpRequest;
 - (id)initFromStream:(NSInputStream *)input_stream
              request:(SFHttpRequest *)request
                total:(int64)total;
-
-// Function used to workaround a bug in 10.4 (Tiger).  We need to explicitly
-// retain the post NSData passed to an NSInputStream.  We'll make that job
-// the responsibility of this class.
-- (void)setData:(id)data;
 
 @end

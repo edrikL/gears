@@ -259,42 +259,18 @@ bool IEHttpRequest::GetInitialUrl(std::string16 *full_url) {
 }
 
 //------------------------------------------------------------------------------
-// Send, SendString, SendImp
+// Send
 //------------------------------------------------------------------------------
 
-bool IEHttpRequest::Send() {
-  if (!IsOpen())
+bool IEHttpRequest::Send(BlobInterface *blob) {
+  if (!IsOpen()) return false;
+  if (IsPostOrPut()) {
+    post_data_ = blob ? blob : new EmptyBlob;
+  } else if (blob) {
     return false;
+  }
 
-  if (!IsPostOrPut())
-    return SendImpl(NULL);
-
-  scoped_refptr<BlobInterface> blob(new EmptyBlob);
-  return SendImpl(blob.get());
-}
-
-bool IEHttpRequest::SendString(const char16 *data) {
-  if (!IsOpen() || !IsPostOrPut() || !data)
-    return false;
-
-  std::string data8;
-  String16ToUTF8(data, &data8);
-  scoped_refptr<BufferBlob> blob(new BufferBlob(data8.data(), data8.size()));
-
-  return SendImpl(blob.get());
-}
-
-bool IEHttpRequest::SendBlob(BlobInterface *data) {
-  if (!IsOpen() || !IsPostOrPut() || !data)
-    return false;
-
-  return SendImpl(data);
-}
-
-bool IEHttpRequest::SendImpl(BlobInterface *data) {
-  if (data) {
-    post_data_ = data;
-
+  if (post_data_.get()) {
     // TODO(bpm): do we have to set this or will URLMON do so based
     // on the size of our stream?
     std::string16 size_str = Integer64ToString16(post_data_->Length());

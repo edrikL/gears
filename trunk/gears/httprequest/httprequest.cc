@@ -248,24 +248,24 @@ void GearsHttpRequest::Send(JsCallContext *context) {
 
   scoped_refptr<HttpRequest> request_being_sent = request_;
 
-  bool ok = false;
+  scoped_refptr<BlobInterface> blob;
   if (!post_data_string.empty()) {
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
                                  HttpConstants::kMimeTextPlain);
     }
-    ok = request_->SendString(post_data_string.c_str());
+    std::string utf8_string;
+    String16ToUTF8(post_data_string.data(), post_data_string.length(),
+                   &utf8_string);
+    blob.reset(new BufferBlob(utf8_string.data(), utf8_string.length()));
   } else if (post_data_module) {
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
                                  HttpConstants::kMimeApplicationOctetStream);
     }
-    scoped_refptr<BlobInterface> blob;
     static_cast<GearsBlob*>(post_data_module)->GetContents(&blob);
-    ok = request_->SendBlob(blob.get());
-  } else {
-    ok = request_->Send();
   }
+  bool ok = request_->Send(blob.get());
 
   if (!ok) {
     if (!has_fired_completion_event_) {
