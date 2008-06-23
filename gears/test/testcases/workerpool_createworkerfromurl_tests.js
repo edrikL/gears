@@ -128,6 +128,12 @@ function testCreateWorkerFromUrl3() {
 
 function testCreateWorkerFromUrl5() {
   var expectedError = 'Page does not have permission to use Google Gears';
+  
+  // TODO(playmobil): Remove once 'Google Gears' -> 'Gears' name change has
+  // been completed.
+  if (isSafari) {
+    expectedError = 'Page does not have permission to use Gears';
+  }
 
   var wp = google.gears.factory.create('beta.workerpool');
   // Have to keep a reference to the workerpool otherwise, sometimes the message

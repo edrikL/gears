@@ -361,6 +361,7 @@ endif
 
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
+CXXFLAGS += -include base/safari/prefix_header.h
 
 THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
@@ -413,7 +414,8 @@ ICEBERG = /usr/local/bin/freeze
 # that need it.
 ifeq ($(wildcard $(ICEBERG)),)
 else
-HAVE_ICEBERG = 1
+# TODO(playmobil): Re-enable once we get Iceberg builds working on pulse.
+# HAVE_ICEBERG = 1
 endif
 
 endif
