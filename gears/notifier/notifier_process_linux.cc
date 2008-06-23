@@ -28,7 +28,27 @@
 #else
 #if defined(LINUX) && !defined(OS_MACOSX)
 
+#include <string>
+#include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
 #include "gears/notifier/notifier_process.h"
+
+namespace notifier {
+
+std::string GetSingleInstanceLockFilePath() {
+  static std::string lock_file_path;
+  if (lock_file_path.empty()) {
+    std::string lock_file_path("/tmp/" PRODUCT_SHORT_NAME_ASCII "notifier");
+    lock_file_path += IntegerToString(getuid());
+    lock_file_path += ".lock";
+  }
+  return lock_file_path;
+}
+
+}
 
 bool NotifierProcess::StartProcess() {
   // TODO (jianli): to be implemented.
@@ -36,13 +56,29 @@ bool NotifierProcess::StartProcess() {
 }
 
 bool NotifierProcess::RegisterProcess() {
-  // TODO (jianli): to be implemented.
-  return false;
+  // Nothing to do since it has already been done in
+  // LinuxNotifier::CheckSingleInstance
+  return true;
 }
 
 unsigned int NotifierProcess::FindProcess() {
-  // TODO (jianli): to be implemented.
-  return 0;
+  unsigned int pid = 0;
+
+  std::string lock_file_path = notifier::GetSingleInstanceLockFilePath();
+  int lock_file_fd = open(lock_file_path.c_str(), O_RDONLY);
+  if (lock_file_fd > 0) {
+    char buf[16] = { 0 };
+    int num = read(lock_file_fd, buf, sizeof(buf) - 1);
+    if (0 < num && num < static_cast<int>(sizeof(buf) - 1)) {
+      int id = atoi(buf);
+      if (id > 0 && kill(static_cast<pid_t>(id), 0) == 0) {
+        pid = static_cast<unsigned int>(id);
+      }
+    }
+    close(lock_file_fd);
+  }
+
+  return pid;
 }
 
 #endif  // defined(LINUX) && !defined(OS_MACOSX)
