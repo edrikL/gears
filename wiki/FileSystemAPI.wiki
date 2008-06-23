@@ -87,8 +87,10 @@ interface Desktop {
   //        Example. ['Image Files (*.gif, *.jpg, *.png)', '*.gif;*.jpg;*.png',
   //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
   //                  'All Files (*.*)', '*.*']
+  //     multiselect [optional] - If omitted or set to true, the user can select multiple
+  //        files by shift-clicking.  Otherwise, the user can select at most one file.
   //
-  Array getLocalFiles([in string Array filters]);
+  Array getLocalFiles([in string Array filters], [in bool multiselect]);
 }
 }}}
 
