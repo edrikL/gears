@@ -23,40 +23,48 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
-#define GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
+#ifndef GEARS_DESKTOP_DROP_TARGET_FF_H__
+#define GEARS_DESKTOP_DROP_TARGET_FF_H__
+#ifdef OFFICIAL_BUILD
+// The Drag-and-Drop API has not been finalized for official builds.
+#else
 
-#include "gears/desktop/file_dialog.h"  // for struct Filter
+#include <gecko_internal/nsIDragService.h>
+#include <gecko_sdk/include/nsIDOMEventListener.h>
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
-class JsArray;
+class DropTarget
+    : public nsIDOMEventListener,
+      public JsEventHandlerInterface {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
-struct ModuleEnvironment;
+  scoped_refptr<ModuleEnvironment> module_environment_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+  scoped_ptr<JsRootedCallback> on_drag_enter_;
+  scoped_ptr<JsRootedCallback> on_drag_over_;
+  scoped_ptr<JsRootedCallback> on_drag_leave_;
+  scoped_ptr<JsRootedCallback> on_drop_;
 
-namespace FileDialogUtils {
-  // Validates and places filters in a vector.
-  // Returns: false if input is invalid
-  // Parameters:
-  //  filters - in - An array of pairs of strings (description,filter).
-  //  out - out - The filters are placed in here.
-  //  error - out - error message is placed in here
-  bool FiltersToVector(const JsArray& filters,
-                       std::vector<FileDialog::Filter>* out,
-                       std::string16* error);
+  DropTarget() {}
 
-  // Creates an array of javascript objects from files.
-  // Each javascript object has the following properties.
-  //  name - the filename without path
-  //  blob - the blob representing the contents of the file
-  // Returns: false on failure
-  // Parameters:
-  //  selected_files - in - the list of files to process
-  //  module - in - required for constructing new objects
-  //  files - out - the constructed javascript array is placed in here
-  //  error - out - error message is placed in here
-  bool FilesToJsObjectArray(const std::vector<std::string16>& selected_files,
-                            ModuleEnvironment& module_environment,
-                            JsArray* files,
-                            std::string16* error);
-}  // namespace FileDialogUtils
+  // This is the JsEventHandlerInterface callback, not the
+  // nsIDOMEventListener one. The latter is declared by the
+  // NS_DECL_NSIDOMEVENTLISTENER above.
+  virtual void HandleEvent(JsEventType event_type);
 
-#endif  // GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
+  bool GetDroppedFiles(nsIDragSession *drag_session,
+                       JsArray *files_out,
+                       std::string16 *error_out);
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
+};
+
+#endif  // OFFICIAL_BUILD
+#endif  // GEARS_DESKTOP_DROP_TARGET_FF_H__

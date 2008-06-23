@@ -174,6 +174,14 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   void RemoveNotification(JsCallContext *context);
 #endif  // OFFICIAL_BUILD
 
+#ifdef OFFICIAL_BUILD
+// The Drag-and-Drop API has not been finalized for official builds.
+#else
+  // IN: DomElement div, object callbacks
+  // OUT: -
+  void RegisterDropTarget(JsCallContext *context);
+#endif
+
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };

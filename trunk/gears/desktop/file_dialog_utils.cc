@@ -68,7 +68,7 @@ bool FileDialogUtils::FiltersToVector(const JsArray& filters,
 
 bool FileDialogUtils::FilesToJsObjectArray(
     const std::vector<std::string16>& selected_files,
-    const ModuleImplBaseClass& module,
+    ModuleEnvironment& module_environment,
     JsArray* files,
     std::string16* error) {
   // selected_files, blobs and base_names are aligned
@@ -93,7 +93,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
 
   // create javascript objects and place in javascript array
   for (int i = 0; i < size; ++i) {
-    JsRunnerInterface* js_runner = module.GetJsRunner();
+    JsRunnerInterface* js_runner = module_environment.js_runner_;
     if (!js_runner) {
       *error = STRING16(L"Failed to get JsRunnerInterface.");
       return false;
@@ -110,8 +110,8 @@ bool FileDialogUtils::FilesToJsObjectArray(
     }
 
     scoped_refptr<GearsBlob> gears_blob;
-    CreateModule<GearsBlob>(module.GetJsRunner(), &gears_blob);
-    if (!gears_blob->InitBaseFromSibling(&module)) {
+    CreateModule<GearsBlob>(js_runner, &gears_blob);
+    if (!gears_blob->InitBaseManually(&module_environment)) {
       *error = STRING16(L"Initializing base class failed.");
       return false;
     }

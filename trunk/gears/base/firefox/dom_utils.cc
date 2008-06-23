@@ -27,6 +27,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsIURI.h>
 #include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsIDOMWindow.h>
+#include <gecko_sdk/include/nsIDOMHTMLElement.h>
 #include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #include <gecko_sdk/include/nsIDOMDocument.h>
@@ -271,7 +272,7 @@ nsresult DOMUtils::VerifyAndGetFileInputElement(nsISupports *unknown,
                                           nsIDOMHTMLInputElement **file_input) {
   // Verify 'unknown' is actually a content node from Gecko's DOM as opposed
   // to a JavaScript object pretending to be one.
-  if (!VerifyNsContent(unknown))  return NS_ERROR_FAILURE;
+  if (!VerifyNsContent(unknown)) return NS_ERROR_FAILURE;
 
   // Verify unknown is an <input> element
   nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(unknown);
@@ -286,6 +287,24 @@ nsresult DOMUtils::VerifyAndGetFileInputElement(nsISupports *unknown,
   // Return a reference to the interface pointer
   *file_input = input;
   (*file_input)->AddRef();
+
+  return NS_OK;
+}
+
+
+nsresult DOMUtils::VerifyAndGetDomHtmlElement(nsISupports *unknown,
+                                             nsIDOMHTMLElement **element) {
+  // Verify 'unknown' is actually a content node from Gecko's DOM as opposed
+  // to a JavaScript object pretending to be one.
+  if (!VerifyNsContent(unknown)) return NS_ERROR_FAILURE;
+
+  // Verify unknown is a DOM HTML element
+  nsCOMPtr<nsIDOMHTMLElement> e = do_QueryInterface(unknown);
+  NS_ENSURE_ARG(e);
+
+  // Return a reference to the interface pointer
+  *element = e;
+  (*element)->AddRef();
 
   return NS_OK;
 }

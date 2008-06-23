@@ -46,6 +46,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 class nsIDOMDocument;
 class nsIDOMEventTarget;
 class nsIDOMWindowInternal;
+class nsIDOMHTMLElement;
 class nsIDOMHTMLInputElement;
 class nsIJSContextStack;
 class nsIScriptContext;
@@ -80,6 +81,11 @@ class DOMUtils {
   // its interface pointer.
   static nsresult VerifyAndGetFileInputElement(nsISupports *unknown,
                                            nsIDOMHTMLInputElement **file_input);
+
+  // Verifies the given unknown is a legitimate DOM HTML element and returns
+  // its interface pointer.
+  static nsresult VerifyAndGetDomHtmlElement(nsISupports *unknown,
+                                             nsIDOMHTMLElement **element);
 
   // Creates a new nsIURI object. The 'url' parameter can be a relative url or
   // an absolute url. Returns true on success
