@@ -66,7 +66,7 @@
 #define PNG_NO_READ_INVERT
 #define PNG_NO_READ_SHIFT
 #define PNG_NO_READ_PACKSWAP
-#define PNG_NO_READ_FILLER
+// #define PNG_NO_READ_FILLER  // TODO(cprince): Remove from Skia instead?
 #define PNG_NO_READ_SWAP_ALPHA
 #define PNG_NO_READ_STRIP_ALPHA
 #define PNG_NO_READ_INVERT_ALPHA
@@ -80,7 +80,7 @@
 #define PNG_NO_READ_oFFs
 #define PNG_NO_READ_pCAL
 #define PNG_NO_READ_pHYs
-#define PNG_NO_READ_sBIT
+// #define PNG_NO_READ_sBIT  // TODO(cprince): Remove from Skia instead?
 #define PNG_NO_READ_sCAL
 #define PNG_NO_READ_sPLT
 #define PNG_NO_READ_TEXT

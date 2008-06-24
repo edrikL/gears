@@ -13,6 +13,4 @@ Local Modifications:
   and extracted to third_party.
 - mv jpeg-6b libjpeg
 - cp libjpeg/jconfig.vc libjpeg/jconfig.h.
-- Directive for HAVE_BOOLEAN (jconfig.h:22) enabled only for WIN32
-- The files listed in LIBSOURCES in makefile.unix, plus jmemnobs.c were added
-  to the Gears Makefile.
+- Minor #ifdef changes to build on WIN32.  All are marked 'Gears'.
