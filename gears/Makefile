@@ -805,6 +805,7 @@ $(BROWSER)_CPPSRCS	+= \
 		paths.cc \
 		permissions_db.cc \
 		permissions_db_test.cc \
+		permissions_manager.cc \
 		process_utils_win32.cc \
 		png_utils.cc \
 		scoped_refptr_test.cc \

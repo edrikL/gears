@@ -552,7 +552,8 @@ bool WebCacheDB::UpgradeFrom10To11() {
 
   for (std::vector<SecurityOrigin>::const_iterator iter = origins.begin();
        iter != origins.end(); ++iter) {
-    if (!permissions->IsOriginAllowed(*iter)) {
+    if (!permissions->IsOriginAllowed(*iter,
+                                      PermissionsDB::PERMISSION_LOCAL_DATA)) {
       if (!DeleteServersForOrigin(*iter)) {
         return false;
       }
@@ -691,8 +692,10 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   // If the origin is not explicitly allowed, don't serve anything
   SecurityOrigin origin;
   PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions || !origin.InitFromUrl(url) ||
-      !permissions->IsOriginAllowed(origin)) {
+  if (!permissions || 
+      !origin.InitFromUrl(url) ||
+      !permissions->IsOriginAllowed(origin,
+                                    PermissionsDB::PERMISSION_LOCAL_DATA)) {
     return false;
   }
 
@@ -1248,7 +1251,8 @@ bool WebCacheDB::InsertServer(ServerInfo *server) {
   PermissionsDB *permissions = PermissionsDB::GetDB();
   if (!permissions ||
       !origin.InitFromUrl(server->security_origin_url.c_str()) ||
-      !permissions->IsOriginAllowed(origin)) {
+      !permissions->IsOriginAllowed(origin,
+                                    PermissionsDB::PERMISSION_LOCAL_DATA)) {
     return false;
   }
 

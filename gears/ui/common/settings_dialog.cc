@@ -87,8 +87,11 @@ bool SettingsDialog::PopulateOrigins(Json::Value *json_array,
     return false;
   }
 
+  // TODO(andreip): Fix this to take into account permission types.
   std::vector<SecurityOrigin> list;
-  if (!capabilities->GetOriginsByValue(value, &list)) {
+  if (!capabilities->GetOriginsByValue(value,
+                                       PermissionsDB::PERMISSION_LOCAL_DATA,
+                                       &list)) {
     return false;
   }
 
@@ -157,8 +160,9 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     if (!origin.InitFromUrl(origin_string.c_str())) {
       continue;
     }
-
-    capabilities->SetCanAccessGears(origin,
-                                    PermissionsDB::PERMISSION_NOT_SET);
+    // TODO(andreip): Fix this to take into account permission types.
+    capabilities->SetPermission(origin,
+                                PermissionsDB::PERMISSION_LOCAL_DATA,
+                                PermissionsDB::PERMISSION_NOT_SET);
   }
 }

@@ -64,9 +64,7 @@
 #endif
 
 
-GearsFactory::GearsFactory()
-    : is_creation_suspended_(false),
-      permission_state_(NOT_SET) {  // can't check DB because no origin yet
+GearsFactory::GearsFactory() : is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
 
@@ -106,14 +104,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   }
 
   std::string16 module_name(object_name_bstr);
-
-  // Make sure the user gives this site permission to use Gears unless the
-  // module is whitelisted.
-
-  if (RequiresPermissionToUseGears(module_name)) {
-    bool use_temporary_permissions = true;
-    if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                                 NULL, NULL, NULL)) {
+  
+  if (RequiresLocalDataPermissionType(module_name)) {
+    // Make sure the user gives this site permission to use Gears unless the
+    // module can be created without requiring any permissions.
+    // Also check is_creation_suspended, because the factory can be suspended
+    // even when permission_states_ is an ALLOWED_* value.
+    if (is_creation_suspended_ ||
+        !GetPermissionsManager()->AcquirePermission(
+        PermissionsDB::PERMISSION_LOCAL_DATA)) {
       RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                                 PRODUCT_FRIENDLY_NAME L"."));
     }
@@ -342,11 +341,14 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
       RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
     }
   }
-
-  bool use_temporary_permissions = false;
-  if (HasPermissionToUseGears(this, use_temporary_permissions,
-                              image_url.c_str(), site_name.c_str(),
-                              extra_message.c_str())) {
+  scoped_ptr<PermissionsDialog::CustomContent> custom_content(
+      new PermissionsDialog::CustomContent(image_url.c_str(),
+                                           site_name.c_str(),
+                                           extra_message.c_str()));
+  assert(custom_content.get());
+  if (GetPermissionsManager()->AcquirePermission(
+      PermissionsDB::PERMISSION_LOCAL_DATA,
+      custom_content.get())) {
     *retval = VARIANT_TRUE;
   } else {
     *retval = VARIANT_FALSE;
@@ -359,40 +361,13 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
-  switch (permission_state_) {
-    case ALLOWED_PERMANENTLY:
-    case ALLOWED_TEMPORARILY:
-      *retval = VARIANT_TRUE;
-      break;
-    case DENIED_PERMANENTLY:
-    case DENIED_TEMPORARILY:
-      *retval = VARIANT_FALSE;
-      break;
-    case NOT_SET: {
-      // If the state is unknown, look in the PermissionsDB. If a persisted
-      // value exists, update permission_state_.  Otherwise do NOT modify
-      // permission_state_; it would affect subsequent factory.create() calls.
-      *retval = VARIANT_FALSE;  // default value; covers errors too
-      PermissionsDB *permissions_db = PermissionsDB::GetDB();
-      if (permissions_db) {
-        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
-          case PermissionsDB::PERMISSION_ALLOWED:
-            permission_state_ = ALLOWED_PERMANENTLY;
-            *retval = VARIANT_TRUE;
-            break;
-          case PermissionsDB::PERMISSION_DENIED:
-            permission_state_ = DENIED_PERMANENTLY;
-            *retval = VARIANT_FALSE;
-            break;
-          default:
-            break;  // use the default retval already set
-        }
-      }
-      break;
-    }
-    default:
-      RETURN_EXCEPTION(STRING16(L"Internal error."));
+  if (GetPermissionsManager()->HasPermission(
+      PermissionsDB::PERMISSION_LOCAL_DATA)) {
+    *retval = VARIANT_TRUE;
+  } else {
+    *retval = VARIANT_FALSE;
   }
+
   RETURN_NORMAL();
 }
 

@@ -73,8 +73,7 @@ void Dispatcher<GearsFactory>::Init() {
 }
 
 GearsFactory::GearsFactory()
-    : is_creation_suspended_(false),
-      permission_state_(NOT_SET) {
+    : is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
 
@@ -97,7 +96,6 @@ void GearsFactory::Create(JsCallContext *context) {
   }
 #endif
 
-  bool use_temporary_permissions = true;
   std::string16 module_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
   JsArgument argv[] = {
@@ -108,15 +106,16 @@ void GearsFactory::Create(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  // Make sure the user gives this site permission to use Gears unless the
-  // module is whitelisted.
-
-  if (RequiresPermissionToUseGears(module_name)) {
-    if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                                 NULL, NULL, NULL)) {
+  if (RequiresLocalDataPermissionType(module_name)) {
+    // Make sure the user gives this site permission to use Gears unless the
+    // module can be created without requiring any permissions.
+    // Also check is_creation_suspended, because the factory can be suspended
+    // even when permission_states_ is an ALLOWED_* value.
+    if (is_creation_suspended_ ||
+        !GetPermissionsManager()->AcquirePermission(
+        PermissionsDB::PERMISSION_LOCAL_DATA)) {
       context->SetException(STRING16(L"Page does not have permission to use "
                                      PRODUCT_FRIENDLY_NAME L"."));
-      return;
     }
   }
 
@@ -195,28 +194,15 @@ void GearsFactory::GetBuildInfo(JsCallContext *context) {
 }
 
 void GearsFactory::GetPermission(JsCallContext *context) {
-  std::string16 site_name;
-  std::string16 image_url;
-  std::string16 extra_message;
-  
-  JsArgument argv[] = {
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &site_name },
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &image_url },
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &extra_message },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  
-  if (context->is_exception_set())
-    return;
-  
-  bool use_temporary_permissions = false;
-  bool has_permission = false;
-  if (HasPermissionToUseGears(this, use_temporary_permissions,
-                              image_url.c_str(), site_name.c_str(),
-                              extra_message.c_str())) {
-    has_permission = true;
-  }
-  
+  scoped_ptr<PermissionsDialog::CustomContent> custom_content(
+      PermissionsDialog::CreateCustomContent(context));
+ 
+  if (!custom_content.get()) { return; }
+ 
+  bool has_permission = GetPermissionsManager()->AcquirePermission(
+      PermissionsDB::PERMISSION_LOCATION_DATA,
+      custom_content.get());
+
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
@@ -224,42 +210,8 @@ void GearsFactory::GetPermission(JsCallContext *context) {
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 void GearsFactory::GetHasPermission(JsCallContext *context) {
-  bool has_permission = false;
-  switch (permission_state_) {
-    case ALLOWED_PERMANENTLY:
-    case ALLOWED_TEMPORARILY:
-      has_permission = true;
-      break;
-    case DENIED_PERMANENTLY:
-    case DENIED_TEMPORARILY:
-      has_permission = false;
-      break;
-    case NOT_SET: {
-      // If the state is unknown, look in the PermissionsDB. If a persisted
-      // value exists, update permission_state_.  Otherwise do NOT modify
-      // permission_state_; it would affect subsequent factory.create() calls.
-      PermissionsDB *permissions_db = PermissionsDB::GetDB();
-      if (permissions_db) {
-        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
-          case PermissionsDB::PERMISSION_ALLOWED:
-            permission_state_ = ALLOWED_PERMANENTLY;
-            has_permission = true;
-            break;
-          case PermissionsDB::PERMISSION_DENIED:
-            permission_state_ = DENIED_PERMANENTLY;
-            has_permission = false;
-            break;
-          default:
-            break;  // use the default retval already set
-        }
-      }
-      break;
-    }
-    default:
-      context->SetException(STRING16(L"Internal error."));
-      return;
-  }
-
+  bool has_permission = GetPermissionsManager()->HasPermission(
+      PermissionsDB::PERMISSION_LOCAL_DATA);
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 

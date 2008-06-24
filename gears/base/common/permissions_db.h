@@ -41,13 +41,14 @@ enum PermissionState {
   ALLOWED_PERMANENTLY,
   ALLOWED_TEMPORARILY,
   DENIED_PERMANENTLY,
-  DENIED_TEMPORARILY
+  DENIED_TEMPORARILY,
 };
 
 // This class provides an API to manage the capabilities of pages within
-// Gears. Right now, it is a baby API and only manages a single capability:
-// the ability to access Gears at all. But we anticipate it growing into a
-// bigger API, which would manage more fine-grained capabilities, such as the
+// Gears. Right now, it manages two capabilities: the ability to access local
+// data (e.g. database and localserver) and the ability to access location data
+// (e.g. geolocation). We anticipate it growing into a somewhat bigger API, 
+// which would manage more fine-grained capabilities, such as the
 // ability to store more than 1MB on disk, etc.
 //
 // TODO(aa): Think about factoring some of the commonalities between this class
@@ -65,29 +66,43 @@ class PermissionsDB {
   enum PermissionValue {
     PERMISSION_NOT_SET = 0,  // origin has no persisted value
     PERMISSION_ALLOWED = 1,
-    PERMISSION_DENIED = 2
+    PERMISSION_DENIED = 2,
+  };
+
+  // The existing types of permissions.
+  enum PermissionType {
+    // database(manager), localserver, workerpool, audio(recorder), canvas
+    PERMISSION_LOCAL_DATA,
+    // geolocation
+    PERMISSION_LOCATION_DATA,
   };
 
   // Gets a thread-specific PermissionsDB instance.
   static PermissionsDB *GetDB();
 
-  // Sets the Gears access level for a given SecurityOrigin.
-  void SetCanAccessGears(const SecurityOrigin &origin, PermissionValue value);
+  // Sets the Gears access level for a given SecurityOrigin and PermissionType.
+  void SetPermission(const SecurityOrigin &origin,
+                     PermissionType type,
+                     PermissionValue value);
 
-  // Gets the Gears access level for a given SecurityOrigin.
-  PermissionsDB::PermissionValue GetCanAccessGears(const SecurityOrigin &origin);
+  // Gets the Gears access level for a given SecurityOrigin and PermissionType.
+  PermissionsDB::PermissionValue GetPermission(const SecurityOrigin &origin,
+                                               PermissionType type);
 
-  // Returns true if the origin has permission to use Gears.
-  bool IsOriginAllowed(const SecurityOrigin &origin) {
-    return GetCanAccessGears(origin) == PERMISSION_ALLOWED;
+  // Returns true if the origin has the requested permission type.
+  bool IsOriginAllowed(const SecurityOrigin &origin, PermissionType type) {
+    return GetPermission(origin, type) == PERMISSION_ALLOWED;
   }
 
-  // Gets all the origins with a specific value.
+  // Gets all the origins with a specific value for the given PermissionType.
   bool GetOriginsByValue(PermissionValue value,
+                         PermissionType type,
                          std::vector<SecurityOrigin> *result);
 
-  // Attempts to enable Gears for a worker with the given SecurityOrigin.
-  bool EnableGearsForWorker(const SecurityOrigin &origin);
+  // Attempts to enable access to Gears for a worker with the given
+  // SecurityOrigin.
+  bool EnableGearsForWorker(const SecurityOrigin &worker_origin,
+                            const SecurityOrigin &host_origin);
 
   // The key used to cache instances of PermissionsDB in ThreadLocals.
   static const std::string kThreadLocalKey;
@@ -159,6 +174,7 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  bool UpgradeToVersion9();
   bool UpgradeToVersion8();
   bool UpgradeToVersion7();
   bool UpgradeToVersion6();
@@ -171,14 +187,25 @@ class PermissionsDB {
   // DB instance when a thread dies.
   static void DestroyDB(void *context);
 
+  // Internal utility that tries to allow the given permission for the
+  // given origin.
+  bool TryAllow(const SecurityOrigin &origin,
+                PermissionType type);
+
+  // Maps a permission type to an access table.
+  NameValueTable* GetTableForPermissionType(PermissionType type);
+
   // Database we use to store capabilities information.
   SQLDatabase db_;
 
   // Version metadata for the capabilities database.
   NameValueTable version_table_;
 
-  // Maps origins to ability to access Gears.
-  NameValueTable access_table_;
+  // Maps origins to ability to access local data in Gears.
+  NameValueTable local_data_access_table_;
+
+  // Maps origins to ability to access location data in Gears.
+  NameValueTable location_access_table_;
 
   // Shortcuts origins have defined.
   ShortcutTable shortcut_table_;

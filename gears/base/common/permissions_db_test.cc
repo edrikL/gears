@@ -79,11 +79,15 @@ bool TestPermissionsDBAll(std::string16 *error) {
   // Set some permissions
   SecurityOrigin foo;
   foo.InitFromUrl(STRING16(L"http://unittest.foo.example.com"));
-  permissions->SetCanAccessGears(foo, PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(foo,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
 
   SecurityOrigin bar;
   bar.InitFromUrl(STRING16(L"http://unittest.bar.example.com"));
-  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DENIED);
+  permissions->SetPermission(bar,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
 
   // Get the threadlocal instance and make sure we got the same instance back
   TEST_ASSERT(PermissionsDB::GetDB() == permissions);
@@ -93,19 +97,26 @@ bool TestPermissionsDBAll(std::string16 *error) {
   ThreadLocals::DestroyValue(PermissionsDB::kThreadLocalKey);
   permissions = PermissionsDB::GetDB();
 
-  TEST_ASSERT(permissions->GetCanAccessGears(foo) ==
+  TEST_ASSERT(permissions->GetPermission(
+      foo, PermissionsDB::PERMISSION_LOCAL_DATA) ==
       PermissionsDB::PERMISSION_ALLOWED);
-  TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
+  TEST_ASSERT(permissions->GetPermission(
+      bar, PermissionsDB::PERMISSION_LOCAL_DATA) ==
       PermissionsDB::PERMISSION_DENIED);
 
   // Try searching for PERMISSION_NOT_SET (should not be allowed).
   std::vector<SecurityOrigin> list;
   TEST_ASSERT(!permissions->GetOriginsByValue(
-      PermissionsDB::PERMISSION_NOT_SET, &list));
+      PermissionsDB::PERMISSION_NOT_SET,
+      PermissionsDB::PERMISSION_LOCAL_DATA,
+      &list));
 
   // Now try resetting
-  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_NOT_SET);
-  TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
+  permissions->SetPermission(bar,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_NOT_SET);
+  TEST_ASSERT(permissions->GetPermission(
+      bar, PermissionsDB::PERMISSION_LOCAL_DATA) ==
       PermissionsDB::PERMISSION_NOT_SET);
 
   // TODO(shess) Constants for later comparison.

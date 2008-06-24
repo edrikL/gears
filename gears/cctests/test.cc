@@ -278,8 +278,9 @@ void GearsTest::RunTests(JsCallContext *context) {
     return;
   }
 
-  permissions->SetCanAccessGears(cc_tests_origin,
-                                 PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(cc_tests_origin,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
 
   std::string16 error;
   bool ok = true;
@@ -342,8 +343,9 @@ void GearsTest::RunTests(JsCallContext *context) {
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
   permissions = PermissionsDB::GetDB();
-  permissions->SetCanAccessGears(cc_tests_origin,
-                                 PermissionsDB::PERMISSION_NOT_SET);
+  permissions->SetPermission(cc_tests_origin,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_NOT_SET);
 
   if (!ok) {
     if (error.empty()) {

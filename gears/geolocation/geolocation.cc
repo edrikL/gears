@@ -35,6 +35,7 @@
 #include <math.h>
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/permissions_manager.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/device_data_provider.h"
@@ -92,6 +93,12 @@ struct LocationAvailableMessageData : public MessageData {
   GearsGeolocation *object;
   LocationProviderBase *provider;
 };
+// Helper function that checks if the caller had the required permissions
+// to use this API. If the permissions are not set, it prompts the user.
+// If the permissions cannot be acquired, it sets an exception and returns
+// false. Else it returns true.
+static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
+                                             JsCallContext *context);
 
 // Local functions
 
@@ -128,6 +135,7 @@ void Dispatcher<GearsGeolocation>::Init() {
   RegisterMethod("getCurrentPosition", &GearsGeolocation::GetCurrentPosition);
   RegisterMethod("watchPosition", &GearsGeolocation::WatchPosition);
   RegisterMethod("clearWatch", &GearsGeolocation::ClearWatch);
+  RegisterMethod("getPermission", &GearsGeolocation::GetPermission);
 }
 
 GearsGeolocation::GearsGeolocation()
@@ -157,6 +165,9 @@ GearsGeolocation::~GearsGeolocation() {
 // API Methods
 
 void GearsGeolocation::GetLastPosition(JsCallContext *context) {
+  // Check permissions first.
+  if (!AcquirePermissionForLocationData(this, context)) return;
+
   // If there's no good current position, we simply return null.
   // TODO(steveblock): Cache the last known position in the database to provide
   // state between sessions.
@@ -180,14 +191,23 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
 }
 
 void GearsGeolocation::GetCurrentPosition(JsCallContext *context) {
+  // Check permissions first.
+  if (!AcquirePermissionForLocationData(this, context)) return;
+
   GetPositionFix(context, false);
 }
 
 void GearsGeolocation::WatchPosition(JsCallContext *context) {
+  // Check permissions first.
+  if (!AcquirePermissionForLocationData(this, context)) return;
+
   GetPositionFix(context, true);
 }
 
 void GearsGeolocation::ClearWatch(JsCallContext *context) {
+  // Check permissions first.
+  if (!AcquirePermissionForLocationData(this, context)) return;
+
   int id;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &id },
@@ -199,6 +219,19 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
   if (!CancelWatch(id)) {
     context->SetException(STRING16(L"Unknown watch ID."));
   }
+}
+
+void GearsGeolocation::GetPermission(JsCallContext *context) {
+  scoped_ptr<PermissionsDialog::CustomContent> custom_content(
+      PermissionsDialog::CreateCustomContent(context));
+ 
+  if (!custom_content.get()) { return; }
+ 
+  bool has_permission = GetPermissionsManager()->AcquirePermission(
+      PermissionsDB::PERMISSION_LOCATION_DATA,
+      custom_content.get());
+
+  context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
 // LocationProviderBase::ListenerInterface implementation.
@@ -809,6 +842,19 @@ static bool PositionHasChanged(const Position &old_position,
   double min_accuracy = std::min(old_position.horizontal_accuracy,
                                  new_position.horizontal_accuracy);
   return delta / min_accuracy > 0.1;
+}
+
+static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
+                                             JsCallContext *context) {
+  if (!geo_module->GetPermissionsManager()->AcquirePermission(
+      PermissionsDB::PERMISSION_LOCATION_DATA)) {
+    std::string16 error = STRING16(L"Page does not have permission to access "
+                                   L"location information using "
+                                   PRODUCT_FRIENDLY_NAME);
+    context->SetException(error);
+    return false;
+  }
+  return true;
 }
 
 #endif  // OFFICIAL_BUILD

@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,29 +23,43 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_FACTORY_UTILS_H__
-#define GEARS_BASE_COMMON_FACTORY_UTILS_H__
+#ifndef GEARS_BASE_COMMON_PERMISSIONS_MANAGER_H__
+#define GEARS_BASE_COMMON_PERMISSIONS_MANAGER_H__
+
+#include <map>
 
 #include "gears/base/common/permissions_db.h"
-#include "gears/base/common/string16.h"
+#include "gears/ui/common/permissions_dialog.h"
 
-class SecurityOrigin;
+class PermissionsManager {
+ public:
+  explicit PermissionsManager(const SecurityOrigin &security_origin);
 
+  // Attempts to acquire the given type of permission. If the permission is not
+  // currently set (either temporarily or in the database), it prompts the user.
+  bool AcquirePermission(PermissionsDB::PermissionType type);
 
-// The 'classVersion' parameter to factory.create() is reserved / deprecated.
-// Currently only '1.0' is allowed.
-extern const char16 *kAllowedClassVersion;
+  // Attempts to acquire the given type of permission. If the permission is not
+  // currently set (either temporarily or in the database), it prompts the user.
+  // The permissions prompt is customized with the contents of the 'custom'
+  // object.
+  bool AcquirePermission(PermissionsDB::PermissionType type,
+                         const PermissionsDialog::CustomContent *custom);
 
+  // Returns true if the owning module has the given permission type and false
+  // otherwise.
+  bool HasPermission(PermissionsDB::PermissionType type);
 
-// Appends information about the Gears build to the string provided.
-void AppendBuildInfo(std::string16 *s);
+  // Copies the permission state from the given permission manager.
+  void ImportPermissions(const PermissionsManager &other_manager);
 
-// Sets a usage-tracking bit once per instantiation of Gears module. On
-// machines that have the Google Update Service available, this bit is
-// periodically reported and then reset. Currently Windows-only.
-void SetActiveUserFlag();
+ private:
+  PermissionState GetPriorDecision(PermissionsDB::PermissionType type);
 
-// Checks if the module requires PERMISSION_LOCAL_DATA to be created.
-bool RequiresLocalDataPermissionType(const std::string16 &module_name);
+  std::map<PermissionsDB::PermissionType, PermissionState> permission_state_;
+  SecurityOrigin security_origin_;
 
-#endif // GEARS_BASE_COMMON_FACTORY_UTILS_H__
+  DISALLOW_EVIL_CONSTRUCTORS(PermissionsManager);
+};
+
+#endif  // GEARS_BASE_COMMON_PERMISSIONS_MANAGER_H__

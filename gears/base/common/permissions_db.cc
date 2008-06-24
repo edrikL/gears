@@ -33,8 +33,11 @@
 static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
-static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 8;
+// The table name below should really be "LocalDataAccess". However,
+// this would break backwards compatibility so we let it be "Access".
+static const char16 *kLocalDataAccessTableName = STRING16(L"Access");
+static const char16 *kLocationDataAccessTableName = STRING16(L"LocationAccess");
+static const int kCurrentVersion = 9;
 static const int kOldestUpgradeableVersion = 1;
 
 const char16 *PermissionsDB::kShortcutsChangedTopic = 
@@ -73,11 +76,12 @@ void PermissionsDB::DestroyDB(void *context) {
 
 PermissionsDB::PermissionsDB()
     : version_table_(&db_, kVersionTableName),
-      access_table_(&db_, kAccessTableName),
+      local_data_access_table_(&db_, kLocalDataAccessTableName),
+      location_access_table_(&db_, kLocationDataAccessTableName),
       shortcut_table_(&db_),
       database_name_table_(&db_),
       database2_metadata_(&db_) {
-	}
+}
 
 
 bool PermissionsDB::Init() {
@@ -121,7 +125,7 @@ bool PermissionsDB::Init() {
       return false;
     }
   } else {
-    if (!UpgradeToVersion8()) {
+    if (!UpgradeToVersion9()) {
       return false;
     }
   }
@@ -136,31 +140,36 @@ bool PermissionsDB::Init() {
 }
 
 
-PermissionsDB::PermissionValue PermissionsDB::GetCanAccessGears(
-                                   const SecurityOrigin &origin) {
+PermissionsDB::PermissionValue PermissionsDB::GetPermission(
+    const SecurityOrigin &origin,
+    PermissionType type) {
   int retval_int = PERMISSION_NOT_SET;
-  access_table_.GetInt(origin.url().c_str(), &retval_int);
+  NameValueTable* table = GetTableForPermissionType(type);
+  table->GetInt(origin.url().c_str(), &retval_int);
   return static_cast<PermissionsDB::PermissionValue>(retval_int);
 }
 
 
-void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
-                                      PermissionsDB::PermissionValue value) {
+void PermissionsDB::SetPermission(const SecurityOrigin &origin,
+                                  PermissionType type,
+                                  PermissionsDB::PermissionValue value) {
   if (origin.url().empty()) {
     assert(false);
     return;
   }
 
+  NameValueTable* table = GetTableForPermissionType(type);
   if (value == PERMISSION_NOT_SET) {
-    access_table_.Clear(origin.url().c_str());
+    table->Clear(origin.url().c_str());
   } else if (value == PERMISSION_ALLOWED || value == PERMISSION_DENIED) {
-    access_table_.SetInt(origin.url().c_str(), value);
+    table->SetInt(origin.url().c_str(), value);
   } else {
-    LOG(("PermissionsDB::SetCanAccessGears invalid value: %d", value));
+    LOG(("PermissionsDB::SetPermission invalid value: %d", value));
     assert(false);
   }
 
-  if (value == PERMISSION_DENIED || value == PERMISSION_NOT_SET) {
+  if ((type == PERMISSION_LOCAL_DATA) &&
+      (value == PERMISSION_DENIED || value == PERMISSION_NOT_SET)) {
     WebCacheDB *webcacheDB = WebCacheDB::GetDB();
     if (webcacheDB) {
       webcacheDB->DeleteServersForOrigin(origin);
@@ -170,36 +179,22 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
 
 
 bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
+                                      PermissionType type,
                                       std::vector<SecurityOrigin> *result) {
   if (PERMISSION_ALLOWED != value && PERMISSION_DENIED != value) {
     LOG(("Unexpected value: %d", value));
     return false;
   }
-
-  // TODO(aa): Refactor into NameValueTable::FindNamesByIntValue().
-  std::string16 sql(STRING16(L"SELECT Name FROM "));
-  sql += kAccessTableName;
-  sql += STRING16(L" WHERE Value = ? ORDER BY Name ASC");
-
-  SQLStatement statement;
-  if (SQLITE_OK != statement.prepare16(&db_, sql.c_str())) {
+  
+  NameValueTable* table = GetTableForPermissionType(type);
+  std::vector<std::string16> origins;
+  if (!table->FindNamesByIntValue(value, &origins)) {
     return false;
   }
 
-  if (SQLITE_OK != statement.bind_int(0, value)) {
-    return false;
-  }
-
-  int rv;
-  while (SQLITE_DONE != (rv = statement.step())) {
-    if (SQLITE_ROW != rv) {
-      LOG(("PermissionsDB::ListGearsAccess: Could not iterate. Error was: %d",
-           db_.GetErrorCode()));
-      return false;
-    }
-
+  for (int i = 0; i < static_cast<int>(origins.size()); ++i) {
     SecurityOrigin origin;
-    if (!origin.InitFromUrl(statement.column_text16_safe(0))) {
+    if (!origin.InitFromUrl(origins.at(i).c_str())) {
       LOG(("PermissionsDB::ListGearsAccess: InitFromUrl() failed."));
       // If we can't initialize a single URL, don't freak out. Try to do the
       // other ones.
@@ -212,22 +207,42 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
 }
 
 
-bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
+bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &worker_origin,
+                                         const SecurityOrigin &host_origin) {
   SQLTransaction transaction(&db_, "PermissionsDB::EnableGearsForWorker");
   if (!transaction.Begin()) {
     return false;
   }
 
-  switch (GetCanAccessGears(origin)) {
+  if (IsOriginAllowed(host_origin, PERMISSION_LOCAL_DATA)) {
+    if (!TryAllow(worker_origin, PERMISSION_LOCAL_DATA)) {
+      return false;
+    }
+  }
+
+  if (IsOriginAllowed(host_origin, PERMISSION_LOCATION_DATA)) {
+    if (!TryAllow(worker_origin, PERMISSION_LOCATION_DATA)) {
+      return false;
+    }
+  }
+
+  return transaction.Commit();
+}
+
+bool PermissionsDB::TryAllow(const SecurityOrigin &origin,
+                             PermissionType type) {
+
+  NameValueTable* table = GetTableForPermissionType(type);
+  switch (GetPermission(origin, type)) {
     case PERMISSION_ALLOWED:
       return true;
     case PERMISSION_DENIED:
       return false;
     case PERMISSION_NOT_SET:
-      if (!access_table_.SetInt(origin.url().c_str(), PERMISSION_ALLOWED)) {
+      if (!table->SetInt(origin.url().c_str(), PERMISSION_ALLOWED)) {
         return false;
       }
-      return transaction.Commit();
+      return true;
     default:
       LOG(("Unexpected permission value"));
       return false;
@@ -342,7 +357,8 @@ bool PermissionsDB::CreateDatabase() {
   }
 
   if (!version_table_.MaybeCreateTable() ||
-      !access_table_.MaybeCreateTable() ||
+      !local_data_access_table_.MaybeCreateTable() ||
+      !location_access_table_.MaybeCreateTable() ||
       !shortcut_table_.MaybeCreateTableLatestVersion() ||
       !database_name_table_.MaybeCreateTableLatestVersion()) {
     return false;
@@ -552,7 +568,7 @@ bool PermissionsDB::UpgradeToVersion7() {
 }
 
 bool PermissionsDB::UpgradeToVersion8() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion7");
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion8");
   if (!transaction.Begin()) {
     return false;
   }
@@ -568,7 +584,7 @@ bool PermissionsDB::UpgradeToVersion8() {
   }
 
   if (version != 7) {
-    LOG(("PermissionsDB::UpgradeToVersion7 unexpected version: %d", version));
+    LOG(("PermissionsDB::UpgradeToVersion8 unexpected version: %d", version));
     return false;
   }
 
@@ -581,4 +597,49 @@ bool PermissionsDB::UpgradeToVersion8() {
   }
 
   return transaction.Commit();
+}
+
+bool PermissionsDB::UpgradeToVersion9() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion9");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  int version = 0;
+  version_table_.GetInt(kVersionKeyName, &version);
+
+  if (version < 8) {
+    if (!UpgradeToVersion8()) {
+      return false;
+    }
+    version_table_.GetInt(kVersionKeyName, &version);
+  }
+
+  if (version != 8) {
+    LOG(("PermissionsDB::UpgradeToVersion9 unexpected version: %d", version));
+    return false;
+  }
+
+  if (!location_access_table_.MaybeCreateTable()) {
+    return false;
+  }
+
+  if (!version_table_.SetInt(kVersionKeyName, 9)) {
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+NameValueTable* PermissionsDB::GetTableForPermissionType(PermissionType type) {
+  switch (type) {
+    case PERMISSION_LOCAL_DATA:
+      return &local_data_access_table_;
+    case PERMISSION_LOCATION_DATA:
+      return &location_access_table_;
+    default:
+      LOG(("Unexpected permission type"));
+      assert(false);
+      return NULL;
+  }
 }

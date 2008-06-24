@@ -206,7 +206,8 @@ void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
   }
 
   // Enable the worker's origin for gears access if it isn't explicitly
-  // disabled.
+  // disabled: specifically, we only enable the same permission types that are
+  // already granted to the worker's owner.
   // NOTE: It is OK to do this here, even though there is a race with starting
   // the background thread. Even if permission is revoked before after this
   // happens that is no different than what happens if permission is revoked
@@ -218,7 +219,7 @@ void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
       return;
     }
 
-    if (!db->EnableGearsForWorker(script_origin)) {
+    if (!db->EnableGearsForWorker(script_origin, EnvPageSecurityOrigin())) {
       std::string16 message(STRING16(L"Gears access is denied for url: "));
       message += absolute_url;
       message += STRING16(L".");

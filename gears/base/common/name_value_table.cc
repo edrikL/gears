@@ -178,6 +178,34 @@ bool NameValueTable::HasName(const char16 *name, bool *retval) {
   }
 }
 
+bool NameValueTable::FindNamesByIntValue(int value,
+                                         std::vector<std::string16>* names) {
+  assert(names);
+  std::string16 sql(STRING16(L"SELECT Name FROM "));
+  sql += table_name_;
+  sql += STRING16(L" WHERE Value = ? ORDER BY Name ASC");
+
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(db_, sql.c_str())) {
+    return false;
+  }
+
+  if (SQLITE_OK != statement.bind_int(0, value)) {
+    return false;
+  }
+
+  int rv;
+  while (SQLITE_DONE != (rv = statement.step())) {
+    if (SQLITE_ROW != rv) {
+      LOG(("NameValueTable::FindNamesByIntValue: Iterate failed. Error was: %d",
+           db_->GetErrorCode()));
+      return false;
+    }
+    names->push_back(statement.column_text16_safe(0));
+  }
+
+  return true;
+}
 
 bool NameValueTable::Clear(const char16 *name) {
   assert(name);

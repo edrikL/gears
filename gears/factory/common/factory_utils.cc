@@ -122,88 +122,6 @@ void AppendBuildInfo(std::string16 *s) {
 #endif
 }
 
-
-bool HasPermissionToUseGears(GearsFactory *factory,
-                             bool use_temporary_permissions,
-                             const char16 *custom_icon_url,
-                             const char16 *custom_name,
-                             const char16 *custom_message) {
-  // First check is_creation_suspended, because the factory can be suspended
-  // even when permission_state_ is an ALLOWED_* value.
-  if (factory->is_creation_suspended_) {
-    return false;
-  }
-
-  // Check for a cached value.
-  if (factory->permission_state_ == ALLOWED_PERMANENTLY) {
-    return true;
-  } else if (factory->permission_state_ == DENIED_PERMANENTLY) {
-    return false;
-  } else if (factory->permission_state_ == ALLOWED_TEMPORARILY &&
-             use_temporary_permissions) {
-    return true;
-  } else if (factory->permission_state_ == DENIED_TEMPORARILY &&
-             use_temporary_permissions) {
-    return false;
-  }
-
-  // See if the user has permanently allowed or denied this origin.
-  const SecurityOrigin &origin = factory->EnvPageSecurityOrigin();
-
-  PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions) { return false; }
-
-  switch (permissions->GetCanAccessGears(origin)) {
-    // Origin was found in database. Save choice for page lifetime,
-    // so things continue working even if underlying database changes.
-    case PermissionsDB::PERMISSION_ALLOWED:
-      factory->permission_state_ = ALLOWED_PERMANENTLY;
-      return true;
-    case PermissionsDB::PERMISSION_DENIED:
-      factory->permission_state_ = DENIED_PERMANENTLY;
-      return false;
-    // Origin was not found in database.
-    case PermissionsDB::PERMISSION_NOT_SET:
-      break;
-    // All other values are unexpected.
-    default:
-      assert(false); 
-  }
-
-  std::string16 full_icon_url;
-  if (custom_icon_url && custom_icon_url[0]) {
-    if (ResolveAndNormalize(factory->EnvPageLocationUrl().c_str(),
-                            custom_icon_url,
-                            &full_icon_url)) {
-      custom_icon_url = full_icon_url.c_str();
-    }
-  }
-
-  // Display the modal dialog. Should not happen in a faceless worker.
-  assert(!factory->EnvIsWorker());
-  factory->permission_state_ = ShowPermissionsPrompt(origin,
-                                                     custom_icon_url,
-                                                     custom_name,
-                                                     custom_message);
-
-  // Return the boolean decision.
-  if (factory->permission_state_ == ALLOWED_PERMANENTLY ||
-      factory->permission_state_ == ALLOWED_TEMPORARILY) {
-    return true;
-  }
-  return false;
-}
-
-PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
-                                      const char16 *custom_icon_url,
-                                      const char16 *custom_name,
-                                      const char16 *custom_message) {
-  return PermissionsDialog::Prompt(origin,
-                                   custom_icon_url,
-                                   custom_name,
-                                   custom_message);
-}
-
 void SetActiveUserFlag() {
 #ifdef WIN32
   // We use the HKCU version of the Google Update "did run" value so that
@@ -258,8 +176,15 @@ void SetActiveUserFlag() {
 #endif  // #ifdef BROWSER_WEBKIT
 }
 
-bool RequiresPermissionToUseGears(const std::string16 &module_name) {
-  return module_name != STRING16(L"beta.desktop") &&
-         module_name != STRING16(L"beta.httprequest") &&
-         module_name != STRING16(L"beta.timer");
+bool RequiresLocalDataPermissionType(const std::string16 &module_name) {
+  return module_name == STRING16(L"beta.audio") ||
+         module_name == STRING16(L"beta.audiorecorder") ||
+         module_name == STRING16(L"beta.canvas") ||
+         module_name == STRING16(L"beta.console") ||
+         module_name == STRING16(L"beta.database") ||
+         module_name == STRING16(L"beta.databasemanager") ||
+         module_name == STRING16(L"beta.imageloader") ||
+         module_name == STRING16(L"beta.localserver") ||
+         module_name == STRING16(L"beta.test") ||
+         module_name == STRING16(L"beta.workerpool");
 }

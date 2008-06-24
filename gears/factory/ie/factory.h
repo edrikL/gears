@@ -97,14 +97,6 @@ class ATL_NO_VTABLE GearsFactory
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
-  // friends for exposing 'permission_state_'
-  friend class PoolThreadsManager;
-  friend bool HasPermissionToUseGears(GearsFactory *factory,
-                                      bool use_temporary_permissions,
-                                      const char16 *custom_icon_url,
-                                      const char16 *custom_name,
-                                      const char16 *custom_message);
-
   // Helper methods used by Create() which create either a dispatcher-based or
   // COM-based module. Returns true if the module was created successfully.
   // Returns false and an empty error message if the module is unknown. Returns
@@ -118,15 +110,6 @@ class ATL_NO_VTABLE GearsFactory
   // unable to create objects.  This is important for some use cases, like
   // cross-origin workers.
   bool is_creation_suspended_;
-
-  // We remember opt-in for the life of this page even if 'remember_choice'
-  // is not selected. The page and it's workers will be allowed to use Gears
-  // without prompts until the page is unloaded.
-  //
-  // TODO(cprince): move this into ModuleImplBaseClass to auto-pass permission
-  // data around. Do that when we have a single instance of the info per page,
-  // because multiple copies can get out of sync (permission data is mutable).
-  PermissionState permission_state_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
 };

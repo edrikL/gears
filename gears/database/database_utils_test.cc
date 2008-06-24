@@ -68,7 +68,9 @@ bool TestDatabaseUtilsAll(std::string16 *error) {
   // Get us an origin to work with.
   SecurityOrigin foo;
   foo.InitFromUrl(STRING16(L"http://unittest.foo.example.com"));
-  permissions->SetCanAccessGears(foo, PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(foo,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
 
   // Delete any existing database file.
   const char16 *kFooDatabaseName = STRING16(L"poison_test");

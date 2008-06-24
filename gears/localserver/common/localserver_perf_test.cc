@@ -326,8 +326,9 @@ bool LocalServerPerfTests::AllowOrigin(const SecurityOrigin &origin) {
   if (!permissions) return false;
 
   ScopedPerfSampler allow_sampler(&allow_stats_);
-  permissions->SetCanAccessGears(origin,
-                                 PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(origin,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
   return true;
 }
 
@@ -336,8 +337,9 @@ bool LocalServerPerfTests::DisallowOrigin(const SecurityOrigin &origin) {
   if (!permissions) return false;
 
   ScopedPerfSampler disallow_sampler(&disallow_stats_);
-  permissions->SetCanAccessGears(origin,
-                                 PermissionsDB::PERMISSION_NOT_SET);
+  permissions->SetPermission(origin,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_NOT_SET);
   return true;
 }
 
