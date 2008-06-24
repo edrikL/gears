@@ -124,6 +124,7 @@ The additional properties below are sound channel specific properties.
 // - google.gears.factory.create('beta.audio')
 Audio class : Media
 {
+  // TODO: prefer int (number of channels) over enumeration ?
   // Channel type
   const unsigned short MONO = 1;
   const unsigned short STEREO = 2;
@@ -177,10 +178,8 @@ AudioRecorder class
   // specifies the length (in milli seconds) of the audio recorded
   readonly attribute float duration;
  
-  // channel type
-  const unsigned short MONO = 1;
-  const unsigned short STEREO = 2;
-           attribute short channelType;
+  // number of channels, currently can be 1 (mono) or 2 (stereo)
+           attribute int numOfChannels;
   // sample rate for the recording
            attribute float sampleRate;
   // sample type for the recording, possible values need to be defined
@@ -243,7 +242,7 @@ The AudioRecorder class throws the following events, under the stated preconditi
 
   TODO: Describe other attributes also.
 
-  * _sampleRate_ - sample rate for recording specified in kHz. On setting with an arbitrary value, the AudioRecorder tries to pick the nearest possible sample rate. On getting returns the sample rate actually set. Cannot be modified while recording.
+  * _sampleRate_ - sample rate for recording specified in Hz. On setting with an arbitrary value, the AudioRecorder tries to pick the nearest possible sample rate. On getting returns the sample rate actually set. Cannot be modified while recording.
 
   * _sampleFormat_ - Possible values need to be defined. Currently, only S16_LE (signed 16 bit little endian linear PCM) is supported. Cannot be modified while recording.
 
