@@ -1,2 +1,2 @@
 #labels DesignDoc
-See CanvasAPI
+See [CanvasAPI].
