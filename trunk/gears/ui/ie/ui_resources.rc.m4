@@ -55,6 +55,10 @@ html_dialog.css              HTML  "ui/common/html_dialog.css"
 html_dialog.css.end          HTML  {"\0END\0"}
 icon_32x32.png               HTML  "ui/common/icon_32x32.png"
 icon_32x32.png.end           HTML  {"\0END\0"}
+local_data.png               HTML  "ui/common/local_data.png"
+local_data.png.end           HTML  {"\0END\0"}
+location_data.png            HTML  "ui/common/location_data.png"
+location_data.png.end        HTML  {"\0END\0"}
 
 #include "genfiles/ui_html.rc"
 
