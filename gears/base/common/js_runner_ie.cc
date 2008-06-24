@@ -104,6 +104,46 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_array.release();
   }
 
+  bool ConvertJsObjectToDate(JsObject *obj,
+                             int64 *milliseconds_since_epoch) {
+    assert(obj);
+    assert(milliseconds_since_epoch);
+
+    if (V_VT(&(obj->token())) != VT_DISPATCH) {
+      return false;
+    }
+    CComPtr<IDispatch> dispatch = V_DISPATCH(&(obj->token()));
+
+    DISPID function_iid;
+    if (FAILED(ActiveXUtils::GetDispatchMemberId(dispatch,
+                                                 STRING16(L"getTime"),
+                                                 &function_iid))) {
+      return false;
+    }
+    DISPPARAMS parameters = {0};
+    VARIANT retval = {0};
+    EXCEPINFO exception;
+    HRESULT hr = dispatch->Invoke(
+        function_iid,           // member to invoke
+        IID_NULL,               // reserved
+        LOCALE_SYSTEM_DEFAULT,  // locale
+        DISPATCH_METHOD,        // dispatch/invoke as...
+        &parameters,            // parameters
+        &retval,                // receives result
+        &exception,             // receives exception
+        NULL);                  // receives badarg index
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    if (V_VT(&retval) != VT_R8) {
+      return false;
+    }
+
+    *milliseconds_since_epoch = static_cast<int64>(V_R8(&retval));
+    return true;
+  }
+
   bool InvokeCallbackImpl(const JsRootedCallback *callback,
                           int argc, JsParamToSend *argv,
                           JsRootedToken **optional_alloc_retval,

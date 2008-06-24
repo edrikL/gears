@@ -154,6 +154,30 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_array.release();
   }
 
+  bool ConvertJsObjectToDate(JsObject *obj,
+                             int64 *milliseconds_since_epoch) {
+    assert(obj);
+    assert(milliseconds_since_epoch);
+
+    NPObject *np_obj = NPVARIANT_TO_OBJECT(obj->token());
+
+    NPIdentifier get_time_id = NPN_GetStringIdentifier("getTime");
+
+    ScopedNPVariant result;
+    bool rv = NPN_Invoke(GetContext(), np_obj, get_time_id, NULL, 0, &result);
+    if (!rv) {
+      return false;
+    }
+
+    if (!NPVARIANT_IS_DOUBLE(result)) {
+      return false;
+    }
+
+    *milliseconds_since_epoch = static_cast<int64>(NPVARIANT_TO_DOUBLE(result));
+
+    return true;
+  }
+
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
