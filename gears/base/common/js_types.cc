@@ -1877,7 +1877,7 @@ void ScopedNPVariant::Release() {
 // Browser-specific JsCallContext functions.
 #if BROWSER_FF
 
-void ConvertJsParamToToken(const JsParamToSend &param,
+bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token) {
   switch (param.type) {
     case JSPARAM_BOOL: {
@@ -1892,6 +1892,19 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_INT64: {
       const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      // If the value fits inside a 31-bit signed int (i.e. 30 regular bits
+      // and 1 sign bit), then using an int is more efficient, on SpiderMonkey,
+      // than a heap-allocated double.
+      if ((*value >= JSVAL_INT_MIN) && (*value <= JSVAL_INT_MAX)) {
+        int value_as_int32 = static_cast<int32>(*value);
+        *token = INT_TO_JSVAL(value_as_int32);
+        break;
+      }
+      // Otherwise, fall back to a double, although if the value can't be
+      // represented by a double, without loss of precision, then we will fail.
+      if ((*value < JS_INT_MIN) || (*value > JS_INT_MAX)) {
+        return false;
+      }
       const double dvalue = static_cast<double>(*value);
       jsdouble *js_double = JS_NewDouble(context, dvalue);
       *token = DOUBLE_TO_JSVAL(js_double);
@@ -1944,6 +1957,7 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     default:
       assert(false);
   }
+  return true;
 }
 
 JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
@@ -1957,7 +1971,9 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the JS caller is expecting a return value.
   if (retval_) {
     JsParamToSend retval = { type, value_ptr };
-    ConvertJsParamToToken(retval, js_context(), retval_);
+    if (!ConvertJsParamToToken(retval, js_context(), retval_)) {
+      SetException(STRING16(L"Return value is out of range."));
+    }
   }
 }
 
@@ -1985,7 +2001,7 @@ void JsCallContext::SetException(const std::string16 &message) {
 
 #elif BROWSER_IE
 
-void ConvertJsParamToToken(const JsParamToSend &param,
+bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, CComVariant *token) {
   switch (param.type) {
     case JSPARAM_BOOL: {
@@ -2000,6 +2016,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_INT64: {
       const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      // If the value can't be represented by a double, without loss of
+      // precision, then we will fail.
+      if ((*value < JS_INT_MIN) || (*value > JS_INT_MAX)) {
+        return false;
+      }
       const double dvalue = static_cast<double>(*value);
       *token = dvalue;  // CComVariant understands 'double'
       break;
@@ -2050,6 +2071,7 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     default:
       assert(false);
   }
+  return true;
 }
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
@@ -2058,10 +2080,12 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   if (retval_) {
     JsParamToSend retval = { type, value_ptr };
     JsScopedToken scoped_retval;
-    ConvertJsParamToToken(retval, js_context(), &scoped_retval);
-
-    // In COM, return values are released by the caller.
-    scoped_retval.Detach(retval_);
+    if (ConvertJsParamToToken(retval, js_context(), &scoped_retval)) {
+      // In COM, return values are released by the caller.
+      scoped_retval.Detach(retval_);
+    } else {
+      SetException(STRING16(L"Return value is out of range."));
+    }
   }
 }
 
@@ -2091,7 +2115,7 @@ void JsCallContext::SetException(const std::string16 &message) {
 
 #elif BROWSER_NPAPI
 
-void ConvertJsParamToToken(const JsParamToSend &param,
+bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *variant) {
   switch (param.type) {
     case JSPARAM_BOOL: {
@@ -2106,6 +2130,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_INT64: {
       const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      // If the value can't be represented by a double, without loss of
+      // precision, then we will fail.
+      if ((*value < JS_INT_MIN) || (*value > JS_INT_MAX)) {
+        return false;
+      }
       const double dvalue = static_cast<double>(*value);
       variant->Reset(dvalue);
       break;
@@ -2157,6 +2186,7 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     default:
       assert(false);
   }
+  return true;
 }
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
@@ -2164,12 +2194,14 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 
   JsParamToSend retval = { type, value_ptr };
   ScopedNPVariant np_retval;
-  ConvertJsParamToToken(retval, js_context(), &np_retval);
-  *retval_ = np_retval;
-
-  // In NPAPI, return values from callbacks are released by the browser.
-  // Therefore, we give up ownership of this variant without releasing it.
-  np_retval.Release();
+  if (ConvertJsParamToToken(retval, js_context(), &np_retval)) {
+    *retval_ = np_retval;
+    // In NPAPI, return values from callbacks are released by the browser.
+    // Therefore, we give up ownership of this variant without releasing it.
+    np_retval.Release();
+  } else {
+    SetException(STRING16(L"Return value is out of range."));
+  }
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
