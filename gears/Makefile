@@ -1089,6 +1089,9 @@ CRASH_SENDER_CPPSRCS  += \
 #-----------------------------------------------------------------------------
 # canvas
 
+ifeq ($(OFFICIAL_BUILD),1)
+# The Canvas API is not yet enabled in official builds.
+else
 $(BROWSER)_VPATH += \
 		canvas \
 		$(NULL)
@@ -1097,6 +1100,7 @@ $(BROWSER)_CPPSRCS += \
 		canvas.cc \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
+endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # database

@@ -197,6 +197,9 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
   -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
 
+SKIA_LIB_DIR = ../third_party/skia
+SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
+
 LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 
 ifeq ($(USING_LIBGD),1)
@@ -255,6 +258,11 @@ CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -pthread
+
+MKLIB = ar rcs
+LIB_PREFIX = lib
+LIB_SUFFIX = .a
+LIBFLAGS = $@
 
 MKDLL = g++
 DLL_PREFIX = lib
@@ -375,6 +383,11 @@ THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch ppc -arch i386 -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
+
+MKLIB = ar rcs
+LIB_PREFIX = lib
+LIB_SUFFIX = .a
+LIBFLAGS = $@
 
 MKDLL = g++
 DLL_PREFIX = lib
@@ -565,6 +578,11 @@ COMPILE_FLAGS_dbg += /fastcap
 SHARED_LINKFLAGS_dbg += base\common\trace_buffers_win32\trace_buffers_win32.lib
 endif # OFFICIAL_BUILD
 endif # wince / win32
+
+MKLIB = lib
+LIB_PREFIX =
+LIB_SUFFIX = .lib
+LIBFLAGS = /OUT:$@
 
 MKDLL = link
 DLL_PREFIX =
