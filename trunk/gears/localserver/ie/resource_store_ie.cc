@@ -299,6 +299,7 @@ LRESULT GearsResourceStore::OnCaptureUrlComplete(UINT uMsg,
   CaptureTask* task = reinterpret_cast<CaptureTask*>(lParam);
   if (task && (task == capture_task_.get())) {
     if (current_request_.get()) {
+      need_to_fire_failed_events_ = false;
       int index = wParam;
       bool success = (uMsg == WM_CAPTURE_URL_SUCCEEDED);
       LOG16((L"ResourceStore::OnCaptureUrlComplete( %s, %s %d)\n",
@@ -310,7 +311,6 @@ LRESULT GearsResourceStore::OnCaptureUrlComplete(UINT uMsg,
                 success, current_request_->id);
     }
   }
-  need_to_fire_failed_events_ = false;
   bHandled = TRUE;
   return 0;
 }
