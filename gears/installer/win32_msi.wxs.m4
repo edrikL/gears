@@ -212,6 +212,10 @@ m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.xul" />
                       <File Id='ff_icon_32x32.png' Name='icon_32x32.png'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/icon_32x32.png" />
+                      <File Id='ff_local_data.png' Name='local_data.png'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/local_data.png" />
+                      <File Id='ff_location_data.png' Name='location_data.png'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/location_data.png" />
                     </Component>
                   </Directory>
                   <Directory Id='OurFFLocaleDir' Name='locale'>

@@ -114,7 +114,9 @@ COMMON_RESOURCES = \
 	ui/common/button_corner_black.gif \
 	ui/common/button_corner_blue.gif \
 	ui/common/button_corner_grey.gif \
-	ui/common/icon_32x32.png
+	ui/common/icon_32x32.png \
+	ui/common/local_data.png \
+	ui/common/location_data.png
 
 FF3_RESOURCES = \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.js \
