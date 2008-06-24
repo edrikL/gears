@@ -1049,16 +1049,19 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
     return false;
   }
 
-
-  // This Factory always inherits opt-in permissions.  (Either ALLOWED_* value
-  // could be used; _PERMANENTLY means getPermission() doesn't have any effect.)
-  factory->permission_state_ = ALLOWED_PERMANENTLY;
-  // But for cross-origin workers, object creation is suspended until the
+  // For cross-origin workers, object creation is suspended until the
   // callee invokes allowCrossOrigin().
   if (!wi->threads_manager->page_security_origin().IsSameOrigin(
                                                        wi->script_origin)) {
     factory->SuspendObjectCreation();
     wi->is_factory_suspended = true;
+  } else {
+    // For same-origin workers, just copy the permission state from the
+    // owning worker.
+    JavaScriptWorkerInfo *owner_info =
+      wi->threads_manager->worker_info_[kOwningWorkerId];
+    wi->module_environment->permissions_manager_.ImportPermissions(
+        owner_info->module_environment->permissions_manager_);
   }
 
   // This WorkerPool needs the same underlying PoolThreadsManager as its parent.

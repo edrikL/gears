@@ -28,12 +28,15 @@
 #ifndef GEARS_BASE_COMMON_BASE_CLASS_H__
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
+#include <map>
+
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/browsing_context.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/permissions_manager.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
-#include "gears/base/common/browsing_context.h"
 
 #if BROWSER_FF
 
@@ -89,14 +92,15 @@ struct ModuleEnvironment : public RefCounted {
                     JsRunnerInterface *js_runner,
                     BrowsingContext *browsing_context)
       : security_origin_(security_origin),
-#if BROWSER_FF || BROWSER_NPAPI
-        js_context_(js_context),
-#elif BROWSER_IE
-        iunknown_site_(iunknown_site),
-#endif
-        is_worker_(is_worker),
-        js_runner_(js_runner),
-        browsing_context_(browsing_context) {}
+  #if BROWSER_FF || BROWSER_NPAPI
+      js_context_(js_context),
+  #elif BROWSER_IE
+      iunknown_site_(iunknown_site),
+  #endif
+      is_worker_(is_worker),
+      js_runner_(js_runner),
+      browsing_context_(browsing_context),
+      permissions_manager_(security_origin) {}
 
   // Note that the SecurityOrigin may not necessarily be the same as the
   // originating page, e.g. in the case of a cross-origin worker, it would be
@@ -118,6 +122,8 @@ struct ModuleEnvironment : public RefCounted {
   bool is_worker_;
   JsRunnerInterface *js_runner_;
   scoped_refptr<BrowsingContext> browsing_context_;
+
+  PermissionsManager permissions_manager_;
 
  private:
   // This struct is ref-counted and hence has a private destructor (which
@@ -187,6 +193,8 @@ class ModuleImplBaseClass {
   BrowsingContext *EnvPageBrowsingContext() const;
 
   JsRunnerInterface *GetJsRunner() const;
+
+  PermissionsManager *GetPermissionsManager() const;
 
 #if BROWSER_FF
   // JavaScript worker-thread parameter information

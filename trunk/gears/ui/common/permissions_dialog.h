@@ -29,21 +29,36 @@
 #include "gears/base/common/security_model.h"
 
 enum PermissionState;
+class JsCallContext;
 
 class PermissionsDialog {
  public:
+  // CustomContent wraps a custom icon, name, and message that can be optionally
+  // displayed by the permissions dialog. The 'custome_icon_url' should be a
+  // full url to a 32x32 image suitable for use in an HTML image tag, and
+  // 'custom_message' should not contain HTML markup.
+  struct CustomContent {
+    CustomContent(const char16 *custom_icon_url_in,
+                  const char16 *custom_name_in,
+                  const char16 *custom_message_in);
+    std::string16 custom_icon_url;
+    std::string16 custom_name;
+    std::string16 custom_message;
+  };
+
+  // Utility method that creates a CustomContent object from a JsCallContext,
+  // expecting that the JsCallContext contains three string arguments in the   
+  // following order: site_name, image_url, extra_message.
+  static CustomContent* CreateCustomContent(JsCallContext *context);    
+
   // Displays a modal dialog asking the user whether to let the given origin
   // use Gears.  Updates the PermissionsDB if the user's choice is permanent.
   // Returns a PermissionState value indicating the user's choice.
-  //
-  // The custom icon, name, and message parameters are optional and may be NULL.
-  // If NULL, a default icon and message will be shown. The 'custome_icon_url'
-  // should be a full url to a 32x32 image suitable for use in an HTML image
-  // tag, and 'custom_message' should not contain HTML markup.
+  // The custom_content parameter is optional. If NULL, a default icon and
+  // message will be shown.
   static PermissionState Prompt(const SecurityOrigin &origin,
-                                const char16 *custom_icon_url,
-                                const char16 *custom_name,
-                                const char16 *custom_message);
+                                PermissionsDB::PermissionType type,
+                                const CustomContent *custom_content);
  private:
   // Private constructor. Use static Prompt() methods instead.
   PermissionsDialog() {}

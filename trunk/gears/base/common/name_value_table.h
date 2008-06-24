@@ -51,6 +51,10 @@ class NameValueTable {
 
   // Check whether the specified name exists in the table.
   bool HasName(const char16 *name, bool *retval);
+  
+  // Gets a vector of names that match the given int value.
+  bool NameValueTable::FindNamesByIntValue(int value,
+                                           std::vector<std::string16>* names);
 
   // Removes a value that was previously created with one of the Set methods.
   bool Clear(const char16 *name);

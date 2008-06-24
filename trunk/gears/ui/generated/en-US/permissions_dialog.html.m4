@@ -187,16 +187,24 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td class="text-alignment" valign="top">
-          <img id="icon" src="icon_32x32.png" width="32" height="32">
+          <img id="icon" width="32" height="32">
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
         <td width="100%" class="text-alignment" valign="middle">
-          <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
-          The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
-          will be able to store and access information on your computer.
-          </TRANS_BLOCK>
+          <div id="local-data" style="display:none">
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
+            The website below wants to store information on your computer 
+            using PRODUCT_FRIENDLY_NAME_UQ .
+            </TRANS_BLOCK>
+          </div>
+          <div id="location-data" style="display:none">
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information">
+            The website below wants to access information about your location 
+            using PRODUCT_FRIENDLY_NAME_UQ.
+            </TRANS_BLOCK>
+          </div>
         </td>
       </tr>
     </table>
@@ -384,6 +392,7 @@ m4_include(ui/common/button.js)
       // Handy for debugging layout:
       args = {
         origin: "http://www.google.com",
+        dialogType: "localData",
         customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
         customName: "My Application",
         customMessage: "Press the button to enable my application to run offline!"
@@ -394,11 +403,23 @@ m4_include(ui/common/button.js)
     }
 
     var origin = args['origin'];  // required parameter
+    var dialogType = args['dialogType'];  // required parameter
     var customIcon = args['customIcon'];
     var customName = args['customName'];
     var customMessage = args['customMessage'];
 
     var elem;
+
+    elem = dom.getElementById("icon");
+    if (dialogType == "localData") {
+      elem.src = "local_data.png";
+      elem = dom.getElementById("local-data");
+      elem.style.display = "block";
+    } else if (dialogType == "locationData") {
+      elem.src = "location_data.png";
+      elem = dom.getElementById("location-data");
+      elem.style.display = "block";
+    }
 
     if (!customName) {
       elem = dom.getElementById("origin-only");

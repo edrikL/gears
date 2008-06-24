@@ -137,6 +137,11 @@ class GearsGeolocation
   // OUT: nothing
   void ClearWatch(JsCallContext *context);
 
+  // Triggers the geolocation-specific permissions dialog.
+  // IN:  string site_name, string image_url, string extra_message
+  // OUT: boolean permission
+  void GetPermission(JsCallContext *context);
+
  private:
   // Maintains all the data for a position fix.
   typedef std::vector<LocationProviderBase*> ProviderVector;

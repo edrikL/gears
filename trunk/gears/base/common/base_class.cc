@@ -161,6 +161,11 @@ JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   return module_environment_->js_runner_;
 }
 
+PermissionsManager *ModuleImplBaseClass::GetPermissionsManager() const {
+  assert(module_environment_.get());
+  return &(module_environment_->permissions_manager_);
+}
+
 void ModuleImplBaseClass::Ref() {
   assert(js_wrapper_);
   js_wrapper_->Ref();
