@@ -179,7 +179,7 @@ AudioRecorder class
   readonly attribute float duration;
  
   // number of channels, currently can be 1 (mono) or 2 (stereo)
-           attribute int numOfChannels;
+           attribute int numberOfChannels;
   // sample rate for the recording
            attribute float sampleRate;
   // sample type for the recording, possible values need to be defined
