@@ -23,6 +23,14 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Workaround for weirdness in pulse were PWD is set incorrectly to the pulse
+# bin directory, rather than the real current working directory.  $(shell )
+# is expensive, so we only run it if PWD is set incorrectly, by checking
+# for the existence of a file named 'Makefile' in the current directory.
+ifeq ($(wildcard $(PWD)/Makefile),)
+PWD = $(shell pwd)
+endif
+
 #-----------------------------------------------------------------------------
 # use the libraries if not indicated otherwise.
 
@@ -414,8 +422,7 @@ ICEBERG = /usr/local/bin/freeze
 # that need it.
 ifeq ($(wildcard $(ICEBERG)),)
 else
-# TODO(playmobil): Re-enable once we get Iceberg builds working on pulse.
-# HAVE_ICEBERG = 1
+HAVE_ICEBERG = 1
 endif
 
 endif
