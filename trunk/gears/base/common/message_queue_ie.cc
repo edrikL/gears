@@ -26,17 +26,30 @@
 #include <assert.h>
 #include <deque>
 #include <map>
+#include <string>
 #include <windows.h>
 
+#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/thread_locals.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+
+static const std::string kTlsKey("base:ThreadMessageQueue.TlsData");
 class ThreadMessageWindow;
 
-// A concrete implementation that uses HWNDs and PostMessage
+// A concrete implementation that uses HWNDs and PostMessage. There is a
+// single instance of this class. When InitThreadMessageQueue is called,
+// a ThreadMessageWindow, containing an HWND, is created to receive message
+// posted to the calling thread of control. A ThreadLocal is set to detect
+// thread termination and destroy the window. A reference to the window is
+// also placed into a global map for use by the Send method to lookup the
+// destination window by thread id.
 class IEThreadMessageQueue : public ThreadMessageQueue {
  public:
+  IEThreadMessageQueue() : thread_map_(NULL) {}
+
   virtual bool InitThreadMessageQueue();
   virtual ThreadId GetCurrentThreadId();
   virtual bool Send(ThreadId thread_handle,
@@ -45,6 +58,19 @@ class IEThreadMessageQueue : public ThreadMessageQueue {
  private:
   friend class ThreadMessageWindow;
   void HandleThreadMessage(int message_type, MessageData *message_data);
+
+  typedef std::map<ThreadId, ThreadMessageWindow*> ThreadMap;
+  Mutex thread_map_mutex_;
+  ThreadMap *thread_map_;
+
+  struct TlsData {
+    TlsData(ThreadId id, ThreadMessageWindow *window)
+        : thread_id(id), message_window(window) {}
+    ThreadId thread_id;
+    scoped_ptr<ThreadMessageWindow> message_window;
+  };
+
+  static void ThreadEndHook(void* value);
 };
 
 // Owns the window that has the message queue for a thread, and manages the
@@ -82,11 +108,11 @@ class ThreadMessageWindow : public CWindowImpl<ThreadMessageWindow> {
     linked_ptr<MessageData> message_data;
   };
 
+  Mutex events_mutex_;
   std::deque<MessageEvent> events_;
 };
 
-static Mutex window_mutex_;  // Protects the message_windows_ collection
-static std::map<ThreadId, linked_ptr<ThreadMessageWindow> > *message_windows_;
+
 static IEThreadMessageQueue g_instance;
 
 // static
@@ -94,46 +120,65 @@ ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
   return &g_instance;
 }
 
+
 bool IEThreadMessageQueue::InitThreadMessageQueue() {
-  MutexLock lock(&window_mutex_);
-  if (!message_windows_) {
-    message_windows_ = new std::map<ThreadId,
-                                    linked_ptr<ThreadMessageWindow> >;
+  if (ThreadLocals::HasValue(kTlsKey)) {
+    return true;  // already initialized
   }
-  ThreadId thread_id = GetCurrentThreadId();
-  if (message_windows_->find(thread_id) == message_windows_->end()) {
-    (*message_windows_)[thread_id] =
-        linked_ptr<ThreadMessageWindow>(new ThreadMessageWindow);
+
+  // Note: We have to be careful about dead locks here and in
+  // ThreadEndHook below. ThreadEndHook is called via DllMain which
+  // is called by the loader with the loader lock being held. So
+  // we have to avoid calling anything that may acquire the loader
+  // lock while we have our mutex locked. This is why we create
+  // the window prior to locking our mutex.
+  TlsData *data = new TlsData(GetCurrentThreadId(),
+                              new ThreadMessageWindow);
+  ThreadLocals::SetValue(kTlsKey, data, &ThreadEndHook);
+
+  MutexLock lock(&thread_map_mutex_);
+  if (!thread_map_) {
+    thread_map_ = new ThreadMap;
   }
+  (*thread_map_)[data->thread_id] = data->message_window.get();
   return true;
 }
 
-// This is only called in gears/base/ie/module.cc on thread detatch.
-void ShutdownThreadMessageQueue() {
-  MutexLock lock(&window_mutex_);
-  if (message_windows_)
-    message_windows_->erase(g_instance.GetCurrentThreadId());
+
+// static
+void IEThreadMessageQueue::ThreadEndHook(void* value) {
+  TlsData *data = reinterpret_cast<TlsData*>(value);
+  if (data) {
+    // Scoped to release the lock prior to window deletion
+    {
+      MutexLock lock(&g_instance.thread_map_mutex_);
+      assert(g_instance.thread_map_);
+      g_instance.thread_map_->erase(data->thread_id);
+    }
+
+    delete data;
+  }
 }
+
 
 ThreadId IEThreadMessageQueue::GetCurrentThreadId() {
   return ::GetCurrentThreadId();
 }
 
-bool IEThreadMessageQueue::Send(ThreadId thread,
+bool IEThreadMessageQueue::Send(ThreadId thread_id,
                                 int message_type,
                                 MessageData *message_data) {
-  MutexLock lock(&window_mutex_);
-  if (!message_windows_) {
-    delete message_data;
+  scoped_ptr<MessageData> scoped_message_data(message_data);
+  MutexLock lock(&thread_map_mutex_);
+  if (!thread_map_) {
     return false;
   }
-  std::map<ThreadId, linked_ptr<ThreadMessageWindow> >::iterator window;
-  window = message_windows_->find(thread);
-  if (window == message_windows_->end()) {
-    delete message_data;
+  ThreadMap::iterator found = thread_map_->find(thread_id);
+  if (found == thread_map_->end()) {
     return false;
   }
-  window->second->PostThreadMessage(message_type, message_data);
+  found->second->PostThreadMessage(message_type,
+                                   scoped_message_data.release());
   return true;
 }
 
@@ -149,20 +194,31 @@ LRESULT ThreadMessageWindow::OnThreadMessage(UINT msg, WPARAM unused_wparam,
                                              LPARAM unused_lparam,
                                              BOOL &handled) {
   assert(msg == WM_THREAD_MESSAGE);
-  MessageEvent event;
+                       
+  // Swap contents of events queue into local variable.
+  std::deque<MessageEvent> local_events;
   {
-    MutexLock lock(&window_mutex_);
-    assert(events_.size() > 0);
-    event = events_.front();
-    events_.pop_front();
+    MutexLock lock(&events_mutex_);
+    events_.swap(local_events);
   }
-  g_instance.HandleThreadMessage(event.message_type, event.message_data.get());
+  assert(!local_events.empty());    
+
+  // Dispatch all pending messages.
+  while (!local_events.empty()) {
+    MessageEvent &event = local_events.front();
+    g_instance.HandleThreadMessage(event.message_type,
+                                   event.message_data.get());
+    local_events.pop_front();
+  }
   handled = TRUE;
   return 0;
 }
 
 void ThreadMessageWindow::PostThreadMessage(int message_type,
                                             MessageData *message_data) {
+  MutexLock lock(&events_mutex_);
   events_.push_back(MessageEvent(message_type, message_data));
-  PostMessage(WM_THREAD_MESSAGE, 0, 0);
+  if (events_.size() == 1) {
+    PostMessage(WM_THREAD_MESSAGE, 0, 0);
+  }
 }
