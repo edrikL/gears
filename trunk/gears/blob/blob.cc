@@ -97,20 +97,8 @@ void GearsBlob::GetLength(JsCallContext *context) {
   if (length < 0) {
     context->SetException(STRING16(L"error determining length."));
     return;
-  } else if (length > JS_INT_MAX) {
-    context->SetException(STRING16(L"length is out of range."));
-    return;
   }
-
-  // If length (which is 64-bit) fits inside 32 bits, then return it as a
-  // 32-bit int, otherwise return it as a double.
-  if (length > INT_MAX) {
-    double length_as_double = static_cast<double>(length);
-    context->SetReturnValue(JSPARAM_DOUBLE, &length_as_double);
-  } else {
-    int length_as_int = static_cast<int>(length);
-    context->SetReturnValue(JSPARAM_INT, &length_as_int);
-  }
+  context->SetReturnValue(JSPARAM_INT64, &length);
 }
 
 void GearsBlob::Slice(JsCallContext *context) {

@@ -344,11 +344,6 @@ void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
   }
 
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
-  // TODO(nigeltao): move this check into SetReturnValue.
-  if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
-    context->SetException(STRING16(L"lastInsertRowId is out of range."));
-    return;
-  }
   context->SetReturnValue(JSPARAM_INT64, &rowid);
 }
 

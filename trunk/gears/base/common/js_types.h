@@ -618,7 +618,12 @@ class JsCallContext {
 
 // Given a JsParamToSend, extract it into a JsScopedToken.  Resulting token
 // increases the reference count for objects.
-void ConvertJsParamToToken(const JsParamToSend &param,
+// Returns true if successful. On failure, token is not modified.
+// Failure could happen if the caller tried to return a numerical value that
+// is outside the range of numbers representable by the particular JavaScript
+// engine. For example, if that engine internally only uses int32s or doubles,
+// then some int64 values are not representable.
+bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token);
 
 //-----------------------------------------------------------------------------

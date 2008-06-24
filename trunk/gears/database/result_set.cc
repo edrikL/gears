@@ -136,13 +136,7 @@ void GearsResultSet::FieldImpl(JsCallContext *context, int index) {
   switch (column_type) {
     case SQLITE_INTEGER: {
       sqlite_int64 i64 = sqlite3_column_int64(statement_, index);
-      // TODO(nigeltao): move this check into JsCallContext::SetReturnValue.
-      if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
-        context->SetReturnValue(JSPARAM_INT64, &i64);
-      } else {
-        context->SetException(STRING16(L"Integer value is out of range."));
-        return;
-      }
+      context->SetReturnValue(JSPARAM_INT64, &i64);
       break;
     }
     case SQLITE_FLOAT: {
