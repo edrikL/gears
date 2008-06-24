@@ -725,12 +725,12 @@ void GearsResourceStore::HandleEvent(int code, int param,
 //------------------------------------------------------------------------------
 void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
   if (current_request_.get()) {
+    need_to_fire_failed_events_ = false;
     InvokeCompletionCallback(current_request_.get(),
                              current_request_->urls[index],
                              current_request_->id,
                              success);
   }
-  need_to_fire_failed_events_ = false;
 }
 
 //------------------------------------------------------------------------------
