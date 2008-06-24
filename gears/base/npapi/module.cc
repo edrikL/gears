@@ -84,19 +84,6 @@ extern "C" {
 }
 #endif  // BROWSER_WEBKIT
 
-#ifdef WIN32
-#include "gears/base/ie/atl_headers.h"
-// Initialize ATL.
-// TODO(mpcomplete): remove when no longer needed.  This is used by HttpRequest
-// for now.
-CComModule g_module;
-
-// TODO(mpcomplete): remove IE dependency.
-// This is defined in gears/base/common/message_queue_ie.h.  It should only be
-// called here.
-void ShutdownThreadMessageQueue();
-#endif;
-
 
 // Store the browser functions in thread local storage to avoid calling the
 // functions on a different thread.
@@ -203,7 +190,6 @@ NPError STDCALL NP_Shutdown() {
 BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {
     case DLL_THREAD_DETACH:
-      ShutdownThreadMessageQueue();
       ThreadLocals::HandleThreadDetached();
       break;
     case DLL_PROCESS_DETACH:

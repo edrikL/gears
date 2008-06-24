@@ -33,8 +33,9 @@
 #include "gears/base/common/mutex.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 
-// TODO(michaeln): These should be defined by a threading abstraction
-// layer.
+// TODO(michaeln): Perhaps these should be defined by a threading abstraction
+// layer, and perhaps always use an 'int' to avoid native thread types from
+// leaking thru in this common interface.
 #if BROWSER_FF
 typedef int ThreadId;
 #elif BROWSER_WEBKIT || defined(ANDROID)
