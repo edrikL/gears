@@ -69,7 +69,11 @@ void Dispatcher<GearsDesktop>::Init() {
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
+#ifdef BROWSER_WEBKIT
+  // The Drag-and-Drop API has not been implemented for Safari.
+#else
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
+#endif
 #endif  // OFFICIAL_BUILD
 }
 
@@ -824,6 +828,9 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
+#ifdef BROWSER_WEBKIT
+  // The Drag-and-Drop API has not been implemented for Safari.
+#else
 void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   if (EnvIsWorker()) {
     context->SetException(
@@ -849,4 +856,5 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
     return;
   }
 }
+#endif
 #endif  // OFFICIAL_BUILD
