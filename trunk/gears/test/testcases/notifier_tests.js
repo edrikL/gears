@@ -59,7 +59,15 @@ function testNotificationApi() {
   notification.icon = ICON;
   assertEqual(ICON, notification.icon);
 
-  // TODO (jianli): check displayAtTime and displayUntilTime
+  var DISPLAY_AT_TIME = new Date();
+  notification.displayAtTime = DISPLAY_AT_TIME;
+  assertEqual(notification.displayAtTime.toUTCString(),
+              DISPLAY_AT_TIME.toUTCString());
+
+  var DISPLAY_UNTIL_TIME = new Date();
+  notification.displayUntilTime = DISPLAY_UNTIL_TIME;
+  assertEqual(notification.displayUntilTime.toUTCString(),
+              DISPLAY_UNTIL_TIME.toUTCString());              
 
   notification.addAction('View', 'http://view/...');
   notification.addAction('Snooze', 'http://snooze/...');

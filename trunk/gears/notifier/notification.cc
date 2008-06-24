@@ -298,7 +298,11 @@ void GearsNotification::SetDisplayAtTime(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  // TODO (jianli): to be implemented
+  JsRunnerInterface *js_runner = GetJsRunner();
+  if (!js_runner->ConvertJsObjectToDate(&obj, &display_at_time_ms_)) {
+    context->SetException(STRING16(L"failed to set value for displayAtTime."));
+    return;
+  }
 }
 
 void GearsNotification::GetDisplayUntilTime(JsCallContext *context) {
@@ -320,7 +324,12 @@ void GearsNotification::SetDisplayUntilTime(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  // TODO (jianli): to be implemented
+  JsRunnerInterface *js_runner = GetJsRunner();
+  if (!js_runner->ConvertJsObjectToDate(&obj, &display_until_time_ms_)) {
+    context->SetException(
+        STRING16(L"failed to set value for displayUntilTime."));
+    return;
+  }
 }
 
 void GearsNotification::AddAction(JsCallContext *context) {

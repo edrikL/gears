@@ -125,6 +125,10 @@ class JsRunnerInterface {
   // The caller takes ownership of the returned value.
   virtual JsArray* NewArray() = 0;
 
+  // Convert a JsObject to our date type.
+  virtual bool ConvertJsObjectToDate(JsObject *obj,
+                                     int64 *milliseconds_since_epoch) = 0;
+
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.
   virtual bool InvokeCallback(const JsRootedCallback *callback,

@@ -135,6 +135,36 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_array.release();
   }
 
+  bool ConvertJsObjectToDate(JsObject *obj,
+                             int64 *milliseconds_since_epoch) {
+    assert(obj);
+    assert(milliseconds_since_epoch);
+
+    JSObject *js_object = JSVAL_TO_OBJECT(obj->token());
+    jsval func_val = JSVAL_VOID;
+    JSObject *objp = NULL;
+    JSBool result = JS_GetMethod(js_engine_context_, js_object,
+                                 "getTime", &objp, &func_val);
+    if (!result || JSVAL_IS_VOID(func_val)) {
+      return false;
+    }
+
+    jsval ret_val = JSVAL_VOID;
+    result = JS_CallFunctionValue(js_engine_context_, js_object, func_val,
+                                  0, NULL, &ret_val);
+    if (!result) {
+      return false;
+    }
+
+    jsdouble td;
+    if (!JS_ValueToNumber(js_engine_context_, ret_val, &td)) {
+      return false;
+    }
+    LL_D2L(*((int64*)milliseconds_since_epoch), td);
+
+    return true;
+  }
+
   virtual bool InvokeCallbackSpecialized(
                    const JsRootedCallback *callback, int argc, jsval *argv,
                    JsRootedToken **optional_alloc_retval) = 0;
