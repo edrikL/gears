@@ -449,7 +449,8 @@ interface AudioUtils : MediaUtils
 }}}
 
 
-= C++ design (class design) =
+#CPPDesign
+= C++ design =
 
 ==Threads:==
 
