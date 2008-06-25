@@ -73,6 +73,15 @@ NetworkLocationProvider::~NetworkLocationProvider() {
   wifi_data_provider_->Unregister(this);
 }
 
+void NetworkLocationProvider::AddListener(
+    LocationProviderBase::ListenerInterface *listener) {
+  LocationProviderBase::AddListener(listener);
+
+  // Signal to the worker thread that there is a new listener.
+  is_new_listener_waiting_ = true;
+  thread_notification_event_.Signal();
+}
+
 // LocationProviderBase implementation
 void NetworkLocationProvider::GetPosition(Position *position) {
   assert(position);
@@ -107,12 +116,12 @@ void NetworkLocationProvider::LocationResponseAvailable(
   position_ = position;
   position_mutex_.Unlock();
 
-  // Let listeners know that we now have a position available.
-  UpdateListeners();
-
   // Signal to the worker thread that this request has completed.
   is_last_request_complete_ = true;
   thread_notification_event_.Signal();
+
+  // Let listeners know that we now have a position available.
+  UpdateListeners();
 }
 
 // Thread implementation
@@ -172,6 +181,7 @@ void NetworkLocationProvider::Run() {
   // thread_notification_event_.
   int64 last_request_time = GetCurrentTimeMillis();
   bool minimum_time_elapsed = false;
+  is_new_listener_waiting_ = false;
   while (!is_shutting_down_) {
     if (minimum_time_elapsed) {
       // If the minimum time period has elapsed, just wait for the event.
@@ -192,6 +202,21 @@ void NetworkLocationProvider::Run() {
           minimum_time_elapsed = true;
         }
       }
+    }
+    if (is_new_listener_waiting_) {
+      // A new listener has just registered with this provider. If new data is
+      // available, force a new request now, unless a request is already in
+      // progress. If not, update listeners with the last known position.
+      if (is_new_data_available_) {
+        if (is_last_request_complete_) {
+          // Force a new request
+          minimum_time_elapsed = true;
+        }
+      } else {
+        // Update listeners with the last known position.
+        UpdateListeners();
+      }
+      is_new_listener_waiting_ = false;
     }
     // If the thread is not shutting down, we have new data, the last request
     // has completed, and the minimum time has elapsed, make the next request.

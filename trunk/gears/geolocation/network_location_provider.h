@@ -45,6 +45,9 @@ class NetworkLocationProvider
                           const std::string16 &host_name);
   virtual ~NetworkLocationProvider();
 
+  // Override LocationProviderBase implementation.
+  virtual void AddListener(LocationProviderBase::ListenerInterface *listener);
+
   // LocationProviderBase implementation
   virtual void GetPosition(Position *position);
 
@@ -103,6 +106,7 @@ class NetworkLocationProvider
   bool is_shutting_down_;
   bool is_new_data_available_;
   bool is_last_request_complete_;
+  bool is_new_listener_waiting_;
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
