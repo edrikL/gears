@@ -35,10 +35,9 @@ void PositionCallback(Position position);
 
 
 interface Position {
-  readonly double latitude;  // latitude in degrees
-  readonly double longitude;  // longitude in degrees
-  readonly double altitude;  // height in meters above the WGS 84 reference
-                             // ellipsoid, or null if unsupported by device.
+  readonly double latitude;  // latitude in degrees (WGS84 datum)
+  readonly double longitude;  // longitude in degrees (WGS84 datum)
+  readonly double altitude;  // height in meters (WGS84 datum), or null if unsupported by device.
   readonly double horizontalAccuracy;  // in meters
   readonly double verticalAccuracy;  // in meters, or null if unsupported
   readonly Date timestamp;      // time when location was established
@@ -232,8 +231,8 @@ Client identification is not explicitly included in the protocol. Cookies can be
 === Location data elements ===
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| latitude || Current latitude in degrees. || No || double ||
-|| longitude || Current longitude in degrees.  || No || double ||
+|| latitude || Current latitude in degrees (WGS84 datum). || No || double ||
+|| longitude || Current longitude in degrees (WGS84 datum).  || No || double ||
 
 === Cell-Id data elements ===
 
@@ -289,9 +288,9 @@ If the request format is invalid, the server responds with HTTP status 400. The 
 If the request format is valid, the server replies with HTTP status 200. If the location was successfully resolved, the location object is populated with the details. Otherwise, it is null. TODO: Consider adding an error property to the response, the contents of which Gears could pass back to JavaScript?
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| latitude || Latitude of the fix, in degrees. || Yes || double ||
-|| longitude || Longitude of the fix, in degrees. || Yes || double ||
-|| altitude || Altitude of the fix, in meters. || No || int ||
+|| latitude || Latitude of the fix, in degrees (WGS84 datum). || Yes || double ||
+|| longitude || Longitude of the fix, in degrees (WGS84 datum). || Yes || double ||
+|| altitude || Altitude of the fix, in meters (WGS84 datum). || No || int ||
 || horizontal_accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. || No || int ||
 || vertical_accuracy || The vertical accuracy of the fix, in meters. || No || int ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. Each field is an optional property of the object. || No || object ||
