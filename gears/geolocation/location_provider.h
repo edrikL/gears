@@ -51,14 +51,14 @@ class LocationProviderBase {
 
   virtual ~LocationProviderBase() {}
 
-  // Adds a listener, which will be called back with
-  // ListenerInterface::LocationUpdateAvailable whenever a new position is
-  // available.
-  void AddListener(ListenerInterface *listener);
+  // Adds a listener, which will be called back on
+  // ListenerInterface::LocationUpdateAvailable as soon as a position is
+  // available and again whenever a new position is available.
+  virtual void AddListener(ListenerInterface *listener);
   // Removes a listener. In particular, once this method returns, no further
   // calls to ListenerInterface::LocationUpdateAvailable will be made for this
   // listener. It may block if a callback is in progress.
-  void RemoveListener(ListenerInterface *listener);
+  virtual void RemoveListener(ListenerInterface *listener);
 
   // Interface methods
   // Gets the current best position estimate.
@@ -68,7 +68,7 @@ class LocationProviderBase {
   virtual void UpdatePosition() {}
 
  protected:
-  void UpdateListeners();
+  virtual void UpdateListeners();
 
  private:
   // The listeners registered to this provider. We use a set to avoid
