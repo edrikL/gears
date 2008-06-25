@@ -466,6 +466,7 @@ Consider a single `GearsAudio` object created from the `GearsFactory`. This migh
     * In the case of a portaudio player, once `StartStream()` is called by `player.play()`, this thread invokes `paCallback()` module (defined by us) every now and then, until `StopStream()` is called.
 
 ==Class Design:==
+Please note that only the important fields are described here. The class members less crucial to the understanding of how the various elements interplay are omitted in this discussion, for reasons of brevity.
 
 ===1. `MediaData` class:===
 
