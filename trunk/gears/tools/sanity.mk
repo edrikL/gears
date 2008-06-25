@@ -85,8 +85,16 @@ ifdef CMD_LINE_BROWSER
     endif
     endif
   else
+  ifeq ($(OS),symbian)
+    ifneq ($(BROWSER),NPAPI)
+    ifneq ($(BROWSER),NONE)
+      $(error On Symbian, BROWSER can only be one of: NPAPI | NONE)
+    endif
+    endif
+  else
     # Shouldn't get here, as config.mk should always set OS if the user doesn't.
     $(error Unrecognized OS)
+  endif  # ifeq ($(OS),symbian)
   endif  # ifeq ($(OS),android)
   endif  # ifeq ($(OS),linux)
   endif  # ifeq ($(OS),osx)

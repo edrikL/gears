@@ -66,9 +66,11 @@ NPAPI_VPATH	+= \
 		base/common \
 		$(NULL)
 
+ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
+endif
 endif
 
 #-----------------------------------------------------------------------------
@@ -558,6 +560,12 @@ SQLITE_CSRCS	+= \
 		fts2_porter.c \
 		fts2_tokenizer1.c \
 		$(NULL)
+
+ifeq ($(OS),symbian)
+SQLITE_CSRCS	+= \
+		os_symbian.cc \
+		$(NULL)
+endif # symbian
 endif # USING_SQLITE
 
 #-----------------------------------------------------------------------------
@@ -943,8 +951,6 @@ NPAPI_CPPSRCS	+= \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		plugin.cc \
-		time_utils_win32.cc \
-		vista_utils.cc \
 		$(NULL)
 
 ifeq ($(OS),win32)
@@ -954,16 +960,31 @@ NPAPI_CPPSRCS	+= \
 		ie_version.cc \
 		message_queue_ie.cc \
 		paths_np.cc \
+		time_utils_win32.cc \
+		vista_utils.cc \
 		$(NULL)
-
 # TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
                 $(NPAPI_OUTDIR)/module.res \
                 $(NULL)
 else
+ifeq ($(OS),symbian)
+NPAPI_M4SRCS	+= \
+		gears_armv5.pkg.m4 \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		file_symbian.cc \
+		stopwatch_symbian.cc \
+		paths_np.cc \
+		plugin_symbian.cc \
+		uid_symbian.cc \
+		$(NULL)
+else
 NPAPI_CPPSRCS	+= \
 		file_posix.cc \
 		$(NULL)
+endif # SYMBIAN
 endif # WIN32
 
 #-----------------------------------------------------------------------------
@@ -1071,7 +1092,7 @@ $(BROWSER)_CPPSRCS	+= \
 		console.cc \
 		js_callback_logging_backend.cc \
 		$(NULL)
-
+    
 #-----------------------------------------------------------------------------
 # crash_sender
 
@@ -1119,6 +1140,7 @@ $(BROWSER)_CPPSRCS	+= \
 
 #-----------------------------------------------------------------------------
 # database2
+
 $(BROWSER)_VPATH += \
                 database2 \
                 $(NULL)
@@ -1891,6 +1913,16 @@ include site-prerules.mk
 endif
 
 #-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# The following makefile filters out the files that have not been ported
+# to Symbian yet
+ifeq ($(OS),symbian)
+include tools/temporary_removefiles_symbian.mk
+endif
+
+#-----------------------------------------------------------------------------
+
 include tools/rules.mk
 
 #-----------------------------------------------------------------------------
