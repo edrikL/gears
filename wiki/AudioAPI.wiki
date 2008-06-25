@@ -452,6 +452,7 @@ interface AudioUtils : MediaUtils
 = C++ design (class design) =
 
 *_Threads_*:
+
 Consider a single `GearsAudio` object created from the `GearsFactory`. This might end up in 3 parallel threads of execution over the course of time. Find them below (along with a high level description of their broad functionality).
 
 1. *Main thread* (controlled from JS)
@@ -614,9 +615,8 @@ public:
 
 This is a portaudio specific module. A singleton class, that does two things:
 
-1. Provide a thread safe wrapper for portaudio stream methods.
-
-2. Keep track of player/recorder threads in memory.
+  # Provide a thread safe wrapper for portaudio stream methods.
+  # Keep track of player/recorder threads in memory.
 
 {{{
 class PaManager {
@@ -688,8 +688,7 @@ private:
 
 *_How they all work together_*:
 
-Main thread:
------------
+===Main thread:==
   * Through the factory, the main thread (JS) creates a `GearsAudio` object. The constructor of `GearsAudio` does the following:
     * Instantiate a new `MediaData` object, and assign it to its `scoped_refptr media_data_`. The `media_buffer_` in the `media_data_` is initially empty. `buffer_size_` is 0.
     * Instantiates a new player object (`PlayerInterface`) passing this `media_data_` to it. The player is referenced by a `scoped_ptr` (so that it gets automatically cleaned up when this `GearsMedia` object is cleaned up).
@@ -701,15 +700,14 @@ Main thread:
     * After implementing the state changes specified by the HTML5 spec, it calls `Start()` on `network_media_request_`.
   * If `'play()'` is called, the main thread calls `player->play()`;
 
-Network thread:
---------------
+===Network thread:===
   * On construction, `AddRef()`s the passed `media_data_`. (via `scoped_refptr<MediaData>.reset()`).
   * The `Run()` method loads the data over the network from the `url_`. `media_data_` is made to 'point to' `payload.data()`. Note that, NO LOCK is acquired when data is streamed into media_data_. 
   * The `NetworkMediaRequest` class includes a listener that defines the `DataAvailable` method. This is invoked periodically by the browser's network layer modules. This method, acquires the `media_data_lock_` and sets `buffer_size_` to the size of the currently available data on the `payload_`.
   * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class acquires the `media_data_lock_` and clears the `media_buffer_` while also deleting `payload_`. Locking here is essential because the player thread might be reading `media_data_` at that same moment.
 
-Player thread:
--------------
+===Player thread:===
+
   * `PaPlayer`, on creation, `AddRef()`s m`edia_data_ (by virtue of using `scoped_refptr`) and also registers itself with the `PaManager`.
   * `PaPlayer::play()` defines `OpenDefaultStream(<params>, this)` and `StartStream()` - (call safe methods defined on `PaManager`).
   * `PaPlayer::PaCallback()` does the following:
