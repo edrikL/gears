@@ -54,8 +54,9 @@ static FileDialog* NewFileDialogGtk(const FileDialog::Mode mode) {
   FileDialog* dialog = NULL;
 
   switch (mode) {
+    case FileDialog::SINGLE_FILE:
     case FileDialog::MULTIPLE_FILES:
-      dialog = new FileDialogGtk(parent);
+      dialog = new FileDialogGtk(parent, FileDialog::MULTIPLE_FILES == mode);
       break;
 
     default:
@@ -108,8 +109,9 @@ static FileDialog* NewFileDialogWin32(const FileDialog::Mode mode,
   FileDialog* dialog = NULL;
 
   switch (mode) {
+    case FileDialog::SINGLE_FILE:
     case FileDialog::MULTIPLE_FILES:
-      dialog = new FileDialogWin32(parent);
+      dialog = new FileDialogWin32(parent, FileDialog::MULTIPLE_FILES == mode);
       break;
 
     default:
@@ -126,8 +128,9 @@ static FileDialog* NewFileDialogCarbon(const FileDialog::Mode mode) {
   FileDialog* dialog = NULL;
 
   switch (mode) {
+    case FileDialog::SINGLE_FILE:
     case FileDialog::MULTIPLE_FILES:
-      dialog = new FileDialogCarbon();
+      dialog = new FileDialogCarbon(FileDialog::MULTIPLE_FILES == mode);
       break;
 
     default:

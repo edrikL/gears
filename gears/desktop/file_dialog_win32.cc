@@ -29,8 +29,8 @@
 
 #include "gears/base/common/string_utils.h"
 
-FileDialogWin32::FileDialogWin32(HWND parent)
-  : parent_(parent) {
+FileDialogWin32::FileDialogWin32(HWND parent, bool multiselect)
+  : parent_(parent), multiselect_(multiselect) {
 }
 
 FileDialogWin32::~FileDialogWin32() {
@@ -38,6 +38,7 @@ FileDialogWin32::~FileDialogWin32() {
 
 // Initialize an open file dialog to open multiple files.
 static void InitDialog(HWND parent,
+                       bool multiselect,
                        OPENFILENAME* ofn,
                        std::vector<TCHAR>* file_buffer) {
   const static int kFileBufferSize = 32768;
@@ -55,14 +56,14 @@ static void InitDialog(HWND parent,
   ofn->lpstrFileTitle = NULL;
   ofn->nMaxFileTitle = 0;
   ofn->lpstrInitialDir = NULL;
-  ofn->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST |
+  ofn->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+  if (multiselect) {
 #ifdef WINCE
-               // The native WinCE file picker does not support multi-select.
+    // The native WinCE file picker does not support multi-select.
 #else
-               OFN_ALLOWMULTISELECT |
+    ofn->Flags |= OFN_ALLOWMULTISELECT;
 #endif
-               OFN_EXPLORER;
-
+  }
 }
 
 static void AddToBuffer(const std::string16& str,
@@ -150,7 +151,7 @@ bool FileDialogWin32::OpenDialog(const std::vector<Filter>& filters,
                                  std::string16* error) {
   OPENFILENAME ofn;
   std::vector<TCHAR> file_buffer;
-  InitDialog(parent_, &ofn, &file_buffer);
+  InitDialog(parent_, multiselect_, &ofn, &file_buffer);
 
   std::vector<TCHAR> filter_buffer;
   if (!AddFilters(filters, &ofn, &filter_buffer, error))

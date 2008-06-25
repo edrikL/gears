@@ -32,8 +32,8 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
 
-FileDialogGtk::FileDialogGtk(GtkWindow* parent)
-  : parent_(parent) {
+FileDialogGtk::FileDialogGtk(GtkWindow* parent, bool multiselect)
+  : parent_(parent), multiselect_(multiselect) {
 }
 
 FileDialogGtk::~FileDialogGtk() {
@@ -41,6 +41,7 @@ FileDialogGtk::~FileDialogGtk() {
 
 // Initialize a GTK dialog to open multiple files.
 static bool InitDialog(GtkWindow* parent,
+                       bool multiselect,
                        GtkFileChooser** dialog,
                        std::string16* error) {
   *dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new("Open File",
@@ -54,7 +55,7 @@ static bool InitDialog(GtkWindow* parent,
   if (parent && parent->group) {
     gtk_window_group_add_window(parent->group, GTK_WINDOW(*dialog));
   }
-  gtk_file_chooser_set_select_multiple(*dialog, TRUE);
+  gtk_file_chooser_set_select_multiple(*dialog, multiselect ? TRUE : FALSE);
   return true;
 }
 
@@ -133,7 +134,7 @@ bool FileDialogGtk::OpenDialog(const std::vector<Filter>& filters,
   bool success = false;
   GtkFileChooser* dialog = NULL;
 
-  if ((success = InitDialog(parent_, &dialog, error))) {
+  if ((success = InitDialog(parent_, multiselect_, &dialog, error))) {
     if ((success = AddFilters(filters, dialog, error))) {
       success = Display(dialog, selected_files, error);
     }

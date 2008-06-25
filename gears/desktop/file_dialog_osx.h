@@ -30,7 +30,9 @@
 
 class FileDialogCarbon : public FileDialog {
  public:
-  FileDialogCarbon();
+  // Parameters:
+  //  multiselect - The user may shift-click to select multiple files vs one.
+  FileDialogCarbon(bool multiselect);
   virtual ~FileDialogCarbon();
 
   virtual bool OpenDialog(const std::vector<Filter>& filters,
@@ -38,6 +40,7 @@ class FileDialogCarbon : public FileDialog {
                           std::string16* error);
 
  private:
+  bool multiselect_;
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogCarbon);
 };
 

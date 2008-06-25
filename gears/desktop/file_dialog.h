@@ -40,6 +40,7 @@ class FileDialog {
   // For example, FILES_AND_DIRECTORIES, for a custom dialog that allows the
   // user to select files and directories at the same time.
   enum Mode {
+    SINGLE_FILE,    // exactly one file
     MULTIPLE_FILES  // one or more files
   };
 

@@ -36,8 +36,8 @@ class FileDialogGtk : public FileDialog {
  public:
   // Parameters:
   //  parent - The parent window. May be NULL.
-  //  module - Required for initializing new javascript and COM objects.
-  FileDialogGtk(GtkWindow* parent);
+  //  multiselect - The user may select multiple files vs one.
+  FileDialogGtk(GtkWindow* parent, bool multiselect);
   virtual ~FileDialogGtk();
 
   virtual bool OpenDialog(const std::vector<Filter>& filters,
@@ -46,6 +46,7 @@ class FileDialogGtk : public FileDialog {
 
  private:
   GtkWindow* parent_;
+  bool multiselect_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogGtk);
 };
