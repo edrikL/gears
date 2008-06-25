@@ -71,7 +71,7 @@ static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
 
 // static
 template<>
-WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
   return new Win32WifiDataProvider();
 }
 

@@ -51,7 +51,7 @@ static bool GetAccessPointData(const HANDLE &ndis_handle,
 
 // static
 template<>
-WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
   return new WinceWifiDataProvider();
 }
 
