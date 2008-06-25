@@ -33,7 +33,7 @@
 #   undef OS_OTHER
 # endif
 #endif
-#if !defined(OS_UNIX) && !defined(OS_OTHER)
+#if !defined(OS_UNIX) && !defined(OS_OTHER) && !defined(OS_SYMBIAN)
 # define OS_OTHER 0
 # ifndef OS_WIN
 #   if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
@@ -195,7 +195,31 @@
 #define sqlite3OsDlsym              sqlite3Os2Dlsym
 #define sqlite3OsDlclose            sqlite3Os2Dlclose
 #endif
-
+#if OS_SYMBIAN
+#define sqlite3OsOpenReadWrite      sqlite3SymbianOpenReadWrite
+#define sqlite3OsOpenExclusive      sqlite3SymbianOpenExclusive
+#define sqlite3OsOpenReadOnly       sqlite3SymbianOpenReadOnly
+#define sqlite3OsDelete             sqlite3SymbianDelete
+#define sqlite3OsFileExists         sqlite3SymbianFileExists
+#define sqlite3OsFullPathname       sqlite3SymbianFullPathname
+#define sqlite3OsIsDirWritable      sqlite3SymbianIsDirWritable
+#define sqlite3OsSyncDirectory      sqlite3SymbianSyncDirectory
+#define sqlite3OsTempFileName       sqlite3SymbianTempFileName
+#define sqlite3OsRandomSeed         sqlite3SymbianRandomSeed
+#define sqlite3OsSleep              sqlite3SymbianSleep
+#define sqlite3OsCurrentTime        sqlite3SymbianCurrentTime
+#define sqlite3OsEnterMutex         sqlite3SymbianEnterMutex
+#define sqlite3OsLeaveMutex         sqlite3SymbianLeaveMutex
+#define sqlite3OsInMutex            sqlite3SymbianInMutex
+#define sqlite3OsThreadSpecificData sqlite3SymbianThreadSpecificData
+#define sqlite3OsMalloc             sqlite3GenericMalloc
+#define sqlite3OsRealloc            sqlite3GenericRealloc
+#define sqlite3OsFree               sqlite3GenericFree
+#define sqlite3OsAllocationSize     sqlite3GenericAllocationSize
+#define sqlite3OsDlopen             sqlite3SymbianDlopen
+#define sqlite3OsDlsym              sqlite3SymbianDlsym
+#define sqlite3OsDlclose            sqlite3SymbianDlclose
+#endif
 
 
 

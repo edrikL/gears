@@ -282,9 +282,14 @@ struct sqlite3_api_routines {
 #define sqlite3_prepare_v2             sqlite3_api->prepare_v2
 #define sqlite3_prepare16_v2           sqlite3_api->prepare16_v2
 #define sqlite3_clear_bindings         sqlite3_api->clear_bindings
-#endif /* SQLITE_CORE */
-
 #define SQLITE_EXTENSION_INIT1     const sqlite3_api_routines *sqlite3_api;
 #define SQLITE_EXTENSION_INIT2(v)  sqlite3_api = v;
+
+#else
+
+#define SQLITE_EXTENSION_INIT1
+#define SQLITE_EXTENSION_INIT2(v)
+
+#endif /* SQLITE_CORE */
 
 #endif /* _SQLITE3EXT_H_ */
