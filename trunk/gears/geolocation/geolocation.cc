@@ -51,7 +51,7 @@ static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 
-// Temporarily define DeviceDataProviderBase::DefaultFactoryFunction() here for
+// Temporarily define DeviceDataProvider::DefaultFactoryFunction() here for
 // platforms where the device data provider is not yet implemented.
 // TODO(steveblock): Implement device data providers for remaining platforms.
 #if defined(WINCE)
@@ -61,7 +61,7 @@ static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 #else
 // static
 template<>
-RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
+RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
   assert(false);
   return NULL;
 }
@@ -78,7 +78,7 @@ RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
 #else
 // static
 template<>
-WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
   assert(false);
   return NULL;
 }

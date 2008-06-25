@@ -58,7 +58,7 @@ static int FromDeviceDataFormat(const int &value);
 
 // static
 template<>
-RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
+RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
   return new WinceRadioDataProvider();
 }
 

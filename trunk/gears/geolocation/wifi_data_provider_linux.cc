@@ -86,7 +86,7 @@ static bool GetAccessPointData(std::vector<AccessPointData> *access_points);
 
 // static
 template<>
-WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
   return new LinuxWifiDataProvider();
 }
 

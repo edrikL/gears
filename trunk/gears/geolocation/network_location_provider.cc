@@ -45,8 +45,8 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
       is_shutting_down_(false) {
   // Get the device data providers. The first call to Register will create the
   // provider and it will be deleted by ref counting.
-  radio_data_provider_ = DeviceDataProviderBase<RadioData>::Register(this);
-  wifi_data_provider_ = DeviceDataProviderBase<WifiData>::Register(this);
+  radio_data_provider_ = RadioDataProvider::Register(this);
+  wifi_data_provider_ = WifiDataProvider::Register(this);
 
   // Currently, request_address and address_language are properties of a given
   // fix request, not of a location provider.
@@ -91,7 +91,7 @@ void NetworkLocationProvider::GetPosition(Position *position) {
 
 // DeviceDataProviderInterface::ListenerInterface implementation.
 void NetworkLocationProvider::DeviceDataUpdateAvailable(
-    DeviceDataProviderBase<RadioData> *provider) {
+    RadioDataProvider *provider) {
   MutexLock lock(&data_mutex_);
   assert(provider == radio_data_provider_);
   is_radio_data_complete_ = radio_data_provider_->GetData(&radio_data_);
@@ -100,7 +100,7 @@ void NetworkLocationProvider::DeviceDataUpdateAvailable(
 }
 
 void NetworkLocationProvider::DeviceDataUpdateAvailable(
-    DeviceDataProviderBase<WifiData> *provider) {
+    WifiDataProvider *provider) {
   assert(provider == wifi_data_provider_);
   MutexLock lock(&data_mutex_);
   is_wifi_data_complete_ = wifi_data_provider_->GetData(&wifi_data_);

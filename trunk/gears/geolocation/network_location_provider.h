@@ -36,8 +36,8 @@
 
 class NetworkLocationProvider
     : public LocationProviderBase,
-      public DeviceDataProviderBase<RadioData>::ListenerInterface,
-      public DeviceDataProviderBase<WifiData>::ListenerInterface,
+      public RadioDataProvider::ListenerInterface,
+      public WifiDataProvider::ListenerInterface,
       public NetworkLocationRequest::ListenerInterface,
       public Thread {
  public:
@@ -52,11 +52,9 @@ class NetworkLocationProvider
   virtual void GetPosition(Position *position);
 
  private:
-  // DeviceDataProviderBase::ListenerInterface implementation.
-  virtual void DeviceDataUpdateAvailable(
-      DeviceDataProviderBase<RadioData> *provider);
-  virtual void DeviceDataUpdateAvailable(
-      DeviceDataProviderBase<WifiData> *provider);
+  // DeviceDataProvider::ListenerInterface implementation.
+  virtual void DeviceDataUpdateAvailable(RadioDataProvider *provider);
+  virtual void DeviceDataUpdateAvailable(WifiDataProvider *provider);
 
   // NetworkLocationRequest::ListenerInterface implementation.
   virtual void LocationResponseAvailable(const Position &position);
@@ -67,7 +65,7 @@ class NetworkLocationProvider
   // Internal helper used by worker thread to make a network request
   bool MakeRequest();
 
-  // Internal helper used by DeviceDataProviderBase
+  // Internal helper used by DeviceDataUpdateAvailable
   void DeviceDataUpdateAvailableImpl();
 
   // The network location request object and the url and host name it will use.
@@ -76,8 +74,8 @@ class NetworkLocationProvider
   std::string16 host_name_;
 
   // The device data providers
-  DeviceDataProviderBase<RadioData> *radio_data_provider_;
-  DeviceDataProviderBase<WifiData> *wifi_data_provider_;
+  RadioDataProvider *radio_data_provider_;
+  WifiDataProvider *wifi_data_provider_;
 
   // The radio and wifi data, flags to indicate if each data set is complete,
   // and their guarding mutex.

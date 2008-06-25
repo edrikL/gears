@@ -34,7 +34,7 @@
 
 // static
 template<>
-RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
+RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
   return new EmptyDeviceDataProvider<RadioData>();
 }
 

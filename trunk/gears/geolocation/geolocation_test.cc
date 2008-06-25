@@ -85,8 +85,8 @@ class MockRadioDataProviderImpl : public MockDeviceDataProviderImpl<RadioData> {
   MockRadioDataProviderImpl() {}
   virtual ~MockRadioDataProviderImpl() {}
 
-  // Factory method for use with DeviceDataProviderBase::SetFactory.
-  static DeviceDataProviderImplBase<RadioData> *Create() {
+  // Factory method for use with DeviceDataProvider::SetFactory.
+  static RadioDataProviderImplBase *Create() {
     return new MockRadioDataProviderImpl();
   }
 
@@ -114,8 +114,8 @@ class MockWifiDataProviderImpl : public MockDeviceDataProviderImpl<WifiData> {
   MockWifiDataProviderImpl() {}
   virtual ~MockWifiDataProviderImpl() {}
 
-  // Factory method for use with DeviceDataProviderBase::SetFactory.
-  static DeviceDataProviderImplBase<WifiData> *Create() {
+  // Factory method for use with DeviceDataProvider::SetFactory.
+  static WifiDataProviderImplBase *Create() {
     return new MockWifiDataProviderImpl();
   }
 
@@ -267,10 +267,8 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
 }
 
 void ConfigureGeolocationForTest(JsCallContext *context) {
-  DeviceDataProviderBase<RadioData>::SetFactory(
-      MockRadioDataProviderImpl::Create);
-  DeviceDataProviderBase<WifiData>::SetFactory(
-      MockWifiDataProviderImpl::Create);
+  RadioDataProvider::SetFactory(MockRadioDataProviderImpl::Create);
+  WifiDataProvider::SetFactory(MockWifiDataProviderImpl::Create);
 }
 
 #endif  // USING_CCTESTS
