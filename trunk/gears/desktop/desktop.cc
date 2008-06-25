@@ -364,19 +364,20 @@ bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
 
 // Display an open file dialog returning the selected files.
 // Parameters:
+//  mode - in - whether to allow single or multiple selection of files
 //  filters - in - a vector of filters
 //  module - in - used to create javascript objects and arrays
 //  files - out - a vector of filenames
 //  error - out - the error message is placed in here
-static bool DisplayFileDialog(const std::vector<FileDialog::Filter> &filters,
+static bool DisplayFileDialog(const FileDialog::Mode mode,
+                              const std::vector<FileDialog::Filter> &filters,
                               const ModuleImplBaseClass& module,
                               std::vector<std::string16> *files,
                               std::string16* error) {
   assert(files);
   assert(error);
   // create and display dialog
-  scoped_ptr<FileDialog> dialog(NewFileDialog(FileDialog::MULTIPLE_FILES,
-                                              module));
+  scoped_ptr<FileDialog> dialog(NewFileDialog(mode, module));
   if (!dialog.get()) {
     *error = STRING16(L"Failed to create dialog.");
     return false;
@@ -387,8 +388,10 @@ static bool DisplayFileDialog(const std::vector<FileDialog::Filter> &filters,
 void GearsDesktop::GetLocalFiles(JsCallContext *context) {
   JsArray filters;
 
+  bool multiselect = true;
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &filters },
+    { JSPARAM_OPTIONAL, JSPARAM_BOOL, &multiselect },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
@@ -413,7 +416,9 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
   }
 
   std::vector<std::string16> files;
-  if (!DisplayFileDialog(vec_filters, *this, &files, &error)) {
+  if (!DisplayFileDialog(multiselect ? FileDialog::MULTIPLE_FILES
+                                     : FileDialog::SINGLE_FILE,
+                         vec_filters, *this, &files, &error)) {
     context->SetException(error);
     return;
   }

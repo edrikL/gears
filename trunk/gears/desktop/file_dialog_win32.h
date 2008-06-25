@@ -39,7 +39,8 @@ class FileDialogWin32 : public FileDialog {
  public:
   // Parameters:
   //  parent - The parent window. May be NULL.
-  FileDialogWin32(HWND parent);
+  //  multiselect - The user may shift-click to select multiple files vs one.
+  FileDialogWin32(HWND parent, bool multiselect);
   virtual ~FileDialogWin32();
 
   virtual bool OpenDialog(const std::vector<Filter>& filters,
@@ -48,6 +49,7 @@ class FileDialogWin32 : public FileDialog {
 
  private:
   HWND parent_;
+  bool multiselect_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogWin32);
 };

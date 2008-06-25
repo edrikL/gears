@@ -35,7 +35,8 @@
 #include "gears/base/common/common.h"
 #include "gears/base/safari/scoped_cf.h"
 
-FileDialogCarbon::FileDialogCarbon() {
+FileDialogCarbon::FileDialogCarbon(bool multiselect)
+    : multiselect_(multiselect) {
 }
 
 FileDialogCarbon::~FileDialogCarbon() {
@@ -291,7 +292,8 @@ static Boolean FilterFileCallBack(AEDesc* theItem, void* info,
 }
 
 // Initialize an open file dialog to open multiple files.
-static bool InitDialog(const std::vector<FileDialog::Filter>& filters,
+static bool InitDialog(bool multiselect,
+    const std::vector<FileDialog::Filter>& filters,
     scoped_NavDialogRef* dialog, Filters* data, std::string16* error) {
   NavDialogCreationOptions dialog_options;
   OSStatus status = NavGetDefaultDialogCreationOptions(&dialog_options);
@@ -302,7 +304,11 @@ static bool InitDialog(const std::vector<FileDialog::Filter>& filters,
 
   // set application wide modality and multiple file selections
   dialog_options.modality = kWindowModalityAppModal;
-  dialog_options.optionFlags |= kNavAllowMultipleFiles;
+  if (multiselect) {
+    dialog_options.optionFlags |= kNavAllowMultipleFiles;
+  } else {
+    dialog_options.optionFlags &= ~kNavAllowMultipleFiles;
+  }
 
   if (!AddFilters(filters, data, &dialog_options, error))
     return false;
@@ -389,7 +395,7 @@ bool FileDialogCarbon::OpenDialog(const std::vector<Filter>& filters,
   scoped_NavDialogRef dialog(NULL);
   Filters data;
 
-  if ((success = InitDialog(filters, &dialog, &data, error))) {
+  if ((success = InitDialog(multiselect_, filters, &dialog, &data, error))) {
     success = Display(dialog.get(), selected_files, error);
   }
 
