@@ -626,11 +626,8 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
       // JS_IdToValue is implemented as a typecast, and should never fail.
       assert(false);
     }
-    if (!JSVAL_IS_STRING(property_key)) {
-      continue;
-    }
     std::string16 property_name;
-    if (!JsTokenToString_NoCoerce(property_key, js_context_, &property_name)) {
+    if (!JsTokenToString_Coerce(property_key, js_context_, &property_name)) {
       continue;
     }
     out->push_back(property_name);
