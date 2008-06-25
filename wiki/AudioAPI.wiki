@@ -470,7 +470,7 @@ Consider a single `GearsAudio` object created from the `GearsFactory`. This migh
 
 ==Class Design:==
 
-===1. MediaData class:===
+===1. `MediaData` class:===
 
 A `MediaData` object holds the audio buffer data, and also states/properties that are shared by the various threads concurrently. This is also the protocol object passed to the player's callback function (referred to, as `userData` in portaudio documentation).
 This is a `RefCounted` object, as it is shared by multiple threads. Hence, all threads should access this object via scoped_refptrs. Note that, for a given `GearsAudio` object, a single `MediaData` object exists in memory for the scope of that `GearsAudio` object. The `MediaData` object is shared by the `GearsMedia` object in the main thread, the `NetworkMediaRequest` object in the network thread and the `PaPlayer` object in the player thread. Each of these objects hold a `scoped_refptr` to the shared `MediaData` object. 
@@ -497,7 +497,7 @@ class MediaData : public RefCounted {
 }
 }}}
 
-===2. GearsMedia class:===
+===2. `GearsMedia` class:===
 
 Abstracts HTML5 media, of which we are only implementing audio for now. 
 `GearsAudio`, naturally extends from `GearsMedia`. `GearsMedia` handles all the Media functionality mentioned in the HTML5 spec. Since this functionality would be common to audio and video, no changes are expected here, if we add a `GearsVideo` class later.
@@ -515,7 +515,7 @@ class GearsMedia {
 }
 }}}
 
-===3. GearsAudio class:===
+===3. `GearsAudio` class:===
 
 This is the object created when passing `'beta.audio'` to Factory.
 
@@ -537,7 +537,7 @@ class GearsAudio
 }
 }}}
 
-===4. NetworkMediaRequest class:===
+===4. `NetworkMediaRequest` class:===
 
 This is the class that takes care of asynchronously loading data from the network into the `media_buffer_` field of the `MediaData` object.
 
@@ -564,7 +564,7 @@ class NetworkMediaRequest : public AsyncTask {
 }
 }}}
 
-===5. PlayerInterface class:===
+===5. `PlayerInterface` class:===
 
 The abstract player interface. `GearsAudio` class is abstracted from how the player works.
 It just holds a `scoped_ptr` to an object that implements `PlayerInterface` and makes calls such as `play()`, `pause()`, etc.... The concrete player instance take care of the actual implementation.
@@ -588,7 +588,7 @@ class PlayerInterface {
 }
 }}}
 
-===6. PlayerFactory class:===
+===6. `PlayerFactory` class:===
 
 The factory singleton class that returns the instance of the player that we want to use.
 Right now, only possible value is `"portaudio"`. Later, new players can figure in here,
@@ -612,7 +612,7 @@ public:
 }
 }}}
 
-===7. PaManager class:===
+===7. `PaManager` class:===
 
 This is a portaudio specific module. A singleton class, that does two things:
 
@@ -647,7 +647,7 @@ class PaManager {
 }
 }}}
 
-===8. PaPlayer class:===
+===8. `PaPlayer` class:===
 
 This is a portaudio specific module. It represents the portaudio based audio player.
 
