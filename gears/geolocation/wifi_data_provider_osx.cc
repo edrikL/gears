@@ -48,7 +48,7 @@ static const int kPollingInterval = 1000;
 
 // static
 template<>
-WifiDataProviderImplBase *WifiDataProviderBase::DefaultFactoryFunction() {
+WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
   return new OsxWifiDataProvider();
 }
 
