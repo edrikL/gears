@@ -707,7 +707,7 @@ private:
 
 ===Player thread:===
 
-  * `PaPlayer`, on creation, `AddRef()`s m`edia_data_ (by virtue of using `scoped_refptr`) and also registers itself with the `PaManager`.
+  * `PaPlayer`, on creation, `AddRef()`s `media_data_` (by virtue of using `scoped_refptr`) and also registers itself with the `PaManager`.
   * `PaPlayer::play()` defines `OpenDefaultStream(<params>, this)` and `StartStream()` - (call safe methods defined on `PaManager`).
   * `PaPlayer::PaCallback()` does the following:
     * Obtain a lock on `media_data_lock_` (so that when it is reading the buffer, nobody deletes it). 
