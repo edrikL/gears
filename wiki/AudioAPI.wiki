@@ -455,15 +455,15 @@ interface AudioUtils : MediaUtils
 
 Consider a single `GearsAudio` object created from the `GearsFactory`. This might end up in 3 parallel threads of execution over the course of time. Find them below (along with a high level description of their broad functionality).
 
-# *Main thread (controlled from JS)*
-  * creates `GearsAudio` object.
-  * load() from network - by setting 'src' to a URL -> spawns Network thread. (A parallel flow exists for loading from a blob as well).
-  * play() - starts portaudio stream -> creation of Portaudio thread
-# *Network thread (one per `GearsMedia` object)*
-  * load from HTTP asynchronously
-# *Player thread (one per `GearsMedia` object)*
-  * responsible for playing the audio data streamed in by the network thread.
-  * In the case of a portaudio player, once `StartStream()` is called by `player.play()`, this thread invokes `paCallback()` module (defined by us) every now and then, until `StopStream()` is called.
+  # *Main thread (controlled from JS)*
+    * creates `GearsAudio` object.
+    * load() from network - by setting 'src' to a URL -> spawns Network thread. (A parallel flow exists for loading from a blob as well).
+    * play() - starts portaudio stream -> creation of Portaudio thread
+  # *Network thread (one per `GearsMedia` object)*
+    * load from HTTP asynchronously
+  # *Player thread (one per `GearsMedia` object)*
+    * responsible for playing the audio data streamed in by the network thread.
+    * In the case of a portaudio player, once `StartStream()` is called by `player.play()`, this thread invokes `paCallback()` module (defined by us) every now and then, until `StopStream()` is called.
 
 ==Class Design:==
 
