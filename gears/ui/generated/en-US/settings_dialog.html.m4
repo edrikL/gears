@@ -299,8 +299,17 @@ m4_include(ui/common/button.js)
 
     allowedSites = args.allowed;
     deniedSites = args.denied;
-    initList("div-allowed", args.allowed, ALLOWED);
-    initList("div-denied", args.denied, DENIED);
+
+    function sortSites(a, b) {
+      // Ignore the scheme, so that we just sort by the host.
+      return a.replace(/^\w+:/, '') > b.replace(/^\w+:/, '');
+    }
+
+    allowedSites.sort(sortSites);
+    deniedSites.sort(sortSites);
+
+    initList("div-allowed", allowedSites, ALLOWED);
+    initList("div-denied", deniedSites, DENIED);
   }
 
   function initList(tableId, sites, kind) {
