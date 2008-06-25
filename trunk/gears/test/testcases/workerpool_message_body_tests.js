@@ -122,6 +122,27 @@ function testSimpleObjectMessage() {
   }, childId);
 }
 
+function testCoercedObjectPropertiesMessage() {
+  startAsync();
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.onmessage = function(text, sender, message) {
+    var mb = message.body;
+    assertEqual('one', mb['1'], 'Incorrect message body');
+    assertEqual('two', mb['2'], 'Incorrect message body');
+    assertEqual('three', mb['true'], 'Incorrect message body');
+    assertEqual('four', mb['false'], 'Incorrect message body');
+    completeAsync();
+  };
+
+  var childId = wp.createWorker(kEchoWorkerCode);
+  wp.sendMessage({
+    '1': 'one',
+    '2': 'two',
+    'true': 'three',
+    'false': 'four'
+  }, childId);
+}
+
 function testNestedArrayMessage() {
   startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
