@@ -73,6 +73,8 @@ RadioDataProviderImplBase *RadioDataProviderBase::DefaultFactoryFunction() {
 // Win32 uses Win32WifiDataProvider.
 #elif defined(LINUX) && !defined(OS_MACOSX)
 // Linux uses LinuxWifiDataProvider.
+#elif defined(OS_MACOSX)
+// OSX uses OsxWifiDataProvider.
 #else
 // static
 template<>
