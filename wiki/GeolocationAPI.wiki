@@ -82,7 +82,7 @@ interface PositionOptions {
   // The array can also be cleared, or set to null, so that no location
   // providers will be used.
   // For more information on the protocol that Gears uses to communicate with
-  // location providers, see Appendix B.
+  // location providers, see below.
   string[] gearsLocationProviderUrls;
 
   // TODO: Consider adding distanceThreshold (for use with watch())
@@ -137,24 +137,7 @@ It must be clear to users when an application is using the Geolocation API.  We 
   1. *Some persistent UI that indicates the Geolocation API is being used.* For example, there could be a bar across the bottom of the browser with an icon of a globe or map. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget it is being used.
 
 
-= Appendix A: Alternate API =
-
-Instead of the Geolocation API described above, Gears could expose only the underlying location signals.  (See "Location Provider Protocol - Request Format" below for the list of signals.)
-
-In many ways the approaches are equivalent.  The signals must be sent _somewhere_ in order to be useful, and that destination can be set as the `locationProviderUrl`.
-
-Still, a lower-level API would be different in several ways:
-
-  * *Consistency* - A low-level API is not directly useful to web app developers, so location providers would be tasked with designing the interface used by web apps.  This gives location providers more flexibility.  At the same time, it hinders web app developers slightly: it becomes more work to integrate geolocation data into an app, and it could become hard to switch between location providers that expose different interfaces.
-
-  * *Privacy* - With a low-level API, it's unclear whether separate Gears and Geolocation security dialogs would be useful.  (It would still make sense to indicate when position data is being tracked.)
-
-  * *Surface Area* - The low-level API would be a subset of the proposed spec, which can be seen as an advantage or disadvantage.  There are obvious differences, like removing all the methods described earlier.  There are also less obvious simplifications, like returning only the current signals, rather than any historical data.
-
-  * *Logic* - With a high-level API, it's more obvious how Gears can make decisions like whether to turn on the GPS radio in response to a request.  With a low-level signals-based API, it's unclear whether we can do much more than rate-limiting.
-
-
-= Appendix B: Location Provider Protocol =
+= Network Location Provider Protocol =
 
 Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to get an accurate location fix, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
 
