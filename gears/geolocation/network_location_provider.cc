@@ -164,8 +164,8 @@ void NetworkLocationProvider::Run() {
     if (is_shutting_down_) {
       return;
     }
-    // The event should be due to new device data.
-    assert(is_new_data_available_);
+    // The event should be due to new device data or a new listener.
+    assert(is_new_data_available_ || is_new_listener_waiting_);
     // Lock the data mutex to test is_radio_data_complete_ and
     // is_wifi_data_complete_ on the next loop.
     data_mutex_.Lock();
