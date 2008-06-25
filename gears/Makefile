@@ -829,6 +829,7 @@ $(BROWSER)_CPPSRCS	+= \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		string_utils_osx.cc \
 		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
@@ -1001,7 +1002,6 @@ SF_CPPSRCS	+= \
 		browser_utils.cc \
 		browser_utils_sf.cc \
 		common_sf.mm \
-		cf_string_utils.cc \
 		curl_downloader.mm \
 		file_posix.cc \
 		html_event_monitor_np.cc \
@@ -1234,6 +1234,7 @@ NOTIFIER_CORE	+= \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		string_utils_osx.cc \
 		system_linux.cc \
 		system_osx.cc \
 		system_win32.cc \
@@ -1251,7 +1252,8 @@ NOTIFIER_CPPSRCS += \
 
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
-		notifier_osx.mm
+		notifier_osx.mm \
+		$(NULL)
 endif
 
 NOTIFIER_CSRCS += \

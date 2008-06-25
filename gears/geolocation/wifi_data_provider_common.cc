@@ -36,12 +36,9 @@
 #include <windows.h>
 #elif defined(OS_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
+#include "gears/base/common/string_utils_osx.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"  // For scoped_array
-
-// TODO (steveblock): Combine with implementations in
-// base/safari/cf_string_utils and notifier/notification.
-static bool CFStringRefToString16Local(CFStringRef str, std::string16 *out16);
 #endif
 
 std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
@@ -61,7 +58,7 @@ std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
       mac_as_int[0], mac_as_int[1], mac_as_int[2],
       mac_as_int[3], mac_as_int[4], mac_as_int[5]));
   std::string16 mac;
-  CFStringRefToString16Local(mac_string.get(), &mac);
+  CFStringRefToString16(mac_string.get(), &mac);
   return mac;
 #else
   char16 mac[18];
@@ -75,27 +72,6 @@ std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
   return mac;
 #endif
 }
-
-#ifdef OS_MACOSX
-static bool CFStringRefToString16Local(CFStringRef str, std::string16 *out16) {
-  if (!str || !out16)
-    return false;
-  
-  unsigned long length = CFStringGetLength(str);
-  const UniChar *out_str = CFStringGetCharactersPtr(str);
-
-  if (!out_str) {
-    scoped_array<UniChar> buffer(new UniChar[length + 1]);
-    CFStringGetCharacters(str, CFRangeMake(0, length), buffer.get());
-    buffer[length] = 0;
-    out16->assign(buffer.get());
-  } else {
-    out16->assign(out_str, length);
-  }
-  
-  return true;
-}
-#endif
 
 #endif  // WIN32 || OS_MACOSX
 

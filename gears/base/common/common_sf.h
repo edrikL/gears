@@ -29,10 +29,14 @@
 #define GEARS_BASE_COMMON_COMMON_SF_H__
 
 #include <CoreFoundation/CoreFoundation.h>
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#endif
 
 #include "genfiles/product_constants.h"
 #include "gears/base/common/basictypes.h"
-#include "gears/base/safari/cf_string_utils.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/base/common/string_utils_osx.h"
 
 struct NPObject;
 

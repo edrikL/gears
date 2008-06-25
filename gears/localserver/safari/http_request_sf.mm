@@ -37,7 +37,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/browser_utils.h"
-#include "gears/base/safari/cf_string_utils.h"
 #include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/localserver/common/http_request.h"
@@ -545,3 +544,4 @@ void SFHttpRequest::OnUploadProgress(int64 position, int64 total) {
     listener_->UploadProgress(this, position, total);
   }
 }
+

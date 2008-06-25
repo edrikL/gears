@@ -27,7 +27,8 @@
 
 #import "gears/base/common/paths.h"
 #import "gears/base/common/paths_sf_more.h"
-#import "gears/base/safari/cf_string_utils.h"
+#include "gears/base/common/string_utils_osx.h"
+#import "gears/base/safari/nsstring_utils.h"
   
 bool GetInstallDirectory(std::string16 *path) {
   // TODO(aa): Implement me when needed.
@@ -47,3 +48,4 @@ bool GetBaseResourcesDirectory(std::string16 *path) {
 bool GetUserHomeDirectory(std::string16 *home_dir) {
   return [[@"~" stringByExpandingTildeInPath] string16:home_dir];
 }
+
