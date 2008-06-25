@@ -25,8 +25,8 @@
 
 // Utilities operating on NSStrings, char16*, std::string16, etc.
 
-#ifndef GEARS_BASE_SAFARI_STRING_UTILS_H__
-#define GEARS_BASE_SAFARI_STRING_UTILS_H__
+#ifndef GEARS_BASE_SAFARI_NSSTRING_UTILS_H__
+#define GEARS_BASE_SAFARI_NSSTRING_UTILS_H__
 
 #if defined(__cplusplus)
 #include "gears/base/common/string_utils.h"
@@ -53,21 +53,4 @@
 #endif  // C++
 #endif  // Objective C
 
-// C++
-#if defined(__cplusplus)
-
-// Create a String16 from a CFStringRef
-bool CFStringRefToString16(CFStringRef str, std::string16 *out16);
-
-// Create a CFStringRef from a String16.  Caller is responsible for releasing
-// CFStringRef.
-CFStringRef CFStringCreateWithString16(const char16 *str);
-
-// Convert an input buffer with the specified encoding into a std::string16.
-bool ConvertToString16UsingEncoding(const char *in, int len,
-                                    CFStringEncoding encoding,
-                                    std::string16 *out16);
-
-#endif  // C++
-
-#endif  // GEARS_BASE_SAFARI_STRING_UTILS_H__
+#endif  // GEARS_BASE_SAFARI_NSSTRING_UTILS_H__

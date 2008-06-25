@@ -1,4 +1,4 @@
-// Copyright 2008, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,24 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/safari/browser_utils_sf.h"
+// Utilities operating on NSStrings, char16*, std::string16, etc.
 
-#include "gears/base/common/string_utils_osx.h"
-#include "gears/base/safari/scoped_cf.h"
+#ifndef GEARS_BASE_COMMON_STRING_UTILS_OSX_H__
+#define GEARS_BASE_COMMON_STRING_UTILS_OSX_H__
 
-bool CFURLRefToString16(CFURLRef url, std::string16 *out16) {
-  if (!url || !out16)
-    return false;
-  
-  scoped_CFURL absolute(CFURLCopyAbsoluteURL(url));
-  CFStringRef absoluteStr = CFURLGetString(absolute.get());
-  
-  return CFStringRefToString16(absoluteStr, out16);
-}
+#include <CoreFoundation/CoreFoundation.h>
+#include "gears/base/common/string16.h"
 
-CFURLRef CFURLCreateWithString16(const char16 *url_str) {
-  scoped_CFString url(CFStringCreateWithString16(url_str));
-  
-  return CFURLCreateWithString(kCFAllocatorDefault, url.get(), NULL);
-}
+// Create a String16 from a CFStringRef
+bool CFStringRefToString16(CFStringRef str, std::string16 *out16);
 
+// Create a CFStringRef from a String16.  Caller is responsible for releasing
+// CFStringRef.
+CFStringRef CFStringCreateWithString16(const char16 *str);
+
+// Convert an input buffer with the specified encoding into a std::string16.
+bool ConvertToString16UsingEncoding(const char *in, int len,
+                                    CFStringEncoding encoding,
+                                    std::string16 *out16);
+
+#endif  // GEARS_BASE_COMMON_STRING_UTILS_OSX_H__

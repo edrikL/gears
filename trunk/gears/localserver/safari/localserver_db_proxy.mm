@@ -25,7 +25,7 @@
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/http_utils.h"
-#include "gears/base/safari/cf_string_utils.h"
+#import "gears/base/safari/nsstring_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/localserver_db.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"
@@ -150,3 +150,4 @@
 }
 
 @end
+

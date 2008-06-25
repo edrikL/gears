@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/http_utils.h"
-#include "gears/base/safari/cf_string_utils.h"
+#import "gears/base/safari/nsstring_utils.h"
 #include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/localserver/common/http_request.h"
@@ -314,3 +314,4 @@
   [status_line_nsstr string16:status_line];
 }
 @end
+

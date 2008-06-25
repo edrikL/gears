@@ -23,10 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <CoreFoundation/CoreFoundation.h>
-#include "gears/base/common/string_utils.h"
+#ifdef OS_MACOSX
+
+#include "gears/base/common/string_utils_osx.h"
+
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/cf_string_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 bool CFStringRefToString16(CFStringRef str, std::string16 *out16) {
@@ -87,3 +88,5 @@ bool ConvertToString16UsingEncoding(const char *in, int len,
   
   return true;
 }
+
+#endif  // OS_MACOSX

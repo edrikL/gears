@@ -23,10 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#import "gears/base/safari/nsstring_utils.h"
+
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/string_utils.h"
-#import "gears/base/safari/cf_string_utils.h"
+#include "gears/base/common/string_utils_osx.h"
 #import "third_party/scoped_ptr/scoped_ptr.h"
 
 @implementation NSString(GearsString16Conversion)
@@ -61,3 +63,4 @@
 }
 
 @end
+

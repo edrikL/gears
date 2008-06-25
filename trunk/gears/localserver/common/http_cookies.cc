@@ -328,8 +328,8 @@ bool GetCookieString(const char16 *url, BrowsingContext *context,
 //------------------------------------------------------------------------------
 
 #elif BROWSER_SAFARI
+#include "gears/base/common/string_utils_osx.h"
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/cf_string_utils.h"
 #include "gears/localserver/safari/http_cookies_sf.h"
 
 bool GetCookieString(const char16 *url, BrowsingContext *context,

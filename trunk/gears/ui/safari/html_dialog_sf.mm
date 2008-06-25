@@ -31,7 +31,7 @@
 #include "gears/base/common/paths_sf_more.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
-#include "gears/base/safari/cf_string_utils.h"
+#import "gears/base/safari/nsstring_utils.h"
 #include "gears/base/safari/curl_downloader.h"
 #include "gears/base/safari/safari_workarounds.h"
 #include "gears/base/safari/scoped_cf.h"
@@ -347,3 +347,4 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
   SetResult(results.c_str());
   return true;
 }
+
