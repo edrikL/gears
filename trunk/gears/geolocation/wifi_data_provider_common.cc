@@ -27,10 +27,14 @@
 // The Geolocation API has not been finalized for official builds.
 #else
 
+#if defined(WIN32) || defined(OS_MACOSX)
+
 #include "gears/geolocation/wifi_data_provider_common.h"
 
 #include <assert.h>
-#ifdef OS_MACOSX
+#if defined(WIN32)
+#include <windows.h>
+#elif defined(OS_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #include "gears/base/safari/scoped_cf.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"  // For scoped_array
@@ -38,7 +42,7 @@
 // TODO (steveblock): Combine with implementations in
 // base/safari/cf_string_utils and notifier/notification.
 static bool CFStringRefToString16Local(CFStringRef str, std::string16 *out16);
-#endif  // OS_MACOSX
+#endif
 
 std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
   // mac_as_int is big-endian. Write in byte chunks.
@@ -92,5 +96,7 @@ static bool CFStringRefToString16Local(CFStringRef str, std::string16 *out16) {
   return true;
 }
 #endif
+
+#endif  // WIN32 || OS_MACOSX
 
 #endif  // OFFICIAL_BUILD
