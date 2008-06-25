@@ -31,20 +31,9 @@
 
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 
+#include <assert.h>
 #include "gears/geolocation/device_data_provider.h"
-
-std::string16 MacAddressAsString16(const UCHAR mac_as_int[6]) {
-  char16 mac[18];  // Format is XX-XX-XX-XX-XX-XX.
-  // mac_as_int is big-endian. Write in byte chunks.
-#ifdef DEBUG
-  int num_characters =
-#endif
-      wsprintf(mac, STRING16(L"%02x-%02x-%02x-%02x-%02x-%02x"), mac_as_int[0],
-               mac_as_int[1], mac_as_int[2], mac_as_int[3], mac_as_int[4],
-               mac_as_int[5]);
-  assert(num_characters == 17);
-  return mac;
-}
+#include "gears/geolocation/wifi_data_provider_common.h"
 
 bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
                           AccessPointData *access_point_data) {
