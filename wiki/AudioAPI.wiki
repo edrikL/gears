@@ -681,10 +681,10 @@ private:
 }}}
 
 == Locking semantics:==
-===Semantics of `media_data`:===
+===The `media_data`:===
 `media_data_` is not NULL whenever a player thread or a network thread (or in general, whoever needs to read/write `media_buffer_`) is executing because they use a `scoped_refptr` to reference the `media_data_` and hence have `addRef()`-ed it. (In other words, whenever `PaCallback` executes, `media_data_` cannot be NULL. This can in fact be asserted in the callback function).
 
-===Semantics of media_buffer:===
+===Semantics for locking `media_buffer`:===
   * Whoever reads/dereferences the `media_buffer_` needs to acquire the `media_data_lock_` (but reads only valid data based on the buffer's current size).
   * Whoever sets the `media_buffer_` to NULL, needs to acquire the `media_data_lock_` too.
   * Appending onto the buffer does NOT require a lock. (This is not harmful because no existing values are modified, and hence no danger of wrong or illegal values being read). This is required so that the network thread can concurrently write into the buffer as the player thread is reading it (instead of one thread blocking on the other synchronously).
