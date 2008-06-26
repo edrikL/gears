@@ -48,6 +48,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"
+#include "gears/base/npapi/module.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 #ifdef BROWSER_WEBKIT
