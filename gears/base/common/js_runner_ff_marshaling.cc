@@ -234,7 +234,9 @@ bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
     JS_SetPrivate(cx_, proto, proto_data);
   }
 
+  JS_BeginRequest(cx_);
   JSObject *instance_obj = JS_NewObject(cx_, js_class, proto, global_obj_);
+  JS_EndRequest(cx_);
   if (!instance_obj) return false;
 
   if (!SetupInstanceObject(instance_obj, module, NULL))
@@ -302,6 +304,7 @@ bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
 
   // Note: JS_NewObject by itself does not call the object constructor.
   // JS_ConstructObject is a superset that does.
+  JsRequest request(cx_);
   JSObject *instance_obj = JS_NewObject(cx_,
                                         proto_data->alloc_jsclass.get(),
                                         proto_obj,
@@ -354,6 +357,7 @@ bool JsContextWrapper::InitClass(const char *class_name,
   scoped_ptr<JSClass> alloc_jsclass(new JSClass(js_wrapper_class));
 
   // add the class to the JSContext
+  JS_BeginRequest(cx_);
   *proto_obj = JS_InitClass(cx_, global_obj_,
                             NULL, // parent_proto
                             alloc_jsclass.get(), // JSClass *
@@ -361,6 +365,7 @@ bool JsContextWrapper::InitClass(const char *class_name,
                             0, // ctor_num_args
                             NULL, NULL,  //   prototype   props/funcs
                             NULL, NULL); // "constructor" props/funcs
+  JS_EndRequest(cx_);
   if (!*proto_obj) { return false; }
 
   // setup the JsWrapperDataForProto struct
@@ -496,12 +501,14 @@ bool JsContextWrapper::AddFunctionToPrototype(
     newfunction_flags = JSFUN_SETTER;
   }
   
+  JS_BeginRequest(cx_);
   JSFunction *function = JS_NewFunction(cx_,
                                         JsContextWrapper::JsWrapperCaller,
                                         param_count,
                                         newfunction_flags,
                                         proto_obj, // parent
                                         name);
+  JS_EndRequest(cx_);
   JSObject *function_obj = JS_GetFunctionObject(function);
 
   // Save info about the function.
@@ -538,10 +545,12 @@ bool JsContextWrapper::AddFunctionToPrototype(
 
   // Note: JS_DefineProperty is written to handle adding a setter to a
   // previously defined getter with the same name.
+  JS_BeginRequest(cx_);
   JSBool js_ok = JS_DefineProperty(cx_, proto_obj, name,
                                    method, // method
                                    getter, setter, // getter, setter
                                    function_flags);
+  JS_EndRequest(cx_);
   if (!js_ok) { return false; }
 
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
@@ -559,8 +568,10 @@ bool JsContextWrapper::AddFunctionToPrototype(
       linked_ptr<JsWrapperDataForFunction>(function_data.get()));
   jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.release());
   assert(!JSVAL_IS_GCTHING(pointer_jsval));
+  JS_BeginRequest(cx_);
   JS_SetReservedSlot(cx_, function_obj, kFunctionDataReservedSlotIndex,
                      pointer_jsval);
+  JS_EndRequest(cx_);
 
   return true;
 }
@@ -685,9 +696,11 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
 
   JsWrapperDataForFunction *function_data;
   jsval function_data_jsval;
+  JS_BeginRequest(cx);
   JSBool js_ok = JS_GetReservedSlot(cx, function_obj,
                                     kFunctionDataReservedSlotIndex,
                                     &function_data_jsval);
+  JS_EndRequest(cx);
   function_data = static_cast<JsWrapperDataForFunction *>(
                       JSVAL_TO_PRIVATE(function_data_jsval));
   assert(function_data);
@@ -1439,7 +1452,10 @@ static JSBool VariantDataToJS(JSContext *cx, JSObject *scope_obj,
             // Easy. Handle inline.
             if(NS_FAILED(variant->GetAsDouble(&xpctvar.val.d)))
                 return JS_FALSE;
-            return JS_NewNumberValue(cx, xpctvar.val.d, jsval_out);
+            JS_BeginRequest(cx);
+            JSBool success = JS_NewNumberValue(cx, xpctvar.val.d, jsval_out);
+            JS_EndRequest(cx);
+            return success;
         }
         case nsIDataType::VTYPE_BOOL:
         {
@@ -1636,7 +1652,9 @@ VARIANT_DONE:
         }
         case nsIDataType::VTYPE_EMPTY_ARRAY:
         {
+            JS_BeginRequest(cx);
             JSObject* array = JS_NewArrayObject(cx, 0, nsnull);
+            JS_EndRequest(cx);
             if(!array)
                 return JS_FALSE;
             *jsval_out = OBJECT_TO_JSVAL(array);
@@ -1708,6 +1726,8 @@ VARIANT_DONE:
 // Returns JS_FALSE if the specified type was not a simple type.
 static JSBool NativeSimpleData2JS(JSContext *cx, jsval *d, const void *s,
                                   const nsXPTType &type_info) {
+  JsRequest request(cx);
+
   jsdouble *dbl = nsnull;
   switch (type_info.TagPart()) {
     case nsXPTType::T_I8    : *d = INT_TO_JSVAL((int32)*((int8*)s));     break;
@@ -1778,8 +1798,10 @@ JSBool NativeData2JS(JSContext *cx, JSObject *scope_obj,
             NS_ASSERTION(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
 
-            JSString* str;
-            if(!(str = JS_NewStringCopyN(cx, p, 1)))
+            JS_BeginRequest(cx);
+            JSString* str = JS_NewStringCopyN(cx, p, 1);
+            JS_EndRequest(cx);
+            if(!str)
                 return JS_FALSE;
             *d = STRING_TO_JSVAL(str);
             break;
@@ -1789,8 +1811,10 @@ JSBool NativeData2JS(JSContext *cx, JSObject *scope_obj,
             jschar* p = (jschar*)s;
             if(!p)
                 return JS_FALSE;
-            JSString* str;
-            if(!(str = JS_NewUCStringCopyN(cx, p, 1)))
+            JS_BeginRequest(cx);
+            JSString* str = JS_NewUCStringCopyN(cx, p, 1);
+            JS_EndRequest(cx);
+            if(!str)
                 return JS_FALSE;
             *d = STRING_TO_JSVAL(str);
             break;
@@ -2039,10 +2063,12 @@ JSBool NativeData2JS(JSContext *cx, JSObject *scope_obj,
 
               // Note: JS_NewObject by itself does not call the object constructor.
               // JS_ConstructObject is a superset that does.
+              JS_BeginRequest(cx);
               JSObject *out_instance_obj = JS_NewObject(cx,
                                                         proto_data->alloc_jsclass.get(),
                                                         out_proto_obj,
                                                         scope_obj); // parent
+              JS_EndRequest(cx);
               if (!out_instance_obj) {
                 assert(false); // NOT YET IMPLEMENTED??
                 //return <FAILURE>
@@ -2105,8 +2131,10 @@ static JSBool NativeStringWithSize2JS(JSContext *cx,
             char* p = *((char**)src);
             if(!p)
                 break;
-            JSString* str;
-            if(!(str = JS_NewStringCopyN(cx, p, count)))
+            JS_BeginRequest(cx);
+            JSString* str = JS_NewStringCopyN(cx, p, count);
+            JS_EndRequest(cx);
+            if(!str)
                 return JS_FALSE;
             *dest = STRING_TO_JSVAL(str);
             break;
@@ -2118,8 +2146,10 @@ static JSBool NativeStringWithSize2JS(JSContext *cx,
             jschar* p = *((jschar**)src);
             if(!p)
                 break;
-            JSString* str;
-            if(!(str = JS_NewUCStringCopyN(cx, p, count)))
+            JS_BeginRequest(cx);
+            JSString* str = JS_NewUCStringCopyN(cx, p, count);
+            JS_EndRequest(cx);
+            if(!str)
                 return JS_FALSE;
             *dest = STRING_TO_JSVAL(str);
             break;
@@ -2132,7 +2162,6 @@ static JSBool NativeStringWithSize2JS(JSContext *cx,
     }
     return JS_TRUE;
 }
-
 
 // [Reference: this is inspired by Mozilla's XPCConvert::JSData2Native() in
 // /xpconnect/src/xpcconvert.cpp]
@@ -2152,6 +2181,7 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
       //*error_out = NS_ERROR_XPC_BAD_CONVERT_JS;
       *error_out = NS_ERROR_FAILURE;
 
+    JsRequest request(cx);
     switch(type_info.TagPart())
     {
     case nsXPTType::T_I8     :

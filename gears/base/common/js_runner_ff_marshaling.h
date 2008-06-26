@@ -58,6 +58,20 @@ typedef std::map<const std::string, JSObject*> NameToProtoMap;
 
 class JsContextWrapper;
 
+// Wraps a set of calls to JS_BeginRequest and JS_EndRequest.
+class JsRequest {
+ public:
+  JsRequest(JSContext *cx) : cx_(cx) {
+    JS_BeginRequest(cx_);
+  }
+  ~JsRequest() {
+    JS_EndRequest(cx_);
+  }
+
+ private:
+  JSContext *cx_;
+};
+
 //
 // Structs that record different custom data for the different JSObject types.
 // The structs have a common header so we can differentiate generic JSObjects.
