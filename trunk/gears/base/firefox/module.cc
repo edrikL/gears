@@ -29,7 +29,6 @@
 // #includes below include common_ff.h. this causes PR_LOGGING to be not
 // defined and gLog to become not defined symbol in opt builds
 #include "gears/base/common/common_ff.h"
-#include <gecko_internal/nsIXULAppInfo.h>
 #endif
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsMemory.h>
@@ -38,6 +37,7 @@
 #include <gecko_sdk/include/nsICategoryManager.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
+#include <gecko_internal/nsIXULAppInfo.h>
 
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
@@ -296,19 +296,9 @@ static nsModuleInfo const kModuleInfo = {
 NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
                                        nsIFile* location,
                                        nsIModule** result) {
-  // This is set in base/firefox/xpcom_dynamic_load.cc on load.  The Firefox
-  // XPI contains distinct modules for Gecko 1.8 and Gecko 1.9 based browser.
-  // This will be set to NULL if it is loaded in the wrong host, at which point
-  // this test will fail, and the module won't be registered.
-  if (!XPTC_InvokeByIndex_DynLoad) {
-    return NS_ERROR_FAILURE;
-  }
-
-#ifdef BROWSER_FF3
-  // TODO(zork): Remove this code once Firefox 3 ships.
-
-  // If we're running on Firefox 3, we need to make sure we aren't loaded in
-  // any old betas, because interfaces we need do not exist.
+  // This module is compiled once against Gecko 1.8 (Firefox 1.5 and 2) and
+  // once against Gecko 1.9 (Firefox 3). We need to make sure that we are
+  // only loaded into the environment we were compiled against.
   nsresult nr;
   nsCOMPtr<nsIXULAppInfo> app_info =
       do_GetService("@mozilla.org/xre/app-info;1", &nr);
@@ -316,14 +306,28 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
     return NS_ERROR_FAILURE;
   }
 
-  // Get the Firefox version string.
-  nsCString version;
-  app_info->GetVersion(version);
+  nsCString gecko_version;
+  app_info->GetPlatformVersion(gecko_version);
 
-  // Check that the version string matches the proper Firefox
-  const nsCString::char_type *begin, *end;
-  version.BeginReading(&begin, &end);
-  if (strcmp(begin, "3.0")) {
+#if defined(BROWSER_FF2)
+  if (strncmp(gecko_version.BeginReading(), "1.8", 3) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+#elif defined(BROWSER_FF3)
+  if (strncmp(gecko_version.BeginReading(), "1.9", 3) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // We don't support the early betas of Firefox 3 that many people have
+  // installed, so we explicitly disallow those versions here.
+  nsCString build_id_string;
+  app_info->GetPlatformBuildID(build_id_string);
+
+  // The first FF3 version that we support is RC1. I got its build ID here:
+  // http://wiki.mozilla.org/QA/Firefox3/TestResults/RC1
+  // There are several listed for the various platforms. I use the earliest.
+  int build_id = ParseLeadingInteger(build_id_string.BeginReading(), NULL);
+  if (build_id < 2008051202) {
     return NS_ERROR_FAILURE;
   }
 #endif
