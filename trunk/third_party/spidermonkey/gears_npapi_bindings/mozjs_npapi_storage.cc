@@ -1,5 +1,6 @@
 // Copyright 2008, Google Inc.
 //
+//
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
 //
@@ -40,7 +41,7 @@ typedef struct {
   char *npp_exception;
 } NPAPI_Data;
 
-static std::string kNPAPIThreadLocalKey = "NPAPI Storage";
+static const ThreadLocals::Slot kNPAPIThreadLocalKey = ThreadLocals::Alloc();
 
 static NPAPI_Data *GetNPAPIData() {
   NPAPI_Data *ret =static_cast<NPAPI_Data *>(ThreadLocals::GetValue(
