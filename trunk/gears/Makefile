@@ -832,6 +832,8 @@ $(BROWSER)_CPPSRCS	+= \
 		string_utils_osx.cc \
 		string_utils_test.cc \
 		thread_locals.cc \
+		timed_call.cc \
+		timed_call_test.cc \
 		url_utils.cc \
 		url_utils_test.cc \
 		$(NULL)
