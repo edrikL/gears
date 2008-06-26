@@ -196,7 +196,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <div id="local-data" style="display:none">
             <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
             The website below wants to store information on your computer 
-            using PRODUCT_FRIENDLY_NAME_UQ .
+            using PRODUCT_FRIENDLY_NAME_UQ.
             </TRANS_BLOCK>
           </div>
           <div id="location-data" style="display:none">
@@ -229,7 +229,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       </div>
     </div>
 
-    <p id="checkbox-row">
+    <div id="location-privacy-statement" style="display:none; padding-top:3px;">
+      <TRANS_BLOCK desc="Tells the users to read the website's privacy policy to see how their location information will be used.">
+      Read the site's privacy policy to see how your location will be used.
+      </TRANS_BLOCK>
+    </div>
+
+    <p id="checkbox-row" style="display:none">
       <table cellspacing="0" cellpadding="0" border="0">
         <tr>
           <td valign="middle">
@@ -289,7 +295,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
+              <input type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
               <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
             </td>
           </div>
@@ -346,16 +352,14 @@ m4_include(ui/common/button.js)
     var allowText = dom.getElementById("string-allow");
     if (allowText) {
       window.pie_dialog.SetButton(allowText.innerText, "allowAccessPermanently();");
+      window.pie_dialog.SetButtonEnabled(true);
     }
     var cancelText = dom.getElementById("string-cancel");
     if (cancelText) {
       window.pie_dialog.SetCancelButton(cancelText.innerText);
     }
-    updateAllowButtonEnabledState();
   }
   initWarning();
-
-  var allowButtonUnlocked = false;
 
   function setTextContent(elem, content) {
     if (isDefined(typeof document.createTextNode)) {
@@ -378,7 +382,6 @@ m4_include(ui/common/button.js)
         elemSettings.style.display = 'block';
         elemHelp.style.display = 'none';
         window.pie_dialog.SetButton("Allow", "allowAccessPermanently();");
-        updateAllowButtonEnabledState();
       }
       window.pie_dialog.ResizeDialog();
     } else {
@@ -418,6 +421,8 @@ m4_include(ui/common/button.js)
     } else if (dialogType == "locationData") {
       elem.src = "location_data.png";
       elem = dom.getElementById("location-data");
+      elem.style.display = "block";
+      elem = dom.getElementById("location-privacy-statement");
       elem.style.display = "block";
     }
 
@@ -462,12 +467,12 @@ m4_include(ui/common/button.js)
       setTextContent(elem, customMessage);
     }
 
-    // This does not work on PIE...
     if (!browser.ie_mobile) {
       // Set up the checkbox to toggle the enabledness of the Allow button.
       dom.getElementById("unlock").onclick = updateAllowButtonEnabledState;
+      dom.getElementById("checkbox-row").style.display = 'block';
+      updateAllowButtonEnabledState();
     }
-    updateAllowButtonEnabledState();
     resizeDialogToFitContent();
   }
 
@@ -476,9 +481,7 @@ m4_include(ui/common/button.js)
     var allowButton = dom.getElementById("allow-button");
     var unlockCheckbox = dom.getElementById("unlock");
 
-    allowButtonUnlocked = unlockCheckbox.checked;
-
-    if (allowButtonUnlocked) {
+    if (unlockCheckbox.checked) {
       enableButton(allowButton);
     } else {
       disableButton(allowButton);
@@ -488,9 +491,7 @@ m4_include(ui/common/button.js)
   // Note: The structure that the following functions pass is coupled to the
   // code in PermissionsDialog that processes it.
   function allowAccessPermanently() {
-    if (allowButtonUnlocked) {
       saveAndClose({"allow": true, "permanently": true});
-    }
   }
 
   function denyAccessTemporarily() {
