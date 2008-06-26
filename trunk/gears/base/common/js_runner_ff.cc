@@ -120,7 +120,9 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   JsArray* NewArray() {
+    JS_BeginRequest(GetContext());
     JSObject* array_object = JS_NewArrayObject(GetContext(), 0, NULL);
+    JS_EndRequest(GetContext());
     if (!array_object)
       return NULL;
 
@@ -268,6 +270,8 @@ class JsRunnerBase : public JsRunnerInterface {
       LOG(("Could not get global object from script engine."));
       return NULL;
     }
+
+    JsRequest request(js_engine_context_);
 
     jsval val = INT_TO_JSVAL(0);
     JSBool result = JS_GetProperty(js_engine_context_, global_object,
@@ -539,6 +543,7 @@ bool JsRunner::InitJavaScriptEngine() {
   js_engine_context_ = cx.get();
 #endif
 
+  JsRequest request(cx.get());
   global_obj_ = JS_NewObject(cx.get(), &global_class, 0, 0);
 
   if (!global_obj_) { return false; }
@@ -609,6 +614,7 @@ bool JsRunner::AddGlobal(const std::string16 &name,
 
 bool JsRunner::AddGlobal(const std::string16 &name,
                          ModuleImplBaseClass *object) {
+  JsRequest request(js_engine_context_);
   return JS_TRUE == JS_DefineUCProperty(
       js_engine_context_, global_obj_,
       reinterpret_cast<const jschar *>(name.c_str()),
@@ -622,6 +628,8 @@ bool JsRunner::Start(const std::string16 &full_script) {
   //
   // Add script code to the engine instance
   //
+
+  JsRequest request(js_engine_context_);
 
   uintN line_number_start = 0;
   js_script_ = JS_CompileUCScript(
@@ -661,6 +669,7 @@ bool JsRunner::Eval(const std::string16 &script, jsval *return_value) {
   assert(return_value);
   JSObject *object = JS_GetGlobalObject(js_engine_context_);
 
+  JsRequest request(js_engine_context_);
   uintN line_number_start = 0;
   JSBool js_ok = JS_EvaluateUCScript(
                        js_engine_context_,
@@ -676,11 +685,14 @@ bool JsRunner::Eval(const std::string16 &script, jsval *return_value) {
 bool JsRunner::InvokeCallbackSpecialized(
                    const JsRootedCallback *callback, int argc, jsval *argv,
                    JsRootedToken **optional_alloc_retval) {
+  JsRequest request(js_engine_context_);
+
   jsval retval;
   JSBool result = JS_CallFunctionValue(
                       callback->context(),
                       JS_GetGlobalObject(callback->context()),
                       callback->token(), argc, argv, &retval);
+
   if (result == JS_FALSE) { return false; }
 
   if (optional_alloc_retval) {
@@ -809,10 +821,12 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   stack->Push(js_engine_context_);
 
   uintN line_number_start = 0;
+  JS_BeginRequest(js_engine_context_);
   JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
       js_engine_context_, object, jsprin,
       reinterpret_cast<const jschar *>(script.c_str()), script.length(),
       virtual_filename.c_str(), line_number_start, return_value);
+  JS_EndRequest(js_engine_context_);
 
   // Restore the context stack.
   JSContext *cx;

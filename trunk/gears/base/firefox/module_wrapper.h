@@ -79,6 +79,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   virtual void Ref() {
     assert(JSVAL_IS_GCTHING(token_));
     if (ref_count_.Ref()) {
+      JsRequest request(js_context_);
       JS_AddRoot(js_context_, &token_);
     }
   }
@@ -86,6 +87,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   virtual void Unref() {
     assert(JSVAL_IS_GCTHING(token_));
     if (ref_count_.Unref()) {
+      JsRequest request(js_context_);
       JS_RemoveRoot(js_context_, &token_);
     }
   }

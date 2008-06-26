@@ -44,12 +44,14 @@ std::string16 EscapeMessage(const std::string16 &message) {
 void ThrowGlobalErrorImpl(JsRunnerInterface *js_runner,
                           const std::string16 &message) {
 #if BROWSER_FF3
+  JS_BeginRequest(js_runner->GetContext());
   JS_SetPendingException(
       js_runner->GetContext(),
       STRING_TO_JSVAL(JS_NewUCStringCopyZ(
           js_runner->GetContext(),
           reinterpret_cast<const jschar *>(message.c_str()))));
   JS_ReportPendingException(js_runner->GetContext());
+  JS_EndRequest(js_runner->GetContext());
 #elif BROWSER_NPAPI
   std::string16 string_to_eval =
       std::string16(STRING16(L"window.onerror('")) +

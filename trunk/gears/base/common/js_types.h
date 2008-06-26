@@ -338,13 +338,17 @@ class JsRootedToken {
   JsRootedToken(JsContextPtr context, JsToken token)
       : context_(context), token_(token) {
     if (JSVAL_IS_GCTHING(token_)) {
+      JS_BeginRequest(context_);
       JS_AddRoot(context_, &token_);
+      JS_EndRequest(context_);
     }
   }
 
   ~JsRootedToken() {
     if (JSVAL_IS_GCTHING(token_)) {
+      JS_BeginRequest(context_);
       JS_RemoveRoot(context_, &token_);
+      JS_EndRequest(context_);
     }
   }
 

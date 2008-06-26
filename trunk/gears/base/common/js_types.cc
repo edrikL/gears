@@ -254,8 +254,10 @@ JsArray::JsArray() : js_context_(NULL), array_(0) {
 }
 
 JsArray::~JsArray() {
-  if (array_ && JSVAL_IS_GCTHING(array_))
+  if (array_ && JSVAL_IS_GCTHING(array_)) {
+    JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &array_);
+  }
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
@@ -265,12 +267,16 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
     return false;
   }
 
-  if (array_ && JSVAL_IS_GCTHING(array_))
+  if (array_ && JSVAL_IS_GCTHING(array_)) {
+    JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &array_);
+  }
   array_ = value;
   js_context_ = context;
-  if (JSVAL_IS_GCTHING(array_))
+  if (JSVAL_IS_GCTHING(array_)) {
+    JsRequest request(js_context_);
     JS_AddRoot(js_context_, &array_);
+  }
   return true;
 }
 
@@ -278,6 +284,7 @@ bool JsArray::GetLength(int *length) const {
   // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
+  JsRequest request(js_context_);
   jsuint array_length;
   if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array_), &array_length) !=
       JS_TRUE) {
@@ -293,6 +300,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 
   // JS_GetElement sets the token to JS_VOID if we request a non-existent index.
   // This is the correct jsval for JSPARAM_UNDEFINED.
+  JsRequest request(js_context_);
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
                        index, out) == JS_TRUE;
 }
@@ -301,6 +309,7 @@ bool JsArray::SetElement(int index, const JsToken &value) {
   // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
+  JsRequest request(js_context_);
   return JS_DefineElement(js_context_,
                           JSVAL_TO_OBJECT(array_),
                           index, value,
@@ -597,8 +606,10 @@ JsObject::JsObject() : js_context_(NULL), js_object_(0) {
 }
 
 JsObject::~JsObject() {
-  if (js_object_ && JSVAL_IS_GCTHING(js_object_))
+  if (js_object_ && JSVAL_IS_GCTHING(js_object_)) {
+    JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &js_object_);
+  }
 }
 
 bool JsObject::SetObject(JsToken value, JsContextPtr context) {
@@ -607,8 +618,10 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
       JS_RemoveRoot(js_context_, &js_object_);
     js_object_ = value;
     js_context_ = context;
-    if (JSVAL_IS_GCTHING(js_object_))
+    if (JSVAL_IS_GCTHING(js_object_)) {
+      JsRequest request(js_context_);
       JS_AddRoot(js_context_, &js_object_);
+    }
     return true;
   }
 
@@ -619,6 +632,7 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
+  JsRequest request(js_context_);
   JSIdArray *ids = JS_Enumerate(js_context_, JSVAL_TO_OBJECT(js_object_));
   for (int i = 0; i < ids->length; i++) {
     jsval property_key;
@@ -641,6 +655,7 @@ bool JsObject::GetProperty(const std::string16 &name,
   // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
+  JsRequest request(js_context_);
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
                           reinterpret_cast<const jschar*>(name.c_str()),
                           name.length(), out) == JS_TRUE;
@@ -656,6 +671,7 @@ bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
     return false;
   }
 
+  JsRequest request(js_context_);
   JSBool result = JS_DefineProperty(js_context_,
                                     JSVAL_TO_OBJECT(js_object_),
                                     name_utf8.c_str(), value,
@@ -1140,6 +1156,7 @@ bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out) {
 
 bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out) {
   JSBool bool_value;
+  JsRequest request(cx);
   if (!JS_ValueToBoolean(cx, t, &bool_value)) { return false; }
   *out = (bool_value == JS_TRUE);
   return true;
@@ -1171,6 +1188,7 @@ bool JsTokenToInt_Coerce(JsToken t, JsContextPtr cx, int *out) {
 
 bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
   jsdouble dbl_value;
+  JsRequest request(cx);
   if (!JS_ValueToNumber(cx, t, &dbl_value)) { return false; }
   // Edge-case: NaN should return failure
   if (isnan(dbl_value)) { return false; }
@@ -1179,6 +1197,7 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
 }
 
 bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
+  JsRequest request(cx);
   JSString *js_str = JS_ValueToString(cx, t);
   if (!js_str) { return false; }
   out->assign(reinterpret_cast<const char16 *>(JS_GetStringChars(js_str)),
@@ -1246,6 +1265,7 @@ bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
 // Similarly for FooToJsToken in general, for Foo in {Bool, Int, Double}.
 bool StringToJsToken(JsContextPtr context, const char16 *value,
                      JsScopedToken *out) {
+  JsRequest request(context);
   JSString *jstr = JS_NewUCStringCopyZ(context,
                                        reinterpret_cast<const jschar *>(value));
   if (jstr) {
@@ -1257,6 +1277,7 @@ bool StringToJsToken(JsContextPtr context, const char16 *value,
 }
 
 bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
+  JsRequest request(context);
   jsdouble* dp = JS_NewDouble(context, value);
   if (!dp)
     return false;
@@ -1876,6 +1897,7 @@ void ScopedNPVariant::Release() {
 
 bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token) {
+  JsRequest request(context);
   switch (param.type) {
     case JSPARAM_BOOL: {
       const bool *value = static_cast<const bool *>(param.value_ptr);
@@ -2498,7 +2520,9 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
   // First set the exception to any value, in case we fail to create the full
   // exception object below.  Setting any jsval will satisfy the JS engine,
   // we just won't get e.message.  We use INT_TO_JSVAL(1) here for simplicity.
+  JS_BeginRequest(cx);
   JS_SetPendingException(cx, INT_TO_JSVAL(1));
+  JS_EndRequest(cx);
 
   // Create a JS Error object with a '.message' property. The other fields
   // like "lineNumber" and "fileName" are filled in automatically by Firefox
@@ -2513,7 +2537,9 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
+  JS_BeginRequest(cx);
   JS_SetPendingException(cx, error_object->token());
+  JS_EndRequest(cx);
 
   return retval;
 }
@@ -2529,7 +2555,9 @@ bool RootJsToken(JsContextPtr cx, JsToken t) {
   // RootJsToken allocates a jsval copy and uses _that_ pointer for the root.
   assert(JSVAL_IS_GCTHING(t));
   jsval *root_container = new jsval(t);
+  JS_BeginRequest(cx);
   JSBool js_ok = JS_AddRoot(cx, root_container);
+  JS_EndRequest(cx);
   return js_ok ? true : false;
 }
 
