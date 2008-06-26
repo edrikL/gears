@@ -28,16 +28,25 @@
 #ifndef GEARS_MEDIA_AUDIO_RECORDER_H__
 #define GEARS_MEDIA_AUDIO_RECORDER_H__
 
+#include <vector>
+
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/string16.h"
 #include "gears/media/audio_recorder_constants.h"
+#include "gears/media/pa_audio_recorder.h"
+
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsAudioRecorder
     : public ModuleImplBaseClassVirtual {
  public:
   GearsAudioRecorder();
   ~GearsAudioRecorder();
+
+  // TODO(vamsikrishna): Instead of making it a friend, make it clear what
+  // exactly a PaAudioRecorder needs.
+  friend class PaAudioRecorder;
 
   // ---- ERROR STATE ----
   // readonly attribute AudioRecorderError error;
@@ -56,29 +65,25 @@ class GearsAudioRecorder
   // readonly attribute float duration;
   void GetDuration(JsCallContext *context);
 
-  // const unsinged short MONO = 1;
-  DEFINE_CONSTANT(MONO, int, JSPARAM_INT,
-    AudioRecorderConstants::CHANNEL_TYPE_MONO);
+  // attribute int numberOfChannels;
+  void GetNumberOfChannels(JsCallContext *context);
+  void SetNumberOfChannels(JsCallContext *context);
 
-  // const unsinged short STEREO = 2;
-  DEFINE_CONSTANT(STEREO, int, JSPARAM_INT,
-    AudioRecorderConstants::CHANNEL_TYPE_STEREO);
-
-  // attribute short channelType;
-  void GetChannelType(JsCallContext *context);
-  void SetChannelType(JsCallContext *context);
-
-  // attribute int sampleRate;
+  // attribute float sampleRate;
   void GetSampleRate(JsCallContext *context);
   void SetSampleRate(JsCallContext *context);
 
-  // attribute int bitsPerSample;
-  void GetBitsPerSample(JsCallContext *context);
-  void SetBitsPerSample(JsCallContext *context);
+  // const unsigned short S16_LE = 0;
+  DEFINE_CONSTANT(S16_LE, int, JSPARAM_INT,
+    AudioRecorderConstants::SAMPLE_FORMAT_S16_LE);
 
-  // attribute string format;
-  void GetFormat(JsCallContext *context);
-  void SetFormat(JsCallContext *context);
+  // attribute short sampleFormat;
+  void GetSampleFormat(JsCallContext *context);
+  void SetSampleFormat(JsCallContext *context);
+
+  // attribute string type;
+  void GetType(JsCallContext *context);
+  void SetType(JsCallContext *context);
 
   // ---- METHODS ----
   void Record(JsCallContext *context);
@@ -136,14 +141,17 @@ class GearsAudioRecorder
   int activity_level_;
   double duration_;
 
-  int channel_type_;
-  int sample_rate_;
-  int bits_per_sample_;
-  std::string16 format_;
+  int number_of_channels_;
+  double sample_rate_;
+  int sample_format_;
+  std::string16 type_;
 
   double volume_;
   bool muted_;
   int silence_level_;
+
+  std::vector<uint8> buffer_;
+  scoped_ptr<PaAudioRecorder> p_pa_audio_recorder_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsAudioRecorder);
 };

@@ -34,9 +34,8 @@ namespace AudioRecorderConstants {
   const int AUDIO_RECORDER_ERR_ENCODE = 1;
   const int AUDIO_RECORDER_ERR_DEVICE = 2;
 
-  // channel type
-  const int CHANNEL_TYPE_MONO = 1;
-  const int CHANNEL_TYPE_STEREO = 2;
+  // sample format
+  const int SAMPLE_FORMAT_S16_LE = 0;
 };
 
 #endif  // GEARS_MEDIA_AUDIO_RECORDER_CONSTANTS_H__
