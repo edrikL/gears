@@ -129,6 +129,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/localserver/common/resource_store.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+bool TestAllMutex(std::string16 *error);  // from mutex_test.cc
 #if BROWSER_FF
 // from blob_input_stream_ff_test.cc
 bool TestBlobInputStreamFf(std::string16 *error);
@@ -286,6 +287,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   std::string16 error;
   bool ok = true;
   BrowsingContext *browsing_context = EnvPageBrowsingContext();
+  ok &= TestAllMutex(&error);
   ok &= TestByteStore(&error);
   ok &= TestStringUtils(&error);
   ok &= TestFileUtils(&error);
@@ -340,7 +342,6 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestJsonEscaping(&error);
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
-  ok &= TestTimedCallbackAll(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.

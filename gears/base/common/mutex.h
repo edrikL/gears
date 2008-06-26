@@ -28,9 +28,16 @@
 
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/common.h"
+#if defined(WIN32) || defined(WINCE)
+#include "gears/base/common/scoped_refptr.h"
+#endif  // defined(WIN32) || defined(WINCE)
 
 class Condition;
 
+// TODO(bgarcia): Replace this function with something more appropriate.
+//                Hopefully Thread::Yield() from gears/base/common/thread.h,
+//                once it is created.
+extern void ThreadYield();
 
 // A Mutex is a non-reentrant (aka non-recursive) mutex.  At most
 // one thread T may hold a mutex at a given time.
@@ -68,6 +75,7 @@ class Mutex {
  private:
   // Implementation for Await and AwaitWithTimeout.
   bool AwaitImpl(const Condition &cond, int64 end_time);
+  friend class CondVar;
 #ifdef DEBUG
   bool is_locked_;
 #endif // DEBUG
@@ -175,5 +183,68 @@ inline Condition::Condition(const T *object, bool (T::*method)() const) :
   InternalMethodCallerType caller = &ConditionMethodCaller<T>;
   this->function_ = reinterpret_cast<InternalFunctionType>(caller);
 }
+
+// Implements a subset of the Google 'CondVar' class.
+//
+// The Mutex::Await() implementation does a busy-wait, consuming CPU resources
+// until the condition is true.  This is fine for conditions that aren't
+// expected to take long to be satisfied, but for more generic cases, use
+// CondVar instead.
+//
+// Usage for a thread waiting for some condition C protected by mutex mu:
+//       mu.Lock();
+//       while (!C) { cv->Wait(&mu); }        // releases and reacquires mu
+//       //  C holds; process data
+//       mu.Unlock();
+//
+// Usage to wake T is:
+//       mu.Lock();
+//      // process data, possibly establishing C
+//      if (C) { cv->Signal(); }
+//      mu.Unlock();
+// If C may be useful to more than one waiter, use SignalAll()
+// instead of Signal().
+//
+class CondVar {
+ public:
+  CondVar();
+  ~CondVar();
+
+  // Atomically release *mutex and block on this condition variable.
+  // The thread unblocks, reacquires the *mutex and returns if after blocking,
+  // any of:
+  //  - this condition variable is signalled with SignalAll(), or
+  //  - this condition variable is signalled in any manner and this thread
+  //    was chosen to be awakened.
+  //  - this call was interrupted by a signal.
+  void Wait(Mutex *mutex);
+
+  // Atomically release *mutex and block on this condition variable, with
+  // a timeout.
+  // The thread unblocks, reacquires the *mutex and returns if after blocking,
+  // any of:
+  //  - this condition variable is signalled with SignalAll(), or
+  //  - "milliseconds" milliseconds have elapsed, or
+  //  - this condition variable is signalled in any manner and this thread
+  //    was the most recently blocked thread that has not yet woken.
+  //  - this call was interrupted by a signal.
+  // Returns false if signalled, true if timed out.
+  // If both conditions are true, it can return either true or false.
+  bool WaitWithTimeout(Mutex *mutex, int milliseconds);
+
+  // Signal this CondVar to awaken all waiters.
+  // It is more efficient (but not necessary) to call SignalAll after
+  // unlocking the mutex.
+  void SignalAll();
+
+ private:
+#if defined(WIN32) || defined(WINCE)
+  class Event;  // This is a win32 event with reference counting added.
+  Mutex current_event_mutex_;
+  scoped_refptr<Event> current_event_;
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
+  pthread_cond_t cond_;
+#endif
+};
 
 #endif // GEARS_BASE_COMMON_MUTEX_H__

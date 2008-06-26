@@ -808,6 +808,9 @@ $(BROWSER)_CPPSRCS	+= \
 		message_service.cc \
 		message_service_test.cc \
 		mutex.cc \
+		mutex_posix.cc \
+		mutex_test.cc \
+		mutex_win32.cc \
 		name_value_table.cc \
 		name_value_table_test.cc \
 		paths.cc \
@@ -1224,6 +1227,8 @@ NOTIFIER_CORE	+= \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_win32.cc \
 		mutex.cc \
+		mutex_posix.cc \
+		mutex_win32.cc \
 		notification_manager.cc \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
