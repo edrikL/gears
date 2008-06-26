@@ -63,7 +63,6 @@
 
 #elif BROWSER_IE
 #elif BROWSER_NPAPI
-#elif BROWSER_SAFARI
 #endif  // BROWSER_xyz
 
 class ModuleWrapperBaseClass;
@@ -173,8 +172,6 @@ class ModuleImplBaseClass {
   bool InitBaseFromDOM(IUnknown *site);
 #elif BROWSER_NPAPI
   bool InitBaseFromDOM(JsContextPtr instance);
-#elif BROWSER_SAFARI
-  bool InitBaseFromDOM(const char *url_str);
 #endif
   bool InitBaseFromSibling(const ModuleImplBaseClass *other);
   bool InitBaseManually(ModuleEnvironment *source_module_environment);

@@ -39,8 +39,6 @@
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
-#elif BROWSER_SAFARI
-#include "gears/base/safari/browser_utils.h"
 #endif
 
 bool ModuleImplBaseClass::InitBaseFromSibling(
@@ -56,8 +54,6 @@ bool ModuleImplBaseClass::InitBaseFromDOM() {
 bool ModuleImplBaseClass::InitBaseFromDOM(IUnknown *site) {
 #elif BROWSER_NPAPI
 bool ModuleImplBaseClass::InitBaseFromDOM(JsContextPtr instance) {
-#elif BROWSER_SAFARI
-bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
 #endif
   bool is_worker = false;
   SecurityOrigin security_origin;
@@ -87,10 +83,6 @@ bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
   return succeeded && InitBaseManually(new ModuleEnvironment(
       security_origin, instance, is_worker,
       NewDocumentJsRunner(NULL, instance), browsing_context.get()));
-#elif BROWSER_SAFARI
-  bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
-  return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, is_worker, NULL, browsing_context.get()));
 #endif
 }
 
