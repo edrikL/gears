@@ -110,6 +110,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/common/timed_call_test.h"
 #ifdef WINCE
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/wince_compatibility.h"
@@ -339,6 +340,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestJsonEscaping(&error);
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
+  ok &= TestTimedCallbackAll(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
