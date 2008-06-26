@@ -171,13 +171,15 @@ class PlatformTimer {
     // USER_TIMER_MAXIMUM is approximately 24.8 days.  If we have a timer
     // that should go off after longer than this period, we will wake up after
     // the 24 days and just rearm the timer again.
+    // WinCE doesn't define USER_TIMER_MAXIMUM and USER_TIMER_MINIMUM,
+    // so we just use magic numbers.
 
-    if (timeout > USER_TIMER_MAXIMUM)
-      timeout = USER_TIMER_MAXIMUM;
+    if (timeout > 0x7FFFFFFF)
+      timeout = 0x7FFFFFFF;
 
     // Avoid negative timer delays doing weird things
-    if (timeout < USER_TIMER_MINIMUM)
-      timeout = USER_TIMER_MINIMUM;
+    if (timeout < 0x0000000A)
+      timeout = 0x0000000A;
 
     timer_id_ = SetTimer(NULL, timer_id_, (UINT)timeout, &OnTimer);
 
