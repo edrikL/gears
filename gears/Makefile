@@ -1896,6 +1896,7 @@ $(BROWSER)_CPPSRCS += \
 		audio.cc \
 		audio_recorder.cc \
 		media.cc \
+		pa_audio_recorder.cc \
 		time_ranges.cc \
 		$(NULL)
 

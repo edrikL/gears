@@ -23,12 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/media/audio_recorder.h"
+
 #include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
-#include "gears/media/audio_recorder.h"
+#include "gears/blob/blob.h"
+#include "gears/blob/buffer_blob.h"
 #include "gears/media/audio_recorder_constants.h"
+#include "gears/media/pa_audio_recorder.h"
 
 DECLARE_GEARS_WRAPPER(GearsAudioRecorder);
 
@@ -42,16 +46,16 @@ void Dispatcher<GearsAudioRecorder>::Init() {
                    NULL);
   RegisterProperty("duration", &GearsAudioRecorder::GetDuration, NULL);
 
-  REGISTER_CONSTANT(MONO, GearsAudioRecorder);
-  REGISTER_CONSTANT(STEREO, GearsAudioRecorder);
-  RegisterProperty("channelType", &GearsAudioRecorder::GetChannelType,
-                   &GearsAudioRecorder::SetChannelType);
+  RegisterProperty("numberOfChannels",
+                   &GearsAudioRecorder::GetNumberOfChannels,
+                   &GearsAudioRecorder::SetNumberOfChannels);
   RegisterProperty("sampleRate", &GearsAudioRecorder::GetSampleRate,
                    &GearsAudioRecorder::SetSampleRate);
-  RegisterProperty("bitsPerSample", &GearsAudioRecorder::GetBitsPerSample,
-                   &GearsAudioRecorder::SetBitsPerSample);
-  RegisterProperty("format", &GearsAudioRecorder::GetFormat,
-                   &GearsAudioRecorder::SetFormat);
+  REGISTER_CONSTANT(S16_LE, GearsAudioRecorder);
+  RegisterProperty("sampleFormat", &GearsAudioRecorder::GetSampleFormat,
+                   &GearsAudioRecorder::SetSampleFormat);
+  RegisterProperty("type", &GearsAudioRecorder::GetType,
+                   &GearsAudioRecorder::SetType);
 
   RegisterMethod("record", &GearsAudioRecorder::Record);
   RegisterMethod("pause", &GearsAudioRecorder::Pause);
@@ -94,20 +98,22 @@ GearsAudioRecorder::GearsAudioRecorder()
       activity_level_(0),
       duration_(0.0),
       // TODO(vamsikrishna): Set with the default value, once spec is done.
-      format_(STRING16(L"")),
+      type_(STRING16(L"")),
       volume_(0.5),
       muted_(false),
       silence_level_(0) {
   // TODO(vamsikrishna): Initialize based on device.
-  channel_type_ = AudioRecorderConstants::CHANNEL_TYPE_MONO;
+  number_of_channels_ = 1;
   sample_rate_ = 16000;
-  bits_per_sample_ = 16;
+  sample_format_ = AudioRecorderConstants::SAMPLE_FORMAT_S16_LE;
 
-  // TODO(vamsikrishna): Implement me
+  p_pa_audio_recorder_.reset(new PaAudioRecorder(this));
 }
 
 GearsAudioRecorder::~GearsAudioRecorder() {
-  // TODO(vamsikrishna): Implement me
+  if (recording_) {
+    p_pa_audio_recorder_->Terminate();
+  }
 }
 
 void GearsAudioRecorder::GetError(JsCallContext *context) {
@@ -145,11 +151,11 @@ void GearsAudioRecorder::GetDuration(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_DOUBLE, &duration_);
 }
 
-void GearsAudioRecorder::GetChannelType(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_INT, &channel_type_);
+void GearsAudioRecorder::GetNumberOfChannels(JsCallContext *context) {
+  context->SetReturnValue(JSPARAM_INT, &number_of_channels_);
 }
 
-void GearsAudioRecorder::SetChannelType(JsCallContext *context) {
+void GearsAudioRecorder::SetNumberOfChannels(JsCallContext *context) {
   // TODO(vamsikrishna): Implement me
 }
 
@@ -161,36 +167,75 @@ void GearsAudioRecorder::SetSampleRate(JsCallContext *context) {
   // TODO(vamsikrishna): Implement me
 }
 
-void GearsAudioRecorder::GetBitsPerSample(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_INT, &bits_per_sample_);
+void GearsAudioRecorder::GetSampleFormat(JsCallContext *context) {
+  context->SetReturnValue(JSPARAM_INT, &sample_format_);
 }
 
-void GearsAudioRecorder::SetBitsPerSample(JsCallContext *context) {
+void GearsAudioRecorder::SetSampleFormat(JsCallContext *context) {
   // TODO(vamsikrishna): Implement me
 }
 
-void GearsAudioRecorder::GetFormat(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &format_);
+void GearsAudioRecorder::GetType(JsCallContext *context) {
+  context->SetReturnValue(JSPARAM_STRING16, &type_);
 }
 
-void GearsAudioRecorder::SetFormat(JsCallContext *context) {
+void GearsAudioRecorder::SetType(JsCallContext *context) {
   // TODO(vamsikrishna): Implement me
 }
 
 void GearsAudioRecorder::Record(JsCallContext *context) {
-  // TODO(vamsikrishna): Implement me
+  if (recording_) {
+    p_pa_audio_recorder_->Terminate();
+  }
+
+  // TODO(vamsikrishna): Check that recording can be done according to the
+  // given recording state (channelType,...) else set error to
+  // AUDIO_RECORDER_ERR_DEVICE.
+
+  buffer_.clear();
+  p_pa_audio_recorder_->Init();
+
+  recording_ = true;
+  paused_ = false;
+  duration_ = 0.0;
+  muted_ = false;
+
+  // TODO(vamsikrishna): Fire record event, start firing progress event periodically.
+
+  p_pa_audio_recorder_->StartCapture();
 }
 
 void GearsAudioRecorder::Pause(JsCallContext *context) {
-  // TODO(vamsikrishna): Implement me
+  if (!recording_ || paused_) return;
+
+  paused_ = true;
+
+  // TODO(vamsikrishna): Fire pause event.
+
+  p_pa_audio_recorder_->StopCapture();
 }
 
 void GearsAudioRecorder::UnPause(JsCallContext *context)  {
-  // TODO(vamsikrishna): Implement me
+  if (!recording_ || !paused_) return;
+
+  paused_ = false;
+
+  // TODO(vamsikrishna): Fire unpause event.
+
+  p_pa_audio_recorder_->StartCapture();
+
 }
 
 void GearsAudioRecorder::Stop(JsCallContext *context) {
-  // TODO(vamsikrishna): Implement me
+  if (!recording_) return;
+
+  p_pa_audio_recorder_->StopCapture();
+
+  recording_ = false;
+
+  // TODO(vamsikrishna): Fire ended event.
+
+  p_pa_audio_recorder_->Terminate();
 }
 
 void GearsAudioRecorder::GetVolume(JsCallContext *context) {
@@ -206,7 +251,22 @@ void GearsAudioRecorder::GetMuted(JsCallContext *context) {
 }
 
 void GearsAudioRecorder::SetMuted(JsCallContext *context) {
-  // TODO(vamsikrishna): Implement me
+  bool value;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+
+  if (!recording_) return;
+
+  if (muted_ == value) return;
+
+  muted_ = value;
+
+  // TODO(vamsikrishna): Fire volumechange event.
 }
 
 void GearsAudioRecorder::GetSilenceLevel(JsCallContext *context) {
@@ -226,7 +286,20 @@ void GearsAudioRecorder::RemoveCueRanges(JsCallContext *context) {
 }
 
 void GearsAudioRecorder::GetBlob(JsCallContext *context) {
-  // TODO(vamsikrishna): Implement me
+  // TODO(vamsikrishna): Return the blob based on the 'type' attribute.
+  if (recording_) {
+    context->SetReturnValue(JSPARAM_NULL, 0);
+    return;
+  }
+
+  scoped_refptr<BufferBlob> blob(NULL);
+  scoped_refptr<GearsBlob> response_blob;
+
+  blob.reset(new BufferBlob(&buffer_));
+  CreateModule<GearsBlob>(GetJsRunner(), &response_blob);
+  response_blob->Reset(blob.get());
+
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob.get());
 }
 
 void GearsAudioRecorder::GetEventRecord(JsCallContext *context) {
@@ -284,4 +357,3 @@ void GearsAudioRecorder::GetEventEnded(JsCallContext *context) {
 void GearsAudioRecorder::SetEventEnded(JsCallContext *context) {
   // TODO(vamsikrishna): Implement me
 }
-

@@ -43,3 +43,96 @@ function testDefaultAttributeValues() {
   }
 }
 
+// TODO(vamsikrishna): Enable the below tests after figuring out how to
+// mock the audio recording device. 
+
+/*function testBasicRecording() {
+  if (isOfficial) {
+    // Audio API is not available on official builds yet.
+  } else {
+    var recorder = google.gears.factory.create('beta.audiorecorder');
+    
+    assertEqual(false, recorder.recording);
+    recorder.record();
+    assertEqual(true, recorder.recording);
+    recorder.stop();
+    assertEqual(false, recorder.recording);
+    // TODO(vamsikrishna): Compare the blob from the recorder, once the
+    // getBlob() and a mock recorder are implemented.
+  }
+}
+
+function testPauseWhileNotRecording() {
+  if (isOfficial) {
+    // Audio API is not available on official builds yet.
+  } else {
+    var recorder = google.gears.factory.create('beta.audiorecorder');
+    
+    var old_paused_value = recorder.paused;
+    recorder.pause();
+    assertEqual(old_paused_value, recorder.paused);
+    // TODO(vamsikrishna): Assert that the 'pause' event is not raised. 
+  }
+}
+
+function testPauseWhileRecording() {
+  if (isOfficial) {
+    // Audio API is not available on official builds yet.
+  } else {
+    var recorder = google.gears.factory.create('beta.audiorecorder');
+    
+    recorder.record();
+    recorder.pause();
+    assertEqual(true, recorder.recording);
+    assertEqual(true, recorder.paused);
+    // TODO(vamsikrishna): Assert that the 'pause' event is raised.
+    recorder.unpause();
+    assertEqual(true, recorder.recording);
+    assertEqual(false, recorder.paused);
+    // TODO(vamsikrishna): Assert that the 'unpause' event is raised.
+    recorder.stop();
+  }
+}
+
+// TODO(vamsikrishna): Add a test that tests that calling pause repeatedly
+// is equivalent calling it once (the 'pause' event should not be raised
+// repeatedly).
+
+function testMuteWhileNotRecording() {
+  if (isOfficial) {
+    // Audio API is not available on official builds yet.
+  } else {
+    var recorder = google.gears.factory.create('beta.audiorecorder');
+    
+    var old_muted_value = recorder.muted;
+    recorder.muted = true;
+    assertEqual(old_muted_value, recorder.muted);
+    // TODO(vamsikrishna): Assert that the 'volumechange' event is not raised.
+  }
+}
+
+function testMuteWhileRecording() {
+  if (isOfficial) {
+    // Audio API is not available on official builds yet.
+  } else {
+    var recorder = google.gears.factory.create('beta.audiorecorder');
+
+    recorder.record();
+    recorder.muted = true;
+    assertEqual(true, recorder.recording);
+    assertEqual(true, recorder.muted);
+    // TODO(vamsikrishna): Assert that the 'volumechange' event is raised.
+    recorder.muted = false;
+    assertEqual(true, recorder.recording);
+    assertEqual(false, recorder.muted);
+    // TODO(vamsikrishna): Assert that the 'volumechange' event is raised.
+    recorder.stop();
+  }
+}
+
+// TODO(vamsikrishna): Add a test that tests that setting muted repeatedly
+// is equivalent to setting it once (the 'volumechange' event should not be raised
+// repeatedly).
+
+// TODO(vamsikrishna): Add tests that test the pause and mute functionalities
+// when used together.*/
