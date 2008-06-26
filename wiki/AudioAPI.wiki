@@ -549,7 +549,7 @@ class NetworkMediaRequest : public AsyncTask {
   // define a private constructor and destructor (for the AsyncTask you need to call 'DeleteWhenDone' on cleanup);
 
   // payload that holds the network data (This is also referenced by media_data_).
-  WebCacheDB::PayloadInfo* payload;
+ scoped_ptr<WebCacheDB::PayloadInfo> payload;
 
   // shared pointer to media data.
   scoped_refptr<MediaData> media_data_;
@@ -703,7 +703,7 @@ private:
   * On construction, `AddRef()`s the passed `media_data_`. (via `scoped_refptr<MediaData>.reset()`).
   * The `Run()` method loads the data over the network from the `url_`. `media_data_` is made to 'point to' `payload.data()`. Note that, NO LOCK is acquired when data is streamed into media_data_. 
   * The `NetworkMediaRequest` class includes a listener that defines the `DataAvailable` method. This is invoked periodically by the browser's network layer modules. This method, acquires the `media_data_lock_` and sets `buffer_size_` to the size of the currently available data on the `payload_`.
-  * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class acquires the `media_data_lock_` and clears the `media_buffer_` while also deleting `payload_`. Locking here is essential because the player thread might be reading `media_data_` at that same moment.
+  * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class acquires the `media_data_lock_` and clears the `media_buffer_` while also implicitly deleting `payload_` (this being a scoped_ptr). `buffer_size_' becomes 0. Locking here is essential because the player thread might be reading `media_data_` at that same moment.
 
 ===Player thread:===
 
