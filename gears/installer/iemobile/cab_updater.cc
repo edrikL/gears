@@ -51,7 +51,7 @@ const char16* kUpgradeUrl = reinterpret_cast<const char16*>(  // STRING16()
 // The topic for the message system.
 const char16* kTopic = STRING16(L"Cab Update Event");
 // The key for ThreadLocals.
-const std::string kThreadLocalKey("cabupdater");
+const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 // String constants for XML parsing
 // Query language
 const char16* kQueryLanguage = STRING16(L"XPath");

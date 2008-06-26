@@ -751,7 +751,7 @@ class JsThreadRecycler {
 
       // Discard our reference to the defunct worker.
       pooled_thread.wi_ = NULL;
-      ThreadLocals::ClearMap();
+      ThreadLocals::ClearEntries();
 
       // Don't reuse this if we've stopped, or if we don't have a runtime.
       if (!g_running_ || !pooled_thread.js_runtime_) {

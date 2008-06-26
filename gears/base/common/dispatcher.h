@@ -29,6 +29,7 @@
 #include <map>
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/thread_locals.h"
 
 class JsCallContext;
 
@@ -119,7 +120,7 @@ class Dispatcher : public DispatcherInterface {
     return GetThreadLocals().methods;
   }
 
-  static const std::string kThreadLocalsKey;
+  static const ThreadLocals::Slot kThreadLocalsKey;
 
   ImplClass *impl_;
 
@@ -130,7 +131,8 @@ class Dispatcher : public DispatcherInterface {
 #define DECLARE_DISPATCHER(ImplClass) \
 class ImplClass; \
 template <> \
-const std::string Dispatcher<ImplClass>::kThreadLocalsKey("base:" #ImplClass)
+const ThreadLocals::Slot Dispatcher<ImplClass>::kThreadLocalsKey = \
+    ThreadLocals::Alloc()
 
 // Boilerplate code for constants
 

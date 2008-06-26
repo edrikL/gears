@@ -33,6 +33,8 @@
 #include "gears/base/safari/scoped_cf.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+static const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
+
 // A concrete implementation for Safari.
 class SFThreadMessageQueue : public ThreadMessageQueue {
  public:
@@ -250,7 +252,6 @@ void SFThreadMessageQueue::InitThreadEndHook() {
   // OSes (linux), the destructor proc is called from a different thread,
   // and on others (windows), the destructor proc is called from the
   // terminating thread. 
-  const std::string kThreadLocalKey("base:ThreadMessageQueue.ThreadEndHook");
   if (!ThreadLocals::HasValue(kThreadLocalKey)) {
     ThreadId *id = new ThreadId(GetCurrentThreadId()); 
     ThreadLocals::SetValue(kThreadLocalKey, id, &ThreadEndHook);

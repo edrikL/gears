@@ -37,7 +37,7 @@
 extern std::string16 g_user_agent;  // Defined in base/npapi/npp_bindings.cc
 
 typedef std::stack<JsCallContext*> JsCallStack;
-static const std::string kJsCallStackKey("base:JsCallStack");
+const ThreadLocals::Slot kJsCallStackKey = ThreadLocals::Alloc();
 
 static void DeleteJsCallStack(void *context) {
   JsCallStack *call_stack = reinterpret_cast<JsCallStack*>(context);

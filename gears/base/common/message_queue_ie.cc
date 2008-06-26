@@ -36,7 +36,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 
-static const std::string kTlsKey("base:ThreadMessageQueue.TlsData");
+static const ThreadLocals::Slot kTlsKey = ThreadLocals::Alloc();
 class ThreadMessageWindow;
 
 // A concrete implementation that uses HWNDs and PostMessage. There is a
