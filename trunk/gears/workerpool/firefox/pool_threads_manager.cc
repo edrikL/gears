@@ -486,6 +486,10 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   JsRootedToken *alloc_js_retval = NULL;
   bool js_retval = false;
 
+  // At this point we are going to be handling the exception on this thread,
+  // so we clear the exception so that the JS engine is aware of this.
+  JS_ClearPendingException(wi->js_runner->GetContext());
+
   if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
                                     &alloc_js_retval)) {
     // Coerce the return value to bool. We typically don't coerce interfaces,
