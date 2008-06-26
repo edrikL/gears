@@ -31,6 +31,8 @@
 #include <assert.h>
 #include <atlsync.h>
 #include <windows.h>
+
+#include "gears/base/common/common.h"
 #if defined(WINCE)
 #include "gears/base/common/wince_compatibility.h"
 #endif
@@ -55,7 +57,7 @@ bool Thread::ThreadInternal::Start(Thread *thread) {
   if (handle_ != 0) {
     return true;
   } else {
-    LOG16((L"Failed to start thread: %s\n", GetLastErrorString().c_str()));
+    LOG(("Failed to start thread: 0x%08x\n", GetLastError()));
     handle_ = 0;
     return false;
   }
@@ -67,10 +69,10 @@ void Thread::ThreadInternal::Join() {
   }
   // This will block until thread termination.
   if (WaitForSingleObject(handle_, INFINITE) != WAIT_OBJECT_0) {
-    LOG16((L"Failed to join child thread: %s\n", GetLastErrorString().c_str()));
+    LOG(("Failed to join child thread: 0x%08x\n", GetLastError()));
   }
   if (!CloseHandle(handle_)) {
-    LOG16((L"Failed to close handle: %s\n", GetLastErrorString().c_str()));
+    LOG(("Failed to close handle: 0x%08x\n", GetLastError()));
   }
   handle_ = 0;
 }
@@ -82,4 +84,4 @@ unsigned int __stdcall Thread::ThreadInternal::ThreadRun(void *data) {
   return 0;
 }
 
-#endif // defined(WIN32) || defined(WINCE)
+#endif  // defined(WIN32) || defined(WINCE)
