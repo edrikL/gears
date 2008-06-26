@@ -54,8 +54,6 @@
 #include "gears/base/safari/npapi_patches.h" 
 #endif
 
-extern const std::string kNPNFuncsKey;
-
 // We keep a map of active DocumentJsRunners so we can notify them when their
 // NP instance is destroyed.
 class DocumentJsRunner;

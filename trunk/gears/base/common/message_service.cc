@@ -32,10 +32,10 @@
 #include "gears/base/common/thread_locals.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+static const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
 typedef std::set<MessageObserverInterface*> ObserverSet;
 typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
-
 
 // When NotifyObservers is called, the message service needs to broadcast
 // the notification to observers on multiple threads. It uses the thread
@@ -315,7 +315,6 @@ void MessageService::InitThreadEndHook() {
   // Also, we only do this for the actual singleton instance of the
   // MessageService class as opposed to instances created for unit testing.
   if (GetInstance() == this) {
-    const std::string kThreadLocalKey("base:MessageService.ThreadEndHook");
     if (!ThreadLocals::HasValue(kThreadLocalKey)) {
       ThreadId *id = new ThreadId(message_queue_->GetCurrentThreadId());
       ThreadLocals::SetValue(kThreadLocalKey, id, &ThreadEndHook);

@@ -41,6 +41,8 @@
 #include "third_party/npapi/nphostapi.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+static const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
+
 class ThreadSpecificQueue;
 
 // A concrete (and naive) implementation that uses Event.
@@ -187,7 +189,6 @@ void AndroidThreadMessageQueue::HandleThreadMessage(int message_type,
   }
 }
 
-
 void AndroidThreadMessageQueue::InitThreadEndHook() {
   // We use a ThreadLocal to get called when an OS thread terminates
   // and use that opportunity to remove all observers that remain
@@ -200,7 +201,6 @@ void AndroidThreadMessageQueue::InitThreadEndHook() {
   //
   // Also, we only do this for the actual singleton instance of the
   // MessageService class as opposed to instances created for unit testing.
-  const std::string kThreadLocalKey("base:ThreadMessageQueue.ThreadEndHook");
   if (!ThreadLocals::HasValue(kThreadLocalKey)) {
     ThreadId *id = new ThreadId(GetCurrentThreadId());
     ThreadLocals::SetValue(kThreadLocalKey, id, &ThreadEndHook);

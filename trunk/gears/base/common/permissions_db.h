@@ -32,6 +32,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/shortcut_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/database2/database2_metadata.h"
 
 // TODO(cprince): Consider merging this with PermissionsDB::PermissionValue.
@@ -105,7 +106,7 @@ class PermissionsDB {
                             const SecurityOrigin &host_origin);
 
   // The key used to cache instances of PermissionsDB in ThreadLocals.
-  static const std::string kThreadLocalKey;
+  static const ThreadLocals::Slot kThreadLocalKey;
 
   // Adds (or overwrites) a shortcut for origin/name, with appUrl,
   // iconUrl, msg as data, and whether or not to allow creation of this

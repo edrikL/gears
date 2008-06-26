@@ -94,7 +94,7 @@ static GearsNPNetscapeFuncs g_browser_funcs;
 #else
 static NPNetscapeFuncs g_browser_funcs;
 #endif
-const std::string kNPNFuncsKey("base:NPNetscapeFuncs");
+const ThreadLocals::Slot kNPNFuncsKey = ThreadLocals::Alloc();
 
 NPError STDCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
 {

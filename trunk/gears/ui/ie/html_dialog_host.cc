@@ -71,7 +71,7 @@ while(0);
 }
 
 
-const char kThreadLocalKey[] = "htmldialoghost::instance";
+const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
 
 static LRESULT CALLBACK MessageProcStatic(int code, WPARAM wparam,

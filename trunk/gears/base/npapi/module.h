@@ -28,8 +28,9 @@
 
 #include "gears/base/common/string16.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/thread_locals.h"
 
-extern const std::string kNPNFuncsKey;
+extern const ThreadLocals::Slot kNPNFuncsKey;
 
 void AllowNPInit(bool allow);
 

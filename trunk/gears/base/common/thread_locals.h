@@ -42,24 +42,28 @@
 // Provides for per thread-local storage in a win32 DLL. This classes allocates
 // a single TLS index from the OS, and keeps multiple entries in a map
 // stored in that per-thread slot.
-//
-// Users of this class should follow the convention module:name to avoid 
-// conflicts in keys. For example, "base:permissions".
 //------------------------------------------------------------------------------
 class ThreadLocals {
  public:
+  // A TLS slot, used as the key.
+  typedef int Slot;
 
   // Destructor callback used to destroy a value when a thread terminates.
   typedef void (*DestructorCallback)(void*);
 
+  // Returns a new unique slot for storing a thread-local value.
+  // Note: always call this from a global initializer.  That way, we can find
+  // out immediately if we have exceeded our fixed number of slots.
+  static Slot Alloc();
+
   // Returns the thread-local value for the given key. If no value
   // has been stored with this key, returns NULL.
   // @key, the key of the value to retrieve
-  static void *GetValue(const std::string &key);
+  static void *GetValue(Slot key);
 
   // Returns whether or not a thread-local value exists for the given key.
   // @key, the key of the value to test
-  static bool HasValue(const std::string &key);
+  static bool HasValue(Slot key);
 
   // Sets the thead local value and its destructor for the given key. When the
   // thread terminates, the destructor (if non-null) will be called.  If a value
@@ -77,33 +81,33 @@ class ThreadLocals {
   //              same thread SetValue() was called from.  On thread
   //              death under Firefox on Linux and MacOS X, the
   //              destructor is called in the joining thread.
-  static void SetValue(const std::string &key,
+  static void SetValue(Slot key,
                        void *value,
                        DestructorCallback destructor);
 
   // Destroys the thread-local value for the given key and clears its entry.
   // @key, the key of value to destroy
-  static void DestroyValue(const std::string &key);
+  static void DestroyValue(Slot key);
 
  private:
   // We keep an entry of this type for each value in the per thread map.
   struct Entry {
-    Entry() : value_(NULL), destructor_(NULL) {}
+    Entry() : value_(NULL), destructor_(NULL), valid_(false) {}
     Entry(void *value, DestructorCallback destructor) :
-      value_(value), destructor_(destructor) {}
+      value_(value), destructor_(destructor), valid_(true) {}
     void *value_;
     DestructorCallback destructor_;
+    bool valid_;
   };
-  typedef std::map< std::string, Entry > Map;
 
   // Returns the map associated with the currently executing thread, optionally
   // creating the map if one does not already exist.
-  static Map *GetMap(bool createIfNeeded);
+  static Entry *GetEntries(bool createIfNeeded);
 
-  static void ClearMap();
-  static void DestroyMap(Map* map);
-  static void SetTlsMap(Map* map);
-  static Map* GetTlsMap();
+  static void ClearEntries();
+  static void DestroyEntries(Entry* map);
+  static void SetTlsEntries(Entry* map);
+  static Entry* GetTlsEntries();
 
 #if BROWSER_IE
   // We use one thread-local storage slot from the OS and keeps a map

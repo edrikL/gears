@@ -47,7 +47,7 @@
 // monotonically increasing in those cases.
 
 // Named according to style from base/common/thread_locals.h
-static const std::string kTimerSingletonKey = "base:common:timed_callback";
+static const ThreadLocals::Slot kTimerSingletonKey = ThreadLocals::Alloc();
 
 class PlatformTimer;
 

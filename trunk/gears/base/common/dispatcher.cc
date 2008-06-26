@@ -160,7 +160,7 @@ void Dispatcher<T>::DeleteThreadLocals(void *context) {
 // static
 template<class T>
 typename Dispatcher<T>::ThreadLocalVariables &Dispatcher<T>::GetThreadLocals() {
-  const std::string &key = kThreadLocalsKey;
+  const ThreadLocals::Slot &key = kThreadLocalsKey;
   ThreadLocalVariables *locals =
       reinterpret_cast<ThreadLocalVariables*>(ThreadLocals::GetValue(key));
   if (!locals) {

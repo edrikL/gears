@@ -40,7 +40,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-const std::string kThreadLocalKey("base:ThreadMessageQueue.ThreadEndHook");
+static const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
 struct MessageEvent;
 #if BROWSER_FF3

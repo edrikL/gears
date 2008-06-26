@@ -43,7 +43,7 @@ static const int kOldestUpgradeableVersion = 1;
 const char16 *PermissionsDB::kShortcutsChangedTopic = 
                   STRING16(L"base:permissions:shortcuts-changed");
 
-const std::string PermissionsDB::kThreadLocalKey("base:permissions");
+const ThreadLocals::Slot PermissionsDB::kThreadLocalKey = ThreadLocals::Alloc();
 
 
 PermissionsDB *PermissionsDB::GetDB() {

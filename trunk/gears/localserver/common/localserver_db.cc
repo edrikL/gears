@@ -64,7 +64,7 @@ const char *kPayloadsTable = "Payloads";
 const char *kResponseBodiesTable = "ResponseBodies";
 
 // Key used to store cache instances in ThreadLocals
-const std::string kThreadLocalKey("localserver:db");
+const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
 // TODO(michaeln): VS2005 for windows has redefined ARRAYSIZE in a
 // fashion that is not equivalent with the macro we use elsewhere.

@@ -26,6 +26,8 @@
 #include <assert.h>
 #include "gears/base/common/thread_locals.h"
 
+#include "gears/base/common/atomic_ops.h"
+
 // TODO(mpcomplete): implement these.
 #if BROWSER_NPAPI && defined(WIN32)
 #define BROWSER_IE 1
@@ -52,15 +54,29 @@ pthread_once_t ThreadLocals::tls_index_init_ = PTHREAD_ONCE_INIT;
 pthread_key_t ThreadLocals::tls_index_;
 #endif
 
+static const int kMaxSlots = 64;
+static ThreadLocals::Slot next_slot_;
+
+ThreadLocals::Slot ThreadLocals::Alloc() {
+  // Grab a new slot.
+  Slot slot = AtomicIncrement(&next_slot_, 1) - 1;
+  if (next_slot_ >= kMaxSlots) {
+    assert(!"Ran out of thread-local slots! Increase kMaxSlots.");
+    return -1;
+  }
+
+  return slot;
+}
+
 //------------------------------------------------------------------------------
 // GetValue
 //------------------------------------------------------------------------------
-void *ThreadLocals::GetValue(const std::string &key) {
-  Map *map = GetMap(false);
-  if (!map) return NULL;
-  Map::iterator found = map->find(key);
-  if (found != map->end())
-    return found->second.value_;
+void *ThreadLocals::GetValue(Slot key) {
+  if (key < 0 || key >= kMaxSlots) return NULL; 
+  Entry *entries = GetEntries(false);
+  if (!entries) return NULL;
+  if (entries[key].valid_)
+    return entries[key].value_;
   else
     return NULL;
 }
@@ -69,26 +85,26 @@ void *ThreadLocals::GetValue(const std::string &key) {
 //------------------------------------------------------------------------------
 // HasValue
 //------------------------------------------------------------------------------
-bool ThreadLocals::HasValue(const std::string &key) {
-  Map *map = GetMap(false);
-  if (map)
-    return (map->find(key) != map->end());
-  else
-    return false;
+bool ThreadLocals::HasValue(Slot key) {
+  if (key < 0 || key >= kMaxSlots) return false; 
+  Entry *entries = GetEntries(false);
+  if (!entries) return false;
+  return entries[key].valid_;
 }
 
 
 //------------------------------------------------------------------------------
 // SetValue
 //------------------------------------------------------------------------------
-void ThreadLocals::SetValue(const std::string &key,
+void ThreadLocals::SetValue(Slot key,
                             void *value,
                             DestructorCallback destructor) {
+  if (key < 0 || key >= kMaxSlots) return; 
   DestroyValue(key);  // get rid of any existing value for this key
-  Map *map = GetMap(true);
-  assert(map);
-  if (map) {
-    (*map)[key] = Entry(value, destructor);
+  Entry *entries = GetEntries(true);
+  assert(entries);
+  if (entries) {
+    entries[key] = Entry(value, destructor);
   }
 }
 
@@ -96,89 +112,88 @@ void ThreadLocals::SetValue(const std::string &key,
 //------------------------------------------------------------------------------
 // DestroyValue
 //------------------------------------------------------------------------------
-void ThreadLocals::DestroyValue(const std::string &key) {
-  Map *map = GetMap(false);
-  if (map) {
-    Map::iterator found = map->find(key);
-    if (found != map->end()) {
-      if (found->second.destructor_) {
-        found->second.destructor_(found->second.value_);
-      }
-      map->erase(found);
+void ThreadLocals::DestroyValue(Slot key) {
+  if (key < 0 || key >= kMaxSlots) return; 
+  Entry *entries = GetEntries(false);
+  if (entries && entries[key].valid_) {
+    if (entries[key].destructor_) {
+      entries[key].destructor_(entries[key].value_);
     }
+    entries[key].valid_ = false;
   }
 }
 
 
 //------------------------------------------------------------------------------
-// GetMap
+// GetEntries
 //------------------------------------------------------------------------------
-ThreadLocals::Map *ThreadLocals::GetMap(bool createIfNeeded) {
+ThreadLocals::Entry *ThreadLocals::GetEntries(bool createIfNeeded) {
 #if !BROWSER_SAFARI && !defined(ANDROID)
   assert(tls_index_ != kNoIndex);
 #endif
-  Map *map = GetTlsMap();
-  if (createIfNeeded && !map) {
-    map = new Map();
-    SetTlsMap(map);
+  Entry *entries = GetTlsEntries();
+  if (createIfNeeded && !entries) {
+    entries = new Entry[kMaxSlots];
+    SetTlsEntries(entries);
   }
-  return map;
+  return entries;
 }
 
 
 //------------------------------------------------------------------------------
-// ClearMap
+// ClearEntries
 //------------------------------------------------------------------------------
-void ThreadLocals::ClearMap() {
-  Map *map = GetTlsMap();
-  if (!map) return;
-  for (Map::iterator iter = map->begin(); iter != map->end(); iter++) {
-    if (iter->second.destructor_) {
-      iter->second.destructor_(iter->second.value_);
+void ThreadLocals::ClearEntries() {
+  Entry *entries = GetTlsEntries();
+  if (!entries) return;
+  for (int i = 0; i < kMaxSlots; ++i) {
+    if (entries[i].valid_ && entries[i].destructor_) {
+      entries[i].destructor_(entries[i].value_);
     }
+    entries[i].valid_ = false;
   }
-  map->clear();
 }
 
 //------------------------------------------------------------------------------
-// DestroyMap
+// DestroyEntries
 //------------------------------------------------------------------------------
-void ThreadLocals::DestroyMap(Map* map) {
-  for (Map::iterator iter = map->begin(); iter != map->end(); iter++) {
-    if (iter->second.destructor_) {
-      iter->second.destructor_(iter->second.value_);
+void ThreadLocals::DestroyEntries(Entry* entries) {
+  for (int i = 0; i < kMaxSlots; ++i) {
+    if (entries[i].valid_ && entries[i].destructor_) {
+      entries[i].destructor_(entries[i].value_);
     }
+    entries[i].valid_ = false;
   }
-  delete map;
+  delete entries;
 }
 
 
 //------------------------------------------------------------------------------
-// SetTlsMap
+// SetTlsEntries
 //------------------------------------------------------------------------------
-void ThreadLocals::SetTlsMap(Map* map) {
+void ThreadLocals::SetTlsEntries(Entry* entries) {
 #if BROWSER_IE
-  ::TlsSetValue(tls_index_, map);
+  ::TlsSetValue(tls_index_, entries);
 #elif BROWSER_FF
-  PR_SetThreadPrivate(tls_index_, map);
+  PR_SetThreadPrivate(tls_index_, entries);
 #elif BROWSER_SAFARI || defined(ANDROID)
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
-  pthread_setspecific(tls_index_, map);
+  pthread_setspecific(tls_index_, entries);
 #endif
 }
 
 
 //------------------------------------------------------------------------------
-// GetTlsMap
+// GetTlsEntries
 //------------------------------------------------------------------------------
-ThreadLocals::Map* ThreadLocals::GetTlsMap() {
+ThreadLocals::Entry* ThreadLocals::GetTlsEntries() {
 #if BROWSER_IE
-  return reinterpret_cast<Map*>(TlsGetValue(tls_index_));
+  return reinterpret_cast<Entry*>(TlsGetValue(tls_index_));
 #elif BROWSER_FF
-  return reinterpret_cast<Map*>(PR_GetThreadPrivate(tls_index_));
+  return reinterpret_cast<Entry*>(PR_GetThreadPrivate(tls_index_));
 #elif BROWSER_SAFARI || defined(ANDROID)
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
-  return reinterpret_cast<Map*>(pthread_getspecific(tls_index_));
+  return reinterpret_cast<Entry*>(pthread_getspecific(tls_index_));
 #endif
 }
 
@@ -212,14 +227,14 @@ void ThreadLocals::HandleProcessDetached() {
 //------------------------------------------------------------------------------
 // HandleThreadDetached
 // Destroys any values stored for the currently executing thread and deletes the
-// per thread map we've been using for this thread.
+// per thread entries we've been using for this thread.
 //------------------------------------------------------------------------------
 void ThreadLocals::HandleThreadDetached() {
   if (tls_index_ != kNoIndex) {
-    Map* map = GetTlsMap();
-    if (map) {
-      DestroyMap(map);
-      SetTlsMap(NULL);
+    Entry* entries = GetTlsEntries();
+    if (entries) {
+      DestroyEntries(entries);
+      SetTlsEntries(NULL);
     }
   }
 }
@@ -244,7 +259,7 @@ nsresult ThreadLocals::HandleModuleConstructed() {
 //------------------------------------------------------------------------------
 void PR_CALLBACK ThreadLocals::TlsDestructor(void *priv) {
   if (priv)
-    DestroyMap(reinterpret_cast<Map*>(priv));
+    DestroyEntries(reinterpret_cast<Entry*>(priv));
 }
 
 #elif BROWSER_SAFARI || defined(ANDROID)
@@ -255,8 +270,8 @@ void ThreadLocals::InitializeKey() {
 
 // This destructor will be called for each key when the thread is terminating.
 // For this class, it should be called only once.
-void ThreadLocals::FinalizeKey(void *map) {
-  DestroyMap(reinterpret_cast<Map*>(map));
+void ThreadLocals::FinalizeKey(void *entries) {
+  DestroyEntries(reinterpret_cast<Entry*>(entries));
 }
 
 #endif
