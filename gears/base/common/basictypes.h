@@ -52,6 +52,17 @@ typedef unsigned long long uint64;
 //------------------------------------------------------------------------------
 // BROWSER_FF
 //------------------------------------------------------------------------------
+
+// For gecko 1.8,
+// prtypes.h (really gecko_sdk/include/obsolete/protypes.h) defines int32
+// except when _WINSOCK2API_ is defined because it incorrectly says that
+// winsock defines int32.  To fix problem, we define int32 for this case.
+//
+// For gecko 1.9, it got fixed.
+#if BROWSER_FF2 && defined(WIN32) && defined(_WINSOCK2API_)
+typedef int int32;
+#endif  // BROWSER_FF2 && defined(WIN32) && defined(_WINSOCK2API_)
+
 // NSPR defines these integer types
 #include <gecko_sdk/include/prtypes.h>
 #else
