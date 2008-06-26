@@ -23,67 +23,66 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// POSIX systems.
+#if defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
+
 #include <assert.h>
-#include "gears/base/common/event.h"
-#include "gears/base/common/message_queue.h"
+#include <pthread.h>
+#include "gears/geolocation/thread_posix.h"
 #include "gears/geolocation/thread.h"
-#if defined(WIN32) || defined(WINCE)
-#include "thread_win32.h"
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
-#include "thread_posix.h"
-#else
-#error "Unknown threading platform"
+#if defined(OS_ANDROID)
+#include "gears/base/android/java_jni.h"
 #endif
 
-Thread::Thread()
-    : is_running_(false),
-      thread_id_(0),
-      started_event_(),
-      internal_(new ThreadInternal()) {
+Thread::ThreadInternal::ThreadInternal()
+    : handle_(0) {
 }
 
-Thread::~Thread() {
+Thread::ThreadInternal::~ThreadInternal() {
   // The thread should have either terminated before destruction, or
   // never have been started.
-  assert(!is_running_ && thread_id_ == 0);
+  assert(handle_ == 0);
 }
 
-ThreadId Thread::Start() {
-  assert(!is_running_ && thread_id_ == 0);
-  if (internal_->Start(this)) {
-    // Wait for the child thread to reach its Run() method.
-    started_event_.Wait();
-    // The thread should have set thread_id_ and is_running_ before
-    // signalling started_event_.
-    assert(thread_id_ != 0);
-    return thread_id_;
+bool Thread::ThreadInternal::Start(Thread *thread) {
+  assert(handle_ == 0);
+  // Start the child thread. The child will call ThreadRun with a
+  // pointer to the Thread instance.
+  if (pthread_create(&handle_, NULL, &ThreadRun, thread) == 0) {
+    return true;
   } else {
-    LOG(("Failed to start thread."));
-    return 0;
+    LOG(("Failed to start thread\n"));
+    handle_ = 0;
+    return false;
   }
 }
 
-void Thread::Join() {
-  if (thread_id_ != 0) {
-    // Wait for the child thread to terminate, and free its resources.
-    internal_->Join();
-    thread_id_ = 0;
+void Thread::ThreadInternal::Join() {
+  if (handle_ == 0) {
+    return;
   }
+  // This will block until thread termination.
+  if (pthread_join(handle_, NULL) != 0) {
+    LOG(("Failed to join child thread\n"));
+    assert(false);
+  }
+  handle_ = 0;
 }
 
-// Called by ThreadInternal on successful thread creation.
-void Thread::ThreadMain() {
-  // Initialize the message queue.
-  ThreadMessageQueue* queue = ThreadMessageQueue::GetInstance();
-  queue->InitThreadMessageQueue();
-  // Get this thread's id.
-  thread_id_ = queue->GetCurrentThreadId();
-  // Set running state.
-  is_running_ = true;
-  // Let our creator know that we started ok.
-  started_event_.Signal();
-  // Do the actual work.
-  Run();
-  // Clear running state.
-  is_running_ = false;
+void *Thread::ThreadInternal::ThreadRun(void *data) {
+#ifdef OS_ANDROID
+  // Android requires threads to register themselves with the VM, in
+  // case the therad ends up calling some managed code.
+  JniAttachCurrentThread();
+#endif
+  // Call the parent Thread::ThreadMain()
+  Thread *thread = reinterpret_cast<Thread *>(data);
+  thread->ThreadMain();
+#ifdef OS_ANDROID
+  // Unregister from the Android VM.
+  JniDetachCurrentThread();
+#endif
+  return NULL;
 }
+
+#endif // defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)

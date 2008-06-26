@@ -23,67 +23,63 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
-#include "gears/base/common/event.h"
-#include "gears/base/common/message_queue.h"
-#include "gears/geolocation/thread.h"
+// WIN32 systems.
 #if defined(WIN32) || defined(WINCE)
-#include "thread_win32.h"
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
-#include "thread_posix.h"
-#else
-#error "Unknown threading platform"
-#endif
 
-Thread::Thread()
-    : is_running_(false),
-      thread_id_(0),
-      started_event_(),
-      internal_(new ThreadInternal()) {
+#include "gears/geolocation/thread_win32.h"
+
+#include <assert.h>
+#include <atlsync.h>
+#include <windows.h>
+#if defined(WINCE)
+#include "gears/base/common/wince_compatibility.h"
+#endif
+#include "gears/geolocation/thread.h"
+
+Thread::ThreadInternal::ThreadInternal()
+    : handle_(0) {
 }
 
-Thread::~Thread() {
+Thread::ThreadInternal::~ThreadInternal() {
   // The thread should have either terminated before destruction, or
   // never have been started.
-  assert(!is_running_ && thread_id_ == 0);
+  assert(handle_ == 0);
 }
 
-ThreadId Thread::Start() {
-  assert(!is_running_ && thread_id_ == 0);
-  if (internal_->Start(this)) {
-    // Wait for the child thread to reach its Run() method.
-    started_event_.Wait();
-    // The thread should have set thread_id_ and is_running_ before
-    // signalling started_event_.
-    assert(thread_id_ != 0);
-    return thread_id_;
+bool Thread::ThreadInternal::Start(Thread *thread) {
+  assert(handle_ == 0);
+  // Start the child thread. The child will call ThreadRun with a
+  // pointer to the Thread instance.
+  handle_ = reinterpret_cast<HANDLE>(
+      _beginthreadex(NULL, 0, &ThreadRun, thread, 0, NULL));
+  if (handle_ != 0) {
+    return true;
   } else {
-    LOG(("Failed to start thread."));
-    return 0;
+    LOG16((L"Failed to start thread: %s\n", GetLastErrorString().c_str()));
+    handle_ = 0;
+    return false;
   }
 }
 
-void Thread::Join() {
-  if (thread_id_ != 0) {
-    // Wait for the child thread to terminate, and free its resources.
-    internal_->Join();
-    thread_id_ = 0;
+void Thread::ThreadInternal::Join() {
+  if (handle_ == 0) {
+    return;
   }
+  // This will block until thread termination.
+  if (WaitForSingleObject(handle_, INFINITE) != WAIT_OBJECT_0) {
+    LOG16((L"Failed to join child thread: %s\n", GetLastErrorString().c_str()));
+  }
+  if (!CloseHandle(handle_)) {
+    LOG16((L"Failed to close handle: %s\n", GetLastErrorString().c_str()));
+  }
+  handle_ = 0;
 }
 
-// Called by ThreadInternal on successful thread creation.
-void Thread::ThreadMain() {
-  // Initialize the message queue.
-  ThreadMessageQueue* queue = ThreadMessageQueue::GetInstance();
-  queue->InitThreadMessageQueue();
-  // Get this thread's id.
-  thread_id_ = queue->GetCurrentThreadId();
-  // Set running state.
-  is_running_ = true;
-  // Let our creator know that we started ok.
-  started_event_.Signal();
-  // Do the actual work.
-  Run();
-  // Clear running state.
-  is_running_ = false;
+unsigned int __stdcall Thread::ThreadInternal::ThreadRun(void *data) {
+  // Call the parent Thread::ThreadMain()
+  Thread *thread = reinterpret_cast<Thread *>(data);
+  thread->ThreadMain();
+  return 0;
 }
+
+#endif // defined(WIN32) || defined(WINCE)

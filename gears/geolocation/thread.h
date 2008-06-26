@@ -28,42 +28,51 @@
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/message_queue.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // This class abstracts creating a new thread. Derived classes implement the Run
-// method, which is run in a new thread when Start is called. Derived classes
-// may also override the CleanUp method, which is called in the new thread after
-// Run completes and can be used to delete the object.
+// method, which is run in a new thread when Start is called.
 class Thread {
  public:
   Thread();
   virtual ~Thread();
 
-  // Creates a thread and invokes this->Run() as its body.
+  // Starts a thread and invokes this->Run() as its body. Returns the
+  // child thread's ID if successfully started, or 0 on error.
   ThreadId Start();
 
-  // Waits for the Run method to complete. Note that the thread may execute code
-  // in CleanUp() after this method has returned.
-  virtual void Join();
+  // Waits for the Run method to complete, freeing any OS-specific
+  // thread handle resources associated with the child thread. Must be
+  // called before destruction if a thread was started successfully.
+  void Join();
   // Returns true if the child thread is running.
   bool IsRunning() const { return is_running_; }
+  // Returns the child thread's ID, or 0 if not running.
+  ThreadId GetThreadId() const { return is_running_ ? thread_id_ : 0; }
 
- private:
-  // This method is called in the new thread.
+ protected:
+  // This method is called in the child thread. The caller ensures the
+  // thread environment is setup before the call and destructed on
+  // return.
   virtual void Run() = 0;
 
-  // This method is called in the new thread after Run has completed. No member
-  // objects are touched after this method has been called, so it it safe, for
-  // instance, to delete the object from this method. Default implementation
-  // does nothing.
-  virtual void CleanUp() {}
+ private:
+  // OS-specific details, forward declared here.
+  class ThreadInternal;
 
-  // Event signalled from the child thread when Run() has returned.
-  Event run_complete_event_;
-  // True if the child thread is running.
+  // Set and cleared by the child thread around the call to Run().
   bool is_running_;
+  // OS-independent thread identifier, set by the child thread, reset
+  // by Join().
+  ThreadId thread_id_;
+  // Event signalled by the child thread after initialization.
+  Event started_event_;
+  // OS-specific details such as the underlying handle.
+  scoped_ptr<ThreadInternal> internal_;
 
   // Initializes the message queue for this thread and calls Run().
-  friend void ThreadMain(void *user_data);
+  // Called by ThreadInternal on successful child thread creation.
+  void ThreadMain();
 };
 
 #endif  // GEARS_GEOLOCATION_THREAD_H__
