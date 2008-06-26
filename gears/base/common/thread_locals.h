@@ -165,6 +165,38 @@ class ThreadLocals {
 #endif
 };
 
+// Helper class to encapsulate a ThreadLocals slot with a specific
+// type. The type must support casting to and from a void pointer. Do
+// not use other than as a global initializer as the slot is not
+// deallocated on destruction. Example usage:
+//   ThreadLocalValue<BrowserFunctions *> g_browser_funcs;
+//   void CallBrowser(int x) {
+//     g_browser_funcs.GetValue()->Callback(x);
+//   }
+template<class T>
+class ThreadLocalValue {
+ public:
+  ThreadLocalValue()
+      : slot_(ThreadLocals::Alloc()) {
+  }
+  
+  void SetValue(T value, ThreadLocals::DestructorCallback destructor) const {
+    ThreadLocals::SetValue(slot_, reinterpret_cast<void *>(value), destructor);
+  }
+  bool HasValue() const {
+    return ThreadLocals::HasValue(slot_);
+  }
+  T GetValue() const {
+    return reinterpret_cast<T>(ThreadLocals::GetValue(slot_));
+  }
+  void DestroyValue() const {
+    ThreadLocals::DestroyValue(slot_);
+  }
+
+ private:
+  const ThreadLocals::Slot slot_;
+};
+
 // TODO(mpcomplete): remove.
 #if BROWSER_NPAPI
 #undef BROWSER_IE
