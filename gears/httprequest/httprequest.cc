@@ -339,6 +339,8 @@ void GearsHttpRequest::GetAllResponseHeaders(JsCallContext *context) {
 
 void GearsHttpRequest::GetUpload(JsCallContext *context) {
   if (upload_.get() == NULL) {
+    InitUnloadMonitor();
+
     bool result = CreateModule<GearsHttpRequestUpload>(GetJsRunner(), &upload_);
     assert(result);
     result = upload_->InitBaseFromSibling(this);
