@@ -65,7 +65,7 @@ wp.sendMessage(['removeListener'], w);
  
 =DETAILS=
 
-Two new concepts are being introduced: worker _scope_ (global or not) and worker _lifetime_ (detached or not).
+Two new concepts are being introduced: worker *scope* (global or not) and worker *lifetime* (detached or not).
 
 These concepts are orthogonal.  For example, a site may use workers that are global but not detached.
 
