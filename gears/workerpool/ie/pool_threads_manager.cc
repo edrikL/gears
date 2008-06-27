@@ -630,7 +630,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   assert(NULL == wi->js_runner);
   wi->js_runner = js_runner.get();
 
-  bool thread_init_succeeded = (NULL != js_runner.get()) &&
+  bool thread_init_succeeded = (NULL != wi->js_runner) &&
                                wi->threads_manager->InitWorkerThread(wi);
 
   wi->thread_init_ok = thread_init_succeeded;
@@ -646,9 +646,12 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     wi->script_mutex.Unlock();
 
     if (wi->script_ok) {
-      if (SetupJsRunner(js_runner.get(), wi)) {
+      // We release our JsRunnerInterface to SetupJsRunner, which, if
+      // successful, will reset wi->module_environment to a new
+      // ModuleEnvironment that owns the JsRunnerInterface.
+      if (SetupJsRunner(js_runner.release(), wi)) {
         // Add JS code to engine.  Any script errors trigger HandleError().
-        js_runner->Start(wi->script_text);
+        wi->js_runner->Start(wi->script_text);
       }
     }
 
@@ -677,7 +680,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.
-  wi->js_runner = NULL;  // scoped_ptr is about to delete the underlying object
+  wi->js_runner = NULL;
   wi->threads_manager->ReleaseWorkerRef();
   wi->module_environment.reset(NULL);
 
@@ -686,9 +689,9 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
 bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
                                        JavaScriptWorkerInfo *wi) {
-  if (!js_runner) { return false; }
-
+  assert(js_runner != NULL);
   assert(!wi->module_environment.get());
+  // The newly allocated ModuleEnvironment will take ownership of js_runner.
   wi->module_environment.reset(
       new ModuleEnvironment(wi->script_origin, NULL, true, js_runner,
                             wi->threads_manager->browsing_context()));

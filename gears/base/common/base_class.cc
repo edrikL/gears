@@ -41,6 +41,28 @@
 #include "gears/base/npapi/np_utils.h"
 #endif
 
+ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
+#if BROWSER_IE
+                                     IUnknown *iunknown_site,
+#endif
+                                     bool is_worker,
+                                     JsRunnerInterface *js_runner,
+                                     BrowsingContext *browsing_context)
+    : security_origin_(security_origin),
+#if BROWSER_FF || BROWSER_NPAPI
+      js_context_(js_runner->GetContext()),
+#elif BROWSER_IE
+      iunknown_site_(iunknown_site),
+#endif
+      is_worker_(is_worker),
+      js_runner_(js_runner),
+      browsing_context_(browsing_context),
+      permissions_manager_(security_origin) {
+#if BROWSER_FF
+  assert(js_context_ != NULL);
+#endif
+}
+
 bool ModuleImplBaseClass::InitBaseFromSibling(
                               const ModuleImplBaseClass *other) {
   assert(other->module_environment_.get());
@@ -67,7 +89,7 @@ bool ModuleImplBaseClass::InitBaseFromDOM(JsContextPtr instance) {
                    DOMUtils::GetPageOrigin(&security_origin) &&
                    DOMUtils::GetPageBrowsingContext(&browsing_context);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, cx, is_worker, NewDocumentJsRunner(NULL, cx),
+      security_origin, is_worker, NewDocumentJsRunner(NULL, cx),
       browsing_context.get()));
 #elif BROWSER_IE
   bool succeeded =
@@ -81,7 +103,7 @@ bool ModuleImplBaseClass::InitBaseFromDOM(JsContextPtr instance) {
       BrowserUtils::GetPageSecurityOrigin(instance, &security_origin) &&
       BrowserUtils::GetPageBrowsingContext(instance, &browsing_context);
   return succeeded && InitBaseManually(new ModuleEnvironment(
-      security_origin, instance, is_worker,
+      security_origin, is_worker,
       NewDocumentJsRunner(NULL, instance), browsing_context.get()));
 #endif
 }
@@ -150,7 +172,7 @@ BrowsingContext *ModuleImplBaseClass::EnvPageBrowsingContext() const {
 
 JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   assert(module_environment_.get());
-  return module_environment_->js_runner_;
+  return module_environment_->js_runner_.get();
 }
 
 PermissionsManager *ModuleImplBaseClass::GetPermissionsManager() const {
