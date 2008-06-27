@@ -29,7 +29,9 @@
 #if !defined(OFFICIAL_BUILD) && defined(WIN32)
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 // Can't include any Skia header here, or factory.cc will fail to compile due
 // to unused inline functions defined in the Skia header.
 class SkBitmap;
@@ -40,7 +42,9 @@ class GearsCanvasRenderingContext2D;
 // Extension of a subset of HTML5 canvas for photo manipulation.
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
-class GearsCanvas : public ModuleImplBaseClassVirtual {
+class GearsCanvas
+    : public ModuleImplBaseClassVirtual,
+      public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;
 
@@ -104,6 +108,14 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
   // at top of file.
   scoped_ptr<SkBitmap> skia_bitmap_;
   scoped_ptr<SkCanvas> skia_canvas_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
+  // Sets up any structures that aren't needed until the interface is used.
+  // It's ok to call this multiple times.
+  void LazyInitialize();
+
+  // This is the callback used to handle the 'JSEVENT_UNLOAD' event.
+  virtual void HandleEvent(JsEventType event_type);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
