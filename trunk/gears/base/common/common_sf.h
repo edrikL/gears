@@ -47,6 +47,7 @@ struct NPObject;
 extern "C" {
 #endif
 void SafariGearsLog(const char *fn, ...);
+void SafariGearsLog16(const char16 *msg_utf16, ...);
   
 #ifdef __OBJC__
 

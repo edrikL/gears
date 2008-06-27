@@ -34,7 +34,7 @@
 #ifndef COMMON_MAC_FILE_ID_H__
 #define COMMON_MAC_FILE_ID_H__
 
-#include <limits.h>
+#include <sys/syslimits.h>
 
 namespace google_breakpad {
 

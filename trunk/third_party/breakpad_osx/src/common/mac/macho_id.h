@@ -34,10 +34,10 @@
 #ifndef COMMON_MAC_MACHO_ID_H__
 #define COMMON_MAC_MACHO_ID_H__
 
-#include <limits.h>
 #include <mach-o/loader.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
+#include <sys/syslimits.h>
 
 namespace MacFileUtilities {
 

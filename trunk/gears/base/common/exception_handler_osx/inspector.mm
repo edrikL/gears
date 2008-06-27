@@ -38,6 +38,7 @@
 #import <stdio.h>
 #import <string.h>
 #import <string>
+#import <sys/syslimits.h>
 
 #import "gears/base/common//exception_handler_osx//inspector.h"
 
