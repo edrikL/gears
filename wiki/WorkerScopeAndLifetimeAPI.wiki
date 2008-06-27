@@ -50,7 +50,7 @@ Now assume the site wants the sync process to continue even when all browser win
 workerPool.runDetached();
 }}}
 
-Assume a different site would like to communicate across all open tabs.  A global worker enables this as well:
+Assume a different site would like to communicate across all its open tabs.  A global worker enables this as well:
 
 {{{
 var w = wp.openGlobalWorkerFromUrl('site-comm.js');
