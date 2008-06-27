@@ -54,7 +54,7 @@ Assume a different site would like to communicate across all its open tabs.  A g
 
 {{{
 var w = wp.openGlobalWorkerFromUrl('site-comm.js');
-wp.sendMessage(['addListener'], w);
+wp.sendMessage(['addListener'], w);  // a site-specific protocol
 ...
 wp.sendMessage(['broadcast', data], w);
 ...
