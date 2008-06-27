@@ -42,6 +42,7 @@
 
 #include "gears/base/common/js_runner.h"
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #ifdef WINCE
@@ -784,7 +785,7 @@ class DocumentJsRunner : public JsRunnerBase {
     return EvalImpl(script, NULL);
 #endif
   }
-  
+
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     assert(false);  // Should not be called on the DocumentJsRunner.
   }
