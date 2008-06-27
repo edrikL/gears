@@ -44,19 +44,215 @@
 #include "third_party/glint/include/current_time.h"
 #include "third_party/glint/include/nine_grid.h"
 #include "third_party/glint/include/platform.h"
+#include "third_party/glint/include/point.h"
+#include "third_party/glint/include/rectangle.h"
 #include "third_party/glint/include/root_ui.h"
 #include "third_party/glint/include/row.h"
 #include "third_party/glint/include/simple_text.h"
+#include "third_party/glint/include/size.h"
+
+using glint::Node;
+using glint::Point;
+using glint::Size;
 
 static const char *kTitleId = "title_text";
 static const char *kSubtitleId = "subtitle_text";
+static const char *kDescriptionId = "description_text";
 static const char *kBalloonContainer = "balloon_container";
 
 const double kAlphaTransitionDuration = 1.0;
 const double kAlphaTransitionDurationShort = 0.3;
 const double kAlphaTransitionDurationForRestore = 0.2;
+const double kMoveTransitionDuration = 0.325;
 const double kExpirationTime = 5.0;
 const double kExpirationTimeSlice = 0.25;
+
+// Container for balloons. Implements several static methods that provide
+// balloon metrics scaled properly in case system has "large fonts" support.
+// Also implements a few non-static members to perform layout on its child
+// nodes that are assumed to be individual baloons.
+class BalloonContainer : public glint::Node {
+ public:
+  BalloonContainer() {
+    if (!initialized_) {
+      initialized_ = true;
+      RefreshSystemMetrics();
+    }
+  }
+
+  static int min_balloon_width();
+  static int max_balloon_width();
+  static int min_balloon_height();
+  static int max_balloon_height();
+
+  // Scale the size to count in the system font factor
+  static int ScaleSize(int size);
+
+  // Refresh the cached values for work area and drawing metrics (i.e scale
+  // factor when 'large ). This is done automatically first time and the
+  // application should call this method to re-acquire metrics after
+  // resolution and settings change.
+  static void RefreshSystemMetrics();
+
+ protected:
+  // Instructs base class to delegate children layout to this class.
+  virtual bool LayoutChildren() { return false; }
+  virtual Size OnComputeRequiredSize(Size constraint);
+  virtual Size OnSetLayoutBounds(Size reserved);
+
+ private:
+  enum BalloonPlacementEnum {
+    HORIZONTALLY_FROM_BOTTOM_LEFT,
+    HORIZONTALLY_FROM_BOTTOM_RIGHT,
+    VERTICALLY_FROM_TOP_RIGHT,
+    VERTICALLY_FROM_BOTTOM_RIGHT
+  };
+
+  // Minimum and maximum size of balloon
+  const static int kBalloonMinWidth = 270;
+  const static int kBalloonMaxWidth = 270;
+  const static int kBalloonMinHeight = 50;
+  const static int kBalloonMaxHeight = 120;
+
+  static Point GetOrigin();
+  // Compute the position for the next balloon. Modifies current origin.
+  static Point NextPosition(Size balloon_size, Point *origin);
+
+  static BalloonPlacementEnum placement_;
+  static glint::Rectangle work_area_;
+  static double font_scale_factor_;
+  static bool initialized_;
+  DISALLOW_EVIL_CONSTRUCTORS(BalloonContainer);
+};
+
+#ifdef WIN32
+BalloonContainer::BalloonPlacementEnum BalloonContainer::placement_ =
+    BalloonContainer::VERTICALLY_FROM_BOTTOM_RIGHT;
+#else
+BalloonContainer::BalloonPlacementEnum BalloonContainer::placement_ =
+    BalloonContainer::VERTICALLY_FROM_TOP_RIGHT;
+#endif  // WIN32
+
+glint::Rectangle BalloonContainer::work_area_;
+double BalloonContainer::font_scale_factor_ = 1.0;
+bool BalloonContainer::initialized_ = false;
+
+// Scale the size to count in the system font factor
+int BalloonContainer::ScaleSize(int size) {
+  return static_cast<int>(size * font_scale_factor_);
+}
+
+int BalloonContainer::min_balloon_width() {
+  return ScaleSize(kBalloonMinWidth);
+}
+
+int BalloonContainer::max_balloon_width() {
+  return ScaleSize(kBalloonMaxWidth);
+}
+
+int BalloonContainer::min_balloon_height() {
+  return ScaleSize(kBalloonMinHeight);
+}
+
+int BalloonContainer::max_balloon_height() {
+  return ScaleSize(kBalloonMaxHeight);
+}
+
+void BalloonContainer::RefreshSystemMetrics() {
+  System::GetMainScreenBounds(&work_area_);
+  font_scale_factor_ = System::GetSystemFontScaleFactor();
+}
+
+Point BalloonContainer::GetOrigin() {
+  Point origin;
+
+  switch (placement_) {
+    case HORIZONTALLY_FROM_BOTTOM_LEFT:
+      origin.x = work_area_.left();
+      origin.y = work_area_.bottom();
+      break;
+    case HORIZONTALLY_FROM_BOTTOM_RIGHT:
+      origin.x = work_area_.right();
+      origin.y = work_area_.bottom();
+      break;
+    case VERTICALLY_FROM_TOP_RIGHT:
+      origin.x = work_area_.right();
+      origin.y = work_area_.top();
+      break;
+    case VERTICALLY_FROM_BOTTOM_RIGHT:
+      origin.x = work_area_.right();
+      origin.y = work_area_.bottom();
+      break;
+    default:
+      assert(false);
+      break;
+  }
+  return origin;
+}
+
+Point BalloonContainer::NextPosition(Size balloon_size, Point *origin) {
+  assert(origin);
+  Point result;
+
+  switch (placement_) {
+    case HORIZONTALLY_FROM_BOTTOM_LEFT:
+      result.x = origin->x;
+      result.y = origin->y - balloon_size.height;
+      origin->x += balloon_size.width;
+      break;
+    case HORIZONTALLY_FROM_BOTTOM_RIGHT:
+      origin->x -= balloon_size.width;
+      result.x = origin->x;
+      result.y = origin->y - balloon_size.height;
+      break;
+    case VERTICALLY_FROM_TOP_RIGHT:
+      result.x = origin->x - balloon_size.width;
+      result.y = origin->y;
+      origin->y += balloon_size.height;
+      break;
+    case VERTICALLY_FROM_BOTTOM_RIGHT:
+      origin->y -= balloon_size.height;
+      result.x = origin->x - balloon_size.width;
+      result.y = origin->y;
+      break;
+    default:
+      assert(false);
+      break;
+  }
+  return result;
+}
+
+Size BalloonContainer::OnComputeRequiredSize(Size constraint) {
+  glint::Rectangle screen_bounds;
+  System::GetMainScreenBounds(&screen_bounds);
+  if (screen_bounds.IsEmpty())
+    return Size();
+
+  Size container_size = screen_bounds.size();
+  // Let children compute their size
+  for (Node *child = first_child(); child; child = child->next_sibling()) {
+    Size child_size = child->ComputeRequiredSize(container_size);
+  }
+  return container_size;
+}
+
+// The parent container reserved a space for us - at least the amount returned
+// from OnComputeRequiredSize. Now we should iterate over the children and give
+// them new layout bounds.
+Size BalloonContainer::OnSetLayoutBounds(Size reserved) {
+  Point origin = GetOrigin();
+
+  for (Node *child = first_child(); child; child = child->next_sibling()) {
+    Point position = NextPosition(child->required_size(), &origin);
+    glint::Rectangle child_location(position.x,
+                                    position.y,
+                                    position.x + child->required_size().width,
+                                    position.y + child->required_size().height);
+    // Position the child.
+    child->SetLayoutBounds(child_location);
+  }
+  return reserved;
+}
 
 class TimerHandler : public glint::MessageHandler {
  public:
@@ -166,6 +362,240 @@ class MouseWithinDetector : public glint::MessageHandler {
   DISALLOW_EVIL_CONSTRUCTORS(MouseWithinDetector);
 };
 
+Balloon::Balloon(const GearsNotification &from, BalloonCollection *collection)
+  : root_(NULL),
+    collection_(collection),
+    state_(OPENING_BALLOON)  {
+  assert(collection_);
+  notification_.CopyFrom(from);
+}
+
+Balloon::~Balloon() {
+}
+
+glint::Node *Balloon::CreateTree() {
+  glint::Node *root = new glint::Node();
+  root->set_min_width(BalloonContainer::min_balloon_width());
+  root->set_min_height(BalloonContainer::min_balloon_height());
+  root->set_max_width(BalloonContainer::max_balloon_width());
+  root->set_max_height(BalloonContainer::max_balloon_height());
+  root->set_alpha(glint::colors::kTransparentAlpha);
+  glint::Rectangle margin(3, 3, 3, 3);
+  root->set_margin(margin);
+
+  glint::NineGrid *background = new glint::NineGrid();
+  background->ReplaceImage("res://background.png");
+  background->set_center_height(10);
+  background->set_center_width(10);
+  // TODO(dimich): enable shadow later (too slow in DBG)
+  background->set_shadow(false);
+  root->AddChild(background);
+
+  glint::Column *column = new glint::Column();
+  column->set_background(glint::Color(0xFFFF00));
+  root->AddChild(column);
+
+  glint::SimpleText *text = new glint::SimpleText();
+  text->set_id(kTitleId);
+  text->set_font_size(10);
+  text->set_bold(true);
+  margin.Set(6, 3, 6, 0);
+  text->set_margin(margin);
+  text->set_horizontal_alignment(glint::X_LEFT);
+  column->AddChild(text);
+
+  text = new glint::SimpleText();
+  text->set_id(kSubtitleId);
+  margin.Set(6, 1, 6, 0);
+  text->set_margin(margin);
+  text->set_horizontal_alignment(glint::X_LEFT);
+  column->AddChild(text);
+
+  text = new glint::SimpleText();
+  text->set_id(kDescriptionId);
+  margin.Set(6, 1, 6, 3);
+  text->set_margin(margin);
+  text->set_horizontal_alignment(glint::X_LEFT);
+  column->AddChild(text);
+
+  glint::Row *buttons = new glint::Row();
+  margin.Set(5, 0, 5, 5);
+  buttons->set_margin(margin);
+  buttons->set_horizontal_alignment(glint::X_RIGHT);
+  column->AddChild(buttons);
+
+  glint::Button *close_button = new glint::Button();
+  close_button->ReplaceImage("res://button_strip.png");
+  close_button->set_min_height(22);
+  close_button->set_min_width(70);
+  buttons->AddChild(close_button);
+  text = new glint::SimpleText();
+  text->set_font_size(8);
+  text->set_text("close");
+  margin.Set(2, 2, 2, 2);
+  text->set_margin(margin);
+  close_button->AddChild(text);
+  close_button->SetClickHandler(Balloon::OnCloseButton, this);
+
+  root->AddHandler(new AnimationCompletedHandler(this));
+  root->AddHandler(new MouseWithinDetector(this, root));
+  SetAlphaTransition(root, kAlphaTransitionDuration);
+  SetMoveTransition(root);
+
+  return root;
+}
+
+void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
+  Balloon *this_ = reinterpret_cast<Balloon*>(user_info);
+  assert(this_);
+  this_->InitiateClose(true);  // true == 'user_initiated'
+}
+
+bool Balloon::SetTextField(const char *id, const std::string16 &text) {
+  assert(id);
+  glint::SimpleText *text_node = static_cast<glint::SimpleText*>(
+      root_->FindNodeById(id));
+  if (!text_node)
+    return false;
+  std::string text_utf8;
+  if (!String16ToUTF8(text.c_str(), &text_utf8))
+    return false;
+  text_node->set_text(text_utf8);
+  return true;
+}
+
+void Balloon::UpdateUI() {
+  SetTextField(kTitleId, notification_.title());
+  SetTextField(kSubtitleId, notification_.subtitle());
+  SetTextField(kDescriptionId, notification_.description());
+}
+
+bool Balloon::SetAlphaTransition(glint::Node *node,
+                                 double transition_duration) {
+  if (!node)
+    return false;
+
+  glint::AnimationTimeline *timeline = NULL;
+  if (transition_duration > 0) {
+    timeline = new glint::AnimationTimeline();
+
+    glint::AlphaAnimationSegment *segment = new glint::AlphaAnimationSegment();
+    segment->set_type(glint::RELATIVE_TO_START);
+    timeline->AddAlphaSegment(segment);
+
+    segment = new glint::AlphaAnimationSegment();
+    segment->set_type(glint::RELATIVE_TO_FINAL);
+    segment->set_duration(transition_duration);
+    timeline->AddAlphaSegment(segment);
+
+    timeline->RequestCompletionMessage(node);
+  }
+  node->SetTransition(glint::ALPHA_TRANSITION, timeline);
+  return true;
+}
+
+bool Balloon::SetMoveTransition(Node *node) {
+  if (!node)
+    return false;
+
+  glint::AnimationTimeline *timeline = new glint::AnimationTimeline();
+
+  glint::TranslationAnimationSegment *segment =
+      new glint::TranslationAnimationSegment();
+  segment->set_type(glint::RELATIVE_TO_START);
+  timeline->AddTranslationSegment(segment);
+
+  segment = new glint::TranslationAnimationSegment();
+  segment->set_type(glint::RELATIVE_TO_FINAL);
+  segment->set_duration(kMoveTransitionDuration);
+  timeline->AddTranslationSegment(segment);
+
+  node->SetTransition(glint::MOVE_TRANSITION, timeline);
+  return true;
+}
+
+bool Balloon::InitiateClose(bool user_initiated) {
+  state_ = user_initiated ? USER_CLOSING_BALLOON : AUTO_CLOSING_BALLOON;
+
+  // If closed by user, set shorter transition.
+  if (user_initiated) {
+    SetAlphaTransition(root_, kAlphaTransitionDurationShort);
+  }
+
+  root_->set_alpha(glint::colors::kTransparentAlpha);
+  return true;
+}
+
+void Balloon::OnAnimationCompleted() {
+  switch (state_) {
+    case OPENING_BALLOON:
+      state_ = SHOWING_BALLOON;
+      break;
+
+    case AUTO_CLOSING_BALLOON:
+    case USER_CLOSING_BALLOON: {
+      // Need to do this async because 'animation completion' message gets
+      // fired from synchronous tree walk and it's bad to remove part of
+      // the tree during the walk.
+      RemoveWorkItem *remove_work = new RemoveWorkItem(collection_, this);
+      glint::platform()->PostWorkItem(NULL, remove_work);
+      break;
+    }
+
+    case RESTORING_BALLOON:
+      state_ = SHOWING_BALLOON;
+      SetAlphaTransition(root_, kAlphaTransitionDuration);
+      break;
+
+    case SHOWING_BALLOON:
+      // We might be doing some other animation while showing the balloon,
+      // like the scaling animation when the system font changes.
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+}
+
+void Balloon::OnMouseIn() {
+  // If closing it automatically, bring it back
+  if (state_ == AUTO_CLOSING_BALLOON) {
+    // Cancel current animation
+    SetAlphaTransition(root_, 0);
+
+    // Restore the alpha to opaque, fast.
+    SetAlphaTransition(root_, kAlphaTransitionDurationForRestore);
+    root_->set_alpha(glint::colors::kOpaqueAlpha);
+
+    state_ = RESTORING_BALLOON;
+  }
+  collection_->SuspendExpirationTimer();
+}
+
+void Balloon::OnMouseOut() {
+  collection_->RestoreExpirationTimer();
+}
+
+bool Balloon::InitializeUI(glint::Node *container) {
+  assert(container);
+  assert(!root_);
+  // Some operations (triggering animations for example) require node to be
+  // already connected to a RootUI. So first create tree, hook it up to
+  // container and then complete initialization.
+  root_ = CreateTree();
+  if (!root_)
+    return false;
+
+  container->AddChild(root_);
+  UpdateUI();
+
+  // Start revealing animation.
+  state_ = OPENING_BALLOON;
+  root_->set_alpha(glint::colors::kOpaqueAlpha);
+  return true;
+}
+
 BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
   : observer_(observer),
     root_ui_(NULL),
@@ -254,14 +684,8 @@ void BalloonCollection::EnsureRoot() {
     return;
 
   root_ui_ = new glint::RootUI(true);  // topmost window
-  glint::Row *container = new glint::Row();
-  container->set_direction(glint::Row::BOTTOM_TO_TOP);
-  container->ReplaceDistribution("natural");
-  container->set_background(glint::Color(0x44444444));
+  glint::Node *container = new BalloonContainer();
   container->set_id(kBalloonContainer);
-  glint::Transform offset;
-  offset.AddOffset(glint::Vector(500.0f, 250.0f));
-  container->set_transform(offset);
   container->AddHandler(new TimerHandler(this));
   root_ui_->set_root_node(container);
   root_ui_->Show();
@@ -272,7 +696,7 @@ bool BalloonCollection::AddToUI(Balloon *balloon) {
   EnsureRoot();
 
   ResetExpirationTimer();
-  balloons_.push_front(balloon);
+  balloons_.push_back(balloon);
 
   glint::Row *container = static_cast<glint::Row*>(
       root_ui_->FindNodeById(kBalloonContainer));
@@ -348,203 +772,5 @@ void BalloonCollection::OnTimer(double current_time) {
     ResetExpirationTimer();
   }
 }
-
-Balloon::Balloon(const GearsNotification &from, BalloonCollection *collection)
-  : root_(NULL),
-    collection_(collection),
-    state_(OPENING_BALLOON)  {
-  assert(collection_);
-  notification_.CopyFrom(from);
-}
-
-Balloon::~Balloon() {
-}
-
-glint::Node *Balloon::CreateTree() {
-  glint::Node *root = new glint::Node();
-  root->set_min_width(300);
-  root->set_min_height(100);
-  root->set_alpha(glint::colors::kTransparentAlpha);
-
-  glint::NineGrid *background = new glint::NineGrid();
-  background->ReplaceImage("res://background.png");
-  background->set_center_height(10);
-  background->set_center_width(10);
-  background->set_shadow(true);
-  root->AddChild(background);
-
-  glint::Column *column = new glint::Column();
-  column->set_background(glint::Color(0xFFFF00));
-  root->AddChild(column);
-
-  glint::SimpleText *text = new glint::SimpleText();
-  text->set_id(kTitleId);
-  text->set_font_size(14);
-  glint::Rectangle margin;
-  margin.Set(10, 10, 10, 10);
-  text->set_margin(margin);
-  column->AddChild(text);
-
-  text = new glint::SimpleText();
-  text->set_id(kSubtitleId);
-  margin.Set(2, 3, 2, 3);
-  text->set_margin(margin);
-  column->AddChild(text);
-
-  glint::Row *buttons = new glint::Row();
-  margin.Set(5, 5, 5, 5);
-  buttons->set_margin(margin);
-  buttons->set_horizontal_alignment(glint::X_RIGHT);
-  column->AddChild(buttons);
-
-  glint::Button *close_button = new glint::Button();
-  close_button->ReplaceImage("res://button_strip.png");
-  close_button->set_min_height(22);
-  close_button->set_min_width(70);
-  buttons->AddChild(close_button);
-  text = new glint::SimpleText();
-  text->set_text("Close");
-  margin.Set(3, 3, 3, 3);
-  text->set_margin(margin);
-  close_button->AddChild(text);
-  close_button->SetClickHandler(Balloon::OnCloseButton, this);
-
-  root->AddHandler(new AnimationCompletedHandler(this));
-  root->AddHandler(new MouseWithinDetector(this, root));
-  SetAlphaTransition(root, kAlphaTransitionDuration);
-
-  return root;
-}
-
-void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
-  Balloon *this_ = reinterpret_cast<Balloon*>(user_info);
-  assert(this_);
-  this_->InitiateClose(true);  // true == 'user_initiated'
-}
-
-bool Balloon::SetTextField(const char *id, const std::string16 &text) {
-  assert(id);
-  glint::SimpleText *text_node = static_cast<glint::SimpleText*>(
-      root_->FindNodeById(id));
-  if (!text_node)
-    return false;
-  std::string text_utf8;
-  if (!String16ToUTF8(text.c_str(), &text_utf8))
-    return false;
-  text_node->set_text(text_utf8);
-  return true;
-}
-
-void Balloon::UpdateUI() {
-  SetTextField(kTitleId, notification_.title());
-  SetTextField(kSubtitleId, notification_.subtitle());
-}
-
-bool Balloon::SetAlphaTransition(glint::Node *node,
-                                 double transition_duration) {
-  if (!node)
-    return false;
-
-  glint::AnimationTimeline *timeline = NULL;
-  if (transition_duration > 0) {
-    timeline = new glint::AnimationTimeline();
-
-    glint::AlphaAnimationSegment *segment = new glint::AlphaAnimationSegment();
-    segment->set_type(glint::RELATIVE_TO_START);
-    timeline->AddAlphaSegment(segment);
-
-    segment = new glint::AlphaAnimationSegment();
-    segment->set_type(glint::RELATIVE_TO_FINAL);
-    segment->set_duration(transition_duration);
-    timeline->AddAlphaSegment(segment);
-
-    timeline->RequestCompletionMessage(node);
-  }
-  node->SetTransition(glint::ALPHA_TRANSITION, timeline);
-  return true;
-}
-
-bool Balloon::InitiateClose(bool user_initiated) {
-  state_ = user_initiated ? USER_CLOSING_BALLOON : AUTO_CLOSING_BALLOON;
-
-  // If closed by user, set shorter transition.
-  if (user_initiated) {
-    SetAlphaTransition(root_, kAlphaTransitionDurationShort);
-  }
-
-  root_->set_alpha(glint::colors::kTransparentAlpha);
-  return true;
-}
-
-void Balloon::OnAnimationCompleted() {
-  switch (state_) {
-    case OPENING_BALLOON:
-      state_ = SHOWING_BALLOON;
-      break;
-
-    case AUTO_CLOSING_BALLOON:
-    case USER_CLOSING_BALLOON: {
-      // Need to do this async because 'animation completion' message gets
-      // fired from synchronous tree walk and it's bad to remove part of
-      // the tree during the walk.
-      RemoveWorkItem* remove_work = new RemoveWorkItem(collection_, this);
-      glint::platform()->PostWorkItem(NULL, remove_work);
-      break;
-    }
-
-    case RESTORING_BALLOON:
-      state_ = SHOWING_BALLOON;
-      SetAlphaTransition(root_, kAlphaTransitionDuration);
-      break;
-
-    case SHOWING_BALLOON:
-      // We might be doing some other animation while showing the balloon,
-      // like the scaling animation when the system font changes.
-      break;
-
-    default:
-      assert(false);
-      break;
-  }
-}
-
-void Balloon::OnMouseIn() {
-  // If closing it automatically, bring it back
-  if (state_ == AUTO_CLOSING_BALLOON) {
-    // Cancel current animation
-    SetAlphaTransition(root_, 0);
-
-    // Restore the alpha to opaque, fast.
-    SetAlphaTransition(root_, kAlphaTransitionDurationForRestore);
-    root_->set_alpha(glint::colors::kOpaqueAlpha);
-
-    state_ = RESTORING_BALLOON;
-  }
-  collection_->SuspendExpirationTimer();
-}
-
-void Balloon::OnMouseOut() {
-  collection_->RestoreExpirationTimer();
-}
-
-bool Balloon::InitializeUI(glint::Node *container) {
-  assert(container);
-  assert(!root_);
-  // Some operations (triggering animations for example) require node to be
-  // already connected to a RootUI. So first create tree, hook it up to
-  // container and then complete initialization.
-  root_ = CreateTree();
-  if (!root_)
-    return false;
-
-  container->AddChild(root_);
-  UpdateUI();
-
-  // Start revealing animation.
-  state_ = OPENING_BALLOON;
-  root_->set_alpha(glint::colors::kOpaqueAlpha);
-  return true;
-}
-
 
 #endif  // OFFICIAL_BULID

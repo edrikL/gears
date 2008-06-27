@@ -39,7 +39,16 @@ class Rectangle;
 class System {
  public:
   static std::string GetResourcePath();
+
+  // Returns bounds suitable for showing UI (does not include system menu,
+  // taskbar or sidebars that occupy the space on a side).
   static void GetMainScreenBounds(glint::Rectangle *bounds);
+
+  // If the system supports "large fonts" setting by scaling fonts behind the
+  // scene (as Windows does when it scales 10pt font to look like 18pt), this
+  // will report the 'font multiplication factor" for our UI to follow.
+  static double GetSystemFontScaleFactor();
+
  private:
   System() {}  // Static class.
 };

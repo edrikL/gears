@@ -83,6 +83,73 @@ void System::GetMainScreenBounds(glint::Rectangle *bounds) {
   }
 }
 
+// Used in System::GetSystemFontScaleFactor.
+struct FontScaleMapping {
+  const wchar_t *size_name;
+  double scale_factor;
+};
+
+// Get the scale factor of current system font to normal system font
+// (i.e. DPI has been changed)
+double System::GetSystemFontScaleFactor() {
+  double factor = 1.0;
+
+  // Count in the scaling due to DPI change
+  const double kDefaultDPI = 96.0;
+  HDC hdc = ::GetDC(NULL);
+  factor *= ::GetDeviceCaps(hdc, LOGPIXELSY) / kDefaultDPI;
+  ::ReleaseDC(NULL, hdc);
+
+  const wchar_t kKeyName[] =
+      L"Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager";
+  HKEY key;
+  if (ERROR_SUCCESS != ::RegOpenKeyEx(HKEY_CURRENT_USER,
+                                      kKeyName,
+                                      0,
+                                      KEY_READ,
+                                      &key)) {
+    return factor;
+  }
+
+  // Count in the scaling due to font size change. Windows stores the
+  // current 'font size name' in registry and AFAIK there can be 3 string
+  // values for which we should check.
+  const int kBufferSizeBytes = 64;
+  BYTE buffer[kBufferSizeBytes];
+  DWORD buffer_actual_bytes = kBufferSizeBytes;
+  if (ERROR_SUCCESS == ::RegQueryValueEx(key,
+                                         L"SizeName",
+                                         NULL,
+                                         NULL,
+                                         buffer,
+                                         &buffer_actual_bytes)) {
+    const FontScaleMapping mappings[] = {
+      { L"NormalSize",      1.0 },
+      { L"LargeFonts",      13.0 / 11.0 },
+      { L"ExtraLargeFonts", 16.0 / 11.0 },
+    };
+    wchar_t *font_size_name = reinterpret_cast<wchar_t*>(buffer);
+    int font_size_name_length = buffer_actual_bytes / sizeof(font_size_name[0]);
+
+    // RegQueryValueEx does not guarantee terminating \0. So check and if there
+    // is one, don't include it in wstring.
+    if (font_size_name_length >= 1 &&
+        font_size_name[font_size_name_length - 1] == 0) {
+      --font_size_name_length;
+    }
+
+    std::wstring size_name(font_size_name, font_size_name_length);
+    for (size_t i = 0; i < ARRAYSIZE(mappings); ++i) {
+      if (size_name == mappings[i].size_name) {
+        factor *= mappings[i].scale_factor;
+        break;
+      }
+    }
+  }
+
+  return factor;
+}
+
 #endif  // WIN32
 #endif  // OFFICIAL_BUILD
 
