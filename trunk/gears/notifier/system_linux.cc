@@ -33,11 +33,19 @@
 
 std::string System::GetResourcePath() {
   // TODO(dimich): Implement this.
+  assert(false && "Not implemented");
   return std::string();
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
   // TODO(dimich): Implement this.
+  assert(false && "Not implemented");
+}
+
+double System::GetSystemFontScaleFactor() {
+  // TODO(dimich): Implement this.
+  assert(false && "Not implemented");
+  return 1.0;
 }
 
 #endif  // defined(LINUX) && !defined(OS_MACOSX)

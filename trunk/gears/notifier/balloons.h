@@ -37,6 +37,12 @@
 #include "gears/notifier/notification.h"
 
 class GearsNotification;
+class BalloonCollection;
+// Glint classes
+namespace glint {
+class Node;
+class RootUI;
+}
 
 class BalloonCollectionObserver {
  public:
@@ -66,14 +72,6 @@ class BalloonCollectionInterface {
   // Is there room to add another notification?
   virtual bool has_space() = 0;
 };
-
-// Glint classes
-namespace glint {
-class Node;
-class RootUI;
-}
-
-class BalloonCollection;
 
 // Represents a Notification on the screen.
 class Balloon {
@@ -117,6 +115,7 @@ class Balloon {
   bool SetTextField(const char *id, const std::string16 &text);
   static void OnCloseButton(const std::string &button_id, void *user_info);
   static bool SetAlphaTransition(glint::Node *node, double transition_duration);
+  static bool SetMoveTransition(glint::Node *node);
 
   GearsNotification notification_;
   glint::Node *root_;
