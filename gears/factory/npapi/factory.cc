@@ -30,7 +30,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/ie/detect_version_collision.h"
+#include "gears/base/common/detect_version_collision.h"
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/console/console.h"
 #include "gears/database/database.h"
@@ -77,21 +77,44 @@ GearsFactory::GearsFactory()
   SetActiveUserFlag();
 }
 
+// Returns NULL if an error occured loading the string.
+static const char16 *GetVersionCollisionErrorString() {
+#if defined(WIN32)
+  // TODO(playmobil): This code isn't threadsafe, refactor.
+  const int kMaxStringLength = 256;
+  static char16 error_text[kMaxStringLength];
+  if (!LoadString(GetGearsModuleHandle(), IDS_VERSION_COLLISION_TEXT, 
+                  error_text, kMaxStringLength)) {
+    return NULL;
+  }
+  return error_text;
+#elif defined(BROWSER_WEBKIT)
+  //TODO(playmobil): Internationalize string.
+  static const char16 *error_text = STRING16(L"A " PRODUCT_FRIENDLY_NAME 
+                                    L" update has been downloaded.\n"
+                                    L"\n"
+                                    L"Please close all browser windows"
+                                    L" to complete the upgrade process.\n");
+  return error_text;
+#else
+  return NULL;
+#endif
+}
+
 void GearsFactory::Create(JsCallContext *context) {
-// TODO(playmobil): Implement detect_version_collision.* files on non-win32 
-// platforms.
-#ifdef WIN32
+#if defined(WIN32) || defined(BROWSER_WEBKIT)
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
     }
-    const int kMaxStringLength = 256;
-    char16 error_text[kMaxStringLength];
-    if (LoadString(GetGearsModuleHandle(),
-                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
+    
+    const char16 *error_text = GetVersionCollisionErrorString();
+    if (error_text) {
       context->SetException(error_text);
+      return;
     } else {
       context->SetException(STRING16(L"Internal Error"));
+      return;
     }
   }
 #endif

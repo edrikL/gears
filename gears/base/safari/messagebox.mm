@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,33 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Implementation of the PathUtils.h common utilities
+#include <Cocoa/Cocoa.h>
 
-#import "gears/base/common/paths.h"
-#import "gears/base/common/paths_sf_more.h"
-#include "gears/base/common/string_utils_osx.h"
-#import "gears/base/safari/nsstring_utils.h"
+#include "gears/base/common/common.h"
+#include "gears/base/safari/messagebox.h"
+
+void MessageBox(const char16 *title,
+                const char16 *message) {
+  NSString *title_ns = [NSString stringWithString16:title];
+  NSString *message_ns = [NSString stringWithString16:message];
   
-bool GetInstallDirectory(std::string16 *path) {
-  // TODO(aa): Implement me when needed.
-  return false;
-}
-
-bool GetBaseDataDirectory(std::string16 *path) {
-  NSString *dir = [GearsPathUtilities gearsDataDirectory];
-  return CFStringRefToString16((CFStringRef)dir, path);
-}
-
-bool GetBaseResourcesDirectory(std::string16 *path) {
-  NSString *dir = [GearsPathUtilities gearsResourcesDirectory];
-  return CFStringRefToString16((CFStringRef)dir, path);
-}
-
-bool GetUserHomeDirectory(std::string16 *home_dir) {
-  return [[@"~" stringByExpandingTildeInPath] string16:home_dir];
-}
-
-bool GetUserTempDirectory(std::string16 *tmp_dir) {
-  // As of OSX 10.4+ this is a per-user temp directory.
-  return [NSTemporaryDirectory() string16:tmp_dir];
+  NSAlert *alert = [NSAlert alertWithMessageText:title_ns
+                                   defaultButton:nil 
+                                 alternateButton:nil
+                                     otherButton:nil
+                       informativeTextWithFormat:message_ns];
+  [alert runModal];
 }

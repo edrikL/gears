@@ -25,12 +25,12 @@
 
 #include <assert.h>
 
+#include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/console.h"
 #include "gears/database/database.h"
 #include "gears/database2/manager.h"

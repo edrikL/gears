@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/ie/detect_version_collision.h"
+#include "gears/base/common/detect_version_collision.h"
 
 #include <assert.h>
 #include <atlbase.h>
@@ -58,7 +58,7 @@ static CMutex our_version_running_mutex;
 // For the Win32 NPAPI distribution:
 //   We're going to append the exe path (see below), so keep this short to
 //   reduce odds of hitting the MAX_PATH mutex name limit.
-#define PRODUCT_COLLISION_GUID L"{" PRODUCT_SHORT_NAME L"}"
+#define PRODUCT_COLLISION_GUID L"{gears}"  // [naming]
 #else
 // For the Win32 IE distribution:
 #define PRODUCT_COLLISION_GUID L"{685E0F7D-005A-40a0-B9F8-168FBA824248}"

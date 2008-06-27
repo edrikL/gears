@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/ie/detect_version_collision.h"
+#include "gears/base/common/detect_version_collision.h"
 #include "gears/ui/common/settings_dialog.h"
 #include "gears/ui/ie/tools_menu_item.h"
 #include "genfiles/product_constants.h"

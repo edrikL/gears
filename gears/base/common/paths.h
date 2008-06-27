@@ -117,6 +117,9 @@ bool GetComponentDirectory(std::string16 *path);
 #ifdef BROWSER_WEBKIT
 // Returns the user's home directory.
 bool GetUserHomeDirectory(std::string16 *home_dir);
+
+// Returns the location of the user's temporary directory.
+bool GetUserTempDirectory(std::string16 *tmp_dir);
 #endif
 
 // Checks that an unsanitized string from the user is valid for use as part
