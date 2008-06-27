@@ -100,7 +100,7 @@ In V1, `runDetached()` should return an exception if the calling worker is not g
 Gears has a few goals not addressed by those specs:
   * cross-origin workers
   * detached workers
-  * passing non-string values (including Blob and Endpoint) between workers.
+  * passing non-string values (including Blob and Endpoint) between workers
 
 There are also compatibility goals, including:
   * backward compatibility with text-based workers
