@@ -33,14 +33,22 @@ MODULE		= $(SHORT_NAME)
 # third_party/breakpad
 
 ifeq ($(OS),win32)
-THIRD_PARTY_VPATH	+= \
+BREAKPAD_VPATH	+= \
 		../third_party/breakpad/src/client/windows/handler \
 		../third_party/breakpad/src/common/windows \
 		$(NULL)
 
-THIRD_PARTY_CPPSRCS	+= \
+BREAKPAD_CPPSRCS	+= \
 		exception_handler.cc \
 		guid_string.cc \
+		$(NULL)
+
+THIRD_PARTY_VPATH	+= \
+		$(BREAKPAD_VPATH) \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		$(BREAKPAD_CPPSRCS) \
 		$(NULL)
 
 
@@ -71,6 +79,53 @@ NPAPI_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
 endif
+endif
+
+#-----------------------------------------------------------------------------
+# third_party/breakpad_osx
+
+ifeq ($(OS),osx)
+BREAKPAD_VPATH	+= \
+		../third_party/breakpad_osx/src/client \
+		../third_party/breakpad_osx/src/client/mac/handler \
+		../third_party/breakpad_osx/src/common \
+		../third_party/breakpad_osx/src/common/mac \
+		$(NULL)
+
+BREAKPAD_CPPSRCS	+= \
+		dynamic_images.cc \
+		exception_handler.cc \
+		file_id.cc \
+		macho_id.cc \
+		macho_utilities.cc \
+		macho_walker.cc \
+		minidump_file_writer.cc \
+		minidump_generator.cc \
+		protected_memory_allocator.cc \
+		string_conversion.cc \
+		string_utilities.cc \
+		$(NULL)		
+
+THIRD_PARTY_VPATH	+= \
+		$(BREAKPAD_VPATH) \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		$(BREAKPAD_CPPSRCS) \
+		$(NULL)
+
+SF_VPATH	+= \
+		base/common/exception_handler_osx \
+		$(NULL)
+
+SF_CPPSRCS	+= \
+		exception_handler_osx.mm \
+		google_breakpad.mm \
+		mach_ipc.mm \
+		on_demand_server.mm \
+		simple_string_dictionary.mm \
+		$(NULL)
+
 endif
 
 #-----------------------------------------------------------------------------
@@ -897,7 +952,7 @@ IE_IDLSRCS	+= \
 IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
-		detect_version_collision.cc \
+		detect_version_collision_win32.cc \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
@@ -961,7 +1016,7 @@ NPAPI_CPPSRCS	+= \
 
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
-		detect_version_collision.cc \
+		detect_version_collision_win32.cc \
 		file_win32.cc \
 		ie_version.cc \
 		message_queue_ie.cc \
@@ -1008,12 +1063,14 @@ SF_CPPSRCS	+= \
 		browser_utils_sf.cc \
 		common_sf.mm \
 		curl_downloader.mm \
+		detect_version_collision_osx.mm \
 		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
 		ipc_message_queue_null.cc \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
+		messagebox.mm \
 		message_queue_sf.cc \
 		module.cc \
 		np_utils.cc \
@@ -1047,6 +1104,25 @@ VISTA_BROKER_CPPSRCS += \
 VISTA_BROKER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
+
+#-----------------------------------------------------------------------------
+# crash_inspector
+
+ifeq ($(OS),osx)
+COMMON_VPATH += \
+		$(BREAKPAD_CPPSRCS) \
+		base/common/exception_handler_osx \
+		$(NULL)
+
+OSX_CRASH_INSPECTOR_CPPSRCS += \
+		$(BREAKPAD_CPPSRCS) \
+		convert_UTF.c \
+		inspector.mm \
+		mach_ipc.mm \
+		on_demand_server.mm \
+		simple_string_dictionary.mm \
+		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # launch_url_with_browser
@@ -1101,6 +1177,7 @@ $(BROWSER)_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # crash_sender
 
+ifeq ($(OS),win32)
 COMMON_VPATH += \
 		crash_sender \
 		../third_party/breakpad/src/client/windows/sender \
@@ -1112,6 +1189,22 @@ CRASH_SENDER_CPPSRCS  += \
 		crash_sender_win32.cc \
 		http_upload.cc \
 		$(NULL)
+endif
+		
+ifeq ($(OS),osx)
+COMMON_VPATH += \
+		crash_sender \
+		gears/base/common/exception_handler_osx \
+		../third_party/breakpad_osx/src/common/mac \
+		$(NULL)
+
+CRASH_SENDER_CPPSRCS += \
+		crash_sender_osx.m \
+		HTTPMultipartUpload.m \
+		nshost_macaddress.m \
+		$(NULL)
+endif
+
 
 #-----------------------------------------------------------------------------
 # canvas
