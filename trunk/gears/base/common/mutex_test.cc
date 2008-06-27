@@ -23,9 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef USING_CCTESTS
+
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
+#ifdef OFFICIAL_BUILD
+// Thread code not yet in official builds.
+#else
 #include "gears/geolocation/thread.h"
+#endif  // OFFICIAL_BUILD
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -74,6 +80,9 @@ static bool TestCondition(std::string16 *error) {
 
 namespace {
 
+#ifdef OFFICIAL_BUILD
+// Thread code not yet in official builds.
+#else
 class WaitCondVar : public Thread {
  public:
   WaitCondVar(CondVar *cond_var, Mutex *mutex, bool* gate, int timeout = -1)
@@ -109,6 +118,7 @@ class WaitCondVar : public Thread {
   bool *gate_;
   int timeout_;
 };
+#endif  // OFFICIAL_BUILD
 
 }  // namespace
 
@@ -117,7 +127,6 @@ static bool TestCondVar(std::string16 *error) {
 
   Mutex mutex;
   CondVar cond_var;
-  bool gate;
 
   // Test WaitWithTimeout with timeout set to zero.
   {
@@ -133,7 +142,11 @@ static bool TestCondVar(std::string16 *error) {
     TEST_ASSERT(result);
   }
 
+#ifdef OFFICIAL_BUILD
+// Thread code not yet in official builds.
+#else
   // Test SignalAll and Wait.
+  bool gate;
   {
     gate = false;
     WaitCondVar wait_thread(&cond_var, &mutex, &gate);
@@ -189,6 +202,7 @@ static bool TestCondVar(std::string16 *error) {
       delete wait_thread[i];
     }
   }
+#endif  // OFFICIAL_BUILD
 
   return ok;
 }
@@ -210,3 +224,5 @@ static bool TestMutexLock(std::string16 *error) {
   // TODO(bgarcia): implement MutexLock tests
   return true;
 }
+
+#endif  // USING_CCTESTS
