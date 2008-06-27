@@ -1041,24 +1041,7 @@ M4FLAGS  += -DI18N_LANGUAGES="($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS)))
 # "UQ" means "un-quoted".
 # IMPORTANT: these values affect most visible names, but there are exceptions.
 # If you change a name below, also search the code for "[naming]"
-
-# We temporarily change the name only when compiling for Safari, because
-# changing it for other platforms would break a bunch of stuff (win32 
-# intaller, location of data directory, etc.)
-# TODO(playmobil): Change this globally to 'Gears', once surrounding issues
-#  have been resolved.
-FRIENDLY_NAME_NEW=Gears
 FRIENDLY_NAME=Google Gears
 SHORT_NAME=gears
-
-# TODO(playmobil): Remove along with the above, need to grep for
-# DPRODUCT_FRIENDLY_NAME_NEW_UQ and change all instances to 
-# PRODUCT_FRIENDLY_NAME_UQ
-M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_NEW_UQ="$(FRIENDLY_NAME_NEW)"
-
-ifeq ($(BROWSER),SF)
-M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME_NEW)"
-else
 M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME)"
-endif
 M4FLAGS  += -DPRODUCT_SHORT_NAME_UQ="$(SHORT_NAME)"
