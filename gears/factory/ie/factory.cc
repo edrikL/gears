@@ -193,8 +193,10 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #ifdef WINCE
   // Furthermore, Canvas, Console, Media and Image are unimplemented on WinCE.
 #else
+#ifdef WIN32
   } else if (object_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(GetJsRunner(), &object);
+#endif
   } else if (object_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {

@@ -26,16 +26,19 @@
 #ifndef GEARS_CANVAS_CANVAS_H__
 #define GEARS_CANVAS_CANVAS_H__
 
-#ifndef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds.
+#if !defined(OFFICIAL_BUILD) && defined(WIN32)
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
+// Can't include any Skia header here, or factory.cc will fail to compile due
+// to unused inline functions defined in the Skia header.
+class SkBitmap;
+class SkCanvas;
 
 class GearsCanvasRenderingContext2D;
 
-// Extension of a subset of HTML5 Canvas for photo manipulation.
-// See http://code.google.com/p/google-gears/wiki/ImagingAPI for more detailed
+// Extension of a subset of HTML5 canvas for photo manipulation.
+// See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
 class GearsCanvas : public ModuleImplBaseClassVirtual {
  public:
@@ -83,29 +86,27 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
   void GetHeight(JsCallContext *context);
   void SetWidth(JsCallContext *context);
   void SetHeight(JsCallContext *context);
-  // One of the strings "rgba_32" and "rgb_24":
-  void GetColorMode(JsCallContext *context);
-  void SetColorMode(JsCallContext *context);
 
   // Returns a context object to draw onto the canvas.
   // IN: String contextId
   // OUT: CanvasRenderingContext2D
   void GetContext(JsCallContext *context);
 
+  // Not exported to JS:
+  SkBitmap *SkiaBitmap();
+  SkCanvas *SkiaCanvas();
+  int Width();
+  int Height();
 
  private:
-  static const std::string16 kColorModeRgba32;
-  static const std::string16 kColorModeRgb24;
-  std::string16 color_mode_;
-  int width_;
-  int height_;
   scoped_refptr<GearsCanvasRenderingContext2D> rendering_context_;
-
-  // Resets the canvas to all transparent black pixels at the given dimensions.
-  void ResetToBlankPixels();
+  // Cannot embed objects directly due to compilation issues; see comment
+  // at top of file.
+  scoped_ptr<SkBitmap> skia_bitmap_;
+  scoped_ptr<SkCanvas> skia_canvas_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
 
-#endif  // OFFICIAL_BUILD
+#endif  // !defined(OFFICIAL_BUILD) && defined(WIN32)
 #endif  // GEARS_CANVAS_CANVAS_H__

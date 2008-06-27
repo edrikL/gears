@@ -26,13 +26,14 @@
 #ifndef GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 #define GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 
-#ifndef OFFICIAL_BUILD
+#if !defined(OFFICIAL_BUILD) && defined(WIN32)
 
 #include "gears/base/common/common.h"
 #include "gears/canvas/canvas.h"
+#include "third_party/skia/include/SkCanvas.h"
 
 // 2D Context to manipulate the canvas.
-// See http://code.google.com/p/google-gears/wiki/ImagingAPI for more detailed
+// See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
 class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
  public:
@@ -253,5 +254,5 @@ class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvasRenderingContext2D);
 };
 
-#endif  // OFFICIAL_BUILD
+#endif  // !defined(OFFICIAL_BUILD) && defined(WIN32)
 #endif  // GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__

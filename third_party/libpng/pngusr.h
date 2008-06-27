@@ -41,7 +41,8 @@
 #define PNG_NO_FIXED_POINT_SUPPORTED
 #define PNG_NO_MNG_FEATURES
 #define PNG_NO_USER_TRANSFORM_PTR
-#define PNG_NO_HANDLE_AS_UNKNOWN
+// Change to get Skia to compile.
+// #define PNG_NO_HANDLE_AS_UNKNOWN
 #define PNG_NO_CONSOLE_IO
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
@@ -66,7 +67,6 @@
 #define PNG_NO_READ_INVERT
 #define PNG_NO_READ_SHIFT
 #define PNG_NO_READ_PACKSWAP
-// #define PNG_NO_READ_FILLER  // TODO(cprince): Remove from Skia instead?
 #define PNG_NO_READ_SWAP_ALPHA
 #define PNG_NO_READ_STRIP_ALPHA
 #define PNG_NO_READ_INVERT_ALPHA
@@ -80,15 +80,19 @@
 #define PNG_NO_READ_oFFs
 #define PNG_NO_READ_pCAL
 #define PNG_NO_READ_pHYs
-// #define PNG_NO_READ_sBIT  // TODO(cprince): Remove from Skia instead?
 #define PNG_NO_READ_sCAL
 #define PNG_NO_READ_sPLT
 #define PNG_NO_READ_TEXT
 #define PNG_NO_READ_tIME
-#define PNG_NO_READ_UNKNOWN_CHUNKS
-#define PNG_NO_READ_USER_CHUNKS
 #define PNG_NO_READ_EMPTY_PLTE
 #define PNG_NO_READ_OPT_PLTE
+// Changes to get Skia to compile:
+// TODO(cprince): Remove these from Skia instead?
+// #define PNG_NO_READ_sBIT
+// #define PNG_NO_READ_FILLER
+// #define PNG_NO_READ_UNKNOWN_CHUNKS
+// #define PNG_NO_READ_USER_CHUNKS
+
 
 #ifdef OFFICIAL_BUILD
 #define PNG_NO_READ_PACK

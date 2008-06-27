@@ -1119,14 +1119,18 @@ CRASH_SENDER_CPPSRCS  += \
 ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
+ifeq ($(OS),win32)  # Skia binary for other platforms not checked in yet.
 $(BROWSER)_VPATH += \
 		canvas \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
+		blob_backed_skia_input_stream.cc \
+		blob_backed_skia_output_stream.cc \
 		canvas.cc \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
+endif  # win32
 endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
