@@ -1,0 +1,142 @@
+#summary Worker API extensions for global namespacing, and detached execution.
+#labels DesignDoc
+*Author:* Chris Prince
+
+=PROBLEM=
+
+Gears provides parallel execution of !JavaScript through the [http://code.google.com/apis/gears/api_workerpool.html worker object].  Workers also support [CrossOriginAPI cross-origin communication].
+
+However, two additional features are frequently requested:
+  * *Global namespacing* - for singleton workers, to which multiple pages can connect.
+  * *Detached execution* - for running a script without any browser windows open.
+
+
+=SOLUTION=
+
+We can enable global namespacing and detached execution by making small, incremental changes to the !WorkerPool module.
+
+The API changes are summarized here.  Design details follow.
+
+{{{
+interface WorkerPool
+  integer createWorker(text)
+  integer createWorkerFromUrl(url)
+  GearsEndpoint openGlobalWorker(text, name)  // NEW METHOD
+  GearsEndpoint openGlobalWorkerFromUrl(url)  // NEW METHOD
+
+  callback onmessage(m)    // NEW: 'm.sender' may be an integer or GearsEndpoint
+  callback onerror(e)
+  void sendMessage(msg, dest)  // NEW: 'dest' may be an integer or GearsEndpoint
+
+  void allowCrossOrigin()
+  void runDetached()       // NEW METHOD
+
+interface GearsEndpoint
+  // Opaque handle, similar to GearsBlob.  No attributes in V1.
+}}}
+
+
+=EXAMPLES=
+
+Assume an offline-enabled site wants to synchronize data with a server.  If multiple windows are open, the site only wants one sync task running.  Using a global worker solves this problem:
+
+{{{
+wp.openGlobalWorkerFromUrl('http://example.com/sync.js');
+}}}
+
+Now assume the site wants the sync process to continue even when all browser windows are closed.  It can do that by adding the following line to 'sync.js':
+
+{{{
+workerPool.runDetached();
+}}}
+
+Assume a different site would like to communicate across all open tabs.  A global worker enables this as well:
+
+{{{
+var w = wp.openGlobalWorkerFromUrl('site-comm.js');
+wp.sendMessage(['addListener'], w);
+...
+wp.sendMessage(['broadcast', data], w);
+...
+wp.sendMessage(['removeListener'], w);
+...
+}}}
+
+ 
+=DETAILS=
+
+Two new concepts are being introduced: worker _scope_ (global or not) and worker _lifetime_ (detached or not).
+
+These concepts are orthogonal.  For example, a site may use workers that are global but not detached.
+
+==Scope==
+
+`openGlobalWorker()` and `openGlobalWorkerFromUrl()` first check if a worker with the given identity exists.  If it does not exist, the worker is created.  The worker is returned as a `GearsEndpoint`.
+
+URL-based global workers are uniquely identified by their `url` parameter. (An optional `name` parameter could be added. But should it be?)
+
+Text-based workers^[1]^ can be uniquely identified by the security origin of the calling site, plus a caller-specified name, which may be empty.
+
+^[1]^ _Note: there is an interesting problem when text-based workers are opened cross-origin.  The "create or open" model doesn't work, because origin A cannot be allowed to provide raw script to run in origin B. Perhaps it's okay to return failure. Or perhaps callers should not be allowed to open text-based global workers across origins. (The latter also simplifies the `name` parameter, because then it doesn't need to include the full origin.)_
+
+==Lifetime==
+
+All workers stay alive as long as they are referenced by an open web page.^[2]^
+
+When there are no more references, one of two things happens:
+  * A worker that has not called `runDetached()` is terminated.
+  * A worker that has called `runDetached()` may continue executing.
+    * In this case, Gears shows a notification to alert the user. The notification also lets the user control whether the worker continues.
+
+In V1, `runDetached()` should return an exception if the calling worker is not global, as this probably indicates a developer error.  That's because detached non-global workers are orphaned; other workers can never connect to them.
+
+^[2]^ _Successfully detached workers should also count as open references. Not-yet-detached global workers should not count; otherwise unintended cycles can occur._
+
+
+=DESIGN Q&A=
+
+*Q: How does this compare to Ian Hickson's proposal for [http://hixie.ch/specs/dom/workers/0.9 workers] and [http://hixie.ch/specs/dom/messages/0.9 endpoints]?*
+
+Gears has a few goals not addressed by those specs:
+  * cross-origin workers
+  * detached workers
+  * passing non-string values (including Blob and Endpoint) between workers.
+
+There are also compatibility goals, including:
+  * backward compatibility with text-based workers
+  * backward compatibility with existing naming conventions
+
+We should be able to reconcile these differences.  And Gears should implement the unified spec as !WorkerPool2.  But until then, compatibility with !WorkerPool should be maintained. Breaking compatibility twice is not worth the cost.
+
+
+*Q: Why doesn't !GearsEndpoint have a sendMessage() method?*
+
+It almost certainly will in !WorkerPool2.  And it could today as well.  But then the API would be inconsistent, and thus confusing:
+{{{
+var w1 = wp.createWorker('foo.js');
+var w2 = wp.openGlobalWorkerFromUrl('bar.js');
+...
+wp.sendMessage(message, w1);
+...
+w2.sendmessage(message);
+}}}
+
+*Q: Why do callers decide whether a worker is global, rather than the worker itself?*
+
+Callers may want to open the same script multiple times, as both a global worker and a non-global worker.  For example:
+{{{
+    wp.createWorkerFromUrl("http://a.com/dataManager.js");  // manages secret data
+wp.openGlobalWorkerFromUrl("http://a.com/dataManager.js");  // manages shared data
+}}}
+
+
+*Q1: Why is the full URL used for worker identity, rather than just the security origin?*
+
+*Q2: Why aren't there simple (or "naked") names in the global namespace?*
+
+It would be a security hole if sites could map scripts to (name, origin) pairs.  Similar logic applies to naked global names.
+
+Consider this scenario:
+  * `good.com` loads `helper.com/login.js` as ("helper.com", "login").
+  * But if `evil.com` runs first, it can map ("helper.com", "login") to `helper.com/echo.js`.
+  * When `good.com` runs, it will be sending sensitive information to the wrong script!
