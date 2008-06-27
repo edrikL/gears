@@ -1018,11 +1018,7 @@ SHORT_NAME=gears
 # TODO(playmobil): Remove along with the above, need to grep for
 # DPRODUCT_FRIENDLY_NAME_NEW_UQ and change all instances to 
 # PRODUCT_FRIENDLY_NAME_UQ
-# We need this because when building the installer, BROWSER isn't
-# defined.
-ifeq ($(OS),osx)
 M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_NEW_UQ="$(FRIENDLY_NAME_NEW)"
-endif
 
 ifeq ($(BROWSER),SF)
 M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME_NEW)"

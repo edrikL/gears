@@ -30,7 +30,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
+  <!-- [naming] WinCE uses the new product name. 
+       Remove this when renaming is complete. -->
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+  <title>PRODUCT_FRIENDLY_NAME_NEW_UQ Security Warning</title>
+~,~
   <title>PRODUCT_FRIENDLY_NAME_UQ Security Warning</title>
+~)
   <style type="text/css">
     .text-alignment {
       /* This is modified via a script for rtl languages. */
@@ -153,7 +160,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="string-deny"><TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">Deny</TRANS_BLOCK></div>
     <div id="string-deny-accesskey"><TRANS_BLOCK desc="Access key for the deny button.">D</TRANS_BLOCK></div>
     <div id="string-cancel"><TRANS_BLOCK desc="Button user can press to cancel the dialog.">Cancel</TRANS_BLOCK></div>
-    <div id="string-never-allow"><TRANS_BLOCK desc="Link that disallows Gears on this site.">Never allow it</TRANS_BLOCK></div>
   </div>
 
   <!--
@@ -168,9 +174,18 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
    <h2>Information</h2>
    <p>
      <TRANS_BLOCK desc="Header for basic help section.">
+     <!-- [naming] WinCE uses the new product name. 
+          Remove this when renaming is complete. -->
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+     PRODUCT_FRIENDLY_NAME_NEW_UQ is an open source browser extension that
+     enables web applications to provide offline functionality using the
+     following JavaScript APIs:
+~,~
      PRODUCT_FRIENDLY_NAME_UQ is an open source browser extension that enables
      web applications to provide offline functionality using the following
      JavaScript APIs:
+~)
      </TRANS_BLOCK>
    </p>
    <ul>
@@ -195,14 +210,28 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         <td width="100%" class="text-alignment" valign="middle">
           <div id="local-data" style="display:none">
             <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
+            <!-- [naming] WinCE uses the new product name. 
+                 Remove this when renaming is complete. -->
             The website below wants to store information on your computer 
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+            using PRODUCT_FRIENDLY_NAME_NEW_UQ.
+~,~
             using PRODUCT_FRIENDLY_NAME_UQ.
+~)
             </TRANS_BLOCK>
           </div>
           <div id="location-data" style="display:none">
             <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information">
+            <!-- [naming] WinCE uses the new product name. 
+                 Remove this when renaming is complete. -->
             The website below wants to access information about your location 
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+            using PRODUCT_FRIENDLY_NAME_NEW_UQ.
+~,~
             using PRODUCT_FRIENDLY_NAME_UQ.
+~)
             </TRANS_BLOCK>
           </div>
         </td>
@@ -245,8 +274,15 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <td valign="middle">
             <label for="unlock">
           <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
+              <!-- [naming] WinCE uses the new product name. 
+                   Remove this when renaming is complete. -->
               &nbsp;I <span class="accesskey">t</span>rust this site. Allow
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+              it to use PRODUCT_FRIENDLY_NAME_NEW_UQ.
+~,~
               it to use PRODUCT_FRIENDLY_NAME_UQ.
+~)
           </TRANS_BLOCK>
             </label>
           </td>
@@ -272,9 +308,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         <td class="text-alignment" valign="middle">
           <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
-              Never allow this site
-            </TRANS_BLOCK>
-          </a>
+              Never allow this site</TRANS_BLOCK></a>
         </td>
       </tr>
       </table>
@@ -283,30 +317,36 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
+
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+          <td width="50%" class="text-alignment" valign="middle">
+~,~
+          <td width="100%" class="text-alignment" valign="middle">
+~)
+            <a href="#" onclick="denyAccessPermanently(); return false;">
+            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+              Never allow it</TRANS_BLOCK></a>
+~,~
+              Never allow this site</TRANS_BLOCK></a>
+~)
+          </td>
+
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~         <!-- 
-          We use form input buttons instead of buttons elements as PIE
+          We use form input buttons instead of button elements as PIE
           does not support them.
           -->
 
-          <td width="50%" class="text-alignment" valign="middle">
-            <input type="BUTTON" id="never-allow-button" onclick="denyAccessPermanently(); return false;"></input>
-          </td>
-
-          <div id="div-buttons">
-            <td width="50%" align="right" valign="middle">
-              <input type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
+          <td width="50%" align="right" valign="middle">
+            <form>
+              <input type="BUTTON" id="allow-button" onclick="allowAccessPermanently(); return false;"></input>
               <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
-            </td>
-          </div>
-~,~           
-          <td width="100%" class="text-alignment" valign="middle">
-            <a href="#" onclick="denyAccessPermanently(); return false;">
-            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
-              Never allow this site
-            </TRANS_BLOCK>
-            </a>
+            </form>
           </td>
+~,~
           <td nowrap="true" align="right" valign="middle">
             <button id="allow-button" class="custom"
               onclick="allowAccessPermanently(); return false;"></button
@@ -348,7 +388,6 @@ m4_include(ui/common/button.js)
   }
 
   if (browser.ie_mobile) {
-    setButtonLabel("string-never-allow", "never-allow-button");
     var allowText = dom.getElementById("string-allow");
     if (allowText) {
       window.pie_dialog.SetButton(allowText.innerText, "allowAccessPermanently();");
@@ -358,6 +397,8 @@ m4_include(ui/common/button.js)
     if (cancelText) {
       window.pie_dialog.SetCancelButton(cancelText.innerText);
     }
+    // Focus allow button by default.
+    document.getElementById('allow-button').focus();
   }
   initWarning();
 
