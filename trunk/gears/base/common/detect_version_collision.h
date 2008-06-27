@@ -28,15 +28,17 @@
 // point of never having to reboot the system. This code helps us deal with
 // a case where a browser restart is required.  When an upgrade has been
 // downloaded and registered but a previous version is loaded and running,
-// thing will not work properly. We can end up with both versions of Gears
-// loaded into the same process and the system is confused about which DLL
-// contains CLSIDs, so neither version is fully functional, yuck.  Similarly,
-// different versions may require different database schemas.
+// thing will not work properly.
+// On win32 we can end up with both versions of Gears loaded into the same 
+// process and the system is confused about which DLL contains CLSIDs, so 
+// neither version is fully functional, yuck.  Similarly, different versions 
+// may require different database schemas.
 //
 // Our general approach for the short term is to have the new version
-// cripple itself at DLL load time if it sees an old version still running.
+// cripple itself at load time if it sees an old version still running.
 // We could cripple ourselves in several ways:
 //
+// On win32:
 // a. Refuse to load the DLL by returning E_FAIL from DllMain, but this could
 //    prevent the new DLL from being registered and cause the installer to fail
 // b. Refuse to create COM class factories by returning E_FAIL from
@@ -60,8 +62,8 @@
 // would still be required in this scenario, but at least Gears continues to
 // function properly.
 
-#ifndef GEARS_BASE_IE_DETECT_VERSION_COLLISION_H__
-#define GEARS_BASE_IE_DETECT_VERSION_COLLISION_H__
+#ifndef GEARS_BASE_COMMON_DETECT_VERSION_COLLISION_H__
+#define GEARS_BASE_COMMON_DETECT_VERSION_COLLISION_H__
 
 #include <ctype.h>
 
@@ -77,4 +79,4 @@ void MaybeNotifyUserOfVersionCollision();
 // Puts up a simple message box alerting the user about the problem
 void NotifyUserOfVersionCollision();
 
-#endif  // GEARS_BASE_IE_DETECT_VERSION_COLLISION_H__
+#endif  // GEARS_BASE_COMMON_DETECT_VERSION_COLLISION_H__
