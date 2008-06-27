@@ -35,7 +35,7 @@
 #include <wininet.h>
 #include "gears/base/common/browsing_context.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
 #include <dispex.h>  // for IDispatchEx

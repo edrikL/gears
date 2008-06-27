@@ -23,32 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/detect_version_collision.h"
 #include "gears/ui/safari/settings_menu.h"
 #include "gears/ui/common/settings_dialog.h"
 
 @implementation GearsSettingsMenuEnabler
-+ (BOOL)installHook {
++ (void)installSettingsMenu {
+  // Allocate an instance of ourselves.
   GearsSettingsMenuEnabler *inst = [[GearsSettingsMenuEnabler alloc] init];
-  if (!inst) return NO;
-  
-  NSApplication *app = [NSApplication sharedApplication];
-  if (!app) return NO;
+  if (!inst) return;
 
-  // Make sure we don't try to add our Notification listener more than once.
-  static bool notification_hook_installed = false;
-  assert(!notification_hook_installed);
-  if (!notification_hook_installed) {
-    [[NSNotificationCenter defaultCenter] 
-        addObserver:inst 
-           selector:@selector(applicationDidFinishLaunching:) 
-               name:NSApplicationDidFinishLaunchingNotification
-             object:app];
-    notification_hook_installed = true;
-  }
-  return YES;
-}
-
-- (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
   NSMenu *mainMenu = [NSApp mainMenu];
   NSMenuItem *app_menu = [mainMenu itemAtIndex:0];
   if (!app_menu) return;
@@ -58,10 +42,15 @@
                             action:@selector(showSettingsDialog) 
                      keyEquivalent:@"" 
                            atIndex:4];
-  [new_menu setTarget:self];
+  [new_menu setTarget:inst];
 }
 
 - (void)showSettingsDialog {
+  if (DetectedVersionCollision()) {
+    NotifyUserOfVersionCollision();
+    return;
+  }
+  
   if (!SettingsDialog::IsVisible()) {
     SettingsDialog::Run();
   }

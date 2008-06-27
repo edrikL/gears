@@ -87,7 +87,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_token.h"

@@ -24,26 +24,63 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
-#import "gears/ui/safari/settings_menu.h"
+#include "gears/base/common/detect_version_collision.h"
+#include "gears/base/common/exception_handler.h"
 #import "gears/base/safari/browser_load_hook.h"
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
+#import "gears/ui/safari/settings_menu.h"
+
+static ExceptionManager exception_manager(true);
 
 @implementation GearsBrowserLoadHook
 + (BOOL)installHook {
-  // Register HTTP intercept hook.
-  if (![GearsHTTPHandler registerHandler]) {
-    return NO;
+#ifdef OFFICIAL_BUILD
+  // Init Breakpad.
+  exception_manager.StartMonitoring();
+#endif
+
+  // If there is a version collision, don't register HTTP interception hoooks.  
+  if (!DetectedVersionCollision()) {
+    // Register HTTP intercept hook.
+    if (![GearsHTTPHandler registerHandler]) {
+      return NO;
+    }
+    
+    // Install workarounds.
+    ApplyProtocolWorkaround();
   }
   
-  if (![GearsSettingsMenuEnabler installHook]) {
-    return NO;
+  // Register an applicationDidFinishLaunching delegeate
+  GearsBrowserLoadHook *inst = [[GearsBrowserLoadHook alloc] init];
+  if (!inst) return NO;
+  
+  NSApplication *app = [NSApplication sharedApplication];
+  if (!app) return NO;
+
+  // Make sure we don't try to add our Notification listener more than once.
+  static bool notification_hook_installed = false;
+  assert(!notification_hook_installed);
+  if (!notification_hook_installed) {
+    [[NSNotificationCenter defaultCenter] 
+        addObserver:inst 
+           selector:@selector(applicationDidFinishLaunching:) 
+               name:NSApplicationDidFinishLaunchingNotification
+             object:app];
+             
+    notification_hook_installed = true;
   }
   
-  ApplyProtocolWorkaround();
-  
+  // If we got here then we loaded OK
   LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
   return YES;
 }
 
+// Called at the end of the application's launch, when NIBs are loaded and
+// the menu bar is ready.
+- (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
+
+  // Install Settings Menu.
+  [GearsSettingsMenuEnabler installSettingsMenu];
+}
 @end

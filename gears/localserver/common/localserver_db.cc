@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "gears/base/common/exception_handler_win32.h"  // For ExceptionManager
+#include "gears/base/common/exception_handler.h"  // For ExceptionManager
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/paths.h"

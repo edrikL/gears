@@ -44,7 +44,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #ifdef WINCE
 // WinCE does not use HtmlEventMonitor to monitor page unloading.
 #else

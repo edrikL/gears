@@ -29,7 +29,8 @@
 #import <Cocoa/Cocoa.h>
 
 @interface GearsSettingsMenuEnabler : NSObject
-+(BOOL)installHook;
+// Called by GearsBrowserLoadHook after the Application's NIBs are loaded.
++ (void)installSettingsMenu;
 @end
 
 #endif  // GEARS_UI_SETTINGS_MENU_H__

@@ -25,10 +25,10 @@
 #ifdef WINCE
 #include "gears/base/ie/activex_utils.h"
 #endif
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/detect_version_collision.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/base/ie/bho.h"
-#include "gears/base/ie/detect_version_collision.h"
 #include "gears/factory/common/factory_utils.h"
 #ifdef WINCE
 #include "gears/installer/iemobile/cab_updater.h"
