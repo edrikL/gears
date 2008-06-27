@@ -158,7 +158,7 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   // OUT: GearsBlob[] files
   void GetLocalFiles(JsCallContext *context);
 
-#ifdef OFFICIAL_BUILD
+#if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
   // The notification API has not been finalized for official builds.
 #else
   // IN: void
@@ -174,7 +174,7 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   void RemoveNotification(JsCallContext *context);
 #endif  // OFFICIAL_BUILD
 
-#ifdef OFFICIAL_BUILD
+#if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
   // IN: DomElement div, object callbacks

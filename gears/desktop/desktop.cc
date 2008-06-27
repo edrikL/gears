@@ -61,16 +61,20 @@ void Dispatcher<GearsDesktop>::Init() {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android
+#else
   RegisterMethod("createNotification", &GearsDesktop::CreateNotification);
   RegisterMethod("removeNotification", &GearsDesktop::RemoveNotification);
   RegisterMethod("showNotification", &GearsDesktop::ShowNotification);
+#endif
 #endif  // OFFICIAL_BUILD
 
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#ifdef BROWSER_WEBKIT
-  // The Drag-and-Drop API has not been implemented for Safari.
+#if defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Safari and Android.
 #else
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
 #endif
@@ -733,7 +737,9 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android.
+#else
 uint32 FindNotifierProcess(JsCallContext *context) {
   uint32 process_id = NotifierProcess::FindProcess();
   if (!process_id) {
@@ -827,14 +833,14 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
                             notification);
   }
 }
-
+#endif
 #endif  // OFFICIAL_BUILD
 
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#ifdef BROWSER_WEBKIT
-  // The Drag-and-Drop API has not been implemented for Safari.
+#if defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Safari and Android.
 #else
 void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   if (EnvIsWorker()) {
