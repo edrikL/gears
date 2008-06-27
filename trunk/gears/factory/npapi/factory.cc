@@ -223,7 +223,7 @@ void GearsFactory::GetPermission(JsCallContext *context) {
   if (!custom_content.get()) { return; }
  
   bool has_permission = GetPermissionsManager()->AcquirePermission(
-      PermissionsDB::PERMISSION_LOCATION_DATA,
+      PermissionsDB::PERMISSION_LOCAL_DATA,
       custom_content.get());
 
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
