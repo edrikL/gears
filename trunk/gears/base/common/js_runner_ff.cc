@@ -50,7 +50,7 @@
 
 #include "genfiles/localserver.h"
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()

@@ -30,7 +30,7 @@
 
 #include "gears/localserver/common/update_task.h"
 
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"

@@ -35,11 +35,10 @@
 //     /breakpad/src/common/windows/guid_string.cc
 //     /breakpad/src/common/windows/http_upload.cc
 
-#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__
-#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__
+#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
+#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
 
-// TODO(michaeln): rename this file to exception_handler.h
-#if defined(WIN32) && !defined(WINCE)
+#if (defined(WIN32) && !defined(WINCE)) || defined(BROWSER_WEBKIT)
 
 namespace google_breakpad {
   class ExceptionHandler;
@@ -74,19 +73,19 @@ class ExceptionManager {
   // false is returned.
   static bool ReportAndContinue();
 
+// None of this is used on OS X.
+#if (defined(WIN32) && !defined(WINCE))
   // TODO(michaeln): Cleanup. The following should not be called
   // directly, ideally these should be private methods.
   bool catch_entire_process() { return catch_entire_process_; }
-  static void SendMinidump(const char *minidump_filename);
-  static bool CanSendMinidump();  // considers throttling
 
  private:
   static ExceptionManager *instance_;
 
   bool catch_entire_process_;
   google_breakpad::ExceptionHandler *exception_handler_;
+#endif
 };
-
 #else
 
 // Stub to allow compilation on OS'es for which we do not yet implement crash
@@ -97,4 +96,4 @@ class ExceptionManager {
 };
 
 #endif  // WIN32 && !WINCE
-#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__
+#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__

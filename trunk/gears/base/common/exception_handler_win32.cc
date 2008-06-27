@@ -32,7 +32,7 @@
 #include <shellapi.h>
 #include <time.h>
 
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 
 #include "gears/base/common/paths.h"
 

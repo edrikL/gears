@@ -25,7 +25,7 @@
 
 #include "gears/database/database_utils.h"
 
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/paths.h"

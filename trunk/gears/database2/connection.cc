@@ -25,7 +25,7 @@
 
 #include "gears/database2/connection.h"
 
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 // TODO(aa): Refactor so we don't have to rely on code from database1.

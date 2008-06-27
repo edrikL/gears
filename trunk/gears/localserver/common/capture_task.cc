@@ -25,7 +25,7 @@
 
 #include "gears/localserver/common/capture_task.h"
 
-#include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/exception_handler.h"
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
