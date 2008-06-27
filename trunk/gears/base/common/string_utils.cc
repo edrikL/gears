@@ -30,7 +30,7 @@
 // Android is missing wcslen. This is just a wide character strlen.
 #include <unicode/ustring.h>
 size_t wcslen(const char16 *str) {
-  return u_strlen(str);
+  return u_strlen(reinterpret_cast<const UChar*>(str));
 }
 #endif  // ANDROID
 
