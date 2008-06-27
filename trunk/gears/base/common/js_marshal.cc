@@ -230,7 +230,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
 bool MarshaledJsToken::Unmarshal(
     ModuleEnvironment *module_environment,
     JsScopedToken *out) {
-  JsRunnerInterface *js_runner = module_environment->js_runner_;
+  JsRunnerInterface *js_runner = module_environment->js_runner_.get();
   bool success = false;
   switch (type_) {
     case JSPARAM_BOOL: {

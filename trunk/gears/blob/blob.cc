@@ -144,8 +144,9 @@ class MarshaledGearsBlob : public MarshaledModule {
 
   bool Unmarshal(ModuleEnvironment *module_environment,
                  JsScopedToken *out) {
+    JsRunnerInterface *js_runner = module_environment->js_runner_.get();
     scoped_refptr<GearsBlob> gears_blob;
-    if (!CreateModule<GearsBlob>(module_environment->js_runner_, &gears_blob) ||
+    if (!CreateModule<GearsBlob>(js_runner, &gears_blob) ||
         !gears_blob->InitBaseManually(module_environment)) {
       return false;
     }

@@ -93,7 +93,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
 
   // create javascript objects and place in javascript array
   for (int i = 0; i < size; ++i) {
-    JsRunnerInterface* js_runner = module_environment.js_runner_;
+    JsRunnerInterface* js_runner = module_environment.js_runner_.get();
     if (!js_runner) {
       *error = STRING16(L"Failed to get JsRunnerInterface.");
       return false;

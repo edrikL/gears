@@ -32,11 +32,13 @@
 
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/browsing_context.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/permissions_manager.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 
@@ -66,7 +68,6 @@
 #endif  // BROWSER_xyz
 
 class ModuleWrapperBaseClass;
-class JsRunnerInterface;
 
 #ifdef WINCE
 class GearsFactory;
@@ -81,25 +82,15 @@ class GearsFactory;
 // Ref/Unref methods.
 struct ModuleEnvironment : public RefCounted {
  public:
+  // Note that ModuleEnvironment will take ownership of the JsRunnerInterface*
+  // passed to it, and will be responsible for deleting it.
   ModuleEnvironment(SecurityOrigin security_origin,
-#if BROWSER_FF || BROWSER_NPAPI
-                    JsContextPtr js_context,
-#elif BROWSER_IE
+#if BROWSER_IE
                     IUnknown *iunknown_site,
 #endif
                     bool is_worker,
                     JsRunnerInterface *js_runner,
-                    BrowsingContext *browsing_context)
-      : security_origin_(security_origin),
-  #if BROWSER_FF || BROWSER_NPAPI
-      js_context_(js_context),
-  #elif BROWSER_IE
-      iunknown_site_(iunknown_site),
-  #endif
-      is_worker_(is_worker),
-      js_runner_(js_runner),
-      browsing_context_(browsing_context),
-      permissions_manager_(security_origin) {}
+                    BrowsingContext *browsing_context);
 
   // Note that the SecurityOrigin may not necessarily be the same as the
   // originating page, e.g. in the case of a cross-origin worker, it would be
@@ -119,7 +110,7 @@ struct ModuleEnvironment : public RefCounted {
 #endif
 
   bool is_worker_;
-  JsRunnerInterface *js_runner_;
+  scoped_ptr<JsRunnerInterface> js_runner_;
   scoped_refptr<BrowsingContext> browsing_context_;
 
   PermissionsManager permissions_manager_;
@@ -127,7 +118,25 @@ struct ModuleEnvironment : public RefCounted {
  private:
   // This struct is ref-counted and hence has a private destructor (which
   // should only be called on the final Unref).
-  virtual ~ModuleEnvironment() {}
+  virtual ~ModuleEnvironment() {
+    // TODO(nigeltao): Yes, this is an intentional memory leak of js_runner_.
+    // As of just before CL 7536880, we were accidentally leaking
+    // DocumentJsRunner instances but not JsRunner instances (i.e. js_runner_
+    // instances that represent the JS engine on the main thread, but not those
+    // on the worker threads). That ChangeList did not modify actual behavior,
+    // but it did make it explicit that we have a memory leak that we have to
+    // fix.
+    // Unfortunately, fixing the leak isn't as easy as just removing the
+    // js_runner_.release() call below, since at least on some platforms,
+    // doing so will crash the browser. It is up to future ChangeLists to
+    // remove the BROWSER_XXs from the #if below, once the leak is plugged
+    // properly, for each XX.
+#if BROWSER_FF || BROWSER_IE || BROWSER_NPAPI
+    if (!is_worker_) {
+      js_runner_.release();
+    }
+#endif
+  }
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleEnvironment);
 };
