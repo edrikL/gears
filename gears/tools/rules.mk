@@ -90,6 +90,7 @@ $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
 NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS) $(NOTIFIER_CSRCS))
 NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_TEST_CPPSRCS)  $(NOTIFIER_TEST_CSRCS))
+OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
@@ -129,6 +130,7 @@ DEPS = \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(OSX_CRASH_INSPECTOR_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SF_INPUTMANAGER_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -195,12 +197,15 @@ IE_WINCESETUP_DLL   = $(IE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
 SF_INPUTMANAGER_EXE = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 
 # Note: crash_sender.exe name needs to stay in sync with name used in
-# exception_handler_win32.cc.
-CRASH_SENDER_EXE  = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
-NOTIFIER_EXE      = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
-NOTIFIER_TEST_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
-OSX_LAUNCHURL_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
-PERF_TOOL_EXE     = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
+# exception_handler_win32.cc and exception_handler_osx/google_breakpad.mm.
+CRASH_SENDER_EXE        = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
+NOTIFIER_EXE            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
+NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
+# Note: crash_inspector name needs to stay in sync with name used in
+# exception_handler_osx/google_breakpad.mm.
+OSX_CRASH_INSPECTOR_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_inspector$(EXE_SUFFIX)
+OSX_LAUNCHURL_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
+PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
 # development environment as deployment environment.
@@ -817,10 +822,27 @@ $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PO
 	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(SKIA_LIB) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+# Dump the symbols and strip the executable
+	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a ppc $@ > $@_ppc.symbols
+	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a i386 $@ > $@_i386.symbols
+	$(STRIP_EXECUTABLE)
 	rm $(OUTDIR)/obj_list.temp
 
+# Crash inspector is launched by the crashed process from it's exception handler
+# and is what actually communicates with the crashed process to extract the
+# minidump.  It then launches crash_sender in order to actually send the
+# minidump over the wire.
+$(OSX_CRASH_INSPECTOR_EXE): $(OSX_CRASH_INSPECTOR_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(OSX_CRASH_INSPECTOR_OBJS) -framework Carbon
+
+ifeq ($(OS),win32)
 $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) advapi32.lib shell32.lib wininet.lib
+endif
+ifeq ($(OS),osx)
+$(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) -framework Carbon -framework Cocoa -framework Foundation -framework IOKit -framework SystemConfiguration -lstdc++
+endif
 
 $(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
@@ -921,7 +943,7 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@
@@ -930,6 +952,9 @@ $(SF_PLUGIN_BUNDLE): $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
 # Add Info.plist file & localized strings.
 	cat tools/osx/Info.plist | sed 's/$${EXECUTABLE_NAME}/Gears/' > $@/Contents/Info.plist
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
+# Copy breakpad exes.
+	cp -r $(CRASH_SENDER_EXE) $@/Contents/Resources/
+	cp -r $(OSX_CRASH_INSPECTOR_EXE) $@/Contents/Resources/
 # Copy the actual plugin.
 	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
 # Create webarchives for all dialogs.

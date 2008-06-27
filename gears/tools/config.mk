@@ -164,6 +164,11 @@ ifdef IS_WIN32_OR_WINCE
 CPPFLAGS += -I../third_party/breakpad/src
 endif
 
+ifeq ($(OS),osx)
+# Breakpad assumes it is in the include path
+CPPFLAGS += -I../third_party/breakpad_osx/src
+endif
+
 ifeq ($(BROWSER),FF2)
 GECKO_BASE = ../third_party/gecko_1.8
 else
@@ -321,6 +326,8 @@ MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 ECHO=@echo
 
 CPPFLAGS += -DOS_MACOSX
+# for breakpad
+CPPFLAGS += -DUSE_PROTECTED_ALLOCATIONS=1
 
 ifeq ($(BROWSER),SF)
 CPPFLAGS += -I ../third_party/spidermonkey/nspr/pr/include
@@ -378,11 +385,22 @@ LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
 COMMON_CPPFLAGS += -fvisibility=hidden
 COMMON_CXXFLAGS += -fvisibility-inlines-hidden
 
-COMPILE_FLAGS_dbg = -g -O0
+COMPILE_FLAGS_dbg = -O0
 COMPILE_FLAGS_opt = -O2
-COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+ifeq ($(BROWSER),SF)
+# Breakpad on OSX needs debug symbols to use the STABS format, rather than the
+# default DWARF debug symbols format. Note that we enable gstabs for debug &
+# opt; we strip them later in opt.
+COMPILE_FLAGS += -gstabs+
+else
+# TODO(playmobil): use gstabs+ universally once we have Breakpad working for
+# the FF OSX release.
+COMPILE_FLAGS_dbg += -g
+endif
+COMPILE_FLAGS += -c -o $@ -fPIC -fmessage-length=0 -Wall $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
+
 
 # TODO(playmobil): Remove this condition and move -Werror directly into the COMPILE_FLAGS definition.
 ifeq ($(BROWSER),SF)
@@ -400,6 +418,24 @@ THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch ppc -arch i386 -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
+
+ifeq ($(BROWSER),SF)
+# libcrypto required by breakpad.
+SHARED_LINKFLAGS += -lcrypto
+endif
+
+# Command to strip debug symbols from a binary, we need this so we can dump
+# the symbols from an opt build for breakpad, and then strip the symbols
+# as a separate phase.
+# TODO(playmobil): Remove the conditional and add to FF targets once we have
+# Breakpad working for the FF OSX release.
+ifeq ($(BROWSER),SF)
+ifeq ($(MODE),OPT)
+STRIP_EXECUTABLE = /Developer/usr/bin/strip -Sx $@
+else
+STRIP_EXECUTABLE =
+endif
+endif
 
 MKLIB = ar rcs
 LIB_PREFIX = lib
