@@ -62,6 +62,19 @@ void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("getContext", &GearsCanvas::GetContext);
 }
 
+void GearsCanvas::LazyInitialize() {
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+}
+
+void GearsCanvas::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  rendering_context_.reset();
+}
+
 void GearsCanvas::Load(JsCallContext *context) {
   ModuleImplBaseClass *other_module;
   JsArgument args[] = {
@@ -219,6 +232,8 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     return;
   }
   if (rendering_context_.get() == NULL) {
+    LazyInitialize();
+
     CreateModule<GearsCanvasRenderingContext2D>(GetJsRunner(),
         &rendering_context_);
     if (!rendering_context_->InitBaseFromSibling(this)) {
