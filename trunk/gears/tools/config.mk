@@ -207,7 +207,15 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
 
 SKIA_LIB_DIR = ../third_party/skia
-SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
+ifeq ($(OFFICIAL_BUILD),1)
+# Not finalized for official builds.
+else
+ifeq ($(OS),win32)  # Skia binaries for other platforms not checked in yet.
+# Only the dbg version of the Skia lib has been checked in so far. We use this
+# in Gears opt builds as well.
+SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-dbg-$(OS)-$(ARCH)$(LIB_SUFFIX)
+endif
+endif
 
 LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 

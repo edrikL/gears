@@ -177,8 +177,10 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   // The Canvas, Console, Database2, Geolocation, Media, and Image APIs have not been
   // finalized for official builds.
 #else
+#ifdef WIN32
   } else if (object_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(GetJsRunner(), &object);
+#endif
   } else if (object_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.databasemanager")) {

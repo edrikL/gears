@@ -23,79 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Tests that all functions and properties of the canvas and context are
-// defined.
-/* function testStub() {
-  // Create a new canvas object in each test to not have a dependency on the
-  // state of the canvas or its context and therefore a dependency on the order
-  // of execution of tests.
-  if(isOfficial)
-    return;
-  var canvas = google.gears.factory.create("beta.canvas","1.0");
-  var ctx = canvas.getContext('gears-2d');
-  canvas.load({});
-  canvas.toBlob("image/jpeg", {});
-
-  canvas.clone();
-
-  assertEqual(canvas.originalPalette, undefined);
-
-  canvas.crop(10, 10, 100, 100);
-
-  ctx.save();
-  ctx.restore();
-
-  ctx.clearRect(200, 200, 30, 30);
-  ctx.fillRect(200, 200, 30, 30);
-  ctx.strokeRect(200, 200, 30, 30);
-
-  ctx.scale(0.8, 0.7);
-  ctx.scale(0.8);
-  ctx.rotate(0.34);
-  ctx.translate(30, -20);
-  ctx.transform(1, 2, 3, 4, 5, 6);
-  ctx.setTransform(1, 2, 3, 4, 5, 6);
-
-  ctx.createImageData(1024, 768);
-  ctx.getImageData(0, 0, 500, 400);
-  
-  var dummyImageData = {};
-  ctx.putImageData(dummyImageData, 100, 100);
-  ctx.putImageData(dummyImageData, 100, 100, 10, 20, 30, 40);
-
-  var dummyMatrix = {};
-  ctx.colorTransform(dummyMatrix);
-  ctx.convolutionTransform(dummyMatrix);
-  ctx.medianFilter(4.3);
-
-  ctx.drawText('Hello World', 'Times New Roman', 12, 0, 0, 100, 40, {});
-  ctx.drawText('Hello World', 'Times New Roman', 12, 0, 0, 100, 40);
-  ctx.drawText('Hello World', 'Times New Roman', 12, 0, 0);
-
-  var dummyImage = {};
-  ctx.drawImage(dummyImage, 100, 90);
-  ctx.drawImage(dummyImage, 100, 90, 1024, 768);
-  ctx.drawImage(dummyImage, 10, 10, 50, 50, 100, 90, 1024, 768);
-
-  var dummyImageData = {};
-  ctx.drawImageData(dummyImageData, 10, 10, 400, 300, 50, 40);
-
-  ctx.adjustBrightness(0.5);
-  ctx.adjustContrast(0.5);
-  ctx.adjustSaturation(0.5);
-  ctx.adjustHue(0.5);
-
-  ctx.blur(0.1, 8);
-  ctx.sharpen(0.2, 6);
-
-  ctx.resetTransform();
-} */
 
 // Test that properties have the correct initial values, and that they can be 
 // read and written.
 function testProperties() {
-  if(isOfficial)
-    return;
   var canvas = google.gears.factory.create("beta.canvas","1.0");
   var ctx = canvas.getContext('gears-2d');
   assertEqual(300, canvas.width);
@@ -104,13 +35,12 @@ function testProperties() {
   assertEqual('source-over', ctx.globalCompositeOperation);
   assertEqual('#000000', ctx.fillStyle);
 
-/*   var WIDTH = 50, HEIGHT = 40;
+  var WIDTH = 50, HEIGHT = 40;
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
-  assertEqual(canvas.width, WIDTH);
-  assertEqual(canvas.height, HEIGHT);
+  assertEqual(WIDTH, canvas.width);
+  assertEqual(HEIGHT, canvas.height);
   // TODO(kart): set to bad values and test?
- */
  
   var ALPHA = 0.4;
   ctx.globalAlpha = ALPHA;
@@ -133,8 +63,6 @@ function testProperties() {
 }
 
 function testGetContext() {
-  if(isOfficial)
-    return;
   var canvas = google.gears.factory.create("beta.canvas","1.0");
   var ctx = canvas.getContext('gears-2d');
   assertEqual(canvas, ctx.canvas);
@@ -142,6 +70,36 @@ function testGetContext() {
   assertEqual(ctx2, ctx);
   assertEqual(null, canvas.getContext('foobar'));
  }
+
+function downloadFile(url, oncomplete) {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', url);
+  request.onreadystatechange = function() {
+    if (request.readyState == 4) {
+      oncomplete(request.responseBlob);
+    }
+  };
+  request.send();
+}
+
+function processDownloadedImage(blob) {
+  var canvas = google.gears.factory.create("beta.canvas","1.0");
+  canvas.load(blob);
+  var pngBlob = canvas.toBlob('image/png');
+  var jpegBlob = canvas.toBlob('image/jpeg');
+  var defaultBlob = canvas.toBlob();
+  completeAsync();
+}
+
+function testLoadAndExportJPEG() {
+  startAsync();
+  downloadFile('../testcases/data/sample.jpeg', processDownloadedImage);
+}
+
+function testLoadAndExportPNG() {
+  startAsync();
+  downloadFile('../testcases/data/sample.png', processDownloadedImage);
+}
 
 /*
 function testDrawImage() {

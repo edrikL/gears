@@ -63,6 +63,13 @@ if (!isSafari && !isWince) {
   suites.push(audioSuite);
 }
 
+if (!isOfficial && isWin32) {
+  var canvasSuite = new TestSuite('Canvas');
+  canvasSuite.addFile('../testcases/canvas_tests.js',
+      {useWorker: true, useIFrame: true});
+  suites.push(canvasSuite);
+}
+
 if (!isWince && !isOfficial) {
   var consoleSuite = new TestSuite('Console');
   consoleSuite.addFile('../testcases/console_tests.js',
@@ -104,13 +111,6 @@ var httpRequestSuite = new TestSuite('HttpRequest');
 httpRequestSuite.addFile('../testcases/httprequest_tests.js',
                          {useWorker: true, useIFrame: true});
 suites.push(httpRequestSuite);
-
-if (!isSafari & !isWince) {
-  var imagingSuite = new TestSuite('Imaging');
-  imagingSuite.addFile('../testcases/imaging_tests.js',
-      {useWorker: false, useIFrame: true});
-  suites.push(imagingSuite);
-}
 
 var internalTestSuite = new TestSuite('Internal_Tests');
 internalTestSuite.addFile('../testcases/internal_tests.js',

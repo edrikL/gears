@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef OFFICIAL_BUILD
-
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/canvas/canvas_rendering_context_2d.h"
@@ -32,10 +30,11 @@
 DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
+// The right values as per the HTML5 canvas spec.
 const std::string16 GearsCanvasRenderingContext2D::kCompositeOpSourceOver(
     STRING16(L"source-over"));
 const std::string16 GearsCanvasRenderingContext2D::kCompositeOpCopy(
-    STRING16(L"copy"));  // The right values as per the canvas spec.
+    STRING16(L"copy"));
 const std::string16 GearsCanvasRenderingContext2D::kTextAlignLeft(
     STRING16(L"left"));
 const std::string16 GearsCanvasRenderingContext2D::kTextAlignCenter(
@@ -131,14 +130,14 @@ void GearsCanvasRenderingContext2D::Restore(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
   double x, y;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x},
-    {JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &y},
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &y }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   if (context->GetArgumentType(1) == JSPARAM_UNDEFINED) {
-    // If only one scale argument is supplied, use it for both dimensions:
+    // If only one scale argument is supplied, use it for both dimensions.
     y = x;
     // TODO(kart): Test this.
   }
@@ -148,19 +147,22 @@ void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
   double angle;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle},
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle },
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+  // Convert to radians.
+  angle = angle * 180.0 / 3.1415926535;
+
+  canvas_->SkiaCanvas()->rotate(static_cast<SkScalar>(angle));
 }
 
 void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
   int x, y;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &x},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &y},
+    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &y }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -171,12 +173,12 @@ void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::Transform(JsCallContext *context) {
   double m11, m12, m21, m22, dx, dy;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy},
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -187,12 +189,12 @@ void GearsCanvasRenderingContext2D::Transform(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::SetTransform(JsCallContext *context) {
   double m11, m12, m21, m22, dx, dy;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx},
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy},
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -209,13 +211,14 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
     JsCallContext *context) {
   double new_alpha;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &new_alpha}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &new_alpha }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   if (new_alpha < 0.0 || new_alpha > 1.0) {
-    return;  // As per canvas spec.
+    // As per the HTML5 canvas spec.
+    return;
   }
   alpha_ = new_alpha;
 }
@@ -229,14 +232,15 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
     JsCallContext *context) {
   std::string16 new_composite_op;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &new_composite_op}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_composite_op }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   if (new_composite_op != kCompositeOpCopy &&
       new_composite_op != kCompositeOpCopy)
-    return;  // As per canvas spec.
+    // As per the HTML5 canvas spec.
+    return;
 
   // TODO(kart): If we're given a composite mode that Canvas supports but we
   // don't, raise an Unsupported exception.
@@ -252,7 +256,7 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
     JsCallContext *context) {
   std::string16 new_fill_style;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   // TODO(kart): Do not generate error on type mismatch.
@@ -261,17 +265,18 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
 
   // TODO(kart):
   // if (new_fill_style is not a valid CSS color)
-  //  return; // As per canvas spec.
+  // As per the HTML5 canvas spec.
+  //  return;
   fill_style_ = new_fill_style;
 }
 
 void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
   int x, y, width, height;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &x},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &y},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &width},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &height}
+    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -282,10 +287,10 @@ void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
   int x, y, width, height;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &x},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &y},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &width},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &height}
+    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -296,10 +301,10 @@ void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
   int x, y, width, height;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &x},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &y},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &width},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &height}
+    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -314,7 +319,7 @@ void GearsCanvasRenderingContext2D::GetFont(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::SetFont(JsCallContext *context) {
   std::string16 new_font;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &new_font}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_font }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -335,14 +340,15 @@ void GearsCanvasRenderingContext2D::GetTextAlign(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
   std::string16 new_align;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &new_align}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_align }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   if (new_align != kTextAlignLeft && new_align != kTextAlignCenter
       && new_align != kTextAlignRight) {
-    return;  // As per the spec.
+    // As per the HTML5 canvas spec.
+    return;
   }
   // TODO(kart): If given a mode that canvas supports but we don't, raise
   // an exception.
@@ -353,7 +359,7 @@ void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::FillText(JsCallContext *context) {
   std::string16 text;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &text}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &text }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -364,7 +370,7 @@ void GearsCanvasRenderingContext2D::FillText(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
   std::string16 text;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_STRING16, &text}
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &text }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -373,32 +379,102 @@ void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
-  JsObject image;
+  ModuleImplBaseClass *other_module;
   int sx, sy, sw, sh, dx, dy, dw, dh;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_OBJECT, &image},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &sx},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &sy},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &sw},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &sh},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dx},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dy},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dw},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dh}
+    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &sx },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &sy },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &sw },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &sh },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dx },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dy },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dw },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dh }
   };
-  context->GetArguments(ARRAYSIZE(args), args);
+  int numArgs = context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  // TODO(kart): Make sure that if only 2 or 4 args are given,
-  // they are treated as the dest args.
-  context->SetException(STRING16(L"Unimplemented"));
+  assert(other_module);
+  if (GearsCanvas::kModuleName != other_module->get_module_name()) {
+    context->SetException(STRING16(L"Argument must be a Canvas."));
+    return;
+  }
+  scoped_refptr<GearsCanvas> source = static_cast<GearsCanvas*>(other_module);
+  
+  if (numArgs != 9) {
+    // Handle missing arguments.
+    if (numArgs == 5) {
+      dw = sw;
+      dh = sh;
+    } else if (numArgs == 3) {
+      dw = canvas_->Width();
+      dh = canvas_->Height();
+    } else {
+      context->SetException(STRING16(L"Unsupported number of arguments."));
+      return;
+    }
+    sw = source->Width();
+    sh = source->Height();
+    dx = sx;
+    dy = sy;
+    sx = 0;
+    sy = 0;
+  }
+    
+  // First extract the source region pixels into a new bitmap.
+  // This also handles the case where a canvas is
+  // drawn onto an overlapping part of itself (which is allowed).
+  SkIRect rect;
+  rect.fLeft = sx;
+  rect.fTop = sy;
+  rect.fRight = sx + sw;
+  rect.fBottom = sy + sh;
+  
+  SkBitmap source_subset;
+  if (sx < 0 || sy < 0 || sx + sw >= source->Width() ||
+      sy + sh >= source->Height()) {
+    context->SetException(STRING16(
+        L"Source rectangle stretches beyond the bounds of its bitmap."));
+    return;
+  }
+  if (!source->SkiaBitmap()->extractSubset(&source_subset, rect)) {
+    assert (sw == 0 || sh == 0);
+    context->SetException(STRING16(
+        L"Source rectangle has zero width or height."));
+    return;
+  }
+  
+  if (dx < 0 || dy < 0 || dx + dw >= canvas_->Width() ||
+      dy + dh >= canvas_->Height()) {
+    context->SetException(STRING16(
+        L"Destination rectangle stretches beyond the bounds of its bitmap."));
+    return;
+  }
+  if (dw == 0 || dh == 0) {
+    context->SetException(STRING16(
+        L"Destination rectangle has zero width or height."));
+    return;
+  }
+  
+  // Now resize the extracted pixels.
+  SkBitmap resized_bitmap;
+  SkCanvas resized_canvas;
+  resized_canvas.setBitmapDevice(resized_bitmap);
+  SkScalar x_scale = static_cast<SkScalar>(static_cast<double>(dw)/sw);
+  SkScalar y_scale = static_cast<SkScalar>(static_cast<double>(dh)/sh);
+  resized_canvas.scale(x_scale, y_scale);
+  resized_canvas.drawBitmap(source_subset, 0, 0);
+    
+  // Finally draw the resized pixels onto this canvas.
+  canvas_->SkiaCanvas()->drawBitmap(resized_bitmap, dx, dy);
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
   int width, height;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &width},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &height}
+    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -409,10 +485,10 @@ void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::GetImageData(JsCallContext *context) {
   int sx, sy, sw, sh;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sx},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sy},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sw},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &sh},
+    { JSPARAM_REQUIRED, JSPARAM_INT, &sx },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &sy },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &sw },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &sh }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -421,16 +497,16 @@ void GearsCanvasRenderingContext2D::GetImageData(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
-  JsObject imageData;
-  int dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight;
+  JsObject image_data;
+  int dx, dy, dirty_x, dirty_y, dirty_width, dirty_height;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_OBJECT, &imageData},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &dx},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &dy},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dirtyX},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dirtyY},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dirtyWidth},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &dirtyHeight}
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &image_data },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &dx },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &dy },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_x },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_y },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_width },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -441,7 +517,7 @@ void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::ColorTransform(JsCallContext *context) {
   JsObject matrix;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix}
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix}
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -453,7 +529,7 @@ void GearsCanvasRenderingContext2D::ConvolutionTransform(
     JsCallContext *context) {
   JsObject matrix;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix}
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -464,7 +540,7 @@ void GearsCanvasRenderingContext2D::ConvolutionTransform(
 void GearsCanvasRenderingContext2D::MedianFilter(JsCallContext *context) {
   double radius;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &radius}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &radius }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -475,7 +551,7 @@ void GearsCanvasRenderingContext2D::MedianFilter(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::AdjustBrightness(JsCallContext *context) {
   double delta;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &delta}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &delta }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -486,7 +562,7 @@ void GearsCanvasRenderingContext2D::AdjustBrightness(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::AdjustContrast(JsCallContext *context) {
   double amount;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -497,7 +573,7 @@ void GearsCanvasRenderingContext2D::AdjustContrast(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::AdjustSaturation(JsCallContext *context) {
   double amount;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -508,7 +584,7 @@ void GearsCanvasRenderingContext2D::AdjustSaturation(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::AdjustHue(JsCallContext *context) {
   double angle;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -520,8 +596,8 @@ void GearsCanvasRenderingContext2D::Blur(JsCallContext *context) {
   double factor;
   int radius;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &radius}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &radius }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -533,8 +609,8 @@ void GearsCanvasRenderingContext2D::Sharpen(JsCallContext *context) {
   double factor;
   int radius;
   JsArgument args[] = {
-    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor},
-    {JSPARAM_REQUIRED, JSPARAM_INT, &radius}
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &radius }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -545,5 +621,3 @@ void GearsCanvasRenderingContext2D::Sharpen(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::ResetTransform(JsCallContext *context) {
   context->SetException(STRING16(L"Unimplemented"));
 }
-
-#endif  // OFFICIAL_BUILD
