@@ -29,6 +29,7 @@
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
+#include "gears/blob/blob_interface.h"
 
 //------------------------------------------------------------------------------
 // ExistsInDB

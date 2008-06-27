@@ -29,9 +29,10 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
-#include "gears/blob/blob_interface.h"
 #include "gears/localserver/common/localserver.h"
 #include "gears/localserver/common/localserver_db.h"
+
+class BlobInterface;
 
 //------------------------------------------------------------------------------
 // ResourceStore
