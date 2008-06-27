@@ -37,38 +37,56 @@ static ExceptionManager exception_manager(true);
 + (BOOL)installHook {
 #ifdef OFFICIAL_BUILD
   // Init Breakpad.
+  LOG(("Gears: Starting breakpad"));
   exception_manager.StartMonitoring();
+  LOG(("Gears: Breakpad started"));
 #endif
 
   // If there is a version collision, don't register HTTP interception hoooks.  
-  if (!DetectedVersionCollision()) {
+  if (DetectedVersionCollision()) {
+    LOG(("Gears: Version collision detected"));
+  } else {
     // Register HTTP intercept hook.
     if (![GearsHTTPHandler registerHandler]) {
+      LOG(("GearsHTTPHandler registerHandler failed"));
       return NO;
     }
     
     // Install workarounds.
+    LOG(("Gears: Installing protocol workaround"));
     ApplyProtocolWorkaround();
+    LOG(("Gears: protocol workaround installed"));
   }
   
   // Register an applicationDidFinishLaunching delegeate
   GearsBrowserLoadHook *inst = [[GearsBrowserLoadHook alloc] init];
-  if (!inst) return NO;
+  if (!inst) {
+    LOG(("GearsBrowserLoadHook init failed"));
+    return NO;
+  }
+  LOG(("GearsBrowserLoadHook object created"));
   
   NSApplication *app = [NSApplication sharedApplication];
-  if (!app) return NO;
+  if (!app) {
+    LOG(("NSApplication sharedApplication returned NULL"));
+    return NO;
+  }
 
   // Make sure we don't try to add our Notification listener more than once.
   static bool notification_hook_installed = false;
   assert(!notification_hook_installed);
   if (!notification_hook_installed) {
+    LOG(("Gears: adding finishlaunching notification hook"));
     [[NSNotificationCenter defaultCenter] 
         addObserver:inst 
            selector:@selector(applicationDidFinishLaunching:) 
                name:NSApplicationDidFinishLaunchingNotification
              object:app];
+    LOG(("Gears: added finishlaunching notification hook"));
              
     notification_hook_installed = true;
+  } else {
+    LOG(("Gears: notification hook already installed"));
   }
   
   // If we got here then we loaded OK
@@ -79,8 +97,9 @@ static ExceptionManager exception_manager(true);
 // Called at the end of the application's launch, when NIBs are loaded and
 // the menu bar is ready.
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
-
+  LOG(("Gears: finishlaunching hook called"));
   // Install Settings Menu.
   [GearsSettingsMenuEnabler installSettingsMenu];
+  LOG(("Gears: finishlaunching hook exited"));
 }
 @end
