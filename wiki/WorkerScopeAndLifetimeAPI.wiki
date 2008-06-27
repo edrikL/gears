@@ -140,3 +140,9 @@ Consider this scenario:
   * `good.com` loads `helper.com/login.js` as ("helper.com", "login").
   * But if `evil.com` runs first, it can map ("helper.com", "login") to `helper.com/echo.js`.
   * When `good.com` runs, it will be sending sensitive information to the wrong script!
+
+*Q: Why add !GearsEndpoint?  Why not continue using integers?*
+
+A global worker can be a member of multiple !WorkerPools.  So integers are no longer unique identifiers.  And even if they were unique, they would not be secure against "scanning" attacks from a rogue global worker.
+
+Adding a !GearsEndpoint object solves these problems, while still allowing worker handles to be passed between workers.  ("Hi worker1, you can use <endpoint> for all your background database requests.")
