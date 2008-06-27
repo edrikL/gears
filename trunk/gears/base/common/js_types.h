@@ -136,12 +136,13 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
 class ScopedNPVariant : public NPVariant {
  public:
   ScopedNPVariant() { VOID_TO_NPVARIANT(*this); }
+  // Must not be 'explicit' so we can use it as a JsScopedToken transparently.
   template<class T>
-  explicit ScopedNPVariant(T value) { VOID_TO_NPVARIANT(*this); Reset(value); }
+  ScopedNPVariant(T value) { VOID_TO_NPVARIANT(*this); Reset(value); }
 
   ~ScopedNPVariant() { Reset(); }
 
-  // This is necessary for API transparency.
+  // This is necessary so we can use it as a JsScopedToken transparently.
   ScopedNPVariant& operator=(const NPVariant &value) {
     Reset(value);
     return *this;
@@ -180,7 +181,10 @@ typedef void* IScriptable;
 
 struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
   JsTokenEqualTo(JsRunnerInterface *js_runner);
+  JsTokenEqualTo(const JsTokenEqualTo& that) { *this = that; }
   ~JsTokenEqualTo();
+
+  JsTokenEqualTo& operator=(const JsTokenEqualTo &that);
 
   bool operator()(const JsToken &x, const JsToken &y) const  {
     // All we are looking for in this comparator is that different NPVariants
@@ -224,7 +228,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
   bool CompareObjects(const JsToken &x, const JsToken &y) const;
 
   JsRunnerInterface *js_runner_;
-  NPObject *compare_func_;
+  ScopedNPVariant compare_func_;
 };
 
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT

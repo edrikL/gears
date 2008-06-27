@@ -73,32 +73,31 @@ JsTokenEqualTo::JsTokenEqualTo(JsRunnerInterface *js_runner)
     return;
   ScopedNPObject global_scoped(global);
   NPString np_script = { kCompareFunc, ARRAYSIZE(kCompareFunc) - 1};
-  ScopedNPVariant compare_func;
   if (!NPN_Evaluate(js_runner->GetContext(), global, &np_script,
-                    &compare_func) ||
-      !NPVARIANT_IS_OBJECT(compare_func)) {
+                    &compare_func_) ||
+      !NPVARIANT_IS_OBJECT(compare_func_)) {
     assert(false);
-    return;
   }
-
-  compare_func_ = NPVARIANT_TO_OBJECT(compare_func);
-  compare_func.Release();  // give ownership to compare_func_.
 }
 
 JsTokenEqualTo::~JsTokenEqualTo() {
-  if (compare_func_) {
-    NPN_ReleaseObject(compare_func_);
-  }
+}
+
+JsTokenEqualTo& JsTokenEqualTo::operator=(const JsTokenEqualTo &that) {
+  js_runner_ = that.js_runner_;
+  compare_func_ = that.compare_func_;
+  return *this;
 }
 
 bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
-  assert(compare_func_);
+  assert(NPVARIANT_IS_OBJECT(compare_func_));
 
+  NPObject *compare_func_obj = NPVARIANT_TO_OBJECT(compare_func_);
   NPVariant args[] = {x, y};
 
   // Invoke the method.
   ScopedNPVariant result;
-  bool rv = NPN_InvokeDefault(js_runner_->GetContext(), compare_func_,
+  bool rv = NPN_InvokeDefault(js_runner_->GetContext(), compare_func_obj,
                               args, 2, &result);
   if (!rv) { return false; }
 
