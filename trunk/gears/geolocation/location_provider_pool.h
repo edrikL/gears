@@ -43,6 +43,7 @@ class LocationProviderPool {
   static LocationProviderBase *Register(
       const std::string16 &type,
       const std::string16 &host,
+      const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener);
 
   static bool Unregister(LocationProviderBase *provider,

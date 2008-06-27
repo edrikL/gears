@@ -84,7 +84,8 @@ class LocationProviderBase {
 LocationProviderBase *NewMockLocationProvider();
 #endif
 LocationProviderBase *NewGpsLocationProvider();
-LocationProviderBase *NewNetworkLocationProvider(
-    const std::string16 &url, const std::string16 &host_name);
+LocationProviderBase *NewNetworkLocationProvider(const std::string16 &url,
+                                                 const std::string16 &host_name,
+                                                 const std::string16 &language);
 
 #endif  // GEARS_GEOLOCATION_LOCATION_PROVIDER_H__

@@ -31,9 +31,11 @@ static const char16 *kGpsString = STRING16(L"GPS");
 
 // Local functions
 static std::string16 MakeKey(const std::string16 &type,
-                             const std::string16 &host);
+                             const std::string16 &host,
+                             const std::string16 &language);
 static LocationProviderBase *NewProvider(const std::string16 &type,
-                                         const std::string16 &host);
+                                         const std::string16 &host,
+                                         const std::string16 &language);
 
 // Global pool
 LocationProviderPool location_provider_pool;
@@ -56,16 +58,17 @@ LocationProviderPool *LocationProviderPool::GetInstance() {
 LocationProviderBase *LocationProviderPool::Register(
       const std::string16 &type,
       const std::string16 &host,
+      const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
   MutexLock lock(&providers_mutex);
-  std::string16 key = MakeKey(type, host);
+  std::string16 key = MakeKey(type, host, language);
   ProviderMap::iterator iter = providers.find(key);
   if (iter == providers.end()) {
     std::pair<ProviderMap::iterator, bool> result =
         providers.insert(
         std::make_pair(key,
-        std::make_pair(NewProvider(type, host), new RefCount())));
+        std::make_pair(NewProvider(type, host, language), new RefCount())));
     assert(result.second);
     iter = result.first;
   }
@@ -107,21 +110,28 @@ bool LocationProviderPool::Unregister(
 // Local functions
 
 static std::string16 MakeKey(const std::string16 &type,
-                             const std::string16 &host) {
-  // A network location request is made from a specific host. Therefore we must
-  // key these providers on both server URL and host name.
+                             const std::string16 &host,
+                             const std::string16 &language) {
+  // A network location request is made from a specific host. Also, the request
+  // includes the address language. Therefore we must key network providers on
+  // server URL, host name and language
   if (type == kGpsString) {
     return kGpsString;
   } else {
-    return type + STRING16(L" ") + host;
+    std::string16 key = type + STRING16(L" ") + host;
+    if (!language.empty()) {
+      key += STRING16(L" ") + language;
+    }
+    return key;
   }
 }
 
 static LocationProviderBase *NewProvider(const std::string16 &type,
-                                         const std::string16 &host) {
+                                         const std::string16 &host,
+                                         const std::string16 &language) {
   if (type == kGpsString) {
     return NewGpsLocationProvider();
   } else {
-    return NewNetworkLocationProvider(type, host);
+    return NewNetworkLocationProvider(type, host, language);
   }
 }

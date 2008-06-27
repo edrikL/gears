@@ -39,21 +39,27 @@ static const int kDataCompleteWaitPeriod = 1000 * 5;  // 5 seconds
 static const int kMinimumRequestInterval = 1000 * 5;  // 5 seconds
 
 NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
-                                                 const std::string16 &host_name)
+                                                 const std::string16 &host_name,
+                                                 const std::string16 &language)
     : url_(url),
       host_name_(host_name),
-      is_shutting_down_(false) {
+      is_shutting_down_(false),
+      address_language_(language) {
+  // TODO(steveblock): Consider allowing multiple values for "address_language"
+  // in the network protocol to allow better sharing of network location
+  // providers.
+
   // Get the device data providers. The first call to Register will create the
   // provider and it will be deleted by ref counting.
   radio_data_provider_ = RadioDataProvider::Register(this);
   wifi_data_provider_ = WifiDataProvider::Register(this);
 
-  // Currently, request_address and address_language are properties of a given
-  // fix request, not of a location provider.
-  // TODO(steveblock): Determine the best way to pass these parameters to the
-  // request.
-  request_address_ = false;
-  address_language_ = STRING16(L"");
+  // Currently, the network spec requires a "request_address" parameter. Since
+  // we share a given network provider accross multiple fix requests, we always
+  // request an address for simplicity.
+  // TODO(steveblock): Consider removing "request_address" from the spec, or
+  // implement the required logic properly.
+  request_address_ = true;
 
   // Start the worker thread
   Start();

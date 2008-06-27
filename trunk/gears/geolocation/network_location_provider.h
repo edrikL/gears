@@ -42,7 +42,8 @@ class NetworkLocationProvider
       public Thread {
  public:
   NetworkLocationProvider(const std::string16 &url,
-                          const std::string16 &host_name);
+                          const std::string16 &host_name,
+                          const std::string16 &language);
   virtual ~NetworkLocationProvider();
 
   // Override LocationProviderBase implementation.

@@ -211,6 +211,7 @@ class GearsGeolocation
 
   // Converts a Gears position object to a JavaScript object.
   static bool ConvertPositionToJavaScriptObject(const Position &position,
+                                                bool use_address,
                                                 JsRunnerInterface *js_runner,
                                                 JsObject *js_object);
 
