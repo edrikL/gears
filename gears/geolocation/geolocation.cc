@@ -181,6 +181,7 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
   scoped_ptr<JsObject> return_object(GetJsRunner()->NewObject());
   assert(return_object.get());
   if (!ConvertPositionToJavaScriptObject(last_position_,
+                                         true,  // Use address if present.
                                          GetJsRunner(),
                                          return_object.get())) {
     LOG(("GearsGeolocation::GetLastPosition() : Failed to create position "
@@ -295,8 +296,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Native providers
 #ifdef WINCE
   // TODO(steveblock): Add GPS for WinCE
-  //info->providers.push_back(pool->Register(STRING16(L"GPS"),
-  //                          host_name, this));
+  //info->providers.push_back(pool->Register(STRING16(L"GPS"), host_name,
+  //                                         info->address_language, this));
 #endif
 
   // Network providers
@@ -306,7 +307,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     // pool.
     GURL url(urls[i]);
     if (url.is_valid()) {
-      info->providers.push_back(pool->Register(urls[i], host_name, this));
+      info->providers.push_back(pool->Register(urls[i], host_name,
+                                               info->address_language, this));
     }
   }
 
@@ -435,6 +437,7 @@ bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
   scoped_ptr<JsObject> callback_param(GetJsRunner()->NewObject());
   assert(callback_param.get());
   if (!ConvertPositionToJavaScriptObject(last_position_,
+                                         fix_info->request_address,
                                          GetJsRunner(),
                                          callback_param.get())) {
     LOG(("GearsGeolocation::MakeCallback() : Failed to create "
@@ -592,6 +595,7 @@ bool GearsGeolocation::ParseLocationProviderUrls(
 
 bool GearsGeolocation::ConvertPositionToJavaScriptObject(
     const Position &position,
+    bool use_address,
     JsRunnerInterface *js_runner,
     JsObject *js_object) {
   assert(js_object);
@@ -628,38 +632,46 @@ bool GearsGeolocation::ConvertPositionToJavaScriptObject(
                                         position.vertical_accuracy,
                                         js_object);
   // Address
-  scoped_ptr<JsObject> address_object(js_runner->NewObject());
-  result &= NULL != address_object.get();
-  if (address_object.get()) {
-    result &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
-                                             position.address.street_number,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"street"),
-                                             position.address.street,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"premises"),
-                                             position.address.premises,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"city"),
-                                             position.address.city,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"county"),
-                                             position.address.county,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"region"),
-                                             position.address.region,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"country"),
-                                             position.address.country,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
-                                             position.address.country_code,
-                                             address_object.get());
-    result &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
-                                             position.address.postal_code,
-                                             address_object.get());
-    result &= js_object->SetPropertyObject(STRING16(L"address"),
-                                           address_object.get());
+  if (use_address) {
+    scoped_ptr<JsObject> address_object(js_runner->NewObject());
+    result &= NULL != address_object.get();
+    if (address_object.get()) {
+      result &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
+                                               position.address.street_number,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"street"),
+                                               position.address.street,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"premises"),
+                                               position.address.premises,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"city"),
+                                               position.address.city,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"county"),
+                                               position.address.county,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"region"),
+                                               position.address.region,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"country"),
+                                               position.address.country,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
+                                               position.address.country_code,
+                                               address_object.get());
+      result &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
+                                               position.address.postal_code,
+                                               address_object.get());
+
+      // Only add the address object if it has some properties.
+      std::vector<std::string16> properties;
+      if (address_object.get()->GetPropertyNames(&properties) &&
+          !properties.empty()) {
+        result &= js_object->SetPropertyObject(STRING16(L"address"),
+                                               address_object.get());
+      }
+    }
   }
   return result;
 }

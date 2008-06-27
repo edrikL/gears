@@ -96,8 +96,10 @@ LocationProviderBase *NewGpsLocationProvider() {
 }
 
 LocationProviderBase *NewNetworkLocationProvider(
-    const std::string16 &url, const std::string16 &host_name) {
-  return new NetworkLocationProvider(url, host_name);
+    const std::string16 &url,
+    const std::string16 &host_name,
+    const std::string16 &language) {
+  return new NetworkLocationProvider(url, host_name, language);
 }
 
 #endif  // OFFICIAL_BUILD
