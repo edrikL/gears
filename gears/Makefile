@@ -1083,6 +1083,10 @@ SF_CPPSRCS	+= \
 		safari_workarounds.m \
 		$(NULL)
 
+SF_LINK_EXTRAS	+= \
+		$(SF_OUTDIR)/resources.res \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # vista_broker
 
