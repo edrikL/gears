@@ -33,6 +33,7 @@
 #include "gears/base/npapi/browser_utils.h"
 #import "gears/base/safari/nsstring_utils.h"
 #include "gears/base/safari/curl_downloader.h"
+#include "gears/base/safari/resource_archive.h"
 #include "gears/base/safari/safari_workarounds.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/ui/common/html_dialog.h"
@@ -101,7 +102,16 @@ static NSDictionary *ScriptableMethods() {
   WebFrame *frame = [webview mainFrame];
   
   // Read in WebArchive.
-  NSData *archive_data = [NSData dataWithContentsOfFile:web_archive_filename_];
+  unsigned char *resource_data;
+  size_t resource_len;
+  std::string16 resource_name;
+  [web_archive_filename_ string16:&resource_name];
+   if (!GetNamedResource(resource_name,
+                         &resource_data,
+                         &resource_len)) return false;
+  NSData *archive_data = [NSData dataWithBytes:resource_data
+                                        length:resource_len];
+  
   WebArchive *webarchive = [[WebArchive alloc] initWithData:archive_data];
   
   [frame loadArchive:webarchive];
@@ -119,12 +129,7 @@ static NSDictionary *ScriptableMethods() {
                 height:(int)height {
   self = [super init];
   if (self) {
-    // TODO(playmobil): Get path for localized files.
-    std::string16 localized_html_file(STRING16(L"en-US/"));
-    localized_html_file += html_filename;
-    NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
-    NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
-    tmp = [pluginPath stringByAppendingPathComponent:tmp];
+    NSString *tmp = [NSString stringWithString16:html_filename.c_str()];
     tmp = [tmp stringByDeletingPathExtension];
     // If we ever go back to file urls, rather than loading the data directly
     // from disk, we need to escape web_archive_filename_ here.

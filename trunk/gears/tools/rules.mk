@@ -598,6 +598,25 @@ $(COMMON_OUTDIR)/%.res: %.rc
 
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
+	
+$(SF_OUTDIR)/%.res: $(COMMON_RESOURCES) $(SF_M4FILES_I18N)
+# On Safari, the .res file is actually an object file. But we still use
+# the .res extension, which lets us run special build steps for resources.
+
+# Bundle ui files into the executable itself by first generating .webarchive files, and then
+# including those in the dylib by converting them into .h files with xxd. 
+# TODO(playmobil): Handle localization correctly.
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/permissions_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/settings_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/shortcuts_dialog.html $(COMMON_RESOURCES)
+	xxd -i "$(SF_OUTDIR)/settings_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h"
+	xxd -i "$(SF_OUTDIR)/permissions_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h"
+	xxd -i "$(SF_OUTDIR)/shortcuts_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h"
+	
+	tools/osx/gen_resource_list.py "$($(BROWSER)_OUTDIR)/genfiles/resource_list.h" "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h"
+	
+	$(CC) $(SF_CPPFLAGS) $(CPPFLAGS) -include base/safari/prefix_header.h -fshort-wchar -c base/safari/resource_archive.cc -o $@
+	
 
 # INSTALLER-RELATED INTERMEDIATE TARGETS
 
@@ -957,13 +976,8 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCH
 	cp -r $(OSX_CRASH_INSPECTOR_EXE) $@/Contents/Resources/
 # Copy the actual plugin.
 	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
-# Create webarchives for all dialogs.
-# Todo(playmobil): Handle localization correctly.
-	mkdir -p $@/Contents/Resources/en-US
-	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/permissions_dialog.html $(COMMON_RESOURCES)
-	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/settings_dialog.html $(COMMON_RESOURCES)
-	tools/osx/webarchiver/webarchiver $@/Contents/Resources/en-US/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/shortcuts_dialog.html $(COMMON_RESOURCES)
 # Copy launch_url
+	mkdir -p $@/Contents/Resources/
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 
