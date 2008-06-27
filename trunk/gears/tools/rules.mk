@@ -734,8 +734,14 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 
 ifneq ($(OS),android)
 ifneq ($(OS),symbian)
+# Too many NPAPI_OBJS - the input line is too long!  Split them up by putting
+# [a-h]* in one list, and the rest in another.
+# Is there a better way to do this?
+NPAPI_OBJS1 = $(filter a% b% c% d% e% f% g% h%,$(NPAPI_OBJS))
+NPAPI_OBJS2 = $(filter-out a% b% c% d% e% f% g% h%,$(NPAPI_OBJS))
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(SKIA_LIB) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
-	$(ECHO) $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(NPAPI_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(NPAPI_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
