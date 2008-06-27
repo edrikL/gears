@@ -24,3 +24,6 @@ Local Modifications:
  > xcodebuild -configuration Release
  > mv build/Release/dump_syms .
  > rm -rf build
+- changed <limits.h> include to <sys/syslimits.h> to fix 10.4 compilation in:
+  src/common/mac/file_id.h
+  src/common/mac/macho_id.h

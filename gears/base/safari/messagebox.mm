@@ -27,6 +27,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/safari/messagebox.h"
+#include "gears/base/safari/nsstring_utils.h"
 
 void MessageBox(const char16 *title,
                 const char16 *message) {
