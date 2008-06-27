@@ -209,7 +209,9 @@ std::string Utf16ToUtf8(const wchar_t* wide_string) {
 
 class Win32Platform : public Platform {
  public:
-  Win32Platform() {
+  Win32Platform()
+      : gdiplus_initialized_(false),
+        nesting_count_(0) {
     ::QueryPerformanceFrequency(&timer_frequency_);
     ::QueryPerformanceCounter(&timer_start_);
     window_class_name_ = NULL;
@@ -618,6 +620,14 @@ class Win32Platform : public Platform {
   }
 
   void RunMessageLoop() {
+    nesting_count_++;
+    if (nesting_count_ == 1) {
+      EnsureGdiplus();
+      if (gdiplus_initialized_) {
+        gdiplus_startup_output_.NotificationHook(&gdiplus_hook_token_);
+      }
+    }
+
     // Pump it up!
     MSG msg;
     // Main message loop:
@@ -626,6 +636,12 @@ class Win32Platform : public Platform {
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
     }
+
+    if (nesting_count_ == 1 && gdiplus_initialized_) {
+      gdiplus_startup_output_.NotificationUnhook(gdiplus_hook_token_);
+      ShutdownGdiplus();
+    }
+    nesting_count_--;
   }
 
   bool SetWindowCaptionText(PlatformWindow* window,
@@ -1161,23 +1177,25 @@ class Win32Platform : public Platform {
   // implement this (and some resource tracking for unittests).
 
   bool EnsureGdiplus() {
-    static bool gdiplus_initialized = false;
-
-    if (!gdiplus_initialized) {
+    if (!gdiplus_initialized_) {
       Gdiplus::GdiplusStartupInput input;
-      Gdiplus::GdiplusStartupOutput output;
-      DWORD token;
-
-      Gdiplus::Status status = Gdiplus::GdiplusStartup(&token,
-                                                       &input,
-                                                       &output);
+      input.SuppressBackgroundThread  = true;
+      Gdiplus::Status status = Gdiplus::GdiplusStartup(
+          &gdiplus_token_, &input, &gdiplus_startup_output_);
 
       if (status != Gdiplus::Ok)
         return false;
 
-      gdiplus_initialized = true;
+      gdiplus_initialized_ = true;
     }
     return true;
+  }
+
+  void ShutdownGdiplus() {
+    if (gdiplus_initialized_) {
+      Gdiplus::GdiplusShutdown(gdiplus_token_);
+      gdiplus_initialized_ = false;
+    }
   }
 
   bool GetBitsFromBitmap(Gdiplus::Bitmap* bitmap, Bitmap** result) {
@@ -1477,6 +1495,12 @@ class Win32Platform : public Platform {
 
   Array<WorkItem> windowless_tasks_;
 
+  bool gdiplus_initialized_;
+  Gdiplus::GdiplusStartupOutput gdiplus_startup_output_;
+  DWORD gdiplus_token_;
+  ULONG_PTR gdiplus_hook_token_;
+  int nesting_count_;
+
   DISALLOW_EVIL_CONSTRUCTORS(Win32Platform);
 };
 
@@ -1489,5 +1513,3 @@ Platform* Platform::Create() {
 }
 
 }  // namespace glint
-
-

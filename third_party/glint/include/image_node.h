@@ -42,6 +42,8 @@ class ImageNode : public Node {
 
   bool ReplaceImage(const std::string& file_name);
 
+  void ReplaceBitmap(int width, int height, const void* data);
+
   Bitmap* bitmap() {
     return bitmap_;
   }

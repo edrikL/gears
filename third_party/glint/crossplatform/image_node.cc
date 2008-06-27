@@ -50,16 +50,36 @@ void ImageNode::ReleaseBitmap() {
 }
 
 bool ImageNode::ReplaceImage(const std::string& file_name) {
-  ReleaseBitmap();
-
-  if (!platform()->LoadBitmapFromFile(file_name, &bitmap_))
+  Bitmap* new_bitmap = NULL;
+  if (!platform()->LoadBitmapFromFile(file_name, &new_bitmap))
     return false;
+
+  ReleaseBitmap();
+  bitmap_ = new_bitmap;
 
   Invalidate();
   return true;
 }
 
+void ImageNode::ReplaceBitmap(int width, int height, const void* data) {
+  ASSERT(width >= 0 && height >= 0);
+  ASSERT(width == 0 || height == 0 || data);
+
+  ReleaseBitmap();
+  bitmap_ = new Bitmap(Point(), Size(width, height));
+  if (width > 0 && height > 0) {
+    memcpy(bitmap_->GetPixelAt(0, 0), data, width * height * 4);
+  }
+  bitmap_->PremultiplyAlpha();
+  Invalidate();
+}
+
 Size ImageNode::OnComputeRequiredSize(Size constraint) {
+  // No bitmap was loaded into this ImageNode.
+  // Make sure there is at least something.
+  if (!bitmap_) {
+    bitmap_ = new Bitmap(Point(), Size());
+  }
   Size image_size = bitmap_->size();
   return image_size;
 }
@@ -97,9 +117,12 @@ bool ImageNode::OnDraw(DrawStack *stack) {
 SetPropertyResult ImageNode::SetSource(BaseObject *node,
                                        const std::string& value) {
   ASSERT(node);
-  static_cast<ImageNode*>(node)->ReplaceImage(value);
+  if (!static_cast<ImageNode*>(node)->ReplaceImage(value)) {
+    return PROPERTY_NOT_SET;
+  }
   return PROPERTY_OK;
 }
 #endif  // GLINT_ENABLE_XML
 
 }  // namespace glint
+

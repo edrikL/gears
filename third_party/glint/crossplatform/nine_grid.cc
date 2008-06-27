@@ -89,6 +89,11 @@ bool NineGrid::OnDraw(DrawStack* stack) {
   if (!stack || !stack->target() || !stack->Top())
     return false;
 
+  // No bitmap specified - nothing to render.
+  if (!nine_grid_) {
+    return true;
+  }
+
   Rectangle local_draw_area(Point(), final_size());
 
   Bitmap* target = stack->target();
