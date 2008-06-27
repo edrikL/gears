@@ -43,8 +43,8 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &language)
     : url_(url),
       host_name_(host_name),
-      is_shutting_down_(false),
-      address_language_(language) {
+      address_language_(language),
+      is_shutting_down_(false) {
   // TODO(steveblock): Consider allowing multiple values for "address_language"
   // in the network protocol to allow better sharing of network location
   // providers.
