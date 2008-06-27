@@ -43,7 +43,12 @@
           Class gearsBrowserLoadHook = 
                      NSClassFromString(@"GearsBrowserLoadHook"); 
           result = [gearsBrowserLoadHook installHook];
+          if (!result) {
+            NSLog(@"gearsBrowserLoadHook installHook failed");
+          }
         }
+      } else {
+        NSLog(@"canLoadGears Returned False");
       }
       
       if (!result) {

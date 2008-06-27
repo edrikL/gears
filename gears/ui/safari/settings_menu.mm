@@ -29,13 +29,20 @@
 
 @implementation GearsSettingsMenuEnabler
 + (void)installSettingsMenu {
+  LOG(("GearsSettingsMenuEnabler installSettingsMenu called"));
   // Allocate an instance of ourselves.
   GearsSettingsMenuEnabler *inst = [[GearsSettingsMenuEnabler alloc] init];
-  if (!inst) return;
+  if (!inst) {
+    LOG(("GearsSettingsMenuEnabler: init failed"));
+    return;
+  }
 
   NSMenu *mainMenu = [NSApp mainMenu];
   NSMenuItem *app_menu = [mainMenu itemAtIndex:0];
-  if (!app_menu) return;
+  if (!app_menu) { 
+    LOG(("GearsSettingsMenuEnabler: Couldn't find app menu"));
+    return;
+  }
   NSMenu *submenu = [app_menu submenu];
   NSMenuItem *new_menu = 
       [submenu insertItemWithTitle:@ PRODUCT_FRIENDLY_NAME_ASCII " Settings..." 
@@ -43,6 +50,8 @@
                      keyEquivalent:@"" 
                            atIndex:4];
   [new_menu setTarget:inst];
+  LOG(("GearsSettingsMenuEnabler: Added Gears settings menu OK"));
+  LOG(("GearsSettingsMenuEnabler installSettingsMenu exited"));
 }
 
 - (void)showSettingsDialog {
