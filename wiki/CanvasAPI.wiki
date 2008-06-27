@@ -55,7 +55,7 @@ Canvas class
   // Returns a new Canvas object with the same pixels.
   Canvas clone();
 
-  // The palette of the image, if the canvas was load()ed from an indexed mode image.
+  // The palette of the image, if the canvas was load()ed from an indexed mode image, and null otherwise.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
   // The palette is an array of color values expressed as integers.
