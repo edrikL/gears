@@ -67,7 +67,7 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createNotification", &GearsDesktop::CreateNotification);
   RegisterMethod("removeNotification", &GearsDesktop::RemoveNotification);
   RegisterMethod("showNotification", &GearsDesktop::ShowNotification);
-#endif
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
 
 #ifdef OFFICIAL_BUILD
@@ -77,7 +77,7 @@ void Dispatcher<GearsDesktop>::Init() {
   // The Drag-and-Drop API has not been implemented for Safari and Android.
 #else
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
-#endif
+#endif  // defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
 #endif  // OFFICIAL_BUILD
 }
 
@@ -546,7 +546,7 @@ bool Desktop::SetShortcut(Desktop::ShortcutInfo *shortcut,
                             &shortcut->icon16x16.raw_data);
     }
   }
-#endif
+#endif  // defined(WIN32) || defined(OS_MACOSX)
 
   // Create the desktop shortcut using platform-specific code
   assert(allow);
@@ -623,7 +623,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
   if (!BrowserUtils::GetUserAgentString(&user_agent)) {
     return false;
   }
-  
+
   if (!GetURLDataAsVector(icon->url, user_agent, &(icon->png_data))) {
     *error = STRING16(L"Could not load icon ");
     *error += icon->url.c_str();
@@ -639,7 +639,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
     request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     int status = 0;
-    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), 
+    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(),
                        async, browsing_context_.get()) ||
         !request->Send(NULL) ||
         (!async && (!request->GetStatus(&status) ||
@@ -663,7 +663,7 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       *error += STRING16(L".");
       return false;
     }
-#endif
+#endif  // BROWSER_WEBKIT
   }
 
   return true;
@@ -740,21 +740,87 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
 #ifdef OS_ANDROID
   // The notification API has not been implemented for Android.
 #else
-uint32 FindNotifierProcess(JsCallContext *context) {
+
+bool Desktop::ValidateNotification(GearsNotification *notification) {
+  assert(!has_error() && notification &&
+         !notification->security_origin().initialized());
+
+  // Associate the notification with its security orgin.
+  notification->set_security_origin(security_origin_);
+
+  // TODO(levin): validate actions with respect to the secruity origin.
+
+  // Handle the icon url.
+  // Normalize and resolve, in case this is a relative URL.
+  if (!notification->icon_url().empty()) {
+    if (!ResolveUrl(notification->mutable_icon_url(), &error_)) {
+      return false;
+    }
+
+    // We only allow icons to be retrieved within origin for now.
+    if (!IsDataUrl(notification->icon_url().c_str()) &&
+        !security_origin_.IsSameOriginAsUrl(notification->icon_url().c_str())) {
+      error_ = STRING16(L"Cannot use cross-origin notfications icons.");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+uint32 FindNotifierProcess(std::string16 *error) {
+  assert(error);
   uint32 process_id = NotifierProcess::FindProcess();
   if (!process_id) {
     // TODO (jianli): Add the async start support.
     if (!NotifierProcess::StartProcess()) {
-      context->SetException(STRING16(L"Failed to start notifier process."));
+      *error = STRING16(L"Failed to start notifier process.");
       return 0;
     }
     process_id = NotifierProcess::FindProcess();
     if (!process_id) {
-      context->SetException(STRING16(L"Failed to find notifier process."));
+      *error = STRING16(L"Failed to find notifier process.");
       return 0;
     }
   }
   return process_id;
+}
+
+bool Desktop::ValidateAndShowNotification(
+    GearsNotification *released_notification) {
+  assert(released_notification);
+  scoped_ptr<GearsNotification> notification(released_notification);
+  if (!ValidateNotification(notification.get())) {
+    return false;
+  }
+
+  // TODO(levin): Make this async.
+  IconData icon;
+  icon.url = notification->icon_url();
+  if (!FetchIcon(&icon, &error_, false, NULL)) {
+    return false;
+  }
+  if (!DecodeIcon(&icon, kNotificationIconDimensions, &error_)) {
+    return false;
+  }
+  notification->set_icon_raw_data(icon.raw_data);
+
+  // Try to find the process of Desktop Notifier.
+  uint32 process_id = FindNotifierProcess(&error_);
+  if (!process_id) {
+    return false;
+  }
+
+  // Send the IPC message to the process of Desktop Notifier.
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+  assert(ipc_message_queue);
+  if (ipc_message_queue) {
+    // IpcMessageQueue is responsible for deleting the message data.
+    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                            kDesktop_AddNotification,
+                            notification.release());
+  }
+  return true;
 }
 
 void GearsDesktop::CreateNotification(JsCallContext *context) {
@@ -779,24 +845,14 @@ void GearsDesktop::ShowNotification(JsCallContext *context) {
     context->SetException(STRING16(L"First argument must be a notification."));
     return;
   }
+  scoped_ptr<GearsNotification> notification(new GearsNotification());
+  notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
 
-  // Try to find the process of Desktop Notifier.
-  uint32 process_id = FindNotifierProcess(context);
-  if (!process_id) {
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
+  if (!desktop.ValidateAndShowNotification(notification.release())) {
+    if (desktop.has_error())
+      context->SetException(desktop.error());
     return;
-  }
-
-  // Send the IPC message to the process of Desktop Notifier.
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
-  assert(ipc_message_queue);
-  if (ipc_message_queue) {
-    GearsNotification *notification = new GearsNotification();
-    notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
-    notification->set_security_origin(EnvPageSecurityOrigin());
-    // IpcMessageQueue is responsible for deleting the message data.
-    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                            kDesktop_AddNotification,
-                            notification);
   }
 }
 
@@ -813,10 +869,21 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
         STRING16(L"Cannot remove the notification with empty id."));
     return;
   }
+  scoped_ptr<GearsNotification> notification(new GearsNotification());
+  notification->set_id(id);
+  // Prepare the notification.
+  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
+  if (!desktop.ValidateNotification(notification.get())) {
+    if (desktop.has_error())
+      context->SetException(desktop.error());
+    return;
+  }
 
   // Try to find the process of Desktop Notifier.
-  uint32 process_id = FindNotifierProcess(context);
+  std::string16 error;
+  uint32 process_id = FindNotifierProcess(&error);
   if (!process_id) {
+    context->SetException(error);
     return;
   }
 
@@ -824,16 +891,13 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
   assert(ipc_message_queue);
   if (ipc_message_queue) {
-    GearsNotification *notification = new GearsNotification();
-    notification->set_id(id);
-    notification->set_security_origin(EnvPageSecurityOrigin());
     // IpcMessageQueue is responsible for deleting the message data.
     ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
                             kDesktop_RemoveNotification,
-                            notification);
+                            notification.release());
   }
 }
-#endif
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
 
 #ifdef OFFICIAL_BUILD
@@ -867,5 +931,5 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
     return;
   }
 }
-#endif
+#endif  // defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
 #endif  // OFFICIAL_BUILD

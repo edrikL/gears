@@ -116,7 +116,8 @@ void GearsNotification::CopyFrom(const GearsNotification& from) {
   version_ = from.version_;
   title_ = from.title_;
   subtitle_ = from.subtitle_;
-  icon_ = from.icon_;
+  icon_url_ = from.icon_url_;
+  icon_raw_data_ = from.icon_raw_data_;
   security_origin_.CopyFrom(from.security_origin_);
   id_ = from.id_;
   description_ = from.description_;
@@ -129,7 +130,7 @@ bool GearsNotification::Serialize(Serializer *out) {
   out->WriteInt(version_);
   out->WriteString(title_.c_str());
   out->WriteString(subtitle_.c_str());
-  out->WriteString(icon_.c_str());
+  out->WriteString(icon_url_.c_str());
   out->WriteString(security_origin_.url().c_str());
   out->WriteString(id_.c_str());
   out->WriteString(description_.c_str());
@@ -139,6 +140,11 @@ bool GearsNotification::Serialize(Serializer *out) {
   for (size_t i = 0; i < actions_.size(); ++i) {
     out->WriteString(actions_[i].text.c_str());
     out->WriteString(actions_[i].url.c_str());
+  }
+  int icon_byte_count = std::max(static_cast<int>(icon_raw_data_.size()), 0);
+  out->WriteInt(icon_byte_count);
+  if (icon_byte_count) {
+    out->WriteBytes(&icon_raw_data_.at(0), icon_raw_data_.size());
   }
   return true;
 }
@@ -150,7 +156,7 @@ bool GearsNotification::Deserialize(Deserializer *in) {
       version_ != kNotificationVersion ||
       !in->ReadString(&title_) ||
       !in->ReadString(&subtitle_) ||
-      !in->ReadString(&icon_) ||
+      !in->ReadString(&icon_url_) ||
       !in->ReadString(&security_origin_url) ||
       !in->ReadString(&id_) ||
       !in->ReadString(&description_) ||
@@ -170,7 +176,25 @@ bool GearsNotification::Deserialize(Deserializer *in) {
     }
     actions_.push_back(action);
   }
+  int icon_byte_count = 0;
+  in->ReadInt(&icon_byte_count);
+  if (icon_byte_count != kNotificationIconByteSize) {
+    return false;
+  }
+  icon_raw_data_.resize(icon_byte_count);
+  if (icon_byte_count) {
+    in->ReadBytes(&icon_raw_data_.at(0), icon_raw_data_.size());
+  }
   return true;
+}
+
+void GearsNotification::set_icon_raw_data(
+    const std::vector<uint8>& icon_raw_data) {
+  if (icon_raw_data.size() != kNotificationIconByteSize) {
+    icon_raw_data_.clear();
+    return;
+  }
+  icon_raw_data_ = icon_raw_data;
 }
 
 #if !BROWSER_NONE
@@ -191,7 +215,7 @@ void GearsNotification::SetTitle(JsCallContext *context) {
 }
 
 void GearsNotification::GetIcon(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &icon_);
+  context->SetReturnValue(JSPARAM_STRING16, &icon_url_);
 }
 
 void GearsNotification::SetIcon(JsCallContext *context) {
@@ -203,7 +227,7 @@ void GearsNotification::SetIcon(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  icon_ = icon;
+  icon_url_ = icon;
 }
 
 void GearsNotification::GetId(JsCallContext *context) {

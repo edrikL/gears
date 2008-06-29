@@ -42,6 +42,10 @@ struct NotificationAction {
   std::string16 url;
 };
 
+const int kNotificationIconDimensions = 48;
+const int kNotificationIconByteSize =
+    kNotificationIconDimensions * kNotificationIconDimensions * 4;
+
 // Describes the information about a notification.
 // Note: do not forget to increase kNotificationVersion if you make any change
 // to this class.
@@ -161,7 +165,10 @@ class GearsNotification :
   const std::string16& id() const { return id_; }
   const std::string16& title() const { return title_; }
   const std::string16& subtitle() const { return subtitle_; }
-  const std::string16& icon() const { return icon_; }
+  const std::string16& icon_url() const { return icon_url_; }
+  const std::vector<uint8>& icon_raw_data() {
+    return icon_raw_data_;
+  }
   const std::string16& description() const { return description_; }
   int64 display_at_time_ms() const { return display_at_time_ms_; }
   int64 display_until_time_ms() const { return display_until_time_ms_; }
@@ -173,7 +180,8 @@ class GearsNotification :
   void set_id(const std::string16& id) { id_ = id; }
   void set_title(const std::string16& title) { title_ = title; }
   void set_subtitle(const std::string16& subtitle) { subtitle_ = subtitle; }
-  void set_icon(const std::string16& icon) { icon_ = icon; }
+  void set_icon_url(const std::string16& icon_url) { icon_url_ = icon_url; }
+  void set_icon_raw_data(const std::vector<uint8>& icon_raw_data);
   void set_description(const std::string16& description) {
     description_ = description;
   }
@@ -185,8 +193,10 @@ class GearsNotification :
   }
   std::vector<NotificationAction> *mutable_actions() { return &actions_; }
 
+  std::string16* mutable_icon_url() { return &icon_url_; }
+
  private:
-  static const int kNotificationVersion = 4;
+  static const int kNotificationVersion = 5;
 
   // NOTE: Increase the kNotificationVersion every time the serialization is
   // going to produce different result. This most likely includes any change
@@ -196,10 +206,13 @@ class GearsNotification :
   std::string16 id_;
   std::string16 title_;
   std::string16 subtitle_;
-  std::string16 icon_;
+  std::string16 icon_url_;
   std::string16 description_;
   int64 display_at_time_ms_;
   int64 display_until_time_ms_;
+  // The raw_data is stored in the notification to avoid the size
+  // overhead of linking png utils into notifier.exe.
+  std::vector<uint8> icon_raw_data_;
   std::vector<NotificationAction> actions_;
   // NOTE: Increase the kNotificationVersion every time the serialization is
   // going to produce different result. This most likely includes any change
