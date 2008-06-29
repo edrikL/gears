@@ -190,7 +190,7 @@ bool GearsNotification::Deserialize(Deserializer *in) {
 
 void GearsNotification::set_icon_raw_data(
     const std::vector<uint8>& icon_raw_data) {
-  if (icon_raw_data.size() != kNotificationIconByteSize) {
+  if (icon_raw_data.size() != static_cast<size_t>(kNotificationIconByteSize)) {
     icon_raw_data_.clear();
     return;
   }
