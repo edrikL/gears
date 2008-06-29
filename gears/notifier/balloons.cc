@@ -42,7 +42,9 @@
 #include "third_party/glint/include/color.h"
 #include "third_party/glint/include/column.h"
 #include "third_party/glint/include/current_time.h"
+#include "third_party/glint/include/image_node.h"
 #include "third_party/glint/include/nine_grid.h"
+#include "third_party/glint/include/node.h"
 #include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/point.h"
 #include "third_party/glint/include/rectangle.h"
@@ -59,6 +61,7 @@ static const char *kTitleId = "title_text";
 static const char *kSubtitleId = "subtitle_text";
 static const char *kDescriptionId = "description_text";
 static const char *kBalloonContainer = "balloon_container";
+static const char *kIconId = "icon";
 
 const double kAlphaTransitionDuration = 1.0;
 const double kAlphaTransitionDurationShort = 0.3;
@@ -391,6 +394,14 @@ glint::Node *Balloon::CreateTree() {
   background->set_shadow(false);
   root->AddChild(background);
 
+  glint::ImageNode *image = new glint::ImageNode();
+  image->set_id(kIconId);
+  image->set_vertical_alignment(glint::Y_TOP);
+  image->set_horizontal_alignment(glint::X_LEFT);
+  margin.Set(6, 9, 0, 0);
+  image->set_margin(margin);
+  root->AddChild(image);
+
   glint::Column *column = new glint::Column();
   column->set_background(glint::Color(0xFFFF00));
   root->AddChild(column);
@@ -451,6 +462,19 @@ void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
   this_->InitiateClose(true);  // true == 'user_initiated'
 }
 
+bool Balloon::SetImage(const char *id,
+                       int width,
+                       int height,
+                       const void *decoded_image) {
+  assert(id);
+  glint::ImageNode *image_node = static_cast<glint::ImageNode*>(
+      root_->FindNodeById(id));
+  if (!image_node)
+    return false;
+  image_node->ReplaceBitmap(width, height, decoded_image);
+  return true;
+}
+
 bool Balloon::SetTextField(const char *id, const std::string16 &text) {
   assert(id);
   glint::SimpleText *text_node = static_cast<glint::SimpleText*>(
@@ -465,6 +489,14 @@ bool Balloon::SetTextField(const char *id, const std::string16 &text) {
 }
 
 void Balloon::UpdateUI() {
+  if (!notification_.icon_raw_data().empty()) {
+    SetImage(kIconId,
+             kNotificationIconDimensions,
+             kNotificationIconDimensions,
+             &(notification_.icon_raw_data()[0]));
+  } else {
+    SetImage(kIconId, 0, 0, NULL);
+  }
   SetTextField(kTitleId, notification_.title());
   SetTextField(kSubtitleId, notification_.subtitle());
   SetTextField(kDescriptionId, notification_.description());

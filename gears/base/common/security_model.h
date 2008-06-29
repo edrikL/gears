@@ -50,6 +50,10 @@ class SecurityOrigin {
   // be set to kUnknownDomain.
   bool InitFromUrl(const char16 *full_url);
 
+  // Has the security origin been initialized yet?
+  bool initialized() const
+      { return initialized_; }
+
   // A url that contains the information representative of the security
   // origin and nothing more. The path is always empty. The port number is
   // not included for for the default port case.

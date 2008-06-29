@@ -113,6 +113,10 @@ class Balloon {
 
   glint::Node *CreateTree();
   bool SetTextField(const char *id, const std::string16 &text);
+  bool SetImage(const char *id,
+                int width,
+                int height,
+                const void *decoded_image);
   static void OnCloseButton(const std::string &button_id, void *user_info);
   static bool SetAlphaTransition(glint::Node *node, double transition_duration);
   static bool SetMoveTransition(glint::Node *node);
