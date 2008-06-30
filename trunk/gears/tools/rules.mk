@@ -656,15 +656,12 @@ OUR_COMPONENT_GUID_NPAPI_REGISTRY = \
 WIX_DEFINES_I18N = $(foreach lang,$(subst -,_,$(I18N_LANGS)),-dOurComponentGUID_FFLang$(lang)DirFiles=$(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_$(lang)_DIR_FILES-$(VERSION)))
 
 # MSI version numbers must have the form <major>.<minor>.<build>. To meet this,
-# we combine our build and patch version numbers. We're extra careful to create
-# a combined version number that is a valid integer (no leading zeros) and still
-# sorts correctly. This assumes that the BUILD and PATCH variables adhere to the
-# range requirements in version.mk. See comments in version.mk for more details.
-#
-# Note: Nesting of shell commands is on purpose to correctly handle the case
-# where BUILD is zero; we don't want to have a leading zero in the final string.
-MSI_BUILD_NUMBER = $(shell printf %d $(BUILD)$(shell printf %02d $(PATCH)))
-MSI_VERSION = $(MAJOR).$(MINOR).$(MSI_BUILD_NUMBER)
+# we combine our build and patch version numbers like so:
+# MSI_VERSION = <major>.<minor>.<BUILD * 100 + PATCH>.
+# Note: This assumes that the BUILD and PATCH variables adhere to the range
+# requirements in version.mk. See comments in version.mk for more details.
+MSI_BUILD = $(shell dc -e "$(BUILD) 100 * $(PATCH) + p")
+MSI_VERSION = $(MAJOR).$(MINOR).$(MSI_BUILD)
 
 $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	candle.exe -out $@ $< \
