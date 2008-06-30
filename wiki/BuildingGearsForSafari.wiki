@@ -1,34 +1,34 @@
-#summary Building Google Gears for Safari
+#summary Building Gears for Safari
 
 = Current Status =
-The current Gears trunk does not compile for Safari.  We are working on a new version of Gears for Safari and will update this page with build instructions when it's ready.
+Gears for Safari compiles and runs in the current repository, there are still bugs and we currently working on stabilizing the port. If you are not a developer, interested in contributing to the Safari port, it's recommended that you wait for an official release.
 
 = Introduction =
 
-If you've already snagged a recent !WebKit nightly [http://nightly.webkit.org build] (522 or later), then you can proceed to build Google Gears for Safari.
+The Safari port is implemented as an NPAPI plugin.  It currently has feature parity with other platform with the exception of the !FileSubmitter class.
 
-There are two big differences between the Firefox and IE builds:
-  * The current code for Safari does not implement the !FileSubmitter class.
-  * The !WorkerPool is implemented as separate processes for each Worker and uses Distributed Objects to pass messages.  The downside is that it's much slower for messaging than the implementations using platform threads
+= Components =
 
-Both of these are being actively worked on.
+Gears for Safari is made up of two components:
+  # !GearsEnabler - An Inputmanager installed in `/Library/InputManagers/` serves to load Gears at browser startup in order to activate HTTP Interception and install the 'Gears Settings...' menu item.
+  # Gears.plugin - The actual NPAPI plugin, resides in `/Library/Internet Plugins/`.
 
 = Building =
-
-  # Open *gears/base/safari/project/project.xcodeproj* using Xcode.
-  # Build the Release build for a Universal binary (or Debug if you want to see how it all works, but just your native CPU).
+  # Type `make` in a terminal window at the root of the `gears/` directory.
 
 = Installing =
 
-If you have [http://s.sudre.free.fr/Software/Iceberg.html Iceberg] installed:
-  # Open *gears/base/safari/project/!GearsSafari.packproj*.
-  # Build and run.
-  # The plugin and input manager will be installed in /Library.
+If you have [http://s.sudre.free.fr/Software/Iceberg.html Iceberg] installed you will get a Gears.pkg package that you can double click to install.  Otherwise you can run the script under `tools/osx/install_gears.sh` which will install Gears for you. 
 
-Otherwise, you can install the components manually:
-  # Copy *gears/base/safari/project/build/Release/Gears.plugin* to the desired Library/Internet Plug-Ins folder (e.g., ~/Library/Internet Plug-Ins).
-  # Copy *gears/base/safari/project/build/Release/!GoogleGearsEnabler* to the desired Library/!InputManagers folder (e.g., ~/Library/!InputManagers).
+Another option is to install the components manually:
+  # Copy `gears/bin-[dbg|opt]/Installers/Safari/Gears.plugin` to the `/Library/Internet Plug-Ins` folder.
+  # Copy ``gears/bin-[dbg|opt]/Installers/Safari/!GearsEnabler` to /Library/!InputManagers folder.  In order to get this to work correctly on OS X 10.5, you will need to set the permissions of GearsEnabler correctly, the `tools/osx/install_inputmanager.sh` script will do this for you.
 
 = Testing =
-After installing, you should restart !WebKit.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.
+After installing, you should restart Safari.  Go to the [http://gears.google.com Gears Homepage], this will indicated whether Gears is installed and what version is running.  In addition you will see the 'Gears Settings...' menu item under the Safari Application menu.  If you've compiled a debug build, Gears will print diagnostic messages to the console as it loads, you can use these to diagnose problems you may have with the Gears installation.
 
+= XCode Project =
+You can find an XCode project for compiling Gears at `tools/osx/gears.xcodeproject`.  This is included mainly for convenience for Mac Developers, the "official" releases of Gears are compiled via the Makefile.
+
+= Breakpad =
+Breakpad is only enabled for official builds, it will not work correctly if the file in `/Library/Internet Plugins` is an alias to the Gears.plugin file in your build directory rather than a copy.  Also, by default, Breakpad turns itself off when running Gears under a debugger.
