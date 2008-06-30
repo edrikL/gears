@@ -51,39 +51,6 @@ static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 
-// Temporarily define DeviceDataProvider::DefaultFactoryFunction() here for
-// platforms where the device data provider is not yet implemented.
-// TODO(steveblock): Implement device data providers for remaining platforms.
-#if defined(WINCE)
-// WinCE uses WinceRadioDataProvider.
-#elif (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
-// Win32, Linux and OSX use EmptyDeviceDataProvider<RadioData>.
-#else
-// static
-template<>
-RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
-  assert(false);
-  return NULL;
-}
-#endif
-
-#if defined(WINCE)
-// WinCE uses WinceWifiDataProvider.
-#elif defined(WIN32) && !defined(WINCE)
-// Win32 uses Win32WifiDataProvider.
-#elif defined(LINUX) && !defined(OS_MACOSX)
-// Linux uses LinuxWifiDataProvider.
-#elif defined(OS_MACOSX)
-// OSX uses OsxWifiDataProvider.
-#else
-// static
-template<>
-WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
-  assert(false);
-  return NULL;
-}
-#endif
-
 // Data structure for use with ThreadMessageQueue.
 struct LocationAvailableMessageData : public MessageData {
  public:
@@ -282,8 +249,8 @@ void GearsGeolocation::HandleThreadMessage(int message_type,
 void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Get the arguments.
   std::vector<std::string16> urls;
-  FixRequestInfo *info = new FixRequestInfo();
-  if (!ParseArguments(context, repeats, &urls, info)) {
+  scoped_ptr<FixRequestInfo> info(new FixRequestInfo());
+  if (!ParseArguments(context, repeats, &urls, info.get())) {
     assert(context->is_exception_set());
     return;
   }
@@ -294,11 +261,14 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   LocationProviderPool *pool = LocationProviderPool::GetInstance();
 
   // Native providers
-#ifdef WINCE
-  // TODO(steveblock): Add GPS for WinCE
-  //info->providers.push_back(pool->Register(STRING16(L"GPS"), host_name,
-  //                                         info->address_language, this));
-#endif
+  if (info->enable_high_accuracy) {
+    LocationProviderBase *gps_provider =
+        pool->Register(STRING16(L"GPS"), host_name, info->address_language,
+                       this);
+    if (gps_provider) {
+      info->providers.push_back(gps_provider);
+    }
+  }
 
   // Network providers
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
@@ -307,19 +277,18 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     // pool.
     GURL url(urls[i]);
     if (url.is_valid()) {
-      info->providers.push_back(pool->Register(urls[i], host_name,
-                                               info->address_language, this));
+      LocationProviderBase *network_provider =
+          pool->Register(urls[i], host_name, info->address_language, this);
+      if (network_provider) {
+        info->providers.push_back(network_provider);
+      }
     }
   }
 
-  // Record this fix. This updates the map of providers and fix requests.
-  MutexLock lock(&providers_mutex_);
-  RecordNewFixRequest(info);
-
-  // Store and return the ID of this fix if it repeats.
-  if (info->repeats) {
-    context->SetReturnValue(JSPARAM_INT, &next_watch_id_);
-    watches_[next_watch_id_++] = info;
+  // If this fix has no providers, throw an exception and quit.
+  if (info->providers.empty()) {
+    context->SetException(STRING16(L"Fix request has no location providers."));
+    return;
   }
 
   // If this is a non-repeating request, hint to all providers that new data is
@@ -331,6 +300,17 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
       (*iter)->UpdatePosition();
     }
   }
+
+  // Store and return the ID of this fix if it repeats.
+  if (info->repeats) {
+    context->SetReturnValue(JSPARAM_INT, &next_watch_id_);
+    watches_[next_watch_id_++] = info.get();
+  }
+
+  // Record this fix. This updates the map of providers and fix requests. The
+  // map takes ownership of the info structure.
+  MutexLock lock(&providers_mutex_);
+  RecordNewFixRequest(info.release());
 }
 
 bool GearsGeolocation::CancelWatch(const int &watch_id) {

@@ -32,7 +32,7 @@
 
 #include "gears/geolocation/location_provider.h"
 
-#include "gears/geolocation/network_location_provider.h"
+#include <assert.h>
 
 void LocationProviderBase::AddListener(ListenerInterface *listener) {
   assert(listener);
@@ -89,17 +89,13 @@ LocationProviderBase *NewMockLocationProvider() {
 
 #endif
 
+// Win32, Linux and OSX do not have a GPS location provider.
+#if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
+
 LocationProviderBase *NewGpsLocationProvider() {
-  // TODO(steveblock): Implement me.
-  assert(false);
   return NULL;
 }
 
-LocationProviderBase *NewNetworkLocationProvider(
-    const std::string16 &url,
-    const std::string16 &host_name,
-    const std::string16 &language) {
-  return new NetworkLocationProvider(url, host_name, language);
-}
+#endif
 
 #endif  // OFFICIAL_BUILD

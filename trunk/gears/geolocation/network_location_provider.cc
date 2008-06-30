@@ -38,6 +38,15 @@ static const int kDataCompleteWaitPeriod = 1000 * 5;  // 5 seconds
 // The minimum period between network requests.
 static const int kMinimumRequestInterval = 1000 * 5;  // 5 seconds
 
+
+LocationProviderBase *NewNetworkLocationProvider(
+    const std::string16 &url,
+    const std::string16 &host_name,
+    const std::string16 &language) {
+  return new NetworkLocationProvider(url, host_name, language);
+}
+
+
 NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &host_name,
                                                  const std::string16 &language)

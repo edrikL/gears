@@ -65,10 +65,14 @@ LocationProviderBase *LocationProviderPool::Register(
   std::string16 key = MakeKey(type, host, language);
   ProviderMap::iterator iter = providers.find(key);
   if (iter == providers.end()) {
+    LocationProviderBase *provider = NewProvider(type, host, language);
+    if (!provider) {
+      return NULL;
+    }
     std::pair<ProviderMap::iterator, bool> result =
         providers.insert(
         std::make_pair(key,
-        std::make_pair(NewProvider(type, host, language), new RefCount())));
+        std::make_pair(provider, new RefCount())));
     assert(result.second);
     iter = result.first;
   }
