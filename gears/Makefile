@@ -1973,14 +1973,18 @@ $(BROWSER)_CPPSRCS	+= \
 		empty_device_data_provider.cc \
 		geolocation.cc \
 		geolocation_test.cc \
+		gps_location_provider_android.cc \
+		gps_location_provider_wince.cc \
 		location_provider.cc \
 		location_provider_pool.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
+		radio_data_provider_android.cc \
 		radio_data_provider_wince.cc \
 		thread.cc \
 		thread_posix.cc \
 		thread_win32.cc \
+		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
 		wifi_data_provider_linux.cc \
 		wifi_data_provider_osx.cc \
