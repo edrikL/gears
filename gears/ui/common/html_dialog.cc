@@ -93,6 +93,8 @@ bool HtmlDialog::SetResult(const char16 *value) {
 #elif BROWSER_WEBKIT
 // In the case of WebKit, DoModalImpl is declared in 
 // gears/ui/safari/html_dialog.mm so do nothing here...
+#elif OS_ANDROID
+// For Android, DoModalImpl is declared in ui/android/html_dialog_android.cc
 #elif BROWSER_NPAPI
 bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
                              const char16 *arguments_string) {
