@@ -48,6 +48,10 @@
 
 std::string16 g_user_agent;  // Access externally via BrowserUtils class.
 
+#ifdef OS_ANDROID
+const ThreadLocals::Slot kNPPInstance = ThreadLocals::Alloc();
+#endif
+
 // here the plugin creates an instance of our NPObject object which 
 // will be associated with this newly created plugin instance and 
 // will do all the neccessary job
@@ -62,6 +66,9 @@ NPError NPP_New(NPMIMEType pluginType,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
+#ifdef OS_ANDROID
+  ThreadLocals::SetValue(kNPPInstance, instance, NULL);
+#endif
   NPObject* obj = CreateGearsFactoryWrapper(instance);
   instance->pdata = obj;
 
@@ -90,6 +97,10 @@ NPError NPP_Destroy(NPP instance, NPSavedData** save)
   NPObject* obj = static_cast<NPObject*>(instance->pdata);
   if (obj)
     NPN_ReleaseObject(obj);
+
+#ifdef OS_ANDROID
+  ThreadLocals::DestroyValue(kNPPInstance);
+#endif
 
   return NPERR_NO_ERROR;
 }
