@@ -881,6 +881,7 @@ class Win32Platform : public Platform {
             "Invalid PlatformFont");
     if (font_handles_.count(font_handle) <= 0)
       return;
+    font_handles_.erase(font_handle);
     ::DeleteObject(font_handle);
   }
 

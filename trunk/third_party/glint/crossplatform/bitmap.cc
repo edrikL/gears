@@ -30,6 +30,18 @@
 
 namespace glint {
 
+// Used for hi-precision integer math in interpolation routines.
+// Defining it inside 'glint/local' namespace should avoid interference with
+// possible outside definitions, even if the code that uses Glint is placing
+// itself into 'glint' namespace for brievity.
+namespace local {
+#ifdef _MSC_VER
+typedef __int64 int64;
+#else
+typedef long long int64;
+#endif  // _MSC_VER
+}  // namespace local
+
 // Combines ARGB pixels with additional alpha.
 // Formula (source is already premultiplied by its own alpha):
 // target = source * alpha + target * (1 - source.alpha * alpha)
@@ -176,8 +188,10 @@ static void InterpolateLine(Color* source,
 
   for (int x = target_clip_start; x < target_clip_end; ++x) {
     int x_hi = (x - target_start) << 8;
-    int source_x_hi = source_start_hi +
-                      (x_hi * source_length_hi) / target_length_hi;
+    // Use 64 bit here since multiplication may overflow 32-bit int.
+    local::int64 source_x_offset_64 =
+        (static_cast<local::int64>(x_hi) * source_length_hi) / target_length_hi;
+    int source_x_hi = source_start_hi + static_cast<int>(source_x_offset_64);
     int dx = source_x_hi & 0xFF;       // fractional location between pixels
     int src_index = (source_x_hi >> 8) * source_pixel_step;  // back in pixels
     Color* source_a = source + src_index;
@@ -506,8 +520,10 @@ bool Bitmap::BilinearScale(const Bitmap& source,
 
   for (int y = target_clip.top(); y < target_clip.bottom(); ++y) {
     int y_hi = (y - target_area.top()) << 8;
+    local::int64 source_y_offset_64 =
+        (static_cast<local::int64>(y_hi) * source_height_hi) / target_height_hi;
     int source_y_hi = source_area_top_hi +
-                      (y_hi * source_height_hi) / target_height_hi;
+                      static_cast<int>(source_y_offset_64);
     int source_y = source_y_hi >> 8;
     // If at the bottom boundary, use the same pixel as next in y direction.
     ASSERT(source_y < source.size().height);
@@ -518,8 +534,10 @@ bool Bitmap::BilinearScale(const Bitmap& source,
     Color* target_pixel = GetPixelAt(target_clip.left(), y);
     for (int x = target_clip.left(); x < target_clip.right(); ++x) {
       int x_hi = (x - target_area.left()) << 8;
+      local::int64 source_x_offset_64 =
+          (static_cast<local::int64>(x_hi) * source_width_hi) / target_width_hi;
       int source_x_hi = source_area_left_hi +
-                        (x_hi * source_width_hi) / target_width_hi;
+                        static_cast<int>(source_x_offset_64);
       int source_x = source_x_hi >> 8;
       int dx = source_x_hi & 0xFF;
 

@@ -487,6 +487,7 @@ bool RootUI::UpdateUI() {
   if (!bitmap_ ||
       bitmap_->size().width != required_width ||
       bitmap_->size().height != required_height) {
+    delete bitmap_;
     bitmap_ = new Bitmap(Point(), Size(required_width, required_height));
     dirty_rectangles_.Reset();
     Rectangle* whole_bitmap = new Rectangle();
