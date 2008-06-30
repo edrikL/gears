@@ -40,3 +40,25 @@ Gears code utilizes intrusive reference counting on some objects via `Ref()` and
    scoped_refptr<Foo> local;
    GetFoo(as_out_parameter(local));
 }}}
+
+= Mac coding guidelines =
+ 
+  * Try to minimize the use of Objective-C - Objective-C can't be utilized in other platforms, the more common code we have in Gears the better.
+  * Use Cocoa for UI - The Carbon UI elements are deprecated and supposedly won't make the 64-bit transition.  Use Cocoa instead.
+
+== Notable Departures from common Objective-C coding style ==
+
+  * In contrast to common Objective-C style, long variable names follow the same conventions as C++ rather than the traditional Apple camelCase convention, e.g.
+{{{
+// Don't:
+@interface Foo : NSObject {
+  NSString *someStringVariable_;
+}
+@end
+
+// Do:
+@interface Foo : NSObject {
+  NSString *some_string_variable_;
+}
+@end
+}}}
