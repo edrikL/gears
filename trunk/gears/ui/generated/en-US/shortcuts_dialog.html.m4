@@ -149,7 +149,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         <div id="scroll">
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
-              <td valign="top"><img id="shortcut-icon" width="32" height="32"></td>
+              <td valign="top"><img id="shortcut-icon" width="32" height="32" src="blank.gif"></td>
               <td align="left" width="100%" valign="middle">
                 <div id="shortcut-name"><b></b></div
                 ><div id="shortcut-description"></div>

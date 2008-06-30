@@ -93,10 +93,11 @@ static NSDictionary *ScriptableMethods() {
 
   [content_view addSubview:webview];
   [webview release]; // addSubView retains webView.
-  [webview setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];
+  [webview setAutoresizingMask:NSViewHeightSizable | NSViewWidthSizable];
   
   // Make ourselves the WebView's delegate.
-  [webview setFrameLoadDelegate: self];
+  [webview setFrameLoadDelegate:self];
+  [webview setUIDelegate:self];
   
   // Load in the dialog's contents.
   WebFrame *frame = [webview mainFrame];
@@ -152,7 +153,7 @@ static NSDictionary *ScriptableMethods() {
 
 - (bool)showModal:(std::string16 *)results {
 
-  unsigned int window_style = NSTitledWindowMask | NSResizableWindowMask;
+  unsigned int window_style = NSTitledWindowMask;
   if (![self createWindow:window_style]) {
     return false;
   }
@@ -222,6 +223,14 @@ static NSDictionary *ScriptableMethods() {
   NSString *sel = [NSString stringWithCString:sel_getName(selector)
                                      encoding:NSUTF8StringEncoding];
   return [ScriptableMethods() objectForKey:sel];
+}
+
+// Webview UI delegate method.
+- (NSArray *)webView:(WebView *)sender 
+    contextMenuItemsForElement:(NSDictionary *)element 
+              defaultMenuItems:(NSArray *)defaultMenuItems {
+  // disable contextual menus for dialogs.
+  return nil;
 }
 
 // JS callback for asynchronously loading an image.

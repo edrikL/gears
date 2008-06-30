@@ -111,6 +111,7 @@ VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR),
 #
 # Begin: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 COMMON_RESOURCES = \
+	ui/common/blank.gif \
 	ui/common/button_bg.gif \
 	ui/common/button_corner_black.gif \
 	ui/common/button_corner_blue.gif \

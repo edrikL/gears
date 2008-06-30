@@ -245,7 +245,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td id="yellowbox-left" class="text-alignment" valign="top">
-              <img id="custom-icon" width="0" height="0">
+              <img id="custom-icon" width="0" height="0" src="blank.gif">
             </td>
             <td id="yellowbox-right" width="100%" class="text-alignment" valign="middle">
               <div id="custom-name"></div>
