@@ -82,8 +82,9 @@ class GearsFactory;
 // Ref/Unref methods.
 struct ModuleEnvironment : public RefCounted {
  public:
-  // Note that ModuleEnvironment will take ownership of the JsRunnerInterface*
-  // passed to it, and will be responsible for deleting it.
+  // Note that, if is_worker is false,  ModuleEnvironment will take ownership
+  // of the JsRunnerInterface* passed to it, and will be responsible for
+  // deleting it.
   ModuleEnvironment(SecurityOrigin security_origin,
 #if BROWSER_IE
                     IUnknown *iunknown_site,
@@ -110,7 +111,7 @@ struct ModuleEnvironment : public RefCounted {
 #endif
 
   bool is_worker_;
-  scoped_ptr<JsRunnerInterface> js_runner_;
+  JsRunnerInterface *js_runner_;
   scoped_refptr<BrowsingContext> browsing_context_;
 
   PermissionsManager permissions_manager_;
@@ -126,16 +127,17 @@ struct ModuleEnvironment : public RefCounted {
     // on the worker threads). That ChangeList did not modify actual behavior,
     // but it did make it explicit that we have a memory leak that we have to
     // fix.
-    // Unfortunately, fixing the leak isn't as easy as just removing the
-    // js_runner_.release() call below, since at least on some platforms,
+    // Unfortunately, fixing the leak isn't as easy as just enabling the
+    // delete js_runner_ call below, since at least on some platforms,
     // doing so will crash the browser. It is up to future ChangeLists to
     // remove the BROWSER_XXs from the #if below, once the leak is plugged
     // properly, for each XX.
-#if BROWSER_FF || BROWSER_IE || BROWSER_NPAPI
     if (!is_worker_) {
-      js_runner_.release();
-    }
+#if BROWSER_FF || BROWSER_IE || BROWSER_NPAPI
+#else
+      delete js_runner_;
 #endif
+    }
   }
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleEnvironment);

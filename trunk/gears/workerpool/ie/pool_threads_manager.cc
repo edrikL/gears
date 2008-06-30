@@ -646,10 +646,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     wi->script_mutex.Unlock();
 
     if (wi->script_ok) {
-      // We release our JsRunnerInterface to SetupJsRunner, which, if
-      // successful, will reset wi->module_environment to a new
-      // ModuleEnvironment that owns the JsRunnerInterface.
-      if (SetupJsRunner(js_runner.release(), wi)) {
+      if (SetupJsRunner(js_runner.get(), wi)) {
         // Add JS code to engine.  Any script errors trigger HandleError().
         wi->js_runner->Start(wi->script_text);
       }
@@ -691,7 +688,6 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
                                        JavaScriptWorkerInfo *wi) {
   assert(js_runner != NULL);
   assert(!wi->module_environment.get());
-  // The newly allocated ModuleEnvironment will take ownership of js_runner.
   wi->module_environment.reset(
       new ModuleEnvironment(wi->script_origin, NULL, true, js_runner,
                             wi->threads_manager->browsing_context()));

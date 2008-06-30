@@ -172,7 +172,7 @@ BrowsingContext *ModuleImplBaseClass::EnvPageBrowsingContext() const {
 
 JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   assert(module_environment_.get());
-  return module_environment_->js_runner_.get();
+  return module_environment_->js_runner_;
 }
 
 PermissionsManager *ModuleImplBaseClass::GetPermissionsManager() const {
