@@ -1041,7 +1041,14 @@ M4FLAGS  += -DI18N_LANGUAGES="($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS)))
 # "UQ" means "un-quoted".
 # IMPORTANT: these values affect most visible names, but there are exceptions.
 # If you change a name below, also search the code for "[naming]"
+
+# The permissions dialog for WinCE uses a product name of 'Gears' to save screen
+# space, so we add FRIENDLY_NAME_NEW and PRODUCT_FRIENDLY_NAME_NEW_UQ.
+# TODO(steveblock): Remove these when we reach the point where we use 'Gears'
+# throughout.
+FRIENDLY_NAME_NEW=Gears
 FRIENDLY_NAME=Google Gears
 SHORT_NAME=gears
+M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_NEW_UQ="$(FRIENDLY_NAME_NEW)"
 M4FLAGS  += -DPRODUCT_FRIENDLY_NAME_UQ="$(FRIENDLY_NAME)"
 M4FLAGS  += -DPRODUCT_SHORT_NAME_UQ="$(SHORT_NAME)"
