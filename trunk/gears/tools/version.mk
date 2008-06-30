@@ -23,6 +23,17 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# NOTE: The allowed ranges for these numbers are <0-255,0-255,0-654,0-99>.
+#
+# These ranges are derived from the format and limits of MSI ProductVersion
+# numbers, which are: <0-255,0-255,0-65535>. We combine the last two Gears
+# version fields to create the last MSI ProductVersion field. Splitting the
+# range in this way gives us lots or range where we need it (we create lots of
+# builds) and little where we don't need it (we create few patches). It also
+# makes it easy to get the Gears version from MSI ProductVersion field.
+#
+# For more information on the MSI ProductVersion field, see:
+# http://msdn.microsoft.com/en-us/library/aa370859(VS.85).aspx
 MAJOR = 0
 MINOR = 4
 BUILD = 0

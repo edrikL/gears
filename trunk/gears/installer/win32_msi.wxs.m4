@@ -41,7 +41,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
   <Product Id='$(var.OurWin32ProductId)' Name='PRODUCT_FRIENDLY_NAME_UQ'
-    Language='1033' Version='PRODUCT_VERSION'
+    Language='1033' Version='$(var.OurMsiVersion)'
     Manufacturer='Google' UpgradeCode='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
     <Package Description='PRODUCT_FRIENDLY_NAME_UQ'
       Comments='PRODUCT_FRIENDLY_NAME_UQ' Manufacturer='Google'
@@ -51,9 +51,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <Upgrade Id='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
       <UpgradeVersion Property='UPGRADING' OnlyDetect='no'
         Minimum='0.0.0.0' IncludeMinimum='yes'
-        Maximum='PRODUCT_VERSION' IncludeMaximum='no' />
+        Maximum='$(var.OurMsiVersion)' IncludeMaximum='no' />
       <UpgradeVersion Property='NEWERVERSIONDETECTED' OnlyDetect='yes'
-        Minimum='PRODUCT_VERSION' IncludeMinimum='no' />
+        Minimum='$(var.OurMsiVersion)' IncludeMinimum='no' />
     </Upgrade>
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
