@@ -98,20 +98,11 @@ GearsDesktop::GearsDesktop()
 #endif  // OFFICIAL_BUILD
 }
 
-#ifdef OS_ANDROID
-Desktop::Desktop(const SecurityOrigin &security_origin,
-                 BrowsingContext *context, NPP js_context)
-    : security_origin_(security_origin),
-      js_call_context_(js_context),
-      browsing_context_(context) {
-}
-#else
 Desktop::Desktop(const SecurityOrigin &security_origin,
                  BrowsingContext *context)
     : security_origin_(security_origin),
       browsing_context_(context) {
 }
-#endif
 
 bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info) {
   // Gears doesn't allow spaces in path names, but desktop shortcuts are the
@@ -303,12 +294,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
                             &shortcut_info.icon128x128.url);
 
   // Prepare the shortcut.
-#ifdef OS_ANDROID
-  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext(),
-                  EnvPageJsContext());
-#else
   Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
-#endif
   if (!desktop.ValidateShortcutInfo(&shortcut_info)) {
     if (desktop.has_error())
       context->SetException(desktop.error());

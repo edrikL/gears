@@ -77,12 +77,7 @@ class Desktop {
     DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
   };
 
-#ifdef OS_ANDROID
-  Desktop(const SecurityOrigin &security_origin, BrowsingContext *context,
-          NPP js_context);
-#else
   Desktop(const SecurityOrigin &security_origin, BrowsingContext *context);
-#endif
 
   // Call this after setting up the ShortcutInfo to validate it and check if
   // the shortcut should be created.  Returns false if the shortcut should not
@@ -153,10 +148,6 @@ class Desktop {
 
   // The context to use when fetching the icons.
   scoped_refptr<BrowsingContext> browsing_context_;
-
-#ifdef OS_ANDROID
-  NPP js_call_context_;
-#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(Desktop);
 };
