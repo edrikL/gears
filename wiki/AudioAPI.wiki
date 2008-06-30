@@ -252,19 +252,19 @@ The AudioRecorder class throws the following events, under the stated preconditi
 
 *_Default values for the various attributes_*
 
-|| *Attribute*   || *New recorder object* || *Previously recorded* ||
-|| error         || null                  || last error occurred   ||
-|| recording     || false                 || false                 ||
-|| paused        || false                 || false                 ||
-|| activityLevel || 0                     || 0                     ||
-|| duration      || 0ms                   || 0ms                   ||
-|| channelType   || based on device       || previous channelType  ||
-|| sampleRate    || based on device       || previous sampleRate   ||
-|| sampleFormat  || based on device       || previous sampleFormat ||
-|| type          || audio/wav             || previous type         ||
-|| volume        || 0.5                   || previous volume       ||
-|| muted         || false                 || false                 ||
-|| silenceLevel  || 0                     || previous silenceLevel ||
+|| *Attribute*   || *New recorder object* || *Previously recorded*     ||
+|| error         || null                  || last error occurred       ||
+|| recording     || false                 || false                     ||
+|| paused        || false                 || false                     ||
+|| activityLevel || 0                     || 0                         ||
+|| duration      || 0ms                   || previous recorded duration||
+|| channelType   || based on device       || previous channelType      ||
+|| sampleRate    || based on device       || previous sampleRate       ||
+|| sampleFormat  || based on device       || previous sampleFormat     ||
+|| type          || audio/wav             || previous type             ||
+|| volume        || 0.5                   || previous volume           ||
+|| muted         || false                 || false                     ||
+|| silenceLevel  || 0                     || previous silenceLevel     ||
 
 *_Recording the audio_*
 
