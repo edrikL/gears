@@ -47,13 +47,18 @@ function initDialog() {
 }
 
 /**
- * Set the label of input button, an optionally, it's accesskey.
+ * Set the label of an input button, and optionally, its accesskey.
  */
 function setButtonLabel(textID, elemID, accessKeyID) {
   var textElem = dom.getElementById(textID);
   var buttonElem = dom.getElementById(elemID);
-  if (!isDefined(typeof textElem) || !isDefined(typeof buttonElem)) {
+  if (textElem == null || buttonElem == null) {
     return;
+  }
+
+  var accessKeyElem = null;
+  if (isDefined(typeof accessKeyID)) {
+    accessKeyElem = dom.getElementById(accessKeyID);
   }
 
   // This function works for two different kinds of buttons. Simple buttons
@@ -65,16 +70,14 @@ function setButtonLabel(textID, elemID, accessKeyID) {
   if (!isDefined(typeof buttonElem.tagName) ||
       buttonElem.tagName.toLowerCase() == "input") {
     buttonElem.value = dom.getTextContent(textElem).trim();
-    if (isDefined(typeof accessKeyElem)) {
+    if (accessKeyElem != null) {
       buttonElem.accessKey = dom.getTextContent(accessKeyElem).trim();
     }
   } else if (buttonElem.tagName.toLowerCase() == "button") {
     var text = dom.getTextContent(textElem).trim();
-    var textLength = text.length;
 
-    if (isDefined(typeof accessKeyID)) {
+    if (accessKeyElem != null) {
       // Some browsers use the accessKey attribute of the the anchor tag.
-      var accessKeyElem = dom.getElementById(accessKeyID);
       var accessKey = dom.getTextContent(accessKeyElem).trim();
       buttonElem.accessKey = accessKey;
 
