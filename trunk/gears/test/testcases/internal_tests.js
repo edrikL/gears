@@ -373,29 +373,37 @@ function testGeolocationFormRequestBody() {
 // location provider.
 function testGeolocationGetLocationFromResponse() {
   if (isUsingCCTests && !isOfficial) {
-    var responseString = '{ ' +
-                         '"location" : { ' +
-                         '"latitude" : 53.1, ' +
-                         '"longitude" : -0.1, ' +
-                         '"altitude" : 30, ' +
-                         '"horizontal_accuracy" : 1200, ' +
-                         '"vertical_accuracy" : 10, ' +
-                         '"address" : { ' +
-                         '"street_number": "100", ' +
-                         '"street": "Amphibian Walkway", ' +
-                         '"city": "Mountain View", ' +
-                         '"county": "Mountain View County", ' +
-                         '"region": "California", ' +
-                         '"country": "United States of America", ' +
-                         '"country_code": "US", ' +
-                         '"postal_code": "94043" ' +
-                         '} ' +
-                         '} ' +
-                         '}';
-    var position =
-        internalTests.testGeolocationGetLocationFromResponse(responseString);
-    // timestamp is set on the C++ side.
-    var correctPosition = new Object();
+    var dummy_server = 'http://test.server.com';
+    var position;
+    var correctPosition;
+
+    // Test good response with valid position.
+    var responseBody = '{ ' +
+                       '"location" : { ' +
+                       '"latitude" : 53.1, ' +
+                       '"longitude" : -0.1, ' +
+                       '"altitude" : 30, ' +
+                       '"horizontal_accuracy" : 1200, ' +
+                       '"vertical_accuracy" : 10, ' +
+                       '"address" : { ' +
+                       '"street_number": "100", ' +
+                       '"street": "Amphibian Walkway", ' +
+                       '"city": "Mountain View", ' +
+                       '"county": "Mountain View County", ' +
+                       '"region": "California", ' +
+                       '"country": "United States of America", ' +
+                       '"country_code": "US", ' +
+                       '"postal_code": "94043" ' +
+                       '} ' +
+                       '} ' +
+                       '}';
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,  // HttpPost result
+        200,   // status code
+        responseBody,
+        42,    // timestamp
+        '');   // server URL
+    correctPosition = new Object();
     correctPosition.latitude = 53.1;
     correctPosition.longitude = -0.1;
     correctPosition.altitude = 30;
@@ -411,6 +419,83 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.address.countryCode = 'US';
     correctPosition.address.postalCode = '94043';
     correctPosition.timestamp = new Date(42);
+    assertObjectEqual(correctPosition, position);
+
+    // Test no response.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        false,  // HttpPost result
+        0,      // status code
+        '',     // response body
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage =
+        'No response from network provider at ' + dummy_server + '.';
+    assertObjectEqual(correctPosition, position);
+
+    // Test bad response.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,   // HttpPost result
+        400,    // status code
+        '',     // response body
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage = 'Network provider at ' +
+                                   dummy_server +
+                                   ' returned error code 400.';
+    assertObjectEqual(correctPosition, position);
+
+    // Test good response with malformed body.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,   // HttpPost result
+        200,    // status code
+        'malformed reposnse body',
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage = 'Response from network provider at ' +
+                                   dummy_server +
+                                   ' was malformed.';
+    assertObjectEqual(correctPosition, position);
+
+    // Test good response with empty body.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,   // HttpPost result
+        200,    // status code
+        '',     // response body
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage = 'Response from network provider at ' +
+                                   dummy_server +
+                                   ' was malformed.';
+    assertObjectEqual(correctPosition, position);
+
+    // Test good response with unknown position.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,   // HttpPost result
+        200,    // status code
+        '{}',   // response body
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage = 'Network provider at ' +
+                                   dummy_server +
+                                   ' did not provide a good position fix.'
+    assertObjectEqual(correctPosition, position);
+
+    // Test good response with explicit unknown position.
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,   // HttpPost result
+        200,    // status code
+        '{"position": null}',
+        0,      // timestamp
+        dummy_server);
+    correctPosition = new Object();
+    correctPosition.errorMessage = 'Network provider at ' +
+                                   dummy_server +
+                                   ' did not provide a good position fix.'
     assertObjectEqual(correctPosition, position);
   }
 }

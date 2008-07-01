@@ -37,22 +37,24 @@
 
 static const char *kGearsNetworkLocationProtocolVersion = "1.0";
 
-// Local functions.
-
-static bool FormRequestBody(const std::string16 &host_name,
-                            const RadioData &radio_data,
-                            const WifiData &wifi_data,
-                            bool request_address,
-                            std::string16 address_language,
-                            double latitude,
-                            double longitude,
-                            scoped_refptr<BlobInterface> *blob);
-// Extracts a position from the server repsonse. Returns true if parsing was
-// successful.
-static bool GetLocationFromResponse(const std::vector<uint8> &response,
-                                    Position *position);
-
-// NetworkLocationRequest
+// Local functions
+static const char16* RadioTypeToString(RadioType type);
+// Adds a string if it's valid to the JSON object.
+static void AddString(const std::string &property_name,
+                      const std::string16 &value,
+                      Json::Value *object);
+// Adds an integer if it's valid to the JSON object.
+static void AddInteger(const std::string &property_name,
+                       const int &value,
+                       Json::Value *object);
+// Adds an angle as a double if it's valid to the JSON object. Returns true if
+// added.
+static bool AddAngle(const std::string &property_name,
+                     const double &value,
+                     Json::Value *object);
+// Parses the server response body. Returns true if parsing was successful.
+static bool ParseServerResponse(const std::string &response_body,
+                                Position *position);
 
 // static
 NetworkLocationRequest* NetworkLocationRequest::Create(
@@ -114,127 +116,30 @@ void NetworkLocationRequest::Run() {
 
   if (listener_) {
     Position position;
-    // HttpPost can fail for a number of reasons. Most likely this is because
-    // we're offline, or there was no response.
-    if (!result) {
-      LOG(("NetworkLocationRequest::Run() : HttpPost request failed.\n"));
-      position.error = STRING16(L"No response from network provider at ");
-      position.error += url_.c_str();
-      position.error += STRING16(L".");
-    } else if (payload.status_code == HttpConstants::HTTP_OK) {
-      // If HttpPost succeeded, payload.data is guaranteed to be non-NULL,
-      // even if the vector it points to is empty.
-      assert(payload.data.get());
-      if (GetLocationFromResponse(*payload.data.get(), &position)) {
-        // The response was successfully parsed, but it may not be a valid
-        // position fix.
-        if (position.IsGoodFix()) {
-          // We use the timestamp from the device data that was used to generate
-          // this position fix.
-          position.timestamp = timestamp_;
-        } else {
-          position.error = STRING16(L"Network provider at ");
-          position.error += url_.c_str();
-          position.error += STRING16(L" did not provide a good position fix.");
-        }
-      } else {
-        // If we failed to parse the repsonse, we call back with a bad
-        // position.
-        LOG(("NetworkLocationRequest::Run() : Response malformed.\n"));
-        position.error = STRING16(L"Response from network provider at ");
-        position.error += url_.c_str();
-        position.error += STRING16(L" was malformed.");
-      }
-    } else {
-      // If the response was bad, we call back with a bad position.
-      LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
-      position.error = STRING16(L"Network provider at ");
-      position.error += url_.c_str();
-      position.error += STRING16(L" returned error code ");
-      position.error += IntegerToString16(payload.status_code);
-      position.error += STRING16(L".");
+    // If HttpPost succeeded, payload.data is guaranteed to be non-NULL,
+    // even if the vector it points to is empty.
+    std::string response_body;
+    if (result && !payload.data->empty()) {
+      response_body.assign(
+          reinterpret_cast<const char*>(&payload.data.get()[0]),
+          payload.data->size());
     }
+    GetLocationFromResponse(result, payload.status_code, response_body,
+                            timestamp_, url_, &position);
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     listener_->LocationResponseAvailable(position);
   }
 }
 
-void NetworkLocationRequest::StopThreadAndDelete() {
-  // The FF implementation of AsyncTask::Abort() delivers a message to the UI
-  // thread to cancel the request. So if we call this method on the UI thread,
-  // we must return to the OS before the call to Abort() will take effect. In
-  // particular, we can't call Abort() then block here waiting for HttpPost to
-  // return.
-  is_processing_response_mutex_.Lock();
-  Abort();
-  is_processing_response_mutex_.Unlock();
-  DeleteWhenDone();
-}
-
-// Local functions.
-
-static const char16* RadioTypeToString(RadioType type) {
-  switch (type) {
-    case RADIO_TYPE_UNKNOWN:
-      return STRING16(L"unknown");
-    case RADIO_TYPE_GSM:
-      return STRING16(L"gsm");
-    case RADIO_TYPE_CDMA:
-      return STRING16(L"cdma");
-    case RADIO_TYPE_WCDMA:
-      return STRING16(L"wcdma");
-    default:
-      assert(false);
-  }
-  return NULL;
-}
-
-// Adds a string if it's valid.
-static void AddString(const std::string &property_name,
-                      const std::string16 &value,
-                      Json::Value *object) {
-  assert(object);
-  assert(object->isObject());
-  if (!value.empty()) {
-    std::string value_utf8;
-    if (String16ToUTF8(value.c_str(), value.size(), &value_utf8)) {
-      (*object)[property_name] = Json::Value(value_utf8);
-    }
-  }
-}
-
-// Adds an integer if it's valid.
-static void AddInteger(const std::string &property_name,
-                       const int &value,
-                       Json::Value *object) {
-  assert(object);
-  assert(object->isObject());
-  if (kint32min != value) {
-    (*object)[property_name] = Json::Value(value);
-  }
-}
-
-// Adds an angle as a double if it's valid. Returns true if added.
-static bool AddAngle(const std::string &property_name,
-                     const double &value,
-                     Json::Value *object) {
-  assert(object);
-  assert(object->isObject());
-  if (value >= -180.0 && value <= 180.0) {
-    (*object)[property_name] = Json::Value(value);
-    return true;
-  }
-  return false;
-}
-
-static bool FormRequestBody(const std::string16 &host_name,
-                            const RadioData &radio_data,
-                            const WifiData &wifi_data,
-                            bool request_address,
-                            std::string16 address_language,
-                            double latitude,
-                            double longitude,
-                            scoped_refptr<BlobInterface> *blob) {
+// static
+bool NetworkLocationRequest::FormRequestBody(const std::string16 &host_name,
+    const RadioData &radio_data,
+    const WifiData &wifi_data,
+    bool request_address,
+    std::string16 address_language,
+    double latitude,
+    double longitude,
+    scoped_refptr<BlobInterface> *blob) {
   assert(blob);
   Json::Value body_object;
   assert(body_object.isObject());
@@ -313,6 +218,119 @@ static bool FormRequestBody(const std::string16 &host_name,
   return true;
 }
 
+// static
+void NetworkLocationRequest::GetLocationFromResponse(
+    bool http_post_result,
+    int status_code,
+    const std::string &response_body,
+    int64 timestamp,
+    std::string16 server_url,
+    Position *position) {
+  assert(position);
+  // HttpPost can fail for a number of reasons. Most likely this is because
+  // we're offline, or there was no response.
+  if (!http_post_result) {
+    LOG(("NetworkLocationRequest::Run() : HttpPost request failed.\n"));
+    position->error = STRING16(L"No response from network provider at ");
+    position->error += server_url.c_str();
+    position->error += STRING16(L".");
+  } else if (status_code == HttpConstants::HTTP_OK) {
+    if (ParseServerResponse(response_body, position)) {
+      // The response was successfully parsed, but it may not be a valid
+      // position fix.
+      if (position->IsGoodFix()) {
+        // We use the timestamp from the device data that was used to generate
+        // this position fix.
+        position->timestamp = timestamp;
+      } else {
+        position->error = STRING16(L"Network provider at ");
+        position->error += server_url.c_str();
+        position->error += STRING16(L" did not provide a good position fix.");
+      }
+    } else {
+      // If we failed to parse the repsonse, we call back with a bad
+      // position.
+      LOG(("NetworkLocationRequest::Run() : Response malformed.\n"));
+      position->error = STRING16(L"Response from network provider at ");
+      position->error += server_url.c_str();
+      position->error += STRING16(L" was malformed.");
+    }
+  } else {
+    // If the response was bad, we call back with a bad position.
+    LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
+    position->error = STRING16(L"Network provider at ");
+    position->error += server_url.c_str();
+    position->error += STRING16(L" returned error code ");
+    position->error += IntegerToString16(status_code);
+    position->error += STRING16(L".");
+  }
+}
+
+void NetworkLocationRequest::StopThreadAndDelete() {
+  // The FF implementation of AsyncTask::Abort() delivers a message to the UI
+  // thread to cancel the request. So if we call this method on the UI thread,
+  // we must return to the OS before the call to Abort() will take effect. In
+  // particular, we can't call Abort() then block here waiting for HttpPost to
+  // return.
+  is_processing_response_mutex_.Lock();
+  Abort();
+  is_processing_response_mutex_.Unlock();
+  DeleteWhenDone();
+}
+
+// Local functions.
+
+static const char16* RadioTypeToString(RadioType type) {
+  switch (type) {
+    case RADIO_TYPE_UNKNOWN:
+      return STRING16(L"unknown");
+    case RADIO_TYPE_GSM:
+      return STRING16(L"gsm");
+    case RADIO_TYPE_CDMA:
+      return STRING16(L"cdma");
+    case RADIO_TYPE_WCDMA:
+      return STRING16(L"wcdma");
+    default:
+      assert(false);
+  }
+  return NULL;
+}
+
+static void AddString(const std::string &property_name,
+                      const std::string16 &value,
+                      Json::Value *object) {
+  assert(object);
+  assert(object->isObject());
+  if (!value.empty()) {
+    std::string value_utf8;
+    if (String16ToUTF8(value.c_str(), value.size(), &value_utf8)) {
+      (*object)[property_name] = Json::Value(value_utf8);
+    }
+  }
+}
+
+static void AddInteger(const std::string &property_name,
+                       const int &value,
+                       Json::Value *object) {
+  assert(object);
+  assert(object->isObject());
+  if (kint32min != value) {
+    (*object)[property_name] = Json::Value(value);
+  }
+}
+
+static bool AddAngle(const std::string &property_name,
+                     const double &value,
+                     Json::Value *object) {
+  assert(object);
+  assert(object->isObject());
+  if (value >= -180.0 && value <= 180.0) {
+    (*object)[property_name] = Json::Value(value);
+    return true;
+  }
+  return false;
+}
+
 // The JsValue::asXXX() methods return zero if a property isn't specified. For
 // our purposes, zero is a valid value, so we have to test for existence.
 
@@ -340,21 +358,18 @@ static bool GetAsString(const Json::Value &object,
   return UTF8ToString16(out_utf8.c_str(), out_utf8.size(), out);
 }
 
-static bool GetLocationFromResponse(const std::vector<uint8> &response,
-                                    Position *position) {
+static bool ParseServerResponse(const std::string &response_body,
+                                Position *position) {
   assert(position);
-  if (response.empty()) {
-    LOG(("GetLocationFromResponse() : Response was empty.\n"));
+  if (response_body.empty()) {
+    LOG(("ParseServerResponse() : Response was empty.\n"));
     return false;
   }
-  std::string response_string;
-  response_string.assign(reinterpret_cast<const char*>(&response[0]),
-                         response.size());
   // Parse the response, ignoring comments.
   Json::Reader reader;
   Json::Value response_object;
-  if (!reader.parse(response_string, response_object, false)) {
-    LOG(("GetLocationFromResponse() : Failed to parse response : %s.\n",
+  if (!reader.parse(response_body, response_object, false)) {
+    LOG(("ParseServerResponse() : Failed to parse response : %s.\n",
          reader.getFormatedErrorMessages().c_str()));
     return false;
   }
@@ -364,6 +379,7 @@ static bool GetLocationFromResponse(const std::vector<uint8> &response,
   // If the network provider was unable to provide a position fix, it should
   // return a 200 with location == null.
   if (location.type() == Json::nullValue) {
+    LOG(("ParseServerResponse() : Location is null.\n"));
     return true;
   }
 
@@ -395,25 +411,5 @@ static bool GetLocationFromResponse(const std::vector<uint8> &response,
   }
   return true;
 }
-
-#ifdef USING_CCTESTS
-// These methods are used only for testing as a means to access the static
-// functions defined here.
-bool FormRequestBodyTest(const std::string16 &host_name,
-                         const RadioData &radio_data,
-                         const WifiData &wifi_data,
-                         bool request_address,
-                         std::string16 address_language,
-                         double latitude,
-                         double longitude,
-                         scoped_refptr<BlobInterface> *blob) {
-  return FormRequestBody(host_name, radio_data, wifi_data, request_address,
-                         address_language, latitude, longitude, blob);
-}
-bool GetLocationFromResponseTest(const std::vector<uint8> &response,
-                                 Position *position) {
-  return GetLocationFromResponse(response, position);
-}
-#endif
 
 #endif  // OFFICIAL_BUILD

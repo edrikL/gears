@@ -38,7 +38,8 @@ void TestParseGeolocationOptions(JsCallContext *context,
 // OUT: string request_body
 void TestGeolocationFormRequestBody(JsCallContext *context);
 
-// IN: string response_body
+// IN: bool http_post_result, int status_code, string response_body,
+//     int64 timestamp, string server_url
 // OUT: object position
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                             JsRunnerInterface *js_runner);
