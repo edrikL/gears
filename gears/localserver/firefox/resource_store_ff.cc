@@ -36,12 +36,13 @@
 #include "gears/localserver/firefox/resource_store_ff.h"
 
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
 #include "gears/blob/blob.h"
-#include "gears/localserver/firefox/file_submitter_ff.h"
+#include "gears/localserver/file_submitter.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -633,18 +634,20 @@ NS_IMETHODIMP GearsResourceStore::GetAllHeaders(const nsAString &url,
 // CreateFileSubmitter
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-GearsResourceStore::CreateFileSubmitter(GearsFileSubmitterInterface **retval) {
+GearsResourceStore::CreateFileSubmitter(nsISupports **retval) {
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
   }
-  nsCOMPtr<GearsFileSubmitter> submitter(new GearsFileSubmitter());
+  scoped_refptr<ModuleImplBaseClass> submitter;
+  CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter);
   if (!submitter->InitBaseFromSibling(this) ||
-      !submitter->store_.Clone(&store_)) {
+      !static_cast<GearsFileSubmitter*>(submitter.get())->store_.Clone(
+          &store_)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize FileSubmitter."));
   }
-
-  NS_ADDREF(*retval = submitter);
+  JsParamFetcher js_params(this);
+  js_params.SetReturnValue(submitter->GetWrapperToken());
   RETURN_NORMAL();
 }
 

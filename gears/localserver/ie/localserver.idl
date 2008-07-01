@@ -27,29 +27,6 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 
-#ifdef WINCE
-  // FileSubmitter is not implemented for WinCE.
-#else
-//
-// GearsFileSubmitterInterface
-// Facilitates the inclusion of resources into form submissions
-// as the file parts of multipart/form-data encoded POSTs.
-//
-
-[
-  object,
-  uuid(0747A88C-5033-44f7-94B4-2E2823925996),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsFileSubmitterInterface : IDispatch {
-  HRESULT setFileInputElement(
-      [in] IDispatch *file_input_element,
-      [in] const BSTR resource_url);
-};
-#endif
-
 //
 // GearsResourceStoreInterface
 //
@@ -122,7 +99,7 @@ interface GearsResourceStoreInterface : IDispatch {
   // FileSubmitter is not implemented for WinCE.
 #else
   HRESULT createFileSubmitter(
-      [out, retval] GearsFileSubmitterInterface **file_submitter);
+      [out, retval] IDispatch **file_submitter);
 #endif
 };
 

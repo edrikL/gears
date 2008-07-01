@@ -128,7 +128,7 @@ class ATL_NO_VTABLE GearsResourceStore
   // for now.
 #else
   virtual HRESULT STDMETHODCALLTYPE createFileSubmitter(
-      /* [retval][out] */ GearsFileSubmitterInterface **file_submitter);
+      /* [retval][out] */ IDispatch **retval);
 #endif
 
  private:

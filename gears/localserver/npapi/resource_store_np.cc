@@ -27,7 +27,7 @@
 
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/localserver/npapi/file_submitter_np.h"
+#include "gears/localserver/file_submitter.h"
 
 DECLARE_GEARS_WRAPPER(GearsResourceStore);
 

@@ -45,7 +45,6 @@
 #include "gears/factory/firefox/factory.h"
 
 #include "gears/localserver/firefox/cache_intercept.h"
-#include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/ui/firefox/ui_utils.h"
@@ -136,11 +135,6 @@ NS_DOMCI_EXTENSION(Scour)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsResourceStoreInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResourceStore, PR_TRUE,
                                              &kGearsResourceStoreClassId)
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsFileSubmitter)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsFileSubmitterInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
-                                             &kGearsFileSubmitterClassId)
-
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -176,9 +170,7 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     { kGearsLocalServerClassName, "GearsLocalServerInterface",
       GEARSLOCALSERVERINTERFACE_IID_STR },
     { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
-      GEARSRESOURCESTOREINTERFACE_IID_STR },
-    { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
-      GEARSFILESUBMITTERINTERFACE_IID_STR }
+      GEARSRESOURCESTOREINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -210,7 +202,6 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // localserver
 NS_DECL_DOM_CLASSINFO(GearsLocalServer)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
-NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   if (NS_FAILED(ThreadLocals::HandleModuleConstructed())) {
@@ -231,9 +222,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
 
-#ifdef DEBUG
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
-#endif
 #if BROWSER_FF2
   DestroyThreadRecycler();
 #endif

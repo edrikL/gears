@@ -575,7 +575,6 @@ bool JsRunner::InitJavaScriptEngine() {
     // localserver
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL}
-    // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 

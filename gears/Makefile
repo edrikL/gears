@@ -1680,6 +1680,7 @@ $(BROWSER)_CPPSRCS += \
 		blob_store.cc \
 		capture_task.cc \
 		file_store.cc \
+		file_submitter.cc \
 		http_constants.cc \
 		http_cookies.cc \
 		localserver.cc \
@@ -1711,7 +1712,6 @@ FF3_IDLSRCS	+= \
 FF3_CPPSRCS	+= \
 		async_task_ff.cc \
 		cache_intercept.cc \
-		file_submitter_ff.cc \
 		http_request_ff.cc \
 		localserver_ff.cc \
 		progress_event.cc \
@@ -1733,6 +1733,7 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		async_task_ie.cc \
+		file_submit_behavior.cc \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_ie.cc \
@@ -1742,17 +1743,6 @@ IE_CPPSRCS	+= \
 		update_task_ie.cc \
 		urlmon_utils.cc \
 		$(NULL)
-
-# Additional files specific to Win32 or WinCE.
-ifeq ($(OS),win32)
-IE_CPPSRCS	+= \
-		file_submit_behavior.cc \
-		file_submitter_ie.cc \
-		$(NULL)
-endif
-
-ifeq ($(OS),wince)
-endif
 
 #-----------------------------------------------------------------------------
 # localserver/npapi
@@ -1768,7 +1758,6 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		async_task_np.cc \
-		file_submitter_np.cc \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_np.cc \
@@ -1787,7 +1776,6 @@ SF_VPATH	+= \
 
 SF_CPPSRCS	+= \
 		async_task_sf.mm \
-		file_submitter_np.cc \
 		http_cookies_sf.mm \
 		http_request_delegate.mm \
 		http_request_sf.mm \

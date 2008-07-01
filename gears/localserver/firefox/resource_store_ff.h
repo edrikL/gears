@@ -82,7 +82,7 @@ class GearsResourceStore
   NS_IMETHOD CaptureFile(nsISupports *file_input_element, const nsAString &url);
   NS_IMETHOD GetCapturedFileName(const nsAString &url,
                                  nsAString &file_name_retval);
-  NS_IMETHOD CreateFileSubmitter(GearsFileSubmitterInterface **_retval);
+  NS_IMETHOD CreateFileSubmitter(nsISupports **_retval);
 
   void HandleEvent(JsEventType event_type);
 
