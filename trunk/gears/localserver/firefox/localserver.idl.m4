@@ -29,21 +29,6 @@
 interface nsIVariant;
 
 //------------------------------------------------------------------------------
-// GearsFileSubmitterInterface
-// Facilitates the inclusion of resources into form submissions
-// as the file parts of multipart/form-data encoded POSTs
-//------------------------------------------------------------------------------
-[scriptable, uuid(265DA719-EBBD-431b-8617-A2B5BF937E29)]
-interface GearsFileSubmitterInterface : GearsBaseClassInterface {
-  /**
-   * Prepares a <input type=file> form element to submit a file residing in
-   * the web capture store when the form is submitted.
-   */
-  void setFileInputElement(in nsISupports file_input_element,
-                           in AString resource_url);
-};
-
-//------------------------------------------------------------------------------
 // ResourceCaptureCompletionHandler
 //------------------------------------------------------------------------------
 [scriptable, function, uuid(4995172C-1842-4720-9465-98033A5A4E66)]
@@ -88,7 +73,7 @@ interface GearsResourceStoreInterface : GearsBaseClassInterface {
 
   AString getCapturedFileName(in AString url);
 
-  GearsFileSubmitterInterface createFileSubmitter(); 
+  nsISupports createFileSubmitter(); 
 };
 
 //------------------------------------------------------------------------------

@@ -23,24 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WINCE
+// FileSubmitter is not implemented for WinCE.
+#else
+
 #include "gears/localserver/ie/file_submit_behavior.h"
 
-#include "gears/base/common/file.h"
-#include "gears/base/common/paths.h"
-#include "gears/base/common/scoped_win32_handles.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
-
-static const wchar_t *kMissingFilename = L"Unknown";
-
 const wchar_t *SubmitFileBehavior::kName_DispName = L"name";
-const wchar_t *SubmitFileBehavior::kCapturedUrl_DispName = L"capturedUrl";
 
 
 //------------------------------------------------------------------------------
-// InitPageOrigin
+// InitFromBehaviorFactory
 //------------------------------------------------------------------------------
-void SubmitFileBehavior::InitPageOrigin(const SecurityOrigin &origin) {
-  page_origin_ = origin;
+void SubmitFileBehavior::InitFromBehaviorFactory(std::string16 &filename) {
+  filename_ = filename.c_str();
 }
 
 
@@ -81,12 +77,12 @@ HRESULT SubmitFileBehavior::Detach(void) {
 //------------------------------------------------------------------------------
 // IElementBehavior::Notify
 //------------------------------------------------------------------------------
-HRESULT SubmitFileBehavior::Notify(long event, VARIANT *var) {
+HRESULT SubmitFileBehavior::Notify(long lEvent, VARIANT *var) {
   if (!behavior_site_) {
     return E_UNEXPECTED;
   }
 
-  switch (event) {
+  switch (lEvent) {
     // End tag of element has been parsed (we can get at attributes)
     case BEHAVIOREVENT_CONTENTREADY: {
       CComVariant name_value;
@@ -94,12 +90,6 @@ HRESULT SubmitFileBehavior::Notify(long event, VARIANT *var) {
                                                 &name_value);
       if (SUCCEEDED(hr) && (name_value.vt == VT_BSTR)) {
         name_ = name_value.bstrVal;
-      }
-      CComVariant captured_url_value;
-      hr = GetHTMLElementAttributeValue(kCapturedUrl_DispName,
-                                        &captured_url_value);
-      if (SUCCEEDED(hr) && (captured_url_value.vt == VT_BSTR)) {
-        SetCapturedUrl(captured_url_value.bstrVal);
       }
       return S_OK;
     }
@@ -118,16 +108,6 @@ HRESULT SubmitFileBehavior::Notify(long event, VARIANT *var) {
 // IElementBehaviorSubmit::Reset
 //------------------------------------------------------------------------------
 HRESULT SubmitFileBehavior::Reset(void) {
-  captured_url_.Empty();
-  if (!temp_file_.empty()) {
-    DeleteFile(temp_file_.c_str());
-    temp_file_.clear();
-  }
-  if (!temp_folder_.empty()) {
-    RemoveDirectory(temp_folder_.c_str());
-    temp_folder_.clear();
-  }
-
   return S_OK;
 }
 
@@ -136,13 +116,10 @@ HRESULT SubmitFileBehavior::Reset(void) {
 // IElementBehaviorSubmit::GetSubmitInfo
 //------------------------------------------------------------------------------
 HRESULT SubmitFileBehavior::GetSubmitInfo(IHTMLSubmitData *submit_data) {
-  LOG16((L"SubmitFileBehavior::GetSubmitInfo\n"));
-  if (!name_ || temp_file_.empty()) {
+  if (!name_ || !filename_) {
     return S_OK;
   }
-  CComBSTR filepath(temp_file_.c_str());
-  HRESULT hr = submit_data->appendNameFilePair(name_, filepath);
-  return hr;
+  return submit_data->appendNameFilePair(name_, filename_);
 }
 
 
@@ -167,9 +144,6 @@ HRESULT SubmitFileBehavior::GetIDsOfNames(REFIID riid,
 
   if (_wcsicmp(*names, kName_DispName) == 0) {
     *dispids++ = kName_DispId;
-    hr = (num_names == 1) ? S_OK : DISP_E_UNKNOWNNAME;
-  } else if (_wcsicmp(*names, kCapturedUrl_DispName) == 0) {
-    *dispids++ = kCapturedUrl_DispId;
     hr = (num_names == 1) ? S_OK : DISP_E_UNKNOWNNAME;
   } else {
     *dispids++ = DISPID_UNKNOWN;
@@ -207,8 +181,6 @@ HRESULT SubmitFileBehavior::Invoke(DISPID dispid,
     if (dispid == kName_DispId) {
       name_ = params->rgvarg->bstrVal;
       return S_OK;
-    } else if (dispid == kCapturedUrl_DispId) {
-      return SetCapturedUrl(params->rgvarg->bstrVal);
     } else {
       return DISP_E_MEMBERNOTFOUND;
     }
@@ -220,8 +192,6 @@ HRESULT SubmitFileBehavior::Invoke(DISPID dispid,
 
     if (dispid == kName_DispId) {
       return name_.CopyTo(result);
-    } else if (dispid == kCapturedUrl_DispId) {
-      return captured_url_.CopyTo(result);
     } else {
       return DISP_E_MEMBERNOTFOUND;
     }
@@ -232,64 +202,4 @@ HRESULT SubmitFileBehavior::Invoke(DISPID dispid,
   }
 }
 
-//------------------------------------------------------------------------------
-// SetCapturedUrl
-//------------------------------------------------------------------------------
-HRESULT SubmitFileBehavior::SetCapturedUrl(BSTR full_url) {
-  // Clear out any existing tempfile and url data we have
-  Reset();
-
-  // Null or empty strings clear the property value, no file will be submitted.
-  if (!full_url || (wcslen(full_url) == 0)) {
-    return S_OK;
-  }
-
-  if (!page_origin_.IsSameOriginAsUrl(full_url)) {
-    return E_FAIL;
-  }
-
-  // Read data from our local store
-  ResourceStore::Item item;
-  if (!store_.GetItem(full_url, &item)) {
-    return E_FAIL;
-  }
-
-  // TODO(michaeln): Now that we're storing files on disk, we don't need to
-  // create temp file for this. Just open the file for shared reading to
-  // prevent it from being removed prior to the form submission and close
-  // the file in our destructor. Ditto for Firefox.
-
-  // Copy to a temp file, we do this here rather than in GetSubmitInfo to more
-  // closely match the behavior in FF.
-  //
-  // The server will see the local filename, so we try to use the original
-  // filename, using a temp directory per class instance to avoid name
-  // conflicts.
-  if (!File::CreateNewTempDirectory(&temp_folder_)) {
-    return E_FAIL;
-  }
-
-  temp_file_ = temp_folder_;
-
-  std::string16 filename;
-  item.payload.GetHeader(HttpConstants::kXCapturedFilenameHeader, &filename);
-  if (filename.empty()) {
-    // This handles the case where the URL didn't get into the database
-    // using the captureFile API. It's arguable whether we should support this.
-    filename = kMissingFilename;
-  }
-
-  temp_file_ += kPathSeparator;  // PathAppend() and basic_string don't mix
-  temp_file_ += filename;
-
-  if (!File::CreateNewFile(temp_file_.c_str()) ||
-      !File::WriteVectorToFile(temp_file_.c_str(), item.payload.data.get())) {
-    Reset();
-    return E_FAIL;
-  }
-
-  captured_url_ = full_url;
-
-  return S_OK;
-}
-
+#endif  // WINCE

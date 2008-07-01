@@ -25,23 +25,25 @@
 
 #ifndef GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
 #define GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
+#ifdef WINCE
+// FileSubmitter is not implemented for WinCE.
+#else
 
 #include <windows.h>
-#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/localserver/common/resource_store.h"
 
 
 //------------------------------------------------------------------------------
 // SubmitFileBehavior
 //
 // A "binary behavior" used to support the submission of files in our local
-// store as part of form submissions. GearsFileSubmitter interacts with
-// this behavior object. This class exposes two properties on the hosting
-// HTMLElement:
+// store as part of form submissions. This class exposes one property on the
+// hosting HTMLElement:
 //   - name, the form field name to submit with the file data
-//   - capturedUrl, the key of the file to submit in the local store
+// The behavior also knows the name of the temporary file it will upload,
+// which is set by its creating FileSubmitterBehaviorFactory during the
+// behavior's construction.
 // When a form containing an element having this behavior is submitted,
 // the name / file pair is uploaded as part of the resulting POST.
 //
@@ -75,7 +77,7 @@ class ATL_NO_VTABLE SubmitFileBehavior
   // IElementBehavior
   STDMETHOD(Detach)(void);
   STDMETHOD(Init)(IElementBehaviorSite *pBehaviorSite);
-  STDMETHOD(Notify)(long event, VARIANT *pVar);
+  STDMETHOD(Notify)(long lEvent, VARIANT *pVar);
 
   // IElementBehaviorSubmit
   STDMETHOD(GetSubmitInfo)(IHTMLSubmitData *submit_data);
@@ -88,19 +90,13 @@ class ATL_NO_VTABLE SubmitFileBehavior
                     DISPPARAMS* params, VARIANT *result, EXCEPINFO *exceptinfo,
                     unsigned int *argerr);
 
-  static const wchar_t *GetCapturedUrlPropertyName() {
-    return kCapturedUrl_DispName;
-  }
-
   static const wchar_t *GetNamePropertyName() {
     return kName_DispName;
   }
 
+  void InitFromBehaviorFactory(std::string16 &filename);
+
  private:
-  void InitPageOrigin(const SecurityOrigin &origin);
-
-  HRESULT SetCapturedUrl(BSTR url);
-
   // Returns the IHTMLElement we're bound to
   HRESULT GetHTMLElement(IHTMLElement **element_out) {
     ATLASSERT(behavior_site_);
@@ -115,21 +111,14 @@ class ATL_NO_VTABLE SubmitFileBehavior
     return ActiveXUtils::GetHTMLElementAttributeValue(element, name, value);
   }
 
-  ResourceStore store_;
   CComBSTR name_;
-  CComBSTR captured_url_;
-  SecurityOrigin page_origin_;
-  std::string16 temp_folder_;
-  std::string16 temp_file_;
+  CComBSTR filename_;
   CComPtr<IElementBehaviorSite> behavior_site_;
 
   // Name and dispatch ids for the property exposed by this behavior.
   static const wchar_t *kName_DispName;
   static const DISPID kName_DispId = 1;
-  static const wchar_t *kCapturedUrl_DispName;
-  static const DISPID kCapturedUrl_DispId = 2;
-
-  friend class GearsFileSubmitter;
 };
 
+#endif  // WINCE
 #endif  // GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__

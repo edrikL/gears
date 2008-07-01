@@ -23,29 +23,84 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_NPAPI_FILE_SUBMITTER_NP_H__
-#define GEARS_LOCALSERVER_NPAPI_FILE_SUBMITTER_NP_H__
+#ifndef GEARS_LOCALSERVER_FILE_SUBMITTER_H__
+#define GEARS_LOCALSERVER_FILE_SUBMITTER_H__
+
+#ifdef WINCE
+  // FileSubmitter is not implemented for WinCE.
+#else
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/security_model.h"
 #include "gears/localserver/common/resource_store.h"
 
-//------------------------------------------------------------------------------
-// GearsFileSubmitter
+
+
+#if BROWSER_IE
+class ATL_NO_VTABLE FileSubmitterBehaviorFactory
+    : public CComObjectRootEx<CComMultiThreadModel>,
+      public CComCoClass<FileSubmitterBehaviorFactory>,
+      public IElementBehaviorFactory {
+ public:
+  DECLARE_NOT_AGGREGATABLE(FileSubmitterBehaviorFactory)
+  DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+  BEGIN_COM_MAP(FileSubmitterBehaviorFactory)
+    COM_INTERFACE_ENTRY(IElementBehaviorFactory)
+  END_COM_MAP()
+
+  FileSubmitterBehaviorFactory() {}
+
+  STDMETHOD(FindBehavior)(BSTR name, BSTR url,
+                          IElementBehaviorSite* behavior_site,
+                          IElementBehavior** behavior_out);
+
+ private:
+  std::string16 filename_;
+
+  friend class GearsFileSubmitter;
+  DISALLOW_EVIL_CONSTRUCTORS(FileSubmitterBehaviorFactory);
+};
+#endif
+
+
+
 // Facilitates the inclusion of captured local files in form submissions by
 // manipulating <input type=file> elements to refer to local files that were
 // previously captured via store.CaptureFile().
-//------------------------------------------------------------------------------
 class GearsFileSubmitter : public ModuleImplBaseClassVirtual {
  public:
-  GearsFileSubmitter() {}
+  GearsFileSubmitter()
+      : ModuleImplBaseClassVirtual("GearsFileSubmitter")
+#if BROWSER_IE
+        ,html_element2_(static_cast<IHTMLElement2*>(NULL))
+        ,behavior_cookie_(0)
+#endif
+      {}
 
-  // IN: HtmlElement file_input_element
-  // IN: string captured_url_key
+  // IN: HtmlElement file_input_element, string captured_url_key
+  // OUT: -
   void SetFileInputElement(JsCallContext *context);
 
  private:
+  ResourceStore store_;
+  std::string16 name_of_temporary_file_;
+
+#if BROWSER_IE
+  CComQIPtr<IHTMLElement2> html_element2_;
+  LONG behavior_cookie_;
+#endif
+
+  bool CreateTempFile(const std::string16 &in_filename,
+                      const WebCacheDB::PayloadInfo &payload);
+
+  bool CaptureInputElement(IScriptable *dom_element);
+
+  friend class GearsResourceStore;
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitter);
 };
 
-#endif // GEARS_LOCALSERVER_NPAPI_FILE_SUBMITTER_NP_H__
+#endif // WINCE
+#endif // GEARS_LOCALSERVER_FILE_SUBMITTER_H__

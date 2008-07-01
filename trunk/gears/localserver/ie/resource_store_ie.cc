@@ -50,7 +50,7 @@
 // FileSubmitter is not implemented for WinCE.
 #else
 #include "gears/blob/blob.h"
-#include "gears/localserver/ie/file_submitter_ie.h"
+#include "gears/localserver/file_submitter.h"
 #endif
 
 //------------------------------------------------------------------------------
@@ -725,33 +725,20 @@ STDMETHODIMP GearsResourceStore::getAllHeaders(
 // createFileSubmitter
 //------------------------------------------------------------------------------
 STDMETHODIMP GearsResourceStore::createFileSubmitter(
-      /* [retval][out] */ GearsFileSubmitterInterface **file_submitter) {
+      /* [retval][out] */ IDispatch **retval) {
+        
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
   }
-  CComObject<GearsFileSubmitter> *submitter = NULL;
-  HRESULT hr = CComObject<GearsFileSubmitter>::CreateInstance(&submitter);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
+  scoped_refptr<GearsFileSubmitter> submitter;
+  CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter);
+  if (!submitter->InitBaseFromSibling(this) ||
+      !submitter->store_.Clone(&store_)) {
+    RETURN_EXCEPTION(STRING16(L"Failed to initialize FileSubmitter."));
   }
-
-  CComPtr< CComObject<GearsFileSubmitter> > reference_adder(submitter);
-
-  if (!submitter->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
-  }
-
-  if (!submitter->store_.Clone(&store_)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize GearsFileSubmitter."));
-  }
-
-  hr = submitter->QueryInterface(file_submitter);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to QueryInterface for"
-                              L" GearsFileSubmitterInterface."));
-  }
-
+  *retval = submitter->GetWrapperToken().pdispVal;
+  submitter->Ref();
   RETURN_NORMAL();
 }
 #endif
