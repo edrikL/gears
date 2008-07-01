@@ -13,5 +13,6 @@ fi
 
 rm -rf "/Library/InputManagers/GearsEnabler"
 rm -rf "/Library/Receipts/Gears.pkg"
+rm -rf "/Library/Receipts/Google Gears.pkg"
 
 echo "Removed Gears for Safari."
