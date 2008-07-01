@@ -41,9 +41,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <p>Title: <input id="title" value="Goog morning!"/> Counter: <span
         id="counter"></span></p>
       <p>Subtitle:
-        <input id="subtitle" value="Breakfast:"/></p>
+        <input id="subtitle" value="test 1 2 3..."/></p>
       <p>Description:
-        <input id="description" value="cheese, eggs and jam!"/></p>
+        <input id="description"
+        value="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed .."/>
+      </p>
       <p><button onclick="onPost()">Post</button></p>
     </div>
     <label for="status">Posted Notifications:</label>
@@ -53,7 +55,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <!-- ====================================== -->
 <!--            JavaScript code             -->
-
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
 var console;
@@ -76,7 +77,7 @@ function sendNotification(id, title, subtitle, description) {
 		var notification = desktop.createNotification();
 		notification.id = "foo" + id;
 		notification.title = title;
-		notification.icon = 'http://mail.google.com/mail.gif';
+		notification.icon = 'icon_48x48.png';
 		notification.subtitle = subtitle;
 		notification.description = description;
 		desktop.showNotification(notification);
