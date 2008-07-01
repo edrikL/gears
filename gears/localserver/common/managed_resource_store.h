@@ -108,7 +108,7 @@ class ManagedResourceStore : public LocalServer {
   friend class UpdateTask;
 #if BROWSER_IE
   friend class IEUpdateTask;
-#elif BROWSER_FF || BROWSER_SAFARI
+#elif BROWSER_FF || BROWSER_SAFARI || defined(OS_ANDROID)
   friend class UpdateTaskSingleProcess;
 #elif BROWSER_NPAPI
   friend class NPUpdateTask;

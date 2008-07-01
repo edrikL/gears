@@ -30,13 +30,17 @@
 // from defining int32, so we include it first.
 #include "gears/base/common/basictypes.h"
 
+#ifdef WIN32
 #include <atlsync.h>
+#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
+#elif defined(OS_ANDROID)
+#include <pthread.h>
+#endif
 #include <vector>
 #include "gears/base/common/browsing_context.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"
@@ -143,6 +147,12 @@ class AsyncTask : protected HttpRequest::HttpListener,
   scoped_refptr<BrowsingContext> browsing_context_;
 
  private:
+  // Run a single iteration of the message loop. Returns true on
+  // success, false if an error is encountered dispatching a
+  // message. This will block until at least one message has been
+  // delivered.
+  bool IterateMessageLoop();
+
   // Implementation of HttpGet and HttpPost.
   bool MakeHttpRequest(const char16 *method,
                        const char16 *full_url,
@@ -161,7 +171,11 @@ class AsyncTask : protected HttpRequest::HttpListener,
   // An HttpRequest listener callback
   void ReadyStateChanged(HttpRequest *source);
 
+#ifdef WIN32
   static unsigned int _stdcall ThreadMain(void *self);
+#elif defined(OS_ANDROID)
+  static void *ThreadMain(void *self);
+#endif
   void CallAsync(ThreadId thread_id, int code, int param);
   void HandleAsync(int code, int param);
 
@@ -179,7 +193,11 @@ class AsyncTask : protected HttpRequest::HttpListener,
 
   bool delete_when_done_;
   Listener *listener_;
+#ifdef WIN32
   HANDLE thread_;
+#elif defined(OS_ANDROID)
+  pthread_t thread_;
+#endif
   bool ready_state_changed_signalled_;
   bool abort_signalled_;
   ThreadId listener_thread_id_;

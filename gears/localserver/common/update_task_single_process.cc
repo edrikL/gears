@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF)
+#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF) || defined(OS_ANDROID)
 #include <assert.h>
 #include <map>
 #include "gears/base/common/mutex.h"
