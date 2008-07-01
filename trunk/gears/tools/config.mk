@@ -61,6 +61,11 @@ endif
 ifeq ($(USING_LIBTREMOR),)
   USING_LIBTREMOR = 1
 endif
+ifeq ($(USING_MOZJS),)
+  ifeq ($(BROWSER),SF)
+    USING_MOZJS = 1
+  endif
+endif
 
 # Make-ish way of saying: if (browser == SF || browser == NPAPI)
 ifneq ($(findstring $(BROWSER), SF|NPAPI),)
@@ -136,10 +141,8 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
-ifeq ($(USING_ICU),1)
 #Additional include paths for gurl.
 CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl
-endif
 
 ifeq ($(USING_ICU),1)
 CPPFLAGS += -I../third_party/icu38/public/common
@@ -329,9 +332,11 @@ CPPFLAGS += -DOS_MACOSX
 # for breakpad
 CPPFLAGS += -DUSE_PROTECTED_ALLOCATIONS=1
 
-ifeq ($(BROWSER),SF)
+ifeq ($(USING_MOZJS),1)
 CPPFLAGS += -I ../third_party/spidermonkey/nspr/pr/include
+endif
 
+ifeq ($(BROWSER),SF)
 # SAFARI-TEMP
 # Remove these - During development, it was convenient to have these defined in
 # the Safari port.  Before release we want to clean this up, and replace these
