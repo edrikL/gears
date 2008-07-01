@@ -226,8 +226,6 @@ endif
 #-----------------------------------------------------------------------------
 # third_party/googleurl
 
-# Only include gurl in builds that use ICU.
-ifeq ($(USING_ICU),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
 		$(NULL)
@@ -252,7 +250,6 @@ URL_PARSING_CPPSRCS	+= \
 THIRD_PARTY_CPPSRCS	+= \
 		$(URL_PARSING_CPPSRCS) \
 		$(NULL)
-endif
 
 #-----------------------------------------------------------------------------
 # third_party/icu38
@@ -668,6 +665,7 @@ ifeq ($(OFFICIAL_BUILD),1)
 # PortAudio is for the Audio API which has not been finalized for official
 # builds.
 else
+ifeq ($(USING_PORTAUDIO),1)
 
 THIRD_PARTY_VPATH	+= \
 		../third_party/portaudio/src/common \
@@ -732,6 +730,7 @@ PORTAUDIO_CSRCS	+= \
 		$(NULL)
 endif
 
+endif # USING_PORTAUDIO
 endif # not OFFICIAL_BUILD
 endif # USING_PORTAUDIO
 #-----------------------------------------------------------------------------
@@ -1758,13 +1757,19 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		async_task_np.cc \
-		http_handler_ie.cc \
-		http_request_ie.cc \
 		localserver_np.cc \
 		update_task_np.cc \
-		urlmon_utils.cc \
 		resource_store_np.cc \
 		$(NULL)
+
+ifeq ($(OS),win32)
+# These files from IE are reused on NPAPI WIN32 builds.
+NPAPI_CPPSRCS	+= \
+		http_handler_ie.cc \
+		http_request_ie.cc \
+		urlmon_utils.cc \
+		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # localserver/safari
