@@ -41,13 +41,6 @@ void Dispatcher<GearsHttpRequestUpload>::Init() {
 
 const std::string GearsHttpRequestUpload::kModuleName("GearsHttpRequestUpload");
 
-GearsHttpRequestUpload::GearsHttpRequestUpload()
-    : ModuleImplBaseClassVirtual(kModuleName) {
-}
-
-GearsHttpRequestUpload::~GearsHttpRequestUpload() {
-}
-
 void GearsHttpRequestUpload::GetOnProgress(JsCallContext *context) {
   JsRootedCallback *callback = onprogress_handler_.get();
   if (callback == NULL) {
@@ -58,6 +51,11 @@ void GearsHttpRequestUpload::GetOnProgress(JsCallContext *context) {
 }
 
 void GearsHttpRequestUpload::SetOnProgress(JsCallContext *context) {
+  if (!unload_monitor_.get()) {
+    unload_monitor_.reset(
+      new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
+  }
+
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
@@ -90,6 +88,12 @@ void GearsHttpRequestUpload::ReportProgress(int64 position, int64 total) {
   }
 }
 
-void GearsHttpRequestUpload::Reset() {
+void GearsHttpRequestUpload::ResetOnProgressHandler() {
   onprogress_handler_.reset();
+}
+
+void GearsHttpRequestUpload::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+  onprogress_handler_.reset();
+  unload_monitor_.reset();
 }

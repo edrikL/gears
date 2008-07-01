@@ -87,10 +87,7 @@ GearsHttpRequest::~GearsHttpRequest() {
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
   onreadystatechangehandler_.reset();
-  if (upload_ != NULL) {
-    upload_->Reset();
-    upload_.reset();
-  }
+  upload_.reset();
   unload_monitor_.reset();
   AbortRequest();
 }
@@ -277,10 +274,11 @@ void GearsHttpRequest::Send(JsCallContext *context) {
       // fired the event, the underlying C++ object *may* declare itself
       // complete without having called our callback. We're being defensive.
       if (request_ == request_being_sent) {
+        // To remove cyclic dependencies we drop our reference to callbacks
+        // when the request is complete.
         onreadystatechangehandler_.reset();
-        if (upload_ != NULL) {
-          upload_->Reset();
-          upload_.reset();
+        if (upload_.get()) {
+          upload_->ResetOnProgressHandler();
         }
         context->SetException(kInternalError);
         return;
@@ -569,11 +567,14 @@ void GearsHttpRequest::DataAvailable(HttpRequest *source) {
 void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   assert(source == request_.get());
 
-  // To remove cyclic dependencies we drop our reference to the callback when
+  // To remove cyclic dependencies we drop our reference to callbacks when
   // the request is complete.
   bool is_complete = IsComplete();
   if (is_complete) {
     has_fired_completion_event_ = true;
+    if (upload_.get()) {
+      upload_->ResetOnProgressHandler();
+    }
   }
   JsRootedCallback *handler = is_complete
       ? onreadystatechangehandler_.release()
