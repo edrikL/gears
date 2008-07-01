@@ -32,12 +32,13 @@
 #include "gears/base/common/js_types.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-class GearsHttpRequestUpload : public ModuleImplBaseClassVirtual {
+class GearsHttpRequestUpload
+    : public ModuleImplBaseClassVirtual,
+      public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;
 
-  GearsHttpRequestUpload();
-  ~GearsHttpRequestUpload();
+  GearsHttpRequestUpload() : ModuleImplBaseClassVirtual(kModuleName) {}
 
   // IN: -
   // OUT: function
@@ -47,12 +48,16 @@ class GearsHttpRequestUpload : public ModuleImplBaseClassVirtual {
   // OUT:-
   void SetOnProgress(JsCallContext *context);
 
+  // For use by GearsHttpRequest
   void ReportProgress(int64 position, int64 total);
-
-  void Reset();
+  void ResetOnProgressHandler();
 
  private:
   scoped_ptr<JsRootedCallback> onprogress_handler_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
+  // JsEventHandlerInterface implementation.
+  virtual void HandleEvent(JsEventType event_type);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsHttpRequestUpload);
 };
