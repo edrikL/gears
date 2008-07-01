@@ -26,7 +26,7 @@
 #ifndef GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__
 #define GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__
 
-#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF)
+#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF) || defined(OS_ANDROID)
 #include "gears/localserver/common/update_task.h"
 
 //------------------------------------------------------------------------------
@@ -45,6 +45,6 @@ class UpdateTaskSingleProcess : public UpdateTask {
   static bool SetRunningTask(UpdateTaskSingleProcess *task);
   static void ClearRunningTask(UpdateTaskSingleProcess *task);
 };
-#endif  // defined(BROWSER_SF) || defined(BROWSER_FF)
+#endif  // defined(BROWSER_SF) || defined(BROWSER_FF) || defined(OS_ANDROID)
 
 #endif  // GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__

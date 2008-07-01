@@ -25,6 +25,9 @@
 
 #include "gears/localserver/npapi/async_task_np.h"
 
+#ifdef OS_ANDROID
+#include "gears/base/android/java_jni.h"
+#endif
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/npapi/browser_utils.h"
@@ -42,16 +45,16 @@ const char16 *kIsOfflineErrorMessage =
 // AsyncTask
 //------------------------------------------------------------------------------
 AsyncTask::AsyncTask(BrowsingContext *browsing_context)
-    : is_initialized_(false),
-      is_aborted_(false),
+    : is_aborted_(false),
+      is_initialized_(false),
+      browsing_context_(browsing_context),
       delete_when_done_(false),
+      listener_(NULL),
+      thread_(NULL),
       ready_state_changed_signalled_(false),
       abort_signalled_(false),
       listener_thread_id_(0),
-      task_thread_id_(0),
-      browsing_context_(browsing_context),
-      listener_(NULL),
-      thread_(NULL) {
+      task_thread_id_(0) {
   Ref();
 }
 
@@ -105,10 +108,20 @@ bool AsyncTask::Start() {
   is_aborted_ = false;
   ready_state_changed_signalled_ = false;
   abort_signalled_ = false;
+#ifdef WIN32
   unsigned int thread_id;
   thread_ = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, &ThreadMain,
                                                     this, 0, &thread_id));
   task_thread_id_ = thread_id;
+#elif defined(OS_ANDROID)
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  if (pthread_create(&thread_, &attr, &ThreadMain, this) == 0) {
+    task_thread_id_ = static_cast<ThreadId>(thread_);
+  }
+  pthread_attr_destroy(&attr);
+#endif
 
   if (thread_ == NULL) return false;
 
@@ -122,7 +135,7 @@ bool AsyncTask::Start() {
 void AsyncTask::Abort() {
   CritSecLock locker(lock_);
   if (thread_ && !is_aborted_) {
-    LOG16((L"AsyncTask::Abort\n"));
+    LOG(("AsyncTask::Abort\n"));
     is_aborted_ = true;
     CallAsync(task_thread_id_, kAbortMessageCode, 0);
   }
@@ -150,7 +163,8 @@ void AsyncTask::DeleteWhenDone() {
 //------------------------------------------------------------------------------
 // ThreadMain
 //------------------------------------------------------------------------------
-unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
+#ifdef WIN32
+unsigned int _stdcall AsyncTask::ThreadMain(void *task) {
   // If initialization fails, don't return immediately. Let the thread continue
   // to run to let signaling around startup/shutdown performed by clients work
   // properly. Down the road, COM objects will fail to be created or function
@@ -158,6 +172,10 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
   if (FAILED(CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL))) {
     LOG(("AsyncTask::ThreadMain - failed to initialize new thread.\n"));
   }
+#elif defined(OS_ANDROID)
+void *AsyncTask::ThreadMain(void *task) {
+  JniAttachCurrentThread();
+#endif
 
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
 
@@ -171,11 +189,17 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
 
   self->Run();
 
+#ifdef WIN32
   CloseHandle(self->thread_);
+#endif
   self->thread_ = NULL;
   self->Unref();  // remove the reference added by the Start
 
+#ifdef WIN32
   CoUninitialize();
+#elif defined(OS_ANDROID)
+  JniDetachCurrentThread();
+#endif
   return 0;
 }
 
@@ -278,6 +302,24 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          was_redirected,
                          full_redirect_url,
                          error_message);
+}
+
+bool AsyncTask::IterateMessageLoop() {
+#ifdef OS_ANDROID
+  // Run the Android message loop once.
+  AndroidMessageLoop::RunOnce();
+  return true;
+#elif defined(WIN32)
+  // Run the WIN32 message loop once.
+  MSG msg;
+  if (GetMessage(&msg, NULL, 0, 0)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+    return true;
+  } else {
+    return false;
+  }
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -389,11 +431,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   }
 
   bool done = false;
-  MSG msg;
-  while (!done && GetMessage(&msg, NULL, 0, 0)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-
+  while (!done && IterateMessageLoop()) {
     if (ready_state_changed_signalled_) {
       ready_state_changed_signalled_ = false;
       // TODO(michaeln): perhaps simplify the HttpRequest interface to
@@ -415,12 +453,12 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
           }
         }
       } else {
-        LOG16((L"AsyncTask - getReadyState failed, aborting request\n"));
+        LOG(("AsyncTask - getReadyState failed, aborting request\n"));
         http_request->Abort();
         done = true;
       }
     } else if (abort_signalled_) {
-      LOG16((L"AsyncTask - abort event signalled, aborting request\n"));
+      LOG(("AsyncTask - abort event signalled, aborting request\n"));
       abort_signalled_ = false;
       http_request->Abort();
       done = true;

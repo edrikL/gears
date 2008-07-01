@@ -95,9 +95,9 @@ class CritSecLock {
 };
 
 
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(OS_ANDROID)
 //------------------------------------------------------------------------------
-// BROWSER_SAFARI
+// BROWSER_SAFARI, OS_ANDROID
 //------------------------------------------------------------------------------
 #include <pthread.h>
 
