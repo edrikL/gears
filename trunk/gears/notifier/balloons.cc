@@ -114,7 +114,7 @@ class BalloonContainer : public glint::Node {
   // Minimum and maximum size of balloon
   const static int kBalloonMinWidth = 270;
   const static int kBalloonMaxWidth = 270;
-  const static int kBalloonMinHeight = 50;
+  const static int kBalloonMinHeight = 70;
   const static int kBalloonMaxHeight = 120;
 
   static Point GetOrigin();
@@ -388,8 +388,8 @@ glint::Node *Balloon::CreateTree() {
 
   glint::NineGrid *background = new glint::NineGrid();
   background->ReplaceImage("res://background.png");
-  background->set_center_height(10);
-  background->set_center_width(10);
+  background->set_center_height(50);
+  background->set_center_width(250);
   // TODO(dimich): enable shadow later (too slow in DBG)
   background->set_shadow(false);
   root->AddChild(background);
@@ -398,7 +398,7 @@ glint::Node *Balloon::CreateTree() {
   image->set_id(kIconId);
   image->set_vertical_alignment(glint::Y_TOP);
   image->set_horizontal_alignment(glint::X_LEFT);
-  margin.Set(6, 9, 0, 0);
+  margin.Set(4, 4, 0, 0);
   image->set_margin(margin);
   root->AddChild(image);
 
@@ -410,43 +410,36 @@ glint::Node *Balloon::CreateTree() {
   text->set_id(kTitleId);
   text->set_font_size(10);
   text->set_bold(true);
-  margin.Set(6, 3, 6, 0);
+  margin.Set(54, 4, 6, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
   text = new glint::SimpleText();
   text->set_id(kSubtitleId);
-  margin.Set(6, 1, 6, 0);
+  text->set_font_size(10);
+  margin.Set(54, 2, 6, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
   text = new glint::SimpleText();
   text->set_id(kDescriptionId);
-  margin.Set(6, 1, 6, 3);
+  margin.Set(54, 2, 6, 3);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
-  glint::Row *buttons = new glint::Row();
-  margin.Set(5, 0, 5, 5);
-  buttons->set_margin(margin);
-  buttons->set_horizontal_alignment(glint::X_RIGHT);
-  column->AddChild(buttons);
-
   glint::Button *close_button = new glint::Button();
-  close_button->ReplaceImage("res://button_strip.png");
-  close_button->set_min_height(22);
-  close_button->set_min_width(70);
-  buttons->AddChild(close_button);
-  text = new glint::SimpleText();
-  text->set_font_size(8);
-  text->set_text("close");
-  margin.Set(2, 2, 2, 2);
-  text->set_margin(margin);
-  close_button->AddChild(text);
+  close_button->ReplaceImage("res://close_button_strip.png");
+  close_button->set_min_height(14);
+  close_button->set_min_width(14);
+  margin.Set(0, 6, 6, 0);
+  close_button->set_margin(margin);
+  close_button->set_horizontal_alignment(glint::X_RIGHT);
+  close_button->set_vertical_alignment(glint::Y_TOP);
   close_button->SetClickHandler(Balloon::OnCloseButton, this);
+  root->AddChild(close_button);
 
   root->AddHandler(new AnimationCompletedHandler(this));
   root->AddHandler(new MouseWithinDetector(this, root));

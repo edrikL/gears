@@ -35,4 +35,5 @@ END
 // Files
 background.png GLINT "background.png"
 button_strip.png GLINT "button_strip.png"
+close_button_strip.png GLINT "close_button_strip.png"
 
