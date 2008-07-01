@@ -63,13 +63,29 @@ class NetworkLocationRequest : public AsyncTask {
   void StopThreadAndDelete();
  private:
   // Private constructor and destructor. Callers should use Create() and
-  // StopThreadAndDelete.
+  // StopThreadAndDelete().
   NetworkLocationRequest(const std::string16 &url,
                          const std::string16 &host_name,
                          ListenerInterface *listener);
   virtual ~NetworkLocationRequest() {}
   // AsyncTask implementation.
   virtual void Run();
+
+  static bool FormRequestBody(const std::string16 &host_name,
+                              const RadioData &radio_data,
+                              const WifiData &wifi_data,
+                              bool request_address,
+                              std::string16 address_language,
+                              double latitude,
+                              double longitude,
+                              scoped_refptr<BlobInterface> *blob);
+
+  static void GetLocationFromResponse(bool http_post_result,
+                                      int status_code,
+                                      const std::string &response_body,
+                                      int64 timestamp,
+                                      std::string16 server_url,
+                                      Position *position);
 
   int64 timestamp_;  // The timestamp of the data used to make the request.
   scoped_refptr<BlobInterface> post_body_;
@@ -78,6 +94,15 @@ class NetworkLocationRequest : public AsyncTask {
   std::string16 host_name_;
 
   Mutex is_processing_response_mutex_;
+
+#ifdef USING_CCTESTS
+  // Uses FormRequestBody for testing.
+  friend void TestGeolocationFormRequestBody(JsCallContext *context);
+  // Uses GetLocationFromResponse for testing.
+  friend void TestGeolocationGetLocationFromResponse(
+      JsCallContext *context,
+      JsRunnerInterface *js_runner);
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationRequest);
 };

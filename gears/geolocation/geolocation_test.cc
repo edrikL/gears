@@ -37,20 +37,9 @@
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/network_location_request.h"
 #include "gears/geolocation/thread.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
-
-// From network_location_request.cc
-bool FormRequestBodyTest(const std::string16 &host_name,
-                         const RadioData &radio_data,
-                         const WifiData &wifi_data,
-                         bool request_address,
-                         std::string16 address_language,
-                         double latitude,
-                         double longitude,
-                         scoped_refptr<BlobInterface> *blob);
-bool GetLocationFromResponseTest(const std::vector<uint8> &response,
-                                 Position *position);
 
 // A mock implementation of DeviceDataProviderImplBase for testing. It simply
 // calls back once every second with constant data.
@@ -201,8 +190,14 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
   wifi_data.access_point_data.push_back(access_point_data);
 
   scoped_refptr<BlobInterface> blob;
-  if (!FormRequestBodyTest(STRING16(L"www.google.com"), radio_data, wifi_data,
-                           true, STRING16(L"en-GB"), 53.1, -0.1, &blob)) {
+  if (!NetworkLocationRequest::FormRequestBody(STRING16(L"www.google.com"),
+                                               radio_data,
+                                               wifi_data,
+                                               true,
+                                               STRING16(L"en-GB"),
+                                               53.1,
+                                               -0.1,
+                                               &blob)) {
     context->SetException(STRING16(L"Failed to form request body."));
     return;
   }
@@ -231,30 +226,40 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
 
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                             JsRunnerInterface *js_runner) {
-  std::string16 response_string;
+  bool http_post_result;
+  int status_code;
+  std::string16 response_body;
+  int64 timestamp;
+  std::string16 server_url;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &response_string },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &http_post_result },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &status_code },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &response_body },
+    { JSPARAM_REQUIRED, JSPARAM_INT64, &timestamp },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &server_url },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
     return;
   }
-  std::string response_string_utf8;
-  if (!String16ToUTF8(response_string.c_str(), response_string.size(),
-                      &response_string_utf8)) {
-    context->SetException(STRING16(L"Failed to convert input string to UTF8."));
-    return;
-  }
-  std::vector<uint8> response_vector(response_string_utf8.begin(),
-                                     response_string_utf8.end());
-  Position position;
-  if (!GetLocationFromResponseTest(response_vector, &position)) {
-    context->SetException(STRING16(L"Failed to get location."));
-    return;
-  }
-  position.timestamp = 42;
-  scoped_ptr<JsObject> position_object(js_runner->NewObject());
 
+  std::string response_body_utf8;
+  if (!String16ToUTF8(response_body.c_str(), response_body.size(),
+                      &response_body_utf8)) {
+    context->SetException(
+        STRING16(L"Failed to convert response body to UTF8."));
+    return;
+  }
+
+  Position position;
+  NetworkLocationRequest::GetLocationFromResponse(http_post_result,
+                                                  status_code,
+                                                  response_body_utf8,
+                                                  timestamp,
+                                                  server_url,
+                                                  &position);
+
+  scoped_ptr<JsObject> position_object(js_runner->NewObject());
   if (!GearsGeolocation::ConvertPositionToJavaScriptObject(
       position,
       true, // Use address if present
