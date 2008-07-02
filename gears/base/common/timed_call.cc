@@ -34,10 +34,11 @@
 #include <set>
 
 #include "gears/base/common/stopwatch.h"  // for GetCurrentTimeMillis()
-#include "gears/base/common/thread_locals.h"
 
-// Some of this code was borrowed from google3/thread/timedcall(.h|.cc)
-// Some other parts were borrowed from timer/timer.cc
+#if !defined(BROWSER_NONE)
+#include "gears/base/common/thread_locals.h"
+#endif
+
 // This timer is designed as a shared timer, so there is only one OS timer
 // per thread handling all the timer callbacks we are asked to handle
 // in that thread.
@@ -46,10 +47,8 @@
 // sync happens?  gettimeofday() and CFAbsoluteTimeGetCurrent() are not
 // monotonically increasing in those cases.
 
-// Named according to style from base/common/thread_locals.h
-static const ThreadLocals::Slot kTimerSingletonKey = ThreadLocals::Alloc();
-
 class PlatformTimer;
+class TimerSingleton;
 
 // less-than operation on pointers to Timer
 struct TimedCallPtrLessThan {
@@ -84,9 +83,28 @@ class TimerSingleton {
   std::set<TimedCall*, TimedCallPtrLessThan> *timer_queue_;
   PlatformTimer *platform_timer_;
 
+#if defined(BROWSER_NONE) && defined(WIN32) && defined(DEBUG)
+  DWORD main_thread_id_;
+#endif
+
+  // For BROWSER_NONE (notifier.exe) we have only one thread
+  // and ThreadLocals is browser-specific, so we just limit ourselves to one
+  // thread to eliminate the dependency on ThreadLocals.
+#if defined(BROWSER_NONE)
+  static TimerSingleton *timer_singleton;
+#else
+  static const ThreadLocals::Slot kTimerSingletonKey;
+#endif
+
   DISALLOW_EVIL_CONSTRUCTORS(TimerSingleton);
 };
 
+#if defined(BROWSER_NONE)
+TimerSingleton *TimerSingleton::timer_singleton = NULL;
+#else
+const ThreadLocals::Slot
+  TimerSingleton::kTimerSingletonKey = ThreadLocals::Alloc();
+#endif
 
 // PlatformTimer contains the platform-specific timer implementations,
 // and has the method SetNextFire, which takes a timeout in milliseconds.
@@ -230,6 +248,19 @@ void TimerSingleton::Erase(TimedCall *call) {
 }
 
 TimerSingleton *TimerSingleton::GetLocalSingleton() {
+#if defined(BROWSER_NONE)
+  if (timer_singleton == NULL)
+    timer_singleton = new TimerSingleton();
+
+#if defined(POSIX)
+  assert(pthread_main_np() == 1);
+#elif defined(WIN32)
+  assert(timer_singleton->main_thread_id_ == GetCurrentThreadId());
+#endif
+
+  return timer_singleton;
+
+#else
   TimerSingleton *singleton = reinterpret_cast<TimerSingleton*>
     (ThreadLocals::GetValue(kTimerSingletonKey));
 
@@ -240,6 +271,7 @@ TimerSingleton *TimerSingleton::GetLocalSingleton() {
   ThreadLocals::SetValue(kTimerSingletonKey, singleton, &DestructCallback);
 
   return singleton;
+#endif
 }
 
 void TimerSingleton::StaticCallback() {
@@ -294,6 +326,10 @@ void TimerSingleton::RearmTimer() {
 TimerSingleton::TimerSingleton() {
   timer_queue_ = new std::set<TimedCall*, TimedCallPtrLessThan>;
   platform_timer_ = new PlatformTimer();
+
+#if defined(BROWSER_NONE) && defined(WIN32) && defined(DEBUG)
+  main_thread_id_ = GetCurrentThreadId();
+#endif
 }
 
 void TimerSingleton::DestructCallback(void *victim) {
@@ -324,19 +360,19 @@ TimedCall::TimedCall(int64 delay_millis, bool repeat,
 }
 
 void TimedCall::Fire() {
-    // Re-schedule a repeating timer
-    // Re-scheduling after the callback would be bad
-    // because ~TimedCall() can be called inside the callback.
-    if (repeat_) {
-      int64 now = GetCurrentTimeMillis();
-      deadline_ = now + delay_;
-      TimerSingleton::GetLocalSingleton()->Insert(this);
-    }
+  // Re-schedule a repeating timer
+  // Re-scheduling after the callback would be bad
+  // because ~TimedCall() can be called inside the callback.
+  if (repeat_) {
+    int64 now = GetCurrentTimeMillis();
+    deadline_ = now + delay_;
+    TimerSingleton::GetLocalSingleton()->Insert(this);
+  }
 
-    // Callback is called here
-    if (callback_ != NULL) {
-      (*callback_)(callback_parameter_);
-    }
+  // Callback is called here
+  if (callback_ != NULL) {
+    (*callback_)(callback_parameter_);
+  }
 }
 
 void TimedCall::Cancel() {

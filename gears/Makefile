@@ -1346,6 +1346,8 @@ NOTIFIER_CORE	+= \
 		system_osx.cc \
 		system_win32.cc \
 		time_utils_win32.cc \
+		timed_call.cc \
+		timed_call_test.cc \
 		$(NULL)
 
 
