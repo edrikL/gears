@@ -36,6 +36,7 @@ int main(int, char **) {
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/timed_call_test.h"
 #include "gears/notifier/balloon_collection_test.h"
 #include "gears/notifier/notification_manager_test.h"
 
@@ -98,9 +99,19 @@ const std::string16& GetTestLog() {
   return UnitTest::instance()->log();
 }
 
+void TestTimedCall() {
+  std::string16 error;
+  bool success = TestTimedCallbackAll(&error);
+
+  if (!success) {
+    UnitTest::instance()->LogError(error);
+  }
+}
+
 int RunTests(int argc, char **argv) {
   UnitTest::instance()->set_print(true);
 
+  TestTimedCall();
   TestNotificationManager();
   TestNotificationManagerDelay();
   TestBalloonCollection();
