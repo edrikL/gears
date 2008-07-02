@@ -2,7 +2,7 @@
 
 A brief history of the Gears project.
 
-  * 2008/07/02 - WordPress 2.6 uses Gears to improve performance. ([http://en.blog.wordpress.com/2008/07/02/gears/ story])
+  * 2008/07/02 - !WordPress 2.6 uses Gears to improve performance. ([http://en.blog.wordpress.com/2008/07/02/gears/ story])
 
   * 2008/05/28 - Google Gears celebrates 1st birthday at Google I/O conference, and [http://googleblog.blogspot.com/2008/05/happy-birthday-google-gears.html announces]:
     * New name (simply "Gears")
