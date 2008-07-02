@@ -24,6 +24,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <assert.h>
 #include "gears/base/common/common.h"
 #include "gears/base/common/thread_locals.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h"

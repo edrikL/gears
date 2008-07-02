@@ -869,7 +869,7 @@ void _MD_solaris_map_sendfile_error(int err)
 }
 #endif /* SOLARIS */
 
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
 void _MD_linux_map_sendfile_error(int err)
 {
     _MD_unix_map_default_error(err) ;

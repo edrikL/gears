@@ -47,7 +47,7 @@
  * not be redefined.
  */
 #if !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__) \
-    && !defined(DARWIN) && !defined(NEXTSTEP)
+    && !defined(DARWIN) && !defined(NEXTSTEP) && !defined(OS_ANDROID)
 #ifndef FD_SETSIZE
 #define FD_SETSIZE  4096
 #endif
@@ -151,7 +151,7 @@ extern PRUint32 _pr_md_ioq_timeout;
 
 struct _MDFileDesc {
     int osfd;
-#if defined(LINUX) && defined(_PR_PTHREADS)
+#if (defined(LINUX) || defined(OS_ANDROID)) && defined(_PR_PTHREADS)
     int tcp_nodelay;  /* used by pt_LinuxSendFile */
 #endif
 };

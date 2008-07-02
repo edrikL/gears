@@ -28,6 +28,11 @@
 #define GEARS_WORKERPOOL_SAFARI_NPAPI_STORAGE_H__
 
 #include "third_party/spidermonkey/gears_include/mozjs_api.h"
+#if BROWSER_WEBKIT
+// NPAPI header not needed for WebKit.
+#else
+#include "third_party/npapi/npapi.h"
+#endif
 
 struct JSContext;
 struct JSRuntime;

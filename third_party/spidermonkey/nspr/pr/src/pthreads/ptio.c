@@ -181,7 +181,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #endif /* HAVE_SEND_FILE */
 #endif /* AIX */
 
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
 #include <sys/sendfile.h>
 #endif
 
@@ -209,7 +209,7 @@ static PRBool _pr_ipv6_v6only_on_by_default;
     || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
     || defined(BSDI) || defined(VMS) || defined(NTO) || defined(DARWIN) \
-    || defined(UNIXWARE) || defined(RISCOS)
+    || defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -346,14 +346,14 @@ struct pt_Continuation
     int nbytes_to_send;                     /* size of header and file */
 #endif  /* SOLARIS */
 
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
     /*
      * For sendfile()
      */
     int in_fd;                              /* descriptor of file to send */
     off_t offset;
     size_t count;
-#endif  /* LINUX */
+#endif  /* LINUX || OS_ANDROID */
  
     PRIntervalTime timeout;                 /* client (relative) timeout */
 
@@ -1107,7 +1107,7 @@ static PRBool pt_solaris_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 }
 #endif  /* SOLARIS */
 
-#ifdef LINUX 
+#if defined(LINUX) || defined(OS_ANDROID)
 static PRBool pt_linux_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 {
     ssize_t rv;
@@ -1132,7 +1132,7 @@ static PRBool pt_linux_sendfile_cont(pt_Continuation *op, PRInt16 revents)
     }
     return PR_TRUE;
 }
-#endif  /* LINUX */
+#endif  /* LINUX || OS_ANDROID */
 
 void _PR_InitIO(void)
 {
@@ -1716,7 +1716,7 @@ static PRFileDesc* pt_Accept(
     {
         PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
         PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
         /*
          * On Linux, experiments showed that the accepted sockets
          * inherit the TCP_NODELAY socket option of the listening
@@ -2537,7 +2537,7 @@ static PRInt32 pt_SolarisDispatchSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
 #endif  /* SOLARIS */
 
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
 /*
  * pt_LinuxSendFile
  *
@@ -2669,7 +2669,7 @@ failed:
     }
     return count;
 }
-#endif  /* LINUX */
+#endif  /* LINUX || OS_ANDROID */
 
 #ifdef AIX
 extern	int _pr_aix_send_file_use_disabled;
@@ -2711,7 +2711,7 @@ static PRInt32 pt_SendFile(
 #else
 	return(pt_SolarisDispatchSendFile(sd, sfd, flags, timeout));
 #endif /* HAVE_SENDFILEV */
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(OS_ANDROID)
     	return(pt_LinuxSendFile(sd, sfd, flags, timeout));
 #else
 	return(PR_EmulateSendFile(sd, sfd, flags, timeout));
@@ -2976,7 +2976,7 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
                 rv = setsockopt(
                     fd->secret->md.osfd, level, name,
                     (char*)&value, sizeof(PRIntn));
-#ifdef LINUX
+#if defined(LINUX) || defined(OS_ANDROID)
                 /* for pt_LinuxSendFile */
                 if (name == TCP_NODELAY && rv == 0) {
                     fd->secret->md.tcp_nodelay = value;
@@ -3251,7 +3251,8 @@ static PRIOMethods _pr_socketpollfd_methods = {
     || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(AIX) || defined(FREEBSD) || defined(NETBSD) \
     || defined(OPENBSD) || defined(BSDI) || defined(VMS) || defined(NTO) \
-    || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS)
+    || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS) \
+    || defined(OS_ANDROID)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"
@@ -4746,7 +4747,8 @@ PR_IMPLEMENT(PRInt32) PR_FD_NISSET(PRInt32 fd, PR_fd_set *set)
 #include <sys/types.h>
 #include <sys/time.h>
 #if !defined(SUNOS4) && !defined(HPUX) \
-    && !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__)
+    && !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__) \
+    && !defined(OS_ANDROID)
 #include <sys/select.h>
 #endif
 

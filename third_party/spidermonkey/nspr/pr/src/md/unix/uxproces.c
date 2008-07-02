@@ -93,7 +93,8 @@ typedef struct pr_PidRecord {
  * that can share the virtual address space and file descriptors.
  */
 #if (defined(IRIX) && !defined(_PR_PTHREADS)) \
-        || ((defined(LINUX) || defined(__GNU__) || defined(__GLIBC__)) \
+        || ((defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
+             || defined(OS_ANDROID)) \
         && defined(_PR_PTHREADS))
 #define _PR_SHARE_CLONES
 #endif
@@ -109,7 +110,8 @@ typedef struct pr_PidRecord {
 
 #if defined(_PR_GLOBAL_THREADS_ONLY) \
 	|| (defined(_PR_PTHREADS) \
-	&& !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__))
+	&& !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__) \
+    && !defined(OS_ANDROID))
 #define _PR_NATIVE_THREADS
 #endif
 

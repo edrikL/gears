@@ -317,7 +317,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
  * 2.0 Linux machines doesn't have the __syscall_poll symbol
  * defined.  (WTC 30 Nov. 1998)
  */
-#if defined(_PR_POLL_AVAILABLE) && !defined(LINUX)
+#if defined(_PR_POLL_AVAILABLE) && (!defined(LINUX) && !defined(OS_ANDROID))
 
 /*
  *-----------------------------------------------------------------------
@@ -540,9 +540,8 @@ done:
     return ready;
 }
 
-#endif  /* !defined(LINUX) */
+#endif  /* !defined(LINUX) && !defined(OS_ANDROID) */
 
 #endif  /* defined(_PR_PTHREADS) || defined(_PR_GLOBAL_THREADS_ONLY) */
 
 /* uxwrap.c */
-

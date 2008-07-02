@@ -41,8 +41,13 @@
 #ifndef GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_UTILS_H__
 #define GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_UTILS_H__ 
 
+#if BROWSER_WEBKIT
 #include <WebKit/npapi.h>
 #include <WebKit/npruntime.h>
+#else
+#include "third_party/npapi/npapi.h"
+#include "third_party/npapi/npruntime.h"
+#endif
 
 #include "gears/base/common/common.h"
 #include "third_party/spidermonkey/gears_include/mozjs_api.h"
