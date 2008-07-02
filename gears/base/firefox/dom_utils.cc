@@ -106,45 +106,32 @@ bool DOMUtils::GetJsContext(JSContext **context) {
 }
 
 
-nsresult DOMUtils::GetScriptContext(nsIScriptContext **context) {
-  JSContext *cx;
-  if (!GetJsContext(&cx)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *context = GetScriptContextFromJSContext(cx);
-  if (*context) {
+nsresult DOMUtils::GetDOMWindowInternal(JSContext *context,
+                                        nsIDOMWindowInternal **result) {
+  nsIScriptContext *script_context = GetScriptContextFromJSContext(context);
+  if (script_context) {
     // TODO(miket): We found a case where GetScriptContextFromJSContext() fails
     // if Toolbar is installed with safebrowsing. Safebrowsing wants to grab
     // https://www.google.com/safebrowsing/getkey? on startup, and for some
     // reason there's no JSContext at that point. We (I and Darin) decided that
     // ignoring that problem with this test is probably the equivalent of
     // whatever the real right thing is to do.
-    NS_ADDREF(*context);
+    NS_ADDREF(script_context);
   }
-  return NS_OK;
-}
+  NS_ENSURE_STATE(script_context);
 
-
-nsresult DOMUtils::GetDocument(nsIDOMDocument **document) {
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  GetWindow(getter_AddRefs(window));
-
-  return window->GetDocument(document);
-}
-
-
-nsresult DOMUtils::GetWindow(nsIDOMWindowInternal **result) {
-  nsCOMPtr<nsIScriptContext> sc;
-  GetScriptContext(getter_AddRefs(sc));
-  NS_ENSURE_STATE(sc);
-
-  return CallQueryInterface(sc->GetGlobalObject(), result);
+  return CallQueryInterface(script_context->GetGlobalObject(), result);
 }
 
 nsresult DOMUtils::GetNativeWindow(NativeWindowPtr* window) {
+  // TODO(nigeltao): check if the JSContext* should be an explicit argument
+  // to this function, rather than an implicit call to GetJsContext.
+  JSContext *js_context;
+  if (!GetJsContext(&js_context)) {
+    return NS_ERROR_FAILURE;
+  }
   nsIDOMWindowInternal* internal_window = NULL;
-  nsresult nr = GetWindow(&internal_window);
+  nsresult nr = GetDOMWindowInternal(js_context, &internal_window);
   if (NS_FAILED(nr))
     return nr;
 
@@ -208,17 +195,6 @@ nsresult DOMUtils::GetNativeWindow(NativeWindowPtr* window) {
 #endif
 
   return NS_OK;
-}
-
-nsresult DOMUtils::GetWindowEventTarget(nsIDOMEventTarget **target) {
-  // WARNING: nsIDOMWindow2::GetWindowRoot() would return an nsIDOMEventTarget
-  // that fires for _all_ tabs in the window!
-
-  nsCOMPtr<nsIDOMWindowInternal> window_internal;
-  nsresult nr = DOMUtils::GetWindow(getter_AddRefs(window_internal));
-  if (NS_FAILED(nr) || !window_internal) { return NS_ERROR_FAILURE; }
-
-  return CallQueryInterface(window_internal, target);
 }
 
 
