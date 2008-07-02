@@ -36,7 +36,7 @@ Upon receiving the content body of a resume request, the server may still not po
 
 A 308 (Resume Incomplete) MAY include a Retry-After header as defined in HTTP/1.1 section 14.37. A client which receives a Retry-After SHOULD delay further resume operations for the specified time period. If the delay is not feasible, the client MUST fail the operation. The server MAY send a 308 (Resume Incomplete) before receiving the entire request body, but as specified in section 8.2.3 of HTTP/1.1 the server SHOULD NOT close the transport connection until it has read the entire request, or until the client closes the connection.
 
-A 308 (Resume Incomplete) MAY include an !ETag header, uniquely identifying the operation. If a client receives an !ETag then it MUST resend the !ETag in an If-Match header on resuming operations.
+A 308 (Resume Incomplete) MAY include an ETag header, uniquely identifying the operation. If a client receives an ETag then it MUST resend the ETag in an If-Match header on resuming operations.
 
 Servers MUST NOT send 308 (Resume Incomplete) responses in the face of fatal errors. By definition, the 308 (Resume Incomplete) response indicates that the client can rectify the current error condition by sending the bytes which the server is missing, and thus the respose code MUST only be sent in this scenario.
 
@@ -50,7 +50,7 @@ The client MAY send a Content-Range without an if-resume-spec parameter in order
 
 = Resume Requests =
 
-When resuming an operation, clients MUST send a byte range that overlaps with the earliest missing range of bytes on the server. If a client received an !ETag in a previous 308 (Resume Incomplete) then it MUST resend the !ETag in an If-Match header on resuming operations.
+When resuming an operation, clients MUST send a byte range that overlaps with the earliest missing range of bytes on the server. If a client received an ETag in a previous 308 (Resume Incomplete) then it MUST resend the ETag in an If-Match header on resuming operations.
 
 The server SHOULD process the data from a resumable operation in the same way it would have processed a single request with the entire content. In particular, the server may need to cache the partial data from an operation, and only process it (e.g. pass it to a CGI application) once the data is complete. Servers which support a streaming mode of processing may do so for a resumable operation as long as the streaming can be resumed normally when the client sends more data in a future resume request.
 
@@ -64,13 +64,13 @@ Clients can query the server for the status of an operation by sending a request
 
 = Initial Handshake =
 
-Query requests could be used by clients to probe servers for resumability support prior to sending additional bytes. They can also be used to implement resumability with a non-unique starting URL that either redirects to a unique URL, or provides a unique !ETag, either of which could then be used to uniquely identify the operation.
+Query requests could be used by clients to probe servers for resumability support prior to sending additional bytes. They can also be used to implement resumability with a non-unique starting URL that either redirects to a unique URL, or provides a unique ETag, either of which could then be used to uniquely identify the operation.
 
 = Use Cases =
 
 The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could issue a HEAD request to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. While this should be the standard mode of operation, alternatively a client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate Content-Range header.
 
-= !ETag Example =
+= ETag Example =
 
 Client sends initial handshake:
 
@@ -80,7 +80,7 @@ Host: example.com
 Content-Length: 0
 }}}
 
-Server assigns !ETag:
+Server assigns ETag:
 
 {{{
 HTTP/1.1 308 Resume Incomplete
