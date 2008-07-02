@@ -199,7 +199,7 @@
 									<key>Path Type</key>
 									<integer>1</integer>
 									<key>Privileges</key>
-									<integer>509</integer>
+									<integer>493</integer>
 									<key>Type</key>
 									<integer>2</integer>
 									<key>UID</key>

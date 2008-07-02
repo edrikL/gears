@@ -33,6 +33,7 @@ BUNDLE_DESTINATION="$INPUT_MGR_DIR/GearsEnabler"
 echo "Installing InputManager from \"$SOURCE_DIR\"."
 
 mkdir -p "$INPUT_MGR_DIR"
+chmod 755 "$INPUT_MGR_DIR"
 rm -rf "$BUNDLE_DESTINATION"
 cp -R "$SOURCE_DIR" "$BUNDLE_DESTINATION"
 chmod -R go-w "$BUNDLE_DESTINATION"
