@@ -1974,7 +1974,6 @@ $(BROWSER)_CPPSRCS	+= \
 		location_provider_pool.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
-		radio_data_provider_android.cc \
 		radio_data_provider_wince.cc \
 		thread.cc \
 		thread_posix.cc \
