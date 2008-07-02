@@ -1183,7 +1183,13 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
  * any usable implementation.
  */
 
+#ifdef OS_ANDROID
+// Android declares getprotobyname_r but doesn't define it. That means
+// we need a unique name.
+static struct protoent *nspr_getprotobyname_r(const char* name)
+#else
 static struct protoent *getprotobyname_r(const char* name)
+#endif
 {
 #ifdef XP_OS2_VACPP
 	return getprotobyname((char *)name);
@@ -1192,7 +1198,13 @@ static struct protoent *getprotobyname_r(const char* name)
 #endif
 } /* getprotobyname_r */
 
+#ifdef OS_ANDROID
+// Android declares getprotobynumber_r but doesn't define it. That
+// means we need a unique name.
+static struct protoent *nspr_getprotobynumber_r(PRInt32 number)
+#else
 static struct protoent *getprotobynumber_r(PRInt32 number)
+#endif
 {
 	return getprotobynumber(number);
 } /* getprotobynumber_r */
@@ -1261,7 +1273,11 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
 	{
 		struct protoent *staticBuf;
 		PR_Lock(_getproto_lock);
+#ifdef OS_ANDROID
+		staticBuf = nspr_getprotobyname_r(name);
+#else
 		staticBuf = getprotobyname_r(name);
+#endif
 		if (NULL == staticBuf)
 		{
 		    rv = PR_FAILURE;
@@ -1341,7 +1357,11 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
 	{
 		struct protoent *staticBuf;
 		PR_Lock(_getproto_lock);
+#ifdef OS_ANDROID
+		staticBuf = nspr_getprotobynumber_r(number);
+#else
 		staticBuf = getprotobynumber_r(number);
+#endif
 		if (NULL == staticBuf)
 		{
 		    rv = PR_FAILURE;

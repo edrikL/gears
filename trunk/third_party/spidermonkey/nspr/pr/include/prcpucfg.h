@@ -44,7 +44,7 @@
 
 #define PR_AF_INET6 30  /* same as AF_INET6 */
 
-#if defined(i386)
+#if defined(i386) || defined(__ARMEL__) // OS_ANDROID change.
 #undef IS_BIG_ENDIAN
 #define  IS_LITTLE_ENDIAN 1
 #else
@@ -55,7 +55,11 @@
 #ifndef HAVE_LONG_LONG
 #define	HAVE_LONG_LONG
 #endif
+#if defined(__arm__) // OS_ANDROID change.
+#define	HAVE_ALIGNED_DOUBLES
+#else
 #undef	HAVE_ALIGNED_DOUBLES
+#endif
 #define	HAVE_ALIGNED_LONGLONGS 1
 
 #define PR_BYTES_PER_BYTE   1
@@ -92,9 +96,17 @@
 #define PR_ALIGN_OF_SHORT   2
 #define PR_ALIGN_OF_INT     4
 #define PR_ALIGN_OF_LONG    4
+#if defined(__arm__) // OS_ANDROID change.
+#define PR_ALIGN_OF_INT64   8
+#else
 #define PR_ALIGN_OF_INT64   4
+#endif
 #define PR_ALIGN_OF_FLOAT   4
+#if defined(__arm__) // OS_ANDROID change.
+#define PR_ALIGN_OF_DOUBLE  8
+#else
 #define PR_ALIGN_OF_DOUBLE  4
+#endif
 #define PR_ALIGN_OF_POINTER 4
 #define PR_ALIGN_OF_WORD    4
 
@@ -144,4 +156,3 @@
 #endif /* NO_NSPR_10_SUPPORT */
 
 #endif /* nspr_cpucfg___ */
-

@@ -104,7 +104,10 @@ __BitScanReverse32(unsigned int val)
 # define js_bitscan_clz32(val)  __BitScanReverse32(val)
 # define JS_HAS_BUILTIN_BITSCAN32
 
-#elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#elif ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) \
+      && !defined(OS_ANDROID)
+// For some reason these compiler built-ins don't appear in the
+// Android system gcc library.
 
 # define js_bitscan_ctz32(val)  __builtin_ctz(val)
 # define js_bitscan_clz32(val)  __builtin_clz(val)

@@ -8,10 +8,10 @@
 // to compile for a 64bit target.
 #ifdef __LITTLE_ENDIAN__
 #define IS_LITTLE_ENDIAN 1
-#undef  IS_BIG_ENDIAN 0
+#undef  IS_BIG_ENDIAN
 #else
 #define IS_BIG_ENDIAN 1
-#undef  IS_LITTLE_ENDIAN 0
+#undef  IS_LITTLE_ENDIAN
 #endif
 // End Gears customization.
 

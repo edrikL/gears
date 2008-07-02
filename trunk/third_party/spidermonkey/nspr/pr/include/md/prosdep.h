@@ -90,7 +90,8 @@ PR_BEGIN_EXTERN_C
 #elif defined(IRIX)
 #include "md/_irix.h"
 
-#elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__)
+#elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
+      || defined(OS_ANDROID)
 #include "md/_linux.h"
 
 #elif defined(OSF1)

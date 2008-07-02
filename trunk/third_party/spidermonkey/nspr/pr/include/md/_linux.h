@@ -92,8 +92,12 @@
 /*
  * Elf linux supports dl* functions
  */
+#ifndef OS_ANDROID
+// Android dlopen() doesn't support NULL to open the current DLL. We
+// don't need this anyway.
 #define HAVE_DLL
 #define USE_DLFCN
+#endif
 
 #ifdef __FreeBSD_kernel__
 #define _PR_HAVE_SOCKADDR_LEN
@@ -220,16 +224,21 @@ extern PRInt32 _PR_ppc_AtomicSet(PRInt32 *val, PRInt32 newval);
 #else
 #define _PR_NO_LARGE_FILES
 #endif
-#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
-#define _PR_INET6
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1) \
+    || defined(OS_ANDROID)
 #define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
 #define _PR_HAVE_GETADDRINFO
+#define _PR_INET6
+#if !defined(OS_ANDROID)
 #define _PR_INET6_PROBE
 #endif
+#endif
+#ifndef OS_ANDROID /* Android doesn't have sem.h */
 #define _PR_HAVE_SYSV_SEMAPHORES
+#endif
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
-#if (__GLIBC__ >= 2) && defined(_PR_PTHREADS)
+#if ((__GLIBC__ >= 2) && defined(_PR_PTHREADS))
 #define _PR_HAVE_GETHOST_R
 #define _PR_HAVE_GETHOST_R_INT
 #endif
@@ -577,5 +586,9 @@ extern int __syscall_poll(struct pollfd *ufds, unsigned long int nfds,
 #include <sys/uio.h>
 
 extern void _MD_linux_map_sendfile_error(int err);
+
+#ifdef OS_ANDROID
+#define HAVE_BSD_FLOCK
+#endif
 
 #endif /* nspr_linux_defs_h___ */

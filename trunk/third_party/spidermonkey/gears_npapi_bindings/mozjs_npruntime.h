@@ -26,8 +26,13 @@
 #ifndef GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_H__
 #define GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_H__ 
 
+#if BROWSER_WEBKIT
 #include <WebKit/npapi.h>
 #include <WebKit/npruntime.h>
+#else
+#include "third_party/npapi/npapi.h"
+#include "third_party/npapi/npruntime.h"
+#endif
 
 // These are the NPAPI runtime functions that are normally exposed by the
 // browser to be used by a plugin.  Here we expose Spidermonkey versions for
@@ -68,4 +73,4 @@ bool NPN_Enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
                    uint32_t *count);
 } // namespace SpiderMonkeyNPAPIBindings
 
-#endif GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_H__
+#endif // GEARS_WORKERPOOL_SAFARI_MOZJS_NPRUNTIME_H__

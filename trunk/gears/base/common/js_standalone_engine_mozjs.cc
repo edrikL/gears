@@ -115,7 +115,11 @@ static bool CreateJSEngine(JsRunner *js_runner, JSRuntime **runtime,
                            JSContext **context) {
   // These are taken from js_runner_ff.cc, if changes are made you'll
   // probably want to change the values there too.
+#ifdef OS_ANDROID
+  const int kRuntimeMaxBytes = 1 * 1024 * 1024; // Somewhat more sensible.
+#else
   const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
+#endif
   const int kContextStackChunkSize = 1024; // Firefox often uses 1024;
                                           // also see js/src/readme.html
   // Create a new JS Runtime.
@@ -252,4 +256,3 @@ bool JSStandaloneEngine::TerminateEngine() {
   SpiderMonkeyNPAPIBindings::NPAPI_Storage::ClearJSContext();
   return true;
 }
-

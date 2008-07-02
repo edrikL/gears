@@ -27,6 +27,12 @@ rather than defining statically.
 * In js/src/jsotypes.h - Added conditionals around typedefs of uint32 & int32,
 as those are defined by Gears as well.
 * Removed js/jsd & js/fdlibm directories.
+* Fixed trailing "0" in #undefs in jsautocfg.h.
+* TODO(jripley): Hardcoded locale in jsnum.c due to Android lacking lconv.
+* Turned off JS_STATIC_ASSERT() in jsutil.h for Android. This trick is
+  incompatible with the version of gcc used.
+* Turned off using compiler __builtin_ctz functions in jsbit.h
+  for Android as the system libraries don't seem to implement them.
 
 Modifications to /nspr:
 * Added "#if defined(__i386__)" to nspr/pr/src/md/unix/os_Darwin_x86.s.
@@ -34,6 +40,23 @@ Modifications to /nspr:
 * nspr/pr/include/md/_darwin.cfg was copied to 
 nspr/pr/include/prcpucfg.h.
 * Removed all directories under nspr/ apart from nspr/pr and nspr/dist.
+* Added _PR_STATIC_BUILD flag in include/prtypes.h to prevent visible
+  symbols in a purely static build.
+* Android platform variations in the following files:
+   - include/md/_linux.h
+   - include/md/_ptd.h
+   - include/md/_unixos.h
+   - include/md/prosdep.h,
+   - include/prcpucfg.h
+   - src/md/prosdep.c
+   - src/md/unix/unix.c
+   - src/md/unix/unix_errors.c
+   - src/md/unix/uxproces.c
+   - src/md/unix/uxrng.c
+   - src/md/unix/uxwrap.c
+   - src/misc/prnetdb.c
+   - src/misc/prsystem.c
+   - src/pthreads/ptio.c
 
 Modifications to /xpcom:
 * Made minor changes in #include sections. All are marked 'Gears'.

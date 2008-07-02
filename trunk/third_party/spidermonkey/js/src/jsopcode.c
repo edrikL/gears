@@ -866,8 +866,20 @@ GetStr(SprintStack *ss, uintN i)
  * JSOP_SETPROP, and JSOP_SETELEM, respectively.  They are never stored in
  * bytecode, so they don't preempt valid opcodes.
  */
+#ifdef __arm__
+// OS_ANDROID change.
+/*
+ * It is actually illegal to store arbitrary values into an enum,
+ * which in this case doesn't work on some ARM targets because the
+ * compiler spots it can fit the enum in an 8 bit type.
+ */
+#define JSOP_GETPROP2   254
+#define JSOP_GETELEM2   255
+// OS_ANDROID change.
+#else
 #define JSOP_GETPROP2   256
 #define JSOP_GETELEM2   257
+#endif
 
 static void
 AddParenSlop(SprintStack *ss)

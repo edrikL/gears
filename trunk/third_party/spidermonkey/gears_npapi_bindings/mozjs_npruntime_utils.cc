@@ -39,11 +39,17 @@
 // firefox 3.0b5 source tarball 
 // mozilla/modules/plugin/base/src/nsJSNPRuntime.cpp & ns4xPlugin.cpp
 
+#if BROWSER_WEBKIT
 #include <WebKit/npapi.h>
 #include <WebKit/npruntime.h>
+#else
+#include "third_party/npapi/npapi.h"
+#include "third_party/npapi/npruntime.h"
+#endif
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/string_utils.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime_utils.h"
 

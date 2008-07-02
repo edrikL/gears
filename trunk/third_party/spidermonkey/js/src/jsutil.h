@@ -73,8 +73,13 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
  * The macro can be used only in places where an "extern" declaration is
  * allowed.
  */
+#ifdef OS_ANDROID
+// gcc isn't happy with some of the asserts in here.
+#define JS_STATIC_ASSERT(condition)
+#else
 #define JS_STATIC_ASSERT(condition)                                           \
     extern void js_static_assert(int arg[(condition) ? 1 : -1])
+#endif
 
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,

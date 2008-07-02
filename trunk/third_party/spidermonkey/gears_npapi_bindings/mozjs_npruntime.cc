@@ -39,6 +39,7 @@
 // mozilla/modules/plugin/base/src/nsJSNPRuntime.cpp & ns4xPlugin.cpp
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/string_utils.h"
 #include "third_party/spidermonkey/gears_include/mozjs_api.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime.h"
