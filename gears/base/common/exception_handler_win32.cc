@@ -44,13 +44,16 @@
 const wchar_t *kCrashReportProductName = L"Google_Gears";  // [naming]
 const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
 #if BROWSER_FF
-                                            L" (win32 firefox)";
+                                            L" (win32 firefox"
 #elif BROWSER_IE
-                                            L" (win32 ie)";
+                                            L" (win32 ie"
 #elif BROWSER_NPAPI
-                                            L" (win32 npapi)";
+                                            L" (win32 npapi"
 #endif
-
+#ifdef DEBUG
+                                            L" dbg";
+#endif
+                                            L")";
 
 using namespace google_breakpad;
 
