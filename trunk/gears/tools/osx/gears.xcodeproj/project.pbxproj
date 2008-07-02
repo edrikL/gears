@@ -400,7 +400,6 @@
 		B58EFE6A0D529ACB00B0A65D /* http_constants.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5A0D529ACB00B0A65D /* http_constants.cc */; };
 		B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5D0D529ACB00B0A65D /* capture_task.cc */; };
 		B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE700D529AEA00B0A65D /* resource_store_np.cc */; };
-		B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */; };
 		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
 		B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A620DDA0A4100F9CD2B /* event_test.cc */; };
 		B5924A660DDA0A4100F9CD2B /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A630DDA0A4100F9CD2B /* event.cc */; };
@@ -429,6 +428,7 @@
 		B5BBD8890D8E8947001A4916 /* url_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8880D8E8947001A4916 /* url_utils.cc */; };
 		B5C4F1EC0DB3F33C00DF1457 /* vdbeapi.c in Sources */ = {isa = PBXBuildFile; fileRef = B5C4F1EB0DB3F33C00DF1457 /* vdbeapi.c */; };
 		B5C4F1EF0DB3F38300DF1457 /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = B5C4F1EE0DB3F38300DF1457 /* pngget.c */; };
+		B5D4BCB50E1C1A9400B5DA2B /* file_submitter.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D4BCB30E1C1A9400B5DA2B /* file_submitter.cc */; };
 		B5D5FBFA0DEF39930033ABE2 /* pool_threads_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D5FBF80DEF39930033ABE2 /* pool_threads_manager.cc */; };
 		B5D5FC040DEF39A00033ABE2 /* workerpool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D5FC030DEF39A00033ABE2 /* workerpool.cc */; };
 		B5D5FC080DEF3A230033ABE2 /* progress_event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D5FC060DEF3A230033ABE2 /* progress_event.cc */; };
@@ -1084,10 +1084,8 @@
 		B58EFE6D0D529AEA00B0A65D /* localserver_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = localserver_np.h; path = ../../localserver/npapi/localserver_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = resource_store_np.h; path = ../../localserver/npapi/resource_store_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE700D529AEA00B0A65D /* resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = resource_store_np.cc; path = ../../localserver/npapi/resource_store_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_submitter_np.cc; path = ../../localserver/npapi/file_submitter_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE770D529AEA00B0A65D /* capture_task_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = capture_task_np.h; path = ../../localserver/npapi/capture_task_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFE780D529AEA00B0A65D /* localserver_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_np.cc; path = ../../localserver/npapi/localserver_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE790D529AEA00B0A65D /* file_submitter_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_submitter_np.h; path = ../../localserver/npapi/file_submitter_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFEB70D529D5900B0A65D /* message_queue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = message_queue.h; path = ../../base/common/message_queue.h; sourceTree = SOURCE_ROOT; };
 		B58EFF630D52A5DC00B0A65D /* common_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = common_sf.h; path = ../../base/common/common_sf.h; sourceTree = SOURCE_ROOT; };
 		B5924A610DDA0A4100F9CD2B /* event.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
@@ -1144,6 +1142,8 @@
 		B5BBD8880D8E8947001A4916 /* url_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils.cc; path = ../../base/common/url_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5C4F1EB0DB3F33C00DF1457 /* vdbeapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vdbeapi.c; path = ../../../third_party/sqlite_google/src/vdbeapi.c; sourceTree = SOURCE_ROOT; };
 		B5C4F1EE0DB3F38300DF1457 /* pngget.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngget.c; path = ../../../third_party/libpng/pngget.c; sourceTree = SOURCE_ROOT; };
+		B5D4BCB30E1C1A9400B5DA2B /* file_submitter.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_submitter.cc; path = ../../localserver/file_submitter.cc; sourceTree = SOURCE_ROOT; };
+		B5D4BCB40E1C1A9400B5DA2B /* file_submitter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_submitter.h; path = ../../localserver/file_submitter.h; sourceTree = SOURCE_ROOT; };
 		B5D5FBF80DEF39930033ABE2 /* pool_threads_manager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pool_threads_manager.cc; path = ../../workerpool/npapi/pool_threads_manager.cc; sourceTree = SOURCE_ROOT; };
 		B5D5FBF90DEF39930033ABE2 /* pool_threads_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pool_threads_manager.h; path = ../../workerpool/npapi/pool_threads_manager.h; sourceTree = SOURCE_ROOT; };
 		B5D5FC020DEF39A00033ABE2 /* workerpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = workerpool.h; path = ../../workerpool/workerpool.h; sourceTree = SOURCE_ROOT; };
@@ -1566,6 +1566,8 @@
 		B544D9630D2EE5D000D30561 /* localserver */ = {
 			isa = PBXGroup;
 			children = (
+				B5D4BCB30E1C1A9400B5DA2B /* file_submitter.cc */,
+				B5D4BCB40E1C1A9400B5DA2B /* file_submitter.h */,
 				B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */,
 				B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */,
 				B544D9640D2EE5D000D30561 /* common */,
@@ -2391,8 +2393,6 @@
 				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
 				B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */,
 				B58EFE700D529AEA00B0A65D /* resource_store_np.cc */,
-				B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */,
-				B58EFE790D529AEA00B0A65D /* file_submitter_np.h */,
 			);
 			name = npapi;
 			sourceTree = "<group>";
@@ -3205,7 +3205,6 @@
 				B58EFE6A0D529ACB00B0A65D /* http_constants.cc in Sources */,
 				B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */,
 				B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */,
-				B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */,
 				B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */,
 				B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */,
 				B58E005B0D5BB2A600B0A65D /* permissions_db.cc in Sources */,
@@ -3361,6 +3360,7 @@
 				B5F09D040E156AE100C7ACB7 /* pa_mac_hostapis.c in Sources */,
 				B5F09D2B0E156C2B00C7ACB7 /* pa_unix_util.c in Sources */,
 				B5F09D6E0E156E7400C7ACB7 /* pa_stream.c in Sources */,
+				B5D4BCB50E1C1A9400B5DA2B /* file_submitter.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
