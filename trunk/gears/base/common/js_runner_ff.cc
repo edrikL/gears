@@ -28,8 +28,10 @@
 #include <set>
 #include <gecko_sdk/include/nspr.h> // for PR_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsIDOMEventTarget.h>
 #include <gecko_sdk/include/nsIURI.h>
 #include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMWindowInternal.h>
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIPrincipal.h>
 #include <gecko_internal/nsIScriptContext.h>
@@ -845,11 +847,13 @@ bool DocumentJsRunner::AddEventHandler(JsEventType event_type,
       unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                  HandleEventUnload,
                                                  this));
-      nsCOMPtr<nsIDOMEventTarget> event_source;
-      if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
-                                     getter_AddRefs(event_source))))
-      {
-        unload_monitor_->Start(event_source);
+      nsCOMPtr<nsIDOMWindowInternal> dom_window_internal;
+      DOMUtils::GetDOMWindowInternal(js_engine_context_,
+                                     getter_AddRefs(dom_window_internal));
+      nsCOMPtr<nsIDOMEventTarget> dom_event_target;
+      nsIDOMEventTarget **target = getter_AddRefs(dom_event_target);
+      if (NS_SUCCEEDED(CallQueryInterface(dom_window_internal, target))) {
+        unload_monitor_->Start(dom_event_target);
       } else {
         return false;
       }

@@ -61,21 +61,12 @@ class DOMUtils {
   // Returns the current JS context.
   static bool GetJsContext(JSContext **context);
 
-  // Returns the current script context.
-  static nsresult GetScriptContext(nsIScriptContext **context);
-
-  // Returns the document corresponding to the current script context.
-  static nsresult GetDocument(nsIDOMDocument **document);
-
-  // Returns the window corresponding to the current script context.
-  static nsresult GetWindow(nsIDOMWindowInternal **window);
+  // Returns the window corresponding to given JSContext.
+  static nsresult GetDOMWindowInternal(JSContext *context,
+                                       nsIDOMWindowInternal **window);
 
   // Returns the native window for the browser.
   static nsresult GetNativeWindow(NativeWindowPtr* window);
-
-  // Returns an object for monitoring events on the _window_ corresponding to
-  // the current script context. Can be used with our HtmlEventMonitor.
-  static nsresult GetWindowEventTarget(nsIDOMEventTarget **target);
 
   // Verifies the given unknown is a legitimate file input element and returns
   // its interface pointer.

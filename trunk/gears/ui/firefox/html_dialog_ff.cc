@@ -54,8 +54,12 @@ static bool LaunchDialog(nsIProperties *params, const char16 *html_filename,
 
   // Get the browser window corresponding to the calling JS
   // NOTE: We assume that there is a js window somewhere on the stack.
+  JSContext *js_context;
+  if (!DOMUtils::GetJsContext(&js_context)) {
+    return false;
+  }
   nsCOMPtr<nsIDOMWindowInternal> calling_window;
-  DOMUtils::GetWindow(getter_AddRefs(calling_window));
+  DOMUtils::GetDOMWindowInternal(js_context, getter_AddRefs(calling_window));
   if (!calling_window) {
     return false;
   }
