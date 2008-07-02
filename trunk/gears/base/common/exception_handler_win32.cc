@@ -51,7 +51,7 @@ const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
                                             L" (win32 npapi"
 #endif
 #ifdef DEBUG
-                                            L" dbg";
+                                            L" dbg"
 #endif
                                             L")";
 
