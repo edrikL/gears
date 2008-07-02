@@ -173,20 +173,22 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="permissions-help">
    <h2>Information</h2>
    <p>
-     <TRANS_BLOCK desc="Header for basic help section.">
-     <!-- [naming] WinCE uses the new product name. 
-          Remove this when renaming is complete. -->
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
+     <!-- [naming] WinCE uses the new product name. 
+          Remove this when renaming is complete. -->
+     <TRANS_BLOCK desc="Header for basic help section on WinCE.">
      PRODUCT_FRIENDLY_NAME_NEW_UQ is an open source browser extension that
      enables web applications to provide offline functionality using the
      following JavaScript APIs:
+     </TRANS_BLOCK>
 ~,~
+     <TRANS_BLOCK desc="Header for basic help section.">
      PRODUCT_FRIENDLY_NAME_UQ is an open source browser extension that enables
      web applications to provide offline functionality using the following
      JavaScript APIs:
-~)
      </TRANS_BLOCK>
+~)
    </p>
    <ul>
      <li><TRANS_BLOCK desc="Short explanation of localserver">Store and serve application resources locally</TRANS_BLOCK></li>
@@ -209,30 +211,36 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         </td>
         <td width="100%" class="text-alignment" valign="middle">
           <div id="local-data" style="display:none">
-            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
-            <!-- [naming] WinCE uses the new product name. 
-                 Remove this when renaming is complete. -->
-            The website below wants to store information on your computer 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
+            <!-- [naming] WinCE uses the new product name. 
+                 Remove this when renaming is complete. -->
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer for WinCE.">
+            The website below wants to store information on your computer 
             using PRODUCT_FRIENDLY_NAME_NEW_UQ.
-~,~
-            using PRODUCT_FRIENDLY_NAME_UQ.
-~)
             </TRANS_BLOCK>
+~,~
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
+            The website below wants to store information on your computer 
+            using PRODUCT_FRIENDLY_NAME_UQ.
+            </TRANS_BLOCK>
+~)
           </div>
           <div id="location-data" style="display:none">
-            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information">
-            <!-- [naming] WinCE uses the new product name. 
-                 Remove this when renaming is complete. -->
-            The website below wants to access information about your location 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
+            <!-- [naming] WinCE uses the new product name. 
+                 Remove this when renaming is complete. -->
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information on WinCE">
+            The website below wants to access information about your location 
             using PRODUCT_FRIENDLY_NAME_NEW_UQ.
-~,~
-            using PRODUCT_FRIENDLY_NAME_UQ.
-~)
             </TRANS_BLOCK>
+~,~
+            <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information">
+            The website below wants to access information about your location 
+            using PRODUCT_FRIENDLY_NAME_UQ.
+            </TRANS_BLOCK>
+~)
           </div>
         </td>
       </tr>
@@ -273,17 +281,20 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           </td>
           <td valign="middle">
             <label for="unlock">
-          <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
-              <!-- [naming] WinCE uses the new product name. 
-                   Remove this when renaming is complete. -->
-              &nbsp;I <span class="accesskey">t</span>rust this site. Allow
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
+              <!-- [naming] WinCE uses the new product name. 
+                   Remove this when renaming is complete. -->
+          <TRANS_BLOCK desc="Indicates the user lets the site use Gears on WinCE.">
+              &nbsp;I <span class="accesskey">t</span>rust this site. Allow
               it to use PRODUCT_FRIENDLY_NAME_NEW_UQ.
-~,~
-              it to use PRODUCT_FRIENDLY_NAME_UQ.
-~)
           </TRANS_BLOCK>
+~,~
+          <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
+              &nbsp;I <span class="accesskey">t</span>rust this site. Allow
+              it to use PRODUCT_FRIENDLY_NAME_UQ.
+          </TRANS_BLOCK>
+~)
             </label>
           </td>
         </tr>
@@ -325,11 +336,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <td width="100%" class="text-alignment" valign="middle">
 ~)
             <a href="#" onclick="denyAccessPermanently(); return false;">
-            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
+            <TRANS_BLOCK desc="Link that disallows Gears on this site for WinCE.">
               Never allow it</TRANS_BLOCK></a>
 ~,~
+            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
               Never allow this site</TRANS_BLOCK></a>
 ~)
           </td>
