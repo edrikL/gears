@@ -488,7 +488,8 @@ class MediaData : public RefCounted {
   
  public:
   // Method to append new data (possibly available from the stream) to the media buffer.
-  // Acquires media_data_lock_ and append the passed vector to media_buffer_
+  // Acquires media_data_lock_.
+  // Reads values in new_data and appends them to media_buffer_.
   void AppendToMediaBuffer(std::vector<uint8>* new_data);
 
   // Method to reset buffer data.
@@ -553,6 +554,8 @@ class GearsAudio
 
 This is the class that takes care of asynchronously loading data from the network into the `media_buffer_` field of the `MediaData` object.
 
+This class also defines a listener that implements the `DataAvailable()` method.
+
 {{{
 class NetworkMediaRequest : public AsyncTask {
  public:
@@ -563,7 +566,7 @@ class NetworkMediaRequest : public AsyncTask {
   // define a private constructor and destructor (for the AsyncTask you need to call 'DeleteWhenDone' on cleanup);
 
   // payload that holds the network data (This is also referenced by media_data_).
- scoped_ptr<WebCacheDB::PayloadInfo> payload;
+  scoped_ptr<WebCacheDB::PayloadInfo> payload;
 
   // shared pointer to media data.
   scoped_refptr<MediaData> media_data_;
@@ -704,9 +707,9 @@ private:
 `media_data_` is not NULL whenever a player thread or a network thread (or in general, whoever needs to read/write `media_buffer_`) is executing because they use a `scoped_refptr` to reference the `media_data_` and hence have `addRef()`-ed it. (In other words, whenever `PaCallback` executes, `media_data_` cannot be NULL. This can in fact be asserted in the callback function).
 
 ===Semantics for locking `media_buffer`:===
-  * Whoever reads/dereferences the `media_buffer_` needs to acquire the `media_data_lock_` (but reads only valid data based on the buffer's current size).
-  * Whoever sets the `media_buffer_` to NULL, needs to acquire the `media_data_lock_` too.
-  * Appending onto the buffer does NOT require a lock. (This is not harmful because no existing values are modified, and hence no danger of wrong or illegal values being read). This is required so that the network thread can concurrently write into the buffer as the player thread is reading it (instead of one thread blocking on the other synchronously).
+  * The only way to read/dereference the `media_buffer_` is through the `GetMediaBufferData` method. This acquires the `media_data_lock_` (but reads only valid data based on the buffer's current size).
+  * The only way to set the `media_buffer_` to NULL is through the `ResetMediaBuffer` method. This acquires the `media_data_lock_` too.
+  * The only way to append onto the buffer is through the `AppendToMediaBuffer` method. This too acquires the `media_data_lock`.
 
 ==How they all work together:==
 
@@ -724,16 +727,16 @@ private:
 
 ===Network thread:===
   * On construction, `AddRef()`s the passed `media_data_`. (via `scoped_refptr<MediaData>.reset()`).
-  * The `Run()` method loads the data over the network from the `url_`. `media_data_` is made to 'point to' `payload.data()`. Note that, NO LOCK is acquired when data is streamed into media_data_. 
-  * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class acquires the `media_data_lock_` and resets the `media_buffer_` to NULL (The `payload_` is implicitly deleted because this is a scoped_ptr). Locking here is essential because the player thread might be reading `media_data_` at that same moment.
+  * The `Run()` method loads the data over the network from the `url_`. 
+  * On `DataAvailable()` new data available in `payload.data()` is appended to the `media_buffer_` in `media_data_` through the `AppendToMediaBuffer()` method.
+  * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class resets the `media_buffer_` by invoking `ResetMediaBuffer()` (The `payload_` is implicitly deleted because this is a scoped_ptr).
 
 ===Player thread:===
 
   * `PaPlayer`, on creation, `AddRef()`s `media_data_` (by virtue of using `scoped_refptr`) and also registers itself with the `PaManager`.
   * `PaPlayer::play()` defines `OpenDefaultStream(<params>, this)` and `StartStream()` - (call safe methods defined on `PaManager`).
   * `PaPlayer::PaCallback()` does the following:
-    * Obtain a lock on `media_data_lock_` (so that when it is reading the buffer, nobody deletes it). 
-    * Look at current size of buffer.
+    * Invokes `GetMediaBufferData()` to get data for the current playback position.
     * Decode if necessary.
     * Fill the 'out' buffer with the next few elements (internally player tracks the current read position on the buffer) till the buffer is filled, till `buffer_size_` is exceeded. Values are filled as is, in case of raw audio data, or decoded to the raw values appropriately.
   *  If the 'current position' exceeds the buffer size, fill silence values ('0') onto the 'out' buffer.
