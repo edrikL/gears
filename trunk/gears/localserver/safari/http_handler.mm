@@ -149,10 +149,10 @@
   } else {
     [[self client] URLProtocol:self didReceiveResponse:response
             cacheStoragePolicy:NSURLCacheStorageNotAllowed];    
+    // Notify the client of the data
+    [[self client] URLProtocol:self didLoadData:data];
   }
   
-  // Notify the client of the data
-  [[self client] URLProtocol:self didLoadData:data];
   [[self client] URLProtocolDidFinishLoading:self];
 
   [response release];
