@@ -522,9 +522,11 @@ class GearsMedia {
   scoped_refptr<MediaData> media_data_;  
  protected:
   virtual void play() = 0;
-  NetworkMediaRequest *network_media_request_;
 
- // other properties required to be exposed as specified in the spec...
+  // The asynchronous request for media data
+  SafeHttpRequest *network_media_request_;
+
+  // other properties required to be exposed as specified in the spec...
 }
 }}}
 
@@ -552,12 +554,16 @@ class GearsAudio
 
 ===4. `NetworkMediaRequest` class:===
 
+This class is now obsolete. Ignore this class.
+{{{
+/*
+}}}
 This is the class that takes care of asynchronously loading data from the network into the `media_buffer_` field of the `MediaData` object.
 
 This class also defines a listener that implements the `DataAvailable()` method.
 
 {{{
-class NetworkMediaRequest : public AsyncTask {
+class NetworkMediaRequest : public SafeHttpRequest {
  public:
   static NetworkMediaRequest* Create(<params>); // delegates to private constructor.
   void StopThreadAndDelete(); // call 'DeleteWhenDone' inside this.
@@ -577,6 +583,9 @@ class NetworkMediaRequest : public AsyncTask {
   // The url to be loaded - same as "src" field in GearsAudio
   std::string16 url_;
 }
+}}}
+{{{
+*/
 }}}
 
 ===5. `PlayerInterface` class:===
