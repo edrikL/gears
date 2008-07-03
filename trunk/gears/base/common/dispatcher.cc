@@ -121,8 +121,8 @@ const DispatcherNameList &Dispatcher<T>::GetMemberNames() {
 
 template<class T>
 DispatchId Dispatcher<T>::GetDispatchId(const std::string &member_name) {
-  DispatcherNameList member_names = GetMemberNames();
-  DispatcherNameList::iterator result = member_names.find(member_name);
+  const DispatcherNameList &member_names = GetMemberNames();
+  DispatcherNameList::const_iterator result = member_names.find(member_name);
   if (result != member_names.end()) {
     return result->second;
   } else {
