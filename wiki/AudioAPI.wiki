@@ -460,7 +460,7 @@ Consider a single `GearsAudio` object created from the `GearsFactory`. This migh
     * creates `GearsAudio` object.
     * load() from network - by setting 'src' to a URL -> spawns Network thread. (A parallel flow exists for loading from a blob as well).
     * play() - starts portaudio stream -> creation of Portaudio thread
-  # *Network thread (one per `GearsMedia` object)*
+  # *Network thread (one per load request)*
     * load from HTTP asynchronously
   # *Player thread (one per `GearsMedia` object)*
     * responsible for playing the audio data streamed in by the network thread.
