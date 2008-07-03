@@ -1,8 +1,8 @@
-#summary Building Google Gears for Windows
+#summary Building Gears for Windows
 
 = Introduction =
 
-This document describes how to build Google Gears for Windows.
+This document describes how to build Gears for Windows.
 
 = Building =
 
@@ -17,11 +17,11 @@ Install the following to create the build environment:
   * Unxutils - ftp://garbo.uwasa.fi/win95/unix/UnxUtils.zip and ftp://garbo.uwasa.fi/win95/unix/UnxUpdates.zip.
     * Or you can get the combined package [http://gears.googlecode.com/files/UnxUtils.zip here].
 
-Follow the instructions at http://code.google.com/p/google-gears/source to set up your source tree.
+Follow the instructions at http://code.google.com/p/gears/source to set up your source tree.
 
 Finally open a command prompt, setup your build environment, and build Gears.  (These instructions assume you put Gears in c:\svn-gears and installed Visual Studio and the Platform SDK to their default locations.)
   * Start -> Run -> cmd.exe
-    * cd \svn-gears\google-gears\gears\
+    * cd \svn-gears\gears\gears\
     * "c:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
     * "c:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.cmd"
     * set PATH=%PATH%;<<python path>>;<<wix path>>;<<unxutils path>>\usr\local\wbin
@@ -33,4 +33,4 @@ Finally open a command prompt, setup your build environment, and build Gears.  (
 To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and run the .msi (IE and Firefox) or open the .xpi (Firefox only).
 
 = Testing =
-After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
+After installing, you should restart your browser.  Go to the Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
