@@ -71,9 +71,12 @@ struct Position {
         vertical_accuracy(kint32min),
         timestamp(-1) {}
   bool IsGoodFix() const {
-    // A good fix has a valid latitude and longitude.
+    // A good fix has a valid latitude, longitude, horizontal accuracy and
+    // timestamp.
     return latitude >= -90.0 && latitude <= 90.0 &&
-           longitude >= -180.0 && longitude <= 180.0;
+           longitude >= -180.0 && longitude <= 180.0 &&
+           horizontal_accuracy != kint32min &&
+           timestamp != -1;
   }
   bool IsInitialized() const {
     return IsGoodFix() || !error.empty();
