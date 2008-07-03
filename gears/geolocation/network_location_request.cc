@@ -54,6 +54,7 @@ static bool AddAngle(const std::string &property_name,
                      Json::Value *object);
 // Parses the server response body. Returns true if parsing was successful.
 static bool ParseServerResponse(const std::string &response_body,
+                                int64 timestamp,
                                 Position *position);
 
 // static
@@ -230,34 +231,34 @@ void NetworkLocationRequest::GetLocationFromResponse(
   // HttpPost can fail for a number of reasons. Most likely this is because
   // we're offline, or there was no response.
   if (!http_post_result) {
-    LOG(("NetworkLocationRequest::Run() : HttpPost request failed.\n"));
+    LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost request "
+         "failed.\n"));
     position->error = STRING16(L"No response from network provider at ");
     position->error += server_url.c_str();
     position->error += STRING16(L".");
   } else if (status_code == HttpConstants::HTTP_OK) {
-    if (ParseServerResponse(response_body, position)) {
+    // We use the timestamp from the device data that was used to generate
+    // this position fix.
+    if (ParseServerResponse(response_body, timestamp, position)) {
       // The response was successfully parsed, but it may not be a valid
       // position fix.
-      if (position->IsGoodFix()) {
-        // We use the timestamp from the device data that was used to generate
-        // this position fix.
-        position->timestamp = timestamp;
-      } else {
+      if (!position->IsGoodFix()) {
         position->error = STRING16(L"Network provider at ");
         position->error += server_url.c_str();
         position->error += STRING16(L" did not provide a good position fix.");
       }
     } else {
-      // If we failed to parse the repsonse, we call back with a bad
-      // position.
-      LOG(("NetworkLocationRequest::Run() : Response malformed.\n"));
+      // We failed to parse the repsonse.
+      LOG(("NetworkLocationRequest::GetLocationFromResponse() : Response "
+           "malformed.\n"));
       position->error = STRING16(L"Response from network provider at ");
       position->error += server_url.c_str();
       position->error += STRING16(L" was malformed.");
     }
   } else {
-    // If the response was bad, we call back with a bad position.
-    LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
+    // The response was bad.
+    LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost "
+         "response was bad.\n"));
     position->error = STRING16(L"Network provider at ");
     position->error += server_url.c_str();
     position->error += STRING16(L" returned error code ");
@@ -359,6 +360,7 @@ static bool GetAsString(const Json::Value &object,
 }
 
 static bool ParseServerResponse(const std::string &response_body,
+                                int64 timestamp,
                                 Position *position) {
   assert(position);
   if (response_body.empty()) {
@@ -409,6 +411,8 @@ static bool ParseServerResponse(const std::string &response_body,
     GetAsString(address, "country_code", &position->address.country_code);
     GetAsString(address, "postal_code", &position->address.postal_code);
   }
+
+  position->timestamp = timestamp;
   return true;
 }
 

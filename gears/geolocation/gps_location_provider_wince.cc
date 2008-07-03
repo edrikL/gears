@@ -232,6 +232,7 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
       }
     }
     // TODO(steveblock): Work out how to get accuracy.
+    position_.horizontal_accuracy = 100;
   }
 
   GPS_DEVICE device_state = {0};
@@ -251,7 +252,7 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
   position_mutex_.Unlock();
 
   // Call back only if the position has changed and is good.
-  if (update_available && position_.IsGoodFix() && position_.timestamp != -1) {
+  if (update_available && position_.IsGoodFix()) {
     state_ = STATE_FIX_ACQUIRED;
     UpdateListeners();
   }
