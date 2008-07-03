@@ -352,10 +352,10 @@ bool RootUI::CreatePlatformWindow() {
 
 bool RootUI::UpdatePlatformWindow(const Rectangle& previous_bounds) {
   if (platform_window_ && bitmap_) {
-    Point screen_origin(final_bounds().origin());
+    Point screen_origin(final_bounds_.origin());
     bool screen_origin_changed = (previous_bounds.origin() != screen_origin);
 
-    Size screen_size(final_bounds().size());
+    Size screen_size(final_bounds_.size());
 
     Rectangle* area = NULL;
 
@@ -481,8 +481,8 @@ bool RootUI::UpdateUI() {
   // Make it change in steps to avoid frequent reallocations when
   // UI tree changes its bounds
   Size final_size = final_bounds_.size();
-  int required_width = (final_size.width + 0x2F) & 0xFFFFFFD0;
-  int required_height = (final_size.height + 0x2F) & 0xFFFFFFD0;
+  int required_width = final_size.width;
+  int required_height = final_size.height;
 
   if (!bitmap_ ||
       bitmap_->size().width != required_width ||

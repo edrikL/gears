@@ -68,6 +68,10 @@ class Bitmap : public BaseObject {
   }
 
   bool GetBounds(Rectangle* bounds) const;
+  // Regular way to get a pointer to a pixel. Verifies that (x, y) actually
+  // is covered by underlying bitmap, returns NULL otherwise. This prevents
+  // dangerous issues when arbitrary (x, y) can result in a pointer to
+  // unrelated but allocated memory.
   Color* GetPixelAt(int x, int y) const;
 
   // Multiplies rgb values of each pixel by alpha value for the same pixel.
@@ -123,6 +127,9 @@ class Bitmap : public BaseObject {
                const Point& offset_to_target,
                const Rectangle& target_clip,
                uint32 alpha);
+
+  // Unsafe version of GetPixelAt. Does not do any checks. Use with caution.
+  Color* GetPixelAtUnsafe(int x, int y) const;
 
   PlatformBitmap* platform_bitmap_;
   Color* pixels_;

@@ -248,6 +248,10 @@ Color* Bitmap::GetPixelAt(int x, int y) const {
       y >= origin_.y + size_.height)
     return NULL;
 
+  return GetPixelAtUnsafe(x, y);
+}
+
+Color* Bitmap::GetPixelAtUnsafe(int x, int y) const {
   return pixels_ + (x - origin_.x) + size_.width * (y - origin_.y);
 }
 
@@ -423,7 +427,10 @@ bool Bitmap::DrawNineGrid(const Bitmap& source,
     for (int y = edge_clipped.top(); y < edge_clipped.bottom(); ++y) {
       int dy = y - destination_stops.y[start_y];
       Color* source_line = source.GetPixelAt(0, source_stops.y[start_y] + dy);
-      Color* target_line = GetPixelAt(0, destination_stops.y[start_y] + dy);
+      // It's ok to use unsafe getter here because InterpolateLine only
+      // writes between edge_clipped.left and edge_clipped.right.
+      Color* target_line = GetPixelAtUnsafe(0,
+                                            destination_stops.y[start_y] + dy);
       InterpolateLine(source_line,
                       source_stops.x[1],
                       source_stops.x[2],
@@ -454,7 +461,10 @@ bool Bitmap::DrawNineGrid(const Bitmap& source,
     for (int x = edge_clipped.left(); x < edge_clipped.right(); ++x) {
       int dx = x - destination_stops.x[start_x];
       Color* source_line = source.GetPixelAt(source_stops.x[start_x] + dx, 0);
-      Color* target_line = GetPixelAt(destination_stops.x[start_x] + dx, 0);
+      // It's ok to use unsafe getter here because InterpolateLine only
+      // writes between edge_clipped.top and edge_clipped.bottom.
+      Color* target_line = GetPixelAtUnsafe(destination_stops.x[start_x] + dx,
+                                            0);
       InterpolateLine(source_line,
                       source_stops.y[1],
                       source_stops.y[2],

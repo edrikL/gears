@@ -61,6 +61,7 @@ static const char *kTitleId = "title_text";
 static const char *kSubtitleId = "subtitle_text";
 static const char *kDescriptionId = "description_text";
 static const char *kBalloonContainer = "balloon_container";
+static const char *kActionsContainer = "actions_container";
 static const char *kIconId = "icon";
 
 const double kAlphaTransitionDuration = 1.0;
@@ -383,58 +384,65 @@ glint::Node *Balloon::CreateTree() {
   root->set_max_width(BalloonContainer::max_balloon_width());
   root->set_max_height(BalloonContainer::max_balloon_height());
   root->set_alpha(glint::colors::kTransparentAlpha);
-  glint::Rectangle margin(3, 3, 3, 3);
-  root->set_margin(margin);
 
   glint::NineGrid *background = new glint::NineGrid();
   background->ReplaceImage("res://background.png");
   background->set_center_height(50);
   background->set_center_width(250);
-  // TODO(dimich): enable shadow later (too slow in DBG)
-  background->set_shadow(false);
+  glint::Rectangle margin(-4, -4, -4, -4);
+  background->set_margin(margin);
   root->AddChild(background);
 
   glint::ImageNode *image = new glint::ImageNode();
   image->set_id(kIconId);
   image->set_vertical_alignment(glint::Y_TOP);
   image->set_horizontal_alignment(glint::X_LEFT);
-  margin.Set(4, 4, 0, 0);
+  margin.Set(6, 4, 0, 10);
   image->set_margin(margin);
   root->AddChild(image);
 
   glint::Column *column = new glint::Column();
-  column->set_background(glint::Color(0xFFFF00));
   root->AddChild(column);
 
   glint::SimpleText *text = new glint::SimpleText();
   text->set_id(kTitleId);
+  text->set_font_family("verdana");
   text->set_font_size(10);
   text->set_bold(true);
-  margin.Set(54, 4, 6, 0);
+  margin.Set(56, 8, 6, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
   text = new glint::SimpleText();
   text->set_id(kSubtitleId);
-  text->set_font_size(10);
-  margin.Set(54, 2, 6, 0);
+  text->set_font_family("verdana");
+  text->set_font_size(9);
+  margin.Set(56, 3, 6, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
   text = new glint::SimpleText();
   text->set_id(kDescriptionId);
-  margin.Set(54, 2, 6, 3);
+  text->set_font_family("verdana");
+  margin.Set(56, 4, 6, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
+  glint::Row *actions = new glint::Row();
+  actions->set_id(kActionsContainer);
+  actions->set_horizontal_alignment(glint::X_RIGHT);
+  margin.Set(0, 0, 16, 10);
+  actions->set_margin(margin);
+  column->AddChild(actions);
+
   glint::Button *close_button = new glint::Button();
   close_button->ReplaceImage("res://close_button_strip.png");
-  close_button->set_min_height(14);
-  close_button->set_min_width(14);
-  margin.Set(0, 6, 6, 0);
+  close_button->set_min_height(24);
+  close_button->set_min_width(24);
+  margin.Set(0, 4, 3, 0);
   close_button->set_margin(margin);
   close_button->set_horizontal_alignment(glint::X_RIGHT);
   close_button->set_vertical_alignment(glint::Y_TOP);
