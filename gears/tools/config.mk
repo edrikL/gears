@@ -219,9 +219,7 @@ ifeq ($(OFFICIAL_BUILD),1)
 # Not finalized for official builds.
 else
 ifeq ($(OS),win32)  # Skia binaries for other platforms not checked in yet.
-# Only the dbg version of the Skia lib has been checked in so far. We use this
-# in Gears opt builds as well.
-SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-dbg-$(OS)-$(ARCH)$(LIB_SUFFIX)
+SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
 endif
 endif
 
@@ -612,8 +610,6 @@ SHARED_LINKFLAGS_dbg =
 SHARED_LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
 SHARED_LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
 ifeq ($(OS),win32)
-SHARED_LINKFLAGS_opt += \
-	/NODEFAULTLIB:libcmtd
 SHARED_LINKFLAGS += \
 	/MACHINE:X86 \
 	/NODEFAULTLIB:msvcrt \
