@@ -102,10 +102,9 @@ Media class
            attribute float volume;
            attribute boolean muted;
 
-  // access blob
-  // Returns: the handle to the blob object containing the media data
-  Blob getBlob();
-
+  // load from blob
+  void loadBlob(blob);
+   
   // metadata
            attribute map metadata;
 };
