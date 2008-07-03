@@ -524,7 +524,7 @@ class GearsMedia {
   virtual void play() = 0;
 
   // The asynchronous request for media data
-  SafeHttpRequest *network_media_request_;
+  NetworkMediaRequest *network_media_request_;
 
   // other properties required to be exposed as specified in the spec...
 }
@@ -554,40 +554,34 @@ class GearsAudio
 
 ===4. `NetworkMediaRequest` class:===
 
-This class is now obsolete. Ignore this class.
-{{{
-/*
-}}}
 This is the class that takes care of asynchronously loading data from the network into the `media_buffer_` field of the `MediaData` object.
 
-This class also defines a listener that implements the `DataAvailable()` method.
+This class also encompasses a `MediaListener` class that implements the `DataAvailable()` method. Whenever new data comes in, this is extracted from the response body and appended to the `media_data_` through the `AppendToMediaBuffer()` method.
 
-
-class NetworkMediaRequest : public SafeHttpRequest {
- public:
-  static NetworkMediaRequest* Create(<params>); // delegates to private constructor.
-  void StopThreadAndDelete(); // call 'DeleteWhenDone' inside this.
-
- private:
-  // define a private constructor and destructor (for the AsyncTask you need to call 'DeleteWhenDone' on cleanup);
-
-  // payload that holds the network data (This is also referenced by media_data_).
-  scoped_ptr<WebCacheDB::PayloadInfo> payload;
-
-  // shared pointer to media data.
-  scoped_refptr<MediaData> media_data_;
-
-  // does all the loading.
-  virtual void Run();
-
-  // The url to be loaded - same as "src" field in GearsAudio
-  std::string16 url_;
-}
+This class has a scoped_refptr to the media_data_ which is initialized on creation. 
 
 {{{
-*/
-}}}
+class NetworkMediaRequest {
+ public:
+  NetworkMediaRequest(std::string16 url, MediaData* media_data);
+  virtual ~NetworkMediaRequest();
 
+  // calls open of the httprequest asynchronously.  
+  void AsyncOpen();
+
+ private: 
+  HttpRequest* media_request_;
+  MediaListener* listener_;
+  
+  scoped_refptr<MediaData> media_data_;
+  class MediaListener : public HttpListener {
+    virtual void DataAvailable(HttpRequest * source) {
+      // Append new data in the response body to media_data_
+    }
+  }
+}
+}}}
+ 
 ===5. `PlayerInterface` class:===
 
 The abstract player interface. `GearsAudio` class is abstracted from how the player works.
@@ -728,20 +722,19 @@ private:
     * Instantiates a new player object (`PlayerInterface`) passing this `media_data_` to it. The player is referenced by a `scoped_ptr` (so that it gets automatically cleaned up when this `GearsMedia` object is cleaned up).
     * `network_media_request_` is initially NULL.
   * The javascript now sets `'src'`. This also initiates a `load()` implicitly.
-  * `'load()'` does the below:
-    *  If a `NetworkMediaRequest` object had already been created, call `StopThreadAndDelete()` on that object.
-    * Creates a new `NetworkMediaRequest` object (by passing `media_data_` to it) and assign it to `network_media_request_`.
-    * After implementing the state changes specified by the HTML5 spec, it calls `Start()` on `network_media_request_`.
+  * `'load()'` does the following:
+    * If there is an existing NetworkMediaRequest object, it cleans it.
+    * It creates a new NetworkMediaRequest object by passing the 'media_data_' and the 'url' to it.
+    * It calls `AsyncOpen()` on this object and returns.
   * If `'play()'` is called, the main thread calls `player->play()`;
 
-===Network thread:===
-  * On construction, `AddRef()`s the passed `media_data_`. (via `scoped_refptr<MediaData>.reset()`).
-  * The `Run()` method loads the data over the network from the `url_`. 
-  * On `DataAvailable()` new data available in `payload.data()` is appended to the `media_buffer_` in `media_data_` through the `AppendToMediaBuffer()` method.
-  * On deletion (`StopThreadAndDelete()`), the `NetworkMediaRequest` class resets the `media_buffer_` by invoking `ResetMediaBuffer()` (The `payload_` is implicitly deleted because this is a scoped_ptr).
+===Network thread (NetworkMediaRequest object):===
+  * At the time of creation, `AddRef()`s the passed `media_data_`. (via `scoped_refptr<MediaData>.reset()`).
+  * The `AsyncOpen` method loads the data over the network from the `url_`. 
+  * On `DataAvailable()` new data available in the response body is appended to the `media_buffer_` in `media_data_` through the `AppendToMediaBuffer()` method.
+  * On deletion, this class resets the `media_buffer_` by invoking `ResetMediaBuffer()`.
 
 ===Player thread:===
-
   * `PaPlayer`, on creation, `AddRef()`s `media_data_` (by virtue of using `scoped_refptr`) and also registers itself with the `PaManager`.
   * `PaPlayer::play()` defines `OpenDefaultStream(<params>, this)` and `StartStream()` - (call safe methods defined on `PaManager`).
   * `PaPlayer::PaCallback()` does the following:
