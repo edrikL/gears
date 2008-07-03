@@ -122,7 +122,7 @@ void NetworkLocationRequest::Run() {
     std::string response_body;
     if (result && !payload.data->empty()) {
       response_body.assign(
-          reinterpret_cast<const char*>(&payload.data.get()[0]),
+          reinterpret_cast<const char*>(&payload.data->front()),
           payload.data->size());
     }
     GetLocationFromResponse(result, payload.status_code, response_body,
