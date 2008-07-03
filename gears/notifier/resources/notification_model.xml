@@ -1,0 +1,57 @@
+<Node
+  xmlns="http://www.google.com/glint"
+  min_width="270"
+  max_width="270"
+  min_height="70"
+  max_height="120" 
+transform="translate(1200 30)" background="#0000FF00"> 
+  <NineGrid 
+    margin="-4 -4 -4 -4"
+    source="background.png"
+    center_height="50"
+    center_width="250"/>
+
+  <ImageNode
+source="../../test/manual/icon_48x48.png"
+    id="kIconId"  
+    vertical_alignment="top"  
+    horizontal_alignment="left"
+    margin="6 4 0 10"/>
+
+  <Column>
+    <SimpleText 
+text="Breakfast!"
+      font_family="verdana"
+      font_size="10"
+      id="kTitleId"
+	bold="true"
+	margin="56 8 6 0"
+ 	horizontal_alignment="left"/>
+    <SimpleText 
+text="At cafeteria..."
+      font_family="verdana"
+      font_size="9"
+      id="kSubtitleId"
+	margin="56 3 6 0"
+ 	horizontal_alignment="left"/>
+    <SimpleText 
+text="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed .."
+      id="kDescriptionId"
+      font_family="verdana"
+      font_size="8"
+	margin="56 4 6 0"
+ 	horizontal_alignment="left"/>
+    <Row 
+       id="kActionsContainer"
+	 margin="0 0 16 10" 
+       horizontal_alignment="right">
+    </Row>
+  </Column>
+  <Button    
+    source="close_button_strip.png" 
+    min_height="24"
+    min_width="24" 
+    margin="0 4 3 0" 
+    horizontal_alignment="right"
+    vertical_alignment="top"/>
+</Node>

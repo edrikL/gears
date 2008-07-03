@@ -436,10 +436,15 @@ void Node::SetLayoutBounds(const Rectangle& bounds) {
     local_offset_ = new_local_offset;    // now, update the offset
   }
 
-  // If the node went through layout, it has to be re-rendered (or we
-  // need to rely on nodes calling InvalidateDrawing correctly from their
-  // OnSetLayoutBounds which seems like unreliable idea).
-  full_redraw_ = true;
+  // If the node went through layout and the final_size has changed,
+  // the node has to be re-rendered. If the node was not directly invalidated
+  // (by calling Node::Invalidate()) or didn't change size as result of its
+  // other nodes changing around, and it still has to be re-rendered, then
+  // either there is a bug or the node has to call InvalidateDrawing correctly
+  // from its OnSetLayoutBounds.
+  if (size_changed || position_changed) {
+    full_redraw_ = true;
+  }
   layout_invalidated_ = false;
 }
 
