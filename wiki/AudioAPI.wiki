@@ -562,7 +562,7 @@ This is the class that takes care of asynchronously loading data from the networ
 
 This class also defines a listener that implements the `DataAvailable()` method.
 
-{{{
+
 class NetworkMediaRequest : public SafeHttpRequest {
  public:
   static NetworkMediaRequest* Create(<params>); // delegates to private constructor.
@@ -583,7 +583,7 @@ class NetworkMediaRequest : public SafeHttpRequest {
   // The url to be loaded - same as "src" field in GearsAudio
   std::string16 url_;
 }
-}}}
+
 {{{
 */
 }}}
