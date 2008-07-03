@@ -30,11 +30,10 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 static const char *kPermissionsString = "permissions";
-static const char *kNameString = "name";
 static const char *kLocalStorageString = "localStorage";
 static const char *kLocationDataString = "locationData";
 static const char *kPermissionStateString = "permissionState";
-static const char16 *kSettingsDialogString = L"settings_dialog.html";
+static const char16 *kSettingsDialogString = STRING16(L"settings_dialog.html");
 
 // Gets sites where the permission for local data has the given value and
 // appends them to the array.
