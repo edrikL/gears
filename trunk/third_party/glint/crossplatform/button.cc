@@ -118,11 +118,14 @@ class ButtonMessageHandler : public MessageHandler {
       case GL_MSG_LBUTTONUP:
         if (capture_ && DirectlyOverButton(message)) {
           root_ui->EndMouseCapture();
+          capture_ = false;
           if (callback_ && IsMouseWithin(message)) {
             owner_->set_state(Button::NORMAL);
             callback_(owner_->id(), user_info_);
+            // Note: after callback (which is a user-defined reaction to a
+            // button click) the button itself and this message handler can
+            // be already deleted. Don't access any instance variables.
           }
-          capture_ = false;
         }
         return MESSAGE_HANDLED;
       default:
