@@ -68,8 +68,11 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
     #content table {
       border:1px #ccc;
-      border-style:none solid;
-      border-collapse:collapse;
+      /* Only set the sides and bottom border of the table because
+      border-colapse doesn't work on WinCE. */
+      border-style: none solid;
+      border-bottom-style: solid;
+      border-collapse: collapse;
       /* A bug in Mozilla with border-collapse:collapse along with the overflow
       settings we have on the scroll element causes the left border to be
       placed 1px to the left, making the element invisible. */
@@ -77,8 +80,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     }
 
     #content td {
-      border:1px #ccc;
-      border-style:solid none;
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
       padding:4px;
@@ -93,8 +94,21 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       font-style:italic;
     }
 
-    .left {
-      width:100%;
+    #content td.left {
+      width: 100%;
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~~,~
+      padding-left: 20px;
+~)
+    }
+
+    #content td.right {
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+      width: 120px;
+~,~
+      padding-right: 20px;
+~)
     }
 
     .app-icon {
@@ -118,9 +132,24 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     #button-row {
       display:none;
     }
+~,~~)
 
-    #button-row-smartphone {
-      display:none;
+    td.origin-name {
+      border-top: 1px solid #ccc;
+      font-weight: bold;
+    }
+
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~~,~
+    div.radio-buttons {
+      width: 130px;
+    }
+~)
+
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+    body, td {
+      font-size: 10px;
     }
 ~,~~)
 
@@ -130,11 +159,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="strings" style="display:none;">
     <div id="string-cancel"><TRANS_BLOCK desc="Button user can press to cancel the dialog.">Cancel</TRANS_BLOCK></div>
     <div id="string-cancel-accesskey"><TRANS_BLOCK desc="Access key for cancel button.">C</TRANS_BLOCK></div>
-    <div id="string-save"><TRANS_BLOCK desc="Button user can press to save changes.">Save</TRANS_BLOCK></div>
-    <div id="string-save-accesskey"><TRANS_BLOCK desc="Access key for save button.">S</TRANS_BLOCK></div>
-    <div id="string-remove"><TRANS_BLOCK desc="Button user can press to remove a site from the list.">Remove</TRANS_BLOCK></div>
-    <div id="string-noallowed"><TRANS_BLOCK desc="States that there are no allowed sites.">No allowed sites.</TRANS_BLOCK></div>
-    <div id="string-nodenied"><TRANS_BLOCK desc="States that there are no denied sites.">No denied sites.</TRANS_BLOCK></div>
+    <div id="string-apply"><TRANS_BLOCK desc="Button user can press to apply changes.">Apply</TRANS_BLOCK></div>
+    <div id="string-apply-accesskey"><TRANS_BLOCK desc="Access key for apply button.">A</TRANS_BLOCK></div>
+    <div id="string-nosites"><TRANS_BLOCK desc="States that there are no sites.">No sites.</TRANS_BLOCK></div>
+    <div id="string-allowed"><TRANS_BLOCK desc="States that a site is allowed to use this permission class.">Allowed</TRANS_BLOCK></div>
+    <div id="string-denied"><TRANS_BLOCK desc="States that a site is denied from using this permission class.">Denied</TRANS_BLOCK></div>
+    <div id="string-local-storage"><TRANS_BLOCK desc="Describes the permission class for storing local data.">Local storage</TRANS_BLOCK></div>
+    <div id="string-location-data"><TRANS_BLOCK desc="Describes the permission class for accessing location information.">Location</TRANS_BLOCK></div>
   </div>
   
   <div id="head">
@@ -157,31 +188,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     </table>
   </div>
   <div id="content">
-    <h2>
-      <TRANS_BLOCK desc="Header for allowed sites.">
-      Allowed Sites
-      </TRANS_BLOCK>
-    </h2>
     <p>
-      <TRANS_BLOCK desc="Description of allowed sites.">
-      These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.
+      <TRANS_BLOCK desc="Description of table listing permissions granted to each site.">
+      The table below shows the permissions you have granted to each site that
+      has attempted to use PRODUCT_FRIENDLY_NAME_UQ.
       </TRANS_BLOCK>
     </p>
-    <div id='div-allowed'>
-    </div>
-    <br>
-    <br>
-    <h2>
-      <TRANS_BLOCK desc="Header for denied sites.">
-      Denied Sites
-      </TRANS_BLOCK>
-    </h2>
-    <p>
-      <TRANS_BLOCK desc="Description of denied sites.">
-      These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.
-      </TRANS_BLOCK>
-    </p>
-    <div id='div-denied'>
+    <div id='div-permissions'>
     </div>
     <br>
     <br>
@@ -192,13 +205,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     </div>
   </div>
   <div id="foot">
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-    <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
-    and softkeys for the other buttons. -->
-    <div id="button-row-smartphone">
-    </div>
-~,~~)
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -211,14 +217,14 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </td>
             <td width="50%" align="right" valign="middle">
               <input type="BUTTON" id="confirm-button"
-               onclick="saveAndClose(g_dialogResult); return false;"></input>
+               onclick="saveAndClose(calculateDiff()); return false;"></input>
             </td>
           </div>
 ~,m4_dnl
 ~
           <td nowrap="true" align="right" valign="middle">
             <button id="confirm-button" class="custom"
-                onclick="saveAndClose(g_dialogResult); return false;"
+                onclick="saveAndClose(calculateDiff()); return false;"
               ></button
             ><button id="cancel-button" accesskey="C" class="custom"
                 onclick="saveAndClose(null); return false;"
@@ -244,25 +250,38 @@ m4_include(ui/common/button.js)
 </script>
 <script>
   var debug = false;
-  var g_dialogResult = {"removeSites": []};
-  var allowedSites;
-  var deniedSites;
-  var ALLOWED = 1;
-  var DENIED = 2;
+  var permissions;
+  var originalPermissions;
+
+  // Must match values in permission_db.h
+  var PERMISSION_NOT_SET = 0;
+  var PERMISSION_ALLOWED = 1;
+  var PERMISSION_DENIED  = 2;
+
+  if (debug && browser.ie_mobile) {
+    // Handy for debugging layout.
+    window.pie_dialog = new Object();
+    window.pie_dialog.IsSmartPhone = function() { return false; };
+    window.pie_dialog.SetCancelButton = function() {};
+    window.pie_dialog.SetButton = function() {};
+    window.pie_dialog.SetButtonEnabled = function() {};
+    window.pie_dialog.SetScriptContext = function() {};
+    window.pie_dialog.ResizeDialog = function() {};
+  }
 
   initDialog();
 
   setButtonLabel("string-cancel", "cancel-button", "string-cancel-accesskey");
-  setButtonLabel("string-save", "confirm-button", "string-save-accesskey");
+  setButtonLabel("string-apply", "confirm-button", "string-apply-accesskey");
 
   if (!browser.ie_mobile) {
     CustomButton.initializeAll();
     initCustomLayout(layoutSettings);
   } else {
-    var saveText = dom.getElementById("string-save");
-    if (saveText) {
-      window.pie_dialog.SetButton(saveText.innerText, 
-        "saveAndClose(g_dialogResult);");
+    var applyText = dom.getElementById("string-apply");
+    if (applyText) {
+      window.pie_dialog.SetButton(applyText.innerText, 
+        "saveAndClose(calculateDiff());");
     }
     var cancelText = dom.getElementById("string-cancel");
     if (cancelText) {
@@ -276,117 +295,166 @@ m4_include(ui/common/button.js)
   // Start out with only cancel enabled, just for clarity.
   disableButton(dom.getElementById("confirm-button"));
 
-  function cancelButton() {
-    saveAndClose(null);
-  }
-
-  function confirmButton() {
-    saveAndClose(g_dialogResult);
-  }
-
   function initSettings() {
     var args;
 
     if (debug) {
       // Handy for debugging layout:
       var args = {
-        allowed: ["http://www.google.com", "http://aaronboodman.com"],
-        denied: ["http://www.evil.org"]
+        permissions: {
+          "http://www.google.com": {
+            localStorage: { permissionState: 1 },
+            locationData: { permissionState: 0 }
+          },
+          "http://www.aaronboodman.com": {
+            localStorage: { permissionState: 1 },
+            locationData: { permissionState: 1 }
+          },
+          "http://www.evil.org": {
+            localStorage: { permissionState: 2 },
+            locationData: { permissionState: 2 }
+          }
+        }
       };
     } else {
       args = getArguments();
     }
+    permissions = args.permissions;
+    originalPermissions = cloneObject(permissions);
 
-    allowedSites = args.allowed;
-    deniedSites = args.denied;
-
-    function sortSites(a, b) {
-      // Ignore the scheme, so that we just sort by the host.
-      return a.replace(/^\w+:/, '') > b.replace(/^\w+:/, '');
-    }
-
-    allowedSites.sort(sortSites);
-    deniedSites.sort(sortSites);
-
-    initList("div-allowed", allowedSites, ALLOWED);
-    initList("div-denied", deniedSites, DENIED);
+    updatePermissionsList();
   }
 
-  function initList(tableId, sites, kind) {
-    var table = dom.getElementById(tableId);
+  function updatePermissionsList() {
+    var table = dom.getElementById('div-permissions');
 
     var content = "";
-    if (!sites.length) {
+    for (var originName in permissions) {
+      content += renderOrigin(originName, permissions[originName]);
+    }
+    if (content == "") {
       content = "<tr><td class=\"left\"><em>";
-      if (kind == ALLOWED) {
-        var allowedText = dom.getElementById("string-noallowed");
-        if (allowedText) {
-          if (isDefined(typeof allowedText.innerText)) {
-            content += allowedText.innerText;
-          } else {
-            content += allowedText.textContent;
-          }
-        }
-      } else if (kind == DENIED) {
-        var deniedText = dom.getElementById("string-nodenied");
-        if (deniedText) {
-          if (isDefined(typeof deniedText.innerText)) {
-            content += deniedText.innerText;
-          } else {
-            content += deniedText.textContent;
-          }
+      var allowedText = dom.getElementById("string-nosites");
+      if (allowedText) {
+        if (isDefined(typeof allowedText.innerText)) {
+          content += allowedText.innerText;
+        } else {
+          content += allowedText.textContent;
         }
       }
       content += "</em></td><td></td></tr>";
-    } else {
-      for (var site, i = 0; site = sites[i]; i++) {
-        var cont = initSite(table, site, i, kind);
-        content += cont; 
-      }
     } 
-    table.innerHTML = "<table><tbody>" + content + "</tbody></table>";
+    table.innerHTML = "<table><tbody>" +
+                      content +
+                      "</tbody></table>";
   }
 
-  function initSite(table, siteName, rowNumber, kind) {
-    var content = "<tr><td class=\"left\">";
-    content += wrapDomain(siteName);
-    content += "</td>";
-    content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
-    content += rowNumber;
-    content += ",\"" + siteName + "\"," + kind + ");'>";
-    var removeText = dom.getElementById("string-remove");
-    if (removeText) {
-      if (isDefined(typeof removeText.innerText)) {
-        content += removeText.innerText;
-      } else {
-        content += removeText.textContent;
-      }
+  function renderOrigin(originName, originData) {
+    var localStorageContent =
+        renderLocalStorage(originName, originData.localStorage);
+    var locationDataContent =
+        renderLocationData(originName, originData.locationData);
+
+    // Defend against an origin having no data for any permission class.
+    if (localStorageContent == "" && locationDataContent == "") {
+      return "";
     }
-    content += "</a></td></tr>";
+    var content = "<tr><td class=\"origin-name\" colspan=\"2\">";
+    content += wrapDomain(originName);
+    content += "</td></tr>";
+    if (localStorageContent != "") {
+      content += "<tr>";
+      content += localStorageContent;
+      content += "</tr>";
+    }
+    if (locationDataContent != "") {
+      content += "<tr>";
+      content += locationDataContent;
+      content += "</tr>";
+    }
     return content;
   }
 
-  function handleRemoveClick(rowNumber, origin, kind) {
-    removeOrigin(rowNumber, origin, kind);
+  function renderLocalStorage(originName, data) {
+    if (data == null || data.permissionState == PERMISSION_NOT_SET) {
+      return "";
+    }
+    var content = "";
+    content += "<td class=\"left\">";
+    content += getString("string-local-storage");
+    content += "</td><td class=\"right\">";
+    content += renderRadioButtons(originName, "localStorage",
+                                  data.permissionState);
+    content += "</td>";
+    // Permission class-specific content goes here;
+    return content;
+  }
+
+  function renderLocationData(originName, data) {
+    if (data == null || data.permissionState == PERMISSION_NOT_SET) {
+      return "";
+    }
+    var content = "";
+    content += "<td class=\"left\">";
+    content += getString("string-location-data");
+    content += "</td><td class=\"right\">";
+    content += renderRadioButtons(originName, "locationData",
+                                  data.permissionState);
+    content += "</td>";
+    // Permission class-specific content goes here;
+    return content;
+  }
+
+  function getString(stringId) {
+    var textElement = dom.getElementById(stringId);
+    if (!isDefined(typeof textElement)) {
+      return "";
+    }
+    return dom.getTextContent(textElement);
+  }
+
+  function renderRadioButtons(originName, permissionClass, permissionState) {
+    var radioButtonName = getRadioButtonName(originName, permissionClass);
+    var content = "<div class=\"radio-buttons\">";
+    content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+    if (permissionState == PERMISSION_ALLOWED) {
+      content += "checked=\"true\"";
+    }
+    content += " onclick='handleRadioClick(\"" + originName + "\", \"" +
+               permissionClass + "\", " + PERMISSION_ALLOWED + ");'>";
+    content += getString("string-allowed");
+    content += "</input>";
+    content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+    if (permissionState == PERMISSION_DENIED) {
+      content += "checked=\"true\"";
+    }
+    content += " onclick='handleRadioClick(\"" + originName + "\", \"" +
+               permissionClass + "\", " + PERMISSION_DENIED + ");'>";
+    content += getString("string-denied");
+    content += "</input>";
+    content += "</div>";
+    return content;
+  }
+
+  function getRadioButtonName(originName, permissionClass) {
+    return originName + "-" + permissionClass + "-radio";
+  }
+
+  function handleRadioClick(originName, permissionClass, permissionState) {
+    updatePermission(originName, permissionClass, permissionState);
 
     // Return false to prevent the default link action (scrolling up to top of
     // page in this case).
     return false;
   }
 
-  function removeOrigin(row, origin, kind) {
-    // Add to the list of things to be removed from database.
-    g_dialogResult.removeSites.push(origin);
-
-    if (kind == ALLOWED) {
-      allowedSites = removeRow(row, allowedSites);
-      initList("div-allowed", allowedSites, kind);
-    } else if (kind == DENIED) {
-      deniedSites = removeRow(row, deniedSites);
-      initList("div-denied", deniedSites, kind);
+  function updatePermission(originName, permissionClass, permissionState) {
+    if (permissions[originName][permissionClass].permissionState !=
+        permissionState) {
+      permissions[originName][permissionClass].permissionState =
+          permissionState;
+      enableButton(dom.getElementById("confirm-button"));
     }
-
-    enableButton(dom.getElementById("confirm-button"));
   }
 
   function layoutSettings(contentHeight) {
@@ -405,10 +473,36 @@ m4_include(ui/common/button.js)
     }
   }
 
-  function removeRow(row, array) {
-    var head = array.slice(0, row);
-    var tail = array.slice(row + 1, array.length);
-    return new Array().concat(head, tail);
+  function calculateDiff() {
+    var permissionClasses = ["localStorage", "locationData"];
+    var result = { "modifiedOrigins": {} };
+    for (var originName in originalPermissions) {
+      var originalOriginData = originalPermissions[originName];
+      var originData = permissions[originName];
+      // Defend against a mis-match between the origins in each list.
+      if (isDefined(typeof originData)) {
+        var modifiedOriginData = new Object();
+        var modified = false;
+        for (var i = 0; i < permissionClasses.length; i++) {
+          var permissionClass = permissionClasses[i];
+          // The data may not include entries for all permission classes.
+          if (isDefined(typeof originalOriginData[permissionClass])) {
+            var originalState =
+                originalOriginData[permissionClass]["permissionState"];
+            var state = originData[permissionClass]["permissionState"];
+            if (originalState != state) {
+              modified = true;
+              modifiedOriginData[permissionClass] = new Object();
+              modifiedOriginData[permissionClass]["permissionState"] = state;
+            }
+          }
+        }
+        if (modified) {
+          result.modifiedOrigins[originName] = modifiedOriginData;
+        }
+      }
+    }
+    return result;
   }
 
 </script>

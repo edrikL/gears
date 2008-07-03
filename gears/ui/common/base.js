@@ -104,6 +104,22 @@ Array.prototype.indexOf = function(item) {
   return -1;
 };
 
+/**
+ * Makes a deep copy of an object.
+ */
+function cloneObject(original) {
+  var newObject = new Object();
+  for (i in original) {
+    if (typeof original[i] == 'object') {
+      newObject[i] = cloneObject(original[i]);
+    }
+    else {
+      newObject[i] = original[i];
+    }
+  }
+  newObject.length = original.length;
+  return newObject;
+}
 
 var browser = {};
 
