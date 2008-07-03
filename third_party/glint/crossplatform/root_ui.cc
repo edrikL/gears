@@ -252,6 +252,7 @@ MessageResultCode RootUI::HandleMessage(const Message &message) {
     case GL_MSG_MBUTTONDOWN:
     case GL_MSG_MBUTTONUP:
     case GL_MSG_MOUSEMOVE:
+      last_mouse_message_ = message;
       HandleMouseMessage(message);
       return MESSAGE_HANDLED;
 
@@ -284,8 +285,11 @@ MessageResultCode RootUI::HandleMessage(const Message &message) {
 
     case GL_MSG_IDLE:
       is_snapshot_pending_ = !snapshot_directory_.empty();
-    // fall-through
+      BroadcastMessage(root_node_, message);
+      return MESSAGE_HANDLED;
+
     case GL_MSG_MOUSELEAVE:
+      last_mouse_message_.Clear();
       BroadcastMessage(root_node_, message);
       return MESSAGE_HANDLED;
 
@@ -446,6 +450,20 @@ bool RootUI::DoLayoutLoop() {
         if (!Layout())
           return false;
       }
+    }
+
+    // If the mouse is over the root ui (the last_mouse_message_ was not
+    // cleared by GL_MSG_MOUSELEAVE event), we have to simulate a mouse move
+    // to trigger hittest and proper mouse events if the objects underneath
+    // the mouse moved and changed.
+    if (last_mouse_message_.code != GL_MSG_IDLE) {
+      // In case the last mouse message was not a "mouse move", make it "mouse
+      // move". The rest of information (pressed buttons, modifiers and
+      // location) should stay the same as in the last mouse message.
+      last_mouse_message_.code = GL_MSG_MOUSEMOVE;
+      HandleMessage(last_mouse_message_);
+      if (is_invalidated_)
+        continue;
     }
 
     // We are past layout and layout work items. So it's in a stable snapshot.

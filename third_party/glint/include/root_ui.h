@@ -229,6 +229,8 @@ class RootUI : public BaseObject {
   typedef std::map<const AnimationTimeline*,
                    AnimationTimeline*>::iterator AnimationIterator;
 
+  Message last_mouse_message_;
+
   bool is_invalidated_ ;
   bool update_posted_;
   bool is_topmost_;
