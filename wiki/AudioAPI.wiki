@@ -724,7 +724,7 @@ private:
   * The javascript now sets `'src'`. This also initiates a `load()` implicitly.
   * `'load()'` does the following:
     * If there is an existing NetworkMediaRequest object, it cleans it.
-    * It creates a new NetworkMediaRequest object by passing the 'media_data_' and the 'url' to it.
+    * It creates a new NetworkMediaRequest object by passing the `media_data_` and the 'url' to it.
     * It calls `AsyncOpen()` on this object and returns.
   * If `'play()'` is called, the main thread calls `player->play()`;
 
