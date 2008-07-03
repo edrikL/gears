@@ -476,7 +476,8 @@ This is a `RefCounted` object, as it is shared by multiple threads. Hence, all t
 
 {{{
 class MediaData : public RefCounted {
- public:
+
+ private:
   // The lock used for accessing or updating properties of this object in a thread safe way.
   Mutex media_data_lock_;
 
@@ -484,6 +485,23 @@ class MediaData : public RefCounted {
   // Either the network thread or the main thread (in case of load from blob) 
   // writes to this.
   std::vector<uint8>* media_buffer_;
+  
+ public:
+  // Method to append new data (possibly available from the stream) to the media buffer.
+  // Acquires media_data_lock_ and append the passed vector to media_buffer_
+  void AppendToMediaBuffer(std::vector<uint8>* new_data);
+
+  // Method to reset buffer data.
+  // Acquires media_data_lock_ and sets media_buffer_ to NULL
+  void ResetMediaBuffer();
+
+  // Method to get data present in the media buffer
+  // Acquires media_data_lock_.
+  // Gets data from start_pos of media_buffer of size length and appends onto 'out'
+  // as long as index into buffer is valid.
+  // If index exceeds length of media_buffer_, fills zero thereafter till 'length' values
+  // are filled in 'out'
+  void GetMediaBufferData(std::vector<uint8>* out, int start_pos, int length);
   
   // ....
   // other common properties accessible by all threads
