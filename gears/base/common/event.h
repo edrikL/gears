@@ -65,7 +65,7 @@ class Event {
  private:
   Mutex mutex_;
   bool signal_;
-  Condition condition_;
+  CondVar condition_;
   DISALLOW_EVIL_CONSTRUCTORS(Event);
 };
 
