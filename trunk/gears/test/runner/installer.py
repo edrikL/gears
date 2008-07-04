@@ -13,7 +13,7 @@ if os.name == 'nt':
   import wmi
 
 # Workaround permission, stat.I_WRITE not allowing delete on some systems
-DELETABLE = int('777', 8)
+FULL_PERMISSION = int('777', 8)
 
 class BaseInstaller:
   """ Handle extension installation and browser profile adjustments. """
@@ -29,7 +29,7 @@ class BaseInstaller:
       profile_path = os.path.join(profile_dir, profile)
       target_path = profile[:profile.find('.')]
       if os.path.exists(target_path):
-        os.chmod(target_path, DELETABLE)
+        os.chmod(target_path, FULL_PERMISSION)
         shutil.rmtree(target_path, onerror=self._handleRmError)
       profile_zip = open(profile_path, 'rb')
       self._unzip(profile_zip, target_path)
@@ -121,13 +121,21 @@ class BaseInstaller:
     if not os.path.exists(dst_folder):
       os.mkdir(dst_folder)
     if os.path.exists(dst_path):
-      os.chmod(dst_path, DELETABLE)
+      os.chmod(dst_path, FULL_PERMISSION)
       shutil.rmtree(dst_path, onerror=self._handleRmError)
     self._copyAndChmod(src, dst_path)
 
   def _copyAndChmod(self, src, targ):
     shutil.copytree(src, targ)
-    os.chmod(targ, DELETABLE)
+    self._chmod(targ, FULL_PERMISSION)
+
+  def _chmod(self, targ, permission):
+    """ Recursively set permissions to target and children. """
+    os.chmod(targ, permission)
+    if os.path.isdir(targ):
+      for file in os.listdir(targ):
+        new_targ = os.path.join(targ, file)
+        self._chmod(new_targ, permission)
   
   def _handleRmError(self, func, path, exc_info):
     """ Handle errors removing files with long names on nt systems.
