@@ -178,7 +178,7 @@ bool GearsNotification::Deserialize(Deserializer *in) {
   }
   int icon_byte_count = 0;
   in->ReadInt(&icon_byte_count);
-  if (icon_byte_count != kNotificationIconByteSize) {
+  if (icon_byte_count != 0 && icon_byte_count != kNotificationIconByteSize) {
     return false;
   }
   icon_raw_data_.resize(icon_byte_count);

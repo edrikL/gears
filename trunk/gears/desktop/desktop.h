@@ -77,6 +77,27 @@ class Desktop {
     DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
   };
 
+  class AbortInterface {
+   public:
+    // When abort is called, if IconHandlerInterface::ProcessIcon has
+    // not yet been called, it will not be called.
+    virtual bool Abort() = 0;
+  };
+
+  class IconHandlerInterface {
+   public:
+    // Gets an interface that allows aborting the icon fetch.
+    virtual void set_abort_interface(AbortInterface *abort_interface) = 0;
+
+    // The icon that is being fetched.
+    virtual IconData *mutable_icon() = 0;
+
+    // Called when the icon fetch has finished.  It will not be called if
+    // FetchIcon returns false.
+    virtual void ProcessIcon(bool success,
+                             const std::string16 &icon_error) = 0;
+  };
+
   Desktop(const SecurityOrigin &security_origin, BrowsingContext *context);
 
   // Call this after setting up the ShortcutInfo to validate it and check if
@@ -95,12 +116,11 @@ class Desktop {
   bool HandleDialogResults(ShortcutInfo *shortcut_info,
                            HtmlDialog *shortcuts_dialog);
 
-  // Fetch icon data.  If async is false, we try to fetch and process the icon
-  // synchronously.  Otherwise, we only start the fetch, and put the HttpRequest
-  // into async_request.  It is up to the caller to handle the request at that
-  // point, and store the fetched data in icon->png_data for later decoding.
+  // Fetch icon data.  If icon_handler is NULL, we try to fetch
+  // and process the icon synchronously.  Otherwise, we callback
+  // the icon_handler when the data is ready.
   bool FetchIcon(IconData *icon, std::string16 *error,
-                 bool async, scoped_refptr<HttpRequest> *async_request);
+                 IconHandlerInterface *icon_handler);
 
 #if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
   // The notification API has not been finalized for official builds.
@@ -133,7 +153,6 @@ class Desktop {
                    uint32 locations,
                    std::string16 *error);
 
-  bool DecodeIcon(IconData *icon, int expected_size, std::string16 *error);
   bool AllowCreateShortcut(const ShortcutInfo &shortcut_info);
   bool WriteControlPanelIcon(const ShortcutInfo &shortcut);
   bool GetControlPanelIconLocation(const SecurityOrigin &origin,

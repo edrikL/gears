@@ -25,6 +25,7 @@
 
 #include "gears/desktop/desktop.h"
 
+#include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
@@ -88,6 +89,37 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
 #else
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
+
+bool DecodeIcon(Desktop::IconData *icon, int expected_size,
+                std::string16 *error) {
+  // Icons are optional.  Only try to decode if one was provided.
+  if (icon->url.empty()) {
+    return true;
+  }
+
+  // Decode the png
+  if (!PngUtils::Decode(&icon->png_data.at(0), icon->png_data.size(),
+                        kDesktopIconFormat,
+                        &icon->raw_data, &icon->width, &icon->height)) {
+    *error = STRING16(L"Could not decode PNG data for icon ");
+    *error += icon->url;
+    *error += STRING16(L".");
+    return false;
+  }
+
+  if (icon->width != expected_size || icon->height != expected_size) {
+    *error = STRING16(L"Icon ");
+    *error += icon->url;
+    *error += STRING16(L" has incorrect size. Expected ");
+    *error += IntegerToString16(expected_size);
+    *error += STRING16(L"x");
+    *error += IntegerToString16(expected_size);
+    *error += STRING16(L".");
+    return false;
+  }
+
+  return true;
+}
 
 GearsDesktop::GearsDesktop()
     : ModuleImplBaseClassVirtual("GearsDesktop") {
@@ -465,10 +497,10 @@ bool Desktop::SetShortcut(Desktop::ShortcutInfo *shortcut,
     return true;
   }
 
-  if (!FetchIcon(&shortcut->icon16x16, error, false, NULL) ||
-      !FetchIcon(&shortcut->icon32x32, error, false, NULL) ||
-      !FetchIcon(&shortcut->icon48x48, error, false, NULL) ||
-      !FetchIcon(&shortcut->icon128x128, error, false, NULL)) {
+  if (!FetchIcon(&shortcut->icon16x16, error, NULL) ||
+      !FetchIcon(&shortcut->icon32x32, error, NULL) ||
+      !FetchIcon(&shortcut->icon48x48, error, NULL) ||
+      !FetchIcon(&shortcut->icon128x128, error, NULL)) {
     return false;
   }
 
@@ -582,15 +614,111 @@ bool Desktop::WriteControlPanelIcon(
   return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
+bool GetIconFromRequest(HttpRequest *request,
+                        Desktop::IconData *icon,
+                        std::string16 *error) {
+  assert(request && icon && error);
+  int status = 0;
+  if (!request->GetStatus(&status) ||
+      status != HTTPResponse::RC_REQUEST_OK) {
+    *error = STRING16(L"Could not load icon ");
+    *error += icon->url.c_str();
+    *error += STRING16(L".");
+    return false;
+  }
+
+
+  // Extract the data.
+  if (!request->GetResponseBody(&icon->png_data)) {
+    *error = STRING16(L"Invalid data for icon ");
+    *error += icon->url;
+    *error += STRING16(L".");
+    return false;
+  }
+  return true;
+}
+
+class IconRequestListener : public HttpRequest::HttpListener,
+                            public Desktop::AbortInterface {
+ public:
+  IconRequestListener(HttpRequest *request,
+                      Desktop::IconHandlerInterface *icon_handler)
+      : request_(request),
+        icon_handler_(icon_handler),
+        process_when_done_(false),
+        done_(false),
+        success_(false) {
+    assert(icon_handler_);
+    icon_handler->set_abort_interface(this);
+    request_->SetListener(this, false);
+  }
+
+  void ProcessWhenDone() {
+    process_when_done_ = true;
+    if (done_) {
+      FinishProcess();
+    }
+  }
+
+  virtual void ReadyStateChanged(HttpRequest *source) {
+    HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
+    source->GetReadyState(&state);
+    if (state != HttpRequest::COMPLETE) {
+      return;
+    }
+
+    std::string16 error;
+    if (GetIconFromRequest(source, icon_handler_->mutable_icon(), &error_)) {
+      success_ = true;
+    }
+    done_ = true;
+    if (process_when_done_) {
+      FinishProcess();
+    }
+  }
+
+  virtual bool Abort() {
+    process_when_done_ = false;
+    request_->SetListener(NULL, false);
+    bool success = request_->Abort();
+    delete this;
+    return success;
+  }
+
+
+ private:
+  void FinishProcess() {
+    icon_handler_->ProcessIcon(success_, error_);
+    delete this;
+  }
+
+  std::string16 error_;
+  scoped_refptr<HttpRequest> request_;
+  Desktop::IconHandlerInterface *icon_handler_;
+  bool process_when_done_;
+  bool done_;
+  bool success_;
+  DISALLOW_EVIL_CONSTRUCTORS(IconRequestListener);
+};
+
 bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
-                        bool async, scoped_refptr<HttpRequest> *async_request) {
+                        Desktop::IconHandlerInterface *icon_handler) {
+  assert(icon && error);
+  assert(!icon_handler || icon == icon_handler->mutable_icon());
+
   // Icons are optional. Only try to fetch if one was provided.
   if (icon->url.empty()) {
+    if (icon_handler) {
+      icon_handler->ProcessIcon(false, *error);
+    }
     return true;
   }
 
   if (!icon->png_data.empty()) {
     // Icons can come pre-fetched.  In that case, no need to fetch again.
+    if (icon_handler) {
+      icon_handler->ProcessIcon(false, *error);
+    }
   } else if (IsDataUrl(icon->url.c_str())) {
     // data URL
     std::string16 mime_type, charset;
@@ -600,36 +728,40 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       *error += STRING16(L".");
       return false;
     }
+    if (icon_handler) {
+      icon_handler->ProcessIcon(false, *error);
+    }
   } else {
 #ifdef BROWSER_WEBKIT
-  // Workaround for bug in OS X 10.4, see definition of GetURLData() for
-  // details.
-  // Get user agent.
-  std::string16 user_agent;
-  if (!BrowserUtils::GetUserAgentString(&user_agent)) {
-    return false;
-  }
+    // Workaround for bug in OS X 10.4, see definition of GetURLData() for
+    // details.
+    // Get user agent.
+    std::string16 user_agent;
+    if (!BrowserUtils::GetUserAgentString(&user_agent)) {
+      return false;
+    }
 
-  if (!GetURLDataAsVector(icon->url, user_agent, &(icon->png_data))) {
-    *error = STRING16(L"Could not load icon ");
-    *error += icon->url.c_str();
-    *error += STRING16(L".");
-    return false;
-  }
+    if (!GetURLDataAsVector(icon->url, user_agent, &(icon->png_data))) {
+      *error = STRING16(L"Could not load icon ");
+      *error += icon->url.c_str();
+      *error += STRING16(L".");
+      return false;
+    }
 #else
     // Fetch the png data
     scoped_refptr<HttpRequest> request;
     HttpRequest::Create(&request);
-
+    bool async = icon_handler != NULL;
+    scoped_ptr<IconRequestListener> listener;
+    if (async) {
+      listener.reset(new IconRequestListener(request.get(), icon_handler));
+    }
     request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
-    int status = 0;
     if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(),
                        async, browsing_context_.get()) ||
-        !request->Send(NULL) ||
-        (!async && (!request->GetStatus(&status) ||
-                    status != HTTPResponse::RC_REQUEST_OK))) {
+        !request->Send(NULL)) {
       *error = STRING16(L"Could not load icon ");
       *error += icon->url.c_str();
       *error += STRING16(L".");
@@ -637,50 +769,16 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
     }
 
     if (async) {
-      assert(async_request);
-      *async_request = request;
+      listener->ProcessWhenDone();
+      listener.release();
       return true;
     }
 
     // Extract the data.
-    if (!request->GetResponseBody(&icon->png_data)) {
-      *error = STRING16(L"Invalid data for icon ");
-      *error += icon->url;
-      *error += STRING16(L".");
+    if (!GetIconFromRequest(request.get(), icon, error)) {
       return false;
     }
 #endif  // BROWSER_WEBKIT
-  }
-
-  return true;
-}
-
-bool Desktop::DecodeIcon(Desktop::IconData *icon, int expected_size,
-                         std::string16 *error) {
-  // Icons are optional.  Only try to decode if one was provided.
-  if (icon->url.empty()) {
-    return true;
-  }
-
-  // Decode the png
-  if (!PngUtils::Decode(&icon->png_data.at(0), icon->png_data.size(),
-                        kDesktopIconFormat,
-                        &icon->raw_data, &icon->width, &icon->height)) {
-    *error = STRING16(L"Could not decode PNG data for icon ");
-    *error += icon->url;
-    *error += STRING16(L".");
-    return false;
-  }
-
-  if (icon->width != expected_size || icon->height != expected_size) {
-    *error = STRING16(L"Icon ");
-    *error += icon->url;
-    *error += STRING16(L" has incorrect size. Expected ");
-    *error += IntegerToString16(expected_size);
-    *error += STRING16(L"x");
-    *error += IntegerToString16(expected_size);
-    *error += STRING16(L".");
-    return false;
   }
 
   return true;
@@ -772,39 +870,93 @@ uint32 FindNotifierProcess(std::string16 *error) {
   return process_id;
 }
 
+class NotificationIconHandler : public Desktop::IconHandlerInterface {
+ public:
+  explicit NotificationIconHandler(GearsNotification *released_notification)
+      : notification_(released_notification) {
+    icon_.url = notification_->icon_url();
+  }
+
+  virtual void set_abort_interface(Desktop::AbortInterface *) {
+    // Not used for now.
+  }
+
+  virtual Desktop::IconData *mutable_icon() {
+    return &icon_;
+  }
+
+  virtual void ProcessIcon(bool success,
+                           const std::string16 &icon_error) {
+    scoped_ptr<NotificationIconHandler> delete_me(this);
+    if (!icon_error.empty()) {
+      assert(!success);
+      LogError(STRING16(L"fetch icon"), icon_error.c_str());
+    }
+
+    std::string16 error;
+    if (success) {
+      if (DecodeIcon(&icon_, kNotificationIconDimensions, &error)) {
+        notification_->set_icon_raw_data(icon_.raw_data);
+      } else {
+        LogError(STRING16(L"decode icon"), error.c_str());
+        error.clear();
+      }
+    }
+
+    // Try to find the process of Desktop Notifier.
+    uint32 process_id = FindNotifierProcess(&error);
+    if (!process_id) {
+      LogError(STRING16(L"find process"), error.c_str());
+      return;
+    }
+
+    // TODO(levin): Since this is done async, a delete or an update
+    // message may come in after this update but get processed out of order,
+    // which is bad.  Need to fix this.
+
+    // Send the IPC message to the process of Desktop Notifier.
+    IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
+    assert(ipc_message_queue);
+    if (ipc_message_queue) {
+      // IpcMessageQueue is responsible for deleting the message data.
+      ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
+                              kDesktop_AddNotification,
+                              notification_.release());
+    }
+  }
+
+
+ private:
+  void LogError(const char16 *type, const char16 *error) {
+    std::string origin;
+    String16ToUTF8(notification_->security_origin().url().c_str(), &origin);
+    std::string id;
+    String16ToUTF8(notification_->id().c_str(), &id);
+    std::string type8;
+    String16ToUTF8(type, &type8);
+    std::string error8;
+    String16ToUTF8(error, &error8);
+    LOG(("Notification (origin=%s, id=%s) %s error: %s",
+         origin.c_str(), id.c_str(), type8.c_str(), error8.c_str()));
+  }
+  scoped_ptr<GearsNotification> notification_;
+  Desktop::IconData icon_;
+  DISALLOW_EVIL_CONSTRUCTORS(NotificationIconHandler);
+};
+
 bool Desktop::ValidateAndShowNotification(
     GearsNotification *released_notification) {
   assert(released_notification);
-  scoped_ptr<GearsNotification> notification(released_notification);
-  if (!ValidateNotification(notification.get())) {
+  scoped_ptr<NotificationIconHandler> icon_handler(
+      new NotificationIconHandler(released_notification));
+  if (!ValidateNotification(released_notification)) {
     return false;
   }
 
-  // TODO(levin): Make this async.
-  IconData icon;
-  icon.url = notification->icon_url();
-  if (!FetchIcon(&icon, &error_, false, NULL)) {
+  if (!FetchIcon(icon_handler->mutable_icon(),
+                 &error_,
+                 icon_handler.release())) {
     return false;
-  }
-  if (!DecodeIcon(&icon, kNotificationIconDimensions, &error_)) {
-    return false;
-  }
-  notification->set_icon_raw_data(icon.raw_data);
-
-  // Try to find the process of Desktop Notifier.
-  uint32 process_id = FindNotifierProcess(&error_);
-  if (!process_id) {
-    return false;
-  }
-
-  // Send the IPC message to the process of Desktop Notifier.
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
-  assert(ipc_message_queue);
-  if (ipc_message_queue) {
-    // IpcMessageQueue is responsible for deleting the message data.
-    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                            kDesktop_AddNotification,
-                            notification.release());
   }
   return true;
 }
