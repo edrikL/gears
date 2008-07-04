@@ -25,23 +25,47 @@
 
 #include "gears/base/common/event.h"
 
-Event::Event() : signal_(false), condition_(&signal_) {
+Event::Event()
+    : mutex_(),
+      signal_(false),
+      condition_() {
 }
 
 void Event::Signal() {
   MutexLock lock(&mutex_);
-  signal_ = true;
+  if (!signal_) {
+    // Not already signalled. Signal the condition variable.
+    signal_ = true;
+    condition_.SignalAll();
+  }
 }
 
 void Event::Wait() {
   MutexLock lock(&mutex_);
-  mutex_.Await(condition_);
+  if (!signal_) {
+    // Not signalled. Wait for condition variable to be signalled.
+    condition_.Wait(&mutex_);
+    assert(signal_);
+  }
+  // Reset signal.
   signal_ = false;
 }
 
 bool Event::WaitWithTimeout(int timeout_milliseconds) {
   MutexLock lock(&mutex_);
-  bool result = mutex_.AwaitWithTimeout(condition_, timeout_milliseconds);
-  signal_= false;
-  return result;
+  if (!signal_) {
+    // Not signalled. Wait for the condition variable, with a timeout.
+    bool wait_timed_out = condition_.WaitWithTimeout(&mutex_,
+                                                     timeout_milliseconds);
+    if (wait_timed_out) {
+      // Timed out.
+      return false;
+    } else {
+      // Condition variable signalled.
+      assert(signal_);
+    }
+  }
+  // Reset signal.
+  signal_ = false;
+  return true;
 }
