@@ -80,7 +80,10 @@ class Win32WifiDataProvider
   Mutex data_mutex_;
   // Events signalled to shut down the thread that polls for wifi data.
   Event stop_event_;
-  bool is_polling_thread_running_;
+
+  // Whether we've successfully completed a scan for WiFi data (or the polling
+  // thread has terminated early).
+  bool is_first_scan_complete_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Win32WifiDataProvider);
 };

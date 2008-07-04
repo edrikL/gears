@@ -56,9 +56,9 @@ WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
 }
 
 
-WinceWifiDataProvider::WinceWifiDataProvider() {
+WinceWifiDataProvider::WinceWifiDataProvider()
+    : is_first_scan_complete_(false) {
   // Start the polling thread.
-  is_polling_thread_running_ = true;
   Start();
 }
 
@@ -71,10 +71,9 @@ bool WinceWifiDataProvider::GetData(WifiData *data) {
   assert(data);
   MutexLock lock(&data_mutex_);
   *data = wifi_data_;
-  // If the polling thread is running, we can never have all data, because
-  // there could be any number of access points. If the polling thread has
-  // terminated for any reason, we have all the data we'll ever get.
-  return !is_polling_thread_running_;
+  // If we've successfully completed a scan, indicate that we have all of the
+  // data we can get.
+  return is_first_scan_complete_;
 }
 
 // Thread implementation
@@ -88,7 +87,7 @@ void WinceWifiDataProvider::Run() {
                                   FILE_SHARE_READ, NULL, OPEN_EXISTING,
                                   FILE_ATTRIBUTE_READONLY, NULL);
   if (INVALID_HANDLE_VALUE == ndis_handle) {
-    is_polling_thread_running_ = false;
+    is_first_scan_complete_ = true;
     return;
   }
 
@@ -100,6 +99,7 @@ void WinceWifiDataProvider::Run() {
       data_mutex_.Lock();
       if (update_available = !wifi_data_.Matches(new_data)) {
         wifi_data_ = new_data;
+        is_first_scan_complete_ = true;
       }
       data_mutex_.Unlock();
       if (update_available) {
@@ -108,7 +108,6 @@ void WinceWifiDataProvider::Run() {
     }
   } while (!stop_event_.WaitWithTimeout(kPollingInterval));
 
-  is_polling_thread_running_ = false;
   CloseHandle(ndis_handle);
 }
 

@@ -76,9 +76,9 @@ WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
 }
 
 
-Win32WifiDataProvider::Win32WifiDataProvider() {
+Win32WifiDataProvider::Win32WifiDataProvider()
+    : is_first_scan_complete_(false) {
   // Start the polling thread.
-  is_polling_thread_running_ = true;
   Start();
 }
 
@@ -91,10 +91,9 @@ bool Win32WifiDataProvider::GetData(WifiData *data) {
   assert(data);
   MutexLock lock(&data_mutex_);
   *data = wifi_data_;
-  // If the polling thread is running, we can never have all data, because
-  // there could be any number of access points. If the polling thread has
-  // terminated for any reason, we have all the data we'll ever get.
-  return !is_polling_thread_running_;
+  // If we've successfully completed a scan, indicate that we have all of the
+  // data we can get.
+  return is_first_scan_complete_;
 }
 
 // Thread implementation
@@ -115,7 +114,7 @@ void Win32WifiDataProvider::Run() {
       get_access_point_data_function =
           &Win32WifiDataProvider::GetAccessPointDataWZC;
     } else {
-      is_polling_thread_running_ = false;
+      is_first_scan_complete_ = true;
       return;
     }
   }
@@ -128,6 +127,7 @@ void Win32WifiDataProvider::Run() {
       data_mutex_.Lock();
       if (update_available = !wifi_data_.Matches(new_data)) {
         wifi_data_ = new_data;
+        is_first_scan_complete_ = true;
       }
       data_mutex_.Unlock();
       if (update_available) {
@@ -136,7 +136,6 @@ void Win32WifiDataProvider::Run() {
     }
   } while (!stop_event_.WaitWithTimeout(kPollingInterval));
 
-  is_polling_thread_running_ = false;
   FreeLibrary(library);
 }
 
