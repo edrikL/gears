@@ -61,7 +61,8 @@ class OsxWifiDataProvider
   // Event signalled to shut down the thread that polls for wifi data.
   Event stop_event_;
 
-  // Whether we've successfully completed a scan for WiFi data.
+  // Whether we've successfully completed a scan for WiFi data (or the polling
+  // thread has terminated early).
   bool is_first_scan_complete_;
 
   DISALLOW_EVIL_CONSTRUCTORS(OsxWifiDataProvider);

@@ -34,7 +34,7 @@
 
 // The maximum period of time we'll wait for a complete set of device data
 // before sending the request.
-static const int kDataCompleteWaitPeriod = 1000 * 5;  // 5 seconds
+static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
 // The minimum period between network requests.
 static const int kMinimumRequestInterval = 1000 * 5;  // 5 seconds
 

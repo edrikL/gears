@@ -77,6 +77,7 @@ void OsxWifiDataProvider::Run() {
       "/System/Library/PrivateFrameworks/Apple80211.framework/Apple80211",
       RTLD_LAZY);
   if (!apple_80211_library) {
+    is_first_scan_complete_ = true;
     return;
   }
 
@@ -86,13 +87,12 @@ void OsxWifiDataProvider::Run() {
       dlsym(apple_80211_library, "WirelessScanSplit"));
   WirelessDetach_function_ = reinterpret_cast<WirelessDetachFunction>(
       dlsym(apple_80211_library, "WirelessDetach"));
-  if (!WirelessAttach_function_ ||
-      !WirelessScanSplit_function_ ||
-      !WirelessDetach_function_) {
-    return;
-  }
+  assert(WirelessAttach_function_ &&
+         WirelessScanSplit_function_ &&
+         WirelessDetach_function_);
     
   if ((*WirelessAttach_function_)(&wifi_context_, 0) != noErr) {
+    is_first_scan_complete_ = true;
     return;
   }
 
