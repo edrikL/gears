@@ -50,6 +50,7 @@ static const char16 *kAddressLanguage = STRING16(L"addressLanguage");
 static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
+static const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
 
 // Data structure for use with ThreadMessageQueue.
 struct LocationAvailableMessageData : public MessageData {
@@ -87,14 +88,18 @@ static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
                                            const std::string16 &value,
                                            JsObject *object);
 
-// Determines which of two position fixes is better. This is based on the
-// accuracy and timestamp of each fix, and the current time.
-static bool IsBetterFix(const Position &old_position,
-                        const Position &new_position);
+// Returns true if there has been movement from the old position to the new
+// position.
+static bool IsNewPositionMovement(const Position &old_position,
+                                  const Position &new_position);
 
-// Returns true if the new position differs significantly from the old position.
-static bool PositionHasChanged(const Position &old_position,
-                               const Position &new_position);
+// Returns true if the new position is more accurate than the old position.
+static bool IsNewPositionMoreAccurate(const Position &old_position,
+                                      const Position &new_position);
+
+// Returns true if the old position is out of date.
+static bool IsNewPositionMoreTimely(const Position &old_position,
+                                    const Position &new_position);
 
 DECLARE_GEARS_WRAPPER(GearsGeolocation);
 
@@ -327,18 +332,18 @@ bool GearsGeolocation::CancelWatch(const int &watch_id) {
   return true;
 }
 
-void GearsGeolocation::HandleRepeatingRequestUpdate(
-    LocationProviderBase *provider,
-    FixRequestInfo *fix_info) {
+void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info) {
   assert(fix_info->repeats);
-  // If the postion has changed significantly, and the minimum time since our
-  // last callback to JavaScript has elapsed, we make a callback.
-  if (PositionHasChanged(fix_info->last_position, last_position_)) {
+  // If the postion has changed significantly or the accuracy has improved, and
+  // the minimum time since our last callback to JavaScript has elapsed, we make
+  // a callback.
+  if (IsNewPositionMovement(fix_info->last_position, last_position_) ||
+      IsNewPositionMoreAccurate(fix_info->last_position, last_position_)) {
     // The position has changed significantly.
     int64 elapsed_time =
         GetCurrentTimeMillis() - fix_info->last_callback_time;
     if (elapsed_time > kMinimumCallbackInterval) {
-      if (!MakeCallback(fix_info)) {
+      if (!MakeCallback(fix_info, last_position_)) {
         LOG(("GearsGeolocation::HandleRepeatingRequestUpdate() : JavaScript "
              "callback failed.\n"));
         assert(false);
@@ -352,19 +357,19 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(
 
 void GearsGeolocation::HandleSingleRequestUpdate(
     LocationProviderBase *provider,
-    FixRequestInfo *fix_info) {
+    FixRequestInfo *fix_info,
+    const Position &position) {
   assert(!fix_info->repeats);
+  assert(fix_info->last_callback_time == 0);
   // Remove this provider from the this fix so that future to callbacks to this
   // Geolocation object don't trigger handling for this fix.
   RemoveProvider(provider, fix_info);
   // We callback in two cases ...
-  // - This response gives a good position
+  // - This response gives a good position and we haven't yet called back
   // - The fix has no remaining providers, so we'll never get a valid position
   // We then cancel any pending requests and delete the fix request.
-  if (last_position_.IsGoodFix() || fix_info->providers.empty()) {
-    // There should not have been a previous callback.
-    assert(fix_info->last_callback_time == 0);
-    if (!MakeCallback(fix_info)) {
+  if (position.IsGoodFix() || fix_info->providers.empty()) {
+    if (!MakeCallback(fix_info, position)) {
       LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
            "callback failed.\n"));
       assert(false);
@@ -375,22 +380,23 @@ void GearsGeolocation::HandleSingleRequestUpdate(
 
 void GearsGeolocation::LocationUpdateAvailableImpl(
     LocationProviderBase *provider) {
-  // Update the last known position, which is the best fix we currently have.
-  // this is the only position value we ever return to JavaScript.
-  //
-  // We share the current position between all fix requests. This means that a
-  // given fix request may produce a callback with a position which was obtained
-  // by a different fix request, which may have had different options specified.
+  // Update the last known position, which is the best position estimate we
+  // currently have. This is shared between all repeating fix requests.
+  bool new_last_position = false;
   Position position;
   provider->GetPosition(&position);
   last_position_mutex_.Lock();
-  if (IsBetterFix(last_position_, position)) {
+  if (IsNewPositionMovement(last_position_, position) ||
+      IsNewPositionMoreAccurate(last_position_, position) ||
+      IsNewPositionMoreTimely(last_position_, position)) {
     last_position_ = position;
+    new_last_position = true;
   }
   last_position_mutex_.Unlock();
-  // Even if this fix isn't an improvement, we may still make a callback.
-  //
-  // Iterate over all fix requests of which this provider is a part.
+
+  // Iterate over all non-repeating fix requests of which this provider is a
+  // part. We call back to Javascript if this is the first good position for
+  // that request.
   MutexLock lock(&providers_mutex_);
   ProviderMap::iterator provider_iter = providers_.find(provider);
   // We may not have an entry in the map for this provider. This situation can
@@ -404,19 +410,31 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
          request_iter != fix_requests.end();
          ++request_iter) {
       FixRequestInfo *fix_info = *request_iter;
-      if (fix_info->repeats) {
-        HandleRepeatingRequestUpdate(provider, fix_info);
-      } else {
-        HandleSingleRequestUpdate(provider, fix_info);
+      // TODO(steveblock): Consider storing only non-repeating fix requests in
+      // the map.
+      if (!fix_info->repeats) {
+        HandleSingleRequestUpdate(provider, fix_info, position);
       }
+    }
+  }
+
+  // Iterate over all repeating fix requests. We call back if the new position
+  // represents movement from the last position we called back with.
+  if (new_last_position) {
+    for (FixRequestInfoMap::const_iterator iter = watches_.begin();
+         iter != watches_.end();
+         iter++) {
+      FixRequestInfo *fix_info = const_cast<FixRequestInfo*>(iter->second);
+      HandleRepeatingRequestUpdate(fix_info);
     }
   }
 }
 
-bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
+bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info,
+                                    const Position &position) {
   scoped_ptr<JsObject> callback_param(GetJsRunner()->NewObject());
   assert(callback_param.get());
-  if (!ConvertPositionToJavaScriptObject(last_position_,
+  if (!ConvertPositionToJavaScriptObject(position,
                                          fix_info->request_address,
                                          GetJsRunner(),
                                          callback_param.get())) {
@@ -429,7 +447,7 @@ bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info) {
   // InvokeCallback returns false if the callback enounters an error.
   GetJsRunner()->InvokeCallback(fix_info->callback.get(),
                                 ARRAYSIZE(argv), argv, NULL);
-  fix_info->last_position = last_position_;
+  fix_info->last_position = position;
   fix_info->last_callback_time = GetCurrentTimeMillis();
   return true;
 }
@@ -769,57 +787,30 @@ static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
   return true;
 }
 
-// Helper function for IsBetterFix and PositionHasChanged. Checks whether the
-// old or new position is bad or unintialised, in which case the decision of
-// which to use is easy. Return value is true if this is the case detected, in
-// which cases result indicates whether the new position is the better fix.
+// Helper function for IsMovement, IsMoreAccurate and IsNewPositionMoreTimely.
+// Checks whether the old or new position is bad, in which case the decision of
+// which to use is easy. If this case is detected, the return value is true and
+// result indicates whether the new position should be used.
 static bool CheckForBadPosition(const Position &old_position,
                                 const Position &new_position,
                                 bool *result) {
-  assert(new_position.IsInitialized());
   assert(result);
-  // If the old position is unitialized or bad, always return true. A newer
-  // bad fix is better because we want the updated error message.
-  if (!old_position.IsInitialized() || !old_position.IsGoodFix()) {
-    *result = true;
-    return true;
-  }
-  // The old position is good, so if the new fix is bad, return false.
   if (!new_position.IsGoodFix()) {
+    // New is bad.
     *result = false;
+    return true;
+  } if (!old_position.IsGoodFix()) {
+    // Old is bad, new is good.
+    *result = true;
     return true;
   }
   return false;
 }
 
-// TODO(steveblock): Do something more intelligent here.
-static bool IsBetterFix(const Position &old_position,
-                        const Position &new_position) {
-  bool result;
-  if (CheckForBadPosition(old_position, new_position, &result)) {
-    return result;
-  }
-  // Both are valid.
-  int64 current_time = GetCurrentTimeMillis();
-  int64 old_position_age = current_time - old_position.timestamp;
-  int64 new_position_age = current_time - new_position.timestamp;
-  const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
-  if (old_position_age > kMaximumPositionFixAge &&
-      new_position_age > kMaximumPositionFixAge) {
-    // Both positions are out of date, choose the most recent.
-    return new_position_age < old_position_age;
-  } else if (old_position_age > kMaximumPositionFixAge) {
-    return true;
-  } else if (new_position_age > kMaximumPositionFixAge) {
-    return false;
-  }
-  // Both are in date, choose the most accurate.
-  return new_position.horizontal_accuracy < old_position.horizontal_accuracy;
-}
-
-// TODO(steveblock): Do something more intelligent here.
-static bool PositionHasChanged(const Position &old_position,
-                               const Position &new_position) {
+// Returns true if there has been movement from the old position to the new
+// position.
+static bool IsNewPositionMovement(const Position &old_position,
+                                  const Position &new_position) {
   bool result;
   if (CheckForBadPosition(old_position, new_position, &result)) {
     return result;
@@ -831,11 +822,30 @@ static bool PositionHasChanged(const Position &old_position,
   // Convert to metres. 1 second of arc of latitude (or longitude at the
   // equator) is 1 nautical mile or 1852m.
   delta *= 60 * 1852;
-  // The threshold is when the distance between the two positions exceeds 10% of
-  // the lesser of the two accuracies.
-  double min_accuracy = std::min(old_position.horizontal_accuracy,
+  // The threshold is when the distance between the two positions exceeds the
+  // worse (larger value) of the two accuracies.
+  double max_accuracy = std::max(old_position.horizontal_accuracy,
                                  new_position.horizontal_accuracy);
-  return delta / min_accuracy > 0.1;
+  return delta > max_accuracy;
+}
+
+static bool IsNewPositionMoreAccurate(const Position &old_position,
+                                      const Position &new_position) {
+  bool result;
+  if (CheckForBadPosition(old_position, new_position, &result)) {
+    return result;
+  }
+  return new_position.horizontal_accuracy < old_position.horizontal_accuracy;
+}
+
+static bool IsNewPositionMoreTimely(const Position &old_position,
+                                    const Position &new_position) {
+  bool result;
+  if (CheckForBadPosition(old_position, new_position, &result)) {
+    return result;
+  }
+  return GetCurrentTimeMillis() - old_position.timestamp >
+      kMaximumPositionFixAge;
 }
 
 static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
