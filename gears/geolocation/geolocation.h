@@ -157,7 +157,8 @@ class GearsGeolocation
     bool repeats;
     // Linked_ptr so we can use FixRequestInfo in STL containers.
     linked_ptr<JsRootedCallback> callback;
-    // The last position sent back to JavaScript.
+    // The last position sent back to JavaScript. Used by repeating requests
+    // only.
     Position last_position;
     // The time at which we last called back to JavaScript, in ms since the
     // epoch.
@@ -182,17 +183,17 @@ class GearsGeolocation
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // repeating fix request. 
-  void HandleRepeatingRequestUpdate(LocationProviderBase *provider,
-                                    FixRequestInfo *fix_info);
+  void HandleRepeatingRequestUpdate(FixRequestInfo *fix_info);
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // non-repeating fix request.
   void HandleSingleRequestUpdate(LocationProviderBase *provider,
-                                 FixRequestInfo *fix_info);
+                                 FixRequestInfo *fix_info,
+                                 const Position &position);
 
   // Internal method to make the callback to JavaScript once we have a postion
   // fix.
-  bool MakeCallback(FixRequestInfo *fix_info);
+  bool MakeCallback(FixRequestInfo *fix_info, const Position &position);
 
   // Parses the JavaScript arguments passed to the GetCurrentPosition and
   // WatchPosition methods.
@@ -242,7 +243,8 @@ class GearsGeolocation
   FixRequestInfoMap watches_;
   int next_watch_id_;
 
-  // The current best estimate for our position.
+  // The current best estimate for our position. This is the position returned
+  // by GetLastPosition and is shared by all watches.
   Position last_position_;
   Mutex last_position_mutex_;
 
