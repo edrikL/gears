@@ -167,9 +167,6 @@ class PermissionsDB {
   // Initializes the database. Must be called before other methods.
   bool Init();
 
-  // Creates or upgrades the database to kCurrentVersion.
-  bool CreateOrUpgradeDatabase();
-
   // Creates the database's schema.
   bool CreateDatabase();
 
