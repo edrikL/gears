@@ -688,6 +688,8 @@ class IconRequestListener : public HttpRequest::HttpListener,
 
  private:
   void FinishProcess() {
+    // Calling Abort after this point would be harmful.
+    icon_handler_->set_abort_interface(NULL);
     icon_handler_->ProcessIcon(success_, error_);
     delete this;
   }
