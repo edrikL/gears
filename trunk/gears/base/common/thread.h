@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_GEOLOCATION_THREAD_H__
-#define GEARS_GEOLOCATION_THREAD_H__
+#ifndef GEARS_BASE_COMMON_THREAD_H__
+#define GEARS_BASE_COMMON_THREAD_H__
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/message_queue.h"
@@ -75,4 +75,4 @@ class Thread {
   void ThreadMain();
 };
 
-#endif  // GEARS_GEOLOCATION_THREAD_H__
+#endif  // GEARS_BASE_COMMON_THREAD_H__

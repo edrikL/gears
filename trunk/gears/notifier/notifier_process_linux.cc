@@ -28,13 +28,16 @@
 #else
 #if defined(LINUX) && !defined(OS_MACOSX)
 
-#include <string>
+#include "gears/notifier/notifier_process.h"
+
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
+#include <string>
+
 #include "gears/base/common/common.h"
+#include "gears/base/common/event.h"
 #include "gears/base/common/string16.h"
-#include "gears/notifier/notifier_process.h"
 
 namespace notifier {
 
@@ -50,7 +53,7 @@ std::string GetSingleInstanceLockFilePath() {
 
 }
 
-bool NotifierProcess::StartProcess() {
+bool NotifierProcess::StartProcess(Event *stop_event) {
   // TODO (jianli): to be implemented.
   return false;
 }

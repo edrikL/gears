@@ -23,14 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_GEOLOCATION_THREAD_POSIX_H__
-#define GEARS_GEOLOCATION_THREAD_POSIX_H__
+#ifndef GEARS_BASE_COMMON_THREAD_POSIX_H__
+#define GEARS_BASE_COMMON_THREAD_POSIX_H__
 
 // POSIX systems.
 #if defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
 
 #include <pthread.h>
-#include "gears/geolocation/thread.h"
+#include "gears/base/common/thread.h"
 
 // POSIX implementation of ThreadInternal.
 class Thread::ThreadInternal {
@@ -57,4 +57,4 @@ class Thread::ThreadInternal {
 
 #endif // defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
 
-#endif  // GEARS_GEOLOCATION_THREAD_POSIX_H__
+#endif  // GEARS_BASE_COMMON_THREAD_POSIX_H__

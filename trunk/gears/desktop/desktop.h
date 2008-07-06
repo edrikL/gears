@@ -134,6 +134,8 @@ class Desktop {
   // Returns false on failure, with an optional error message in error().
   // NOTE: It takes ownership of released_notification.
   bool ValidateAndShowNotification(GearsNotification *released_notification);
+
+  bool ValidateAndRemoveNotification(GearsNotification *released_notification);
 #endif  // defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 
   // Error message getters.

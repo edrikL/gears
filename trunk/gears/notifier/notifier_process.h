@@ -30,10 +30,12 @@
   // The notification API has not been finalized for official builds.
 #else
 
+class Event;
+
 class NotifierProcess {
  public:
   // Starts the Desktop Notifier process.
-  static bool StartProcess();
+  static bool StartProcess(Event *stop_event);
 
   // Registers the Desktop Notifier process.
   static bool RegisterProcess();
