@@ -34,9 +34,9 @@
 
 #include "gears/base/android/java_jni.h"
 #include "gears/base/common/event.h"
+#include "gears/base/common/thread.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/module.h"
-#include "gears/geolocation/thread.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/npapi/nphostapi.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"

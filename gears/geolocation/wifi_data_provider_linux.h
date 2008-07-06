@@ -29,8 +29,8 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/thread.h"
 #include "gears/geolocation/device_data_provider.h"
-#include "gears/geolocation/thread.h"
 
 class LinuxWifiDataProvider
     : public WifiDataProviderImplBase,

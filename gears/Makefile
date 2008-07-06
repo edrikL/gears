@@ -1297,6 +1297,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notifier_proxy.cc \
 		notification.cc \
 		$(NULL)
 
@@ -1321,6 +1322,7 @@ NOTIFIER_CORE	+= \
 		$(ICU_CPPSRCS) \
 		$(URL_PARSING_CPPSRCS) \
 		balloons.cc \
+		event.cc \
 		http_constants.cc \
 		http_utils.cc \
 		ipc_message_queue_linux.cc \

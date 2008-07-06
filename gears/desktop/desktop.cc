@@ -45,7 +45,7 @@
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
-#include "gears/notifier/notifier_process.h"
+#include "gears/notifier/notifier_proxy.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -89,6 +89,12 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
 #else
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
+
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+static NotifierProxy g_notifier_proxy;
+#endif  // OFFICIAL_BUILD
 
 bool DecodeIcon(Desktop::IconData *icon, int expected_size,
                 std::string16 *error) {
@@ -854,24 +860,6 @@ bool Desktop::ValidateNotification(GearsNotification *notification) {
   return true;
 }
 
-uint32 FindNotifierProcess(std::string16 *error) {
-  assert(error);
-  uint32 process_id = NotifierProcess::FindProcess();
-  if (!process_id) {
-    // TODO (jianli): Add the async start support.
-    if (!NotifierProcess::StartProcess()) {
-      *error = STRING16(L"Failed to start notifier process.");
-      return 0;
-    }
-    process_id = NotifierProcess::FindProcess();
-    if (!process_id) {
-      *error = STRING16(L"Failed to find notifier process.");
-      return 0;
-    }
-  }
-  return process_id;
-}
-
 class NotificationIconHandler : public Desktop::IconHandlerInterface {
  public:
   explicit NotificationIconHandler(GearsNotification *released_notification)
@@ -905,28 +893,12 @@ class NotificationIconHandler : public Desktop::IconHandlerInterface {
       }
     }
 
-    // Try to find the process of Desktop Notifier.
-    uint32 process_id = FindNotifierProcess(&error);
-    if (!process_id) {
-      LogError(STRING16(L"find process"), error.c_str());
-      return;
-    }
-
     // TODO(levin): Since this is done async, a delete or an update
     // message may come in after this update but get processed out of order,
     // which is bad.  Need to fix this.
-
-    // Send the IPC message to the process of Desktop Notifier.
-    IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
-    assert(ipc_message_queue);
-    if (ipc_message_queue) {
-      // IpcMessageQueue is responsible for deleting the message data.
-      ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                              kDesktop_AddNotification,
-                              notification_.release());
-    }
+    g_notifier_proxy.PostNotification(kDesktop_AddNotification,
+                                      notification_.release());
   }
-
 
  private:
   void LogError(const char16 *type, const char16 *error) {
@@ -960,6 +932,18 @@ bool Desktop::ValidateAndShowNotification(
                  icon_handler.release())) {
     return false;
   }
+  return true;
+}
+
+bool Desktop::ValidateAndRemoveNotification(
+    GearsNotification *released_notification) {
+  assert(released_notification);
+  scoped_ptr<GearsNotification> notification(released_notification);
+  if (!ValidateNotification(notification.get())) {
+    return false;
+  }
+  g_notifier_proxy.PostNotification(kDesktop_RemoveNotification,
+                                    notification.release());
   return true;
 }
 
@@ -1011,30 +995,12 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
   }
   scoped_ptr<GearsNotification> notification(new GearsNotification());
   notification->set_id(id);
-  // Prepare the notification.
+
   Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
-  if (!desktop.ValidateNotification(notification.get())) {
+  if (!desktop.ValidateAndRemoveNotification(notification.release())) {
     if (desktop.has_error())
       context->SetException(desktop.error());
     return;
-  }
-
-  // Try to find the process of Desktop Notifier.
-  std::string16 error;
-  uint32 process_id = FindNotifierProcess(&error);
-  if (!process_id) {
-    context->SetException(error);
-    return;
-  }
-
-  // Send the IPC message to the process of Desktop Notifier.
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
-  assert(ipc_message_queue);
-  if (ipc_message_queue) {
-    // IpcMessageQueue is responsible for deleting the message data.
-    ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                            kDesktop_RemoveNotification,
-                            notification.release());
   }
 }
 #endif  // OS_ANDROID

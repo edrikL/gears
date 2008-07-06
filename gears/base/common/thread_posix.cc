@@ -28,8 +28,8 @@
 
 #include <assert.h>
 #include <pthread.h>
-#include "gears/geolocation/thread_posix.h"
-#include "gears/geolocation/thread.h"
+#include "gears/base/common/thread_posix.h"
+#include "gears/base/common/thread.h"
 #if defined(OS_ANDROID)
 #include "gears/base/android/java_jni.h"
 #endif

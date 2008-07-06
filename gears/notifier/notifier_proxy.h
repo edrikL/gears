@@ -23,40 +23,30 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WINCE_H__
-#define GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WINCE_H__
+#ifndef GEARS_NOTIFIER_NOTIFIER_PROXY_H__
+#define GEARS_NOTIFIER_NOTIFIER_PROXY_H__
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/event.h"
-#include "gears/base/common/mutex.h"
-#include "gears/base/common/thread.h"
-#include "gears/geolocation/device_data_provider.h"
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 
-class WinceWifiDataProvider
-    : public WifiDataProviderImplBase,
-      public Thread {
+#include "gears/base/common/basictypes.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+
+class GearsNotification;
+class NotifierProxyThread;
+
+class NotifierProxy {
  public:
-  WinceWifiDataProvider();
-  virtual ~WinceWifiDataProvider();
-
-  // WifiDataProviderImplBase implementation
-  virtual bool GetData(WifiData *data);
+  NotifierProxy();
+  ~NotifierProxy();
+  void PostNotification(int message_type, GearsNotification *notification);
 
  private:
-  // Thread implementation.
-  virtual void Run();
+  scoped_ptr<NotifierProxyThread> thread_;
 
-  WifiData wifi_data_;
-  Mutex data_mutex_;
-
-  // Event signalled to shut down the thread that polls for wifi data.
-  Event stop_event_;
-
-  // Whether we've successfully completed a scan for WiFi data (or the polling
-  // thread has terminated early).
-  bool is_first_scan_complete_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(WinceWifiDataProvider);
+  DISALLOW_EVIL_CONSTRUCTORS(NotifierProxy);
 };
 
-#endif  // GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WINCE_H__
+#endif  // OFFICIAL_BUILD
+#endif  // GEARS_NOTIFIER_NOTIFIER_PROXY_H__

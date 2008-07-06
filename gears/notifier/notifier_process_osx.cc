@@ -30,7 +30,9 @@
 
 #include "gears/notifier/notifier_process.h"
 
-bool NotifierProcess::StartProcess() {
+#include "gears/base/common/event.h"
+
+bool NotifierProcess::StartProcess(Event *stop_event) {
   // TODO (jianli): to be implemented.
   return false;
 }

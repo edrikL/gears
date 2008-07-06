@@ -34,11 +34,11 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/thread.h"
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/network_location_request.h"
-#include "gears/geolocation/thread.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // A mock implementation of DeviceDataProviderImplBase for testing. It simply

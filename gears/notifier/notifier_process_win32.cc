@@ -28,9 +28,11 @@
 #else
 #ifdef WIN32
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/string16.h"
 #include "gears/notifier/notifier_process.h"
+
+#include "gears/base/common/common.h"
+#include "gears/base/common/event.h"
+#include "gears/base/common/string16.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Work around the header including errors.
@@ -107,9 +109,19 @@ class NotifierSyncGate {
     return true;
   }
 
-  bool Wait(int timeout_ms) {
+  bool Wait(Event *stop_event, int timeout_ms) {
     assert(handle_);
-    return ::WaitForSingleObject(handle_, timeout_ms) == WAIT_OBJECT_0;
+    // TODO (jianli): Add support for WaitMultiple.
+    while (timeout_ms > 0) {
+      if (::WaitForSingleObject(handle_, 1000) == WAIT_OBJECT_0) {
+        return true;
+      }
+      if (stop_event && stop_event->WaitWithTimeout(1)) {
+        return false;
+      }
+      timeout_ms -= 1000;
+    }
+    return false;
   }
 
  private:
@@ -155,7 +167,7 @@ bool GetNotifierPath(std::string16 *path) {
   return true;
 }
 
-bool NotifierProcess::StartProcess() {
+bool NotifierProcess::StartProcess(Event *stop_event) {
   std::string16 notifier_path;
   if (!GetNotifierPath(&notifier_path)) {
     return false;
@@ -180,7 +192,7 @@ bool NotifierProcess::StartProcess() {
   ::CloseHandle(process_info.hThread);
 
   NotifierSyncGate gate(kNotifierStartUpSyncGateName);
-  return gate.Wait(kNotifierStartUpSyncTimeoutMs);
+  return gate.Wait(stop_event, kNotifierStartUpSyncTimeoutMs);
 }
 
 bool NotifierProcess::RegisterProcess() {

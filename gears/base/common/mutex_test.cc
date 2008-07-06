@@ -27,11 +27,7 @@
 
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
-#ifdef OFFICIAL_BUILD
-// Thread code not yet in official builds.
-#else
-#include "gears/geolocation/thread.h"
-#endif  // OFFICIAL_BUILD
+#include "gears/base/common/thread.h"
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -80,9 +76,6 @@ static bool TestCondition(std::string16 *error) {
 
 namespace {
 
-#ifdef OFFICIAL_BUILD
-// Thread code not yet in official builds.
-#else
 class WaitCondVar : public Thread {
  public:
   WaitCondVar(CondVar *cond_var, Mutex *mutex, bool* gate, int timeout = -1)
@@ -118,7 +111,6 @@ class WaitCondVar : public Thread {
   bool *gate_;
   int timeout_;
 };
-#endif  // OFFICIAL_BUILD
 
 }  // namespace
 
