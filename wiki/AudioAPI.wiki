@@ -461,7 +461,7 @@ Consider a single `GearsAudio` object created from the `GearsFactory`. This migh
     * play() - starts portaudio stream -> creation of Portaudio thread
   # *Network thread (one per load request)*
     * load from HTTP asynchronously
-  # *Player thread (one per `GearsMedia` object)*
+  # *Player thread (one per play request)*
     * responsible for playing the audio data streamed in by the network thread.
     * In the case of a portaudio player, once `StartStream()` is called by `player.play()`, this thread invokes `paCallback()` module (defined by us) every now and then, until `StopStream()` is called.
 
@@ -483,7 +483,7 @@ class MediaData : public RefCounted {
   // The media buffer. This is initially NULL. 
   // Either the network thread or the main thread (in case of load from blob) 
   // writes to this.
-  std::vector<uint8>* media_buffer_;
+  scoped_ptr<std::vector<uint8>> media_buffer_;
   
  public:
   // Method to append new data (possibly available from the stream) to the media buffer.
@@ -497,11 +497,11 @@ class MediaData : public RefCounted {
 
   // Method to get data present in the media buffer
   // Acquires media_data_lock_.
-  // Gets data from start_pos of media_buffer of size length and appends onto 'out'
+  // Gets data from start_pos of media_buffer of size length and appends onto the 'output'
   // as long as index into buffer is valid.
   // If index exceeds length of media_buffer_, fills zero thereafter till 'length' values
   // are filled in 'out'
-  void GetMediaBufferData(std::vector<uint8>* out, int start_pos, int length);
+  std::vector<uint8>* MediaData::GetMediaBufferData(int start_pos, int length)
   
   // ....
   // other common properties accessible by all threads
@@ -523,7 +523,7 @@ class GearsMedia {
   virtual void play() = 0;
 
   // The asynchronous request for media data
-  NetworkMediaRequest *network_media_request_;
+  scoped_ptr<NetworkMediaRequest> network_media_request_;
 
   // other properties required to be exposed as specified in the spec...
 }
@@ -555,12 +555,12 @@ class GearsAudio
 
 This is the class that takes care of asynchronously loading data from the network into the `media_buffer_` field of the `MediaData` object.
 
-This class also encompasses a `MediaListener` class that implements the `DataAvailable()` method. Whenever new data comes in, this is extracted from the response body and appended to the `media_data_` through the `AppendToMediaBuffer()` method.
+This class also implements the HttpRequest::Listener interface and provides implementations for the `DataAvailable()` and the `ReadyStateChanged` methods. Whenever new data comes in, this is extracted from the response body and appended to the `media_data_` through the `AppendToMediaBuffer()` method.
 
 This class has a scoped_refptr to the media_data_ which is initialized on creation. 
 
 {{{
-class NetworkMediaRequest {
+class NetworkMediaRequest : HttpRequest::Listener {
  public:
   NetworkMediaRequest(std::string16 url, MediaData* media_data);
   virtual ~NetworkMediaRequest();
@@ -573,11 +573,10 @@ class NetworkMediaRequest {
   MediaListener* listener_;
   
   scoped_refptr<MediaData> media_data_;
-  class MediaListener : public HttpListener {
-    virtual void DataAvailable(HttpRequest * source) {
-      // Append new data in the response body to media_data_
-    }
-  }
+  
+  // Listener implementation
+  void DataAvailable(HttpRequest * source);
+  void ReadyStateChanged(HttpRequest *source);
 }
 }}}
  
