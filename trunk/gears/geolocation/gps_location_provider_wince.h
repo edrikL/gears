@@ -30,9 +30,9 @@
 #include <gpsapi.h>
 #include "gears/base/common/common.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/thread.h"
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/geolocation.h"
-#include "gears/geolocation/thread.h"
 
 class WinceGpsLocationProvider
     : public LocationProviderBase,
