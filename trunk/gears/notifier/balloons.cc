@@ -643,6 +643,16 @@ BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
 
 BalloonCollection::~BalloonCollection() {
   Clear();
+
+  // NULL the root_ui_ and then delete it
+  // to avoid unnecessary processing when it is deleted.
+  glint::RootUI *root = root_ui_;
+  root_ui_ = NULL;
+  delete root;
+
+  // Just making sure that no code recreated the root_ui_
+  // while it was being destroyed.
+  assert(!root_ui_);
 }
 
 void BalloonCollection::Clear() {
@@ -652,6 +662,7 @@ void BalloonCollection::Clear() {
     Balloon *removed = *it;
     delete removed;
   }
+  balloons_.clear();
 }
 
 Balloon *BalloonCollection::FindBalloon(
