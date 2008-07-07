@@ -33,6 +33,8 @@ as those are defined by Gears as well.
   incompatible with the version of gcc used.
 * Turned off using compiler __builtin_ctz functions in jsbit.h
   for Android as the system libraries don't seem to implement them.
+* Added assert(0) in js/src/jsgc.c so we fail if JSObjects arent't cleaned up
+  when a context goes away.
 
 Modifications to /nspr:
 * Added "#if defined(__i386__)" to nspr/pr/src/md/unix/os_Darwin_x86.s.

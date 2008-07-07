@@ -49,6 +49,7 @@
  * XXX swizzle page to freelist for better locality of reference
  */
 #include "jsstddef.h"
+#include <assert.h>
 #include <stdlib.h>     /* for free */
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
@@ -1530,6 +1531,10 @@ CheckLeakedRoots(JSRuntime *rt)
     JS_DHashTableEnumerate(&rt->gcRootsHash, js_root_printer,
                            &leakedroots);
     if (leakedroots > 0) {
+        // Gears: Leaking JS Objects can cause bad behavior in other ports
+        // so we fail hard here so we know there's a problem.
+        assert(0);
+        
         if (leakedroots == 1) {
             fprintf(stderr,
 "JS engine warning: 1 GC root remains after destroying the JSRuntime at %p.\n"

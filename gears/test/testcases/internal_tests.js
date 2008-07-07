@@ -631,4 +631,5 @@ function testPerfTimer() {
 }
 
 // SAFARI-TEMP - Disable tests that don't currently work on Safari.
+testCreateObject._disable_in_safari = true;
 testObjectProperties._disable_in_safari = true;
