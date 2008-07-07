@@ -36,7 +36,7 @@
 #include <map>
 #include <vector>
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/message_queue.h"
+#include "gears/base/common/message_service.h"
 #include "gears/geolocation/location_provider.h"
 #ifdef USING_CCTESTS
 #include "gears/geolocation/geolocation_test.h"
@@ -96,7 +96,7 @@ struct Position {
 class GearsGeolocation
     : public ModuleImplBaseClassVirtual,
       public LocationProviderBase::ListenerInterface,
-      public ThreadMessageQueue::HandlerInterface {
+      public MessageObserverInterface {
  public:
 #ifdef USING_CCTESTS
   // Uses ParseArguments for testing.
@@ -168,8 +168,10 @@ class GearsGeolocation
   // LocationProviderBase::ListenerInterface implementation.
   virtual bool LocationUpdateAvailable(LocationProviderBase *provider);
 
-  // ThreadMessageQueue::HandlerInterface implementation.
-  virtual void HandleThreadMessage(int message_type, MessageData *message_data);
+  // MessageObserverInterface implementation.
+  virtual void OnNotify(MessageService *service,
+                        const char16 *topic,
+                        const NotificationData *data);
 
   // Internal; method used by HandleThreadMessage.
   void LocationUpdateAvailableImpl(LocationProviderBase *provider);
