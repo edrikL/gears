@@ -51,17 +51,36 @@ static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 static const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
+static const char16 *kGeolocationObserverTopic = STRING16(L"geolocation");
 
-// Data structure for use with ThreadMessageQueue.
-struct LocationAvailableMessageData : public MessageData {
+// Data class for use with MessageService.
+class LocationAvailableNotificationData : public NotificationData {
  public:
-  LocationAvailableMessageData(GearsGeolocation *object_in,
-                               LocationProviderBase *provider_in)
+  LocationAvailableNotificationData(GearsGeolocation *object_in,
+                                    LocationProviderBase *provider_in)
       : object(object_in),
         provider(provider_in) {}
-  virtual ~LocationAvailableMessageData() {}
+  virtual ~LocationAvailableNotificationData() {}
+
+ friend class GearsGeolocation;
+
+private:
   GearsGeolocation *object;
   LocationProviderBase *provider;
+
+  // NotificationData implementation. These methods are not required.
+  virtual SerializableClassId GetSerializableClassId() {
+    assert(false);
+    return SERIALIZABLE_NULL;
+  }
+  virtual bool Serialize(Serializer *out) {
+    assert(false);
+    return false;
+  }
+  virtual bool Deserialize(Deserializer *in) {
+    assert(false);
+    return false;
+  }
 };
 // Helper function that checks if the caller had the required permissions
 // to use this API. If the permissions are not set, it prompts the user.
@@ -121,10 +140,8 @@ GearsGeolocation::GearsGeolocation()
     assert(false);
     return;
   }
-  ThreadMessageQueue::GetInstance()->RegisterHandler(
-      kLocationUpdateAvailable, this);
-  java_script_thread_id_ =
-      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+
+  MessageService::GetInstance()->AddObserver(this, kGeolocationObserverTopic);
 }
 
 GearsGeolocation::~GearsGeolocation() {
@@ -134,6 +151,9 @@ GearsGeolocation::~GearsGeolocation() {
        ++iter) {
     LocationProviderPool::GetInstance()->Unregister(iter->first, this);
   }
+
+  MessageService::GetInstance()->RemoveObserver(this,
+                                                kGeolocationObserverTopic);
 }
 
 // API Methods
@@ -215,38 +235,32 @@ bool GearsGeolocation::LocationUpdateAvailable(LocationProviderBase *provider) {
   // We marshall this callback onto the JavaScript thread. This simplifies
   // issuing new fix requests and calling back to JavaScript, which must be done
   // from the JavaScript thread.
-  bool result = ThreadMessageQueue::GetInstance()->Send(
-    java_script_thread_id_,
-    kLocationUpdateAvailable,
-    new LocationAvailableMessageData(this, provider));
-  if (!result) {
-    LOG(("GearsGeolocation::LocationUpdateAvailable() : Failed to send "
-         "message.\n"));
-    assert(false);
-    return false;
-  }
+  MessageService::GetInstance()->NotifyObservers(
+      kGeolocationObserverTopic,
+      new LocationAvailableNotificationData(this, provider));
   return true;
 }
 
-// ThreadMessageQueue::HandlerInterface implementation.
-void GearsGeolocation::HandleThreadMessage(int message_type,
-                                           MessageData *message_data) {
-  assert(message_data);
-  // Check that the message is of the right type.
-  if (kLocationUpdateAvailable != message_type) {
-    return;
-  }
+// MessageObserverInterface implementation.
+void GearsGeolocation::OnNotify(MessageService *service,
+                                const char16 *topic,
+                                const NotificationData *data) {
+  assert(data);
+  // Check that the notification is for the correct topic.
+  assert(char16_wmemcmp(kGeolocationObserverTopic,
+                        topic,
+                        char16_wcslen(kGeolocationObserverTopic)) == 0);
 
-  LocationAvailableMessageData *data =
-      reinterpret_cast<LocationAvailableMessageData*>(message_data);
+  const LocationAvailableNotificationData *location_update_data =
+      reinterpret_cast<const LocationAvailableNotificationData*>(data);
 
-  // Only respond to messages sent by this object.
-  if (this != data->object) {
+  // Only respond to notifications initiated by this object.
+  if (this != location_update_data->object) {
     return;
   }
 
   // Invoke the implementation.
-  data->object->LocationUpdateAvailableImpl(data->provider);
+  LocationUpdateAvailableImpl(location_update_data->provider);
 }
 
 // Non-API methods
