@@ -221,15 +221,21 @@ void NetworkLocationProvider::Run() {
     if (is_new_listener_waiting_) {
       // A new listener has just registered with this provider. If new data is
       // available, force a new request now, unless a request is already in
-      // progress. If not, update listeners with the last known position.
+      // progress. If not, update listeners with the last known position,
+      // provided we have one.
       if (is_new_data_available_) {
         if (is_last_request_complete_) {
           // Force a new request
           minimum_time_elapsed = true;
         }
       } else {
-        // Update listeners with the last known position.
-        UpdateListeners();
+        // Before the first network request completes, position_ may not be
+        // valid, so we do not update the listeners. They will be updated once
+        // the network request completes.
+        if (position_.IsInitialized()) {
+          // Update listeners with the last known position.
+          UpdateListeners();
+        }
       }
       is_new_listener_waiting_ = false;
     }
