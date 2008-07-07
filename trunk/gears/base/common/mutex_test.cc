@@ -134,9 +134,6 @@ static bool TestCondVar(std::string16 *error) {
     TEST_ASSERT(result);
   }
 
-#ifdef OFFICIAL_BUILD
-// Thread code not yet in official builds.
-#else
   // Test SignalAll and Wait.
   bool gate;
   {
@@ -194,7 +191,6 @@ static bool TestCondVar(std::string16 *error) {
       delete wait_thread[i];
     }
   }
-#endif  // OFFICIAL_BUILD
 
   return ok;
 }
