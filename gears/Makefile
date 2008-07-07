@@ -1179,7 +1179,7 @@ $(BROWSER)_CPPSRCS	+= \
 		console.cc \
 		js_callback_logging_backend.cc \
 		$(NULL)
-
+    
 #-----------------------------------------------------------------------------
 # crash_sender
 
@@ -1196,7 +1196,7 @@ CRASH_SENDER_CPPSRCS  += \
 		http_upload.cc \
 		$(NULL)
 endif
-
+		
 ifeq ($(OS),osx)
 COMMON_VPATH += \
 		crash_sender \
@@ -1313,21 +1313,6 @@ IE_CPPSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# gtest
-
-GTEST_VPATH	+= \
-		../third_party/gtest/src \
-		$(GLINT_VPATH) \
-		$(NULL)
-
-GTEST_CPPSRCS	+= \
-		gtest.cc \
-		gtest-death-test.cc \
-		gtest-filepath.cc \
-		gtest-port.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # notifier
 
 COMMON_VPATH	+= \
@@ -1413,13 +1398,9 @@ endif
 
 #-----------------------------------------------------------------------------
 # notifier_test
-COMMON_VPATH	+= \
-		$(GTEST_VPATH) \
-		$(NULL)
 
 NOTIFIER_TEST_CPPSRCS += \
 		$(GLINT_CPPSRCS) \
-		$(GTEST_CPPSRCS) \
 		$(NOTIFIER_CORE) \
 		balloon_collection_test.cc \
 		notification_manager_test.cc \
