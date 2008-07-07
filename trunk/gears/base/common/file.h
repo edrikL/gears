@@ -164,6 +164,8 @@ class File {
   // Returns false if there is an error or if the file is not opened for write.
   bool Truncate(int64 length);
 
+  const std::string16 &GetFilePath() const { return file_path_; }
+
   ~File();
 
  private:
@@ -199,16 +201,17 @@ class File {
   //       change.
 #ifdef WIN32
   HANDLE handle_;
-  std::string16 file_path_;
   bool auto_delete_;
-  File() : auto_delete_(false), handle_(NULL) {}
+  explicit File(const char16 *path)
+      : handle_(NULL), auto_delete_(false), file_path_(path) {}
 #else
 // Currently all non-win32 targets are POSIX compliant.
   FILE *handle_;
-  File() : handle_(NULL) {}
+  explicit File(const char16 *path)
+      : handle_(NULL), file_path_(path) {}
 #endif
   OpenAccessMode mode_;
-
+  std::string16 file_path_;
 };
 
 

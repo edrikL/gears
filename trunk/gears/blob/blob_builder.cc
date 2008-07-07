@@ -36,6 +36,7 @@ BlobBuilder::BlobBuilder() : byte_store_(new ByteStore) {
 }
 
 BlobBuilder::~BlobBuilder() {
+  byte_store_->Finalize();
 }
 
 bool BlobBuilder::AddBlob(BlobInterface *blob) {
@@ -45,6 +46,7 @@ bool BlobBuilder::AddBlob(BlobInterface *blob) {
     scoped_refptr<BlobInterface> byte_store_blob;
     byte_store_->CreateBlob(&byte_store_blob);
     blob_list_.push_back(byte_store_blob.get());
+    byte_store_->Finalize();
     byte_store_.reset(new ByteStore);
   }
   blob_list_.push_back(blob);
@@ -60,12 +62,12 @@ bool BlobBuilder::AddString(const std::string16 &data) {
 }
 
 void BlobBuilder::CreateBlob(scoped_refptr<BlobInterface> *blob) {
-  bool appended_bytes = false;
+  bool pushed_unfinalized_data = false;
   if (byte_store_->Length()) {
     scoped_refptr<BlobInterface> byte_store_blob;
     byte_store_->CreateBlob(&byte_store_blob);
     blob_list_.push_back(byte_store_blob.get());
-    appended_bytes = true;
+    pushed_unfinalized_data = true;
   }
 
   if (blob_list_.empty()) {
@@ -76,7 +78,7 @@ void BlobBuilder::CreateBlob(scoped_refptr<BlobInterface> *blob) {
     *blob = new JoinBlob(blob_list_);
   }
 
-  if (appended_bytes) {
+  if (pushed_unfinalized_data) {
     blob_list_.pop_back();
   }
 }
@@ -90,6 +92,7 @@ int64 BlobBuilder::Length() const {
 }
 
 void  BlobBuilder::Reset() {
+  byte_store_->Finalize();
   byte_store_.reset(new ByteStore);
   blob_list_.clear();
 }

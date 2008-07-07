@@ -30,7 +30,6 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // SliceBlob exposes a subset of an existing blob.
-
 class SliceBlob : public BlobInterface {
  public:
   // SliceBlob always returns the provided length as its own length, even if
@@ -39,7 +38,7 @@ class SliceBlob : public BlobInterface {
 
   virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
   virtual int64 Length() const;
-
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const;
  private:
   scoped_refptr<BlobInterface> blob_;
   int64 offset_, length_;

@@ -30,23 +30,22 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_interface.h"
 
-namespace {
 const int64 kMaxBufferSize = 1024 * 1024;  // 1MB
 
 // Presents a blob interface of a snapshot of a ByteStore.
 // Data can continue to be added to the ByteStore, but this blob will only
 // present the data that existed at construction time.
-class ByteStoreBlob : public BlobInterface {
+class ByteStore::Blob : public BlobInterface {
  public:
-  explicit ByteStoreBlob(ByteStore* byte_store)
+  explicit Blob(ByteStore* byte_store)
       : byte_store_(byte_store), length_(byte_store->Length()) {
   }
 
-  int64 Length() const {
+  virtual int64 Length() const {
     return length_;
   }
 
-  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
+  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     if (offset >= length_) {
       return 0;
     } else if (offset + max_bytes >= length_) {
@@ -55,13 +54,30 @@ class ByteStoreBlob : public BlobInterface {
     return byte_store_->Read(destination, offset, max_bytes);
   }
 
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const {
+    if (length_ == 0) {
+      return true;  // don't add an element for no data
+    }
+
+    DataElement element;
+    byte_store_->GetDataElement(&element);
+    if (element.type() == DataElement::TYPE_FILE &&
+        element.file_path().empty()) {
+      return false;  // nameless temp files (posix) not supported
+    }
+    element.TrimToLength(length_);
+    elements->push_back(element);
+    return true;
+  }
+
  private:
   scoped_refptr<ByteStore> byte_store_;
   int64 length_;
 };
-}  // namespace
 
-ByteStore::ByteStore() : file_op_(File::WRITE) {
+
+ByteStore::ByteStore()
+    : file_op_(File::WRITE), is_finalized_(false), preserve_data_(false) {
 }
 
 ByteStore::~ByteStore() {
@@ -74,8 +90,9 @@ bool ByteStore::AddData(const void *data, int64 length) {
   if (length == 0) return true;
 
   MutexLock lock(&mutex_);
+  assert(!is_finalized_);
 
-  if (!file_.get() && (length + data_.size() <= kMaxBufferSize)) {
+  if (IsUsingData() && (length + data_.size() <= kMaxBufferSize)) {
     data_.insert(data_.end(), static_cast<const uint8*>(data),
                  static_cast<const uint8*>(data) + length);
     return true;
@@ -89,7 +106,11 @@ bool ByteStore::AddData(const void *data, int64 length) {
         file_.reset();
         return false;
       }
+    }
+    if (!preserve_data_) {
       data_.clear();
+      // Note, if the flag is set, we keep data_ around so ptrs returned
+      // via GetDataElement remain valid for the life of the BlobStore.
     }
   }
   if (file_op_ == File::READ) {
@@ -113,17 +134,17 @@ bool ByteStore::AddString(const std::string16 &data) {
 }
 
 void ByteStore::CreateBlob(scoped_refptr<BlobInterface> *blob) {
-  blob->reset(new ByteStoreBlob(this));
+  blob->reset(new ByteStore::Blob(this));
 }
 
 int64 ByteStore::Length() const {
   MutexLock lock(&mutex_);
 
-  if (!file_.get()) {
+  if (IsUsingData()) {
     return data_.size();
   }
   // Stored in a file.
-  assert(data_.empty());
+  assert(data_.empty() || preserve_data_);
   if (file_op_ == File::WRITE) {
     file_->Flush();
     file_op_ = File::READ;
@@ -138,7 +159,7 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
 
   MutexLock lock(&mutex_);
 
-  if (!file_.get()) {
+  if (IsUsingData()) {
     if (data_.size() <= offset) {
       return 0;
     }
@@ -155,7 +176,7 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     return max_bytes;
   }
   // Stored in a file.
-  assert(data_.empty());
+  assert(data_.empty() || preserve_data_);
   if (file_op_ == File::WRITE) {
     // The subsequent call to Seek will do a flush as well.
     file_op_ = File::READ;
@@ -165,4 +186,30 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     return -1;
   }
   return file_->Read(destination, max_bytes);
+}
+
+void ByteStore::Finalize() {
+  MutexLock lock(&mutex_);
+  is_finalized_ = true;
+}
+
+void ByteStore::GetDataElement(DataElement *element) {
+  assert(element);
+
+  MutexLock lock(&mutex_);
+  if (!is_finalized_ && IsUsingData() && !preserve_data_) {
+    // We reserve space so the vector won't get reallocated as
+    // new data is added.
+    data_.reserve(kMaxBufferSize);
+    preserve_data_ = true;
+  }
+
+  if (IsUsingFile()) {
+    file_->Flush();
+    element->SetToFilePath(file_->GetFilePath());
+  } else if (!data_.empty()) {
+    element->SetToBytes(&data_[0], static_cast<int>(data_.size()));
+  } else {
+    element->SetToBytes(NULL, 0);
+  }
 }

@@ -37,9 +37,10 @@ class JoinBlob : public BlobInterface {
   typedef std::vector<scoped_refptr<BlobInterface> > List;
 
   explicit JoinBlob(const List &blob_list);
-  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
-  inline virtual int64 Length() const { return length_; }
 
+  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  virtual int64 Length() const { return length_; }
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const;
  private:
   typedef std::map<int64, scoped_refptr<BlobInterface> > Map;
   Map blob_map_;

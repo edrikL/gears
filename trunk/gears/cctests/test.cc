@@ -154,10 +154,7 @@ bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
 bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
 bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
-bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
-bool TestFileBlob(std::string16 *error);  // from blob_test.cc
-bool TestJoinBlob(std::string16 *error);  // from blob_test.cc
-bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
+bool TestBlob(std::string16 *error);  // from blob_test.cc
 #if (defined(WIN32) && !defined(WINCE)) || \
     (defined(LINUX) && !defined(OS_MACOSX))
 // from ipc_message_queue_test.cc
@@ -308,10 +305,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSerialization(&error);
   ok &= TestCircularBuffer(&error);
   ok &= TestRefCount(&error);
-  ok &= TestBufferBlob(&error);
-  ok &= TestFileBlob(&error);
-  ok &= TestJoinBlob(&error);
-  ok &= TestSliceBlob(&error);
+  ok &= TestBlob(&error);
 
 #if (defined(WIN32) && !defined(WINCE)) || \
     (defined(LINUX) && !defined(OS_MACOSX))

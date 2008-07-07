@@ -62,3 +62,14 @@ int64 BufferBlob::Read(uint8 *destination, int64 offset,
 int64 BufferBlob::Length() const {
   return buffer_.size();
 }
+
+bool BufferBlob::GetDataElements(std::vector<DataElement> *elements) const {
+  assert(elements && elements->empty());
+  if (!buffer_.empty()) {
+    assert(buffer_.size() <= static_cast<int>(kint32max));
+    elements->push_back(DataElement());
+    elements->back().SetToBytes(&buffer_[0], 
+                                static_cast<int>(buffer_.size()));
+  }
+  return true;
+}

@@ -98,8 +98,7 @@ bool File::Flush() {
 
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
-  scoped_ptr<File> file(new File());
-  file->file_path_ = ToLongPath(full_filepath);
+  scoped_ptr<File> file(new File(full_filepath));
   DWORD desired_access = 0;
   switch (access_mode) {
     case READ:
@@ -131,13 +130,13 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
       break;
   }
   file->mode_ = access_mode;
-  file->handle_ = ::CreateFileW(file->file_path_.c_str(),
-                                    desired_access,
-                                    access_mode == READ ? FILE_SHARE_READ : 0,
-                                    NULL,
-                                    creation_disposition,
-                                    FILE_ATTRIBUTE_NORMAL,
-                                    NULL);
+  file->handle_ = ::CreateFileW(ToLongPath(full_filepath).c_str(),
+                                desired_access,
+                                access_mode == READ ? FILE_SHARE_READ : 0,
+                                NULL,
+                                creation_disposition,
+                                FILE_ATTRIBUTE_NORMAL,
+                                NULL);
   if (file->handle_ == INVALID_HANDLE_VALUE) {
     return NULL;
   }
