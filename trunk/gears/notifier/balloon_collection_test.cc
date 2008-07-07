@@ -27,12 +27,25 @@
   // The notification API has not been finalized for official builds.
 #else
 #if USING_CCTESTS
+#include "gears/notifier/balloon_collection_test.h"
+
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/balloons.h"
 #include "gears/notifier/notification.h"
+#include "gears/notifier/unit_test.h"
 #include "gears/notifier/user_activity.h"
-#include "third_party/gtest/include/gtest/gtest.h"
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(test, message)                                      \
+  do {                                                                  \
+    if (!(test)) {                                                      \
+      std::string16 final_message(                                      \
+          STRING16(L"Balloon Collection Test Failed"));                 \
+      final_message.append(message);                                    \
+      LogTestError(final_message);                                      \
+    }                                                                   \
+  } while (0)
 
 class BalloonCollectionObserverMock : public BalloonCollectionObserver {
  public:
@@ -54,7 +67,7 @@ class BalloonCollectionObserverMock : public BalloonCollectionObserver {
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollectionObserverMock);
 };
 
-TEST(TestBalloonCollection, BasicFunctionality) {
+void TestBalloonCollection() {
   BalloonCollectionObserverMock observer;
   BalloonCollection balloons(&observer);
 
@@ -66,24 +79,24 @@ TEST(TestBalloonCollection, BasicFunctionality) {
   balloons.Show(notification1);
 
   bool found = balloons.Update(notification1);
-  EXPECT_TRUE(found) << "Update didn't find the original notification";
+  TEST_ASSERT(found, STRING16(L"Update didn't find the original notification"));
 
   notification1.set_id(STRING16(L"2"));
   found = balloons.Update(notification1);
-  EXPECT_FALSE(found) << "Update found wrong notification";
+  TEST_ASSERT(!found, STRING16(L"Update found wrong notification"));
 
   balloons.Show(notification1);
 
   bool deleted = balloons.Delete(notification1.security_origin(),
                                  notification1.id());
-  EXPECT_TRUE(deleted) << "Delete didn't find the notification";
+  TEST_ASSERT(deleted, STRING16(L"Delete didn't find the notification"));
 
   deleted = balloons.Delete(notification1.security_origin(),
                             notification1.id());
-  EXPECT_FALSE(deleted) << "Delete can delete a notification twice!";
+  TEST_ASSERT(!deleted, STRING16(L"Delete can delete a notification twice!"));
 
-  EXPECT_EQ(4, observer.space_changed())
-      << "Incorrect number of calls to OnBalloonSpaceChanged";
+  TEST_ASSERT(observer.space_changed() == 4,
+              STRING16(L"Incorrect number of calls to OnBalloonSpaceChanged"));
 }
 
 #endif  // USING_CCTESTS

@@ -23,52 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
-#define GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
+#ifndef GEARS_NOTIFIER_BALLOON_COLLECTION_TEST_H__
+#define GEARS_NOTIFIER_BALLOON_COLLECTION_TEST_H__
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
 #if USING_CCTESTS
-#include <map>
 
-#include "gears/notifier/balloons.h"
+void TestBalloonCollection();
 
-void TestNotificationManager();
-void TestNotificationManagerDelay();
-
-class BalloonCollectionMock : public BalloonCollectionInterface {
- public:
-  BalloonCollectionMock();
-  virtual ~BalloonCollectionMock();
-
-  virtual void Show(const GearsNotification &notification);
-  virtual bool Update(const GearsNotification &notification);
-  virtual bool Delete(const SecurityOrigin &security_origin,
-                      const std::string16 &bare_id);
-
-  virtual bool has_space();
-  void set_has_space(bool has_space);
-
-  int show_call_count() const {
-    return show_call_count_;
-  }
-
-  void set_show_call_count(int show_call_count);
-  void set_update_call_count(int update_call_count);
-  void set_delete_call_count(int delete_call_count);
-
-
- private:
-  bool has_space_;
-  int show_call_count_;
-  int update_call_count_;
-  int delete_call_count_;
-
-  typedef std::pair<std::string16, std::string16> NotificationId;
-
-  std::map<NotificationId, int> displayed_;
-  DISALLOW_EVIL_CONSTRUCTORS(BalloonCollectionMock);
-};
 #endif  // USING_CCTESTS
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
+#endif  // GEARS_NOTIFIER_BALLOON_COLLECTION_TEST_H__
