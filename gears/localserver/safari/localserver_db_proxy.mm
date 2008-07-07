@@ -84,7 +84,8 @@
   std::string16 redirect_url;
   if (payload.IsHttpRedirect()) {
     // We collapse a chain of redirects and hop directly to the final 
-    // location for which we have a cache entry
+    // location for which we have a cache entry.
+    int num_redirects = 0;
     while (payload.IsHttpRedirect()) {
       if (!payload.GetHeader(HttpConstants::kLocationHeader, &redirect_url))
         return nil;
@@ -92,6 +93,14 @@
       // Fetch a response for redirect_url from our DB
       if (!db->Service(redirect_url.c_str(), NULL, false, &payload))
         return nil;
+        
+      // Make sure we don't get stuck in an infinite redirect loop.
+      ++num_redirects;
+      if (num_redirects > HttpConstants::kMaxRedirects) {
+        LOG16((STRING16(L"Redirect chain too long %s -> %s"),
+               url16.c_str(), redirect_url.c_str()));
+        return nil;
+      }
     }
     
     *redirectURL = [NSURL URLWithString:

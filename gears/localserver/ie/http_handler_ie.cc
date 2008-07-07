@@ -900,7 +900,8 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   std::string16 redirect_url;
   if (payload_.IsHttpRedirect()) {
     // We collapse a chain of redirects and hop directly to the final
-    // location for which we have a cache entry
+    // location for which we have a cache entry.
+    int num_redirects = 0;
     while (payload_.IsHttpRedirect()) {
       if (!payload_.GetHeader(HttpConstants::kLocationHeader, &redirect_url)) {
         LOG16((L"  redirect with no location - using default handler\n"));
@@ -918,6 +919,14 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
         return CallReportResult(INET_E_REDIRECT_FAILED,
                                 HttpConstants::HTTP_FOUND,
                                 redirect_url.c_str());
+      }
+      
+      // Make sure we don't get stuck in an infinite redirect loop.
+      ++num_redirects;
+      if (num_redirects > HttpConstants::kMaxRedirects) {
+        LOG16((STRING16(L"Redirect chain too long %s -> %s"),
+               url, redirect_url.c_str()));
+        return E_FAIL;
       }
     }
     LOG16((L"  cache hit - redirect ( %s )\n", redirect_url.c_str()));
