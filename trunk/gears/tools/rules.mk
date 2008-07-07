@@ -983,14 +983,14 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@
 	mkdir -p $@/Contents/Resources/English.lproj
 	mkdir -p $@/Contents/MacOS
 # Add Info.plist file & localized strings.
-	cat tools/osx/Info.plist | sed 's/$${EXECUTABLE_NAME}/Gears/' > $@/Contents/Info.plist
+	cp $($(BROWSER)_OUTDIR)/genfiles/Info.plist $@/Contents/
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
 # Copy breakpad exes.
 	cp -r $(CRASH_SENDER_EXE) $@/Contents/Resources/

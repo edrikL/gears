@@ -1950,10 +1950,12 @@ endif # wince
 
 SF_VPATH	+= \
 		installer/safari \
+		tools/osx \
 		$(NULL)
 
 SF_M4SRCS	+= \
 		installer.packproj.m4 \
+		Info.plist.m4 \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

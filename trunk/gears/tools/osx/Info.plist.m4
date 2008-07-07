@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
+	<string>Gears</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -17,7 +17,7 @@
 	<key>CFBundleSignature</key>
 	<string>GGer</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>PRODUCT_VERSION</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFPlugInDynamicRegisterFunction</key>
@@ -44,13 +44,13 @@
 	<dict>
 		<key>application/x-googlegears</key>
 		<dict>
-      <key>WebPluginExtensions</key>
+			<key>WebPluginExtensions</key>
 			<array/>
 			<key>WebPluginTypeDescription</key>
-			<string>Gears</string>
+			<string>Gears PRODUCT_VERSION</string>
 		</dict>
 	</dict>
 	<key>WebPluginName</key>
-	<string>Gears</string>
+	<string>Gears PRODUCT_VERSION</string>
 </dict>
 </plist>
