@@ -35,6 +35,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class BlobInterface;
+class DataElement;
 
 class ByteStore : public RefCounted {
  public:
@@ -47,7 +48,9 @@ class ByteStore : public RefCounted {
   // Returns false if the data could not be added.
   bool AddString(const std::string16 &data);
 
-  // Returns a Blob instance containing all the data.
+  // Returns a blob interface of a snapshot of the ByteStore.
+  // Data can continue to be added to the ByteStore, but this blob
+  // will only present the data that existed at construction time.
   void CreateBlob(scoped_refptr<BlobInterface> *blob);
 
   // Returns the length of all data.
@@ -56,13 +59,27 @@ class ByteStore : public RefCounted {
   // Copies 'length' data at 'offset' into the supplied buffer.
   int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
+  // The contents of a finalized ByteStore are no longer modifiable.
+  bool IsFinalized() const { return is_finalized_; }
+  void Finalize();
+
  private:
   ~ByteStore();
+
+  class Blob;
+  void GetDataElement(DataElement *elements);
+
+  // Helpers that return whether the store is working out of a file
+  // or an in memory data buffer.
+  bool IsUsingFile() const { return file_.get() ? true : false; }
+  bool IsUsingData() const { return !IsUsingFile(); }
 
   std::vector<uint8> data_;
   scoped_ptr<File> file_;
   mutable File::OpenAccessMode file_op_;
   mutable Mutex mutex_;
+  bool is_finalized_;
+  bool preserve_data_;
   DISALLOW_EVIL_CONSTRUCTORS(ByteStore);
 };
 

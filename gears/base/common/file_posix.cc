@@ -84,7 +84,7 @@ bool File::Flush() {
 
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
-  scoped_ptr<File> file(new File());
+  scoped_ptr<File> file(new File(full_filepath));
   std::string file_path_utf8_;
   if (!String16ToUTF8(full_filepath, &file_path_utf8_)) {
     return false;
@@ -348,7 +348,8 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
 }
 
 File *File::CreateNewTempFile() {
-  scoped_ptr<File> file(new File());
+  // TODO(michaeln): use named temp files
+  scoped_ptr<File> file(new File(STRING16(L"")));
   file->mode_ = READ_WRITE;
   file->handle_ = tmpfile();
   if (file->handle_ == NULL) {

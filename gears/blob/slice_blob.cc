@@ -53,3 +53,43 @@ int64 SliceBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
 int64 SliceBlob::Length() const {
   return length_;
 }
+
+bool SliceBlob::GetDataElements(std::vector<DataElement> *elements) const {
+  assert(elements && elements->empty());
+
+  std::vector<DataElement> nested_elements;
+  if (!blob_->GetDataElements(&nested_elements)) {
+    return false;
+  }
+  
+  if (!nested_elements.empty()) {
+    std::vector<DataElement>::iterator iter = nested_elements.begin();
+
+    // Skip over elements until we reach our offset_
+    uint64 skip_remaining = static_cast<uint64>(offset_);
+    while (skip_remaining > 0 && iter != nested_elements.end()) {
+      uint64 content_length = (*iter).GetContentLength();
+      if (content_length > skip_remaining) {
+        (*iter).TrimFront(skip_remaining);
+        break;  // don't advance the iter, this element is included below
+      }
+      skip_remaining -= content_length;
+      ++iter; 
+    }      
+
+    // Include elements until we reach our length_
+    uint64 include_remaining = static_cast<uint64>(length_);
+    while (include_remaining > 0 && iter != nested_elements.end()) {
+      uint64 content_length = (*iter).GetContentLength();
+      if (content_length > include_remaining) {
+        (*iter).TrimToLength(include_remaining);
+        content_length = include_remaining;
+      }
+      elements->push_back(*iter);
+      include_remaining -= content_length;
+      ++iter;
+    }
+  }
+
+  return true;
+}

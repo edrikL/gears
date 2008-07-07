@@ -65,3 +65,21 @@ int64 JoinBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   }
   return bytes_read;
 }
+
+bool JoinBlob::GetDataElements(std::vector<DataElement> *elements) const {
+  assert(elements && elements->empty());
+  if (!blob_map_.empty()) {
+    Map::const_iterator iter;
+    for (iter = blob_map_.begin(); iter != blob_map_.end(); ++iter) {
+      std::vector<DataElement> nested_elements;
+      if (!iter->second->GetDataElements(&nested_elements)) {
+        elements->clear();
+        return false;
+      }
+      elements->insert(elements->end(),
+                       nested_elements.begin(),
+                       nested_elements.end());
+    }
+  }
+  return true;
+}

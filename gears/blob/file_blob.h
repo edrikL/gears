@@ -34,6 +34,7 @@
 
 class File;
 
+// FileBlob provides a blob interface to a file's contents.
 class FileBlob : public BlobInterface {
  public:
   // The filename should be an absolute path, not a relative one.
@@ -44,10 +45,12 @@ class FileBlob : public BlobInterface {
   // it when FileBlob is deleted.
   FileBlob(File *file);
 
-  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  // The absolute path of the contained file.
+  const std::string16 &GetFilePath() const;
 
-  int64 Length() const;
-
+  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  virtual int64 Length() const;
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const;
  private:
   mutable Mutex file_lock_;
   scoped_ptr<File> file_;

@@ -26,8 +26,108 @@
 #ifndef GEARS_BLOB_BLOB_INTERFACE_H__
 #define GEARS_BLOB_BLOB_INTERFACE_H__
 
+#include <assert.h>
+#include <vector>
 #include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/string16.h"
 #include "gears/base/common/scoped_refptr.h"
+
+
+// Class used to expose the internal structure of a Blob
+class DataElement {
+ public:
+  enum Type {
+    TYPE_BYTES,
+    TYPE_FILE
+  };
+
+  DataElement() : type_(TYPE_BYTES), bytes_(NULL), bytes_length_(0),
+                  file_range_offset_(0), file_range_length_(kuint64max) {
+  }
+
+
+  Type type() const { return type_; }
+
+  // Only valid for TYPE_BYTES
+  const uint8 *bytes() const { return bytes_; }
+  int bytes_length() const { return bytes_length_; }
+
+  // Only valid for TYPE_FILE
+  const std::string16& file_path() const { return file_path_; }
+  uint64 file_range_offset() const { return file_range_offset_; }
+  uint64 file_range_length() const { return file_range_length_; }
+
+  void SetToBytes(const uint8 *bytes, int bytes_len) {
+    type_ = TYPE_BYTES;
+    bytes_ = bytes;
+    bytes_length_ = bytes_len;
+  }
+
+  void SetToFilePath(const std::string16 &path) {
+    SetToFilePathRange(path, 0, kuint64max);
+  }
+
+  // If offset + length exceeds the end of the file, the length reported
+  // by GetContentLength is clipped at eof.
+  void SetToFilePathRange(const std::string16 &path,
+                          uint64 offset, uint64 length) {
+    type_ = TYPE_FILE;
+    file_path_ = path;
+    file_range_offset_ = offset;
+    file_range_length_ = length;
+  }
+
+  // Returns the byte-length of the element.  For files that do not exist, 0
+  // is returned. This is done for consistency with Mozilla.
+  uint64 GetContentLength() const {
+    if (type_ == TYPE_BYTES) {
+      return static_cast<uint64>(bytes_length_);
+    }
+    assert(type_ == TYPE_FILE);
+    int64 length = File::GetFileSize(file_path_.c_str());
+    if (length < 0)
+      return 0;  // file does not exist
+    if (file_range_offset_ >= static_cast<uint64>(length))
+      return 0;  // range is beyond eof
+
+    // compensate for the offset and clip file_range_length_ to eof
+    return std::min(static_cast<uint64>(length) - file_range_offset_,
+                    file_range_length_);
+  }
+
+  void TrimFront(uint64 amount) {
+    uint64 length = GetContentLength();
+    assert(amount <= length);
+    if (type_ == TYPE_BYTES) {
+      bytes_ += amount;
+      bytes_length_ = static_cast<int>(length - amount);
+    } else {
+      assert(type_ == TYPE_FILE);
+      file_range_offset_ += amount;
+    }
+  }
+
+  void TrimToLength(uint64 new_length) {
+    uint64 length = GetContentLength();
+    assert(new_length <= length);
+    if (type_ == TYPE_BYTES) {
+      bytes_length_ = static_cast<int>(new_length);
+    } else {
+      assert(type_ == TYPE_FILE);
+      file_range_length_ = new_length;
+    }
+  }
+
+ private:
+  Type type_;
+  const uint8 *bytes_;
+  int bytes_length_;
+  std::string16 file_path_;
+  uint64 file_range_offset_;
+  uint64 file_range_length_;
+};
+
 
 class BlobInterface : public RefCounted {
  public:
@@ -44,6 +144,12 @@ class BlobInterface : public RefCounted {
   // file's size change underneath it.
   virtual int64 Length() const = 0;
 
+  // Returns an array that describes storage backing the blob's data.
+  // Note that it is the caller's responsibility to ensure that the Blob
+  // instance remains in scope for the duration that the 'elements' array
+  // needs to be utilized.
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const = 0;
+
  protected:
   BlobInterface() {}
   virtual ~BlobInterface() {}
@@ -52,18 +158,24 @@ class BlobInterface : public RefCounted {
   DISALLOW_EVIL_CONSTRUCTORS(BlobInterface);
 };
 
+
 class EmptyBlob : public BlobInterface {
  public:
   EmptyBlob() {}
 
-  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
+  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     if (!destination || (offset < 0) || (max_bytes < 0))
       return -1;
     return 0;
   }
 
-  int64 Length() const {
+  virtual int64 Length() const {
     return 0;
+  }
+
+  virtual bool GetDataElements(std::vector<DataElement> *elements) const {
+    assert(elements && elements->empty());
+    return true;
   }
 
  private:

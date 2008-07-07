@@ -53,3 +53,25 @@ int64 FileBlob::Length() const {
   }
   return -1;
 }
+
+bool FileBlob::GetDataElements(std::vector<DataElement> *elements) const {
+  assert(elements && elements->empty());
+  if (!file_.get()) {
+    return false;
+  }
+  const std::string16 &file_path = file_->GetFilePath();
+  if (file_path.empty()) {
+    return false;
+  }
+  elements->push_back(DataElement());
+  elements->back().SetToFilePath(file_path);
+  return true;
+}
+
+const std::string16 &FileBlob::GetFilePath() const {
+  if (!file_.get()) {
+    static std::string16 kEmpty;
+    return kEmpty;
+  }
+  return file_->GetFilePath();
+}
