@@ -149,19 +149,23 @@ static bool TestCallbackSanity() {
   callback_watch->Start();
 
   LOG(("TestCallbackSanity - timer\n"));
-  TimedCall timer(2000, false, &CallbackTestCallback,
+  TimedCall timer(200, false, &CallbackTestCallback,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArgTest)));
 
   // Allow the message loop to deal with incoming messages,
   // so the timer isn't stifled by the thread being busy
   // sleep/yield does not work - you have to go back to the message loop
-  // Give it 3 seconds to callback, should fire in 2
+  // Give it 300ms to callback, should fire in 200ms
   LOG(("TestCallbackSanity - wait\n"));
 
+  const int wait_time_ms = 300;
 #if defined(OS_MACOSX)
   int rval;
-  while (!callback_test_toggle && StopwatchGetElapsed(callback_watch) < 3000) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode, 3.0, false);
+  while (!callback_test_toggle &&
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
+    rval = CFRunLoopRunInMode(kGearsCustomMode,
+                              static_cast<float>(wait_time_ms) / 1000.0,
+                              false);
     LOG(("TestCallbackSanity - RunInMode rval: %d\n", rval));
     if (rval == kCFRunLoopRunFinished)  // No timers to wait on
       break;
@@ -169,7 +173,8 @@ static bool TestCallbackSanity() {
 
 #elif defined(WIN32)
   MSG msg;
-  while (!callback_test_toggle && StopwatchGetElapsed(callback_watch) < 3000) {
+  while (!callback_test_toggle &&
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
     Sleep(1);
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
       TranslateMessage(&msg);
@@ -207,19 +212,23 @@ static bool TestCallbackSorting() {
   callback_watch->Start();
 
   // Set timers out of order, they should be fired in order by timeout
-  TimedCall timer_a(2000, false, &CallbackTestCallback3,
+  TimedCall timer_a(200, false, &CallbackTestCallback3,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArg3)));
-  TimedCall timer_b(1000, false, &CallbackTestCallback1,
+  TimedCall timer_b(100, false, &CallbackTestCallback1,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArg1)));
-  TimedCall timer_c(1500, false, &CallbackTestCallback2,
+  TimedCall timer_c(150, false, &CallbackTestCallback2,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArg2)));
 
   LOG(("TestCallbackSorting - wait\n"));
+
+  const int wait_time_ms = 300;
 #if defined(OS_MACOSX)
   int rval;
   while (callback_sorting_counter != 3 &&
-         StopwatchGetElapsed(callback_watch) < 3000) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode, 3.0, false);
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
+    rval = CFRunLoopRunInMode(kGearsCustomMode,
+                              static_cast<float>(wait_time_ms) / 1000.0,
+                              false);
     LOG(("TestCallbackSorting - RunInMode rval: %d\n", rval));
     if (rval == kCFRunLoopRunFinished)  // No timers to wait on
       break;
@@ -227,7 +236,7 @@ static bool TestCallbackSorting() {
 #elif defined(WIN32)
   MSG msg;
   while (callback_sorting_counter != 3 &&
-         StopwatchGetElapsed(callback_watch) < 3000) {
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
     Sleep(1);
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
       TranslateMessage(&msg);
@@ -264,26 +273,31 @@ static bool TestCallbackRepeat() {
   callback_watch = new Stopwatch();
   callback_watch->Start();
 
-  // Repeat every 500 ms from now
+  // Repeat every 100 ms from now.
   // Repeats are scheduled right before the timer fires.
-  // Should fire at 500, 1000, 1500, 2000, 2500, 3000 (6 times)
-  TimedCall timer(500, true, &CallbackTestCallbackRepeat,
+  const int internal_ms = 100;
+  TimedCall timer(internal_ms, true, &CallbackTestCallbackRepeat,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArgRepeat)));
+  // Allow for 5 repeats (plus a little slack).
+  const int repeats = 5;
+  const int wait_time_ms = internal_ms * repeats + 100;
 
   LOG(("TestCallbackRepeat - wait\n"));
 #if defined(OS_MACOSX)
   int rval;
-  while (callback_repeat_counter <= 5 &&
-         StopwatchGetElapsed(callback_watch) < 3000) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode, 3.0, false);
+  while (callback_repeat_counter <= repeats &&
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
+    rval = CFRunLoopRunInMode(kGearsCustomMode,
+                              static_cast<float>(wait_time_ms) / 1000.0,
+                              false);
     LOG(("TestCallbackRepeat - RunInMode rval: %d\n", rval));
     if (rval == kCFRunLoopRunFinished)  // No timers to wait on
       break;
   }
 #elif defined(WIN32)
   MSG msg;
-  while (callback_repeat_counter <= 5 &&
-         StopwatchGetElapsed(callback_watch) < 3000) {
+  while (callback_repeat_counter <= repeats &&
+         StopwatchGetElapsed(callback_watch) < wait_time_ms) {
     Sleep(1);
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
       TranslateMessage(&msg);
@@ -296,7 +310,7 @@ static bool TestCallbackRepeat() {
 
   // Must repeat at least 5 times, the exact number is dependent on anyone else
   // who triggers the event loop.
-  TEST_ASSERT(callback_repeat_counter >= 5);
+  TEST_ASSERT(callback_repeat_counter >= repeats);
 
   delete callback_watch;
   callback_watch = NULL;
