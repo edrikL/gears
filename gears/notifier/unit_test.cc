@@ -29,99 +29,24 @@ int main(int, char **) {
   return 0;
 }
 #else
-#include <string>
-
 #include "gears/notifier/unit_test.h"
 
-#include "gears/base/common/basictypes.h"
-#include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/timed_call_test.h"
-#include "gears/notifier/balloon_collection_test.h"
-#include "gears/notifier/notification_manager_test.h"
+#include "third_party/gtest/include/gtest/gtest.h"
 
-class UnitTest {
- public:
-  // singleton
-  static UnitTest *instance() {
-    return &unit_test_;
-  }
-
-  void LogError(const std::string16& error) {
-    failed_ = true;
-    log_.append(error);
-    log_.append(STRING16(L"\n"));
-
-    if (print_) {
-      std::string error8;
-      String16ToUTF8(error.c_str(), &error8);
-      printf("%s\n", error8.c_str());
-    }
-  }
-
-  bool all_passed() const {
-    return !failed_;
-  }
-
-  // The full results of what was logged.  This is
-  // to pass back over the ipc call.
-  const std::string16& log() const {
-    return log_;
-  }
-
-  void set_print(bool print) {
-    print_ = print;
-  }
-
- private:
-  UnitTest() : failed_(false), print_(false) {
-  }
-
-  static UnitTest unit_test_;
-
-  std::string16 log_;
-  bool failed_;
-  bool print_;
-  DISALLOW_EVIL_CONSTRUCTORS(UnitTest);
-};
-
-UnitTest UnitTest::unit_test_;
-
-void LogTestError(const std::string16& error) {
-  UnitTest::instance()->LogError(error);
-}
-
-bool DidAllTestsPass() {
-  return UnitTest::instance()->all_passed();
-}
-
-const std::string16& GetTestLog() {
-  return UnitTest::instance()->log();
-}
-
-void TestTimedCall() {
+TEST(TimedCall, BasicCallback) {
   std::string16 error;
   bool success = TestTimedCallbackAll(&error);
 
   if (!success) {
-    UnitTest::instance()->LogError(error);
+    FAIL() << error;
   }
 }
 
 int RunTests(int argc, char **argv) {
-  UnitTest::instance()->set_print(true);
-
-  TestTimedCall();
-  TestNotificationManager();
-  TestNotificationManagerDelay();
-  TestBalloonCollection();
-  if (!DidAllTestsPass()) {
-    printf("*** Test failures occurred. ***\n");
-    return 1;
-  }
-  printf("*** All tests passed. ***\n");
-
-  return 0;
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 // For OSX, 'main' is defined in unit_test_osx.mm.
@@ -131,4 +56,3 @@ int main(int argc, char **argv) {
 }
 #endif  // OS_MACOSX
 #endif  // defined(OFFICIAL_BUILD) || !defined(USING_CCTESTS)
-
