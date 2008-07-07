@@ -88,7 +88,8 @@ static bool TestBufferBlob(std::string16 *error) {
   TEST_ASSERT(data_elements.size() == 1);
   TEST_ASSERT(data_elements[0].type() == DataElement::TYPE_BYTES);
   TEST_ASSERT(data_elements[0].bytes_length() == num_bytes);
-  TEST_ASSERT(data_elements[0].GetContentLength() == num_bytes);
+  TEST_ASSERT(data_elements[0].GetContentLength() ==
+              static_cast<size_t>(num_bytes));
   TEST_ASSERT(data_elements[0].bytes());
   TEST_ASSERT(memcmp(data_elements[0].bytes(), buffer, 3) == 0);
 
@@ -208,7 +209,8 @@ static bool TestSliceBlob(std::string16 *error) {
   TEST_ASSERT(data_elements.size() == 1);
   TEST_ASSERT(data_elements[0].type() == DataElement::TYPE_BYTES);
   TEST_ASSERT(data_elements[0].bytes_length() == blob1->Length());
-  TEST_ASSERT(data_elements[0].GetContentLength() == blob1->Length());
+  TEST_ASSERT(data_elements[0].GetContentLength() ==
+              static_cast<size_t>(blob1->Length()));
   TEST_ASSERT(data_elements[0].bytes());
   TEST_ASSERT(memcmp(data_elements[0].bytes(), "cde", 3) == 0);
 
@@ -241,7 +243,8 @@ static bool TestSliceBlob(std::string16 *error) {
   TEST_ASSERT(data_elements.size() == 1);
   TEST_ASSERT(data_elements[0].type() == DataElement::TYPE_BYTES);
   TEST_ASSERT(data_elements[0].bytes_length() == blob2->Length());
-  TEST_ASSERT(data_elements[0].GetContentLength() == blob2->Length());
+  TEST_ASSERT(data_elements[0].GetContentLength() ==
+              static_cast<size_t>(blob2->Length()));
   TEST_ASSERT(data_elements[0].bytes());
   TEST_ASSERT(memcmp(data_elements[0].bytes(), "d", 1) == 0);
 
@@ -440,9 +443,9 @@ static bool TestBlobDataElements(std::string16 *error) {
   std::vector<DataElement> file_elements;
   TEST_ASSERT(joined_buffers->GetDataElements(&buffer_elements));
   TEST_ASSERT(joined_files->GetDataElements(&file_elements));
-  TEST_ASSERT(buffer_elements.size() == kDataLen);
-  TEST_ASSERT(file_elements.size() == kDataLen);
-  for (size_t i = 0; i < kDataLen; ++i) {
+  TEST_ASSERT(buffer_elements.size() == static_cast<size_t>(kDataLen));
+  TEST_ASSERT(file_elements.size() == static_cast<size_t>(kDataLen));
+  for (size_t i = 0; i < static_cast<size_t>(kDataLen); ++i) {
     TEST_ASSERT(buffer_elements[i].type() == DataElement::TYPE_BYTES);
     TEST_ASSERT(buffer_elements[i].GetContentLength() == 1);
     TEST_ASSERT(buffer_elements[i].bytes()[0] == kData[i]);
@@ -457,7 +460,7 @@ static bool TestBlobDataElements(std::string16 *error) {
   }
 
   // Cleanup the temp file
-  File::DeleteRecursively(temp_dir.c_str());  
+  File::DeleteRecursively(temp_dir.c_str());
   return true;
 }
 
