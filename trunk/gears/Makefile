@@ -1972,6 +1972,7 @@ $(BROWSER)_IDLSRCS	+= \
 $(BROWSER)_CPPSRCS	+= \
 		empty_device_data_provider.cc \
 		geolocation.cc \
+		geolocation_db.cc \
 		geolocation_test.cc \
 		gps_location_provider_android.cc \
 		gps_location_provider_wince.cc \
@@ -1979,6 +1980,7 @@ $(BROWSER)_CPPSRCS	+= \
 		location_provider_pool.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
+		position_table.cc \
 		radio_data_provider_wince.cc \
 		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
