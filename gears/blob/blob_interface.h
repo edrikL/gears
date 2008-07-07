@@ -109,8 +109,7 @@ class DataElement {
   }
 
   void TrimToLength(uint64 new_length) {
-    uint64 length = GetContentLength();
-    assert(new_length <= length);
+    assert(new_length <= GetContentLength());
     if (type_ == TYPE_BYTES) {
       bytes_length_ = static_cast<int>(new_length);
     } else {
