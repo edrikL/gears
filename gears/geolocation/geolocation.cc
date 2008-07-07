@@ -39,6 +39,7 @@
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/geolocation_db.h"
 #include "third_party/googleurl/src/gurl.h"
 
 // TODO(steveblock): Update default URL when finalized.
@@ -52,6 +53,7 @@ static const char16 *kGearsLocationProviderUrls =
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 static const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
 static const char16 *kGeolocationObserverTopic = STRING16(L"geolocation");
+static const char16 *kLastPositionName = STRING16(L"LastPosition");
 
 // Data class for use with MessageService.
 class LocationAvailableNotificationData : public NotificationData {
@@ -142,6 +144,12 @@ GearsGeolocation::GearsGeolocation()
   }
 
   MessageService::GetInstance()->AddObserver(this, kGeolocationObserverTopic);
+
+  // Retrieve the cached last known position, if available.
+  GeolocationDB *db = GeolocationDB::GetDB();
+  if (db) {
+    db->RetrievePosition(kLastPositionName, &last_position_);
+  }
 }
 
 GearsGeolocation::~GearsGeolocation() {
@@ -154,6 +162,14 @@ GearsGeolocation::~GearsGeolocation() {
 
   MessageService::GetInstance()->RemoveObserver(this,
                                                 kGeolocationObserverTopic);
+
+  // Store the last known position.
+  if (last_position_.IsGoodFix()) {
+    GeolocationDB *db = GeolocationDB::GetDB();
+    if (db) {
+      db->StorePosition(kLastPositionName, last_position_);
+    }
+  }
 }
 
 // API Methods
@@ -163,8 +179,6 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
   if (!AcquirePermissionForLocationData(this, context)) return;
 
   // If there's no good current position, we simply return null.
-  // TODO(steveblock): Cache the last known position in the database to provide
-  // state between sessions.
   if (!last_position_.IsGoodFix()) {
     return;
   }
