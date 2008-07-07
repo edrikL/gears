@@ -921,15 +921,16 @@ class NotificationIconHandler : public Desktop::IconHandlerInterface {
 bool Desktop::ValidateAndShowNotification(
     GearsNotification *released_notification) {
   assert(released_notification);
-  scoped_ptr<NotificationIconHandler> icon_handler(
-      new NotificationIconHandler(released_notification));
   if (!ValidateNotification(released_notification)) {
+    delete released_notification;
     return false;
   }
 
-  if (!FetchIcon(icon_handler->mutable_icon(),
-                 &error_,
-                 icon_handler.release())) {
+  // Don't create icon_handler until released_notification
+  // has its url resolved (inside of ValidateNotification).
+  NotificationIconHandler *icon_handler =
+      new NotificationIconHandler(released_notification);
+  if (!FetchIcon(icon_handler->mutable_icon(), &error_, icon_handler)) {
     return false;
   }
   return true;
