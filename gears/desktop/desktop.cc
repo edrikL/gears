@@ -42,6 +42,7 @@
 #ifdef BROWSER_WEBKIT
 #include "gears/base/safari/curl_downloader.h"
 #endif
+#include "gears/blob/blob_interface.h"
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/notifier/notification.h"
@@ -633,14 +634,26 @@ bool GetIconFromRequest(HttpRequest *request,
     return false;
   }
 
-
   // Extract the data.
-  if (!request->GetResponseBody(&icon->png_data)) {
+  scoped_refptr<BlobInterface> blob;
+  if (!request->GetResponseBody(&blob)) {
     *error = STRING16(L"Invalid data for icon ");
     *error += icon->url;
     *error += STRING16(L".");
     return false;
   }
+  // TODO(bgarcia): Change type of IconData.png_data to Blob.
+  //                That will eliminate the copying done here.
+  int64 blob_length(blob->Length());
+  assert(blob_length >= 0);
+  assert(blob_length <= static_cast<int64>(kuint32max));
+  icon->png_data.resize(static_cast<size_t>(blob_length));
+#ifdef DEBUG
+  int64 length = blob->Read(&(icon->png_data[0]), 0, blob_length);
+  assert(length == blob_length);
+#else
+  blob->Read(&(icon->png_data[0]), 0, blob_length);
+#endif  // DEBUG
   return true;
 }
 
@@ -782,7 +795,6 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       return true;
     }
 
-    // Extract the data.
     if (!GetIconFromRequest(request.get(), icon, error)) {
       return false;
     }

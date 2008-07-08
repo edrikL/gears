@@ -63,6 +63,9 @@ class ByteStore : public RefCounted {
   bool IsFinalized() const { return is_finalized_; }
   void Finalize();
 
+  // Attempts to reserve memory for storage.
+  void Reserve(int64 length);
+
  private:
   ~ByteStore();
 

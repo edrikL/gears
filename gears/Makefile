@@ -1840,6 +1840,7 @@ $(BROWSER)_CPPSRCS += \
 		blob.cc \
 		blob_builder.cc \
 		blob_test.cc \
+		blob_utils.cc \
 		buffer_blob.cc \
 		file_blob.cc \
 		join_blob.cc \

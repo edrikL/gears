@@ -38,7 +38,6 @@
   self = [super init];
   if (self) {
     owner_ = owner;
-    dataEncoding_ = kCFStringEncodingUTF8;
   }
   return self;
 }
@@ -46,7 +45,7 @@
 - (void)dealloc {
   [request_ release];
   [connection_ release];
-  [receivedData_ release];
+  if (response_body_) response_body_->Unref();
   [headerDictionary_ release];
   [mimeType_ release];
   
@@ -116,7 +115,9 @@
   request_ = nil;
                          
   if (connection_) {
-    receivedData_ = [[NSMutableData data] retain];
+    assert(response_body_ == NULL);
+    response_body_ = new ByteStore;
+    response_body_->Ref();
     return true;
   }
   return false;
@@ -134,20 +135,18 @@
 // multipart/x-mixed-replace) this method may be called multiple times.
 - (void)connection:(NSURLConnection *)connection 
   didReceiveResponse:(NSURLResponse *)response {
+  assert(response);
   
   // Owner may be deleted by ReadyStateChange JS callback.
   owner_->Ref();
   owner_->SetReadyState(HttpRequest::SENT);
-  
-  [receivedData_ setLength:0];
-  
-  // Save string encoding, for use in GetResponseAsString.
-  const NSString *encoding_str = [response textEncodingName];
-  if (encoding_str) {
-    dataEncoding_ = CFStringConvertIANACharSetNameToEncoding(
-                         reinterpret_cast<CFStringRef>(encoding_str));
+
+  assert(response_body_->Length() == 0);
+  if (response) {
+    std::string16 encoding;
+    [[response textEncodingName] string16:&encoding];
+    owner_->SetResponseCharset(encoding);
   }
-  
   // Squirrel away http headers, response code and mimeType.
   NSHTTPURLResponse *http_response = static_cast<NSHTTPURLResponse *>(response);
   NSDictionary *all_headers = [[http_response allHeaderFields] retain];
@@ -161,7 +160,7 @@
 
 // Called when connection receives data.
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-  [receivedData_ appendData:data];
+  response_body_->AddData([data bytes], [data length]);
   
   // Owner should set the ready state to interactive.
   owner_->OnDataAvailable();
@@ -262,34 +261,9 @@
   value->clear();
 }
 
-- (void)responseBytes:(std::vector<uint8> *)body {
+- (void)responseBody:(scoped_refptr<BlobInterface> *)body {
   assert(body);
-  assert(receivedData_);
-  
-  size_t body_len = [receivedData_ length];
-  
-  body->resize(body_len);
-  
-  if (body_len) {
-    [receivedData_ getBytes:&(*body)[0] length:body_len];
-  }
-}
-
-- (bool)responseAsString:(std::string16 *)response {
-  assert(response);
-  assert(receivedData_);
-
-  size_t length = [receivedData_ length];
-  if (length > 0) {
-    return ConvertToString16UsingEncoding(
-               static_cast<const char *>([receivedData_ bytes]), 
-               length, 
-               dataEncoding_, 
-               response);
-  } else {
-    response->clear();
-    return true;
-  }
+  response_body_->CreateBlob(body);
 }
 
 - (int)statusCode {
@@ -314,4 +288,3 @@
   [status_line_nsstr string16:status_line];
 }
 @end
-

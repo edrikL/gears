@@ -113,46 +113,16 @@ bool SFHttpRequest::GetReadyState(ReadyState *state) {
 }
 
 //------------------------------------------------------------------------------
-// GetResponseBodyAsText
+// GetResponseBody
 //------------------------------------------------------------------------------
-bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
+bool SFHttpRequest::GetResponseBody(scoped_refptr<BlobInterface> *body) {
+  assert(body);
   if (!IsInteractiveOrComplete() || was_aborted_) {
     return false;
   }
-    
-  if (!text) {
-    return false;
-  }
 
-  return [delegate_holder_->delegate responseAsString:text];
-}
-
-//------------------------------------------------------------------------------
-// GetResponseBody
-//------------------------------------------------------------------------------
-bool SFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  if (!(IsComplete() && !was_aborted_)) {
-    return false;
-  }
-  
-  if (!body) {
-    return false;
-  }
-  
-  [delegate_holder_->delegate responseBytes:body];
+  [delegate_holder_->delegate responseBody:body];
   return true;
-}
-
-//------------------------------------------------------------------------------
-// GetResponseBody
-//------------------------------------------------------------------------------
-std::vector<uint8> *SFHttpRequest::GetResponseBody() {
-  scoped_ptr< std::vector<uint8> > body(new std::vector<uint8>);
-  if (!GetResponseBody(body.get())) {
-    return NULL;
-  } else {
-    return body.release();
-  }
 }
 
 //------------------------------------------------------------------------------
@@ -422,6 +392,13 @@ bool SFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
 }
 
 //------------------------------------------------------------------------------
+// GetResponseCharset
+//------------------------------------------------------------------------------
+std::string16 SFHttpRequest::GetResponseCharset() {
+  return charset_;
+}
+
+//------------------------------------------------------------------------------
 // GetResponseHeader
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetResponseHeader(const char16 *name,
@@ -533,6 +510,13 @@ void SFHttpRequest::Reset() {
 }
 
 //------------------------------------------------------------------------------
+// SetResponseCharset
+//------------------------------------------------------------------------------
+void SFHttpRequest::SetResponseCharset(const std::string16 &charset) {
+  charset_ = charset;
+}
+
+//------------------------------------------------------------------------------
 // OnUploadProgress
 //------------------------------------------------------------------------------
 void SFHttpRequest::OnUploadProgress(int64 position, int64 total) {
@@ -544,4 +528,3 @@ void SFHttpRequest::OnUploadProgress(int64 position, int64 total) {
     listener_->UploadProgress(this, position, total);
   }
 }
-

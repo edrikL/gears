@@ -38,9 +38,11 @@ bool CFStringRefToString16(CFStringRef str, std::string16 *out16);
 // CFStringRef.
 CFStringRef CFStringCreateWithString16(const char16 *str);
 
-// Convert an input buffer with the specified encoding into a std::string16.
-bool ConvertToString16UsingEncoding(const char *in, int len,
-                                    CFStringEncoding encoding,
-                                    std::string16 *out16);
+// Convert an input buffer encoded with the specified charset to UTF16.
+// TODO(bgarcia): Implement this for other platforms and move this
+// declaration to string_utils.h
+bool ConvertToString16FromCharset(const char *in, int len,
+                                  const std::string16 &charset,
+                                  std::string16 *out16);
 
 #endif  // GEARS_BASE_COMMON_STRING_UTILS_OSX_H__

@@ -29,6 +29,7 @@
 
 #include "gears/localserver/ie/http_request_ie.h"
 
+#include "gears/base/common/byte_store.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
@@ -42,7 +43,7 @@
 
 // We use URLMON's pull-data model which requires making stream read calls
 // beyond the amount of data currently available to force the underlying
-// stream implmentation to read more data from the network. This constant
+// stream implementation to read more data from the network. This constant
 // determines how much data beyond the end we'll request for this purpose.
 static const int kReadAheadAmount = 16 * 1024;
 
@@ -75,7 +76,7 @@ IEHttpRequest::IEHttpRequest()
       was_redirected_(false), was_aborted_(false),
       listener_(NULL), listener_data_available_enabled_(false),
       ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
-      actual_data_size_(0), async_(false) {
+      async_(false) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -102,46 +103,14 @@ bool IEHttpRequest::GetReadyState(ReadyState *state) {
 }
 
 //------------------------------------------------------------------------------
-// GetResponseBodyAsText
-//------------------------------------------------------------------------------
-bool IEHttpRequest::GetResponseBodyAsText(std::string16 *text) {
-  assert(text);
-  if (!IsInteractiveOrComplete() || was_aborted_)
-    return false;
-
-  std::vector<uint8> *data = response_payload_.data.get();
-  if (!data || data->empty() || !actual_data_size_) {
-    text->clear();
-    return true;
-  }
-
-  // TODO(michaeln): detect charset and decode using MLang
-  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]),
-                        actual_data_size_, text);
-}
-
-//------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<uint8> *IEHttpRequest::GetResponseBody() {
-  if (!IsComplete() || was_aborted_)
-    return NULL;
-  return response_payload_.data.release();
-}
-
-//------------------------------------------------------------------------------
-// GetResponseBody
-// TODO(michaeln): remove one or the other of these getResponseBody methods from
-// the interface.
-//------------------------------------------------------------------------------
-bool IEHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  if (!IsComplete() || was_aborted_)
+bool IEHttpRequest::GetResponseBody(scoped_refptr<BlobInterface> *blob) {
+  assert(blob);
+  if (!IsInteractiveOrComplete() || was_aborted_) {
     return false;
-  if (response_payload_.data.get()) {
-    body->swap(*response_payload_.data.get());
-  } else {
-    body->clear();
   }
+  response_body_->CreateBlob(blob);
   return true;
 }
 
@@ -184,6 +153,16 @@ bool IEHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
     return false;
   headers->assign(response_payload_.headers);
   return true;
+}
+
+//------------------------------------------------------------------------------
+// GetResponseCharset
+//------------------------------------------------------------------------------
+std::string16 IEHttpRequest::GetResponseCharset() {
+  // TODO(bgarcia): If the document sets the Content-Type charset, return
+  // that value.
+  // Also need to update blob/blob_utils.cc.
+  return std::string16();
 }
 
 //------------------------------------------------------------------------------
@@ -473,6 +452,7 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
     // case. Here we synthesize a valid redirect response for that purpose.
     // TODO(michaeln): we 'should' get the actual response data
     response_payload_.SynthesizeHttpRedirect(NULL, redirect_url);
+    response_body_.reset(new ByteStore);
     has_synthesized_response_payload_ = true;
     return E_ABORT;
   } else {
@@ -609,46 +589,35 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     return hr;
   }
 
-  std::vector<uint8> *data = response_payload_.data.get();
-  if (!data) {
-    assert(data);
+  if (!response_body_.get()) {
+    assert(response_body_.get());
     Abort();
     return E_UNEXPECTED;
   }
 
   if (flags & BSCF_FIRSTDATANOTIFICATION) {
-    assert(actual_data_size_ == 0);
+    assert(response_body_->Length() == 0);
   }
 
   bool is_new_data_available = false;
 
   // We use the data-pull model as the push model doesn't work
   // in some circumstances. In the pull model we have to read
-  // beyond then end of what's currently available to encourage
+  // beyond the end of what's currently available to encourage
   // the stream to read from the wire, otherwise the bind will stall
   // http://msdn2.microsoft.com/en-us/library/aa380034.aspx
+  scoped_ptr_malloc<uint8> buffer;
+  buffer.reset(static_cast<uint8*>(malloc(kReadAheadAmount)));
   do {
     // Read in big gulps to spin as little as possible
-    DWORD amount_to_read = std::max<DWORD>(data->size() - actual_data_size_,
-                                           kReadAheadAmount);
-
-    // Ensure our data buffer is large enough
-    size_t needed_size = actual_data_size_ + amount_to_read;
-    if (data->size() < needed_size) {
-      data->resize(needed_size * 2);
-    }
-
-    // Read into our data buffer
     DWORD amount_read = 0;
-    hr = stgmed->pstm->Read(&(*data)[actual_data_size_],
-                            amount_to_read, &amount_read);
-    actual_data_size_ += amount_read;
+    hr = stgmed->pstm->Read(buffer.get(), kReadAheadAmount, &amount_read);
+    // TODO(bgarcia):  Add an interface to ByteStore to allow us to directly
+    // write data to the ByteStore's internal buffer, to remove the extra
+    // copying done here.
+    response_body_->AddData(buffer.get(), amount_read);
     is_new_data_available |= (amount_read != 0);
   } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
-
-  if (flags & BSCF_LASTDATANOTIFICATION) {
-    data->resize(actual_data_size_);
-  }
 
   if (is_new_data_available && listener_ && listener_data_available_enabled_) {
     listener_->DataAvailable(this);
@@ -724,8 +693,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   response_payload_.status_line.assign(response_headers,
                                        crlf - response_headers);
   response_payload_.headers = (crlf + 2);  // skip over the LF
-  response_payload_.data.reset(new std::vector<uint8>);
-  actual_data_size_ = 0;
+  response_body_.reset(new ByteStore);
 
   // We only gather the body for good 200 OK responses
   if (status_code == HttpConstants::HTTP_OK) {
@@ -741,7 +709,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
       if (content_length < 0)
         content_length = 0;
     }
-    response_payload_.data->resize(content_length + kReadAheadAmount);
+    response_body_->Reserve(content_length + kReadAheadAmount);
   }
 
   SetReadyState(HttpRequest::INTERACTIVE);

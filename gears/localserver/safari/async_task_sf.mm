@@ -25,6 +25,7 @@
 
 #include <assert.h>
 
+#include "gears/blob/blob_interface.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/safari/async_task_sf.h"
@@ -38,8 +39,8 @@ const char16 *AsyncTask::kCookieRequiredErrorMessage =
 AsyncTask::AsyncTask(BrowsingContext *browsing_context) :
     is_aborted_(false),
     is_initialized_(false),
-    is_destructing_(false),
     browsing_context_(browsing_context),
+    is_destructing_(false),
     delete_when_done_(false),
     thread_(NULL),
     listener_(NULL),
@@ -370,7 +371,25 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     payload->status_code = status;
     if (http_request->GetStatusLine(&payload->status_line)) {
       if (http_request->GetAllResponseHeaders(&payload->headers)) {
-        payload->data.reset(http_request->GetResponseBody());
+        // TODO(bgarcia): Make WebCacheDB::PayloadInfo.data a Blob.
+        //                That will remove the copying done here.
+        scoped_refptr<BlobInterface> blob;
+        if (http_request->GetResponseBody(&blob)) {
+          int64 blob_length(blob->Length());
+          assert(blob_length >= 0);
+          // Make sure blob is small enough to fit inside std::vector.
+          assert(blob_length <= static_cast<int64>(kuint32max));
+          payload->data.reset(new std::vector<uint8>(
+                                  static_cast<size_t>(blob_length)));
+          if (blob_length > 0) {
+#ifdef DEBUG
+            int64 length = blob->Read(&(*payload->data)[0], 0, blob_length);
+            assert(length == blob_length);
+#else
+            blob->Read(&(*payload->data)[0], 0, blob_length);
+#endif  // DEBUG
+          }
+        }
       }
     }
   }

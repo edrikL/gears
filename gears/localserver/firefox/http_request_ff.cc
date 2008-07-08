@@ -112,48 +112,15 @@ bool FFHttpRequest::GetReadyState(ReadyState *state) {
 }
 
 //------------------------------------------------------------------------------
-// GetResponseBodyAsText
-//------------------------------------------------------------------------------
-bool FFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
-  assert(text);
-  if (!IsInteractiveOrComplete() || was_aborted_)
-    return false;
-
-  std::vector<uint8> *data = response_body_.get();
-  if (!data || data->empty()) {
-    text->clear();
-    return true;
-  }
-
-  // TODO(michaeln): detect charset and decode using nsICharsetConverterManager
-  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]),
-                        data->size(), text);
-}
-
-//------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  NS_ENSURE_TRUE(IsComplete() && !was_aborted_, false);
-  if (!response_body_.get()) {
+bool FFHttpRequest::GetResponseBody(scoped_refptr<BlobInterface> *blob) {
+  assert(blob);
+  if (!IsInteractiveOrComplete() || was_aborted_) {
     return false;
   }
-  body->resize(response_body_->size());
-  if (body->size() != response_body_->size()) {
-    return false;
-  }
-  if (body->size() > 0) {
-    memcpy(&(*body)[0], &(*response_body_)[0], response_body_->size());
-  }
+  response_body_->CreateBlob(blob);
   return true;
-}
-
-//------------------------------------------------------------------------------
-// GetResponseBody
-//------------------------------------------------------------------------------
-std::vector<uint8> *FFHttpRequest::GetResponseBody() {
-  NS_ENSURE_TRUE(IsComplete() && !was_aborted_, NULL);
-  return response_body_.release();
 }
 
 //------------------------------------------------------------------------------
@@ -504,8 +471,7 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   // decode an already decoded response body and fail.
   // TODO(michaeln): don't do this for scriptable Gears.HttpRequests
   if (IsComplete() && response_body_.get()) {
-    std::string data_len_str =
-        IntegerToString(static_cast<int>(response_body_.get()->size()));
+    std::string data_len_str = Integer64ToString(response_body_->Length());
     visitor.headers_.SetHeader(HTTPHeaders::CONTENT_LENGTH,
                                data_len_str.c_str(),
                                HTTPHeaders::OVERWRITE);
@@ -525,6 +491,16 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   }
   header_str += HttpConstants::kCrLfAscii;  // blank line at the end
   return UTF8ToString16(header_str.c_str(), header_str.length(), headers);
+}
+
+//------------------------------------------------------------------------------
+// GetResponseCharset
+//------------------------------------------------------------------------------
+std::string16 FFHttpRequest::GetResponseCharset() {
+  // TODO(bgarcia): If the document sets the Content-Type charset, return
+  // that value.
+  // Also need to update blob/blob_utils.cc.
+  return std::string16();
 }
 
 //------------------------------------------------------------------------------
@@ -592,13 +568,13 @@ void FFHttpRequest::SetReadyState(ReadyState state) {
 NS_IMETHODIMP FFHttpRequest::OnStartRequest(nsIRequest *request,
                                             nsISupports *context) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  response_body_.reset(new std::vector<uint8>);
+  response_body_.reset(new ByteStore);
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     PRInt32 length = -1;
     chan->GetContentLength(&length);
     if (length >= 0) {
-      response_body_->reserve(length);
+      response_body_->Reserve(length);
     }
   }
   SetReadyState(HttpRequest::SENT);
@@ -615,24 +591,12 @@ NS_METHOD FFHttpRequest::StreamReaderFunc(nsIInputStream *stream,
                                           PRUint32 count,
                                           PRUint32 *write_count) {
   FFHttpRequest *self = reinterpret_cast<FFHttpRequest*>(closure);
-  std::vector<uint8> *body = self->response_body_.get();
-  if (!body) {
-    return NS_ERROR_UNEXPECTED;
+  scoped_refptr<ByteStore> body = self->response_body_;
+  if (body.get() && body->AddData(from_segment, count)) {
+    *write_count = count;
+    return NS_OK;
   }
-  size_t cur_size = body->size();
-  size_t needed_size = cur_size + count;
-  if (body->capacity() < needed_size) {
-    body->reserve(needed_size * 2);
-  }
-  body->resize(needed_size);
-  if (body->size() != cur_size + count) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  const unsigned char *p = reinterpret_cast<const unsigned char*>(from_segment);
-  memcpy(&(*body)[cur_size], p, count);
-  *write_count = count;
-
-  return NS_OK;
+  return NS_ERROR_UNEXPECTED;
 }
 
 //------------------------------------------------------------------------------
@@ -651,17 +615,16 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
     return NS_OK;
   }
 
-  std::vector<uint8> *body = response_body_.get();
-  if (!body) {
+  if (!response_body_.get()) {
     return NS_ERROR_UNEXPECTED;
   }
-  size_t prev_size = body->size();
+  int64 prev_size = response_body_->Length();
 
   PRUint32 n;
   nsresult rv = stream->ReadSegments(StreamReaderFunc, this, count, &n);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (body->size() > prev_size) {
+  if (response_body_->Length() > prev_size) {
     if (listener_ && listener_data_available_enabled_) {
       listener_->DataAvailable(this);
     }
