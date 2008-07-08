@@ -765,7 +765,7 @@ bool WebCacheDB::DoServiceQuery(
   // Select possible matching entries for this url from all current versions.
   const char16 *sql = STRING16(
       L"SELECT s.ServerID, s.RequiredCookie, s.ServerType, "
-      L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID, e.Redirect"
+      L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID, e.Redirect "
       L"FROM Entries e, Versions v, Servers s "
       L"WHERE e.Url = ? AND IFNULL(?, e.IgnoreQuery) AND "
       L"      v.VersionID = e.VersionID AND "
