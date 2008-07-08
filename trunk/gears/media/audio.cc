@@ -63,9 +63,8 @@ void GearsAudio::GetError(JsCallContext *context) {
 
 void GearsAudio::GetBuffered(JsCallContext *context) {
   scoped_refptr<GearsTimeRanges> buffered;
-  CreateModule<GearsTimeRanges>(GetJsRunner(), &buffered);
-  if (!buffered->InitBaseFromSibling(this)) {
-    context->SetException(STRING16("Initializing base class failed"));
+  if (!CreateModule<GearsTimeRanges>(module_environment_.get(),
+                                     context, &buffered)) {
     return;
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, buffered.get());

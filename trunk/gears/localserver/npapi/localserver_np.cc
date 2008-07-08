@@ -110,11 +110,8 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
 #endif
 
   scoped_refptr<GearsManagedResourceStore> store;
-  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
-    return;  // Create function sets an error message.
-
-  if (!store->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               context, &store)) {
     return;
   }
 
@@ -158,11 +155,8 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
   }
 
   scoped_refptr<GearsManagedResourceStore> store;
-  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
-    return;  // Create function sets an error message.
-
-  if (!store->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               context, &store)) {
     return;
   }
 
@@ -245,11 +239,8 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
 #endif
 
   scoped_refptr<GearsResourceStore> store;
-  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
-    return;  // Create function sets an error message.
-
-  if (!store->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsResourceStore>(module_environment_.get(),
+                                        context, &store)) {
     return;
   }
 
@@ -292,11 +283,8 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
   }
 
   scoped_refptr<GearsResourceStore> store;
-  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
-    return;  // Create function sets an error message.
-
-  if (!store->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsResourceStore>(module_environment_.get(),
+                                        context, &store)) {
     return;
   }
 

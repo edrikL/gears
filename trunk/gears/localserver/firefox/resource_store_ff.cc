@@ -639,11 +639,10 @@ GearsResourceStore::CreateFileSubmitter(nsISupports **retval) {
     RETURN_EXCEPTION(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
   }
-  scoped_refptr<ModuleImplBaseClass> submitter;
-  CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter);
-  if (!submitter->InitBaseFromSibling(this) ||
-      !static_cast<GearsFileSubmitter*>(submitter.get())->store_.Clone(
-          &store_)) {
+  scoped_refptr<GearsFileSubmitter> submitter;
+  if (!CreateModule<GearsFileSubmitter>(module_environment_.get(),
+                                        NULL, &submitter) ||
+      !submitter->store_.Clone(&store_)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize FileSubmitter."));
   }
   JsParamFetcher js_params(this);

@@ -158,47 +158,47 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 
   if (object_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
-    CreateModule<GearsTest>(GetJsRunner(), &object);
+    CreateModule<GearsTest>(module_environment_.get(), NULL, &object);
 #else
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.database")) {
-    CreateModule<GearsDatabase>(GetJsRunner(), &object);
+    CreateModule<GearsDatabase>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+    CreateModule<GearsDesktop>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
+    CreateModule<GearsHttpRequest>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(GetJsRunner(), &object);
+    CreateModule<GearsTimer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.workerpool")) {
-    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
+    CreateModule<GearsWorkerPool>(module_environment_.get(), NULL, &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media, and Image APIs have not been
   // finalized for official builds.
 #else
 #ifdef WIN32
   } else if (object_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(GetJsRunner(), &object);
+    CreateModule<GearsCanvas>(module_environment_.get(), NULL, &object);
 #endif
   } else if (object_name == STRING16(L"beta.console")) {
-    CreateModule<GearsConsole>(GetJsRunner(), &object);
+    CreateModule<GearsConsole>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<Database2Manager>(GetJsRunner(), &object);
+    CreateModule<Database2Manager>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+    CreateModule<GearsGeolocation>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
-    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+    CreateModule<GearsImageLoader>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.audio")) {
-    CreateModule<GearsAudio>(GetJsRunner(), &object);
+    CreateModule<GearsAudio>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.audiorecorder")) {
-    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
+    CreateModule<GearsAudioRecorder>(module_environment_.get(), NULL, &object);
 #endif  // OFFICIAL_BUILD
 #ifdef OFFICIAL_BUILD
   // The Dummy module is not included in official builds.
 #else
   } else if (object_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(GetJsRunner(), &object);
+    CreateModule<DummyModule>(module_environment_.get(), NULL, &object);
 #endif // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
@@ -208,11 +208,6 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 
   if (!object) {
     *error = STRING16(L"Failed to create requested object.");
-    return false;
-  }
-
-  if (!object->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
     return false;
   }
 
@@ -247,9 +242,8 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
     ModuleImplBaseClass *native_base = NULL;
     idl_base->GetNativeBaseClass(&native_base);
     if (native_base) {
-      if (native_base->InitBaseFromSibling(this)) {
-        base_init_succeeded = true;
-      }
+      native_base->InitModuleEnvironment(module_environment_.get());
+      base_init_succeeded = true;
     }
   }
 

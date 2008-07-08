@@ -183,9 +183,8 @@ void GearsImage::ToBlob(JsCallContext *context) {
   }
 
   scoped_refptr<GearsBlob> gears_blob;
-  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
-  if (!gears_blob->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &gears_blob)) {
     return;
   }
   gears_blob->Reset(blob.get());

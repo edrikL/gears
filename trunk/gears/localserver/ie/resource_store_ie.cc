@@ -732,8 +732,8 @@ STDMETHODIMP GearsResourceStore::createFileSubmitter(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
   }
   scoped_refptr<GearsFileSubmitter> submitter;
-  CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter);
-  if (!submitter->InitBaseFromSibling(this) ||
+  if (!CreateModule<GearsFileSubmitter>(module_environment_.get(),
+                                        NULL, &submitter) ||
       !submitter->store_.Clone(&store_)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize FileSubmitter."));
   }

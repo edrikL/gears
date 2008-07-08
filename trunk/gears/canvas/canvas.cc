@@ -135,9 +135,8 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   scoped_refptr<BlobInterface> blob;
   output_stream.CreateBlob(&blob);
   scoped_refptr<GearsBlob> gears_blob;
-  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
-  if (!gears_blob->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &gears_blob)) {
     return;
   }
   gears_blob->Reset(blob.get());
@@ -233,13 +232,8 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   }
   if (rendering_context_.get() == NULL) {
     LazyInitialize();
-
-    CreateModule<GearsCanvasRenderingContext2D>(GetJsRunner(),
-        &rendering_context_);
-    if (!rendering_context_->InitBaseFromSibling(this)) {
-      context->SetException(STRING16(L"Initializing base class failed."));
-      // Don't return a broken object the next time this function is called.
-      rendering_context_.reset(NULL);
+    if (!CreateModule<GearsCanvasRenderingContext2D>(
+            module_environment_.get(), context, &rendering_context_)) {
       return;
     }
     rendering_context_->InitCanvasField(this);

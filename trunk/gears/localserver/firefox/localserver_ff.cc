@@ -118,8 +118,8 @@ NS_IMETHODIMP GearsLocalServer::CreateManagedStore(
   //       name, required_cookie_bstr.m_str);
 
   scoped_refptr<GearsManagedResourceStore> store;
-  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
-  if (!store->InitBaseFromSibling(this) ||
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               NULL, &store) ||
       !store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
                                   name.c_str(), required_cookie.c_str())) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
@@ -156,8 +156,8 @@ NS_IMETHODIMP GearsLocalServer::OpenManagedStore(
   }
 
   scoped_refptr<GearsManagedResourceStore> store;
-  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
-  if (!store->InitBaseFromSibling(this) ||
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               NULL, &store) ||
       !store->store_.Open(existing_store_id)) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ManagedResourceStore."));
   }
@@ -227,9 +227,7 @@ NS_IMETHODIMP GearsLocalServer::CreateStore(
   //       name, required_cookie_bstr.m_str);
 
   nsCOMPtr<GearsResourceStore> store(new GearsResourceStore());
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Error initializing ResourceStore."));
-  }
+  store->InitModuleEnvironment(module_environment_.get());
   if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
                                   name.c_str(), required_cookie.c_str())) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ResourceStore."));
@@ -266,9 +264,7 @@ NS_IMETHODIMP GearsLocalServer::OpenStore(
   }
 
   nsCOMPtr<GearsResourceStore> store(new GearsResourceStore());
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Error initializing ResourceStore."));
-  }
+  store->InitModuleEnvironment(module_environment_.get());
   if (!store->store_.Open(existing_store_id)) {
     RETURN_EXCEPTION(STRING16(L"Error initializing ResourceStore."));
   }

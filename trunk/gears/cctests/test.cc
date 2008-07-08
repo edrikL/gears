@@ -2137,9 +2137,8 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
   std::string input_utf8;
   String16ToUTF8(input_utf16.c_str(), &input_utf8);
   scoped_refptr<GearsBlob> gears_blob;
-  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
-  if (!gears_blob->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &gears_blob)) {
     return;
   }
   gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));

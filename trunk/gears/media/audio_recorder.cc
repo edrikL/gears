@@ -296,7 +296,10 @@ void GearsAudioRecorder::GetBlob(JsCallContext *context) {
   scoped_refptr<GearsBlob> response_blob;
 
   blob.reset(new BufferBlob(&buffer_));
-  CreateModule<GearsBlob>(GetJsRunner(), &response_blob);
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &response_blob)) {
+    return;
+  }
   response_blob->Reset(blob.get());
 
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob.get());

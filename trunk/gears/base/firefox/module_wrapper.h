@@ -117,9 +117,11 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
 
 // Creates an instance of the class and its wrapper.
 template<class GearsClass, class OutType>
-bool CreateModule(JsRunnerInterface *js_runner,
+bool CreateModule(ModuleEnvironment *module_environment,
+                  JsCallContext *context,
                   scoped_refptr<OutType>* module) {
   GearsClass *impl = new GearsClass(); 
+  impl->InitModuleEnvironment(module_environment);
   Dispatcher<GearsClass> *dispatcher = new Dispatcher<GearsClass>(impl);
 
   // NOTE: A little weird to use scoped_ptr here because ModuleWrapper is
@@ -128,9 +130,13 @@ bool CreateModule(JsRunnerInterface *js_runner,
   scoped_ptr<ModuleWrapper> module_wrapper(new ModuleWrapper(impl, dispatcher));
   impl->SetJsWrapper(module_wrapper.get());
 
-  JsContextWrapperPtr context_wrapper = js_runner->GetContextWrapper();
+  JsRunnerInterface *js_runner = module_environment->js_runner_;
   JsToken js_object;
-  if (!context_wrapper->CreateModuleJsObject(impl, &js_object)) {
+  if (!js_runner->GetContextWrapper()->CreateModuleJsObject(impl,
+                                                            &js_object)) {
+    if (context) {
+      context->SetException(STRING16(L"Module creation failed."));
+    }
     return false;
   }
 

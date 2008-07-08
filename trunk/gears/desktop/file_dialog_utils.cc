@@ -110,9 +110,8 @@ bool FileDialogUtils::FilesToJsObjectArray(
     }
 
     scoped_refptr<GearsBlob> gears_blob;
-    CreateModule<GearsBlob>(js_runner, &gears_blob);
-    if (!gears_blob->InitBaseManually(&module_environment)) {
-      *error = STRING16(L"Initializing base class failed.");
+    if (!CreateModule<GearsBlob>(&module_environment, NULL, &gears_blob)) {
+      *error = STRING16(L"GearsBlob creation failed.");
       return false;
     }
     if (!obj->SetPropertyDispatcherModule(STRING16(L"blob"),

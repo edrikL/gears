@@ -339,10 +339,10 @@ void GearsHttpRequest::GetUpload(JsCallContext *context) {
   if (upload_.get() == NULL) {
     InitUnloadMonitor();
 
-    bool result = CreateModule<GearsHttpRequestUpload>(GetJsRunner(), &upload_);
-    assert(result);
-    result = upload_->InitBaseFromSibling(this);
-    assert(result);
+    if (!CreateModule<GearsHttpRequestUpload>(module_environment_.get(),
+                                              context, &upload_)) {
+      return;
+    }
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, upload_.get());
 }
@@ -418,9 +418,8 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
     return;
   }
 
-  CreateModule<GearsBlob>(GetJsRunner(), &response_blob_);
-  if (!response_blob_->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &response_blob_)) {
     return;
   }
   response_blob_->Reset(blob.get());

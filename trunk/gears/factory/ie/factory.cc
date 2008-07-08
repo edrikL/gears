@@ -167,61 +167,55 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 
   if (object_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
-    CreateModule<GearsTest>(GetJsRunner(), &object);
+    CreateModule<GearsTest>(module_environment_.get(), NULL, &object);
 #else
     *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.database")) {
-    CreateModule<GearsDatabase>(GetJsRunner(), &object);
+    CreateModule<GearsDatabase>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+    CreateModule<GearsDesktop>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
+    CreateModule<GearsHttpRequest>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(GetJsRunner(), &object);
+    CreateModule<GearsTimer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.workerpool")) {
-    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
+    CreateModule<GearsWorkerPool>(module_environment_.get(), NULL, &object);
 #ifdef OFFICIAL_BUILD
   // The Canvas, Console, Database2, Geolocation, Media and Image APIs have not
   // been finalized for official builds.
 #else
   } else if (object_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<Database2Manager>(GetJsRunner(), &object);
+    CreateModule<Database2Manager>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+    CreateModule<GearsGeolocation>(module_environment_.get(), NULL, &object);
 #ifdef WINCE
   // Furthermore, Canvas, Console, Media and Image are unimplemented on WinCE.
 #else
 #ifdef WIN32
   } else if (object_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(GetJsRunner(), &object);
+    CreateModule<GearsCanvas>(module_environment_.get(), NULL, &object);
 #endif
   } else if (object_name == STRING16(L"beta.console")) {
-    CreateModule<GearsConsole>(GetJsRunner(), &object);
+    CreateModule<GearsConsole>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
-    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+    CreateModule<GearsImageLoader>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.audio")) {
-    CreateModule<GearsAudio>(GetJsRunner(), &object);
+    CreateModule<GearsAudio>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.audiorecorder")) {
-    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
+    CreateModule<GearsAudioRecorder>(module_environment_.get(), NULL, &object);
 #endif  // WINCE
 #endif  // OFFICIAL_BUILD
 #ifdef OFFICIAL_BUILD
   // The Dummy module is not included in official builds.
 #else
   } else if (object_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(GetJsRunner(), &object);
+    CreateModule<DummyModule>(module_environment_.get(), NULL, &object);
 #endif // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
-    return false;
-  }
-
-  // setup the ModuleImplBaseClass (copy settings from this factory)
-  if (!object->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
     return false;
   }
 
@@ -259,11 +253,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     return false;
   }
 
-  // setup the ModuleImplBaseClass (copy settings from this factory)
-  if (!base_class->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
-  }
+  base_class->InitModuleEnvironment(module_environment_.get());
 
   // Our factory-created Gears objects no longer need to be sited, since we get
   // the domain and location_url from ModuleImplBaseClass.  But we may someday
@@ -374,15 +364,16 @@ STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
 }
 
 
-// InitBaseFromDOM needs the object to be sited.  We override SetSite just to
-// know when this happens, so we can do some one-time setup afterward.
+// InitModuleEnvironmentFromDOM needs the object to be sited.  We override
+// SetSite just to know when this happens, so we can do some one-time setup
+// afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   HRESULT hr = IObjectWithSiteImpl<GearsFactory>::SetSite(site);
 #ifdef WINCE
   // We are unable to get IWebBrowser2 from this pointer. Instead, the user must
   // call privateSetGlobalObject from JavaScript.
 #else
-  InitBaseFromDOM(m_spUnkSite);
+  InitModuleEnvironmentFromDOM(m_spUnkSite);
 #endif
   return hr;
 }
@@ -390,7 +381,7 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
 #ifdef WINCE
 STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
   if (!IsFactoryInitialized(this)) {
-    if (!InitBaseFromDOM(js_dispatch)) {
+    if (!InitModuleEnvironmentFromDOM(js_dispatch)) {
       RETURN_EXCEPTION(STRING16(L"Failed to initialize "
                                 PRODUCT_FRIENDLY_NAME
                                 L"."));

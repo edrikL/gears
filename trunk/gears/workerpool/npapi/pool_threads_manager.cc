@@ -704,16 +704,14 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   // js_runner manages the lifetime of these allocated objects.
 
   scoped_refptr<GearsFactory> factory;
-  if (!CreateModule<GearsFactory>(js_runner, &factory)) { return false; }
-
-  if (!factory->InitBaseManually(wi->module_environment.get())) {
+  if (!CreateModule<GearsFactory>(wi->module_environment.get(),
+                                  NULL, &factory)) {
     return false;
   }
 
   scoped_refptr<GearsWorkerPool> workerpool;
-  if (!CreateModule<GearsWorkerPool>(js_runner, &workerpool)) { return false; }
-
-  if (!workerpool->InitBaseManually(wi->module_environment.get())) {
+  if (!CreateModule<GearsWorkerPool>(wi->module_environment.get(),
+                                     NULL, &workerpool)) {
     return false;
   }
 

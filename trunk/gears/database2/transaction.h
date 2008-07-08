@@ -51,6 +51,7 @@ class Database2Transaction
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
+  Database2Transaction() : ModuleImplBaseClassVirtual("Database2Transaction") {}
   ~Database2Transaction() {}
   // creates Database2Transaction instance
   static bool Create(const Database2 *database,
@@ -104,11 +105,6 @@ class Database2Transaction
   Database2Connection *connection() const { return connection_.get(); }
 
  private:
-  friend bool CreateModule<Database2Transaction, Database2Transaction>(
-                  JsRunnerInterface *js_runner,
-                  scoped_refptr<Database2Transaction>* module);
-  Database2Transaction() : ModuleImplBaseClassVirtual("Database2Transaction") {}
-
   std::string16 old_version_;
   std::string16 new_version_;
 

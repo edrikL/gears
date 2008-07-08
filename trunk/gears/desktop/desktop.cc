@@ -950,10 +950,8 @@ bool Desktop::ValidateAndRemoveNotification(
 
 void GearsDesktop::CreateNotification(JsCallContext *context) {
   scoped_refptr<GearsNotification> notification;
-  if (!CreateModule<GearsNotification>(GetJsRunner(), &notification))
-    return;  // Create function sets an error message.
-  if (!notification->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsNotification>(module_environment_.get(),
+                                       context, &notification)) {
     return;
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, notification.get());

@@ -177,11 +177,8 @@ void GearsDatabase::Execute(JsCallContext *context) {
 
   // Wrap a GearsResultSet around the statement and execute it
   scoped_refptr<GearsResultSet> result_set;
-  if (!CreateModule<GearsResultSet>(GetJsRunner(), &result_set))
-    return;  // Create function sets an error message.
-
-  if (!result_set->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsResultSet>(module_environment_.get(),
+                                    context, &result_set)) {
     return;
   }
 

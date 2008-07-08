@@ -63,56 +63,55 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
 #endif
 }
 
-bool ModuleImplBaseClass::InitBaseFromSibling(
-                              const ModuleImplBaseClass *other) {
-  assert(other->module_environment_.get());
-  return InitBaseManually(other->module_environment_.get());
-}
-
-
 #if BROWSER_FF
-bool ModuleImplBaseClass::InitBaseFromDOM() {
+bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM() {
 #elif BROWSER_IE
-bool ModuleImplBaseClass::InitBaseFromDOM(IUnknown *site) {
+bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM(IUnknown *site) {
 #elif BROWSER_NPAPI
-bool ModuleImplBaseClass::InitBaseFromDOM(JsContextPtr instance) {
+bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM(JsContextPtr instance) {
 #endif
   bool is_worker = false;
   SecurityOrigin security_origin;
   scoped_refptr<BrowsingContext> browsing_context;
   // We allocate a new (with a fresh ref-count of zero) ModuleEnvironment
-  // object, which is passed immediately to InitBase, which maintains a separate
-  // reference, and will therefore look after de-allocating the new object.
+  // object, which is passed immediately to InitModuleEnvironment, which
+  // maintains a separate reference, and will therefore look after
+  // de-allocating the new object.
 #if BROWSER_FF
   JsContextPtr cx;
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
                    DOMUtils::GetPageOrigin(&security_origin) &&
                    DOMUtils::GetPageBrowsingContext(&browsing_context);
-  return succeeded && InitBaseManually(new ModuleEnvironment(
+  if (!succeeded) { return false; }
+  InitModuleEnvironment(new ModuleEnvironment(
       security_origin, is_worker, NewDocumentJsRunner(NULL, cx),
       browsing_context.get()));
 #elif BROWSER_IE
   bool succeeded =
       ActiveXUtils::GetPageOrigin(site, &security_origin) &&
       ActiveXUtils::GetPageBrowsingContext(site, &browsing_context);
-  return succeeded && InitBaseManually(new ModuleEnvironment(
+  if (!succeeded) { return false; }
+  InitModuleEnvironment(new ModuleEnvironment(
       security_origin, site, is_worker, NewDocumentJsRunner(site, NULL),
       browsing_context.get()));
 #elif BROWSER_NPAPI
   bool succeeded =
       BrowserUtils::GetPageSecurityOrigin(instance, &security_origin) &&
       BrowserUtils::GetPageBrowsingContext(instance, &browsing_context);
-  return succeeded && InitBaseManually(new ModuleEnvironment(
+  if (!succeeded) { return false; }
+  InitModuleEnvironment(new ModuleEnvironment(
       security_origin, is_worker,
       NewDocumentJsRunner(NULL, instance), browsing_context.get()));
 #endif
+  return true;
 }
 
 
-bool ModuleImplBaseClass::InitBaseManually(
+void ModuleImplBaseClass::InitModuleEnvironment(
     ModuleEnvironment *source_module_environment) {
   // First, check that we weren't previously initialized.
   assert(!module_environment_.get());
+  assert(source_module_environment);
   // We want to make sure security_origin_ is initialized, but that isn't
   // exposed directly.  So access any member to trip its internal
   // 'initialized_' assert.
@@ -127,8 +126,6 @@ bool ModuleImplBaseClass::InitBaseManually(
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
-
-  return true;
 }
 
 
