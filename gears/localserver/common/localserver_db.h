@@ -360,11 +360,11 @@ class WebCacheDB : SQLTransactionListener {
   bool DoServiceQuery(const char16 *url,
                       bool exact_match,
                       BrowsingContext *context,
-                      const char16 *cookie_url,
+                      const char16 *requested_url,
                       bool *loaded_cookie_map,
                       bool *loaded_cookie_map_ok,
                       CookieMap *cookie_map,
-                      std::string16 *possible_redirect,
+                      std::string16 *possible_session_redirect,
                       int64 *payload_id_out);
 
   bool ServiceGearsInspectorUrl(const char16 *url, PayloadInfo *payload);

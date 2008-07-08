@@ -655,8 +655,8 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
   }
 
   int64 payload_id = kInvalidID;
-  std::string16 redirect_url;
-  if (!ServiceImpl(url, context, &payload_id, &redirect_url)) {
+  std::string16 session_redirect_url;
+  if (!ServiceImpl(url, context, &payload_id, &session_redirect_url)) {
     return false;
   }
 
@@ -665,8 +665,8 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
       return false;
     }
     return true;
-  } else if (!redirect_url.empty()) {
-    return payload->SynthesizeHttpRedirect(NULL, redirect_url.c_str());
+  } else if (!session_redirect_url.empty()) {
+    return payload->SynthesizeHttpRedirect(NULL, session_redirect_url.c_str());
   } else {
     assert(false);
     return false;
@@ -718,13 +718,13 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   bool loaded_cookie_map = false;  // we defer reading cookies until needed
   bool loaded_cookie_map_ok = false;
   CookieMap cookie_map;
-  std::string16 possible_redirect;
+  std::string16 possible_session_redirect;
 
   // First we run a query that looks for exact matches against entries not
   // intended to ignore query arguments.
-  if (DoServiceQuery(url, true, context,
-                     url, &loaded_cookie_map, &loaded_cookie_map_ok,
-                     &cookie_map, &possible_redirect, payload_id_out)) {
+  if (DoServiceQuery(url, true, context, url,
+                     &loaded_cookie_map, &loaded_cookie_map_ok, &cookie_map,
+                     &possible_session_redirect, payload_id_out)) {
     return true;
   }
 
@@ -735,17 +735,17 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   const char16 *query = std::char_traits<char16>::find(url, url_length, '?');
   if (query) {
     std::string16 url_without_query(url, query);
-    if (DoServiceQuery(url_without_query.c_str(), false, context,
-                       url, &loaded_cookie_map, &loaded_cookie_map_ok,
-                       &cookie_map, &possible_redirect, payload_id_out)) {
+    if (DoServiceQuery(url_without_query.c_str(), false, context, url,
+                       &loaded_cookie_map, &loaded_cookie_map_ok, &cookie_map,
+                       &possible_session_redirect, payload_id_out)) {
       return true;
     }
   }
 
   // If we found an entry that requires a cookie, and no cookie exists, and
   // specifies a redirect url for use in that case, then return the redirect.
-  if (!possible_redirect.empty()) {
-    *redirect_url_out = possible_redirect;
+  if (!possible_session_redirect.empty() && possible_session_redirect != url) {
+    *redirect_url_out = possible_session_redirect;
     return true;
   }
 
@@ -756,16 +756,16 @@ bool WebCacheDB::DoServiceQuery(
                      const char16 *url,
                      bool exact_match,
                      BrowsingContext *context,
-                     const char16 *cookie_url,
+                     const char16 *requested_url,
                      bool *loaded_cookie_map,
                      bool *loaded_cookie_map_ok,
                      CookieMap *cookie_map,
-                     std::string16 *possible_redirect,
+                     std::string16 *possible_session_redirect,
                      int64 *payload_id_out) {
   // Select possible matching entries for this url from all current versions.
   const char16 *sql = STRING16(
       L"SELECT s.ServerID, s.RequiredCookie, s.ServerType, "
-      L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID "
+      L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID, e.Redirect"
       L"FROM Entries e, Versions v, Servers s "
       L"WHERE e.Url = ? AND IFNULL(?, e.IgnoreQuery) AND "
       L"      v.VersionID = e.VersionID AND "
@@ -810,9 +810,10 @@ bool WebCacheDB::DoServiceQuery(
     const int64 server_id = stmt.column_int64(0);
     const std::string16 required_cookie(stmt.column_text16_safe(1));
     const ServerType server_type = static_cast<ServerType>(stmt.column_int(2));
-    const char16 *redirect = stmt.column_text16_safe(3);
+    const char16 *session_redirect = stmt.column_text16_safe(3);
     const bool ignore_query = (stmt.column_int(4) != 0);
     const int64 payload_id = stmt.column_int64(5);
+    const char16 *entry_redirect = stmt.column_text16_safe(6);
     bool is_cookie_required = !required_cookie.empty();
 
     // Compute this entry's rank up front and compare to the rank of the
@@ -828,7 +829,8 @@ bool WebCacheDB::DoServiceQuery(
     if (is_cookie_required) {
       if (!(*loaded_cookie_map)) {
         *loaded_cookie_map = true;
-        *loaded_cookie_map_ok = cookie_map->LoadMapForUrl(cookie_url, context);
+        *loaded_cookie_map_ok = cookie_map->LoadMapForUrl(requested_url,
+                                                          context);
         if (!(*loaded_cookie_map_ok)) {
           LOG(("WebCacheDB.Service failed to read cookies\n"));
         }
@@ -843,16 +845,28 @@ bool WebCacheDB::DoServiceQuery(
       ParseCookieNameAndValue(required_cookie, &cookie_name, &cookie_value);
       bool has_required_cookie = cookie_map->HasLocalServerRequiredCookie(
                                                  required_cookie);
-      if (!has_required_cookie && redirect && redirect[0] &&
+      if (!has_required_cookie && session_redirect[0] &&
           (cookie_value != kNegatedRequiredCookieValue) &&
           !cookie_map->HasCookie(cookie_name)) {
-        if (!possible_redirect->empty() && ((*possible_redirect) != redirect)) {
-          LOG(("WebCacheDB.Service conflicting possible redirects\n"));
+        if (!possible_session_redirect->empty() &&
+            ((*possible_session_redirect) != session_redirect)) {
+          LOG(("WebCacheDB.Service conflicting possible session redirects\n"));
         }
-        *possible_redirect = redirect;
+        *possible_session_redirect = session_redirect;
       }
 
       if (!has_required_cookie) {
+        continue;
+      }
+    }
+
+    if (entry_redirect[0]) {
+      std::string16 entry_redirect_str(entry_redirect);
+      if (entry_redirect_str == requested_url) {
+        // Do not return redirects back to the requested url.
+        // This can occur when an entry intended to ignore
+        // query args and redirect to the url w/o args matches
+        // the requested url exactly.
         continue;
       }
     }
