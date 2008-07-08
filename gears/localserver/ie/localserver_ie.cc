@@ -92,13 +92,9 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
          name, required_cookie_bstr.m_str));
 
   scoped_refptr<GearsManagedResourceStore> store;
-  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
-
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
-  }
-
-  if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               NULL, &store) ||
+      !store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
                                   name, required_cookie_bstr.m_str)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ManagedResourceStore."));
   }
@@ -139,13 +135,9 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
   }
 
   scoped_refptr<GearsManagedResourceStore> store;
-  CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store);
-
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
-  }
-
-  if (!store->store_.Open(existing_store_id)) {
+  if (!CreateModule<GearsManagedResourceStore>(module_environment_.get(),
+                                               NULL, &store) ||
+      !store->store_.Open(existing_store_id)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ManagedResourceStore."));
   }
 
@@ -224,11 +216,7 @@ STDMETHODIMP GearsLocalServer::createStore(
   }
 
   CComPtr< CComObject<GearsResourceStore> > reference_adder(store);
-
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
-  }
-
+  store->InitModuleEnvironment(module_environment_.get());
   if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
                                   name, required_cookie_bstr.m_str)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ResourceStore."));
@@ -280,11 +268,7 @@ STDMETHODIMP GearsLocalServer::openStore(
   }
 
   CComPtr< CComObject<GearsResourceStore> > reference_adder(store);
-
-  if (!store->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize base class."));
-  }
-
+  store->InitModuleEnvironment(module_environment_.get());
   if (!store->store_.Open(existing_store_id)) {
     RETURN_EXCEPTION(STRING16(L"Failed to initialize ResourceStore."));
   }

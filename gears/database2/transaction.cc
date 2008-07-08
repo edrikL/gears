@@ -52,8 +52,13 @@ bool Database2Transaction::Create(
                                JsRootedCallback *success_callback,
                                scoped_refptr<Database2Transaction> *instance) {
   assert(instance);
-  if (!CreateModule<Database2Transaction>(database->GetJsRunner(), instance)
-      || !instance->get()->InitBaseFromSibling(database)) {
+  // TODO(nigeltao/glazkov): does this method have to take a
+  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
+  // JsCallContext) suffice?
+  scoped_refptr<ModuleEnvironment> module_environment;
+  database->GetModuleEnvironment(&module_environment);
+  if (!CreateModule<Database2Transaction>(module_environment.get(),
+                                          NULL, instance)) {
     return false;
   }
 

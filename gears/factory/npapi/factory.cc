@@ -155,41 +155,47 @@ void GearsFactory::Create(JsCallContext *context) {
   scoped_refptr<ModuleImplBaseClass> object;
   
   if (module_name == STRING16(L"beta.console")) {
-    CreateModule<GearsConsole>(GetJsRunner(), &object);
+    CreateModule<GearsConsole>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.database")) {
-    CreateModule<GearsDatabase>(GetJsRunner(), &object);
+    CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+    CreateModule<GearsDesktop>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.localserver")) {
-    CreateModule<GearsLocalServer>(GetJsRunner(), &object);
+    CreateModule<GearsLocalServer>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.workerpool")) {
-    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
+    CreateModule<GearsWorkerPool>(module_environment_.get(),
+                                  context, &object);
 #ifdef OFFICIAL_BUILD
   // The Database2, Geolocation and Media API have not been finalized for
   // official builds.
 #else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<Database2Manager>(GetJsRunner(), &object);
+    CreateModule<Database2Manager>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+    CreateModule<GearsGeolocation>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.audio")) {
-    CreateModule<GearsAudio>(GetJsRunner(), &object);
+    CreateModule<GearsAudio>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.audiorecorder")) {
-    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
+    CreateModule<GearsAudioRecorder>(module_environment_.get(),
+                                     context, &object);
 #endif  // OFFICIAL_BUILD
 #ifdef OFFICIAL_BUILD
   // The Dummy module is not included in official builds.
 #else
   } else if (module_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(GetJsRunner(), &object);
+    CreateModule<DummyModule>(module_environment_.get(), context, &object);
 #endif // OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
+    CreateModule<GearsHttpRequest>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(GetJsRunner(), &object);
+    CreateModule<GearsTimer>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
-    CreateModule<GearsTest>(GetJsRunner(), &object);
+    CreateModule<GearsTest>(module_environment_.get(), context, &object);
 #else
     context->SetException(STRING16(L"Object is only available in debug build."));
     return;
@@ -199,12 +205,8 @@ void GearsFactory::Create(JsCallContext *context) {
     return;
   }
 
-  if (!object)
-    return;  // Create function sets an error message.
-
-  if (!object->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
-    return;
+  if (!object) {
+    return;  // CreateModule will set the error message.
   }
 
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, object.get());

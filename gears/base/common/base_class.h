@@ -170,22 +170,21 @@ class ModuleImplBaseClass {
     return module_name_;
   }
 
-  // Initialization functions.  InitBaseFromSibling should be used for most
-  // scenarios.  The other functions should only be used when there are no
-  // sibling ModuleImplBaseClass objects readily available, such as for the
-  // factory objects (since they are created first, they have no siblings).
-  // InitBaseFromDOM is valid iff you are in the main thread.  Otherwise
-  // (i.e. in a worker thread), use InitBaseManually from an appropriately
-  // constructed ModuleEnvironment.
+
+  void InitModuleEnvironment(ModuleEnvironment *source_module_environment);
+
+  // InitModuleEnvironmentFromDOM can only be used from the main thread, and
+  // should only be used for the first module created in the main thread -
+  // i.e. the first GearsFactory instance. Other ModuleImplBaseClass
+  // instances are initialized (i.e. they have InitModuleEnvironment called
+  // on them) by CreateModule.
 #if BROWSER_FF
-  bool InitBaseFromDOM();
+  bool InitModuleEnvironmentFromDOM();
 #elif BROWSER_IE
-  bool InitBaseFromDOM(IUnknown *site);
+  bool InitModuleEnvironmentFromDOM(IUnknown *site);
 #elif BROWSER_NPAPI
-  bool InitBaseFromDOM(JsContextPtr instance);
+  bool InitModuleEnvironmentFromDOM(JsContextPtr instance);
 #endif
-  bool InitBaseFromSibling(const ModuleImplBaseClass *other);
-  bool InitBaseManually(ModuleEnvironment *source_module_environment);
 
   // Host environment information
   void GetModuleEnvironment(scoped_refptr<ModuleEnvironment> *out) const;
@@ -303,8 +302,12 @@ class ModuleWrapperBaseClass {
 };
 
 // Creates a new Module of the given type.  Returns false on failure.
+// On failure, and if context is not NULL, then context's exception string
+// will be set.
 // Usually, OutType will be GearsClass or ModuleImplBaseClass.
 template<class GearsClass, class OutType>
-bool CreateModule(JsRunnerInterface *js_runner, scoped_refptr<OutType>* module);
+bool CreateModule(JsRunnerInterface *js_runner,
+                  JsCallContext *context,
+                  scoped_refptr<OutType>* module);
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

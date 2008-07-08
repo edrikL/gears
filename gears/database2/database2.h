@@ -48,6 +48,7 @@ typedef Database2ThreadSafeQueue<Database2Transaction>
 // which it shares with all transactions it creates.
 class Database2 : public ModuleImplBaseClassVirtual {
  public:
+  Database2() : ModuleImplBaseClassVirtual("Database2") {}
   ~Database2() {}
 
   // creates an instance of Database2
@@ -88,11 +89,6 @@ class Database2 : public ModuleImplBaseClassVirtual {
   void Transaction(JsCallContext *context);
 
  private:
-  friend bool CreateModule<Database2, Database2>(
-                  JsRunnerInterface *js_runner,
-                  scoped_refptr<Database2>* module);
-  Database2() : ModuleImplBaseClassVirtual("Database2") {}
-
   void QueueTransaction(Database2Transaction *transaction);
 
   std::string16 name_;

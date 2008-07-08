@@ -50,8 +50,12 @@ bool Database2::Create(const ModuleImplBaseClass *sibling,
                        Database2Connection *connection,
                        scoped_refptr<Database2> *instance) {
   assert(instance);
-  if (!CreateModule<Database2>(sibling->GetJsRunner(), instance)
-      || !instance->get()->InitBaseFromSibling(sibling)) {
+  // TODO(nigeltao/glazkov): does this method have to take a
+  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
+  // JsCallContext) suffice?
+  scoped_refptr<ModuleEnvironment> module_environment;
+  sibling->GetModuleEnvironment(&module_environment);
+  if (!CreateModule<Database2>(module_environment.get(), NULL, instance)) {
     return false;
   }
 

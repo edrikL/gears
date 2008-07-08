@@ -40,6 +40,7 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual,
                            public Database2RowHandlerInterface,
                            public JsEventHandlerInterface {
  public:
+  Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
   ~Database2ResultSet() {}
   // Creates an instance, returns true if successful.
   static bool Create(const ModuleImplBaseClass *sibling,
@@ -68,11 +69,6 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual,
   virtual void HandleEvent(JsEventType event_type);
 
  private:
-  friend bool CreateModule<Database2ResultSet, Database2ResultSet>(
-                  JsRunnerInterface *js_runner,
-                  scoped_refptr<Database2ResultSet>* module);
-  Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
-
   int rows_affected_;
   int64 last_insert_rowid_;
   int column_count_;

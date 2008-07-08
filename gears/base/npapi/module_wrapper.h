@@ -86,18 +86,22 @@ class ModuleWrapper
 
 // Creates an instance of the class and its wrapper.
 template<class GearsClass, class OutType>
-bool CreateModule(JsRunnerInterface *js_runner,
+bool CreateModule(ModuleEnvironment *module_environment,
+                  JsCallContext *context,
                   scoped_refptr<OutType>* module) {
   ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
-      NPN_CreateObject(js_runner->GetContext(), ModuleWrapper::GetNPClass()));
+      NPN_CreateObject(module_environment->js_runner_->GetContext(),
+                       ModuleWrapper::GetNPClass()));
 
   if (!wrapper) {
-    BrowserUtils::SetJsException(
-        STRING16(L"Failed to create requested object."));
+    if (context) {
+      context->SetException(STRING16(L"Module creation failed."));
+    }
     return false;
   }
 
   GearsClass *impl = new GearsClass;
+  impl->InitModuleEnvironment(module_environment);
   wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
   module->reset(impl);
 

@@ -44,8 +44,13 @@ void Dispatcher<Database2ResultSet>::Init() {
 bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
                                 scoped_refptr<Database2ResultSet> *instance) {
   assert(instance);
-  if (!CreateModule<Database2ResultSet>(sibling->GetJsRunner(), instance)
-      || !instance->get()->InitBaseFromSibling(sibling)) {
+  // TODO(nigeltao/glazkov): does this method have to take a
+  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
+  // JsCallContext) suffice?
+  scoped_refptr<ModuleEnvironment> module_environment;
+  sibling->GetModuleEnvironment(&module_environment);
+  if (!CreateModule<Database2ResultSet>(module_environment.get(),
+                                        NULL, instance)) {
     return false;
   }
 

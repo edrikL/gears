@@ -1037,15 +1037,11 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
   scoped_ptr<GearsFactory> factory(new GearsFactory());
   if (!factory.get()) { return false; }
-
-  if (!factory->InitBaseManually(wi->module_environment.get())) {
-    return false;
-  }
+  factory->InitModuleEnvironment(wi->module_environment.get());
 
   scoped_refptr<GearsWorkerPool> workerpool;
-  if (!CreateModule<GearsWorkerPool>(js_runner, &workerpool)) { return false; }
-
-  if (!workerpool->InitBaseManually(wi->module_environment.get())) {
+  if (!CreateModule<GearsWorkerPool>(wi->module_environment.get(),
+                                     NULL, &workerpool)) {
     return false;
   }
 

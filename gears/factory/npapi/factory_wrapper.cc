@@ -36,7 +36,7 @@ NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
   if (factory_wrapper.get()) {
     GearsFactory *factory = new GearsFactory;
     factory_wrapper->Init(factory, new Dispatcher<GearsFactory>(factory));
-    if (!factory->InitBaseFromDOM(context))
+    if (!factory->InitModuleEnvironmentFromDOM(context))
       return NULL;
   }
 

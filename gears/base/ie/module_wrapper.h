@@ -136,14 +136,20 @@ class ATL_NO_VTABLE ModuleWrapper
 
 // Creates an instance of the class and its wrapper.
 template<class GearsClass, class OutType>
-bool CreateModule(JsRunnerInterface *js_runner,
+bool CreateModule(ModuleEnvironment *module_environment,
+                  JsCallContext *context,
                   scoped_refptr<OutType>* module) {
   CComObject<ModuleWrapper> *module_wrapper;
   HRESULT hr = CComObject<ModuleWrapper>::CreateInstance(&module_wrapper);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    if (context) {
+      context->SetException(STRING16(L"Module creation failed."));
+    }
     return false;
+  }
 
-  GearsClass *impl = new GearsClass(); 
+  GearsClass *impl = new GearsClass();
+  impl->InitModuleEnvironment(module_environment);
   Dispatcher<GearsClass> *dispatcher = new Dispatcher<GearsClass>(impl);
 
   module_wrapper->Init(impl, dispatcher);

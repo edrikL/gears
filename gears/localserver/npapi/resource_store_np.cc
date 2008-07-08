@@ -423,11 +423,8 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
   }
 
   scoped_refptr<GearsFileSubmitter> submitter;
-  if (!CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter))
-    return;  // Create function sets an error message.
-
-  if (!submitter->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Error initializing base class."));
+  if (!CreateModule<GearsFileSubmitter>(module_environment_.get(),
+                                        context, &submitter)) {
     return;
   }
 

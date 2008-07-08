@@ -129,9 +129,8 @@ void GearsBlob::Slice(JsCallContext *context) {
                                                     length));
 
   scoped_refptr<GearsBlob> gears_blob;
-  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
-  if (!gears_blob->InitBaseFromSibling(this)) {
-    context->SetException(STRING16(L"Initializing base class failed."));
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &gears_blob)) {
     return;
   }
   gears_blob->Reset(sliced.get());
@@ -144,10 +143,8 @@ class MarshaledGearsBlob : public MarshaledModule {
 
   bool Unmarshal(ModuleEnvironment *module_environment,
                  JsScopedToken *out) {
-    JsRunnerInterface *js_runner = module_environment->js_runner_;
     scoped_refptr<GearsBlob> gears_blob;
-    if (!CreateModule<GearsBlob>(js_runner, &gears_blob) ||
-        !gears_blob->InitBaseManually(module_environment)) {
+    if (!CreateModule<GearsBlob>(module_environment, NULL, &gears_blob)) {
       return false;
     }
     gears_blob->Reset(contents_.get());
