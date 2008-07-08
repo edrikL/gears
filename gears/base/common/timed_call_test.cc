@@ -57,6 +57,12 @@ const char kCallbackArg3[] = "CallbackArg3";
 static int callback_repeat_counter = 0;
 const char kCallbackArgRepeat[] = "CallbackArgRepeat";
 
+// There are lots of reasons why the timer may not be precise
+// including heavily loaded machine or slow machine.  In order
+// to avoid spurious failures, we add this leeway on to the
+// expected time for any calback to happen.
+const int kLeewayTimeMs = 500;
+
 //
 // Timed Callback Test Helper Functions
 //
@@ -155,10 +161,10 @@ static bool TestCallbackSanity() {
   // Allow the message loop to deal with incoming messages,
   // so the timer isn't stifled by the thread being busy
   // sleep/yield does not work - you have to go back to the message loop
-  // Give it 300ms to callback, should fire in 200ms
+  // Should fire in 200ms.
   LOG(("TestCallbackSanity - wait\n"));
 
-  const int wait_time_ms = 300;
+  const int wait_time_ms = 200 + kLeewayTimeMs;
 #if defined(OS_MACOSX)
   int rval;
   while (!callback_test_toggle &&
@@ -221,7 +227,7 @@ static bool TestCallbackSorting() {
 
   LOG(("TestCallbackSorting - wait\n"));
 
-  const int wait_time_ms = 300;
+  const int wait_time_ms = 200 + kLeewayTimeMs;
 #if defined(OS_MACOSX)
   int rval;
   while (callback_sorting_counter != 3 &&
@@ -278,9 +284,9 @@ static bool TestCallbackRepeat() {
   const int internal_ms = 100;
   TimedCall timer(internal_ms, true, &CallbackTestCallbackRepeat,
     reinterpret_cast<void*>(const_cast<char*>(kCallbackArgRepeat)));
-  // Allow for 5 repeats (plus a little slack).
+  // Allow for 5 repeats.
   const int repeats = 5;
-  const int wait_time_ms = internal_ms * repeats + 100;
+  const int wait_time_ms = internal_ms * repeats + kLeewayTimeMs;
 
   LOG(("TestCallbackRepeat - wait\n"));
 #if defined(OS_MACOSX)
