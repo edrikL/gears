@@ -38,8 +38,8 @@
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager.h"
-#include "gears/notifier/unit_test.h"
 #include "gears/notifier/user_activity.h"
+#include "third_party/gtest/include/gtest/gtest.h"
 
 // This method is defined in the _test file so that notification_manager.cc
 // has no dependencies on test files (even when USING_CCTEST is defined).
@@ -49,17 +49,6 @@ BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
   return mock;
 }
 
-#undef TEST_ASSERT
-#define TEST_ASSERT(test, message)                                      \
-  do {                                                                  \
-    if (!(test)) {                                                      \
-      std::string16 final_message(                                      \
-          STRING16(L"Notifier Test Failed"));                           \
-      final_message.append(message);                                    \
-      LogTestError(final_message);                                      \
-    }                                                                   \
-  } while (0)
-
 BalloonCollectionMock::BalloonCollectionMock()
     : has_space_(false),
       show_call_count_(0),
@@ -68,20 +57,17 @@ BalloonCollectionMock::BalloonCollectionMock()
 }
 
 BalloonCollectionMock::~BalloonCollectionMock() {
-  TEST_ASSERT(show_call_count_ == 0,
-              STRING16(L"Not enough show calls done."));
-  TEST_ASSERT(update_call_count_ == 0,
-              STRING16(L"Not enough update calls done."));
-  TEST_ASSERT(delete_call_count_ == 0,
-              STRING16(L"Not enough delete calls done."));
+  EXPECT_EQ(0, show_call_count_) << "Not enough show calls done.";
+  EXPECT_EQ(0, update_call_count_) << "Not enough update calls done.";
+  EXPECT_EQ(0, delete_call_count_) << "Not enough delete calls done.";
 }
 
 void BalloonCollectionMock::Show(const GearsNotification &notification) {
   NotificationId id(notification.security_origin().url(), notification.id());
-  TEST_ASSERT(displayed_.find(id) == displayed_.end(),
-              STRING16(L"Already showing notification."));
-  TEST_ASSERT(show_call_count_ > 0,
-              STRING16(L"Unexpected show call."));
+  EXPECT_TRUE(displayed_.find(id) == displayed_.end())
+      << "Already showing notification.";
+  EXPECT_GT(show_call_count_, 0)
+      << "Unexpected show call.";
   show_call_count_--;
 
   displayed_[id] = 1;
@@ -117,20 +103,20 @@ void BalloonCollectionMock::set_has_space(bool has_space) {
 }
 
 void BalloonCollectionMock::set_show_call_count(int show_call_count) {
-  TEST_ASSERT(show_call_count_ == 0,
-              STRING16(L"Not enough show calls done."));
+  EXPECT_EQ(0, show_call_count_)
+      << "Not enough show calls done.";
   show_call_count_ = show_call_count;
 }
 
 void BalloonCollectionMock::set_update_call_count(int update_call_count) {
-  TEST_ASSERT(update_call_count_ == 0,
-              STRING16(L"Not enough update calls done."));
+  EXPECT_EQ(0, update_call_count_)
+      << "Not enough update calls done.";
   update_call_count_ = update_call_count;
 }
 
 void BalloonCollectionMock::set_delete_call_count(int delete_call_count) {
-  TEST_ASSERT(delete_call_count_ == 0,
-              STRING16(L"Not enough delete calls done."));
+  EXPECT_EQ(0, delete_call_count_)
+      << "Not enough delete calls done.";
   delete_call_count_ = delete_call_count;
 }
 
@@ -152,7 +138,7 @@ class UserActivityMock : public UserActivityInterface {
   DISALLOW_EVIL_CONSTRUCTORS(UserActivityMock);
 };
 
-void TestNotificationManager() {
+TEST(NotificationManagerTest, BasicFunctionality) {
   UserActivityMock activity;
   NotificationManager manager(&activity);
   BalloonCollectionMock *balloon_collection =
@@ -238,7 +224,7 @@ void RunMessageLoop(int max_time_ms) {
 #endif
 }
 
-void TestNotificationManagerDelay() {
+TEST(NotificationManagerTest, DisplayAtTime) {
   UserActivityMock activity;
   NotificationManager manager(&activity);
   BalloonCollectionMock *balloon_collection =
