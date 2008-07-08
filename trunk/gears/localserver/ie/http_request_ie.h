@@ -36,6 +36,7 @@
 #include "gears/localserver/common/progress_event.h"
 
 class BlobInterface;
+class ByteStore;
 
 class IEHttpRequest
     : public CComObjectRootEx<CComMultiThreadModel::ThreadModelNoCS>,
@@ -77,9 +78,7 @@ class IEHttpRequest
 
   // properties
   virtual bool GetReadyState(ReadyState *state);
-  virtual bool GetResponseBodyAsText(std::string16 *text);
-  virtual bool GetResponseBody(std::vector<uint8> *body);
-  virtual std::vector<uint8> *GetResponseBody();
+  virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
   virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
@@ -94,6 +93,7 @@ class IEHttpRequest
   virtual bool SetRequestHeader(const char16* name, const char16* value);
   virtual bool Send(BlobInterface *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
+  virtual std::string16 GetResponseCharset();
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
   virtual bool Abort();
 
@@ -233,13 +233,9 @@ class IEHttpRequest
   // We populate this structure with various pieces of response data:
   // status code, status line, headers, data
   WebCacheDB::PayloadInfo response_payload_;
+  scoped_refptr<ByteStore> response_body_;
 
   bool has_synthesized_response_payload_;
-
-  // The amount of data we've read into the response_payload_.data
-  // Initially the stl vector is allocated to a large size. We keep
-  // track of how much of that allocated space is actually used here.
-  size_t actual_data_size_;
 
   // URLMON object references
   CComPtr<IMoniker> url_moniker_;

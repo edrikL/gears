@@ -36,6 +36,8 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/factory/npapi/factory.h"
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -79,8 +81,7 @@ struct JavaScriptWorkerInfo {
       : threads_manager(NULL), js_runner(NULL), is_owning_worker(false),
         message_queue_initialized(false), is_invoking_error_handler(false),
         thread_init_signalled(false), thread_init_ok(false),
-        script_signalled(false), script_ok(false), http_request(NULL),
-        is_factory_suspended(false), factory_ref(NULL),
+        script_signalled(false), script_ok(false), is_factory_suspended(false),
 #ifdef WIN32
         thread_handle(INVALID_HANDLE_VALUE),
 #endif
@@ -428,16 +429,22 @@ class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
       source->SetListener(NULL, false);
 
       int status_code;
-      std::string16 body;
+      scoped_refptr<BlobInterface> body;
       std::string16 final_url;
       if (source->GetStatus(&status_code) &&
           status_code == HttpConstants::HTTP_OK &&
-          source->GetResponseBodyAsText(&body) &&
+          source->GetResponseBody(&body) &&
           source->GetFinalUrl(&final_url)) {
         // These are purposely set before locking mutex, because they are still
         // owned by the parent thread at this point.
         wi_->script_ok = true;
-        wi_->script_text += body;
+        std::string16 text;
+        bool result = BlobToString16(body.get(), source->GetResponseCharset(),
+                                     &text);
+        if (!result) {
+          assert(result);  // TODO(bgarcia): throw error on failure.
+        }
+        wi_->script_text += text;
         // Must use security origin of final url, in case there were redirects.
         wi_->script_origin.InitFromUrl(final_url.c_str());
       } else {

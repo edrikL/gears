@@ -57,9 +57,13 @@ CFStringRef CFStringCreateWithString16(const char16 *str) {
                                       std::char_traits<char16>::length(str));
 }
 
-bool ConvertToString16UsingEncoding(const char *in, int len, 
-                                    CFStringEncoding encoding, 
-                                    std::string16 *out16) {
+bool ConvertToString16FromCharset(const char *in, int len,
+                                  const std::string16 &charset,
+                                  std::string16 *out16) {
+  CFStringEncoding encoding;
+  encoding = CFStringConvertIANACharSetNameToEncoding(
+      CFStringCreateWithBytes(NULL, (const UInt8 *)charset.data(),
+                              charset.size(), kCFStringEncodingUTF16, false));
   scoped_cftype<CFStringRef> in_str(CFStringCreateWithBytes(NULL, 
                                                             (const UInt8 *)in, 
                                                             len, 

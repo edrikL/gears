@@ -92,10 +92,7 @@ class HttpRequest {
     COMPLETE = 4
   };
   virtual bool GetReadyState(ReadyState *state) = 0;
-
-  virtual bool GetResponseBodyAsText(std::string16 *text) = 0;
-  virtual bool GetResponseBody(std::vector<uint8> *body) = 0;
-  virtual std::vector<uint8> *GetResponseBody() = 0;
+  virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob) = 0;
   virtual bool GetStatus(int *status) = 0;
   virtual bool GetStatusText(std::string16 *status_text) = 0;
   virtual bool GetStatusLine(std::string16 *status_line) = 0;
@@ -117,6 +114,7 @@ class HttpRequest {
   virtual bool SetRequestHeader(const char16 *name, const char16 *value) = 0;
   virtual bool Send(BlobInterface* blob) = 0;
   virtual bool GetAllResponseHeaders(std::string16 *headers) = 0;
+  virtual std::string16 GetResponseCharset() = 0;
   virtual bool GetResponseHeader(const char16* name, std::string16 *header) = 0;
   virtual bool Abort() = 0;
 

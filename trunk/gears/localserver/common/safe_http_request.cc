@@ -65,38 +65,14 @@ bool SafeHttpRequest::Open(const char16 *method,
   return true;
 }
 
-bool SafeHttpRequest::GetResponseBodyAsText(std::string16 *text) {
+bool SafeHttpRequest::GetResponseBody(scoped_refptr<BlobInterface>* blob) {
   assert(IsApartmentThread());
   MutexLock locker(&request_info_lock_);
   if (!IsValidResponse()) {
     return false;
   }
-  was_response_text_accessed_ = true;
-  *text = request_info_.response.text;
+  *blob = request_info_.response.body;
   return true;
-}
-
-bool SafeHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  assert(IsApartmentThread());
-  MutexLock locker(&request_info_lock_);
-  if (!IsValidResponse() || (GetState() != COMPLETE)) {
-    return false;
-  }
-  if (request_info_.response.body.get()) {
-    body->swap(*request_info_.response.body.get());
-  } else {
-    body->clear();
-  }
-  return true;
-}
-
-std::vector<uint8> *SafeHttpRequest::GetResponseBody() {
-  assert(IsApartmentThread());
-  MutexLock locker(&request_info_lock_);
-  if (!IsValidResponse() || (GetState() != COMPLETE)) {
-    return NULL;
-  }
-  return request_info_.response.body.release();
 }
 
 bool SafeHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
@@ -107,6 +83,13 @@ bool SafeHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   }
   *headers = request_info_.response.headers;
   return true;
+}
+
+std::string16 SafeHttpRequest::GetResponseCharset() {
+  assert(IsApartmentThread());
+  MutexLock locker(&request_info_lock_);
+  assert(IsValidResponse() || request_info_.response.charset.empty());
+  return request_info_.response.charset;
 }
 
 bool SafeHttpRequest::GetResponseHeader(const char16 *name,
@@ -494,7 +477,7 @@ void SafeHttpRequest::DataAvailable(HttpRequest *source) {
     // only if needed. On the first call to DataAvailable, we do so in case our
     // client will access it. On subsequent calls, only do so if the caller
     // has been accessing it.  
-    source->GetResponseBodyAsText(&request_info_.response.text);
+    source->GetResponseBody(&request_info_.response.body);
     was_data_available_called_ = true;
   }
   CallDataAvailableOnApartmentThread();
@@ -532,10 +515,10 @@ void SafeHttpRequest::ReadyStateChanged(HttpRequest *source) {
         source->GetStatusLine(&request_info_.response.status_line);
         source->GetFinalUrl(&request_info_.response.final_url);
         request_info_.response.was_redirected = source->WasRedirected();
+        request_info_.response.charset = source->GetResponseCharset();
       }
       if (state == COMPLETE) {
-        source->GetResponseBodyAsText(&request_info_.response.text);
-        request_info_.response.body.reset(source->GetResponseBody());
+        source->GetResponseBody(&request_info_.response.body);
         RemoveNativeRequest();
       }
       CallReadyStateChangedOnApartmentThread();

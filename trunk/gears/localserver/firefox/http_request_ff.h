@@ -32,6 +32,7 @@
 #include "gecko_sdk/include/nsIStreamListener.h"
 #include "gecko_internal/nsIChannelEventSink.h"
 #include "genfiles/localserver.h"
+#include "gears/base/common/byte_store.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
@@ -95,9 +96,7 @@ class FFHttpRequest : public HttpRequest,
 
   // properties
   virtual bool GetReadyState(ReadyState *state);
-  virtual bool GetResponseBodyAsText(std::string16 *text);
-  virtual bool GetResponseBody(std::vector<uint8> *body);
-  virtual std::vector<uint8> *GetResponseBody();
+  virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
   virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
@@ -112,6 +111,7 @@ class FFHttpRequest : public HttpRequest,
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send(BlobInterface *blob);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
+  virtual std::string16 GetResponseCharset();
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
@@ -155,7 +155,7 @@ class FFHttpRequest : public HttpRequest,
   bool async_;
   std::string16 method_;
   nsCOMPtr<nsIInputStream> post_data_stream_;
-  scoped_ptr< std::vector<uint8> > response_body_;
+  scoped_refptr<ByteStore> response_body_;
   std::string16 url_;
   SecurityOrigin origin_;
   CachingBehavior caching_behavior_;

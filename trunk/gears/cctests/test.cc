@@ -1240,10 +1240,10 @@ class TestHttpRequestListener : public HttpRequest::HttpListener {
     if (state == HttpRequest::COMPLETE) {
       int status = 0;
       std::string16 headers;
-      std::string16 body;
+      scoped_refptr<BlobInterface> body;
       source->GetStatus(&status);
       source->GetAllResponseHeaders(&headers);
-      source->GetResponseBodyAsText(&body);
+      source->GetResponseBody(&body);
       source->SetListener(NULL, false);
       delete this;
       LOG(("TestHttpRequest - complete (%d)\n", status));

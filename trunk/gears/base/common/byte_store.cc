@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <limits>
-
 #include "gears/base/common/byte_store.h"
 
 #include "gears/base/common/string_utils.h"
@@ -166,8 +164,8 @@ int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     if (data_.size() - offset < max_bytes) {
       max_bytes = data_.size() - offset;
     }
-    if (max_bytes > std::numeric_limits<size_t>::max()) {
-      max_bytes = std::numeric_limits<size_t>::max();
+    if (max_bytes > kMaxBufferSize) {
+      max_bytes = kMaxBufferSize;
     }
   
     assert(offset <= kint32max);
@@ -212,4 +210,11 @@ void ByteStore::GetDataElement(DataElement *element) {
   } else {
     element->SetToBytes(NULL, 0);
   }
+}
+
+void ByteStore::Reserve(int64 length) {
+  if (length > kMaxBufferSize) return;
+  MutexLock lock(&mutex_);
+  if (file_.get()) return;
+  data_.reserve(static_cast<size_t>(length));
 }

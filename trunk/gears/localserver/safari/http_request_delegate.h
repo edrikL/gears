@@ -34,6 +34,7 @@
 #import <Cocoa/Cocoa.h>
 #import <Foundation/NSStream.h>
 
+#include "gears/base/common/byte_store.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/safari/http_request_sf.h"
 
@@ -42,11 +43,10 @@
   SFHttpRequest *owner_;
   NSMutableURLRequest *request_;     // (strong)
   NSURLConnection *connection_;      // (strong)
-  NSMutableData *receivedData_;      // (strong)
+  ByteStore *response_body_;         // (strong)
   NSInteger statusCode_;
-  NSDictionary *headerDictionary_;  // (strong)
+  NSDictionary *headerDictionary_;   // (strong)
   NSString *mimeType_;               // (strong)
-  CFStringEncoding dataEncoding_;
 }
 
 #pragma mark Public Instance methods
@@ -109,11 +109,7 @@
 // Get human readable text associated with the status code.
 - (void)statusText:(std::string16 *)status_line;
 
-// Retrieve the response data in a byte array.
-- (void)responseBytes:(std::vector<uint8> *)body;
+// Retrieve the response body as a blob.
+- (void)responseBody:(scoped_refptr<BlobInterface> *)body;
 
-// Retrieve the response data as a UTF-16 string.
-//
-// Returns: true on success.
-- (bool)responseAsString:(std::string16 *)response;
 @end

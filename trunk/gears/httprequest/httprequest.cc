@@ -25,6 +25,8 @@
 
 #include "gears/httprequest/httprequest.h"
 
+#include <limits>
+
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
@@ -32,6 +34,8 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/httprequest/httprequest_upload.h"
 
@@ -387,48 +391,22 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
     context->SetReturnValue(JSPARAM_NULL, 0);
     return;
   }
-
-  // Re-use the previously created GearsBlob object, if it exists.
-  if (response_blob_.get()) {
+  scoped_refptr<BlobInterface> unused_blob;
+  if (GetResponseBlobImpl(context, &unused_blob)) {
     context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
     return;
   }
-
-  // On some platforms' HttpRequest implementation (for example, IE/Windows),
-  // GetResponseBody() swaps the underyling data buffer, and so without this,
-  // calling GetResponseText() after calling GetResponseBody will incorrectly
-  // return an empty string.  This explicit read of response_text_ fixes that,
-  // but it does a possibly-unnecessary copy.
-  // TODO(nigeltao): once Blobs become part of the official build, make the
-  // Blob version of the canonical representation of the HTTP response, and
-  // implement GetResponseText simply as calling something like
-  // response_blob_->GetAsText(&str, encoding), and hence remove the need for
-  // this copy.
-  if (response_text_ == NULL) {
-    response_text_.reset(new std::string16);
-    request_->GetResponseBodyAsText(response_text_.get());
-  }
-
-  scoped_refptr<BlobInterface> blob(NULL);
-  scoped_ptr<std::vector<uint8> >body(request_->GetResponseBody());
-  if (body.get()) {
-    blob.reset(new BufferBlob(body.get()));
-  } else {
-    context->SetReturnValue(JSPARAM_NULL, 0);
-    return;
-  }
-
-  if (!CreateModule<GearsBlob>(module_environment_.get(),
-                               context, &response_blob_)) {
-    return;
-  }
-  response_blob_->Reset(blob.get());
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
+  // Exception set by GetResponseBlobImpl if it fails.
 }
 
 void GearsHttpRequest::GetResponseText(JsCallContext *context) {
   if (!(IsInteractive() || IsComplete())) {
     context->SetException(kNotInteractiveError);
+    return;
+  }
+  if (!IsValidResponse()) {
+    std::string empty_string;
+    context->SetReturnValue(JSPARAM_STRING16, &empty_string);
     return;
   }
   // First, check the cached result (the response_text_ member variable).  It
@@ -437,16 +415,43 @@ void GearsHttpRequest::GetResponseText(JsCallContext *context) {
     context->SetReturnValue(JSPARAM_STRING16, response_text_.get());
     return;
   }
-  scoped_ptr<std::string16> result(new std::string16);
-  bool is_valid_response = IsValidResponse();
-  if (is_valid_response && !request_->GetResponseBodyAsText(result.get())) {
+  scoped_refptr<BlobInterface> blob;
+  if (!GetResponseBlobImpl(context, &blob)) {
+    // Exception set by GetResponseBlobImpl.
+    return;
+  }
+  scoped_ptr<std::string16> text(new std::string16);
+  if (!BlobToString16(blob.get(), request_->GetResponseCharset(), text.get())) {
     context->SetException(kInternalError);
     return;
   }
-  context->SetReturnValue(JSPARAM_STRING16, result.get());
-  if (is_valid_response && IsComplete()) {
-    response_text_.swap(result);
+  // Return and optionally cache the returned value.
+  context->SetReturnValue(JSPARAM_STRING16, text.get());
+  if (IsComplete()) {
+    response_text_.swap(text);
   }
+}
+
+bool GearsHttpRequest::GetResponseBlobImpl(JsCallContext *context,
+                                           scoped_refptr<BlobInterface> *blob) {
+  // Re-use the previously created GearsBlob object, if it exists.
+  if (response_blob_.get()) {
+    response_blob_->GetContents(blob);
+    return true;
+  }
+  assert(IsValidResponse());
+  if (!request_->GetResponseBody(blob)) {
+    context->SetException(kInternalError);
+    return false;
+  }
+  if (IsComplete()) {
+    if (!CreateModule<GearsBlob>(module_environment_.get(),
+                                 context, &response_blob_)) {
+      return false;
+    }
+    response_blob_->Reset(blob->get());
+  }
+  return true;
 }
 
 void GearsHttpRequest::GetStatus(JsCallContext *context) {

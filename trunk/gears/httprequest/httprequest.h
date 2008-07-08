@@ -122,6 +122,8 @@ class GearsHttpRequest
   bool IsComplete()      { return GetState() == HttpRequest::COMPLETE; }
   bool IsValidResponse();
 
+  bool GetResponseBlobImpl(JsCallContext *context,
+                           scoped_refptr<BlobInterface> *blob);
   bool ResolveUrl(const std::string16 &url, std::string16 *resolved_url,
                   std::string16 *exception_message);
 

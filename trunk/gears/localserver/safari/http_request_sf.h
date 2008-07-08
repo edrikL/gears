@@ -75,9 +75,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
 
   // properties
   virtual bool GetReadyState(ReadyState *state);
-  virtual bool GetResponseBodyAsText(std::string16 *text);
-  virtual bool GetResponseBody(std::vector<uint8> *body);
-  virtual std::vector<uint8> *GetResponseBody();
+  virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
   virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
@@ -92,6 +90,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send(BlobInterface *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
+  virtual std::string16 GetResponseCharset();
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
@@ -109,7 +108,8 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   void SetReadyState(ReadyState state);
   // New data has arrived over the connection.
   void OnDataAvailable();
-  
+  void SetResponseCharset(const std::string16 &charset);
+
   // Holders for http headers.
   typedef std::pair<std::string16, std::string16> HttpHeader;
   typedef std::vector<HttpHeader> HttpHeaderVector;
@@ -152,6 +152,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   bool was_redirected_;
   bool async_;
   std::string16 redirect_url_;
+  std::string16 charset_;
   
   HttpHeaderVector headers_to_send_;
   

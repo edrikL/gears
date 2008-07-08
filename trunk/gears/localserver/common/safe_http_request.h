@@ -69,12 +69,9 @@ class SafeHttpRequest
 
   virtual bool Open(const char16 *method, const char16* url, bool async,
                     BrowsingContext *browsing_context);
-
-  virtual bool GetResponseBodyAsText(std::string16 *text);
-  virtual bool GetResponseBody(std::vector<uint8> *body);
-  virtual std::vector<uint8> *GetResponseBody();
-
+  virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
+  virtual std::string16 GetResponseCharset();
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
 
   virtual bool GetStatus(int *status);
@@ -107,14 +104,10 @@ class SafeHttpRequest
     std::string16 status_line;
     std::string16 final_url;
     std::string16 headers;
+    std::string16 charset;
     scoped_ptr<HTTPHeaders> parsed_headers;
-
     // Valid when the ReadyState is either INTERACTIVE or COMPLETE.
-    std::string16 text;
-
-    // Only valid when COMPLETE.
-    scoped_ptr< std::vector<uint8> > body;
-
+    scoped_refptr<BlobInterface> body;
     ResponseInfo() : status(0), was_redirected(false) {}
   };
 
