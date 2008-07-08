@@ -38,7 +38,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1>Gears Notification Test Page</h1>
 
     <div>
-      <p>Title: <input id="title" value="Goog morning!"/> Counter: <span
+      <p>Title: <input id="title" value="Good morning!"/> Counter: <span
         id="counter"></span></p>
       <p>Subtitle:
         <input id="subtitle" value="test 1 2 3..."/></p>
@@ -46,6 +46,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <input id="description"
         value="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed .."/>
       </p>
+      <p>Delay (for displayAt):
+        <input id="delay" value="0"/></p>
       <p><button onclick="onPost()">Post</button></p>
     </div>
     <label for="status">Posted Notifications:</label>
@@ -65,90 +67,102 @@ var desktop;
 
 function addStatus(msg) {
   document.getElementById('status').insertBefore(
-      document.createElement('br'),
-      document.getElementById('status').firstChild);
+  document.createElement('br'),
+  document.getElementById('status').firstChild);
   document.getElementById('status').insertBefore(
-      document.createTextNode(msg),
-      document.getElementById('status').firstChild);
+  document.createTextNode(msg),
+  document.getElementById('status').firstChild);
 }
 
-function sendNotification(id, title, subtitle, description) {
-	try {
-		var notification = desktop.createNotification();
-		notification.id = "foo" + id;
-		notification.title = title;
-		notification.icon = 'icon_48x48.png';
-		notification.subtitle = subtitle;
-		notification.description = description;
-		desktop.showNotification(notification);
-	} catch (ex) {
-		addStatus('Error: ' + ex.description);
-		return false;
-	}
-	return true;
+function sendNotification(id, title, subtitle, description, delay) {
+  try {
+    var notification = desktop.createNotification();
+    notification.id = "foo" + id;
+    notification.title = title;
+    notification.icon = 'icon_48x48.png';
+    notification.subtitle = subtitle;
+    notification.description = description;
+    var delayMs = parseInt(delay, 10);
+    if (!isNaN(delayMs) && delayMs > 0) {
+      var displayAtTime = new Date();
+      displayAtTime.setTime(displayAtTime.getTime() + delayMs);
+      notification.displayAtTime = displayAtTime;
+    }
+    desktop.showNotification(notification);
+  } catch (ex) {
+    addStatus('Error: ' + ex.description);
+    return false;
+  }
+  return true;
 }
 
 function deleteNotification(id) {
   try {
-			desktop.removeNotification("foo" + id);
-	} catch (ex) {
-		addStatus('Error: ' + ex.description);
-		return false;
-	}
-	addStatus('Deleted notification with id=' + id);
+    desktop.removeNotification("foo" + id);
+  } catch (ex) {
+    addStatus('Error: ' + ex.description);
+    return false;
+  }
+  addStatus('Deleted notification with id=' + id);
 }
 
-function updateNotification(id, title, subtitle, description) {
-	if (!sendNotification(id, title, subtitle, description)) {
-		return;
-	}
-	addStatus('Updated: ' + title + '/' + subtitle + '/' + description);
+function updateNotification(id, title, subtitle, description, delay) {
+  if (!sendNotification(id, title, subtitle, description, delay)) {
+    return;
+  }
+  addStatus('Updated: ' + title + '/' + subtitle + '/' + description + 
+    '/' + delay);
 }
 
-function postNotification(id, title, subtitle, description) {
-  if (!sendNotification(id, title, subtitle, description)) {
-		return;
-	}
-	// Add the notificaiton to the 'posted list' so it can be later
-	// deleted/updated.
-	var html =
-		'Notificaiton: id=' +
-		id +
-		'&nbsp;<input id="title' +
-		id +
-	  '" value="' +
-		title + '"/>&nbsp;<input id="subtitle' +
-		id +
-		'" value="' +
-		subtitle + '"/>&nbsp;<input id="description' +
-		id +
-		'" value="' +
-		description + '"/>&nbsp;' +
-  	'<button onclick=\'updateNotification(' +
-	  id + ', document.getElementById("title' +
-		id + '").value, document.getElementById("subtitle' +
-		id + '").value, document.getElementById("description' +
-		id + '").value)\'>Update</button>&nbsp;' +
-		'<button onclick="deleteNotification(' +
-		id + ')">Delete</button>';
+function postNotification(id, title, subtitle, description, delay) {
+  if (!sendNotification(id, title, subtitle, description, delay)) {
+    return;
+  }
+  // Add the notification to the 'posted list' so it can be later
+  // deleted/updated.
+  var html =
+    'Notification: id=' +
+    id +
+    '&nbsp;<input id="title' +
+    id +
+    '" value="' +
+    title + '"/>&nbsp;<input id="subtitle' +
+    id +
+    '" value="' +
+    subtitle + '"/>&nbsp;<input id="description' +
+    id +
+    '" value="' +
+    description + '"/>&nbsp;<input id="delay' +
+    id +
+    '" value="' +
+    delay + '"/>&nbsp;' +
+    '<button onclick=\'updateNotification(' +
+    id + ', document.getElementById("title' +
+    id + '").value, document.getElementById("subtitle' +
+    id + '").value, document.getElementById("description' +
+    id + '").value, document.getElementById("delay' +
+    id + '").value)\'>Update</button>&nbsp;' +
+    '<button onclick="deleteNotification(' +
+    id + ')">Delete</button>';
 
-	var container = document.createElement('p');
-	document.getElementById('posted_list').insertBefore(
-		  container,
-			document.getElementById('posted_list').firstChild);
-	container.innerHTML = html;
+  var container = document.createElement('p');
+  document.getElementById('posted_list').insertBefore(
+      container,
+      document.getElementById('posted_list').firstChild);
+  container.innerHTML = html;
 
   addStatus('Posted: ' + title + ', ' + description);
 }
 
 function onPost() {
   var title = document.getElementById('title').value;
-	var subtitle = document.getElementById('subtitle').value;
-	var description = document.getElementById('description').value;
-	description += ' (' + counter + ')';
-	postNotification(counter, title, subtitle, description);
-	++counter;
-	document.getElementById('counter').innerText = counter;
+  var subtitle = document.getElementById('subtitle').value;
+  var description = document.getElementById('description').value;
+  var delay = document.getElementById('delay').value;
+  description += ' (' + counter + ')';
+  postNotification(counter, title, subtitle, description, delay);
+  ++counter;
+  document.getElementById('counter').innerText = counter;
 }
 
 function init() {
@@ -156,8 +170,8 @@ function init() {
     addStatus('Google Gears is not installed');
     return;
   }
-	counter = 0;
-	desktop = google.gears.factory.create('beta.desktop');
+  counter = 0;
+  desktop = google.gears.factory.create('beta.desktop');
   addStatus('Ready. Press "Post" button to send notification.');
 }
 

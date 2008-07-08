@@ -32,6 +32,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/common/timed_call.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager_test.h"
 #include "gears/notifier/user_activity.h"
@@ -54,7 +55,6 @@ class QueuedNotification {
   }
 
   ~QueuedNotification() {
-    // TODO(levin): cancel the timer here
   }
 
   const GearsNotification &notification() const { return notification_; }
@@ -68,17 +68,19 @@ class QueuedNotification {
   }
 
   void ShowWithDelay(NotificationManager *manager,
-                     int64 delay_time,
+                     int64 delay_time_ms,
                      bool user_delayed) {
     manager_ = manager;
     user_delayed_ = user_delayed;
-    // TODO(levin): create a timer here
+    timer_.reset(new TimedCall(delay_time_ms,
+                               false,
+                               &QueuedNotification::MoveToShowQueue,
+                               this));
   }
 
   void CancelTimer() {
-    // TODO(levin): cancel the timer here
-    // This should be robust to the timer already begin fired (and being
-    // processed or not being set-up at all.)
+    // Cancel the timer.
+    timer_.reset();
     user_delayed_ = false;
     manager_ = NULL;
   }
@@ -103,6 +105,7 @@ class QueuedNotification {
   GearsNotification notification_;
   NotificationManager *manager_;
   bool user_delayed_;
+  scoped_ptr<TimedCall> timer_;
   DISALLOW_EVIL_CONSTRUCTORS(QueuedNotification);
 };
 
