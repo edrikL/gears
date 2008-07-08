@@ -234,6 +234,7 @@ PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/common -I../third_party/porta
 LIBSPEEX_CFLAGS += -I../third_party/speex/include
 LIBSPEEX_CFLAGS += -DFIXED_POINT -DDISABLE_FLOAT_API -DHAVE_CONFIG_H
 LIBTREMOR_CFLAGS += -I../third_party/tremor/include -I../third_party/tremor/lib
+GTEST_CPPFLAGS += -I../third_party/gtest/include -I../third_party/gtest
 
 # Common items, like notifier, is not related to any browser.
 COMMON_CPPFLAGS += -DBROWSER_NONE=1
@@ -368,6 +369,9 @@ SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
+
+# for gtest:
+GTEST_CPPFLAGS += -DGTEST_NOT_MAC_FRAMEWORK_MODE
 
 PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the CoreAudio hostapi for osx
@@ -1010,7 +1014,7 @@ endif
 endif
 
 ifeq ($(USING_CCTESTS),1)
-CPPFLAGS += -DUSING_CCTESTS=1
+CPPFLAGS += -DUSING_CCTESTS=1 $(GTEST_CPPFLAGS)
 M4FLAGS  += -DUSING_CCTESTS=1
 endif
 

@@ -33,9 +33,6 @@
 
 #include "gears/notifier/balloons.h"
 
-void TestNotificationManager();
-void TestNotificationManagerDelay();
-
 class BalloonCollectionMock : public BalloonCollectionInterface {
  public:
   BalloonCollectionMock();
