@@ -238,7 +238,7 @@ bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
     return false;
   }
   NPObject *object = NPVARIANT_TO_OBJECT(in);
-  if (object->_class != GetNPClass<ModuleWrapper>()) {
+  if (object->_class != ModuleWrapper::GetNPClass()) {
     return false;
   }
   *out = static_cast<ModuleWrapper*>(object)->GetModuleImplBaseClass();

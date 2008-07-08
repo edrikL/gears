@@ -69,9 +69,13 @@ class PluginBase : public NPObject {
 };
 
 // Get the NPClass for a Plugin type (the type must derive from PluginBase).
+// Note that this just returns a temporary that can be used to initialize a
+// global.  The reason for not simply returning a static here is that this is a
+// non-member inline function, which means different copies of the static may
+// be created for the different compilation units that call this function.
 template<class Plugin>
-NPClass* GetNPClass() {
-  static NPClass plugin_class = {
+NPClass GetNPClassTemplate() {
+  NPClass plugin_class = {
     NP_CLASS_STRUCT_VERSION,
     PluginBase::Allocate<Plugin>,
     PluginBase::Deallocate,
@@ -85,7 +89,7 @@ NPClass* GetNPClass() {
     NULL,  // PluginBase::RemoveProperty,
   };
 
-  return &plugin_class;
+  return plugin_class;
 }
 
 #endif // GEARS_BASE_NPAPI_PLUGIN_H__
