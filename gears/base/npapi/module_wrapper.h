@@ -41,6 +41,11 @@ class ModuleWrapper
     : public PluginBase,
       public ModuleWrapperBaseClass {
  public:
+  static NPClass *GetNPClass() {
+    static NPClass np_class = GetNPClassTemplate<ModuleWrapper>();
+    return &np_class;
+  }
+
   ModuleWrapper(NPP instance) : PluginBase(instance) {
   }
 
@@ -84,7 +89,7 @@ template<class GearsClass, class OutType>
 bool CreateModule(JsRunnerInterface *js_runner,
                   scoped_refptr<OutType>* module) {
   ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
-      NPN_CreateObject(js_runner->GetContext(), GetNPClass<ModuleWrapper>()));
+      NPN_CreateObject(js_runner->GetContext(), ModuleWrapper::GetNPClass()));
 
   if (!wrapper) {
     BrowserUtils::SetJsException(

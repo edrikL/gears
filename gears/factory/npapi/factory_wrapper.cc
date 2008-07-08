@@ -32,7 +32,7 @@ DECLARE_GEARS_WRAPPER(GearsFactory);
 
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
   scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
-        NPN_CreateObject(context, GetNPClass<ModuleWrapper>())));
+        NPN_CreateObject(context, ModuleWrapper::GetNPClass())));
   if (factory_wrapper.get()) {
     GearsFactory *factory = new GearsFactory;
     factory_wrapper->Init(factory, new Dispatcher<GearsFactory>(factory));

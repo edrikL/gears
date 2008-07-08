@@ -74,8 +74,9 @@ void Dispatcher<HtmlEventMonitorHook>::Init() {
 }
 
 HtmlEventMonitorHook* CreateHtmlEventMonitorHook(JsContextPtr context) {
+  static NPClass np_class = GetNPClassTemplate<HtmlEventMonitorHook>();
   return static_cast<HtmlEventMonitorHook *>(
-      NPN_CreateObject(context, GetNPClass<HtmlEventMonitorHook>()));
+      NPN_CreateObject(context, &np_class));
 }
 
 //
