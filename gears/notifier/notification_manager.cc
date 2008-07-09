@@ -92,14 +92,16 @@ class QueuedNotification {
         reinterpret_cast<QueuedNotification*>(cookie);
     assert(queued_notification && queued_notification->manager_);
 
-    const GearsNotification &notification = queued_notification->notification();
-
-    queued_notification->manager_->MoveFromDelayedToShowQueue(
-        notification.security_origin(),
-        notification.id());
-
+    // Store the manager since it is cleared by canceling the timer.
+    NotificationManager *manager = queued_notification->manager_;
     // Clean up state associated with the timer.
     queued_notification->CancelTimer();
+
+    const GearsNotification &notification = queued_notification->notification();
+    manager->MoveFromDelayedToShowQueue(
+        notification.security_origin(),
+        notification.id());
+    // Don't access queued_notification at this point because it may be deleted.
   }
 
   GearsNotification notification_;
