@@ -46,7 +46,7 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
-#include "gears/localserver/npapi/localserver_np.h"
+#include "gears/localserver/localserver_module.h"
 #include "gears/media/audio.h"
 #include "gears/media/audio_recorder.h"
 #include "gears/timer/timer.h"

@@ -1769,9 +1769,7 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		async_task_np.cc \
-		localserver_np.cc \
 		update_task_np.cc \
-		resource_store_np.cc \
 		$(NULL)
 
 ifeq ($(OS),win32)
