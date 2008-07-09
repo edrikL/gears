@@ -34,8 +34,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/vista_utils.h"
 
-const char16 kPathSeparator = L'\\';  // can always use backslash with IE
-
 // The convention under APPDATA is \Company\Product.
 // Append "for NPAPI" in case we support other browsers and want to use this
 // same directory.
