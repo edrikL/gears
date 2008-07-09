@@ -31,7 +31,7 @@
 #include "gecko_sdk/include/nsIInterfaceRequestor.h"
 #include "gecko_sdk/include/nsIStreamListener.h"
 #include "gecko_internal/nsIChannelEventSink.h"
-#include "genfiles/localserver.h"
+#include "genfiles/base_interface_ff.h"
 #include "gears/base/common/byte_store.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"

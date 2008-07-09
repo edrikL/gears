@@ -23,107 +23,133 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
-#define GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
+#ifndef GEARS_LOCALSERVER_RESOURCE_STORE_MODULE_H__
+#define GEARS_LOCALSERVER_RESOURCE_STORE_MODULE_H__
 
 #include <deque>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
+#include "gears/localserver/common/capture_task.h"
 #include "gears/localserver/common/resource_store.h"
-#include "gears/localserver/npapi/capture_task_np.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
+
+#if BROWSER_IE
+class GearsResourceStoreMessageHwnd;
+#endif
 
 //-----------------------------------------------------------------------------
 // GearsResourceStore
 //-----------------------------------------------------------------------------
 class GearsResourceStore
     : public ModuleImplBaseClassVirtual,
+#if BROWSER_IE
+      // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
+#else
       public AsyncTask::Listener,
+#endif
       public JsEventHandlerInterface {
  public:
-  GearsResourceStore() : next_capture_id_(0), page_is_unloaded_(false) {}
+  static const std::string kModuleName;
 
-  // OUT: string name
+  GearsResourceStore();
+
+  // IN: -
+  // OUT: string
   void GetName(JsCallContext *context);
 
-  // OUT: string cookie
+  // IN: -
+  // OUT: string
   void GetRequiredCookie(JsCallContext *context);
 
-  // OUT: bool enabled
+  // IN: -
+  // OUT: bool
   void GetEnabled(JsCallContext *context);
   // IN: bool enabled
+  // OUT: -
   void SetEnabled(JsCallContext *context);
 
-  // IN: string url | string[] url_array
-  // IN: function completion_callback
+  // IN: string url | string[] url_array, function completion_callback
   // OUT: int capture_id
   void Capture(JsCallContext *context);
 
   // IN: int capture_id
+  // OUT: -
   void AbortCapture(JsCallContext *context);
 
   // IN: string url
-  // OUT: bool is_captured
+  // OUT: bool
   void IsCaptured(JsCallContext *context);
 
   // IN: string url
+  // OUT: -
   void Remove(JsCallContext *context);
 
-  // IN: string src_url
-  // IN: string dst_url
+  // IN: string src_url, string dst_url
+  // OUT: -
   void Rename(JsCallContext *context);
 
-  // IN: string src_url
-  // IN: string dst_url
+  // IN: string src_url, string dst_url
+  // OUT: -
   void Copy(JsCallContext *context);
 
-  // IN: string url
-  // IN: string header_name
-  // OUT: string header
+  // IN: string url, string header_name
+  // OUT: string
   void GetHeader(JsCallContext *context);
 
   // IN: string url
-  // OUT: string headers
+  // OUT: string
   void GetAllHeaders(JsCallContext *context);
 
-  // IN: HtmlElement file_input_element
-  // IN: string url
+  // IN: GearsBlob blob, string url
+  // OUT: -
+  void CaptureBlob(JsCallContext *context);
+
+  // IN: HtmlElement file_input_element, string url
+  // OUT: -
   void CaptureFile(JsCallContext *context);
 
   // IN: string url
-  // OUT: string filename
+  // OUT: string
   void GetCapturedFileName(JsCallContext *context);
 
-  // OUT: GearsFileSubmitter *retval
+  // IN: -
+  // OUT: GearsFileSubmitter
   void CreateFileSubmitter(JsCallContext *context);
 
  protected:
   ~GearsResourceStore();
 
  private:
-  bool ResolveAndAppendUrl(const std::string16 &url, NPCaptureRequest *request);
+  bool ResolveAndAppendUrl(const std::string16 &url, CaptureRequest *request);
   bool ResolveUrl(const std::string16 &url, std::string16 *resolved_url);
   bool StartCaptureTaskIfNeeded(bool fire_events_on_failure);
-  void FireFailedEvents(NPCaptureRequest *request);
-  void InvokeCompletionCallback(NPCaptureRequest *request,
+  void FireFailedEvents(CaptureRequest *request);
+  void InvokeCompletionCallback(CaptureRequest *request,
                                 const std::string16 &capture_url,
                                 int capture_id,
                                 bool succeeded);
   // JsEventHandlerInterface
   virtual void HandleEvent(JsEventType event_type);
+#if BROWSER_IE
+  // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
+#else
   // AsyncTask::Listener
   virtual void HandleEvent(int code, int param, AsyncTask *source);
+#endif
   void OnCaptureUrlComplete(int index, bool success);
   void OnCaptureTaskComplete();
 
   void AbortAllRequests();
 
+  bool GetFileNameFromFileInputElement(IScriptable *dom_element,
+                                       std::string16 *file_name_out);
+
   scoped_ptr<JsEventMonitor> unload_monitor_;
   int next_capture_id_;
-  std::deque<NPCaptureRequest*> pending_requests_;
-  scoped_ptr<NPCaptureRequest> current_request_;
+  std::deque<CaptureRequest*> pending_requests_;
+  scoped_ptr<CaptureRequest> current_request_;
   scoped_ptr<CaptureTask> capture_task_;
   bool page_is_unloaded_;
   std::string16 exception_message_;
@@ -139,7 +165,12 @@ class GearsResourceStore
 
   friend class GearsLocalServer;
 
+#if BROWSER_IE
+  GearsResourceStoreMessageHwnd *message_hwnd_;
+  friend class GearsResourceStoreMessageHwnd;
+#endif
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsResourceStore);
 };
 
-#endif // GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
+#endif // GEARS_LOCALSERVER_RESOURCE_STORE_MODULE_H__

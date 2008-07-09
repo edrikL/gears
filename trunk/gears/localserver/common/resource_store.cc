@@ -57,11 +57,9 @@ bool ResourceStore::FindServer(const SecurityOrigin &security_origin,
                                  server);
 }
 
-// The blob API has not been finalized for official builds
-// AppendHeader is only used by Blob.
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // AppendHeader
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 static void AppendHeader(std::string16 &headers,
                          const char16 *name,
                          const char16 *value) {
@@ -78,6 +76,8 @@ static void AppendHeader(std::string16 &headers,
 // static
 bool ResourceStore::BlobToItem(BlobInterface *blob,
                                const char16 *full_url,
+                               const char16 *optional_content_type,
+                               const char16 *optional_x_captured_filename,
                                Item *item) {
   int64 file_size = blob->Length();
   // We don't support very large files yet.
@@ -85,6 +85,9 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
     return false;
   }
   int data_len = static_cast<int>(file_size);
+  if (optional_content_type == NULL) {
+    optional_content_type = STRING16(L"application/octet-stream");
+  }
 
   item->entry.url = full_url;
   item->payload.status_code = HttpConstants::HTTP_OK;
@@ -107,7 +110,11 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
   AppendHeader(headers, HttpConstants::kContentLengthHeader,
                data_len_str.c_str());
   AppendHeader(headers, HttpConstants::kContentTypeHeader,
-               STRING16(L"application/octet-stream"));
+               optional_content_type);
+  if (optional_x_captured_filename) {
+    AppendHeader(headers, HttpConstants::kXCapturedFilenameHeader,
+                 optional_x_captured_filename);
+  }
   headers.append(HttpConstants::kCrLf);  // Terminiate with a blank line
   item->payload.headers = headers;
   return true;

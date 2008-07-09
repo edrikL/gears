@@ -77,14 +77,11 @@ class GearsFactory
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
-  // Helper methods used by Create() which create either a dispatcher-based or
-  // isupports-based module. Returns true if the module was created
+  // Helper method used by Create(). Returns true if the module was created
   // successfully. Returns false and an empty error message if the module is
   // unknown. Returns false and an error message for other errors.
   bool CreateDispatcherModule(const std::string16 &object_name,
                               JsParamFetcher *js_params, std::string16 *error);
-  bool CreateISupportsModule(const std::string16 &object_name,
-                             nsISupports **retval, std::string16 *error);
 
   // A factory starts out operational, but it can be put in a "suspended" state,
   // unable to create objects.  This is important for some use cases, like

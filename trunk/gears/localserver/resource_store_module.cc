@@ -23,12 +23,124 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/npapi/resource_store_np.h"
+#include "gears/localserver/resource_store_module.h"
 
+#if BROWSER_FF
+#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
+#include <gecko_sdk/include/nsIFile.h>
+#include "gears/base/firefox/ns_file_utils.h"
+#elif BROWSER_IE
+#include <windows.h>
+#endif
+
+#include "gears/base/common/mime_detect.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/blob/blob.h"
+#include "gears/blob/file_blob.h"
 #include "gears/localserver/file_submitter.h"
 
+#if BROWSER_FF
+#include "gears/base/firefox/dom_utils.h"
+#elif BROWSER_IE
+#include "gears/base/ie/activex_utils.h"
+#endif
+
+
+//-----------------------------------------------------------------------------
+// StringBeginsWith - from nsReadableUtils
+//-----------------------------------------------------------------------------
+#if BROWSER_FF2
+static PRBool StringBeginsWith(const nsAString &source,
+                               const nsAString &substring) {
+  nsAString::size_type src_len = source.Length();
+  nsAString::size_type sub_len = substring.Length();
+  if (sub_len > src_len)
+    return PR_FALSE;
+  return Substring(source, 0, sub_len).Equals(substring);
+}
+#endif
+
+
+//-----------------------------------------------------------------------------
+// GearsResourceStoreMessageHwnd
+//-----------------------------------------------------------------------------
+#if BROWSER_IE
+class GearsResourceStoreMessageHwnd
+    : public CWindowImpl<GearsResourceStoreMessageHwnd> {
+ public:
+  static const int kCaptureTaskMessageBase = WM_USER;
+  static const int
+      WM_CAPTURE_TASK_COMPLETE = CaptureTask::CAPTURE_TASK_COMPLETE
+                                 + kCaptureTaskMessageBase;
+  static const int
+      WM_CAPTURE_URL_SUCCEEDED = CaptureTask::CAPTURE_URL_SUCCEEDED
+                                 + kCaptureTaskMessageBase;
+  static const int
+      WM_CAPTURE_URL_FAILED = CaptureTask::CAPTURE_URL_FAILED
+                              + kCaptureTaskMessageBase;
+
+  BEGIN_MSG_MAP(GearsResourceStoreMessageHwnd)
+    MESSAGE_HANDLER(WM_CAPTURE_TASK_COMPLETE, OnCaptureTaskComplete)
+    MESSAGE_HANDLER(WM_CAPTURE_URL_SUCCEEDED, OnCaptureUrlComplete)
+    MESSAGE_HANDLER(WM_CAPTURE_URL_FAILED, OnCaptureUrlComplete)
+  END_MSG_MAP()
+
+  GearsResourceStoreMessageHwnd(GearsResourceStore *resource_store)
+      : resource_store_(resource_store) {}
+
+  void Initialize() {
+    // Make sure we have an HWND
+    if (!IsWindow()) {
+      if (!Create(kMessageOnlyWindowParent,    // parent
+                  NULL,                        // position
+                  NULL,                        // name
+                  kMessageOnlyWindowStyle)) {  // style
+        assert(false);
+      }
+    }
+  }
+
+  LRESULT OnCaptureTaskComplete(UINT uMsg,
+                                WPARAM wParam,
+                                LPARAM lParam,
+                                BOOL& bHandled) {
+    CaptureTask* task = reinterpret_cast<CaptureTask*>(lParam);
+    if (task && (task == resource_store_->capture_task_.get())) {
+      resource_store_->OnCaptureTaskComplete();
+    }
+    bHandled = TRUE;
+    return 0;
+  }
+
+  LRESULT OnCaptureUrlComplete(UINT uMsg,
+                               WPARAM wParam,
+                               LPARAM lParam,
+                               BOOL& bHandled) {
+    CaptureTask* task = reinterpret_cast<CaptureTask*>(lParam);
+    if (task && (task == resource_store_->capture_task_.get())) {
+      int index = wParam;
+      bool success = (uMsg == WM_CAPTURE_URL_SUCCEEDED);
+      resource_store_->OnCaptureUrlComplete(index, success);
+    }
+    bHandled = TRUE;
+    return 0;
+  }
+
+  void OnFinalMessage(HWND hwnd) {
+    delete this;
+  }
+
+ private:
+  GearsResourceStore *resource_store_;
+  DISALLOW_EVIL_CONSTRUCTORS(GearsResourceStoreMessageHwnd);
+};
+#endif
+
+
+//------------------------------------------------------------------------------
+// GearsResourceStore
+//------------------------------------------------------------------------------
 DECLARE_GEARS_WRAPPER(GearsResourceStore);
 
 // static
@@ -48,6 +160,7 @@ void Dispatcher<GearsResourceStore>::Init() {
   RegisterMethod("copy", &GearsResourceStore::Copy);
   RegisterMethod("getHeader", &GearsResourceStore::GetHeader);
   RegisterMethod("getAllHeaders", &GearsResourceStore::GetAllHeaders);
+  RegisterMethod("captureBlob", &GearsResourceStore::CaptureBlob);
   RegisterMethod("captureFile", &GearsResourceStore::CaptureFile);
   RegisterMethod("getCapturedFileName",
                  &GearsResourceStore::GetCapturedFileName);
@@ -55,8 +168,24 @@ void Dispatcher<GearsResourceStore>::Init() {
                  &GearsResourceStore::CreateFileSubmitter);
 }
 
+const std::string GearsResourceStore::kModuleName("GearsResourceStore");
+
+GearsResourceStore::GearsResourceStore()
+    : ModuleImplBaseClassVirtual(kModuleName),
+#if BROWSER_IE
+      message_hwnd_(new GearsResourceStoreMessageHwnd(this)),
+#endif
+      next_capture_id_(0), page_is_unloaded_(false) {}
+
 GearsResourceStore::~GearsResourceStore() {
   AbortAllRequests();
+#if BROWSER_IE
+  if (message_hwnd_->IsWindow()) {
+    message_hwnd_->DestroyWindow();
+  } else {
+    delete message_hwnd_;
+  }
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -137,7 +266,7 @@ void GearsResourceStore::Capture(JsCallContext *context) {
   int capture_id = ++next_capture_id_;
   LOG(("ResourceStore::capture - id = %d\n", capture_id));
 
-  scoped_ptr<NPCaptureRequest> request(new NPCaptureRequest);
+  scoped_ptr<CaptureRequest> request(new CaptureRequest);
   request->id = capture_id;
   request->callback.swap(scoped_callback);  // transfer ownership
 
@@ -200,13 +329,13 @@ void GearsResourceStore::AbortCapture(JsCallContext *context) {
   }
 
   // Search for capture_id in our pending queue
-  std::deque<NPCaptureRequest*>::iterator iter;
+  std::deque<CaptureRequest*>::iterator iter;
   for (iter = pending_requests_.begin();
        iter < pending_requests_.end();
        iter++) {
     if ((*iter)->id == capture_id) {
       // Remove it from the queue and fire completion events
-      NPCaptureRequest *request = (*iter);
+      CaptureRequest *request = (*iter);
       pending_requests_.erase(iter);
       FireFailedEvents(request);
       delete request;
@@ -327,10 +456,175 @@ void GearsResourceStore::Copy(JsCallContext *context) {
 }
 
 //------------------------------------------------------------------------------
+// CaptureBlob
+//------------------------------------------------------------------------------
+void GearsResourceStore::CaptureBlob(JsCallContext *context) {
+#ifdef WINCE
+  context->SetException(STRING16(L"captureBlob is not implemented."));
+#elif BROWSER_NPAPI
+
+  ModuleImplBaseClass *other_module = NULL;
+  std::string16 url;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::string16 full_url;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    context->SetException(STRING16(L"Failed to resolve url."));
+    return;
+  }
+
+  if (GearsBlob::kModuleName != other_module->get_module_name()) {
+    context->SetException(STRING16(L"First argument must be a Blob."));
+    return;
+  }
+  scoped_refptr<BlobInterface> blob;
+  static_cast<GearsBlob*>(other_module)->GetContents(&blob);
+  assert(blob.get());
+
+  ResourceStore::Item item;
+  if (!ResourceStore::BlobToItem(blob.get(), full_url.c_str(),
+                                 NULL, NULL, &item) ||
+      !store_.PutItem(&item)) {
+    context->SetException(STRING16(L"The blob could not be captured."));
+    return;
+  }
+#endif
+}
+
+//------------------------------------------------------------------------------
+// GetFileNameFromFileInputElement
+//------------------------------------------------------------------------------
+bool GearsResourceStore::GetFileNameFromFileInputElement(
+    IScriptable *dom_element,
+    std::string16 *file_name_out) {
+#if BROWSER_FF
+  nsCOMPtr<nsIDOMHTMLInputElement> input;
+  if (NS_OK != DOMUtils::VerifyAndGetFileInputElement(dom_element,
+                                                      getter_AddRefs(input))) {
+    return false;
+  }
+  nsString filepath;
+  if (NS_OK != input->GetValue(filepath)) {
+    return false;
+  }
+  // If its really a file url, handle it differently. Gecko handles file
+  // input elements in this way when submitting forms.
+  if (StringBeginsWith(filepath, NS_LITERAL_STRING("file:"))) {
+    nsCOMPtr<nsIFile> file;
+    // Converts the URL string into the corresponding nsIFile if possible.
+    NSFileUtils::GetFileFromURLSpec(filepath, getter_AddRefs(file));
+    if (!file || NS_FAILED(file->GetPath(filepath))) {
+      return false;
+    }
+  }
+  
+  *file_name_out = filepath.get();
+  return true;
+
+#elif BROWSER_IE
+#ifdef WINCE
+  // If it implements the IPIEHTMLInputTextElement interface, and has type
+  // 'file', then accept it.
+  CComQIPtr<IPIEHTMLInputTextElement> input(dom_element);
+  CComBSTR type;
+  if (input && (FAILED(input->get_type(&type)) || type != L"file")) {
+    input.Release();
+  }
+#else
+  // If it implements the IHTMLInputFileElemement interface, then accept it.
+  CComQIPtr<IHTMLInputFileElement> input(dom_element);
+#endif
+  if (!input) {
+    return false;
+  }
+  CComBSTR filepath;
+  if (FAILED(input->get_value(&filepath))) {
+    return false;
+  }
+  if (filepath.m_str) {
+    file_name_out->assign(filepath);
+  } else {
+    file_name_out->clear();
+  }
+  return true;
+
+#elif BROWSER_NPAPI
+  // TODO(nigeltao): implement on NPAPI.
+  return false;
+
+#else
+  return false;
+#endif
+}
+
+//------------------------------------------------------------------------------
 // CaptureFile
 //------------------------------------------------------------------------------
 void GearsResourceStore::CaptureFile(JsCallContext *context) {
-  context->SetException(STRING16(L"Not Implemented"));
+#if BROWSER_NPAPI
+  // TODO(nigeltao): implement on NPAPI. To do this, I need to figure out how
+  // a FileInputElement is represented.
+  context->SetException(STRING16(L"captureFile is not implemented."));
+#else
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"captureFile is not supported in workers."));
+    return;
+  }
+
+  IScriptable *dom_element = NULL;
+  std::string16 url;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::string16 full_url;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    context->SetException(STRING16(L"Failed to resolve url."));
+    return;
+  }
+
+  std::string16 file_name;
+  if (!GetFileNameFromFileInputElement(dom_element, &file_name)) {
+    context->SetException(
+        STRING16(L"Failed to get the file name from the file input element."));
+    return;
+  }
+  if (file_name.empty()) {
+    context->SetException(STRING16(L"File path is empty."));
+    return;
+  }
+  if (!File::Exists(file_name.c_str())) {
+    context->SetException(STRING16(L"File does not exist."));
+    return;
+  }
+  std::string16 file_base_name;
+  if (!File::GetBaseName(file_name, &file_base_name)) {
+    context->SetException(STRING16(L"Could not extract the file's base name."));
+    return;
+  }
+  std::string16 mime_type = DetectMimeTypeOfFile(file_name);
+  scoped_refptr<BlobInterface> blob(new FileBlob(file_name));
+
+  ResourceStore::Item item;
+  if (!ResourceStore::BlobToItem(blob.get(), full_url.c_str(),
+                                 mime_type.c_str(), file_base_name.c_str(),
+                                 &item) ||
+      !store_.PutItem(&item)) {
+    context->SetException(STRING16(L"The file could not be captured."));
+    return;
+  }
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -416,6 +710,14 @@ void GearsResourceStore::GetAllHeaders(JsCallContext *context) {
 // CreateFileSubmitter
 //------------------------------------------------------------------------------
 void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
+#ifdef WINCE
+  context->SetException(STRING16(L"createFileSubmitter is not implemented."));
+  return;
+#elif BROWSER_NPAPI
+  // TODO(nigeltao): implement on NPAPI.
+  context->SetException(STRING16(L"createFileSubmitter is not implemented."));
+  return;
+#else
   if (EnvIsWorker()) {
     context->SetException(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
@@ -427,9 +729,13 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
                                         context, &submitter)) {
     return;
   }
+  if (!submitter->store_.Clone(&store_)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
 
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, submitter.get());
-  context->SetException(STRING16(L"Not Implemented"));
+#endif
 }
 
 // End Javascript API
@@ -450,7 +756,11 @@ void GearsResourceStore::HandleEvent(JsEventType event_type) {
 //------------------------------------------------------------------------------
 void GearsResourceStore::AbortAllRequests() {
   if (capture_task_.get()) {
+#if BROWSER_IE
+    capture_task_->SetListenerWindow(NULL, 0);
+#else
     capture_task_->SetListener(NULL);
+#endif
     // No need to fire failed events since the current page is being unloaded
     // or the resource store deleted for some other reason.
     need_to_fire_failed_events_ = false;
@@ -462,7 +772,7 @@ void GearsResourceStore::AbortAllRequests() {
     current_request_->callback.reset(NULL);
   }
 
-  for (std::deque<NPCaptureRequest*>::iterator iter = pending_requests_.begin();
+  for (std::deque<CaptureRequest*>::iterator iter = pending_requests_.begin();
        iter != pending_requests_.end(); ++iter) {
     delete (*iter);
   }
@@ -501,7 +811,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 
   capture_task_.reset(new CaptureTask(EnvPageBrowsingContext()));
   if (!capture_task_->Init(&store_, current_request_.get())) {
-    scoped_ptr<NPCaptureRequest> failed_request(current_request_.release());
+    scoped_ptr<CaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
     if (fire_events_on_failure) {
       FireFailedEvents(failed_request.get());
@@ -510,10 +820,17 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     return false;
   }
 
+#if BROWSER_IE
+  message_hwnd_->Initialize();
+  capture_task_->SetListenerWindow(
+      message_hwnd_->m_hWnd,
+      GearsResourceStoreMessageHwnd::kCaptureTaskMessageBase);
+#else
   capture_task_->SetListener(this);
+#endif
   need_to_fire_failed_events_ = true;
   if (!capture_task_->Start()) {
-    scoped_ptr<NPCaptureRequest> failed_request(current_request_.release());
+    scoped_ptr<CaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
     if (fire_events_on_failure) {
       FireFailedEvents(failed_request.get());
@@ -528,6 +845,9 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 //------------------------------------------------------------------------------
 // HandleEvent
 //------------------------------------------------------------------------------
+#if BROWSER_IE
+  // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
+#else
 void GearsResourceStore::HandleEvent(int code, int param,
                                      AsyncTask *source) {
   if (source && (source == capture_task_.get())) {
@@ -540,6 +860,7 @@ void GearsResourceStore::HandleEvent(int code, int param,
     }
   }
 }
+#endif
 
 //------------------------------------------------------------------------------
 // OnCaptureUrlComplete
@@ -558,7 +879,11 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
 // OnCaptureTaskComplete
 //------------------------------------------------------------------------------
 void GearsResourceStore::OnCaptureTaskComplete() {
+#if BROWSER_IE
+  capture_task_->SetListenerWindow(NULL, 0);
+#else
   capture_task_->SetListener(NULL);
+#endif
   capture_task_.release()->DeleteWhenDone();
   if (need_to_fire_failed_events_) {
     assert(current_request_.get());
@@ -571,7 +896,7 @@ void GearsResourceStore::OnCaptureTaskComplete() {
 //------------------------------------------------------------------------------
 // FireFailedEvents
 //------------------------------------------------------------------------------
-void GearsResourceStore::FireFailedEvents(NPCaptureRequest *request) {
+void GearsResourceStore::FireFailedEvents(CaptureRequest *request) {
   assert(request);
   for (size_t i = 0; i < request->urls.size(); ++i) {
     InvokeCompletionCallback(request,
@@ -585,7 +910,7 @@ void GearsResourceStore::FireFailedEvents(NPCaptureRequest *request) {
 // InvokeCompletionCallback
 //------------------------------------------------------------------------------
 void GearsResourceStore::InvokeCompletionCallback(
-                             NPCaptureRequest *request,
+                             CaptureRequest *request,
                              const std::string16 &capture_url,
                              int capture_id,
                              bool succeeded) {
@@ -605,7 +930,7 @@ void GearsResourceStore::InvokeCompletionCallback(
 // ResolveAndAppendUrl
 //------------------------------------------------------------------------------
 bool GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
-                                             NPCaptureRequest *request) {
+                                             CaptureRequest *request) {
   std::string16 full_url;
   if (!ResolveUrl(url.c_str(), &full_url)) {
     return false;

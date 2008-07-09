@@ -45,8 +45,6 @@
 #include "gears/factory/firefox/factory.h"
 
 #include "gears/localserver/firefox/cache_intercept.h"
-#include "gears/localserver/firefox/localserver_ff.h"
-#include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/ui/firefox/ui_utils.h"
 
 #if BROWSER_FF2
@@ -125,16 +123,6 @@ NS_DOMCI_EXTENSION(Scour)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsFactoryInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFactory, PR_TRUE,
                                              &kGearsFactoryClassId)
-
-  // localserver
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsLocalServer)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsLocalServerInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsLocalServer, PR_TRUE,
-                                             &kGearsLocalServerClassId)
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsResourceStore)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsResourceStoreInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResourceStore, PR_TRUE,
-                                             &kGearsResourceStoreClassId)
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -165,12 +153,7 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
   } jsDOMClasses[] = {
     // factory
     { kGearsFactoryClassName, "GearsFactoryInterface",
-      GEARSFACTORYINTERFACE_IID_STR },
-    // localserver
-    { kGearsLocalServerClassName, "GearsLocalServerInterface",
-      GEARSLOCALSERVERINTERFACE_IID_STR },
-    { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
-      GEARSRESOURCESTOREINTERFACE_IID_STR }
+      GEARSFACTORYINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -199,9 +182,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
 
 // factory
 NS_DECL_DOM_CLASSINFO(GearsFactory)
-// localserver
-NS_DECL_DOM_CLASSINFO(GearsLocalServer)
-NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   if (NS_FAILED(ThreadLocals::HandleModuleConstructed())) {
@@ -218,9 +198,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 
   // factory
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFactory));
-  // localserver
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
 
 #if BROWSER_FF2
   DestroyThreadRecycler();

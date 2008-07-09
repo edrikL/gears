@@ -23,14 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/npapi/localserver_np.h"
+#include "gears/localserver/localserver_module.h"
 
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/managed_resource_store_module.h"
-#include "gears/localserver/npapi/resource_store_np.h"
+#include "gears/localserver/resource_store_module.h"
 
 DECLARE_GEARS_WRAPPER(GearsLocalServer);
 
@@ -45,6 +45,8 @@ void Dispatcher<GearsLocalServer>::Init() {
   RegisterMethod("openStore", &GearsLocalServer::OpenStore);
   RegisterMethod("removeStore", &GearsLocalServer::RemoveStore);
 }
+
+const std::string GearsLocalServer::kModuleName("GearsLocalServer");
 
 //-----------------------------------------------------------------------------
 // CanServeLocally
@@ -150,7 +152,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
                                         name.c_str(),
                                         required_cookie.c_str(),
                                         &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, NULL);
+    context->SetReturnValue(JSPARAM_NULL, 0);
     return;
   }
 
@@ -194,7 +196,7 @@ void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
                                         name.c_str(),
                                         required_cookie.c_str(),
                                         &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, NULL);
+    context->SetReturnValue(JSPARAM_NULL, 0);
     return;
   }
 
@@ -278,7 +280,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
                                  name.c_str(),
                                  required_cookie.c_str(),
                                  &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, NULL);
+    context->SetReturnValue(JSPARAM_NULL, 0);
     return;
   }
 

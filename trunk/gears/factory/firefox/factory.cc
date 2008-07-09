@@ -56,7 +56,7 @@
 #include "gears/media/audio_recorder.h"
 
 #include "gears/httprequest/httprequest.h"
-#include "gears/localserver/firefox/localserver_ff.h"
+#include "gears/localserver/localserver_module.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/workerpool.h"
 
@@ -129,19 +129,9 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
 
-  // First try to create a dispatcher-based module.
   std::string16 error;
   bool success = CreateDispatcherModule(module_name, &js_params, &error);
 
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  }
-
-  // There was no dispatcher-based implementation of this object. Try to create
-  // an isupports module.
-  success = CreateISupportsModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {
@@ -169,6 +159,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsDesktop>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(module_environment_.get(), NULL, &object);
+  } else if (object_name == STRING16(L"beta.localserver")) {
+    CreateModule<GearsLocalServer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.workerpool")) {
@@ -212,50 +204,6 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   js_params->SetReturnValue(object->GetWrapperToken());
-  return true;
-}
-
-bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
-                                         nsISupports **retval,
-                                         std::string16 *error) {
-  nsCOMPtr<nsISupports> isupports = NULL;
-
-  nsresult nr = NS_ERROR_FAILURE;
-  if (object_name == STRING16(L"beta.localserver")) {
-    isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-  }  else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  if (NS_FAILED(nr) || !isupports) {
-    *error = STRING16(L"Failed to create requested object.");
-    return false;
-  }
-
-  // setup the ModuleImplBaseClass (copy settings from this factory)
-  bool base_init_succeeded = false;
-  nsCOMPtr<GearsBaseClassInterface> idl_base =
-      do_QueryInterface(isupports, &nr);
-  if (NS_SUCCEEDED(nr) && idl_base) {
-    ModuleImplBaseClass *native_base = NULL;
-    idl_base->GetNativeBaseClass(&native_base);
-    if (native_base) {
-      native_base->InitModuleEnvironment(module_environment_.get());
-      base_init_succeeded = true;
-    }
-  }
-
-  if (!base_init_succeeded) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
-  }
-
-  *retval = isupports.get();
-  (*retval)->AddRef(); // ~nsCOMPtr will Release, so must AddRef here
-  assert((*retval)->AddRef() == 4 &&
-         (*retval)->Release() == 3);
   return true;
 }
 

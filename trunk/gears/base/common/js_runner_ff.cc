@@ -50,7 +50,6 @@
 #endif
 #include "gears/base/common/js_runner.h"
 
-#include "genfiles/localserver.h"
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/html_event_monitor.h"
@@ -573,10 +572,7 @@ bool JsRunner::InitJavaScriptEngine() {
   } classes[] = {
     // TODO(cprince): Unify the interface lists here and in GearsFactory.
     // Could share code, or could query GearsFactory.
-    {GEARSFACTORYINTERFACE_IID, NULL},
-    // localserver
-    {GEARSLOCALSERVERINTERFACE_IID, NULL},
-    {GEARSRESOURCESTOREINTERFACE_IID, NULL}
+    {GEARSFACTORYINTERFACE_IID, NULL}
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 
