@@ -30,26 +30,47 @@
 DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
-// The right values as per the HTML5 canvas spec.
-const std::string16 GearsCanvasRenderingContext2D::kCompositeOpSourceOver(
-    STRING16(L"source-over"));
-const std::string16 GearsCanvasRenderingContext2D::kCompositeOpCopy(
-    STRING16(L"copy"));
-const std::string16 GearsCanvasRenderingContext2D::kTextAlignLeft(
-    STRING16(L"left"));
-const std::string16 GearsCanvasRenderingContext2D::kTextAlignCenter(
-    STRING16(L"center"));
-const std::string16 GearsCanvasRenderingContext2D::kTextAlignRight(
-    STRING16(L"right"));
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
     : ModuleImplBaseClassVirtual(kModuleName),
-    canvas_(NULL),
-    alpha_(1.0),
-    composite_operation_(kCompositeOpSourceOver),
-    fill_style_(STRING16(L"#000000")),
-    font_(STRING16(L"10px sans-serif")),
-    text_align_(STRING16(L"left")) {
+      canvas_(NULL) {
+}
+
+void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {
+  // Prevent double initialization.
+  assert(canvas_ == NULL);
+  assert(new_canvas != NULL);
+  assert(new_canvas->rendering_context_ == this);
+  canvas_ = new_canvas;
+  unload_monitor_.reset(
+      new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
+}
+
+void GearsCanvasRenderingContext2D::ClearReferenceFromGearsCanvas() {
+  // The canvas pointer will be null if this object didn't initalize in the
+  // first place (that is, if InitBaseFromSibling failed), or after a page
+  // unload event.
+  if (canvas_) {
+    assert(canvas_->rendering_context_ == this);
+    // Prevent dangling pointer.
+    // If the canvas later needs a context, it will create another object.
+    canvas_->rendering_context_ = NULL;
+  }
+}
+
+void GearsCanvasRenderingContext2D::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+  // On page unload, we must destroy the scoped_refptr to GearsCanvas.
+  // But to do that, we must first clear the pointer from GearsCanvas, so that
+  // it doesn't become a dangling pointer. If we don't clear it now, we can't
+  // clear it in the destructor since at that time we no longer have a pointer
+  // to Canvas.
+  ClearReferenceFromGearsCanvas();
+  canvas_.reset();
+}
+
+GearsCanvasRenderingContext2D::~GearsCanvasRenderingContext2D() {
+  ClearReferenceFromGearsCanvas();
 }
 
 template<>
@@ -108,15 +129,9 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
 // method call with a numeric argument whose value is infinite or
 // a NaN value must be ignored.
 
-void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {
-  assert(canvas_ == NULL);
-  assert(new_canvas != NULL);
-  canvas_ = new_canvas;
-}
-
 void GearsCanvasRenderingContext2D::GetCanvas(JsCallContext *context) {
   assert(canvas_ != NULL);
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, canvas_);
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, canvas_.get());
 }
 
 void GearsCanvasRenderingContext2D::Save(JsCallContext *context) {
@@ -204,7 +219,8 @@ void GearsCanvasRenderingContext2D::SetTransform(JsCallContext *context) {
 
 void GearsCanvasRenderingContext2D::GetGlobalAlpha(
     JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_DOUBLE, &alpha_);
+  double alpha = canvas_->alpha();
+  context->SetReturnValue(JSPARAM_DOUBLE, &alpha);
 }
 
 void GearsCanvasRenderingContext2D::SetGlobalAlpha(
@@ -216,16 +232,13 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  if (new_alpha < 0.0 || new_alpha > 1.0) {
-    // As per the HTML5 canvas spec.
-    return;
-  }
-  alpha_ = new_alpha;
+  canvas_->set_alpha(new_alpha);
 }
 
 void GearsCanvasRenderingContext2D::GetGlobalCompositeOperation(
     JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &composite_operation_);
+  std::string16 op = canvas_->composite_operation();
+  context->SetReturnValue(JSPARAM_STRING16, &op);
 }
 
 void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
@@ -237,21 +250,17 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  if (new_composite_op != kCompositeOpCopy &&
-      new_composite_op != kCompositeOpCopy)
-    // As per the HTML5 canvas spec.
-    return;
-
-  // TODO(kart): If we're given a composite mode that Canvas supports but we
-  // don't, raise an Unsupported exception.
-  composite_operation_ = new_composite_op;
+  canvas_->set_composite_operation(new_composite_op);
 }
 
 void GearsCanvasRenderingContext2D::GetFillStyle(
     JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &fill_style_);
+  std::string16 fill_style = canvas_->fill_style();
+  context->SetReturnValue(JSPARAM_STRING16, &fill_style);
 }
 
+// TODO(kart): Generate an error if given a CanvasGradient or CanvasPattern
+// object (from the browser's canvas implementation).
 void GearsCanvasRenderingContext2D::SetFillStyle(
     JsCallContext *context) {
   std::string16 new_fill_style;
@@ -263,11 +272,7 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
   if (context->is_exception_set())
     return;
 
-  // TODO(kart):
-  // if (new_fill_style is not a valid CSS color)
-  // As per the HTML5 canvas spec.
-  //  return;
-  fill_style_ = new_fill_style;
+  canvas_->set_fill_style(new_fill_style);
 }
 
 void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
@@ -313,7 +318,8 @@ void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::GetFont(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &font_);
+  std::string16 font = canvas_->font();
+  context->SetReturnValue(JSPARAM_STRING16, &font);
 }
 
 void GearsCanvasRenderingContext2D::SetFont(JsCallContext *context) {
@@ -324,17 +330,13 @@ void GearsCanvasRenderingContext2D::SetFont(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  // TODO(kart):
-  // if (new_font is not a valid CSS font specification) {
-  //   context->SetException("Bad font specification");
-  //   return;
-  // }
-  font_ = new_font;
+  canvas_->set_font(new_font);
   context->SetException(STRING16(L"Unimplemented"));
 }
 
 void GearsCanvasRenderingContext2D::GetTextAlign(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &text_align_);
+  std::string16 text_align = canvas_->text_align();
+  context->SetReturnValue(JSPARAM_STRING16, &text_align);
 }
 
 void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
@@ -345,14 +347,7 @@ void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  if (new_align != kTextAlignLeft && new_align != kTextAlignCenter
-      && new_align != kTextAlignRight) {
-    // As per the HTML5 canvas spec.
-    return;
-  }
-  // TODO(kart): If given a mode that canvas supports but we don't, raise
-  // an exception.
-  text_align_ = new_align;
+  canvas_->set_text_align(new_align);
   context->SetException(STRING16(L"Unimplemented"));
 }
 
@@ -392,7 +387,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     { JSPARAM_OPTIONAL, JSPARAM_INT, &dw },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &dh }
   };
-  int numArgs = context->GetArguments(ARRAYSIZE(args), args);
+  int num_args = context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   assert(other_module);
@@ -402,12 +397,12 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   }
   scoped_refptr<GearsCanvas> source = static_cast<GearsCanvas*>(other_module);
   
-  if (numArgs != 9) {
+  if (num_args != 9) {
     // Handle missing arguments.
-    if (numArgs == 5) {
+    if (num_args == 5) {
       dw = sw;
       dh = sh;
-    } else if (numArgs == 3) {
+    } else if (num_args == 3) {
       dw = canvas_->Width();
       dh = canvas_->Height();
     } else {
@@ -421,53 +416,43 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     sx = 0;
     sy = 0;
   }
-    
-  // First extract the source region pixels into a new bitmap.
-  // This also handles the case where a canvas is
-  // drawn onto an overlapping part of itself (which is allowed).
-  SkIRect rect;
-  rect.fLeft = sx;
-  rect.fTop = sy;
-  rect.fRight = sx + sw;
-  rect.fBottom = sy + sh;
   
-  SkBitmap source_subset;
-  if (sx < 0 || sy < 0 || sx + sw >= source->Width() ||
-      sy + sh >= source->Height()) {
+  SkIRect src_rect = { sx, sy, sx + sw, sy + sh };
+  SkRect dest_rect = { dx, dy, dx + dw, dy + dh };
+
+  // The HTML5 canvas spec says that an invalid src rect must trigger an
+  // exception, but it does not say what to do if the dest rect is invalid.
+  // So, if both rects are invalid, it's more spec-compliant to raise an error
+  // for the src rect.
+  if (!canvas_->IsRectValid(src_rect)) {
     context->SetException(STRING16(
-        L"Source rectangle stretches beyond the bounds of its bitmap."));
+        L"Source rectangle stretches beyond the bounds of its bitmap or "
+        L"has negative dimensions."));
     return;
   }
-  if (!source->SkiaBitmap()->extractSubset(&source_subset, rect)) {
-    assert (sw == 0 || sh == 0);
+  if (src_rect.isEmpty()) {
     context->SetException(STRING16(
         L"Source rectangle has zero width or height."));
     return;
   }
-  
-  if (dx < 0 || dy < 0 || dx + dw >= canvas_->Width() ||
-      dy + dh >= canvas_->Height()) {
+  if (!canvas_->IsRectValid(dest_rect)) {
     context->SetException(STRING16(
-        L"Destination rectangle stretches beyond the bounds of its bitmap."));
+        L"Destination rectangle stretches beyond the bounds of its bitmap or "
+        L"has negative dimensions."));
     return;
   }
-  if (dw == 0 || dh == 0) {
+  if (dest_rect.isEmpty()) {
     context->SetException(STRING16(
         L"Destination rectangle has zero width or height."));
     return;
   }
   
-  // Now resize the extracted pixels.
-  SkBitmap resized_bitmap;
-  SkCanvas resized_canvas;
-  resized_canvas.setBitmapDevice(resized_bitmap);
-  SkScalar x_scale = static_cast<SkScalar>(static_cast<double>(dw)/sw);
-  SkScalar y_scale = static_cast<SkScalar>(static_cast<double>(dh)/sh);
-  resized_canvas.scale(x_scale, y_scale);
-  resized_canvas.drawBitmap(source_subset, 0, 0);
-    
-  // Finally draw the resized pixels onto this canvas.
-  canvas_->SkiaCanvas()->drawBitmap(resized_bitmap, dx, dy);
+  // When drawBitmapRect() is called with a source rectangle, it (also) handles
+  // the case where source canvas is same as this canvas.
+  // TODO(kart): This function silently fails on errors. Find out what can be
+  // done about this.
+  canvas_->SkiaCanvas()->drawBitmapRect(
+      *(source->SkiaBitmap()), &src_rect, dest_rect);
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {

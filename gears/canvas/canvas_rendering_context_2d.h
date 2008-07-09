@@ -35,11 +35,14 @@
 // 2D Context to manipulate the canvas.
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
-class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
+class GearsCanvasRenderingContext2D
+    : public ModuleImplBaseClassVirtual,
+      public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;
 
   GearsCanvasRenderingContext2D();
+  virtual ~GearsCanvasRenderingContext2D();
 
   // Initializes the canvas backreference from this object.
   // This function must be called only once.
@@ -236,21 +239,17 @@ class GearsCanvasRenderingContext2D : public ModuleImplBaseClassVirtual {
   void ResetTransform(JsCallContext *context);
 
  private:
-  static const std::string16 kCompositeOpCopy;
-  static const std::string16 kCompositeOpSourceOver;
-  static const std::string16 kTextAlignLeft;
-  static const std::string16 kTextAlignRight;
-  static const std::string16 kTextAlignCenter;
+  // Removes the plain pointer to this object from its GearsCanvas, to prevent
+  // it from becoming a dangling pointer.
+  void ClearReferenceFromGearsCanvas();
 
-  // TODO(kart): Probably use scoped_refptr, but that forms a
-  // garbage collection cycle (canvas -> context -> canvas).
-  GearsCanvas *canvas_;
+  // Callback used to handle the 'JSEVENT_UNLOAD' event.
+  virtual void HandleEvent(JsEventType event_type);
 
-  double alpha_;
-  std::string16 composite_operation_;
-  std::string16 fill_style_;
-  std::string16 font_;
-  std::string16 text_align_;
+  scoped_refptr<GearsCanvas> canvas_;
+
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvasRenderingContext2D);
 };
 

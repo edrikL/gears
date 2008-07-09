@@ -36,19 +36,20 @@
 // to unused inline functions defined in the Skia header.
 class SkBitmap;
 class SkCanvas;
+struct SkIRect;
+struct SkRect;
 
 class GearsCanvasRenderingContext2D;
 
 // Extension of a subset of HTML5 canvas for photo manipulation.
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
-class GearsCanvas
-    : public ModuleImplBaseClassVirtual,
-      public JsEventHandlerInterface {
+class GearsCanvas : public ModuleImplBaseClassVirtual {
  public:
   static const std::string kModuleName;
 
   GearsCanvas();
+  virtual ~GearsCanvas();
 
   // Loads an image from a supplied blob.
   // IN: Blob blob.
@@ -96,26 +97,60 @@ class GearsCanvas
   // OUT: CanvasRenderingContext2D
   void GetContext(JsCallContext *context);
 
-  // Not exported to JS:
+  // Convenience functions; not exported to JS.
+  // If given an argument that HTML5 canvas doesn't support, the setters below
+  // fail silently without returning an error, as per the HTML5 canvas spec.
+  // But if given an argument that HTML5 canvas supports but we don't,
+  // the setters (set_composite_operation, to be precise) returns false.
   SkBitmap *SkiaBitmap();
   SkCanvas *SkiaCanvas();
   int Width();
   int Height();
+  double alpha() const;
+  void set_alpha(double new_alpha);
+  std::string16 composite_operation() const;
+  // Returns false if given a mode HTML5 canvas supports but we don't.
+  bool set_composite_operation(std::string16 new_composite_op);
+  std::string16 fill_style() const;
+  void set_fill_style(std::string16 new_fill_style);
+  std::string16 font() const;
+  void set_font(std::string16 new_font);
+  std::string16 text_align() const;
+  void set_text_align(std::string16 new_text_align);
 
  private:
-  scoped_refptr<GearsCanvasRenderingContext2D> rendering_context_;
+  friend class GearsCanvasRenderingContext2D;
+
+  // Returns true if the rectangle is contained completely within the bounds
+  // of this bitmap, and has non-negative width and height.
+  bool IsRectValid(const SkIRect &rect);
+  bool IsRectValid(const SkRect &rect);
+  
+  // Parses a composite operation string (as per HTML5 canvas) and returns
+  // one of the two following values or a Skia PorterDuff enum
+  // (represented as an int since we can't include any Skia headers here due to
+  // compilation issues; see comment at top of file).
+  static const int COMPOSITE_MODE_HTML5_CANVAS_ONLY;
+  static const int COMPOSITE_MODE_UNKNOWN;
+  int ParseCompositeOperationString(std::string16 mode);
+
+  // Can't use a scoped_refptr since that will create a reference cycle.
+  // Instead, use a plain pointer and clear it when the target is destroyed.
+  // Recreate this pointer when accessed again. For this to work, we make
+  // the Context stateless.
+  GearsCanvasRenderingContext2D *rendering_context_;
   // Cannot embed objects directly due to compilation issues; see comment
   // at top of file.
   scoped_ptr<SkBitmap> skia_bitmap_;
   scoped_ptr<SkCanvas> skia_canvas_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
 
-  // Sets up any structures that aren't needed until the interface is used.
-  // It's ok to call this multiple times.
-  void LazyInitialize();
-
-  // This is the callback used to handle the 'JSEVENT_UNLOAD' event.
-  virtual void HandleEvent(JsEventType event_type);
+  // Context state:
+  // TODO(kart): Move this state into SkCanvas?
+  double alpha_;
+  std::string16 composite_operation_;
+  std::string16 fill_style_;
+  std::string16 font_;
+  std::string16 text_align_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
