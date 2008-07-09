@@ -56,6 +56,10 @@
 		B507A4070DEC70FD00DC9D6A /* transaction.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FE0DEC70FD00DC9D6A /* transaction.cc */; };
 		B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */ = {isa = PBXBuildFile; fileRef = B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
+		B532BAB20E2536EA00912490 /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB10E2536EA00912490 /* capture_task.cc */; };
+		B532BAB60E25374600912490 /* localserver_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB50E25374600912490 /* localserver_module.cc */; };
+		B532BAB80E25375F00912490 /* localserver_perf_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB70E25375E00912490 /* localserver_perf_test.cc */; };
+		B532BABC0E25378B00912490 /* resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BABA0E25378B00912490 /* resource_store_module.cc */; };
 		B538882E0E12B244000CB9FF /* permissions_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B538882D0E12B244000CB9FF /* permissions_manager.cc */; };
 		B53888310E12B25D000CB9FF /* wifi_data_provider_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */; };
 		B53888350E12B2B5000CB9FF /* wifi_data_provider_common.cc in Sources */ = {isa = PBXBuildFile; fileRef = B53888340E12B2B5000CB9FF /* wifi_data_provider_common.cc */; };
@@ -96,7 +100,6 @@
 		B5482E320E14208100AF78CA /* mach_ipc.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5482E130E141F8700AF78CA /* mach_ipc.mm */; };
 		B5482E330E14208100AF78CA /* on_demand_server.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5482E170E141F8700AF78CA /* on_demand_server.mm */; };
 		B54ADBB80E0F074900884C56 /* dummy_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADBB70E0F074900884C56 /* dummy_module.cc */; };
-		B54ADBBC0E0F07A500884C56 /* localserver_perf_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */; };
 		B54ADC860E0F127B00884C56 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADC640E0F127B00884C56 /* dynamic_images.cc */; };
 		B54ADC870E0F127B00884C56 /* dynamic_images.h in Headers */ = {isa = PBXBuildFile; fileRef = B54ADC650E0F127B00884C56 /* dynamic_images.h */; };
 		B54ADC880E0F127B00884C56 /* exception_handler.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54ADC660E0F127B00884C56 /* exception_handler.cc */; };
@@ -398,9 +401,6 @@
 		B58EFE680D529ACB00B0A65D /* http_cookies.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE560D529ACB00B0A65D /* http_cookies.cc */; };
 		B58EFE690D529ACB00B0A65D /* managed_resource_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE580D529ACB00B0A65D /* managed_resource_store.cc */; };
 		B58EFE6A0D529ACB00B0A65D /* http_constants.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5A0D529ACB00B0A65D /* http_constants.cc */; };
-		B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE5D0D529ACB00B0A65D /* capture_task.cc */; };
-		B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE700D529AEA00B0A65D /* resource_store_np.cc */; };
-		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
 		B5924A650DDA0A4100F9CD2B /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A620DDA0A4100F9CD2B /* event_test.cc */; };
 		B5924A660DDA0A4100F9CD2B /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5924A630DDA0A4100F9CD2B /* event.cc */; };
 		B594F1C70E12B35400B8D38A /* launch_url_with_browser in Resources */ = {isa = PBXBuildFile; fileRef = B58939320DB66F4D00BD56A0 /* launch_url_with_browser */; };
@@ -413,7 +413,6 @@
 		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
 		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
 		B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */; };
-		B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD4D0E06C1A200DCA259 /* thread.cc */; };
 		B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD530E06C23800DCA259 /* byte_store_test.cc */; };
 		B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD540E06C23800DCA259 /* byte_store.cc */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
@@ -447,7 +446,6 @@
 		B5F09C550E1567B300C7ACB7 /* string_utils_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C540E1567B300C7ACB7 /* string_utils_osx.cc */; };
 		B5F09C750E15690900C7ACB7 /* mutex_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C710E15690900C7ACB7 /* mutex_test.cc */; };
 		B5F09C760E15690900C7ACB7 /* mutex_posix.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C720E15690900C7ACB7 /* mutex_posix.cc */; };
-		B5F09C7F0E1569A300C7ACB7 /* thread_posix.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C7E0E1569A300C7ACB7 /* thread_posix.cc */; };
 		B5F09C840E1569E600C7ACB7 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C830E1569E600C7ACB7 /* notifier_process_osx.cc */; };
 		B5F09C880E156A0D00C7ACB7 /* notification.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C860E156A0D00C7ACB7 /* notification.cc */; };
 		B5F09C8C0E156A4200C7ACB7 /* resource_archive.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F09C8B0E156A4200C7ACB7 /* resource_archive.cc */; };
@@ -468,6 +466,12 @@
 		B5F09D040E156AE100C7ACB7 /* pa_mac_hostapis.c in Sources */ = {isa = PBXBuildFile; fileRef = B5F09CD50E156AE100C7ACB7 /* pa_mac_hostapis.c */; };
 		B5F09D2B0E156C2B00C7ACB7 /* pa_unix_util.c in Sources */ = {isa = PBXBuildFile; fileRef = B5F09D2A0E156C2B00C7ACB7 /* pa_unix_util.c */; };
 		B5F09D6E0E156E7400C7ACB7 /* pa_stream.c in Sources */ = {isa = PBXBuildFile; fileRef = B5F09D6D0E156E7400C7ACB7 /* pa_stream.c */; };
+		B5F3105F0E25584C0065151C /* thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F3105E0E25584C0065151C /* thread.cc */; };
+		B5F310620E2558550065151C /* thread_posix.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F310610E2558550065151C /* thread_posix.cc */; };
+		B5F310660E2558B20065151C /* geolocation_db.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F310650E2558B20065151C /* geolocation_db.cc */; };
+		B5F3106A0E2559050065151C /* position_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F310690E2559050065151C /* position_table.cc */; };
+		B5F3106D0E25591D0065151C /* notifier_proxy.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F3106C0E25591D0065151C /* notifier_proxy.cc */; };
+		B5F310760E2559CC0065151C /* blob_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F310750E2559CC0065151C /* blob_utils.cc */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
 		B5FEB9BB0DDCE58C001DBEE5 /* mozjs_npapi_storage.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5FEB9B50DDCE58C001DBEE5 /* mozjs_npapi_storage.cc */; };
@@ -641,6 +645,12 @@
 		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
+		B532BAB10E2536EA00912490 /* capture_task.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = capture_task.cc; path = ../../localserver/common/capture_task.cc; sourceTree = SOURCE_ROOT; };
+		B532BAB40E25374600912490 /* localserver_module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = localserver_module.h; path = ../../localserver/localserver_module.h; sourceTree = SOURCE_ROOT; };
+		B532BAB50E25374600912490 /* localserver_module.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_module.cc; path = ../../localserver/localserver_module.cc; sourceTree = SOURCE_ROOT; };
+		B532BAB70E25375E00912490 /* localserver_perf_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_perf_test.cc; path = ../../localserver/common/localserver_perf_test.cc; sourceTree = SOURCE_ROOT; };
+		B532BABA0E25378B00912490 /* resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resource_store_module.cc; path = ../../localserver/resource_store_module.cc; sourceTree = SOURCE_ROOT; };
+		B532BABB0E25378B00912490 /* resource_store_module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resource_store_module.h; path = ../../localserver/resource_store_module.h; sourceTree = SOURCE_ROOT; };
 		B538882C0E12B244000CB9FF /* permissions_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = permissions_manager.h; path = ../../base/common/permissions_manager.h; sourceTree = SOURCE_ROOT; };
 		B538882D0E12B244000CB9FF /* permissions_manager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = permissions_manager.cc; path = ../../base/common/permissions_manager.cc; sourceTree = SOURCE_ROOT; };
 		B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wifi_data_provider_osx.cc; path = ../../geolocation/wifi_data_provider_osx.cc; sourceTree = SOURCE_ROOT; };
@@ -715,7 +725,6 @@
 		B54ADBA40E0F054500884C56 /* prefix_header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prefix_header.h; path = ../../base/safari/prefix_header.h; sourceTree = SOURCE_ROOT; };
 		B54ADBB60E0F074900884C56 /* dummy_module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dummy_module.h; path = ../../dummy/dummy_module.h; sourceTree = SOURCE_ROOT; };
 		B54ADBB70E0F074900884C56 /* dummy_module.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dummy_module.cc; path = ../../dummy/dummy_module.cc; sourceTree = SOURCE_ROOT; };
-		B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_perf_test.cc; path = ../../localserver/common/localserver_perf_test.cc; sourceTree = SOURCE_ROOT; };
 		B54ADC590E0F119100884C56 /* libbreakpad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbreakpad.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B54ADC640E0F127B00884C56 /* dynamic_images.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dynamic_images.cc; sourceTree = "<group>"; };
 		B54ADC650E0F127B00884C56 /* dynamic_images.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynamic_images.h; sourceTree = "<group>"; };
@@ -1076,16 +1085,10 @@
 		B58EFE590D529ACB00B0A65D /* blob_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = blob_store.h; path = ../../localserver/common/blob_store.h; sourceTree = SOURCE_ROOT; };
 		B58EFE5A0D529ACB00B0A65D /* http_constants.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = http_constants.cc; path = ../../localserver/common/http_constants.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE5C0D529ACB00B0A65D /* managed_resource_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store.h; path = ../../localserver/common/managed_resource_store.h; sourceTree = SOURCE_ROOT; };
-		B58EFE5D0D529ACB00B0A65D /* capture_task.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = capture_task.cc; path = ../../localserver/common/capture_task.cc; sourceTree = SOURCE_ROOT; };
 		B58EFE5E0D529ACB00B0A65D /* file_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_store.h; path = ../../localserver/common/file_store.h; sourceTree = SOURCE_ROOT; };
 		B58EFE5F0D529ACB00B0A65D /* http_cookies.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_cookies.h; path = ../../localserver/common/http_cookies.h; sourceTree = SOURCE_ROOT; };
 		B58EFE600D529ACB00B0A65D /* resource_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = resource_store.h; path = ../../localserver/common/resource_store.h; sourceTree = SOURCE_ROOT; };
 		B58EFE610D529ACB00B0A65D /* localserver.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = localserver.h; path = ../../localserver/common/localserver.h; sourceTree = SOURCE_ROOT; };
-		B58EFE6D0D529AEA00B0A65D /* localserver_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = localserver_np.h; path = ../../localserver/npapi/localserver_np.h; sourceTree = SOURCE_ROOT; };
-		B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = resource_store_np.h; path = ../../localserver/npapi/resource_store_np.h; sourceTree = SOURCE_ROOT; };
-		B58EFE700D529AEA00B0A65D /* resource_store_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = resource_store_np.cc; path = ../../localserver/npapi/resource_store_np.cc; sourceTree = SOURCE_ROOT; };
-		B58EFE770D529AEA00B0A65D /* capture_task_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = capture_task_np.h; path = ../../localserver/npapi/capture_task_np.h; sourceTree = SOURCE_ROOT; };
-		B58EFE780D529AEA00B0A65D /* localserver_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_np.cc; path = ../../localserver/npapi/localserver_np.cc; sourceTree = SOURCE_ROOT; };
 		B58EFEB70D529D5900B0A65D /* message_queue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = message_queue.h; path = ../../base/common/message_queue.h; sourceTree = SOURCE_ROOT; };
 		B58EFF630D52A5DC00B0A65D /* common_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = common_sf.h; path = ../../base/common/common_sf.h; sourceTree = SOURCE_ROOT; };
 		B5924A610DDA0A4100F9CD2B /* event.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
@@ -1110,8 +1113,6 @@
 		B5A9BD450E06C16400DCA259 /* geolocation_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_test.cc; path = ../../geolocation/geolocation_test.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = location_provider_pool.cc; path = ../../geolocation/location_provider_pool.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD4A0E06C18900DCA259 /* location_provider_pool.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = location_provider_pool.h; path = ../../geolocation/location_provider_pool.h; sourceTree = SOURCE_ROOT; };
-		B5A9BD4D0E06C1A200DCA259 /* thread.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cc; path = ../../geolocation/thread.cc; sourceTree = SOURCE_ROOT; };
-		B5A9BD4E0E06C1A200DCA259 /* thread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread.h; path = ../../geolocation/thread.h; sourceTree = SOURCE_ROOT; };
 		B5A9BD530E06C23800DCA259 /* byte_store_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store_test.cc; path = ../../base/common/byte_store_test.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD540E06C23800DCA259 /* byte_store.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = byte_store.cc; path = ../../base/common/byte_store.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD550E06C23800DCA259 /* byte_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = byte_store.h; path = ../../base/common/byte_store.h; sourceTree = SOURCE_ROOT; };
@@ -1163,8 +1164,6 @@
 		B5F09C540E1567B300C7ACB7 /* string_utils_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = string_utils_osx.cc; path = ../../base/common/string_utils_osx.cc; sourceTree = SOURCE_ROOT; };
 		B5F09C710E15690900C7ACB7 /* mutex_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mutex_test.cc; path = ../../base/common/mutex_test.cc; sourceTree = SOURCE_ROOT; };
 		B5F09C720E15690900C7ACB7 /* mutex_posix.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = mutex_posix.cc; path = ../../base/common/mutex_posix.cc; sourceTree = SOURCE_ROOT; };
-		B5F09C7D0E1569A300C7ACB7 /* thread_posix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread_posix.h; path = ../../geolocation/thread_posix.h; sourceTree = SOURCE_ROOT; };
-		B5F09C7E0E1569A300C7ACB7 /* thread_posix.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread_posix.cc; path = ../../geolocation/thread_posix.cc; sourceTree = SOURCE_ROOT; };
 		B5F09C820E1569E600C7ACB7 /* notifier_process.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = notifier_process.h; path = ../../notifier/notifier_process.h; sourceTree = SOURCE_ROOT; };
 		B5F09C830E1569E600C7ACB7 /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
 		B5F09C860E156A0D00C7ACB7 /* notification.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = notification.cc; path = ../../notifier/notification.cc; sourceTree = SOURCE_ROOT; };
@@ -1204,6 +1203,18 @@
 		B5F09D6D0E156E7400C7ACB7 /* pa_stream.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = pa_stream.c; sourceTree = "<group>"; };
 		B5F09DE80E15709F00C7ACB7 /* generate_headers.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; name = generate_headers.sh; path = build_scripts/generate_headers.sh; sourceTree = "<group>"; };
 		B5F09E650E15A22300C7ACB7 /* install_plugin.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; name = install_plugin.sh; path = build_scripts/install_plugin.sh; sourceTree = "<group>"; };
+		B5F3105D0E25584C0065151C /* thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = thread.h; path = ../../base/common/thread.h; sourceTree = SOURCE_ROOT; };
+		B5F3105E0E25584C0065151C /* thread.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thread.cc; path = ../../base/common/thread.cc; sourceTree = SOURCE_ROOT; };
+		B5F310600E2558550065151C /* thread_posix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = thread_posix.h; path = ../../base/common/thread_posix.h; sourceTree = SOURCE_ROOT; };
+		B5F310610E2558550065151C /* thread_posix.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = thread_posix.cc; path = ../../base/common/thread_posix.cc; sourceTree = SOURCE_ROOT; };
+		B5F310640E2558B20065151C /* geolocation_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = geolocation_db.h; path = ../../geolocation/geolocation_db.h; sourceTree = SOURCE_ROOT; };
+		B5F310650E2558B20065151C /* geolocation_db.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_db.cc; path = ../../geolocation/geolocation_db.cc; sourceTree = SOURCE_ROOT; };
+		B5F310680E2559050065151C /* position_table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = position_table.h; path = ../../geolocation/position_table.h; sourceTree = SOURCE_ROOT; };
+		B5F310690E2559050065151C /* position_table.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = position_table.cc; path = ../../geolocation/position_table.cc; sourceTree = SOURCE_ROOT; };
+		B5F3106B0E25591D0065151C /* notifier_proxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notifier_proxy.h; path = ../../notifier/notifier_proxy.h; sourceTree = SOURCE_ROOT; };
+		B5F3106C0E25591D0065151C /* notifier_proxy.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_proxy.cc; path = ../../notifier/notifier_proxy.cc; sourceTree = SOURCE_ROOT; };
+		B5F310740E2559CC0065151C /* blob_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_utils.h; path = ../../blob/blob_utils.h; sourceTree = SOURCE_ROOT; };
+		B5F310750E2559CC0065151C /* blob_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_utils.cc; path = ../../blob/blob_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = async_task_sf.mm; path = ../../localserver/safari/async_task_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_sf.h; path = ../../localserver/safari/async_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_test.cc; path = ../../base/common/url_utils_test.cc; sourceTree = SOURCE_ROOT; };
@@ -1401,6 +1412,8 @@
 				B5950B4F0DDE014100D54424 /* empty_device_data_provider.cc */,
 				79272FDD0DC2141700CDF577 /* geolocation.cc */,
 				79272FDE0DC2141800CDF577 /* geolocation.h */,
+				B5F310640E2558B20065151C /* geolocation_db.h */,
+				B5F310650E2558B20065151C /* geolocation_db.cc */,
 				B5A9BD440E06C16400DCA259 /* geolocation_test.h */,
 				B5A9BD450E06C16400DCA259 /* geolocation_test.cc */,
 				79272FDF0DC2141800CDF577 /* location_provider.cc */,
@@ -1411,10 +1424,8 @@
 				B5950B530DDE014100D54424 /* network_location_provider.cc */,
 				B5950B500DDE014100D54424 /* network_location_request.h */,
 				B5950B510DDE014100D54424 /* network_location_request.cc */,
-				B5A9BD4E0E06C1A200DCA259 /* thread.h */,
-				B5A9BD4D0E06C1A200DCA259 /* thread.cc */,
-				B5F09C7D0E1569A300C7ACB7 /* thread_posix.h */,
-				B5F09C7E0E1569A300C7ACB7 /* thread_posix.cc */,
+				B5F310680E2559050065151C /* position_table.h */,
+				B5F310690E2559050065151C /* position_table.cc */,
 				B53888330E12B2B5000CB9FF /* wifi_data_provider_common.h */,
 				B53888340E12B2B5000CB9FF /* wifi_data_provider_common.cc */,
 				B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */,
@@ -1434,6 +1445,8 @@
 				B5950B9E0DDE033500D54424 /* blob_input_stream_sf.h */,
 				B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */,
 				B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */,
+				B5F310740E2559CC0065151C /* blob_utils.h */,
+				B5F310750E2559CC0065151C /* blob_utils.cc */,
 				B563C4900DF5E56E00A145D1 /* blob_test.cc */,
 				79C3E93C0DB8D8E800346806 /* buffer_blob.cc */,
 				79C3E93D0DB8D8E800346806 /* buffer_blob.h */,
@@ -1568,8 +1581,12 @@
 			children = (
 				B5D4BCB30E1C1A9400B5DA2B /* file_submitter.cc */,
 				B5D4BCB40E1C1A9400B5DA2B /* file_submitter.h */,
+				B532BAB40E25374600912490 /* localserver_module.h */,
+				B532BAB50E25374600912490 /* localserver_module.cc */,
 				B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */,
 				B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */,
+				B532BABB0E25378B00912490 /* resource_store_module.h */,
+				B532BABA0E25378B00912490 /* resource_store_module.cc */,
 				B544D9640D2EE5D000D30561 /* common */,
 				B544DCC10D35789D00D30561 /* safari */,
 				B58EFE430D529A9A00B0A65D /* npapi */,
@@ -1580,35 +1597,35 @@
 		B544D9640D2EE5D000D30561 /* common */ = {
 			isa = PBXGroup;
 			children = (
-				B58EFE490D529ACB00B0A65D /* manifest.cc */,
+				B58EFE590D529ACB00B0A65D /* blob_store.h */,
+				B58EFE4F0D529ACB00B0A65D /* blob_store.cc */,
+				B58EFE570D529ACB00B0A65D /* capture_task.h */,
+				B532BAB10E2536EA00912490 /* capture_task.cc */,
+				B58EFE4D0D529ACB00B0A65D /* critical_section.h */,
+				B58EFE5E0D529ACB00B0A65D /* file_store.h */,
+				B58EFE540D529ACB00B0A65D /* file_store.cc */,
+				B58EFE530D529ACB00B0A65D /* http_constants.h */,
+				B58EFE5A0D529ACB00B0A65D /* http_constants.cc */,
+				B58EFE5F0D529ACB00B0A65D /* http_cookies.h */,
+				B58EFE560D529ACB00B0A65D /* http_cookies.cc */,
+				B58EFE500D529ACB00B0A65D /* http_request.h */,
+				B58EFE610D529ACB00B0A65D /* localserver.h */,
 				B58EFE4A0D529ACB00B0A65D /* localserver.cc */,
-				B58EFE4B0D529ACB00B0A65D /* update_task.h */,
-				B58E00A40D5BB54E00B0A65D /* update_task.cc */,
 				B58EFE4C0D529ACB00B0A65D /* localserver_db.h */,
 				B58EFE550D529ACB00B0A65D /* localserver_db.cc */,
-				B54ADBBB0E0F07A500884C56 /* localserver_perf_test.cc */,
-				B58EFE4D0D529ACB00B0A65D /* critical_section.h */,
-				B58EFE4F0D529ACB00B0A65D /* blob_store.cc */,
-				B58EFE500D529ACB00B0A65D /* http_request.h */,
-				B58EFE510D529ACB00B0A65D /* manifest.h */,
-				B58EFE520D529ACB00B0A65D /* resource_store.cc */,
-				B58EFE530D529ACB00B0A65D /* http_constants.h */,
-				B58EFE540D529ACB00B0A65D /* file_store.cc */,
-				B58EFE560D529ACB00B0A65D /* http_cookies.cc */,
-				B58EFE570D529ACB00B0A65D /* capture_task.h */,
-				B58EFE580D529ACB00B0A65D /* managed_resource_store.cc */,
-				B58EFE590D529ACB00B0A65D /* blob_store.h */,
-				B58EFE5A0D529ACB00B0A65D /* http_constants.cc */,
+				B532BAB70E25375E00912490 /* localserver_perf_test.cc */,
 				B58EFE5C0D529ACB00B0A65D /* managed_resource_store.h */,
-				B5D5FC060DEF3A230033ABE2 /* progress_event.cc */,
+				B58EFE580D529ACB00B0A65D /* managed_resource_store.cc */,
+				B58EFE510D529ACB00B0A65D /* manifest.h */,
+				B58EFE490D529ACB00B0A65D /* manifest.cc */,
 				B5D5FC070DEF3A230033ABE2 /* progress_event.h */,
-				B58EFE5D0D529ACB00B0A65D /* capture_task.cc */,
-				B58EFE5E0D529ACB00B0A65D /* file_store.h */,
-				B58EFE5F0D529ACB00B0A65D /* http_cookies.h */,
+				B5D5FC060DEF3A230033ABE2 /* progress_event.cc */,
 				B58EFE600D529ACB00B0A65D /* resource_store.h */,
-				B58EFE610D529ACB00B0A65D /* localserver.h */,
-				B5FF55D80DDB75DA0058E403 /* update_task_single_process.cc */,
+				B58EFE520D529ACB00B0A65D /* resource_store.cc */,
+				B58EFE4B0D529ACB00B0A65D /* update_task.h */,
+				B58E00A40D5BB54E00B0A65D /* update_task.cc */,
 				B5FF55D90DDB75DA0058E403 /* update_task_single_process.h */,
+				B5FF55D80DDB75DA0058E403 /* update_task_single_process.cc */,
 			);
 			name = common;
 			sourceTree = "<group>";
@@ -1767,8 +1784,12 @@
 				B5F09C530E1567B300C7ACB7 /* string_utils_osx.h */,
 				B5F09C540E1567B300C7ACB7 /* string_utils_osx.cc */,
 				B58727CA0DD4EE61001E4E0B /* string_utils_test.cc */,
+				B5F3105D0E25584C0065151C /* thread.h */,
+				B5F3105E0E25584C0065151C /* thread.cc */,
 				B544D98F0D2EE5D000D30561 /* thread_locals.h */,
 				B544D9900D2EE5D000D30561 /* thread_locals.cc */,
+				B5F310600E2558550065151C /* thread_posix.h */,
+				B5F310610E2558550065151C /* thread_posix.cc */,
 				B544D9920D2EE5D000D30561 /* string16.h */,
 				B5BBD8880D8E8947001A4916 /* url_utils.cc */,
 				B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */,
@@ -2388,11 +2409,6 @@
 		B58EFE430D529A9A00B0A65D /* npapi */ = {
 			isa = PBXGroup;
 			children = (
-				B58EFE770D529AEA00B0A65D /* capture_task_np.h */,
-				B58EFE6D0D529AEA00B0A65D /* localserver_np.h */,
-				B58EFE780D529AEA00B0A65D /* localserver_np.cc */,
-				B58EFE6F0D529AEA00B0A65D /* resource_store_np.h */,
-				B58EFE700D529AEA00B0A65D /* resource_store_np.cc */,
 			);
 			name = npapi;
 			sourceTree = "<group>";
@@ -2489,6 +2505,8 @@
 				B5F09C870E156A0D00C7ACB7 /* notification.h */,
 				B5F09C820E1569E600C7ACB7 /* notifier_process.h */,
 				B5F09C830E1569E600C7ACB7 /* notifier_process_osx.cc */,
+				B5F3106B0E25591D0065151C /* notifier_proxy.h */,
+				B5F3106C0E25591D0065151C /* notifier_proxy.cc */,
 			);
 			name = notifier;
 			sourceTree = "<group>";
@@ -3000,7 +3018,7 @@
 				B57A58270DA927C3001B0CC6 /* Resources */,
 				B57A58280DA927C3001B0CC6 /* Sources */,
 				B57A58290DA927C3001B0CC6 /* Frameworks */,
-				B57A583E0DA9292C001B0CC6 /* ShellScript */,
+				B57A583E0DA9292C001B0CC6 /* Assemble InputManager */,
 			);
 			buildRules = (
 			);
@@ -3137,27 +3155,32 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/../../tools/version.mk",
+				"$(SRCROOT)/../../tools/osx/Info.plist.m4",
 			);
 			outputPaths = (
 				"$(BUILD_DIR)/genfiles/product_constants.h",
 				"$(BUILD_DIR)/genfiles/resource_list.h",
+				"$(BUILD_DIR)/genfiles/Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SRCROOT/build_scripts/generate_headers.sh\"";
+			showEnvVarsInLog = 0;
 		};
-		B57A583E0DA9292C001B0CC6 /* ShellScript */ = {
+		B57A583E0DA9292C001B0CC6 /* Assemble InputManager */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Assemble InputManager";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
+			shellScript = "source \"$SRCROOT/build_scripts/assemble_inputmanager.sh\"";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3203,9 +3226,6 @@
 				B58EFE680D529ACB00B0A65D /* http_cookies.cc in Sources */,
 				B58EFE690D529ACB00B0A65D /* managed_resource_store.cc in Sources */,
 				B58EFE6A0D529ACB00B0A65D /* http_constants.cc in Sources */,
-				B58EFE6C0D529ACB00B0A65D /* capture_task.cc in Sources */,
-				B58EFE7B0D529AEA00B0A65D /* resource_store_np.cc in Sources */,
-				B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */,
 				B58E00570D5BB28900B0A65D /* name_value_table.cc in Sources */,
 				B58E005B0D5BB2A600B0A65D /* permissions_db.cc in Sources */,
 				B58E005F0D5BB2BF00B0A65D /* shortcut_table.cc in Sources */,
@@ -3322,14 +3342,12 @@
 				B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */,
 				B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */,
 				B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */,
-				B5A9BD4F0E06C1A200DCA259 /* thread.cc in Sources */,
 				B5A9BD560E06C23800DCA259 /* byte_store_test.cc in Sources */,
 				B5A9BD570E06C23800DCA259 /* byte_store.cc in Sources */,
 				B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */,
 				B547BF350E098D5900590529 /* curl_downloader.mm in Sources */,
 				B5E9135F0E0AF9EA0061880E /* blob_input_stream_sf_test.mm in Sources */,
 				B54ADBB80E0F074900884C56 /* dummy_module.cc in Sources */,
-				B54ADBBC0E0F07A500884C56 /* localserver_perf_test.cc in Sources */,
 				B54ADD630E1026D700884C56 /* detect_version_collision_osx.cc in Sources */,
 				B54ADEDF0E10604000884C56 /* messagebox.mm in Sources */,
 				B538882E0E12B244000CB9FF /* permissions_manager.cc in Sources */,
@@ -3339,7 +3357,6 @@
 				B5F09C550E1567B300C7ACB7 /* string_utils_osx.cc in Sources */,
 				B5F09C750E15690900C7ACB7 /* mutex_test.cc in Sources */,
 				B5F09C760E15690900C7ACB7 /* mutex_posix.cc in Sources */,
-				B5F09C7F0E1569A300C7ACB7 /* thread_posix.cc in Sources */,
 				B5F09C840E1569E600C7ACB7 /* notifier_process_osx.cc in Sources */,
 				B5F09C880E156A0D00C7ACB7 /* notification.cc in Sources */,
 				B5F09C8C0E156A4200C7ACB7 /* resource_archive.cc in Sources */,
@@ -3361,6 +3378,16 @@
 				B5F09D2B0E156C2B00C7ACB7 /* pa_unix_util.c in Sources */,
 				B5F09D6E0E156E7400C7ACB7 /* pa_stream.c in Sources */,
 				B5D4BCB50E1C1A9400B5DA2B /* file_submitter.cc in Sources */,
+				B532BAB20E2536EA00912490 /* capture_task.cc in Sources */,
+				B532BAB60E25374600912490 /* localserver_module.cc in Sources */,
+				B532BAB80E25375F00912490 /* localserver_perf_test.cc in Sources */,
+				B532BABC0E25378B00912490 /* resource_store_module.cc in Sources */,
+				B5F3105F0E25584C0065151C /* thread.cc in Sources */,
+				B5F310620E2558550065151C /* thread_posix.cc in Sources */,
+				B5F310660E2558B20065151C /* geolocation_db.cc in Sources */,
+				B5F3106A0E2559050065151C /* position_table.cc in Sources */,
+				B5F3106D0E25591D0065151C /* notifier_proxy.cc in Sources */,
+				B5F310760E2559CC0065151C /* blob_utils.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3752,7 +3779,7 @@
 				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = $BUILD_DIR/genfiles/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3820,7 +3847,7 @@
 				GCC_PREFIX_HEADER = ../../base/safari/prefix_header.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../../third_party/icu38/public/common";
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = $BUILD_DIR/genfiles/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
