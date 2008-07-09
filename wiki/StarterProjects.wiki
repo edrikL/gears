@@ -9,4 +9,21 @@ Here are some relatively easy-to-implement ideas that might be good starter proj
 
 = Projects =
 
+==Parsing JSON==
 
+Proposed on July 2008.
+
+[http://en.wikipedia.org/wiki/JSON JSON] is a popular format for server responses that are to be consumed by !JavaScript. For responses from trusted servers, you can `eval()` the string to get a !JavaScript object, or you can use the JSONP trick to evaluate the response inside a `<script>` tag. But, for untrusted servers, neither approach is secure, since it allows foreign code to run in your page (and then, for example, issue requests with your cookies).
+
+json.org provides an all-!JavaScript library to parse untrusted JSON strings, but a C++ implementation (with JS bindings) would presumably be faster. Gears could provide an API to parse a JSON-formatted string and return the appropriate JavaScript. For example:
+{{{
+factory.parseJson('3');  // returns the number 3
+factory.parseJson('[true, {\"foo\": 3, \"bar\": \"\"}]');  // returns an array with two elements
+}}}
+
+The key question is whether or not the performance gain, both against `eval()` and against an implemented-in-JS parser, is big enough that we should care. Benchmark evidence will be as important as actual working code.
+
+
+= Other Sources for Project Ideas =
+
+openajax.org has a [http://www.openajax.org/runtime/wiki/Feature_Requests_Summary_Page wiki page] tallying oft-requested features for improving AJAX. Most of these are too large to be considered a starter project, but there is certainly plenty of inspiration to be found there.
