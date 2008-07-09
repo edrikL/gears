@@ -146,7 +146,7 @@ static bool ComModuleToToken(JsContextPtr context,
 
 static bool JsTokenToComModule(JsContextPtr context, JsToken in,
                                IScriptable** out) {
-  // TODO(kevinww): make this work in a worker pool
+  // TODO(nigeltao): make this work in a worker pool
   nsresult nr;
   nsCOMPtr<nsIXPConnect> xpc;
   xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
@@ -163,6 +163,9 @@ static bool JsTokenToComModule(JsContextPtr context, JsToken in,
   if (NS_FAILED(nr))
     return false;
 
+  if (!JSVAL_IS_OBJECT(in)) {
+    return false;
+  }
   JSObject *obj = JSVAL_TO_OBJECT(in);
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nr = xpc->GetWrappedNativeOfJSObject(context, obj, getter_AddRefs(wrapper));

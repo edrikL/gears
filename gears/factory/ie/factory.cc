@@ -46,7 +46,7 @@
 #include "gears/factory/ie/factory.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
-#include "gears/localserver/ie/localserver_ie.h"
+#include "gears/localserver/localserver_module.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/ie/string_table.h"
 #include "gears/workerpool/workerpool.h"
@@ -142,15 +142,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   std::string16 error;
   bool success = false;
 
-  // Try creating a dispatcher-based module first.
   success = CreateDispatcherModule(module_name, retval, &error);
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  }
-
-  success = CreateComModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {
@@ -178,6 +170,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsDesktop>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(module_environment_.get(), NULL, &object);
+  } else if (object_name == STRING16(L"beta.localserver")) {
+    CreateModule<GearsLocalServer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.workerpool")) {
@@ -228,49 +222,6 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   // based, then we will presumably just call JsCallContext::SetReturnValue,
   // and we will not need to explicitly Ref() here.
   object->Ref();
-  return true;
-}
-
-bool GearsFactory::CreateComModule(const std::string16 &object_name,
-                                   IDispatch **retval, std::string16 *error) {
-  ModuleImplBaseClass *base_class = NULL;
-  CComQIPtr<IDispatch> idispatch;
-
-  HRESULT hr = E_FAIL;
-  if (object_name == STRING16(L"beta.localserver")) {
-    CComObject<GearsLocalServer> *obj;
-    hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  if (FAILED(hr) || !base_class || !idispatch) {
-    *error = STRING16(L"Failed to create requested object.");
-    return false;
-  }
-
-  base_class->InitModuleEnvironment(module_environment_.get());
-
-  // Our factory-created Gears objects no longer need to be sited, since we get
-  // the domain and location_url from ModuleImplBaseClass.  But we may someday
-  // later need an object to be sited, in which case we should enable this code.
-  //
-  //// SetSite any object that supports IObjectWithSite
-  //if (SUCCEEDED(hr)) {
-  //  CComQIPtr<IObjectWithSite> object_with_site = idispatch;
-  //  if (object_with_site) {
-  //    hr = object_with_site->SetSite(m_spUnkSite);
-  //  }
-  //}
-
-  *retval = idispatch;
-  (*retval)->AddRef();  // ~CComQIPtr will Release, so must AddRef here
-  assert((*retval)->AddRef() == 3 &&
-         (*retval)->Release() == 2);
   return true;
 }
 

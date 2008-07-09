@@ -55,6 +55,8 @@ class ResourceStore : public LocalServer {
   // Converts a Blob to an Item that could be served by ResourceStore
   static bool BlobToItem(BlobInterface *blob,
                          const char16 *full_url,
+                         const char16 *optional_content_type,
+                         const char16 *optional_x_captured_filename,
                          Item *out);
 
   // Constructor

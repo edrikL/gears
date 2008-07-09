@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,17 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_IE_CAPTURE_TASK_IE_H__
-#define GEARS_LOCALSERVER_IE_CAPTURE_TASK_IE_H__
+#ifndef GEARS_BASE_COMMON_MIME_DETECT_H__
+#define GEARS_BASE_COMMON_MIME_DETECT_H__
 
-#include "gears/localserver/common/capture_task.h"
-
-//------------------------------------------------------------------------------
-// IECaptureRequest
-//------------------------------------------------------------------------------
-struct IECaptureRequest : public CaptureRequest {
-  CComPtr<IDispatch> completion_callback;
-};
+#include "gears/base/common/basictypes.h"
+#include "gears/base/common/string16.h"
 
 
-#endif  // GEARS_LOCALSERVER_IE_CAPTURE_TASK_IE_H__
+// Returns the browser's best guess for the file's MIME type.
+std::string16 DetectMimeTypeOfFile(const std::string16 &filename);
+
+
+#endif  // GEARS_BASE_COMMON_MIME_DETECT_H__

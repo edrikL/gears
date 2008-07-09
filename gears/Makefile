@@ -861,6 +861,7 @@ $(BROWSER)_CPPSRCS	+= \
 		message_queue.cc \
 		message_service.cc \
 		message_service_test.cc \
+		mime_detect.cc \
 		mutex.cc \
 		mutex_posix.cc \
 		mutex_test.cc \
@@ -1709,11 +1710,13 @@ $(BROWSER)_CPPSRCS += \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
+		localserver_module.cc \
 		localserver_perf_test.cc \
 		managed_resource_store.cc \
 		managed_resource_store_module.cc \
 		manifest.cc \
 		resource_store.cc \
+		resource_store_module.cc \
 		update_task.cc \
 		update_task_single_process.cc \
 		$(NULL)
@@ -1725,22 +1728,12 @@ FF3_VPATH	+= \
 		localserver/firefox \
 		$(NULL)
 
-FF3_M4SRCS	+= \
-		localserver.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		localserver.idl \
-		$(NULL)
-
 FF3_CPPSRCS	+= \
 		async_task_ff.cc \
 		cache_intercept.cc \
 		http_request_ff.cc \
-		localserver_ff.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
-		resource_store_ff.cc \
 		safe_http_request.cc \
 		$(NULL)
 
@@ -1751,19 +1744,13 @@ IE_VPATH	+= \
 		localserver/ie \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		localserver.idl \
-		$(NULL)
-
 IE_CPPSRCS	+= \
 		async_task_ie.cc \
 		file_submit_behavior.cc \
 		http_handler_ie.cc \
 		http_request_ie.cc \
-		localserver_ie.cc \
 		progress_event.cc \
 		progress_input_stream.cc \
-		resource_store_ie.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
 		$(NULL)

@@ -30,7 +30,7 @@ function testCaptureSpoofedInputElement() {
 
   assertError(function() {
     resourceStore.captureFile(fileInputSpoofer, 'foo');
-  }, 'Invalid file input parameter.');
+  });
 }
 
 function testCaptureFilenameString() {

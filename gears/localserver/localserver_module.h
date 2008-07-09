@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_NPAPI_LOCALSERVER_NP_H__
-#define GEARS_LOCALSERVER_NPAPI_LOCALSERVER_NP_H__
+#ifndef GEARS_LOCALSERVER_LOCALSERVER_MODULE_H__
+#define GEARS_LOCALSERVER_LOCALSERVER_MODULE_H__
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
@@ -34,39 +34,37 @@
 //-----------------------------------------------------------------------------
 class GearsLocalServer : public ModuleImplBaseClassVirtual {
  public:
+  static const std::string kModuleName;
+
   // need a default constructor to instance objects from the Factory
-  GearsLocalServer() {}
+  GearsLocalServer() : ModuleImplBaseClassVirtual(kModuleName) {}
 
   // IN: string url
-  // OUT: bool retval
+  // OUT: bool
   void CanServeLocally(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
-  // OUT: GearsManagedResourceStore *retval
+  // IN: string name, optional string required_cookie
+  // OUT: GearsManagedResourceStore
   void CreateManagedStore(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
-  // OUT: GearsManagedResourceStore *retval
+  // IN: string name, optional string required_cookie
+  // OUT: GearsManagedResourceStore
   void OpenManagedStore(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
+  // IN: string name, optional string required_cookie
+  // OUT: -
   void RemoveManagedStore(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
-  // OUT: GearsResourceStore *retval
+  // IN: string name, optional string required_cookie
+  // OUT: GearsResourceStore
   void CreateStore(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
-  // OUT: GearsResourceStore *retval
+  // IN: string name, optional string required_cookie
+  // OUT: GearsResourceStore
   void OpenStore(JsCallContext *context);
 
-  // IN: string name
-  // OPTIONAL IN: required_cookie
+  // IN: string name, optional string required_cookie
+  // OUT: -
   void RemoveStore(JsCallContext *context);
 
  private:
@@ -76,4 +74,4 @@ class GearsLocalServer : public ModuleImplBaseClassVirtual {
   DISALLOW_EVIL_CONSTRUCTORS(GearsLocalServer);
 };
 
-#endif // GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
+#endif // GEARS_LOCALSERVER_LOCALSERVER_MODULE_H__

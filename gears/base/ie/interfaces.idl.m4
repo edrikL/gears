@@ -54,8 +54,6 @@ import "ui/ie/html_dialog_host_iemobile.idl";
 
 import "factory/ie/factory.idl";
 
-import "localserver/ie/localserver.idl";
-
 // The ModuleWrapper C++ class implements GearsModuleProviderInterface in
 // order to let us distinguish VARIANTs that are ModuleWrappers from other
 // VARIANTs, and convert from a VARIANT* to a ModuleWrapper*.
@@ -145,13 +143,5 @@ library GearsTypelib
   coclass GearsFactory
   {
     [default] interface GearsFactoryInterface;
-  };
-
-  [
-    uuid(3A826505-92E3-486a-9FB5-37FE89E971F9)
-  ]
-  coclass GearsLocalServer
-  {
-    [default] interface GearsLocalServerInterface;
   };
 };
