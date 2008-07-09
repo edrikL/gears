@@ -170,7 +170,7 @@ void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
   // Convert to radians.
   angle = angle * 180.0 / 3.1415926535;
 
-  canvas_->SkiaCanvas()->rotate(static_cast<SkScalar>(angle));
+  canvas_->SkiaCanvas()->rotate(SkDoubleToScalar(angle));
 }
 
 void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
@@ -417,42 +417,45 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     sy = 0;
   }
   
-  SkIRect src_rect = { sx, sy, sx + sw, sy + sh };
-  SkRect dest_rect = { dx, dy, dx + dw, dy + dh };
+  SkIRect src_irect = { sx, sy, sx + sw, sy + sh };
+  SkIRect dest_irect = { dx, dy, dx + dw, dy + dh };
 
   // The HTML5 canvas spec says that an invalid src rect must trigger an
   // exception, but it does not say what to do if the dest rect is invalid.
   // So, if both rects are invalid, it's more spec-compliant to raise an error
   // for the src rect.
-  if (!canvas_->IsRectValid(src_rect)) {
+  if (!canvas_->IsRectValid(src_irect)) {
     context->SetException(STRING16(
         L"Source rectangle stretches beyond the bounds of its bitmap or "
         L"has negative dimensions."));
     return;
   }
-  if (src_rect.isEmpty()) {
+  if (src_irect.isEmpty()) {
     context->SetException(STRING16(
         L"Source rectangle has zero width or height."));
     return;
   }
-  if (!canvas_->IsRectValid(dest_rect)) {
+  if (!canvas_->IsRectValid(dest_irect)) {
     context->SetException(STRING16(
         L"Destination rectangle stretches beyond the bounds of its bitmap or "
         L"has negative dimensions."));
     return;
   }
-  if (dest_rect.isEmpty()) {
+  if (dest_irect.isEmpty()) {
     context->SetException(STRING16(
         L"Destination rectangle has zero width or height."));
     return;
   }
   
+  SkRect dest_rect;
+  dest_rect.set(dest_irect);
+
   // When drawBitmapRect() is called with a source rectangle, it (also) handles
   // the case where source canvas is same as this canvas.
   // TODO(kart): This function silently fails on errors. Find out what can be
   // done about this.
   canvas_->SkiaCanvas()->drawBitmapRect(
-      *(source->SkiaBitmap()), &src_rect, dest_rect);
+      *(source->SkiaBitmap()), &src_irect, dest_rect);
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {

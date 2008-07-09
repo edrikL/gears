@@ -121,10 +121,13 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
  private:
   friend class GearsCanvasRenderingContext2D;
 
+  // Resets the Skia bitmap to the specified dimensions and fills it with
+  // transparent black pixels (which, of course, requires allocating pixels).
+  void ResetSkiaBitmap(int width, int height);
+
   // Returns true if the rectangle is contained completely within the bounds
   // of this bitmap, and has non-negative width and height.
   bool IsRectValid(const SkIRect &rect);
-  bool IsRectValid(const SkRect &rect);
   
   // Parses a composite operation string (as per HTML5 canvas) and returns
   // one of the two following values or a Skia PorterDuff enum
