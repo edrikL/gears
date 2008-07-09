@@ -1795,10 +1795,8 @@ SF_CPPSRCS	+= \
 		http_request_delegate.mm \
 		http_request_sf.mm \
 		localserver_db_proxy.mm \
-		localserver_np.cc \
 		progress_event.cc \
 		progress_input_stream.mm \
-		resource_store_np.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
