@@ -21,6 +21,7 @@ Gears could provide an API to parse a JSON-formatted string and return the appro
 {{{
 factory.parseJson('3');  // returns the number 3
 factory.parseJson('[true, {\"foo\": 3, \"bar\": \"\"}]');  // returns an array with two elements
+factory.parseJson('function() {alert(\"Not JSON!\");}');  // throws an Exception
 }}}
 
 The key question is whether or not the performance gain is big enough that we should care. Benchmark evidence will be as important as actual working code.
