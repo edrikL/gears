@@ -189,6 +189,14 @@ class IEHttpRequest
     return bind_verb_ == BINDVERB_POST ||
            bind_verb_ == BINDVERB_PUT;
   }
+  bool IsFileGet() {
+#ifdef OFFICIAL_BUILD
+    return false;
+#else
+    return method_ == HttpConstants::kHttpGET &&
+           origin_.scheme() == HttpConstants::kFileScheme;
+#endif
+  }
 
   // The (non-relative) request url
   std::string16 url_;

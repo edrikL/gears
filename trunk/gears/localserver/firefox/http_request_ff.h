@@ -145,6 +145,15 @@ class FFHttpRequest : public HttpRequest,
            method_ == HttpConstants::kHttpPUT;
   }
 
+  bool IsFileGet() {
+#ifdef OFFICIAL_BUILD
+    return false;
+#else
+    return method_ == HttpConstants::kHttpGET &&
+           origin_.scheme() == HttpConstants::kFileScheme;
+#endif
+  }
+
   static NS_METHOD StreamReaderFunc(nsIInputStream *in,
                                     void *closure,
                                     const char *fromRawSegment,

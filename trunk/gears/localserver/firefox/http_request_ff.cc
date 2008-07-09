@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WIN32
@@ -128,6 +128,12 @@ bool FFHttpRequest::GetResponseBody(scoped_refptr<BlobInterface> *blob) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatus(int *status) {
   NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
+  if (IsFileGet()) {
+    // If it was a 'file://' get request, and we are interactive or complete -
+    // this means the file is present. Equivalent to '200 OK'.
+    *status = HTTPResponse::RC_REQUEST_OK;
+    return true;
+  }
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -144,6 +150,12 @@ bool FFHttpRequest::GetStatus(int *status) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
   NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
+  if (IsFileGet()) {
+    // If it was a 'file://' get request, and we are interactive or complete -
+    // this means the file is present. Equivalent to '200 OK'.
+    *status_text = STRING16(L"OK");
+    return true;
+  }
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -159,6 +171,12 @@ bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
   NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
+  if (IsFileGet()) {
+    // If it was a 'file://' get request, and we are interactive or complete -
+    // this means the file is present. Equivalent to '200 OK'.
+    *status_line = STRING16(L"HTTP/1.1 200 OK");
+    return true;
+  }
   // TODO(michaeln): get the actual status line instead of synthesizing one
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -218,6 +236,13 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async,
 
   method_ = method;
   UpperString(method_);
+
+  // The subsequent OpenAsync will test for existence of the file.
+  if (IsFileGet()) {
+    SetReadyState(HttpRequest::OPEN);
+    return true;
+  }
+
   std::string method_utf8;
   if (!String16ToUTF8(method_.c_str(), &method_utf8)) {
     return false;
@@ -248,6 +273,8 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async,
 bool FFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   if (was_sent_)
     return false;
+  if (IsFileGet())
+    return true;
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -309,39 +336,40 @@ bool FFHttpRequest::Send(BlobInterface *blob) {
   nsresult rv = NS_OK;
   was_sent_ = true;
 
-  nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
-  NS_ENSURE_TRUE(http_channel, false);
+  if (!IsFileGet()) {
+    nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
+    NS_ENSURE_TRUE(http_channel, false);
 
-  if (post_data_stream_) {
-    nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
-    NS_ENSURE_TRUE(upload_channel, false);
+    if (post_data_stream_) {
+      nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
+      NS_ENSURE_TRUE(upload_channel, false);
 
-    nsCString method;
-    http_channel->GetRequestMethod(method);
+      nsCString method;
+      http_channel->GetRequestMethod(method);
 
-    nsCString content_type;
-    if (NS_FAILED(http_channel->GetRequestHeader(
-                      NS_LITERAL_CSTRING("Content-Type"), content_type)) ||
-        content_type.IsEmpty()) {
-      // If no content type was set by the client, we set it to text/plain.
-      // Ideally, we should not be setting the content type here at all,
-      // however not doing so changes the semantics of SetUploadStream such
-      // that we would need to prefix the data in the stream with http headers.
-      // To avoid doing that, we set it to something.
-      content_type = NS_LITERAL_CSTRING("text/plain");
+      nsCString content_type;
+      if (NS_FAILED(http_channel->GetRequestHeader(
+                        NS_LITERAL_CSTRING("Content-Type"), content_type)) ||
+          content_type.IsEmpty()) {
+        // If no content type was set by the client, we set it to text/plain.
+        // Ideally, we should not be setting the content type here at all,
+        // however not doing so changes the semantics of SetUploadStream such
+        // that we would need to prefix the data in the stream with http headers.
+        // To avoid doing that, we set it to something.
+        content_type = NS_LITERAL_CSTRING("text/plain");
+      }
+
+      const int kGetLengthFromStream = -1;
+      rv = upload_channel->SetUploadStream(post_data_stream_,
+                                           content_type,
+                                           kGetLengthFromStream);
+      NS_ENSURE_SUCCESS(rv, false);
+
+      // Reset the method to its original value because SetUploadStream has the
+      // side effect of squashing the previously set value.
+      http_channel->SetRequestMethod(method);
     }
-
-    const int kGetLengthFromStream = -1;
-    rv = upload_channel->SetUploadStream(post_data_stream_,
-                                         content_type,
-                                         kGetLengthFromStream);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    // Reset the method to its original value because SetUploadStream has the
-    // side effect of squashing the previously set value.
-    http_channel->SetRequestMethod(method);
   }
-
 #if BROWSER_FF2
   nsCOMPtr<nsIEventQueueService> event_queue_service;
   nsCOMPtr<nsIEventQueue> modal_event_queue;
@@ -458,6 +486,10 @@ public:
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
+  if (IsFileGet()) {
+    *headers = STRING16(L"");
+    return true;
+  }
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -509,6 +541,10 @@ std::string16 FFHttpRequest::GetResponseCharset() {
 bool FFHttpRequest::GetResponseHeader(const char16 *name,
                                       std::string16 *value) {
   NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
+  if (IsFileGet()) {
+    *value = STRING16(L"");
+    return true;
+  }
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -610,7 +646,7 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
   scoped_refptr<FFHttpRequest> reference(this);
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
   SetReadyState(HttpRequest::INTERACTIVE);
-  
+
   if (was_aborted_) {
     return NS_OK;
   }
