@@ -207,6 +207,18 @@ std::string Utf16ToUtf8(const wchar_t* wide_string) {
   return result;
 }
 
+// If Glint code is packaged into a DLL with resources rather then in a
+// single EXE, then resource names are to be resolved in that DLL (at least
+// this is more common scenario). Find out the handle to the module that
+// contains given executable address and use it for resource loading.
+HMODULE GetCurrentModuleHandle() {
+  MEMORY_BASIC_INFORMATION mbi = {0};
+  DWORD result = ::VirtualQuery(&GetCurrentModuleHandle, &mbi, sizeof(mbi));
+  if (result != sizeof(mbi))
+    return NULL;
+  return reinterpret_cast<HMODULE>(mbi.AllocationBase);
+}
+
 class Win32Platform : public Platform {
  public:
   Win32Platform()
@@ -591,7 +603,7 @@ class Win32Platform : public Platform {
 
     int cx = ::GetSystemMetrics(SM_CXICON);
     int cy = ::GetSystemMetrics(SM_CYICON);
-    HICON icon = reinterpret_cast<HICON>(::LoadImage(::GetModuleHandle(NULL),
+    HICON icon = reinterpret_cast<HICON>(::LoadImage(GetCurrentModuleHandle(),
         wide_icon_name, IMAGE_ICON, cx, cy, LR_SHARED | LR_DEFAULTCOLOR));
     if (!icon)
       return false;
@@ -600,7 +612,7 @@ class Win32Platform : public Platform {
 
     cx = ::GetSystemMetrics(SM_CXSMICON);
     cy = ::GetSystemMetrics(SM_CYSMICON);
-    icon = reinterpret_cast<HICON>(::LoadImage(::GetModuleHandle(NULL),
+    icon = reinterpret_cast<HICON>(::LoadImage(GetCurrentModuleHandle(),
         wide_icon_name, IMAGE_ICON, cx, cy, LR_SHARED | LR_DEFAULTCOLOR));
     if (!icon)
       return false;
@@ -775,12 +787,12 @@ class Win32Platform : public Platform {
     if (!data || !size || !name)
       return false;
 
-    HINSTANCE instance = ::GetModuleHandle(NULL);
-    HRSRC resource = ::FindResourceA(instance, name, kGlintResourceType);
+    HMODULE executable = GetCurrentModuleHandle();
+    HRSRC resource = ::FindResourceA(executable, name, kGlintResourceType);
     if (!resource)
       return false;
 
-    HANDLE resource_handle = ::LoadResource(instance, resource);
+    HANDLE resource_handle = ::LoadResource(executable, resource);
     if (!resource_handle)
       return false;
 
@@ -788,7 +800,7 @@ class Win32Platform : public Platform {
     if (!*data)
       return false;
 
-    *size = ::SizeofResource(instance, resource);
+    *size = ::SizeofResource(executable, resource);
     return true;
   }
 
