@@ -402,18 +402,14 @@ STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
 #endif
   if (status_code == BINDSTATUS_REDIRECTING) {
     return OnRedirect(status_text);
-// Ability to load from "file:" urls is not yet ready for OFFICIAL_BUILD.
-// It has to be ensured in all browser-specific implementations for that.
-#ifndef OFFICIAL_BUILD
   } else if (status_code == BINDSTATUS_BEGINDOWNLOADDATA &&
-             origin_.scheme() == STRING16(L"file")) {
+             IsFileGet()) {
     // In case of 'file:' URLs, URLMON does not go via IHTTPNegotiate
     // but rather reads the file and uses IBindStatusCallback to report
     // progress. So we need to initialize status and data buffer to be
     // ready for IBSC::OnDataAvailable().
     response_payload_.data.reset(new std::vector<uint8>);
     response_payload_.status_code = HTTPResponse::RC_REQUEST_OK;
-#endif  // OFFICIAL_BUILD
   }
   return S_OK;
 }
