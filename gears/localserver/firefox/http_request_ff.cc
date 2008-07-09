@@ -662,7 +662,7 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
 
   if (response_body_->Length() > prev_size) {
     if (listener_ && listener_data_available_enabled_) {
-      listener_->DataAvailable(this);
+      listener_->DataAvailable(this, response_body_->Length());
     }
   }
 

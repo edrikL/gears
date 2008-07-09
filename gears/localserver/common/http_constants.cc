@@ -30,6 +30,8 @@
 const char16 *HttpConstants::kCacheControlHeader = STRING16(L"Cache-Control");
 const char16 *HttpConstants::kContentDispositionHeader
                                             = STRING16(L"Content-Disposition");
+const char16 *HttpConstants::kContentEncodingHeader
+                                            = STRING16(L"Content-Encoding");
 const char16 *HttpConstants::kContentLengthHeader = STRING16(L"Content-Length");
 const char16 *HttpConstants::kContentTypeHeader = STRING16(L"Content-Type");
 const char16 *HttpConstants::kCrLf = STRING16(L"\r\n");

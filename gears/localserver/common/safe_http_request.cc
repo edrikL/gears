@@ -398,12 +398,19 @@ void SafeHttpRequest::OnReadyStateChangedCall() {
 
 void SafeHttpRequest::OnDataAvailableCall() {
   assert(IsApartmentThread());
-  if (was_aborted_) {
-    // The request was aborted after this message was sent, ignore it.
-    return;
+  int64 position;
+  {
+    MutexLock locker(&request_info_lock_);
+
+    if (was_aborted_) {
+      // The request was aborted after this message was sent, ignore it.
+      return;
+    }
+    position = request_info_.download_progress.position;
+    request_info_.download_progress.reported = position;
   }
   if (listener_ && listener_data_available_enabled_) {
-    listener_->DataAvailable(this);
+    listener_->DataAvailable(this, position);
   }
 }
 
@@ -459,28 +466,37 @@ void SafeHttpRequest::CallAsync(ThreadId thread_id,
 // HttpRequest::HttpListener implementation.
 //------------------------------------------------------------------------------
 
-void SafeHttpRequest::DataAvailable(HttpRequest *source) {
+void SafeHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
   assert(IsSafeThread());
   assert(source == native_http_request_.get());
-  MutexLock locker(&request_info_lock_);
-  if (was_aborted_) {
-    // The request we're processing has been aborted, but we have not yet
-    // received the OnAbort message. We pre-emptively call abort here.
-    // When the message does arrive, it will be ignored.
-    OnAbortCall();
-    return;
-  }
+  bool event_pending;
+  {
+    MutexLock locker(&request_info_lock_);
+    if (was_aborted_) {
+      // The request we're processing has been aborted, but we have not yet
+      // received the OnAbort message. We pre-emptively call abort here.
+      // When the message does arrive, it will be ignored.
+      OnAbortCall();
+      return;
+    }
 
-  if (was_response_text_accessed_ || !was_data_available_called_) {
-    // We don't know if your caller is going to try to read the response
-    // text incrementally or not. Here we try to decode and copy the response
-    // only if needed. On the first call to DataAvailable, we do so in case our
-    // client will access it. On subsequent calls, only do so if the caller
-    // has been accessing it.  
-    source->GetResponseBody(&request_info_.response.body);
-    was_data_available_called_ = true;
+    event_pending = (request_info_.download_progress.position !=
+                     request_info_.download_progress.reported);
+    request_info_.download_progress.position = position;
+
+    if (was_response_text_accessed_ || !was_data_available_called_) {
+      // We don't know if your caller is going to try to read the response
+      // text incrementally or not. Here we try to decode and copy the response
+      // only if needed. On the first call to DataAvailable, we do so in case
+      // our client will access it. On subsequent calls, only do so if the
+      // caller has been accessing it.
+      source->GetResponseBody(&request_info_.response.body);
+      was_data_available_called_ = true;
+    }
   }
-  CallDataAvailableOnApartmentThread();
+  if (!event_pending) {
+    CallDataAvailableOnApartmentThread();
+  }
 }
 
 void SafeHttpRequest::ReadyStateChanged(HttpRequest *source) {

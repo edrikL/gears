@@ -616,7 +616,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
 
   if (is_new_data_available && listener_ && listener_data_available_enabled_) {
-    listener_->DataAvailable(this);
+    listener_->DataAvailable(this, response_body_->Length());
   }
 
   return hr;

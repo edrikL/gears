@@ -58,6 +58,10 @@ class GearsHttpRequest
 
   // IN: -
   // OUT: function
+  void GetOnProgress(JsCallContext *context);
+
+  // IN: -
+  // OUT: function
   void GetOnReadyStateChange(JsCallContext *context);
 
   // IN: -
@@ -94,6 +98,10 @@ class GearsHttpRequest
 
   // IN: function
   // OUT: -
+  void SetOnProgress(JsCallContext *context);
+
+  // IN: function
+  // OUT: -
   void SetOnReadyStateChange(JsCallContext *context);
 
   // IN: string name, string value
@@ -104,6 +112,9 @@ class GearsHttpRequest
   scoped_refptr<HttpRequest> request_;
   bool content_type_header_was_set_;
   bool has_fired_completion_event_;
+  bool length_computable_;
+  int content_length_;
+  scoped_ptr<JsRootedCallback> onprogresshandler_;
   scoped_ptr<JsRootedCallback> onreadystatechangehandler_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
   scoped_refptr<GearsHttpRequestUpload> upload_;
@@ -128,11 +139,12 @@ class GearsHttpRequest
                   std::string16 *exception_message);
 
   // This needs to be called when a request is created, or if
-  // onreadystatechangehandler_ is set.  It is safe to call multiple times.
+  // onprogresshangehandler_ or onreadystatechangehandler_ is set.
+  // It is safe to call multiple times.
   void InitUnloadMonitor();
 
   // HttpRequest::HttpListener implementation.
-  virtual void DataAvailable(HttpRequest *source);
+  virtual void DataAvailable(HttpRequest *source, int64 position);
   virtual void ReadyStateChanged(HttpRequest *source);
   virtual void UploadProgress(HttpRequest *source, int64 position, int64 total);
 

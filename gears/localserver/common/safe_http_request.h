@@ -129,6 +129,7 @@ class SafeHttpRequest
     scoped_refptr<BrowsingContext> browsing_context;
 
     scoped_refptr<BlobInterface> post_data_blob;
+    ProgressInfo download_progress;
     ProgressInfo upload_progress;
     ResponseInfo response;
 
@@ -180,7 +181,7 @@ class SafeHttpRequest
   void CallAsync(ThreadId thread_id, Method method);
 
   // HttpListener implementation.
-  void DataAvailable(HttpRequest *source);
+  void DataAvailable(HttpRequest *source, int64 position);
   void ReadyStateChanged(HttpRequest *source);
   void UploadProgress(HttpRequest *source, int64 position, int64 total);
 
