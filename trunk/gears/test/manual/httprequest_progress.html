@@ -4,7 +4,6 @@
     <title>HttpRequest progress</title>
     <script type="text/javascript" src="gears_init.js"></script>
     <script type="text/javascript" language="javascript">
-var current_position = 0;
 
 function handleUploadProgress(event) {
   document.getElementById("uploadProgress").innerHTML =
@@ -22,7 +21,6 @@ function testUploadProgress() {
   document.getElementById("uploadProgress").innerHTML =
     "0 of 0 bytes uploaded.<br>\n";
 
-  current_position = 0;
   var data = 'hello';
   do {
     data = data + data;
@@ -38,7 +36,6 @@ function testDownloadProgress() {
   document.getElementById("downloadProgress").innerHTML =
     "0 of 0 bytes downloaded.<br>\n";
 
-  current_position = 0;
   var request = google.gears.factory.create('beta.httprequest');
   request.onprogress = handleDownloadProgress;
   request.open('GET', 'testcases/cgi/send_response_of_size.py?size=30000000');
