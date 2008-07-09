@@ -44,14 +44,13 @@ const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
 GearsCanvas::GearsCanvas()
     : ModuleImplBaseClassVirtual(kModuleName),
       rendering_context_(NULL),
-      skia_bitmap_(new SkBitmap),
       alpha_(1.0),
       composite_operation_(STRING16(L"source-over")),
       fill_style_(STRING16(L"#000000")),
       font_(STRING16(L"10px sans-serif")),
       text_align_(STRING16(L"start")) {
   // Initial dimensions as per the HTML5 canvas spec.
-  skia_bitmap_->setConfig(skia_config, 300, 150);
+  ResetSkiaBitmap(300, 150);
   skia_canvas_.reset(new SkCanvas(*skia_bitmap_));
 }
 
@@ -123,10 +122,9 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
     return;
   }
 
-  // TODO(kart): Figure out when is the best time to call allocPixels(),
-  // and why.
-  if (NULL == skia_bitmap_->getPixels())
-    skia_bitmap_->allocPixels();
+  // Pixels should have been allocated, either in the contructor,
+  // or in SetWidth() and SetHeight().
+  assert(SkiaBitmap()->getPixels());
 
   BlobBackedSkiaOutputStream output_stream;
   scoped_ptr<SkImageEncoder> encoder(SkImageEncoder::Create(type));
@@ -183,7 +181,10 @@ void GearsCanvas::Crop(JsCallContext *context) {
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, width, height);
   SkCanvas new_canvas(new_bitmap);
-  SkRect dest_rect = { 0, 0, width, height };
+  SkRect dest_rect = { SkIntToScalar(0),
+                       SkIntToScalar(0),
+                       SkIntToScalar(width),
+                       SkIntToScalar(height) };
   new_canvas.drawBitmapRect(*skia_bitmap_, &src_rect, dest_rect);
   new_bitmap.swap(*skia_bitmap_);
 }
@@ -203,17 +204,21 @@ void GearsCanvas::Resize(JsCallContext *context) {
   }
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, new_width, new_height);
+  new_bitmap.allocPixels();
+  // No need to clear the allocated pixels since
+  // we overwrite them all during the resize.
+
   if (Width() != 0 && Height() != 0) {
     SkCanvas new_canvas(new_bitmap);
-    SkScalar x_scale = static_cast<SkScalar>(
+    SkScalar x_scale = SkDoubleToScalar(
         static_cast<double>(new_width) / Width());
-    SkScalar y_scale = static_cast<SkScalar>(
+    SkScalar y_scale = SkDoubleToScalar(
         static_cast<double>(new_height) / Height());
     if (!new_canvas.scale(x_scale, y_scale)) {
       context->SetException(STRING16(L"Could not resize the image."));
       return;
     }
-    new_canvas.drawBitmap(*skia_bitmap_, 0, 0);
+    new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
   } else {
     new_bitmap.eraseARGB(0, 0, 0, 0);
   }
@@ -238,8 +243,7 @@ void GearsCanvas::SetWidth(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  skia_bitmap_->setConfig(skia_config, new_width, Height());
-  skia_bitmap_->eraseARGB(0, 0, 0, 0);
+  ResetSkiaBitmap(new_width, Height());
 }
 
 void GearsCanvas::SetHeight(JsCallContext *context) {
@@ -250,8 +254,7 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  skia_bitmap_->setConfig(skia_config, Width(), new_height);
-  skia_bitmap_->eraseARGB(0, 0, 0, 0);
+  ResetSkiaBitmap(Width(), new_height);
 }
 
 void GearsCanvas::GetContext(JsCallContext *context) {
@@ -267,7 +270,6 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     // As per the HTML5 canvas spec.
     return;
   }
- 
   // Make sure the rendering context is not destroyed before SetReturnValue().
   scoped_refptr<GearsCanvasRenderingContext2D> rendering_context_scoped_ptr;
   if (rendering_context_ == NULL) {
@@ -279,6 +281,20 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     rendering_context_->InitCanvasField(this);
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, rendering_context_);
+}
+
+void GearsCanvas::ResetSkiaBitmap(int width, int height) {
+  // Create a fresh SkBitmap to avoid picking up flags from a previous state.
+  // For instance, following a load of a file without alpha channel,
+  // the isOpaque flag is set, and not cleared by setConfig. As a result,
+  // exported blobs will not an alpha channel. To eliminate such issues,
+  // create a fresh SkBitmap.
+  skia_bitmap_.reset(new SkBitmap);
+  skia_bitmap_->setConfig(skia_config, width, height);
+  // Must allocate pixels before performing any operations,
+  // or assertions fire and some operations (like eraseARGB) fail silently.
+  skia_bitmap_->allocPixels();
+  skia_bitmap_->eraseARGB(0, 0, 0, 0);
 }
 
 SkBitmap *GearsCanvas::SkiaBitmap() {
@@ -293,7 +309,7 @@ int GearsCanvas::Width() {
   return skia_bitmap_->width();
 }
 
-SkScalar GearsCanvas::Height() {
+int GearsCanvas::Height() {
   return skia_bitmap_->height();
 }
 
@@ -363,11 +379,6 @@ bool GearsCanvas::IsRectValid(const SkIRect &rect) {
   return rect.fLeft <= rect.fRight && rect.fTop <= rect.fBottom &&
      rect.fLeft >= 0 && rect.fTop >= 0 &&
      rect.fRight <= Width() && rect.fBottom <= Height();
-}
-
-bool GearsCanvas::IsRectValid(const SkRect &rect) {
-  SkIRect r = { rect.fLeft, rect.fTop, rect.fRight, rect.fBottom };
-  return IsRectValid(r);
 }
 
 // Skia's SkPorterDuff values are all non-negative.

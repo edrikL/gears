@@ -35,31 +35,31 @@ function testProperties() {
   assertEqual('source-over', ctx.globalCompositeOperation);
   assertEqual('#000000', ctx.fillStyle);
 
-  var WIDTH = 50, HEIGHT = 40;
-  canvas.width = WIDTH;
-  canvas.height = HEIGHT;
-  assertEqual(WIDTH, canvas.width);
-  assertEqual(HEIGHT, canvas.height);
+  var width = 50, height = 40;
+  canvas.width = width;
+  canvas.height = height;
+  assertEqual(width, canvas.width);
+  assertEqual(height, canvas.height);
   // TODO(kart): set to bad values and test?
 
-  var ALPHA = 0.4;
-  ctx.globalAlpha = ALPHA;
-  assertEqual(ALPHA, ctx.globalAlpha);
+  var alpha = 0.4;
+  ctx.globalAlpha = alpha;
+  assertEqual(alpha, ctx.globalAlpha);
   ctx.globalAlpha = 9.4; // should be a no-op.
-  assertEqual(ALPHA, ctx.globalAlpha);
+  assertEqual(alpha, ctx.globalAlpha);
 
-  var COMPOSITE_OPERATION = 'copy';
-  ctx.globalCompositeOperation = COMPOSITE_OPERATION;
-  assertEqual(COMPOSITE_OPERATION, ctx.globalCompositeOperation);
+  var compositeOperation = 'copy';
+  ctx.globalCompositeOperation = compositeOperation;
+  assertEqual(compositeOperation, ctx.globalCompositeOperation);
   ctx.globalCompositeOperation = 'foobar'; // should be a no-op.
-  assertEqual(COMPOSITE_OPERATION, ctx.globalCompositeOperation);
+  assertEqual(compositeOperation, ctx.globalCompositeOperation);
 
-  var FILL_STYLE = '#34ab56';
-  ctx.fillStyle = FILL_STYLE;
-  assertEqual(FILL_STYLE, ctx.fillStyle);
+  var fillStyle = '#34ab56';
+  ctx.fillStyle = fillStyle ;
+  assertEqual(fillStyle , ctx.fillStyle);
   // ctx.fillStyle = 'foobar';  // should be a no-op.
   // ctx.fillStyle = 42;  // should be a no-op.
-  assertEqual(FILL_STYLE, ctx.fillStyle);
+  assertEqual(fillStyle , ctx.fillStyle);
 }
 
 function testGetContext() {
@@ -129,6 +129,8 @@ function runLoadAndExportTest(blobs) {
   completeAsync();
 }
 
+// TODO(kart): Add negative tests. Example: load an unsupported blob,
+// export to an unsupported format. What else?
 function testLoadAndExport() {
   startAsync();
   var filenames = [
@@ -142,6 +144,93 @@ function testLoadAndExport() {
     'sample-png-exported-as-png.png'];
   loadBlobs(filenames, runLoadAndExportTest);
 }
+
+function testResize() {
+  var originalFilename = 'sample-original.jpeg';
+  var resizedFilename = 'sample-jpeg-resized-to-400x40.png';
+  startAsync();
+  loadBlobs([originalFilename , resizedFilename], function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    canvas.load(blobs[originalFilename]);
+    
+    var newWidth = 400;
+    var newHeight = 40;
+    canvas.resize(newWidth, newHeight);
+    assertEqual(newWidth, canvas.width);
+    assertEqual(newHeight, canvas.height);
+    assertBlobsEqual(blobs[resizedFilename], canvas.toBlob());
+    completeAsync();
+  });
+}
+
+function testCanvasInitiallyBlank() {
+  var canvas = google.gears.factory.create('beta.canvas');
+  var blob = canvas.toBlob();
+  startAsync();
+  loadBlob('blank-300x150.png', function(filename, blankBlob) {
+    assertBlobsEqual(blankBlob, blob);
+    completeAsync();
+  });
+}
+
+// Tests that changing width or height
+// resets the pixels to all transparent black.
+function testCanvasBlankAfterChangingDimensions() {
+  var originalFilename  = 'sample-original.jpeg';
+  var filenames = [originalFilename,
+                   'blank-313x120.png',
+                   'blank-240x234.png'];
+  startAsync();
+  loadBlobs(filenames, function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    var originalBlob = blobs[originalFilename ];
+    canvas.load(originalBlob);
+    assertEqual(313, canvas.width);
+    assertEqual(234, canvas.height);
+
+    // Changing the height must reset the canvas:
+    canvas.height = 120;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x120.png']);
+    
+    // Changing the width must reset the canvas:
+    canvas.load(originalBlob);
+    canvas.width = 240;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-240x234.png']);
+    
+    completeAsync();
+  });
+}
+
+// Tests that assigning the width or height its present value
+// resets the pixels to all transparent black,
+// as the HTML5 canvas spec requires.
+function testCanvasBlankAfterDimensionsSelfAssignment() {
+  var originalFilename  = 'sample-original.jpeg';
+  var filenames = [originalFilename,
+                   'blank-313x234.png'];
+  startAsync();
+  loadBlobs(filenames, function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    var originalBlob = blobs[originalFilename ];
+    canvas.load(originalBlob);
+    assertEqual(313, canvas.width);
+    assertEqual(234, canvas.height);
+    // The canvas is not blank.
+    assertNotEqual(canvas.toBlob().length, blobs['blank-313x234.png'].length);
+    
+    // Setting width to current width must blank the canvas:
+    canvas.width = canvas.width;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    
+    // Test the same for height:
+    canvas.load(originalBlob);
+    canvas.height = canvas.height;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    
+    completeAsync();
+  });
+}
+
 
 /*
 function testDrawImage() {

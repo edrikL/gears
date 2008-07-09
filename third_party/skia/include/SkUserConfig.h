@@ -35,6 +35,7 @@ inline void SkDebugf(const char format[], ...) {
 
 #undef SK_RELEASE
 #define SK_DEBUG
+#undef SK_SCALAR_IS_FIXED
 // END Gears changes.
 
 #ifdef ANDROID
