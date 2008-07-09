@@ -163,7 +163,7 @@
   response_body_->AddData([data bytes], [data length]);
   
   // Owner should set the ready state to interactive.
-  owner_->OnDataAvailable();
+  owner_->OnDataAvailable(response_body_->Length());
 }
 
 

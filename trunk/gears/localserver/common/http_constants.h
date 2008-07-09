@@ -46,6 +46,7 @@ class HttpConstants {
 
   static const char16 *kCacheControlHeader;
   static const char16 *kContentDispositionHeader;
+  static const char16 *kContentEncodingHeader;
   static const char16 *kContentLengthHeader;
   static const char16 *kContentTypeHeader;
   static const char16 *kCrLf;

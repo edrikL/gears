@@ -32,6 +32,7 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/blob_interface.h"
@@ -64,6 +65,8 @@ void Dispatcher<GearsHttpRequest>::Init() {
   RegisterMethod("open", &GearsHttpRequest::Open);
   RegisterMethod("setRequestHeader", &GearsHttpRequest::SetRequestHeader);
   RegisterMethod("send", &GearsHttpRequest::Send);
+  RegisterProperty("onprogress", &GearsHttpRequest::GetOnProgress,
+                   &GearsHttpRequest::SetOnProgress);
   RegisterProperty("onreadystatechange",
                    &GearsHttpRequest::GetOnReadyStateChange,
                    &GearsHttpRequest::SetOnReadyStateChange);
@@ -81,7 +84,9 @@ GearsHttpRequest::GearsHttpRequest()
     : ModuleImplBaseClassVirtual(kModuleName),
       request_(NULL),
       content_type_header_was_set_(false),
-      has_fired_completion_event_(false) {
+      has_fired_completion_event_(false),
+      length_computable_(false),
+      content_length_(-1) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -90,6 +95,7 @@ GearsHttpRequest::~GearsHttpRequest() {
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
+  onprogresshandler_.reset();
   onreadystatechangehandler_.reset();
   upload_.reset();
   unload_monitor_.reset();
@@ -280,6 +286,7 @@ void GearsHttpRequest::Send(JsCallContext *context) {
       if (request_ == request_being_sent) {
         // To remove cyclic dependencies we drop our reference to callbacks
         // when the request is complete.
+        onprogresshandler_.reset();
         onreadystatechangehandler_.reset();
         if (upload_.get()) {
           upload_->ResetOnProgressHandler();
@@ -349,6 +356,28 @@ void GearsHttpRequest::GetUpload(JsCallContext *context) {
     }
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, upload_.get());
+}
+
+void GearsHttpRequest::GetOnProgress(JsCallContext *context) {
+  JsRootedCallback *callback = onprogresshandler_.get();
+  if (callback == NULL) {
+    context->SetReturnValue(JSPARAM_NULL, 0);
+  } else {
+    context->SetReturnValue(JSPARAM_FUNCTION, callback);
+  }
+}
+
+void GearsHttpRequest::SetOnProgress(JsCallContext *context) {
+  JsRootedCallback *function = NULL;
+  JsArgument argv[] = {
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  onprogresshandler_.reset(function);
+  InitUnloadMonitor();
 }
 
 void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
@@ -563,9 +592,52 @@ bool GearsHttpRequest::ResolveUrl(const std::string16 &url,
   return true;
 }
 
-void GearsHttpRequest::DataAvailable(HttpRequest *source) {
+void GearsHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
   assert(source == request_.get());
   ReadyStateChanged(source);
+
+  // report progress
+  JsRootedCallback *handler = onprogresshandler_.get();
+  if (handler) {
+    JsRunnerInterface *runner = GetJsRunner();
+    assert(runner);
+    if (runner) {
+      scoped_ptr<JsObject> js_object(runner->NewObject());
+      assert(js_object.get());
+      if (content_length_ < 0) {
+        // cache on first access
+        content_length_ = 0;
+        int content_length = 0;
+        std::string16 header_value;
+        request_->GetResponseHeader(HttpConstants::kContentEncodingHeader,
+                                    &header_value);
+        // can only compute total if Content-Encoding is not used
+        if (header_value.empty()) {
+          request_->GetResponseHeader(HttpConstants::kContentLengthHeader,
+                                      &header_value);
+          if (!header_value.empty()) {
+            const char16 *endptr;
+            content_length = ParseLeadingInteger(header_value.c_str(), &endptr);
+            if (*endptr == '\0' && content_length >= 0) {
+              // and Content-Length is set
+              length_computable_ = true;
+              content_length_ = content_length;
+            }
+          }
+        }
+      }
+      js_object->SetPropertyDouble(STRING16(L"total"),
+                                   static_cast<double>(content_length_));
+      js_object->SetPropertyDouble(STRING16(L"loaded"),
+                                   static_cast<double>(position));
+      js_object->SetPropertyBool(STRING16(L"lengthComputable"),
+                                 length_computable_);
+      JsParamToSend argv[] = {
+        { JSPARAM_OBJECT, js_object.get() },
+      };
+      runner->InvokeCallback(handler, ARRAYSIZE(argv), argv, NULL);
+    }
+  }
 }
 
 void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
@@ -576,6 +648,7 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   bool is_complete = IsComplete();
   if (is_complete) {
     has_fired_completion_event_ = true;
+    onprogresshandler_.reset();
     if (upload_.get()) {
       upload_->ResetOnProgressHandler();
     }

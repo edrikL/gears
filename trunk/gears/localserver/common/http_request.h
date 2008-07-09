@@ -121,7 +121,7 @@ class HttpRequest {
   // events and listeners
   class HttpListener {
    public:
-    virtual void DataAvailable(HttpRequest *source) {}
+    virtual void DataAvailable(HttpRequest *source, int64 position) {}
     virtual void ReadyStateChanged(HttpRequest *source) {}
     virtual void UploadProgress(HttpRequest *source,
                                 int64 position, int64 total) {}

@@ -448,7 +448,7 @@ void SFHttpRequest::SetReadyState(ReadyState state) {
 //------------------------------------------------------------------------------
 // OnDataAvailable
 //------------------------------------------------------------------------------
-void SFHttpRequest::OnDataAvailable() {
+void SFHttpRequest::OnDataAvailable(int64 length) {
   scoped_refptr<SFHttpRequest> reference(this);
   SetReadyState(HttpRequest::INTERACTIVE);
   
@@ -457,7 +457,7 @@ void SFHttpRequest::OnDataAvailable() {
   }
   
   if (listener_ && listener_data_available_enabled_) {
-    listener_->DataAvailable(this);
+    listener_->DataAvailable(this, length);
   }
 }
 

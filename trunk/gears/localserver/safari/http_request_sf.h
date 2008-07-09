@@ -107,7 +107,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   bool AllowRedirect(const std::string16 &redirect_url);
   void SetReadyState(ReadyState state);
   // New data has arrived over the connection.
-  void OnDataAvailable();
+  void OnDataAvailable(int64 length);
   void SetResponseCharset(const std::string16 &charset);
 
   // Holders for http headers.

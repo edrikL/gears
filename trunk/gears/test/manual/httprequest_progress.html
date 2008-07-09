@@ -6,14 +6,21 @@
     <script type="text/javascript" language="javascript">
 var current_position = 0;
 
-function handleProgress(event) {
-  document.getElementById("output").innerHTML =
-      document.getElementById("output").innerHTML +
+function handleUploadProgress(event) {
+  document.getElementById("uploadProgress").innerHTML =
+      document.getElementById("uploadProgress").innerHTML +
       event.loaded + ' of ' + event.total + ' bytes uploaded.<br>\n';
 }
 
-function testProgress() {
-  document.getElementById("output").innerHTML = "0 of 0 bytes uploaded.<br>\n";
+function handleDownloadProgress(event) {
+  document.getElementById("downloadProgress").innerHTML =
+      document.getElementById("downloadProgress").innerHTML +
+      event.loaded + ' of ' + event.total + ' bytes downloaded.<br>\n';
+}
+
+function testUploadProgress() {
+  document.getElementById("uploadProgress").innerHTML =
+    "0 of 0 bytes uploaded.<br>\n";
 
   current_position = 0;
   var data = 'hello';
@@ -22,17 +29,36 @@ function testProgress() {
   } while (data.length < 30000000);
 
   var request = google.gears.factory.create('beta.httprequest');
-  request.upload.onprogress = handleProgress;
+  request.upload.onprogress = handleUploadProgress;
   request.open('POST', 'testcases/cgi/send_response_of_size.py?size=5');
   request.send(data);
+}
+
+function testDownloadProgress() {
+  document.getElementById("downloadProgress").innerHTML =
+    "0 of 0 bytes downloaded.<br>\n";
+
+  current_position = 0;
+  var request = google.gears.factory.create('beta.httprequest');
+  request.onprogress = handleDownloadProgress;
+  request.open('GET', 'testcases/cgi/send_response_of_size.py?size=30000000');
+  request.send();
 }
     </script>
   </head>
   <body>
-    <h1>HttpRequest progress</h1>
+    <h1>HttpRequest upload progress</h1>
     <form action="">
-      <input type="button" value="RunProgressTest" onclick="testProgress()">
+      <input type="button" value="RunUploadProgressTest"
+      onclick="testUploadProgress()">
     </form>
-    <div id="output">Ready.<br></div>
+    <div id="uploadProgress">Ready.<br></div>
+
+    <h1>HttpRequest download progress</h1>
+    <form action="">
+      <input type="button" value="RunDownloadProgressTest"
+      onclick="testDownloadProgress()">
+    </form>
+    <div id="downloadProgress">Ready.<br></div>
   </body>
 </html>
