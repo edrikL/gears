@@ -1,0 +1,12 @@
+#summary Small feature proposals that are do-able by new contributors.
+
+= Introduction =
+
+If you're new to Gears development, getting your head around a new codebase can be pretty daunting. It helps if you have something specific that you want to implement, but again, without having a lot of Gears experience, it can be difficult to estimate, a priori, how hard a project will be, and you might end up knee-deep in your debugger without really knowing what you're looking for.
+
+Here are some relatively easy-to-implement ideas that might be good starter projects for new Gears engineers. Hopefully they're small enough to be completed quickly, big enough to give you a taste of how various pieces inside Gears fit together, useful enough to be worth rolling into the main codebase, and fun enough to want to spend your time on.
+
+
+= Projects =
+
+
