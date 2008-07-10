@@ -106,14 +106,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 Root='HKLM' Key='Software\Google\Gears'
                 Name='install_dir' Value='[ProductDir]'
                 Action='write' Type='string' />
+              <RegistryValue
+                Root='HKLM' Key='Software\Google\Gears'
+                Name='install_ver' Value='PRODUCT_VERSION'
+                Action='write' Type='string' />
             </Component>
 
             <!-- IMPORTANT: the OurShared* 'Name' fields MUST match the WIN32 paths in /{firefox,ie}/PathUtils.cc -->
             <Directory Id='OurSharedDir' Name='Shared'>
-               <Component Id='OurSharedDirFiles' Guid='$(var.OurComponentGUID_SharedFiles)'>
+              <Component Id='OurSharedDirFiles' Guid='$(var.OurComponentGUID_SharedFiles)'>
                 <File Id='notifier_exe' Name='notifier.exe' DiskId='1'
                   Source="$(var.OurCommonPath)/notifier.exe" />
-               </Component>
+              </Component>
+              <Directory Id='OurSharedVersionedDir' Name='PRODUCT_VERSION'>
+                <Component Id='OurSharedVersionedDirFiles' Guid='$(var.OurComponentGUID_SharedVersionedFiles)'>
+                  <File Id='notifier_dll' Name='notifier.dll' DiskId='1'
+                    Source="$(var.OurCommonPath)/notifier.dll" />
+                </Component>
+              </Directory>
             </Directory>
 
             <Directory Id='OurIEDir' Name='Internet Explorer'>
@@ -262,6 +272,7 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='OurFFLibDirFiles' />
       <ComponentRef Id='OurFFContentDirFiles' />
       <ComponentRef Id='OurSharedDirFiles' />
+      <ComponentRef Id='OurSharedVersionedDirFiles' />
 m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='~`OurFF`~m4_underscore(LANG)~`DirFiles`~' />
 `~)m4_dnl

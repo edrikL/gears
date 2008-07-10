@@ -1303,6 +1303,7 @@ $(BROWSER)_CPPSRCS += \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
 		notifier_proxy.cc \
+		notifier_utils_win32.cc \
 		notification.cc \
 		$(NULL)
 
@@ -1337,6 +1338,11 @@ COMMON_VPATH	+= \
 		$(GLINT_VPATH) \
 		$(NULL)
 
+NOTIFIER_SHELL_CPPSRCS += \
+		notifier_shell_win32.cc \
+		notifier_utils_win32.cc \
+		$(NULL)
+
 NOTIFIER_CORE	+= \
 		$(ICU_CPPSRCS) \
 		$(URL_PARSING_CPPSRCS) \
@@ -1354,6 +1360,7 @@ NOTIFIER_CORE	+= \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
+		notifier_utils_win32.cc \
 		notification.cc \
 		security_model.cc \
 		serialization.cc \
@@ -1400,6 +1407,10 @@ endif
 ifeq ($(OS),win32)
 COMMON_VPATH	+= \
 		notifier/resources \
+		$(NULL)
+
+NOTIFIER_SHELL_LINK_EXTRAS += \
+		$(COMMON_OUTDIR)/notifier_shell.res \
 		$(NULL)
 
 NOTIFIER_LINK_EXTRAS += \

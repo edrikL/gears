@@ -27,11 +27,21 @@
 
 #ifdef OFFICIAL_BUILD
 
-#include <windows.h>
 // The notification API has not been finalized for official builds.
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
+
+#include <windows.h>
+
+extern "C" {
+
+__declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
+  return TRUE;
+}
+
+__declspec(dllexport) int WINAPI DllEntry(const wchar_t *) {
   return 0;
 }
+
+}  // extern "C"
 
 #else
 
@@ -110,9 +120,15 @@ int Win32Notifier::Run() {
   return 0;
 }
 
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
-  int argc;
-  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+extern "C" {
+
+__declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
+  return TRUE;
+}
+
+__declspec(dllexport) int WINAPI DllEntry(const wchar_t *command_line) {
+  int argc = 0;
+  char16 **argv = CommandLineToArgvW(command_line, &argc);
   if (!argv) { return __LINE__; }  // return line as a lame error code
   LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
 
@@ -131,6 +147,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   return retval;
 }
 
+}  // extern "C"
+
 #endif  // OFFICIAL_BUILD
 #endif  // WIN32
-
