@@ -617,7 +617,6 @@ class JsCallContext {
   JsToken *argv_;
   JsToken *retval_;
   JsRunnerInterface *js_runner_;
-  nsCOMPtr<nsIXPConnect> xpc_;
 #else
   // TODO: browser_xyz
 #endif
