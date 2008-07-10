@@ -65,33 +65,40 @@ Steps:
 ==JavaScript Interfaces==
 
 {{{
-// A simple file handle
+
+interface Desktop {
+  //
+  // ... other apis ...
+  //
+
+  // Displays a file chooser to the user, from which they can select files on the local
+  // disk.  The callback is invoked with an array of the files which were selected.
+  void openFiles(OpenFilesCallback callback, optional OpenFilesOptions options);
+}
+
+void OpenFilesCallback(File[] files);
+
 interface File {
-  // The full name of the file.
+  // The name of the file, excluding the path.
   readonly attribute string name;
 
-  // A blob representing the contents of this file.
+  // The contents of the file.
   readonly attribute Blob blob;
 }
 
-interface Desktop {
-  // Other Desktop functions here...
+interface OpenFileOptions {
+  // By default, the user may select only one file.  If true, the user may select
+  // multiple files.
+  bool multiSelect;
 
-
-  // Open multiple files. Displays a file picker dialog to user.
-  // Returns: an Array of File OR an empty Array if the user canceled the selection
-  // Parameters:
-  //     filters [optional] - An array consisting of pairs of strings. The length must be a factor of two.
-  //        The first string is a description of the filter.
-  //        The second string is a semi-colon separated list of filters.
-  //        Example. ['Image Files (*.gif, *.jpg, *.png)', '*.gif;*.jpg;*.png',
-  //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
-  //                  'All Files (*.*)', '*.*']
-  //     multiselect [optional] - If omitted or set to true, the user can select multiple
-  //        files by shift-clicking.  Otherwise, the user can select at most one file.
-  //
-  Array getLocalFiles([in string Array filters], [in bool multiselect]);
+  // By default, all files on the local disk are shown as selectable.  If a filter is
+  // provided, only files matching the filter are shown.  The user can turn the filter
+  // off, so be aware that selected files may not match the filter.  The filter is an
+  // array of Internet content types and file extensions.
+  // Example: ['text/html', '.txt', 'image/jpeg']
+  string[] filter;
 }
+
 }}}
 
 
