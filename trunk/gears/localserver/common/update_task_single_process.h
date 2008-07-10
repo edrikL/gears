@@ -45,6 +45,6 @@ class UpdateTaskSingleProcess : public UpdateTask {
   static bool SetRunningTask(UpdateTaskSingleProcess *task);
   static void ClearRunningTask(UpdateTaskSingleProcess *task);
 };
-#endif  // defined(BROWSER_SF) || defined(BROWSER_FF) || defined(OS_ANDROID)
+#endif  // defined(BROWSER_WEBKIT) || defined(BROWSER_FF) || defined(OS_ANDROID)
 
 #endif  // GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__
