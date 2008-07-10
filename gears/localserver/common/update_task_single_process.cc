@@ -87,4 +87,4 @@ UpdateTask *UpdateTask::CreateUpdateTask(BrowsingContext *context) {
   return new UpdateTaskSingleProcess(context);
 }
 
-#endif  // defined(BROWSER_SF) || defined(BROWSER_FF)
+#endif  // defined(BROWSER_WEBKIT) || defined(BROWSER_FF)
