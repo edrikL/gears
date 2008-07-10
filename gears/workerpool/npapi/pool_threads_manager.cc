@@ -38,7 +38,7 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
-#include "gears/factory/npapi/factory.h"
+#include "gears/factory/factory_impl.h"
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/common/workerpool_utils.h"
@@ -127,7 +127,7 @@ struct JavaScriptWorkerInfo {
 
   scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::HttpListener> http_request_listener;
-  scoped_refptr<GearsFactory> factory_ref;
+  scoped_refptr<GearsFactoryImpl> factory_ref;
   bool is_factory_suspended;
 
 #ifdef WIN32
@@ -703,16 +703,16 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
   // Add global Factory and WorkerPool objects into the namespace.
   //
-  // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
+  // The factory alone is not enough; factory.create(GearsWorkerPool)
   // would return a NEW PoolThreadsManager instance, but we want access to
   // the one that was previously created for this pool. (There may be multiple
   // pools in a page.)
   //
   // js_runner manages the lifetime of these allocated objects.
 
-  scoped_refptr<GearsFactory> factory;
-  if (!CreateModule<GearsFactory>(wi->module_environment.get(),
-                                  NULL, &factory)) {
+  scoped_refptr<GearsFactoryImpl> factory;
+  if (!CreateModule<GearsFactoryImpl>(wi->module_environment.get(),
+                                      NULL, &factory)) {
     return false;
   }
 

@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_NPAPI_FACTORY_H__
-#define GEARS_BASE_NPAPI_FACTORY_H__
+#ifndef GEARS_FACTORY_FACTORY_IMPL_H__
+#define GEARS_FACTORY_FACTORY_IMPL_H__
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
@@ -40,10 +40,10 @@ class JsRunnerInterface;
 // this factory class to choose at runtime which version of an object to
 // instantiate.
 
-class GearsFactory
+class GearsFactoryImpl
     : public ModuleImplBaseClassVirtual {
  public:
-  GearsFactory();
+  GearsFactoryImpl();
 
   // IN: string object, string version
   void Create(JsCallContext *context);
@@ -71,8 +71,8 @@ class GearsFactory
   // cross-origin workers.
   bool is_creation_suspended_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryImpl);
 };
 
 
-#endif // GEARS_BASE_NPAPI_FACTORY_H__
+#endif // GEARS_FACTORY_FACTORY_IMPL_H__

@@ -23,15 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/npapi/factory.h"
+#include "gears/factory/factory_impl.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/string16.h"
 #include "gears/base/common/detect_version_collision.h"
-#include "gears/base/npapi/module_wrapper.h"
+#include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/string16.h"
 #include "gears/console/console.h"
 #include "gears/database/database.h"
 #include "gears/database2/manager.h"
@@ -62,17 +62,19 @@
 #include "gears/cctests/test.h"
 #endif
 
+DECLARE_GEARS_WRAPPER(GearsFactoryImpl);
+
 // static
 template <>
-void Dispatcher<GearsFactory>::Init() {
-  RegisterProperty("version", &GearsFactory::GetVersion, NULL);
-  RegisterProperty("hasPermission", &GearsFactory::GetHasPermission, NULL);
-  RegisterMethod("create", &GearsFactory::Create);
-  RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
-  RegisterMethod("getPermission", &GearsFactory::GetPermission);
+void Dispatcher<GearsFactoryImpl>::Init() {
+  RegisterProperty("version", &GearsFactoryImpl::GetVersion, NULL);
+  RegisterProperty("hasPermission", &GearsFactoryImpl::GetHasPermission, NULL);
+  RegisterMethod("create", &GearsFactoryImpl::Create);
+  RegisterMethod("getBuildInfo", &GearsFactoryImpl::GetBuildInfo);
+  RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
 }
 
-GearsFactory::GearsFactory()
+GearsFactoryImpl::GearsFactoryImpl()
     : is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
@@ -101,7 +103,7 @@ static const char16 *GetVersionCollisionErrorString() {
 #endif
 }
 
-void GearsFactory::Create(JsCallContext *context) {
+void GearsFactoryImpl::Create(JsCallContext *context) {
 #if defined(WIN32) || defined(BROWSER_WEBKIT)
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
@@ -212,13 +214,13 @@ void GearsFactory::Create(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, object.get());
 }
 
-void GearsFactory::GetBuildInfo(JsCallContext *context) {
+void GearsFactoryImpl::GetBuildInfo(JsCallContext *context) {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
   context->SetReturnValue(JSPARAM_STRING16, &build_info);
 }
 
-void GearsFactory::GetPermission(JsCallContext *context) {
+void GearsFactoryImpl::GetPermission(JsCallContext *context) {
   scoped_ptr<PermissionsDialog::CustomContent> custom_content(
       PermissionsDialog::CreateCustomContent(context));
  
@@ -234,24 +236,24 @@ void GearsFactory::GetPermission(JsCallContext *context) {
 // Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
-void GearsFactory::GetHasPermission(JsCallContext *context) {
+void GearsFactoryImpl::GetHasPermission(JsCallContext *context) {
   bool has_permission = GetPermissionsManager()->HasPermission(
       PermissionsDB::PERMISSION_LOCAL_DATA);
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
-void GearsFactory::GetVersion(JsCallContext *context) {
+void GearsFactoryImpl::GetVersion(JsCallContext *context) {
   std::string16 version(STRING16(PRODUCT_VERSION_STRING));
   context->SetReturnValue(JSPARAM_STRING16, &version);
 }
 
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
 // rather than just the cross-origin worker case.  (Code re-use == good.)
-void GearsFactory::SuspendObjectCreation() {
+void GearsFactoryImpl::SuspendObjectCreation() {
   is_creation_suspended_ = true;
 }
 
-void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
+void GearsFactoryImpl::ResumeObjectCreationAndUpdatePermissions() {
   // TODO(cprince): The transition from suspended to resumed is where we should
   // propagate cross-origin opt-in to the permissions DB.
   is_creation_suspended_ = false;
