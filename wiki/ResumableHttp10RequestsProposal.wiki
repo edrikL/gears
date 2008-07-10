@@ -24,7 +24,7 @@ The core logic of this protocol specification requires a unique identifier of ea
 
 = Initial Request =
 
-Normally there is nothing special about the initial request in a resumable operation. Specifically, it should contain the entire byte range, and not include an Content-Range header. While the protocol itself supports sending a partial range in the initial request, this is recommended against unless explicitly required.
+Normally there is nothing special about the initial request in a resumable operation. Specifically, it should contain the entire byte range, and not include a Content-Range header. While the protocol itself supports sending a partial range in the initial request, this is recommended against unless explicitly required.
 
 = Status Code: 308 Resume Incomplete =
 
@@ -42,9 +42,9 @@ Servers MUST NOT send 308 (Resume Incomplete) responses in the face of fatal err
 
 = Content-Range Header =
 
-The Content-Range header MUST be sent by clients on all resume requests, and MUST be sent on initial requests that contain a partial byte range.
+The Content-Range header MUST be sent by clients on all requests that do not contain the complete byte range, and SHOULD NOT be sent on requests that include the complete byte range. Specifically, Content-Range need not be set on initial requests containing the entire byte range, and must be set on resume requests and query requets.
 
-When including a body in a Content-Range request, clients MUST specify first-byte-pos and last-byte-pos indicating which bytes are being transferred with respect to all bytes in the operation. Clients MUST specify first-byte-pos if any bytes are being transferred (i.e. if the byte range is not zero), otherwise byte-range-resp-spec MUST be "`*`". Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
+Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
 
 = Resume Requests =
 
@@ -59,6 +59,8 @@ If the client sends a resume request which refers to an operation that has alrea
 = Query Requests =
 
 Clients can query the server for the status of an operation by sending a request with no body (and thus no Content-Range header). This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed. This would be desired, for example, when the connection is closed prior to the arrival of a final response code, or if the client receives a 503 (Service Unavailable) status code.
+
+Query requests MUST contain a Content-Range header with a byte-range-resp-spec of "`*`".
 
 = Initial Handshake =
 
