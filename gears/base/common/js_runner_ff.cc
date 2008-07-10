@@ -501,7 +501,6 @@ typedef scoped_token<JSContext*, JS_DestroyContextFunctor> scoped_jscontext_ptr;
 
 bool JsRunner::InitJavaScriptEngine() {
   JSBool js_ok;
-  bool succeeded;
 
   // To cleanup after failures we use scoped objects to manage everything that
   // should be destroyed.  On success we take ownership to avoid cleanup.
@@ -566,29 +565,12 @@ bool JsRunner::InitJavaScriptEngine() {
   js_engine_context_ = cx.release();
   alloc_js_wrapper_ = js_wrapper.release();
 
-  struct {
-    const nsIID iface_id;
-    JSObject *proto_obj; // gets set by code below
-  } classes[] = {
-    // TODO(cprince): Unify the interface lists here and in GearsFactory.
-    // Could share code, or could query GearsFactory.
-    {GEARSFACTORYINTERFACE_IID, NULL}
-  };
-  const int num_classes = sizeof(classes) / sizeof(classes[0]);
-
-  for (int i = 0; i < num_classes; ++i) {
-    // passing NULL for class_id and class_name prevents child workers
-    // from using "new CLASSNAME"
-    succeeded = GetProtoFromIID(classes[i].iface_id, &classes[i].proto_obj);
-    if (!succeeded) { return false; }
-  }
-
 #ifdef DEBUG
   // Do it here to trigger potential GC bugs in our code.
   JS_GC(js_engine_context_);
 #endif
 
-  return true; // succeeded
+  return true;
 }
 
 bool JsRunner::AddGlobal(const std::string16 &name,

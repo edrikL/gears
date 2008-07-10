@@ -30,11 +30,16 @@
 // (regardless of whether the object is in the main JS or worker JS).
 
 #include "domstubs.idl"
+#include "nsISupports.idl"
 
 
 interface ModuleImplBaseClass; // defined in C++
 [ptr] native GearsBaseClassPtr(ModuleImplBaseClass);
 
+// TODO(nigeltao): remove unused GearsBaseClassInterface, and any calls to
+// GetNativeBaseClass, i.e. ScopedJsArgSetter in js_runner_ff_marshaling.cc.
+// When that is done, we should rename this file to something more appropriate
+// than base_interface_ff.idl.
 [/*NOT scriptable*/ uuid(FCC9884F-E13C-477a-AB0F-FEEEA86D58EE)]
 interface GearsBaseClassInterface : nsISupports {
   [noscript] GearsBaseClassPtr getNativeBaseClass();
@@ -49,4 +54,25 @@ interface SpecialHttpRequestInterface : nsISupports {
   // This is an interface for use by CacheIntercept.  We QueryInterface
   // for it to see whether a given request came from Gears.
   [noscript] FFHttpRequestPtr getNativeHttpRequest();
+};
+
+
+// Notionally, this interface is for the GearsFactory object returned by a
+// "new GearsFactory()" call in JavaScript. The method names are accurate, but
+// the arguments, and the return value, are considered only advisory. The
+// underlying GearsFactoryFF implementation delegates to something which is not
+// an XPCOM object, but instead interfaces directly with the JS engine, and not
+// via XPConnect. Hence, we don't need to specify the exact function signature.
+[scriptable, uuid(8A06E8B5-60D2-4268-B2F6-C9AEEAAF8392)]
+interface GearsFactoryInterface : nsISupports {
+  // Args: string className.
+  nsISupports create();
+
+  // Optional args: string siteName, string imageUrl, string extraMessage.
+  boolean getPermission();
+
+  AString getBuildInfo();
+
+  readonly attribute boolean hasPermission;
+  readonly attribute AString version;
 };

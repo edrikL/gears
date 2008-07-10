@@ -217,7 +217,7 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 
 SINGLETON_CONSTRUCTOR(CacheIntercept)
 SINGLETON_CONSTRUCTOR(GearsUiUtils)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GearsFactory, InitModuleEnvironmentFromDOM)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GearsFactory, InitFactoryFromDOM)
 // On Firefox this C++ Factory name affects the script-visible name.
 // It may be possible to use modified Mozilla macros to break the dependency,
 // but we don't have that ability today.

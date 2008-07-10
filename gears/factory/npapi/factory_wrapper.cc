@@ -32,10 +32,15 @@ NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
   scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
         NPN_CreateObject(context, ModuleWrapper::GetNPClass())));
   if (factory_wrapper.get()) {
-    GearsFactoryImpl *factory = new GearsFactoryImpl;
-    factory_wrapper->Init(factory, new Dispatcher<GearsFactoryImpl>(factory));
-    if (!factory->InitModuleEnvironmentFromDOM(context))
+    scoped_refptr<ModuleEnvironment> module_environment(
+        ModuleEnvironment::CreateFromDOM(context));
+    if (!module_environment) {
       return NULL;
+    }
+    GearsFactoryImpl *factory_impl = new GearsFactoryImpl;
+    factory_impl->InitModuleEnvironment(module_environment.get());
+    factory_wrapper->Init(factory_impl,
+                          new Dispatcher<GearsFactoryImpl>(factory_impl));
   }
 
   return factory_wrapper.release();
