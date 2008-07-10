@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/geolocation/position_table.h"
+#include "gears/base/common/position_table.h"
 
 // Macros for use in SQL statements.
 #define POSITION L"Position"
@@ -62,8 +62,8 @@ bool PositionTable::SetPosition(const std::string16 &name,
                                 const Position &position) {
 // Local helper macro.
 #define LOG_BIND_ERROR(name) \
-    LOG(("PositionTable::SetPosition unable to bind " name ": %d\n", \
-    db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::SetPosition unable to bind " name ": %d.\n", \
+    db_->GetErrorCode()));
 
   SQLTransaction transaction(db_, "PositionTable::SetPosition");
   if (!transaction.Begin()) {
@@ -76,8 +76,8 @@ bool PositionTable::SetPosition(const std::string16 &name,
 
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
-    LOG(("PositionTable::SetPosition unable to prepare: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::SetPosition unable to prepare: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -159,8 +159,8 @@ bool PositionTable::SetPosition(const std::string16 &name,
   }
 
   if (SQLITE_DONE != statement.step()) {
-    LOG(("PositionTable::SetPosition unable to step: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::SetPosition unable to step: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -177,14 +177,14 @@ bool PositionTable::GetPosition(const std::string16 &name,
 
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
-    LOG(("PositionTable::GetPosition unable to prepare: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::GetPosition unable to prepare: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, name.c_str())) {
-    LOG(("PositionTable::GetPosition unable to bind name: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::GetPosition unable to bind name: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -192,8 +192,8 @@ bool PositionTable::GetPosition(const std::string16 &name,
   if (SQLITE_DONE == rc) {
     return false;
   } else if (SQLITE_ROW != rc) {
-    LOG(("PositionTable::GetPosition results error: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::GetPosition results error: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -224,20 +224,20 @@ bool PositionTable::DeletePosition(const std::string16 &name) {
 
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
-    LOG(("PositionTable::DeletePosition unable to prepare: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::DeletePosition unable to prepare: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, name.c_str())) {
-    LOG(("PositionTable::DeletePosition unable to bind name: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::DeletePosition unable to bind name: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
-    LOG(("PositionTable::DeletePosition unable to step: %d\n",
-         db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::DeletePosition unable to step: %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -251,8 +251,8 @@ bool PositionTable::CreateVersion1() {
   }
 
   if (SQLITE_OK != db_->Execute(kCreateTableVersion1Statement)) {
-    LOG(("PositionTable::CreateVersion1 create Position "
-         "unable to execute: %d", db_->GetErrorCode(), ".\n"));
+    LOG(("PositionTable::CreateVersion1 unable to execute %d.\n",
+         db_->GetErrorCode()));
     return false;
   }
 

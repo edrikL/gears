@@ -27,10 +27,10 @@
 #define GEARS_GEOLOCATION_GEOLOCATION_DB_H__
 
 #include "gears/base/common/name_value_table.h"
+#include "gears/base/common/position_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/geolocation/geolocation.h"
-#include "gears/geolocation/position_table.h"
 
 class GeolocationDB {
  public:
