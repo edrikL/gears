@@ -46,8 +46,6 @@ The Content-Range header MUST be sent by clients on all resume requests, and MUS
 
 When including a body in a Content-Range request, clients MUST specify first-byte-pos and last-byte-pos indicating which bytes are being transferred with respect to all bytes in the operation. Clients MUST specify first-byte-pos if any bytes are being transferred (i.e. if the byte range is not zero), otherwise byte-range-resp-spec MUST be "`*`". Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
 
-The client MAY send a Content-Range without an if-resume-spec parameter in order to poll the server to determine which byte ranges it already possesses. In such cases, clients MUST NOT include a body in the request. This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed.
-
 = Resume Requests =
 
 When resuming an operation, clients MUST send a byte range that overlaps with the earliest missing range of bytes on the server. If a client received an ETag in a previous 308 (Resume Incomplete) then it MUST resend the ETag in an If-Match header on resuming operations.
@@ -60,7 +58,7 @@ If the client sends a resume request which refers to an operation that has alrea
 
 = Query Requests =
 
-Clients can query the server for the status of an operation by sending a request with no body. This would be desired, for example, when the connection is closed prior to the arrival of a final response code, or if the client receives a 503 (Service Unavailable) status code.
+Clients can query the server for the status of an operation by sending a request with no body (and thus no Content-Range header). This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed. This would be desired, for example, when the connection is closed prior to the arrival of a final response code, or if the client receives a 503 (Service Unavailable) status code.
 
 = Initial Handshake =
 
