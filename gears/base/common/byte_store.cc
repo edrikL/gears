@@ -75,7 +75,8 @@ class ByteStore::Blob : public BlobInterface {
 
 
 ByteStore::ByteStore()
-    : file_op_(File::WRITE), is_finalized_(false), preserve_data_(false) {
+    : file_op_(File::WRITE), is_finalized_(false), preserve_data_(false),
+      async_add_length_(0) {
 }
 
 ByteStore::~ByteStore() {
@@ -89,13 +90,94 @@ bool ByteStore::AddData(const void *data, int64 length) {
 
   MutexLock lock(&mutex_);
   assert(!is_finalized_);
+  assert(async_add_length_ == 0);
 
   if (IsUsingData() && (length + data_.size() <= kMaxBufferSize)) {
     data_.insert(data_.end(), static_cast<const uint8*>(data),
                  static_cast<const uint8*>(data) + length);
     return true;
   }
-  // Stored in a file.
+  return AddDataToFile(data, length);
+}
+
+int64 ByteStore::AddDataDirect(Writer *writer, int64 max_length) {
+  if (max_length < 0) return 0;
+
+  MutexLock lock(&mutex_);
+  assert(!is_finalized_);
+  assert(async_add_length_ == 0);
+
+  if (IsUsingData() && (max_length + data_.size() <= kMaxBufferSize)) {
+    int offset(data_.size());
+    data_.resize(data_.size() + static_cast<unsigned>(max_length));
+    int64 total_bytes_added(0);
+    while (max_length > 0) {
+      int64 bytes_added = writer->WriteToBuffer(&data_[offset], max_length);
+      if (bytes_added == Writer::ASYNC) {
+        async_add_length_ = max_length;
+        return total_bytes_added;
+      }
+      assert(bytes_added >= 0);
+      if (bytes_added == 0) break;
+      total_bytes_added += bytes_added;
+      offset += static_cast<int>(bytes_added);
+      max_length -= bytes_added;
+    }
+    data_.resize(offset);
+    return total_bytes_added;
+  }
+
+  // Too large for our memory buffer.  Write data to a temporary buffer and
+  // then copy to a file.
+  int64 buffer_size(std::min(max_length, kMaxBufferSize));
+  if (buffer_.size() < static_cast<size_t>(buffer_size)) {
+    buffer_.resize(static_cast<size_t>(buffer_size));
+  }
+  int64 total_bytes_added(0);
+  while (max_length > 0) {
+    int64 bytes_added = writer->WriteToBuffer(&buffer_[0], buffer_size);
+    if (bytes_added == Writer::ASYNC) {
+      // Create the file if it doesn't yet exist.
+      AddDataToFile(&buffer_[0], 0);
+      async_add_length_ = buffer_size;
+      return total_bytes_added;
+    }
+    assert(bytes_added >= 0);
+    if (bytes_added == 0) break;
+    if (!AddDataToFile(&buffer_[0], bytes_added)) {
+      break;
+    }
+    total_bytes_added += bytes_added;
+    max_length -= bytes_added;
+    buffer_size = std::min(max_length, buffer_size);
+  }
+  return total_bytes_added;
+}
+
+void ByteStore::AddDataDirectFinishAsync(int64 length) {
+  MutexLock lock(&mutex_);
+  assert(async_add_length_ > 0);
+  assert(length <= async_add_length_);
+  assert(!is_finalized_);
+
+  if (IsUsingData()) {
+    data_.resize(data_.size() -
+                 static_cast<size_t>(async_add_length_ - length));
+  } else {
+    AddDataToFile(&buffer_[0], length);
+  }
+  async_add_length_ = 0;
+}
+
+// Writes data to a temporary file.  Will create & open a file if not already
+// done.  After creating & opening a file, will copy current contents of data_
+// to the file before adding the new data.
+//
+// If called with length == 0, will create a temp file and transfer
+// the current contents of data_ (if any) to the file.
+//
+// Expects the caller to be holding mutex_.
+bool ByteStore::AddDataToFile(const void *data, int64 length) {
   if (!file_.get()) {
     file_.reset(File::CreateNewTempFile());
     if (!data_.empty()) {
@@ -135,57 +217,6 @@ void ByteStore::CreateBlob(scoped_refptr<BlobInterface> *blob) {
   blob->reset(new ByteStore::Blob(this));
 }
 
-int64 ByteStore::Length() const {
-  MutexLock lock(&mutex_);
-
-  if (IsUsingData()) {
-    return data_.size();
-  }
-  // Stored in a file.
-  assert(data_.empty() || preserve_data_);
-  if (file_op_ == File::WRITE) {
-    file_->Flush();
-    file_op_ = File::READ;
-  }
-  return file_->Size();
-}
-
-int64 ByteStore::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
-  if (offset < 0 || max_bytes < 0) {
-    return -1;
-  }
-
-  MutexLock lock(&mutex_);
-
-  if (IsUsingData()) {
-    if (data_.size() <= offset) {
-      return 0;
-    }
-    if (data_.size() - offset < max_bytes) {
-      max_bytes = data_.size() - offset;
-    }
-    if (max_bytes > kMaxBufferSize) {
-      max_bytes = kMaxBufferSize;
-    }
-  
-    assert(offset <= kint32max);
-    memcpy(destination, &data_[static_cast<int>(offset)],
-                        static_cast<size_t>(max_bytes));
-    return max_bytes;
-  }
-  // Stored in a file.
-  assert(data_.empty() || preserve_data_);
-  if (file_op_ == File::WRITE) {
-    // The subsequent call to Seek will do a flush as well.
-    file_op_ = File::READ;
-  }
-  bool result = file_->Seek(offset, File::SEEK_FROM_START);
-  if (!result) {
-    return -1;
-  }
-  return file_->Read(destination, max_bytes);
-}
-
 void ByteStore::Finalize() {
   MutexLock lock(&mutex_);
   is_finalized_ = true;
@@ -212,9 +243,109 @@ void ByteStore::GetDataElement(DataElement *element) {
   }
 }
 
-void ByteStore::Reserve(int64 length) {
-  if (length > kMaxBufferSize) return;
+int64 ByteStore::Length() const {
   MutexLock lock(&mutex_);
-  if (file_.get()) return;
-  data_.reserve(static_cast<size_t>(length));
+
+  if (IsUsingData()) {
+    return data_.size() - async_add_length_;
+  }
+  // Stored in a file.
+  assert(data_.empty() || preserve_data_);
+  if (file_op_ == File::WRITE) {
+    file_->Flush();
+    file_op_ = File::READ;
+  }
+  return file_->Size();
+}
+
+int64 ByteStore::Read(uint8 *destination,
+                      int64 offset, int64 max_length) const {
+  if (offset < 0 || max_length < 0) {
+    return -1;
+  }
+
+  MutexLock lock(&mutex_);
+
+  if (IsUsingData()) {
+    if (data_.size() <= offset) {
+      return 0;
+    }
+    if (data_.size() - offset < max_length) {
+      max_length = data_.size() - offset;
+    }
+    memcpy(destination, &data_[static_cast<int>(offset)],
+                        static_cast<size_t>(max_length));
+    return max_length;
+  }
+  // Stored in a file.
+  assert(data_.empty() || preserve_data_);
+  if (file_op_ == File::WRITE) {
+    // The subsequent call to Seek will do a flush as well.
+    file_op_ = File::READ;
+  }
+  bool result = file_->Seek(offset, File::SEEK_FROM_START);
+  if (!result) {
+    return -1;
+  }
+  return file_->Read(destination, max_length);
+}
+
+int64 ByteStore::ReadDirect(Reader *reader,
+                            int64 offset, int64 max_length) const {
+  if (offset < 0 || max_length < 0) {
+    return -1;
+  }
+  {
+    MutexLock lock(&mutex_);
+    if (IsUsingData()) {
+      if (data_.size() <= offset) {
+        return 0;
+      }
+      if (data_.size() - offset < max_length) {
+        max_length = data_.size() - offset;
+      }
+      int64 total_bytes_read(0);
+      int pos(static_cast<int>(offset));
+      while (max_length > 0) {
+        int64 bytes_read = reader->ReadFromBuffer(&data_[pos], max_length);
+        assert(bytes_read >= 0);
+        if (bytes_read == 0) break;
+        assert(bytes_read <= max_length);
+        total_bytes_read += bytes_read;
+        pos += static_cast<int>(bytes_read);
+        max_length -= bytes_read;
+      }
+      return total_bytes_read;
+    }
+  }
+
+  // Create a temporary buffer and call Read()
+  int64 buffer_size(std::min(max_length, kMaxBufferSize));
+  if (buffer_.size() < static_cast<size_t>(buffer_size)) {
+    buffer_.resize(static_cast<size_t>(buffer_size));
+  }
+  int64 total_bytes_read(0);
+  while (max_length > 0) {
+    int64 bytes_read1 = Read(&buffer_[0], offset, buffer_size);
+    if (bytes_read1 <= 0) break;  // No more data available, or error.
+    int64 bytes_read = reader->ReadFromBuffer(&buffer_[0], bytes_read1);
+    assert(bytes_read >= 0);
+    if (bytes_read == 0) break;
+    total_bytes_read += bytes_read;
+    offset += bytes_read;
+    max_length -= bytes_read;
+    buffer_size = std::min(max_length, buffer_size);
+  }
+  return total_bytes_read;
+}
+
+void ByteStore::Reserve(int64 length) {
+  MutexLock lock(&mutex_);
+  if (IsUsingFile()) return;
+  if (length > kMaxBufferSize) {
+    uint8 data;
+    AddDataToFile(&data, 0);
+  } else {
+    data_.reserve(static_cast<size_t>(length));
+  }
 }

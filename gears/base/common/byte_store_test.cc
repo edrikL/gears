@@ -26,22 +26,83 @@
 #ifdef USING_CCTESTS
 
 #include "gears/base/common/byte_store.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_interface.h"
 
-bool TestByteStore(std::string16 *error) {
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOCATION __FILE__ ", line " TOSTRING(__LINE__)
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestByteStore - failed (%d)\n", __LINE__)); \
+    LOG(("failed at " LOCATION)); \
     assert(error); \
-    *error += STRING16(L"TestByteStore - failed. "); \
+    if (!error->empty()) *error += STRING16(L", "); \
+    *error += STRING16(L"failed at "); \
+    std::string16 location; \
+    UTF8ToString16(LOCATION, &location); \
+    *error += location; \
     return false; \
   } \
 }
+
+namespace {
+
+class TestByteStoreReader : public ByteStore::Reader {
+ public:
+  TestByteStoreReader(std::string16 *error, uint8 *data, int length)
+      : error_(error), pos_(0), data_length_(length), data_(data) {
+  }
+  int64 ReadFromBuffer(const uint8 *buffer, int64 max_length) {
+    int64 len = std::min(static_cast<int64>(data_length_ - pos_), max_length);
+    memcpy(&data_[pos_], buffer, static_cast<size_t>(len));
+    pos_ += static_cast<int>(len);
+    return len;
+  }
+  bool Test(int64 len) {
+    std::string16 *error(error_);
+    TEST_ASSERT(pos_ <= data_length_);
+    TEST_ASSERT(pos_ == len);
+    return true;
+  }
+ private:
+  std::string16 *error_;
+  int pos_;
+  int data_length_;
+  uint8* data_;
+};
+
+class TestByteStoreWriter : public ByteStore::Writer {
+ public:
+  TestByteStoreWriter(std::string16 *error, const char *data, int length)
+      : error_(error), pos_(0), data_length_(length), data_(data) {
+  }
+  int64 WriteToBuffer(uint8 *buffer, int64 max_length) {
+    int64 len = std::min(static_cast<int64>(data_length_ - pos_), max_length);
+    memcpy(buffer, &data_[pos_], static_cast<size_t>(len));
+    pos_ += static_cast<int>(len);
+    return len;
+  }
+  bool Test(int64 len) {
+    std::string16 *error(error_);
+    TEST_ASSERT(pos_ == data_length_);
+    TEST_ASSERT(pos_ == len);
+    return true;
+  }
+ private:
+  std::string16 *error_;
+  int pos_;
+  int data_length_;
+  const char* data_;
+};
+
+}  // namespace
+
+bool TestByteStore(std::string16 *error) {
   const char data1[] = "bytes";
   std::string16 data2(STRING16(L"string"));
-
+  bool ok = true;
   uint8 buffer[64];
   memset(buffer, 0, sizeof(buffer));
   scoped_refptr<ByteStore> byte_store(new ByteStore);
@@ -126,7 +187,38 @@ bool TestByteStore(std::string16 *error) {
   TEST_ASSERT(0 == memcmp(buffer, "sbytesstring", 12));
   memset(buffer, 0, sizeof(buffer));
 
-  return true;
+  // Test AddDataDirect
+  byte_store.reset(new ByteStore);
+  std::string large_data;  // large, but less than 1MB
+  for (int i = 0; i < 1024 * 128; ++i) {
+    large_data.append(data1);
+  }
+  scoped_array<uint8> large_buffer(new uint8[large_data.size() * 2]);
+  TestByteStoreWriter writer(error, large_data.data(), large_data.size());
+  // Pick a size larger than data to write, but small enough to stay in buffer.
+  int64 len = byte_store->AddDataDirect(&writer, 1024 * 1024);
+  ok &= writer.Test(len);
+  TEST_ASSERT(len == large_data.size());
+  TEST_ASSERT(len == byte_store->Length());
+  memset(large_buffer.get(), 0, large_data.size());
+  TEST_ASSERT(len == byte_store->Read(large_buffer.get(), 0,
+                                      large_data.size()));
+  for (unsigned i = 0; i < len - 5; i += 5) {
+    TEST_ASSERT(0 == memcmp(&(large_buffer.get())[i], data1, 5));
+  }
+
+  // Test ReadDirect
+  // Assumes that byte_store already contains 1024 * 128 copies of data1.
+  TestByteStoreReader reader(error, large_buffer.get(), large_data.size() * 2);
+  memset(large_buffer.get(), 0, large_data.size());
+  len = byte_store->ReadDirect(&reader, 0, large_data.size() * 2);
+  ok &= reader.Test(len);
+  TEST_ASSERT(len == large_data.size());
+  TEST_ASSERT(len == byte_store->Length());
+  TEST_ASSERT(0 == memcmp(large_buffer.get(), large_data.data(),
+                          static_cast<size_t>(len)));
+
+  return ok;
 }
 
 #endif  // USING_CCTESTS
