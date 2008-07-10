@@ -31,6 +31,9 @@
 #include "gears/base/firefox/ns_file_utils.h"
 #elif BROWSER_IE
 #include <windows.h>
+#ifdef WINCE
+#include <webvw.h>  // For IPIEHTMLInputTextElement
+#endif
 #endif
 
 #include "gears/base/common/mime_detect.h"
