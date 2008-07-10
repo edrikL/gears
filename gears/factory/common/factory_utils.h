@@ -36,6 +36,10 @@ class SecurityOrigin;
 // Currently only '1.0' is allowed.
 extern const char16 *kAllowedClassVersion;
 
+// The message string for the exception that is thrown when a module
+// cannot be created because the appropriate permissions could not be
+// acquired.
+extern const char16 *kPermissionExceptionString;
 
 // Appends information about the Gears build to the string provided.
 void AppendBuildInfo(std::string16 *s);
