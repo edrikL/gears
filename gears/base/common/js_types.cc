@@ -1985,7 +1985,7 @@ JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                              int argc, JsToken *argv, JsToken *retval)
     : js_context_(cx), is_exception_set_(false),
       argc_(argc), argv_(argv), retval_(retval),
-      js_runner_(js_runner), xpc_(NULL) {}
+      js_runner_(js_runner) {}
 
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
@@ -2001,23 +2001,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 void JsCallContext::SetException(const std::string16 &message) {
   assert(!message.empty());
   is_exception_set_ = true;
-
-  nsresult nr = NS_OK;
-#if BROWSER_FF3
-  nsAXPCNativeCallContext *ncc = NULL;
-  if (xpc_) {
-    nr = xpc_->GetCurrentNativeCallContext(&ncc);
-  }
-#else
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
-  if (xpc_) {
-    nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-  }
-#endif
-
-  JsSetException(js_context_, js_runner_, message.c_str(),
-                 ncc && NS_SUCCEEDED(nr) ?
-                     true : false); // notify_native_call_context
+  JsSetException(js_context_, js_runner_, message.c_str(), false);
 }
 
 #elif BROWSER_IE
