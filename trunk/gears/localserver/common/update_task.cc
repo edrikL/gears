@@ -701,7 +701,6 @@ void UpdateTask::RegisterEventClasses() {
 bool UpdateTask::ProgressEvent::Deserialize(Deserializer *in) {
   if (!in->ReadInt(&files_total_)) return false;
   if (!in->ReadInt(&files_complete_)) return false;
-
   return true;
 }
 
@@ -712,7 +711,6 @@ bool UpdateTask::ProgressEvent::Deserialize(Deserializer *in) {
 bool UpdateTask::ProgressEvent::Serialize(Serializer *out) {
   out->WriteInt(files_total_);
   out->WriteInt(files_complete_);
-
   return true;
 }
 
@@ -722,7 +720,6 @@ bool UpdateTask::ProgressEvent::Serialize(Serializer *out) {
 //------------------------------------------------------------------------------
 bool UpdateTask::ErrorEvent::Deserialize(Deserializer *in) {
   if (!in->ReadString(&error_message_)) return false;
-
   return true;
 }
 
@@ -732,7 +729,6 @@ bool UpdateTask::ErrorEvent::Deserialize(Deserializer *in) {
 //------------------------------------------------------------------------------
 bool UpdateTask::ErrorEvent::Serialize(Serializer *out) {
   out->WriteString(error_message_.c_str());
-
   return true;
 }
 
@@ -742,7 +738,6 @@ bool UpdateTask::ErrorEvent::Serialize(Serializer *out) {
 //------------------------------------------------------------------------------
 bool UpdateTask::CompletionEvent::Deserialize(Deserializer *in) {
   if (!in->ReadString(&new_version_string_)) return false;
-
   return true;
 }
 
@@ -752,7 +747,6 @@ bool UpdateTask::CompletionEvent::Deserialize(Deserializer *in) {
 //------------------------------------------------------------------------------
 bool UpdateTask::CompletionEvent::Serialize(Serializer *out) {
   out->WriteString(new_version_string_.c_str());
-
   return true;
 }
 
@@ -782,22 +776,19 @@ bool UpdateTask::MaybeAutoUpdate(int64 server_id) {
     last_auto_update_map[server_id] = now;
   }
 
+  ManagedResourceStore store;
+  if (!store.Open(server_id)) {
+    return false;
+  }
+
   LOG(("Automatically initiating update for managed store\n"));
-  return StartUpdate(server_id);
+  return StartUpdate(&store);
 }
 
 
 //------------------------------------------------------------------------------
 // StartUpdate
 //------------------------------------------------------------------------------
-bool UpdateTask::StartUpdate(int64 server_id) {
-  ManagedResourceStore store;
-  if (!store.Open(server_id)) {
-    return false;
-  }
-
-  if (!Init(&store) || !Start()) {
-    return false;
-  }
-  return true;
+bool UpdateTask::StartUpdate(ManagedResourceStore *store) {
+  return Init(store) && Start();
 }
