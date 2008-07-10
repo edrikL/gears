@@ -59,6 +59,8 @@
 
 const char16 *kAllowedClassVersion = STRING16(L"1.0");
 
+const char16 *kPermissionExceptionString =
+  STRING16(L"Page does not have permission to use " PRODUCT_FRIENDLY_NAME L".");
 
 const char16 *kGoogleUpdateClientsRegKey =
                   STRING16(L"Software\\Google\\Update\\ClientState");

@@ -103,18 +103,22 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     }
   }
 
+  // Check is_creation_suspended_, because the factory can be suspended
+  // inside a worker that hasn't yet called allowCrossOrigin().
+  if (is_creation_suspended_) {
+    RETURN_EXCEPTION(kPermissionExceptionString);
+  }
+
+  // Get the name of the object they're trying to create.
   std::string16 module_name(object_name_bstr);
-  
+
+  // Check if the module requires local data permission to be created.
   if (RequiresLocalDataPermissionType(module_name)) {
     // Make sure the user gives this site permission to use Gears unless the
     // module can be created without requiring any permissions.
-    // Also check is_creation_suspended, because the factory can be suspended
-    // even when permission_states_ is an ALLOWED_* value.
-    if (is_creation_suspended_ ||
-        !GetPermissionsManager()->AcquirePermission(
+    if (!GetPermissionsManager()->AcquirePermission(
         PermissionsDB::PERMISSION_LOCAL_DATA)) {
-      RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
-                                PRODUCT_FRIENDLY_NAME L"."));
+      RETURN_EXCEPTION(kPermissionExceptionString);
     }
   }
 

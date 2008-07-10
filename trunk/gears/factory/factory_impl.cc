@@ -140,16 +140,19 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
+  // Check is_creation_suspended_, because the factory can be suspended
+  // inside a worker that hasn't yet called allowCrossOrigin().
+  if (is_creation_suspended_) {
+    context->SetException(kPermissionExceptionString);
+  }
+
+  // Check if the module requires local data permission to be created.
   if (RequiresLocalDataPermissionType(module_name)) {
     // Make sure the user gives this site permission to use Gears unless the
     // module can be created without requiring any permissions.
-    // Also check is_creation_suspended, because the factory can be suspended
-    // even when permission_states_ is an ALLOWED_* value.
-    if (is_creation_suspended_ ||
-        !GetPermissionsManager()->AcquirePermission(
+    if (!GetPermissionsManager()->AcquirePermission(
         PermissionsDB::PERMISSION_LOCAL_DATA)) {
-      context->SetException(STRING16(L"Page does not have permission to use "
-                                     PRODUCT_FRIENDLY_NAME L"."));
+      context->SetException(kPermissionExceptionString);
     }
   }
 
