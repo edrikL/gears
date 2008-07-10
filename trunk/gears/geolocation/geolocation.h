@@ -37,11 +37,10 @@
 #include <vector>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/message_service.h"
+#include "gears/geolocation/location_provider.h"
 #ifdef USING_CCTESTS
 #include "gears/geolocation/geolocation_test.h"
 #endif
-#include "gears/geolocation/location_provider.h"
-#include "gears/geolocation/timed_callback.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 
 static const int kBadLatLng = 200;
@@ -97,8 +96,7 @@ struct Position {
 class GearsGeolocation
     : public ModuleImplBaseClassVirtual,
       public LocationProviderBase::ListenerInterface,
-      public MessageObserverInterface,
-      public TimedCallback::ListenerInterface {
+      public MessageObserverInterface {
  public:
 #ifdef USING_CCTESTS
   // Uses ParseArguments for testing.
@@ -147,6 +145,7 @@ class GearsGeolocation
   // OUT: boolean permission
   void GetPermission(JsCallContext *context);
 
+ private:
   // Maintains all the data for a position fix.
   typedef std::vector<LocationProviderBase*> ProviderVector;
   struct FixRequestInfo {
@@ -164,11 +163,8 @@ class GearsGeolocation
     // The time at which we last called back to JavaScript, in ms since the
     // epoch.
     int64 last_callback_time;
-    // The timer used for pending future callbacks in a watch.
-    linked_ptr<TimedCallback> callback_timer;
   };
 
- private:
   // LocationProviderBase::ListenerInterface implementation.
   virtual bool LocationUpdateAvailable(LocationProviderBase *provider);
 
@@ -177,10 +173,7 @@ class GearsGeolocation
                         const char16 *topic,
                         const NotificationData *data);
 
-  // TimedCallback::ListenerInterface implementation.
-  virtual void OnTimeout(TimedCallback *caller, void *user_data);
-
-  // Internal method used by OnNotify.
+  // Internal; method used by HandleThreadMessage.
   void LocationUpdateAvailableImpl(LocationProviderBase *provider);
 
   // Internal method used by GetCurrentPosition and WatchPosition to get a
@@ -238,10 +231,6 @@ class GearsGeolocation
   // Removes a location provider from a fix request.
   void RemoveProvider(LocationProviderBase *provider,
                       FixRequestInfo *fix_request);
-
-  // Causes a callback to JavaScript to be made at the specified number of
-  // milliseconds in the future.
-  void MakeFutureCallback(int timeout_milliseconds, FixRequestInfo *fix_info);
 
   // A map of listners to fix requests. This is used when processing position
   // updates from providers. It is also used to unregister from a listener

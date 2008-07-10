@@ -1996,7 +1996,6 @@ $(BROWSER)_CPPSRCS	+= \
 		network_location_provider.cc \
 		network_location_request.cc \
 		radio_data_provider_wince.cc \
-		timed_callback.cc \
 		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
 		wifi_data_provider_linux.cc \
