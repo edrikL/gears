@@ -41,8 +41,34 @@ class ByteStore : public RefCounted {
  public:
   ByteStore();
 
+  // Functor used to read directly from ByteStore's internal buffer.
+  class Reader {
+   public:
+    // Reads at most max_length bytes from buffer.  Returns the number
+    // of bytes read.  Returns 0 when finished.
+    virtual int64 ReadFromBuffer(const uint8 *buffer, int64 max_length) = 0;
+  };
+
+  // Functor used to write directly to ByteStore's internal buffer.
+  class Writer {
+   public:
+    static const int64 ASYNC = -9;
+    // Write at most max_length bytes to buffer.  Returns the number
+    // of bytes written.  Returns 0 when finished.
+    // Returns ASYNC if the write will be finished asynchronously.
+    virtual int64 WriteToBuffer(uint8 *buffer, int64 max_length) = 0;
+  };
+
   // Appends raw data.  Returns false if the data could not be added.
   bool AddData(const void *data, int64 length);
+
+  // Appends raw data directly to the internal data buffer.
+  // max_length is a value >= the number of bytes that will be added.
+  // Returns the number of bytes added.
+  int64 AddDataDirect(Writer *writer, int64 max_length);
+
+  // Called when an asynchronous Writer has finished.
+  void AddDataDirectFinishAsync(int64 length);
 
   // String data is assumed to be UTF16 and will be converted to UTF8.
   // Returns false if the data could not be added.
@@ -53,15 +79,21 @@ class ByteStore : public RefCounted {
   // will only present the data that existed at construction time.
   void CreateBlob(scoped_refptr<BlobInterface> *blob);
 
+  // The contents of a finalized ByteStore are no longer modifiable.
+  void Finalize();
+
+  bool IsFinalized() const { return is_finalized_; }
+
   // Returns the length of all data.
   int64 Length() const;
 
   // Copies 'length' data at 'offset' into the supplied buffer.
-  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  int64 Read(uint8 *destination, int64 offset, int64 max_length) const;
 
-  // The contents of a finalized ByteStore are no longer modifiable.
-  bool IsFinalized() const { return is_finalized_; }
-  void Finalize();
+  // Reads data directly from the internal data buffer.
+  // max_length is the upper limit on the amount of data to be read.
+  // Returns the number of bytes read.
+  int64 ReadDirect(Reader *reader, int64 offset, int64 max_length) const;
 
   // Attempts to reserve memory for storage.
   void Reserve(int64 length);
@@ -69,6 +101,7 @@ class ByteStore : public RefCounted {
  private:
   ~ByteStore();
 
+  bool AddDataToFile(const void *data, int64 length);
   class Blob;
   void GetDataElement(DataElement *elements);
 
@@ -83,6 +116,8 @@ class ByteStore : public RefCounted {
   mutable Mutex mutex_;
   bool is_finalized_;
   bool preserve_data_;
+  mutable std::vector<uint8> buffer_;
+  int64 async_add_length_;
   DISALLOW_EVIL_CONSTRUCTORS(ByteStore);
 };
 
