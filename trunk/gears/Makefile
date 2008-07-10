@@ -1901,6 +1901,7 @@ IE_CPPSRCS	+= \
 
 ifeq ($(USING_NPAPI),1)
 $(BROWSER)_VPATH	+= \
+		factory \
 		factory/common \
 		factory/npapi \
 		$(NULL)
@@ -1909,7 +1910,7 @@ $(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
-		factory.cc \
+		factory_impl.cc \
 		factory_wrapper.cc \
 		factory_utils.cc \
 		$(NULL)

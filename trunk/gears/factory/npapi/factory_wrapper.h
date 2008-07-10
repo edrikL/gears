@@ -23,13 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
-#define GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+#ifndef GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__
+#define GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/npapi/plugin.h"
 
-// Creates a new NPObject representing a GearsFactory class.
+// Creates a new NPObject representing a GearsFactoryImpl instance.
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context);
 
-#endif // GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+#endif // GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__

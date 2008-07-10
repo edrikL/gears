@@ -26,16 +26,14 @@
 #include "gears/factory/npapi/factory_wrapper.h"
 
 #include "gears/base/common/module_wrapper.h"
-#include "gears/factory/npapi/factory.h"
-
-DECLARE_GEARS_WRAPPER(GearsFactory);
+#include "gears/factory/factory_impl.h"
 
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
   scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
         NPN_CreateObject(context, ModuleWrapper::GetNPClass())));
   if (factory_wrapper.get()) {
-    GearsFactory *factory = new GearsFactory;
-    factory_wrapper->Init(factory, new Dispatcher<GearsFactory>(factory));
+    GearsFactoryImpl *factory = new GearsFactoryImpl;
+    factory_wrapper->Init(factory, new Dispatcher<GearsFactoryImpl>(factory));
     if (!factory->InitModuleEnvironmentFromDOM(context))
       return NULL;
   }
