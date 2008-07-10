@@ -45,31 +45,37 @@
 // TODO(steveblock): Update default URL when finalized.
 static const char16 *kDefaultLocationProviderUrl =
     STRING16(L"http://www.google.com/");
+
+// API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
 static const char16 *kRequestAddress = STRING16(L"requestAddress");
 static const char16 *kAddressLanguage = STRING16(L"addressLanguage");
 static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
+
+// Timing constants.
 static const int64 kMinimumCallbackInterval = 1000;  // 1 second.
 static const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
-static const char16 *kGeolocationObserverTopic = STRING16(L"geolocation");
+
+// DB caching constants.
 static const char16 *kLastPositionName = STRING16(L"LastPosition");
 
-// Data class for use with MessageService.
-class LocationAvailableNotificationData : public NotificationData {
+// MessageService constants.
+static const char16 *kLocationAvailableObserverTopic
+    = STRING16(L"location available");
+static const char16 *kCallbackRequiredObserverTopic
+    = STRING16(L"callback required");
+
+// Data classes for use with MessageService.
+class NotificationDataGeoBase : public NotificationData {
  public:
-  LocationAvailableNotificationData(GearsGeolocation *object_in,
-                                    LocationProviderBase *provider_in)
-      : object(object_in),
-        provider(provider_in) {}
-  virtual ~LocationAvailableNotificationData() {}
+  NotificationDataGeoBase(GearsGeolocation *object_in)
+    : object(object_in) {}
+  virtual ~NotificationDataGeoBase() {}
 
- friend class GearsGeolocation;
+  friend class GearsGeolocation;
 
-private:
-  GearsGeolocation *object;
-  LocationProviderBase *provider;
-
+ private:
   // NotificationData implementation. These methods are not required.
   virtual SerializableClassId GetSerializableClassId() {
     assert(false);
@@ -83,7 +89,45 @@ private:
     assert(false);
     return false;
   }
+
+  GearsGeolocation *object;
+
+  DISALLOW_EVIL_CONSTRUCTORS(NotificationDataGeoBase);
 };
+
+class LocationAvailableNotificationData : public NotificationDataGeoBase {
+ public:
+  LocationAvailableNotificationData(GearsGeolocation *object_in,
+                                    LocationProviderBase *provider_in)
+      : NotificationDataGeoBase(object_in),
+        provider(provider_in) {}
+  virtual ~LocationAvailableNotificationData() {}
+
+ friend class GearsGeolocation;
+
+private:
+  LocationProviderBase *provider;
+
+  DISALLOW_EVIL_CONSTRUCTORS(LocationAvailableNotificationData);
+};
+
+struct CallbackRequiredNotificationData : public NotificationDataGeoBase {
+ public:
+  CallbackRequiredNotificationData(
+      GearsGeolocation *object_in,
+      GearsGeolocation::FixRequestInfo *fix_info_in)
+      : NotificationDataGeoBase(object_in),
+        fix_info(fix_info_in) {}
+  virtual ~CallbackRequiredNotificationData() {}
+
+  friend class GearsGeolocation;
+
+ private:
+  GearsGeolocation::FixRequestInfo *fix_info;
+
+  DISALLOW_EVIL_CONSTRUCTORS(CallbackRequiredNotificationData);
+};
+
 // Helper function that checks if the caller had the required permissions
 // to use this API. If the permissions are not set, it prompts the user.
 // If the permissions cannot be acquired, it sets an exception and returns
@@ -143,7 +187,10 @@ GearsGeolocation::GearsGeolocation()
     return;
   }
 
-  MessageService::GetInstance()->AddObserver(this, kGeolocationObserverTopic);
+  MessageService::GetInstance()->AddObserver(this,
+                                             kLocationAvailableObserverTopic);
+  MessageService::GetInstance()->AddObserver(this,
+                                             kCallbackRequiredObserverTopic);
 
   // Retrieve the cached last known position, if available.
   GeolocationDB *db = GeolocationDB::GetDB();
@@ -160,8 +207,12 @@ GearsGeolocation::~GearsGeolocation() {
     LocationProviderPool::GetInstance()->Unregister(iter->first, this);
   }
 
-  MessageService::GetInstance()->RemoveObserver(this,
-                                                kGeolocationObserverTopic);
+  MessageService::GetInstance()->RemoveObserver(
+      this,
+      kLocationAvailableObserverTopic);
+  MessageService::GetInstance()->RemoveObserver(
+      this,
+      kCallbackRequiredObserverTopic);
 
   // Store the last known position.
   if (last_position_.IsGoodFix()) {
@@ -250,7 +301,7 @@ bool GearsGeolocation::LocationUpdateAvailable(LocationProviderBase *provider) {
   // issuing new fix requests and calling back to JavaScript, which must be done
   // from the JavaScript thread.
   MessageService::GetInstance()->NotifyObservers(
-      kGeolocationObserverTopic,
+      kLocationAvailableObserverTopic,
       new LocationAvailableNotificationData(this, provider));
   return true;
 }
@@ -260,21 +311,47 @@ void GearsGeolocation::OnNotify(MessageService *service,
                                 const char16 *topic,
                                 const NotificationData *data) {
   assert(data);
-  // Check that the notification is for the correct topic.
-  assert(char16_wmemcmp(kGeolocationObserverTopic,
-                        topic,
-                        char16_wcslen(kGeolocationObserverTopic)) == 0);
 
-  const LocationAvailableNotificationData *location_update_data =
-      reinterpret_cast<const LocationAvailableNotificationData*>(data);
+  if (char16_wmemcmp(kLocationAvailableObserverTopic,
+                     topic,
+                     char16_wcslen(topic)) == 0) {
+    const LocationAvailableNotificationData *location_available_data =
+        reinterpret_cast<const LocationAvailableNotificationData*>(data);
 
-  // Only respond to notifications initiated by this object.
-  if (this != location_update_data->object) {
-    return;
+    // Only respond to notifications made by this object.
+    if (this != location_available_data->object) {
+      return;
+    }
+
+    // Invoke the implementation.
+    LocationUpdateAvailableImpl(location_available_data->provider);
+  } else if (char16_wmemcmp(kCallbackRequiredObserverTopic,
+                            topic,
+                            char16_wcslen(topic)) == 0) {
+    const CallbackRequiredNotificationData *callback_required_data =
+        reinterpret_cast<const CallbackRequiredNotificationData*>(data);
+
+    // Only respond to notifications made by this object.
+    if (this != callback_required_data->object) {
+      return;
+    }
+
+    // Delete this callback timer.
+    FixRequestInfo *fix_info = callback_required_data->fix_info;
+    assert(fix_info->callback_timer.get());
+    fix_info->callback_timer.reset();
+    MakeCallback(fix_info, last_position_);
   }
+}
 
-  // Invoke the implementation.
-  LocationUpdateAvailableImpl(location_update_data->provider);
+// TimedCallback::ListenerInterface implementation.
+void GearsGeolocation::OnTimeout(TimedCallback *caller, void *user_data) {
+  assert(user_data);
+  // Send a message to the JavaScriptThread to make the callback.
+  FixRequestInfo *fix_info = reinterpret_cast<FixRequestInfo*>(user_data);
+  MessageService::GetInstance()->NotifyObservers(
+      kCallbackRequiredObserverTopic,
+      new CallbackRequiredNotificationData(this, fix_info));
 }
 
 // Non-API methods
@@ -362,23 +439,30 @@ bool GearsGeolocation::CancelWatch(const int &watch_id) {
 
 void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info) {
   assert(fix_info->repeats);
+  // If there's already a timer active for the callback, there's nothing to do.
+  if (fix_info->callback_timer.get()) {
+    return;
+  }
   // If the postion has changed significantly or the accuracy has improved, and
   // the minimum time since our last callback to JavaScript has elapsed, we make
   // a callback.
   if (IsNewPositionMovement(fix_info->last_position, last_position_) ||
       IsNewPositionMoreAccurate(fix_info->last_position, last_position_)) {
-    // The position has changed significantly.
-    int64 elapsed_time =
-        GetCurrentTimeMillis() - fix_info->last_callback_time;
-    if (elapsed_time > kMinimumCallbackInterval) {
+    // The position has changed significantly. See if the minimum time interval
+    // since the last callback has expired.
+    int64 time_remaining =
+        kMinimumCallbackInterval -
+        (GetCurrentTimeMillis() - fix_info->last_callback_time);
+    if (time_remaining <= 0) {
       if (!MakeCallback(fix_info, last_position_)) {
         LOG(("GearsGeolocation::HandleRepeatingRequestUpdate() : JavaScript "
              "callback failed.\n"));
         assert(false);
       }
     } else {
-      // TODO(steveblock): Start a timer and call back exactly when the
-      // minimum time period has elapsed.
+      // Start an asynchronous timer which will post a message back to this
+      // thread once the minimum time period has elapsed.
+      MakeFutureCallback(static_cast<int>(time_remaining), fix_info);
     }
   }
 }
@@ -772,6 +856,14 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
   // Unregister from the provider, via the pool. This will cancel any pending
   // requests and may block if a callback is currently in progress.
   LocationProviderPool::GetInstance()->Unregister(provider, this);
+}
+
+void GearsGeolocation::MakeFutureCallback(int timeout_milliseconds,
+                                          FixRequestInfo *fix_info) {
+  // Check that there isn't already a timer running for this request.
+  assert(!fix_info->callback_timer.get());
+  fix_info->callback_timer.reset(
+      new TimedCallback(this, timeout_milliseconds, fix_info));
 }
 
 // Local functions
