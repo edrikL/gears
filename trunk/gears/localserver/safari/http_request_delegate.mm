@@ -115,9 +115,11 @@
       
       int read_bytes = 0;
       UInt8 tmp_buf[1024];
+      [post_data_stream open];
       while (read_bytes = [post_data_stream read:tmp_buf maxLength:1024]) {
         [tmp_postdata appendBytes:tmp_buf length:read_bytes];
       }
+      [post_data_stream close];
       [request_ setHTTPBody:tmp_postdata];
       [tmp_postdata release];
     }
