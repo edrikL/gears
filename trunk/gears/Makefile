@@ -872,6 +872,7 @@ $(BROWSER)_CPPSRCS	+= \
 		permissions_db.cc \
 		permissions_db_test.cc \
 		permissions_manager.cc \
+		position_table.cc \
 		process_utils_win32.cc \
 		png_utils.cc \
 		scoped_refptr_test.cc \
@@ -1983,7 +1984,6 @@ $(BROWSER)_CPPSRCS	+= \
 		location_provider_pool.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
-		position_table.cc \
 		radio_data_provider_wince.cc \
 		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
