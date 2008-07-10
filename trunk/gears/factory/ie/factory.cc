@@ -324,7 +324,12 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   // We are unable to get IWebBrowser2 from this pointer. Instead, the user must
   // call privateSetGlobalObject from JavaScript.
 #else
-  InitModuleEnvironmentFromDOM(m_spUnkSite);
+  scoped_refptr<ModuleEnvironment> module_environment(
+      ModuleEnvironment::CreateFromDOM(m_spUnkSite));
+  if (!module_environment) {
+    return E_FAIL;
+  }
+  InitModuleEnvironment(module_environment.get());
 #endif
   return hr;
 }
@@ -332,11 +337,14 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
 #ifdef WINCE
 STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
   if (!IsFactoryInitialized(this)) {
-    if (!InitModuleEnvironmentFromDOM(js_dispatch)) {
+    scoped_refptr<ModuleEnvironment> module_environment(
+        ModuleEnvironment::CreateFromDOM(js_dispatch));
+    if (!module_environment) {
       RETURN_EXCEPTION(STRING16(L"Failed to initialize "
                                 PRODUCT_FRIENDLY_NAME
                                 L"."));
     }
+    InitModuleEnvironment(module_environment.get());
   }
   RETURN_NORMAL();
 }

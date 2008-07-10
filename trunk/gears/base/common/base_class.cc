@@ -63,47 +63,43 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
 #endif
 }
 
+
 #if BROWSER_FF
-bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM() {
+ModuleEnvironment *ModuleEnvironment::CreateFromDOM() {
 #elif BROWSER_IE
-bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM(IUnknown *site) {
+ModuleEnvironment *ModuleEnvironment::CreateFromDOM(IUnknown *site) {
 #elif BROWSER_NPAPI
-bool ModuleImplBaseClass::InitModuleEnvironmentFromDOM(JsContextPtr instance) {
+ModuleEnvironment *ModuleEnvironment::CreateFromDOM(JsContextPtr instance) {
 #endif
   bool is_worker = false;
   SecurityOrigin security_origin;
   scoped_refptr<BrowsingContext> browsing_context;
-  // We allocate a new (with a fresh ref-count of zero) ModuleEnvironment
-  // object, which is passed immediately to InitModuleEnvironment, which
-  // maintains a separate reference, and will therefore look after
-  // de-allocating the new object.
 #if BROWSER_FF
   JsContextPtr cx;
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
                    DOMUtils::GetPageOrigin(&security_origin) &&
                    DOMUtils::GetPageBrowsingContext(&browsing_context);
-  if (!succeeded) { return false; }
-  InitModuleEnvironment(new ModuleEnvironment(
+  if (!succeeded) { return NULL; }
+  return new ModuleEnvironment(
       security_origin, is_worker, NewDocumentJsRunner(NULL, cx),
-      browsing_context.get()));
+      browsing_context.get());
 #elif BROWSER_IE
   bool succeeded =
       ActiveXUtils::GetPageOrigin(site, &security_origin) &&
       ActiveXUtils::GetPageBrowsingContext(site, &browsing_context);
-  if (!succeeded) { return false; }
-  InitModuleEnvironment(new ModuleEnvironment(
+  if (!succeeded) { return NULL; }
+  return new ModuleEnvironment(
       security_origin, site, is_worker, NewDocumentJsRunner(site, NULL),
-      browsing_context.get()));
+      browsing_context.get());
 #elif BROWSER_NPAPI
   bool succeeded =
       BrowserUtils::GetPageSecurityOrigin(instance, &security_origin) &&
       BrowserUtils::GetPageBrowsingContext(instance, &browsing_context);
-  if (!succeeded) { return false; }
-  InitModuleEnvironment(new ModuleEnvironment(
+  if (!succeeded) { return NULL; }
+  return new ModuleEnvironment(
       security_origin, is_worker,
-      NewDocumentJsRunner(NULL, instance), browsing_context.get()));
+      NewDocumentJsRunner(NULL, instance), browsing_context.get());
 #endif
-  return true;
 }
 
 

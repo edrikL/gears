@@ -74,11 +74,17 @@ void Dispatcher<GearsFactoryImpl>::Init() {
   RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
 }
 
+const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
+
 GearsFactoryImpl::GearsFactoryImpl()
-    : is_creation_suspended_(false) {
+    : ModuleImplBaseClassVirtual(kModuleName),
+      is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
 
+#if BROWSER_FF
+  // TODO(nigeltao): implement version collision UI for Firefox.
+#elif defined(WIN32) || defined(BROWSER_WEBKIT)
 // Returns NULL if an error occured loading the string.
 static const char16 *GetVersionCollisionErrorString() {
 #if defined(WIN32)
@@ -102,9 +108,12 @@ static const char16 *GetVersionCollisionErrorString() {
   return NULL;
 #endif
 }
+#endif
 
 void GearsFactoryImpl::Create(JsCallContext *context) {
-#if defined(WIN32) || defined(BROWSER_WEBKIT)
+#if BROWSER_FF
+  // TODO(nigeltao): implement version collision UI for Firefox.
+#elif defined(WIN32) || defined(BROWSER_WEBKIT)
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process

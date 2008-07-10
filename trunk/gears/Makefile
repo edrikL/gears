@@ -1862,16 +1862,14 @@ endif # not OFFICIAL_BUILD
 # factory/firefox
 
 FF3_VPATH	+= \
+		factory \
 		factory/common \
 		factory/firefox \
 		$(NULL)
 
-FF3_IDLSRCS	+= \
-		factory.idl \
-		$(NULL)
-
 FF3_CPPSRCS	+= \
 		factory.cc \
+		factory_impl.cc \
 		factory_utils.cc \
 		$(NULL)
 

@@ -188,7 +188,7 @@ struct JavaScriptWorkerInfo {
 
   JSRuntime *js_runtime_;
   bool thread_created;
-  nsCOMPtr<GearsFactory> factory_ref;
+  scoped_refptr<GearsFactoryImpl> factory_ref;
   bool is_factory_suspended;
   scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::HttpListener> http_request_listener;
@@ -1008,12 +1008,10 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     wi->onmessage_handler.reset(NULL);
     wi->onerror_handler.reset(NULL);
 
-    // nsCOMPtr is not threadsafe, must release from creation thread.
-    wi->factory_ref = NULL;
-
     // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
     // NULL. This allows us to free up these thread resources sooner, and it
     // seems a little cleaner too.
+    wi->factory_ref = NULL;
     wi->js_runner = NULL;
     wi->threads_manager->ReleaseWorkerRef();
     wi->module_environment.reset(NULL);
@@ -1043,12 +1041,11 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   //
   // js_runner manages the lifetime of these allocated objects.
 
-  scoped_ptr<GearsFactory> factory(new GearsFactory());
-  if (!factory.get()) { return false; }
-  factory->InitModuleEnvironment(wi->module_environment.get());
-
+  scoped_refptr<GearsFactoryImpl> factory_impl;
   scoped_refptr<GearsWorkerPool> workerpool;
-  if (!CreateModule<GearsWorkerPool>(wi->module_environment.get(),
+  if (!CreateModule<GearsFactoryImpl>(wi->module_environment.get(),
+                                      NULL, &factory_impl) ||
+      !CreateModule<GearsWorkerPool>(wi->module_environment.get(),
                                      NULL, &workerpool)) {
     return false;
   }
@@ -1057,7 +1054,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   // callee invokes allowCrossOrigin().
   if (!wi->threads_manager->page_security_origin().IsSameOrigin(
                                                        wi->script_origin)) {
-    factory->SuspendObjectCreation();
+    factory_impl->SuspendObjectCreation();
     wi->is_factory_suspended = true;
   } else {
     // For same-origin workers, just copy the permission state from the
@@ -1073,18 +1070,12 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
 
   // Save an AddRef'd pointer to the factory so we can access it later.
-  wi->factory_ref = factory.get();
+  wi->factory_ref = factory_impl.get();
 
 
   // Expose created objects as globals in the JS engine.
-  const nsIID factory_iface_id = GEARSFACTORYINTERFACE_IID;
-  if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
-                            factory.release(), // nsISupports
-                            factory_iface_id)) {
-    return false;
-  }
-
-  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName, workerpool.get())) {
+  if (!js_runner->AddGlobal(kWorkerInsertedFactoryName, factory_impl.get()) ||
+      !js_runner->AddGlobal(kWorkerInsertedWorkerPoolName, workerpool.get())) {
     return false;
   }
 

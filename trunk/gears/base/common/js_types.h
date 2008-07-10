@@ -394,9 +394,6 @@ class JsRootedToken {
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
 
-// Implementations of boilerplate code.
-// - We don't currently need GetNativeBaseClass on IE.
-
 #elif BROWSER_NPAPI
 
 // A JsToken that won't get GC'd out from under you.

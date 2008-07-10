@@ -40,33 +40,6 @@
 #include "gears/base/common/string16.h"  // for string16
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#if BROWSER_FF
-
-#include "genfiles/base_interface_ff.h"
-
-#elif BROWSER_IE
-
-// no "base_interface_ie.h" because IE doesn't require a COM base interface
-
-#elif BROWSER_NPAPI
-
-// no "base_interface_npapi.h" because NPAPI doesn't use COM.
-
-#endif
-
-#if BROWSER_FF
-
-// Implementations of boilerplate code.
-#define GEARS_IMPL_BASECLASS \
-  NS_IMETHOD GetNativeBaseClass(ModuleImplBaseClass **retval) { \
-    *retval = this; \
-    return NS_OK; \
-  }
-
-#elif BROWSER_IE
-#elif BROWSER_NPAPI
-#endif  // BROWSER_xyz
-
 class ModuleWrapperBaseClass;
 
 #ifdef WINCE
@@ -82,6 +55,20 @@ class GearsFactory;
 // Ref/Unref methods.
 struct ModuleEnvironment : public RefCounted {
  public:
+  // CreateFromDOM can only be used from the main thread, and should only be
+  // used for the first module created in the main thread - i.e. the first
+  // GearsFactory instance. Other ModuleImplBaseClass instances are initialized
+  // (i.e. they have InitModuleEnvironment called on them) by CreateModule.
+  // This function returns NULL on failure. On success, the resultant
+  // ModuleEnvironment should be immediately held within a scoped_refptr.
+#if BROWSER_FF
+  static ModuleEnvironment *CreateFromDOM();
+#elif BROWSER_IE
+  static ModuleEnvironment *CreateFromDOM(IUnknown *site);
+#elif BROWSER_NPAPI
+  static ModuleEnvironment *CreateFromDOM(JsContextPtr instance);
+#endif
+
   // Note that, if is_worker is false,  ModuleEnvironment will take ownership
   // of the JsRunnerInterface* passed to it, and will be responsible for
   // deleting it.
@@ -172,19 +159,6 @@ class ModuleImplBaseClass {
 
 
   void InitModuleEnvironment(ModuleEnvironment *source_module_environment);
-
-  // InitModuleEnvironmentFromDOM can only be used from the main thread, and
-  // should only be used for the first module created in the main thread -
-  // i.e. the first GearsFactory instance. Other ModuleImplBaseClass
-  // instances are initialized (i.e. they have InitModuleEnvironment called
-  // on them) by CreateModule.
-#if BROWSER_FF
-  bool InitModuleEnvironmentFromDOM();
-#elif BROWSER_IE
-  bool InitModuleEnvironmentFromDOM(IUnknown *site);
-#elif BROWSER_NPAPI
-  bool InitModuleEnvironmentFromDOM(JsContextPtr instance);
-#endif
 
   // Host environment information
   void GetModuleEnvironment(scoped_refptr<ModuleEnvironment> *out) const;

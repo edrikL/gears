@@ -43,6 +43,8 @@ class JsRunnerInterface;
 class GearsFactoryImpl
     : public ModuleImplBaseClassVirtual {
  public:
+  static const std::string kModuleName;
+
   GearsFactoryImpl();
 
   // IN: string object, string version
