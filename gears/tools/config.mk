@@ -603,6 +603,8 @@ COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$(*F).pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(M
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
 COMPILE_FLAGS += -D_HAS_EXCEPTIONS=0 -D_ATL_NO_EXCEPTIONS
+# Do not export UTF functions.
+COMPILE_FLAGS += -DU_STATIC_IMPLEMENTATION
 
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) /TP /J
@@ -683,6 +685,7 @@ else # wince
 IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib iphlpapi.lib gpsapi.lib
 endif
 NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
+NOTIFIER_SHELL_LIBS = advapi32.lib shlwapi.lib
 
 # Other tools specific to win32/wince builds.
 RC = rc

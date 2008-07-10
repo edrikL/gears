@@ -33,6 +33,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/string16.h"
+#include "gears/notifier/notifier_utils_win32.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Work around the header including errors.
@@ -130,42 +131,6 @@ class NotifierSyncGate {
 };
 
 static scoped_ptr<NotifierSyncGate> g_sync_gate;
-
-bool GetNotifierPath(std::string16 *path) {
-  assert(path);
-
-  HKEY hkey;
-  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     L"Software\\Google\\Gears",
-                     0,
-                     KEY_QUERY_VALUE,
-                     &hkey) != ERROR_SUCCESS) {
-    return false;
-  }
-
-  DWORD type = 0;
-  char16 install_dir_value[MAX_PATH + 1];
-  DWORD size = sizeof(install_dir_value) - sizeof(install_dir_value[0]);
-  LONG res = ::RegQueryValueEx(hkey,
-                               L"install_dir",
-                               NULL,
-                               &type,
-                               reinterpret_cast<BYTE*>(install_dir_value),
-                               &size);
-  ::RegCloseKey(hkey);
-  if (res != ERROR_SUCCESS) {
-    return false;
-  }
-
-  install_dir_value[size / sizeof(install_dir_value[0]) + 1] = L'\0';
-  path->assign(install_dir_value);
-  if (path->at(path->length() - 1) != L'\\') {
-    path->append(L"\\");
-  }
-  path->append(L"Shared\\notifier.exe");
-
-  return true;
-}
 
 bool NotifierProcess::StartProcess(Event *stop_event) {
   std::string16 notifier_path;
