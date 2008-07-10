@@ -5,57 +5,94 @@
     <script type="text/javascript" src="gears_init.js"></script>
     <script type="text/javascript" language="javascript">
 
-function handleUploadProgress(event) {
-  document.getElementById("uploadProgress").innerHTML =
-      document.getElementById("uploadProgress").innerHTML +
-      event.loaded + ' of ' + event.total + ' bytes uploaded.<br>\n';
-}
-
-function handleDownloadProgress(event) {
-  document.getElementById("downloadProgress").innerHTML =
-      document.getElementById("downloadProgress").innerHTML +
-      event.loaded + ' of ' + event.total + ' bytes downloaded.<br>\n';
-}
-
 function testUploadProgress() {
-  document.getElementById("uploadProgress").innerHTML =
-    "0 of 0 bytes uploaded.<br>\n";
+  var request = google.gears.factory.create('beta.httprequest');
+  function handleUploadReadyState() {
+    document.getElementById("uploadReady").innerHTML = request.readyState;
+    document.getElementById("uploadStatus").innerHTML = request.status;
+  }
+  function handleUploadProgress(event) {
+    document.getElementById("uploadProgress").innerHTML = event.loaded;
+    document.getElementById("uploadTotal").innerHTML = event.total;
+  }
 
-  var data = 'hello';
+
+  document.getElementById("uploadProgress").innerHTML = "<br/>";
+  document.getElementById("uploadTotal").innerHTML = "<br/>";
+  document.getElementById("uploadReady").innerHTML = "<br/>";
+  document.getElementById("uploadStatus").innerHTML = "<br/>";
+
+  var data = 'fred';
   do {
     data = data + data;
   } while (data.length < 30000000);
 
-  var request = google.gears.factory.create('beta.httprequest');
+  request.onreadystatechange = handleUploadReadyState;
   request.upload.onprogress = handleUploadProgress;
   request.open('POST', 'testcases/cgi/send_response_of_size.py?size=5');
   request.send(data);
 }
 
 function testDownloadProgress() {
-  document.getElementById("downloadProgress").innerHTML =
-    "0 of 0 bytes downloaded.<br>\n";
-
   var request = google.gears.factory.create('beta.httprequest');
+  function handleDownloadReadyState() {
+    document.getElementById("downloadReady").innerHTML = request.readyState;
+    document.getElementById("downloadStatus").innerHTML = request.status;
+  }
+  function handleDownloadProgress(event) {
+    document.getElementById("downloadProgress").innerHTML = event.loaded;
+    document.getElementById("downloadTotal").innerHTML = event.total;
+  }
+
+
+  document.getElementById("downloadProgress").innerHTML = "<br/>";
+  document.getElementById("downloadTotal").innerHTML = "<br/>";
+  document.getElementById("downloadReady").innerHTML = "<br/>";
+  document.getElementById("downloadStatus").innerHTML = "<br/>";
+
+
+  request.onreadystatechange = handleDownloadReadyState;
   request.onprogress = handleDownloadProgress;
-  request.open('GET', 'testcases/cgi/send_response_of_size.py?size=30000000');
+  request.open('GET', 'testcases/cgi/send_response_of_size.py?size=33554432');
   request.send();
 }
     </script>
   </head>
   <body>
-    <h1>HttpRequest upload progress</h1>
-    <form action="">
-      <input type="button" value="RunUploadProgressTest"
-      onclick="testUploadProgress()">
-    </form>
-    <div id="uploadProgress">Ready.<br></div>
+    <h1>HttpRequest progress</h1>
+    <table border="1">
+      <tr>
+        <td>type</td>
+        <td>bytes transferred</td>
+        <td>total bytes</td>
+        <td>ready state</td>
+        <td>status code</td>
+      </tr>
+      <tr>
+        <td>
+          <form action="">
+            <input type="button" value="TestDownloadProgress"
+            onclick="testDownloadProgress()">
+          </form>
+        </td>
+        <td><div id="downloadProgress"><br/></div></td>
+        <td><div id="downloadTotal"><br/></div></td>
+        <td><div id="downloadReady"><br/></div></td>
+        <td><div id="downloadStatus"><br/></div></td>
+      </tr>
+      <tr>
+        <td>
+          <form action="">
+            <input type="button" value="TestUploadProgress"
+            onclick="testUploadProgress()">
+          </form>
+        </td>
+        <td><div id="uploadProgress"><br/></div></td>
+        <td><div id="uploadTotal"><br/></div></td>
+        <td><div id="uploadReady"><br/></div></td>
+        <td><div id="uploadStatus"><br/></div></td>
+      </tr>
+    </table>
 
-    <h1>HttpRequest download progress</h1>
-    <form action="">
-      <input type="button" value="RunDownloadProgressTest"
-      onclick="testDownloadProgress()">
-    </form>
-    <div id="downloadProgress">Ready.<br></div>
   </body>
 </html>
