@@ -145,25 +145,12 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
                            kCacheInterceptContractId,
                            PR_TRUE, PR_TRUE, NULL);
 
-
-  const struct {
-    const char *className;
-    const char *interfaceName;
-    const char *interfaceIDStr;
-  } jsDOMClasses[] = {
-    // factory
-    { kGearsFactoryClassName, "GearsFactoryInterface",
-      GEARSFACTORYINTERFACE_IID_STR }
-  };
-
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
-    catMgr->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
-                             jsDOMClasses[i].className,
-                             kDomciExtensionContractId,
-                             PR_TRUE, PR_TRUE, NULL);
-    // AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE, ...) does not seem to be
-    // necessary for our Gears interfaces.
-  }
+  // The JAVASCRIPT_DOM_CLASS category lets us hook into "new GearsFactory()"
+  // calls.
+  catMgr->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                           kGearsFactoryClassName,
+                           kDomciExtensionContractId,
+                           PR_TRUE, PR_TRUE, NULL);
 
   return NS_OK;
 }
