@@ -58,7 +58,7 @@ If the client sends a resume request which refers to an operation that has alrea
 
 = Query Requests =
 
-Clients can query the server for the status of an operation by sending a request with no body (and thus no Content-Range header). This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed. This would be desired, for example, when the connection is closed prior to the arrival of a final response code, or if the client receives a 503 (Service Unavailable) status code.
+Clients can query the server for the status of an operation by sending a request with no body. This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed. This would be desired, for example, when the connection is closed prior to the arrival of a final response code, or if the client receives a 503 (Service Unavailable) status code.
 
 Query requests MUST contain a Content-Range header with a byte-range-resp-spec of "`*`".
 
