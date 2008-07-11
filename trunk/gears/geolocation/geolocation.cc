@@ -373,7 +373,10 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Native providers
   if (info->enable_high_accuracy) {
     LocationProviderBase *gps_provider =
-        pool->Register(STRING16(L"GPS"), host_name, info->address_language,
+        pool->Register(STRING16(L"GPS"),
+                       host_name,
+                       info->request_address,
+                       info->address_language,
                        this);
     if (gps_provider) {
       info->providers.push_back(gps_provider);
@@ -388,7 +391,11 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     GURL url(urls[i]);
     if (url.is_valid()) {
       LocationProviderBase *network_provider =
-          pool->Register(urls[i], host_name, info->address_language, this);
+          pool->Register(urls[i],
+                         host_name,
+                         info->request_address,
+                         info->address_language,
+                         this);
       if (network_provider) {
         info->providers.push_back(network_provider);
       }

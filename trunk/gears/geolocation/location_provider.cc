@@ -34,16 +34,17 @@
 
 #include <assert.h>
 
-void LocationProviderBase::AddListener(ListenerInterface *listener) {
+void LocationProviderBase::AddListener(ListenerInterface *listener,
+                                       bool request_address) {
   assert(listener);
   MutexLock lock(&listeners_mutex_);
-  listeners_.insert(listener);
+  listeners_[listener] = request_address;
 }
 
 void LocationProviderBase::RemoveListener(ListenerInterface *listener) {
   assert(listener);
   MutexLock lock(&listeners_mutex_);
-  ListenerSet::iterator iter = listeners_.find(listener);
+  ListenerMap::iterator iter = listeners_.find(listener);
   if (iter != listeners_.end()) {
     listeners_.erase(iter);
   }
@@ -51,11 +52,19 @@ void LocationProviderBase::RemoveListener(ListenerInterface *listener) {
 
 void LocationProviderBase::UpdateListeners() {
   MutexLock lock(&listeners_mutex_);
-  for (ListenerSet::const_iterator iter = listeners_.begin();
+  for (ListenerMap::const_iterator iter = listeners_.begin();
        iter != listeners_.end();
        ++iter) {
-    (*iter)->LocationUpdateAvailable(this);
+    iter->first->LocationUpdateAvailable(this);
   }
+}
+
+LocationProviderBase::ListenerMap *LocationProviderBase::GetListeners() {
+  return &listeners_;
+}
+
+Mutex *LocationProviderBase::GetListenersMutex() {
+  return &listeners_mutex_;
 }
 
 #ifdef USING_CCTESTS

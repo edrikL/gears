@@ -58,6 +58,7 @@ LocationProviderPool *LocationProviderPool::GetInstance() {
 LocationProviderBase *LocationProviderPool::Register(
       const std::string16 &type,
       const std::string16 &host,
+      bool request_address,
       const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
@@ -78,7 +79,7 @@ LocationProviderBase *LocationProviderPool::Register(
   }
   LocationProviderBase *provider = iter->second.first;
   assert(provider);
-  provider->AddListener(listener);
+  provider->AddListener(listener, request_address);
   RefCount *count = iter->second.second;
   assert(count);
   count->Ref();

@@ -34,7 +34,7 @@
 #ifndef GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 #define GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 
-#include <set>
+#include <map>
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 
@@ -54,7 +54,7 @@ class LocationProviderBase {
   // Adds a listener, which will be called back on
   // ListenerInterface::LocationUpdateAvailable as soon as a position is
   // available and again whenever a new position is available.
-  virtual void AddListener(ListenerInterface *listener);
+  virtual void AddListener(ListenerInterface *listener, bool request_address);
   // Removes a listener. In particular, once this method returns, no further
   // calls to ListenerInterface::LocationUpdateAvailable will be made for this
   // listener. It may block if a callback is in progress.
@@ -67,14 +67,18 @@ class LocationProviderBase {
   // as possible. Default implementation does nothing.
   virtual void UpdatePosition() {}
 
+  // Accessor methods.
+  typedef std::map<ListenerInterface*, bool> ListenerMap;
+  ListenerMap *GetListeners();
+  Mutex *GetListenersMutex();
+
  protected:
   virtual void UpdateListeners();
 
  private:
-  // The listeners registered to this provider. We use a set to avoid
-  // duplicates.
-  typedef std::set<ListenerInterface*> ListenerSet;
-  ListenerSet listeners_;
+  // The listeners registered to this provider. We use a map to avoid
+  // duplicates and to record whether each listener requires an address.
+  ListenerMap listeners_;
   Mutex listeners_mutex_;
 };
 
