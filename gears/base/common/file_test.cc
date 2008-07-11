@@ -150,7 +150,7 @@ bool TestFileUtils(std::string16 *error) {
       STRING16(L"/Dir1"),
       STRING16(L"/Dir1/Dir2/"),
       STRING16(L"/Dir1\\Dir2/"),      
-      STRING16("\\Dir1/Dir2/"),      
+      STRING16(L"\\Dir1/Dir2/"),      
       STRING16(L".\\Dir"),
       STRING16(L"..\\Dir.Dir2.Dir3/Dir4/")
   };
