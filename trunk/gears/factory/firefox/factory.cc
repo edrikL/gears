@@ -130,8 +130,13 @@ NS_IMETHODIMP GearsFactory::DelegateToFactoryImpl(const char *name,
   if (context.is_exception_set()) {
     ncc->SetExceptionWasThrown(PR_TRUE);
   } else {
-    // TODO(nigeltao): Add an is_return_value_set() method to JsCallContext,
-    // and check it before calling SetReturnValueWasSet.
+    if (!context.is_return_value_set()) {
+      // Properties should always either throw an exception, or return a value.
+      assert(!is_property);
+      // We had a method call that didn't throw an exception, but instead
+      // returned void. That's perfectly fine.
+      *retval = JSVAL_VOID;
+    }
     ncc->SetReturnValueWasSet(PR_TRUE);
   }
   return NS_OK;
