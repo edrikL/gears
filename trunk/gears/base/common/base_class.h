@@ -280,8 +280,8 @@ class ModuleWrapperBaseClass {
 // will be set.
 // Usually, OutType will be GearsClass or ModuleImplBaseClass.
 template<class GearsClass, class OutType>
-bool CreateModule(JsRunnerInterface *js_runner,
+bool CreateModule(ModuleEnvironment *module_environment,
                   JsCallContext *context,
-                  scoped_refptr<OutType>* module);
+                  scoped_refptr<OutType> *module);
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__
