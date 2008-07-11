@@ -177,16 +177,6 @@ class ModuleImplBaseClass {
 
   PermissionsManager *GetPermissionsManager() const;
 
-#if BROWSER_FF
-  // JavaScript worker-thread parameter information
-  void JsWorkerSetParams(int argc, JsToken *argv, JsToken *retval);
-  int          JsWorkerGetArgc() const;
-  JsToken*     JsWorkerGetArgv() const;
-  JsToken*     JsWorkerGetRetVal() const;
-#elif BROWSER_IE
-  // These do not exist in IE yet.
-#endif
-
   // Methods for dealing with the JavaScript wrapper interface.
   void SetJsWrapper(ModuleWrapperBaseClass *wrapper) { js_wrapper_ = wrapper; }
   ModuleWrapperBaseClass *GetWrapper() const { 
@@ -205,14 +195,6 @@ class ModuleImplBaseClass {
 
  private:
   std::string module_name_;
-
-#if BROWSER_FF
-  int           worker_js_argc_;
-  JsToken      *worker_js_argv_;
-  JsToken      *worker_js_retval_;
-#elif BROWSER_IE
-  // These do not exist in IE yet.
-#endif
 
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;

@@ -112,16 +112,7 @@ void ModuleImplBaseClass::InitModuleEnvironment(
   // exposed directly.  So access any member to trip its internal
   // 'initialized_' assert.
   assert(source_module_environment->security_origin_.port() != -1);
-
   module_environment_.reset(source_module_environment);
-
-#if BROWSER_FF
-  worker_js_argc_ = 0;
-  worker_js_argv_ = NULL;
-  worker_js_retval_ = NULL;
-#elif BROWSER_IE
-  // These do not exist in IE yet.
-#endif
 }
 
 
@@ -186,37 +177,3 @@ void ModuleImplBaseClass::Unref() {
 JsToken ModuleImplBaseClass::GetWrapperToken() const {
   return js_wrapper_->GetWrapperToken();
 }
-
-
-//-----------------------------------------------------------------------------
-#if BROWSER_FF  // the rest of this file only applies to Firefox, for now
-
-
-void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv,
-                                            JsToken *retval) {
-  assert(module_environment_.get());
-  worker_js_argc_ = argc;
-  worker_js_argv_ = argv;
-  worker_js_retval_ = retval;
-}
-
-int ModuleImplBaseClass::JsWorkerGetArgc() const {
-  assert(module_environment_.get());
-  assert(EnvIsWorker());
-  return worker_js_argc_;
-}
-
-JsToken* ModuleImplBaseClass::JsWorkerGetArgv() const {
-  assert(module_environment_.get());
-  assert(EnvIsWorker());
-  return worker_js_argv_;
-}
-
-JsToken *ModuleImplBaseClass::JsWorkerGetRetVal() const {
-  assert(module_environment_.get());
-  assert(EnvIsWorker());
-  return worker_js_retval_;
-}
-
-#endif  // BROWSER_FF
-//-----------------------------------------------------------------------------

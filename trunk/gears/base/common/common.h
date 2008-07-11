@@ -77,17 +77,7 @@
   }
 
 #elif BROWSER_FF
-
 #include "gears/base/common/common_ff.h"
-
-#define RETURN_NORMAL()  return NS_OK
-#define RETURN_EXCEPTION(msg) \
-  { \
-    LOG(("Exception: %s", msg)); \
-    return JsSetException(this->EnvPageJsContext(), this->GetJsRunner(), \
-                          msg, !this->EnvIsWorker()); \
-  }
-
 #elif BROWSER_WEBKIT
 #include "gears/base/common/common_sf.h"
 #elif BROWSER_NPAPI
