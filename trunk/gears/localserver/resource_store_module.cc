@@ -464,7 +464,7 @@ void GearsResourceStore::Copy(JsCallContext *context) {
 void GearsResourceStore::CaptureBlob(JsCallContext *context) {
 #ifdef WINCE
   context->SetException(STRING16(L"captureBlob is not implemented."));
-#elif BROWSER_NPAPI
+#else
 
   ModuleImplBaseClass *other_module = NULL;
   std::string16 url;
