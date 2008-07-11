@@ -137,6 +137,7 @@
 		B53838E00E27C0BB00A45832 /* jquant2.c in Sources */ = {isa = PBXBuildFile; fileRef = B53838DD0E27C0BB00A45832 /* jquant2.c */; };
 		B53838E10E27C0BB00A45832 /* jquant1.c in Sources */ = {isa = PBXBuildFile; fileRef = B53838DE0E27C0BB00A45832 /* jquant1.c */; };
 		B53838E20E27C0BB00A45832 /* jutils.c in Sources */ = {isa = PBXBuildFile; fileRef = B53838DF0E27C0BB00A45832 /* jutils.c */; };
+		B53838F50E27C28C00A45832 /* timed_callback.cc in Sources */ = {isa = PBXBuildFile; fileRef = B53838F40E27C28C00A45832 /* timed_callback.cc */; };
 		B538882E0E12B244000CB9FF /* permissions_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B538882D0E12B244000CB9FF /* permissions_manager.cc */; };
 		B53888310E12B25D000CB9FF /* wifi_data_provider_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */; };
 		B53888350E12B2B5000CB9FF /* wifi_data_provider_common.cc in Sources */ = {isa = PBXBuildFile; fileRef = B53888340E12B2B5000CB9FF /* wifi_data_provider_common.cc */; };
@@ -811,6 +812,8 @@
 		B53838DD0E27C0BB00A45832 /* jquant2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jquant2.c; path = ../../../third_party/libjpeg/jquant2.c; sourceTree = SOURCE_ROOT; };
 		B53838DE0E27C0BB00A45832 /* jquant1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jquant1.c; path = ../../../third_party/libjpeg/jquant1.c; sourceTree = SOURCE_ROOT; };
 		B53838DF0E27C0BB00A45832 /* jutils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jutils.c; path = ../../../third_party/libjpeg/jutils.c; sourceTree = SOURCE_ROOT; };
+		B53838F30E27C28C00A45832 /* timed_callback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = timed_callback.h; path = ../../geolocation/timed_callback.h; sourceTree = SOURCE_ROOT; };
+		B53838F40E27C28C00A45832 /* timed_callback.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timed_callback.cc; path = ../../geolocation/timed_callback.cc; sourceTree = SOURCE_ROOT; };
 		B538882C0E12B244000CB9FF /* permissions_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = permissions_manager.h; path = ../../base/common/permissions_manager.h; sourceTree = SOURCE_ROOT; };
 		B538882D0E12B244000CB9FF /* permissions_manager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = permissions_manager.cc; path = ../../base/common/permissions_manager.cc; sourceTree = SOURCE_ROOT; };
 		B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wifi_data_provider_osx.cc; path = ../../geolocation/wifi_data_provider_osx.cc; sourceTree = SOURCE_ROOT; };
@@ -1591,6 +1594,8 @@
 				B5950B530DDE014100D54424 /* network_location_provider.cc */,
 				B5950B500DDE014100D54424 /* network_location_request.h */,
 				B5950B510DDE014100D54424 /* network_location_request.cc */,
+				B53838F30E27C28C00A45832 /* timed_callback.h */,
+				B53838F40E27C28C00A45832 /* timed_callback.cc */,
 				B53888330E12B2B5000CB9FF /* wifi_data_provider_common.h */,
 				B53888340E12B2B5000CB9FF /* wifi_data_provider_common.cc */,
 				B538882F0E12B25D000CB9FF /* wifi_data_provider_osx.cc */,
@@ -3740,6 +3745,7 @@
 				B53838E00E27C0BB00A45832 /* jquant2.c in Sources */,
 				B53838E10E27C0BB00A45832 /* jquant1.c in Sources */,
 				B53838E20E27C0BB00A45832 /* jutils.c in Sources */,
+				B53838F50E27C28C00A45832 /* timed_callback.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
