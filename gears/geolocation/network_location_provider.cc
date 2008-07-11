@@ -52,8 +52,12 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &language)
     : url_(url),
       host_name_(host_name),
+      request_address_(false),
+      request_address_from_last_request_(false),
       address_language_(language),
-      is_shutting_down_(false) {
+      is_shutting_down_(false),
+      is_new_data_available_(false),
+      is_new_listener_waiting_(false) {
   // TODO(steveblock): Consider allowing multiple values for "address_language"
   // in the network protocol to allow better sharing of network location
   // providers.
@@ -62,13 +66,6 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
   // provider and it will be deleted by ref counting.
   radio_data_provider_ = RadioDataProvider::Register(this);
   wifi_data_provider_ = WifiDataProvider::Register(this);
-
-  // Currently, the network spec requires a "request_address" parameter. Since
-  // we share a given network provider accross multiple fix requests, we always
-  // request an address for simplicity.
-  // TODO(steveblock): Consider removing "request_address" from the spec, or
-  // implement the required logic properly.
-  request_address_ = true;
 
   // Start the worker thread
   Start();
@@ -89,12 +86,62 @@ NetworkLocationProvider::~NetworkLocationProvider() {
 }
 
 void NetworkLocationProvider::AddListener(
-    LocationProviderBase::ListenerInterface *listener) {
-  LocationProviderBase::AddListener(listener);
+    LocationProviderBase::ListenerInterface *listener,
+    bool request_address) {
+  // Determine whether this listener requires an address when the last request
+  // does not.
+  bool new_listener_requires_address =
+      !request_address_from_last_request_ && request_address;
+
+  // Update whether or not we need to request an address.
+  request_address_ |= request_address;
+
+  // If we now need to request an address when we did not before, we don't add
+  // the listener. This is because if a request is currently in progress, we
+  // don't want the new listener to be called back with a position without an
+  // address. We add the listener when we make the next request.
+  if (new_listener_requires_address) {
+    MutexLock lock(&new_listeners_requiring_address_mutex_);
+    new_listeners_requiring_address_.insert(listener);
+  } else {
+    LocationProviderBase::AddListener(listener, request_address);
+  }
 
   // Signal to the worker thread that there is a new listener.
   is_new_listener_waiting_ = true;
   thread_notification_event_.Signal();
+}
+
+void NetworkLocationProvider::RemoveListener(
+    LocationProviderBase::ListenerInterface *listener) {
+  assert(listener);
+
+  // First try removing the listener from the set of new listeners waiting for
+  // an address. Otherwise, try the regular listeners.
+  MutexLock new_listeners_lock(&new_listeners_requiring_address_mutex_);
+  ListenerSet::iterator iter = new_listeners_requiring_address_.find(listener);
+  if (iter != new_listeners_requiring_address_.end()) {
+    new_listeners_requiring_address_.erase(iter);
+  } else {
+    LocationProviderBase::RemoveListener(listener);
+  }
+
+  // Update whether or not we need to request an address.
+  if (request_address_) {
+    if (!new_listeners_requiring_address_.empty()) {
+      return;
+    }
+    MutexLock listeners_lock(GetListenersMutex());
+    ListenerMap *listeners = GetListeners();
+    for (ListenerMap::const_iterator iter = listeners->begin();
+         iter != listeners->end();
+         iter++) {
+      if (iter->second == true) {
+        return;
+      }
+    }
+    request_address_ = false;
+  }
 }
 
 // LocationProviderBase implementation
@@ -196,7 +243,6 @@ void NetworkLocationProvider::Run() {
   // thread_notification_event_.
   int64 last_request_time = GetCurrentTimeMillis();
   bool minimum_time_elapsed = false;
-  is_new_listener_waiting_ = false;
   while (!is_shutting_down_) {
     if (minimum_time_elapsed) {
       // If the minimum time period has elapsed, just wait for the event.
@@ -218,6 +264,8 @@ void NetworkLocationProvider::Run() {
         }
       }
     }
+
+    bool make_request = false;
     if (is_new_listener_waiting_) {
       // A new listener has just registered with this provider. If new data is
       // available, force a new request now, unless a request is already in
@@ -225,8 +273,7 @@ void NetworkLocationProvider::Run() {
       // provided we have one.
       if (is_new_data_available_) {
         if (is_last_request_complete_) {
-          // Force a new request
-          minimum_time_elapsed = true;
+          make_request = true;
         }
       } else {
         // Before the first network request completes, position_ may not be
@@ -239,15 +286,29 @@ void NetworkLocationProvider::Run() {
       }
       is_new_listener_waiting_ = false;
     }
+
+    // If a new listener has now registered such that we now require an address,
+    // we make a new request once the current request completes.
+    new_listeners_requiring_address_mutex_.Lock();
+    if (!new_listeners_requiring_address_.empty()) {
+      if (is_last_request_complete_) {
+        make_request = true;
+      }
+    }
+    new_listeners_requiring_address_mutex_.Unlock();
+
     // If the thread is not shutting down, we have new data, the last request
     // has completed, and the minimum time has elapsed, make the next request.
-    //
-    // TODO(steveblock): If the request does not complete within some maximum
-    // time period, we should kill it and start a new request.
     if (!is_shutting_down_ &&
         is_new_data_available_ &&
         is_last_request_complete_ &&
         minimum_time_elapsed) {
+      make_request = true;
+    }
+
+    // TODO(steveblock): If the request does not complete within some maximum
+    // time period, we should kill it and start a new request.
+    if (make_request) {
       MakeRequest();
       last_request_time = GetCurrentTimeMillis();
       minimum_time_elapsed = false;
@@ -258,14 +319,33 @@ void NetworkLocationProvider::Run() {
 // Other methods
 
 bool NetworkLocationProvider::MakeRequest() {
+  // Reset flags
   is_new_data_available_ = false;
   is_last_request_complete_ = false;
+  is_new_listener_waiting_ = false;
+
+  // If we have new listeners waiting for an address, request_address_
+  // must be true.
+  assert(new_listeners_requiring_address_.empty() || request_address_);
+
+  // Move the new listeners waiting for an address to the list of listeners.
+  MutexLock lock(&new_listeners_requiring_address_mutex_);
+  for (ListenerSet::const_iterator iter =
+       new_listeners_requiring_address_.begin();
+       iter != new_listeners_requiring_address_.end();
+       iter++) {
+    LocationProviderBase::AddListener(*iter, true);
+  }
+  new_listeners_requiring_address_.clear();
+
+  request_address_from_last_request_ = request_address_;
+
   return request_->MakeRequest(radio_data_,
                                wifi_data_,
                                request_address_,
                                address_language_,
-                               -1000,  // We don't have a position to pass to
-                               -1000,  // the server.
+                               kBadLatLng,  // We don't have a position to pass
+                               kBadLatLng,  // to the server.
                                timestamp_);
 }
 

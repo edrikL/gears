@@ -47,7 +47,10 @@ class NetworkLocationProvider
   virtual ~NetworkLocationProvider();
 
   // Override LocationProviderBase implementation.
-  virtual void AddListener(LocationProviderBase::ListenerInterface *listener);
+  virtual void AddListener(LocationProviderBase::ListenerInterface *listener,
+                           bool request_address);
+  virtual void RemoveListener(
+    LocationProviderBase::ListenerInterface *listener);
 
   // LocationProviderBase implementation
   virtual void GetPosition(Position *position);
@@ -91,6 +94,7 @@ class NetworkLocationProvider
 
   // Parameters for the network request
   bool request_address_;
+  bool request_address_from_last_request_;
   std::string16 address_language_;
 
   // The current best position estimate and its guarding mutex
@@ -106,6 +110,12 @@ class NetworkLocationProvider
   bool is_new_data_available_;
   bool is_last_request_complete_;
   bool is_new_listener_waiting_;
+
+  // When the last request did not request an address, this stores any new
+  // listeners which have been added and require an address to be requested.
+  typedef std::set<LocationProviderBase::ListenerInterface*> ListenerSet;
+  ListenerSet new_listeners_requiring_address_;
+  Mutex new_listeners_requiring_address_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };

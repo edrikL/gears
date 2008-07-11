@@ -46,6 +46,7 @@ class LocationProviderPool {
   static LocationProviderBase *Register(
       const std::string16 &type,
       const std::string16 &host,
+      bool request_address,
       const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener);
 
