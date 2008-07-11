@@ -30,6 +30,11 @@ class BaseBrowserLauncher:
 class BaseWin32Launcher(BaseBrowserLauncher):
   """ Abstract base class for Win32 launchers. """
 
+  def launch(self, url):
+    """ First perform some cleanup, then launch browser. """
+    self._DestroyOldSlaveProcesses()
+    BaseBrowserLauncher.launch(self, url)
+
   def _killInstancesByName(self, process_name):
     """ Kill all instances of given process name.
     
@@ -43,7 +48,28 @@ class BaseWin32Launcher(BaseBrowserLauncher):
       handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
       win32api.TerminateProcess(handle, 0)
       win32api.CloseHandle(handle)
+    # Don't return until processes are gone
+    while len(wmi.WMI().Win32_Process(Name=process_name)) > 0:
+      time.sleep(1)
+    
+  
+  def _DestroyOldSlaveProcesses(self):
+    """ Check for and kill any existing gears slave processes.
 
+    Gears internal tests create some slave processes while running.
+    Here we check to see if any did not shut down properly and
+    destroy any that remain.
+    """
+    process_list = wmi.WMI().Win32_Process(Name='rundll32.exe')
+    for process in process_list:
+      pid = process.ProcessID
+      print 'RUNDLL32 PROCESS** %s' % process.CommandLine
+      if process.CommandLine.rfind('gears.dll') > 0:
+        print 'Killing deadlocked slave process: %d' % pid
+        handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
+        win32api.TerminateProcess(handle, 0)
+        win32api.CloseHandle(handle)    
+  
 
 class BaseFirefoxWin32Launcher(BaseWin32Launcher):
   """ Abstract base class for win32 firefox launchers. """
@@ -100,6 +126,8 @@ class IExploreWin32Launcher(BaseWin32Launcher):
     Must kill ie by name and not pid for ie7 compatibility.
     """
     self._killInstancesByName('iexplore.exe')
+    # Also kill ie's crash handler process
+    self._killInstancesByName('iedw.exe')
 
   def type(self):
     return 'IExploreWin32'

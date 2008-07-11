@@ -119,7 +119,7 @@ class BaseInstaller:
     """
     dst_path = os.path.join(dst_folder, profile_name)
     if not os.path.exists(dst_folder):
-      os.mkdir(dst_folder)
+      os.makedirs(dst_folder)
     if os.path.exists(dst_path):
       os.chmod(dst_path, FULL_PERMISSION)
       shutil.rmtree(dst_path, onerror=self._handleRmError)
@@ -129,13 +129,23 @@ class BaseInstaller:
     shutil.copytree(src, targ)
     self._chmod(targ, FULL_PERMISSION)
 
-  def _chmod(self, targ, permission):
-    """ Recursively set permissions to target and children. """
-    os.chmod(targ, permission)
-    if os.path.isdir(targ):
-      for file in os.listdir(targ):
-        new_targ = os.path.join(targ, file)
-        self._chmod(new_targ, permission)
+  def _chmod(self, target, permission):
+    """ Recursively set permissions to target and children. 
+    
+    We must set permissions recursively after unzipping and copying
+    folders so that the contents will be executable.  This is necessary
+    because by default zip will not mark any files as executable and this
+    prevents us from launching executable files embedded in Gears.
+
+    Args:
+      target: Target file path
+      permission: Int representing the new file permissions.
+    """
+    os.chmod(target, permission)
+    if os.path.isdir(target):
+      for file in os.listdir(target):
+        new_target = os.path.join(target, file)
+        self._chmod(new_target, permission)
   
   def _handleRmError(self, func, path, exc_info):
     """ Handle errors removing files with long names on nt systems.
@@ -183,7 +193,7 @@ class BaseInstaller:
       path = target
       for p in fullpath[:-1]:
         try:
-          os.mkdir(os.path.join(path, p))
+          os.makedirs(os.path.join(path, p))
         except OSError:
           pass
         path = os.path.join(path, p)
@@ -200,21 +210,11 @@ class BaseWin32Installer(BaseInstaller):
 
   def __init__(self):
     self._prepareProfiles()
-    self._DestroyOldSlaveProcesses()
     
   def install(self):
     """ Do installation.  """
     # First, uninstall current installed build, if any exists
-    if os.path.exists(self.current_build):
-      # Supress exceptions if uninstall fails or no build present.
-      try:
-        build_path = self._buildPath(self.current_build)
-        print 'Uninstalling build %s' % build_path
-        c = ['msiexec', '/passive', '/uninstall', build_path]
-        p = subprocess.Popen(c)
-        p.wait()
-      except:
-        print 'Uninstall unsuccessful.'
+    self._uninstallCurrentBuild()    
 
     # Now install new build
     build_path = self._buildPath(BaseInstaller.BUILDS)
@@ -229,21 +229,18 @@ class BaseWin32Installer(BaseInstaller):
     # Save new build as current installed build
     self._saveInstalledBuild()
   
-  def _DestroyOldSlaveProcesses(self):
-    """ Check for and kill any existing gears slave processes.
-
-    Gears internal tests create some slave processes while running.
-    Here we check to see if any did not shut down properly and
-    destroy any that remain.
-    """
-    process_list = wmi.WMI().Win32_Process(Name='rundll32.exe')
-    for process in process_list:
-      pid = process.ProcessID
-      if process.CommandLine.rfind('gears.dll') > 0:
-        print 'Killing deadlocked slave process: %d' % pid
-        handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
-        win32api.TerminateProcess(handle, 0)
-        win32api.CloseHandle(handle)    
+  def _uninstallCurrentBuild(self):
+    """ If a known current build exists, uninstall it. """
+    if os.path.exists(self.current_build):
+      # Supress exceptions if uninstall fails or no build present.
+      try:
+        build_path = self._buildPath(self.current_build)
+        print 'Uninstalling build %s' % build_path
+        c = ['msiexec', '/passive', '/uninstall', build_path]
+        p = subprocess.Popen(c)
+        p.wait()
+      except:
+        print 'Uninstall failed or no installer found.'
   
 
 class WinXpInstaller(BaseWin32Installer):
@@ -393,7 +390,8 @@ class Firefox2MacInstaller(BaseFirefoxMacInstaller):
 
   def __init__(self, profile_name):
     firefox_bin = Firefox2MacInstaller.FIREFOX_PATH
-    BaseFirefoxMacInstaller.__init__(self, profile_name, firefox_bin, 'ff2profile-mac')
+    BaseFirefoxMacInstaller.__init__(self, profile_name, 
+                                     firefox_bin, 'ff2profile-mac')
   
 
 class Firefox3MacInstaller(BaseFirefoxMacInstaller):
@@ -403,14 +401,13 @@ class Firefox3MacInstaller(BaseFirefoxMacInstaller):
 
   def __init__(self, profile_name):
     firefox_bin = Firefox3MacInstaller.FIREFOX_PATH
-    BaseFirefoxMacInstaller.__init__(self, profile_name, firefox_bin, 'ff3profile-mac')
+    BaseFirefoxMacInstaller.__init__(self, profile_name, 
+                                     firefox_bin, 'ff3profile-mac')
   
 
 class SafariMacInstaller(BaseInstaller):
   """ Safari installer for Mac OS X. """
   
-  ROOT_PASSWORD = 'test'
-
   def __init__(self, build_type):
     self._prepareProfiles()
     self.build_type = build_type
@@ -419,23 +416,48 @@ class SafariMacInstaller(BaseInstaller):
     self.profile_path = os.path.join(home, 'Library/Application Support/Google')
     self.profile_name = 'Google Gears for Safari'
     self.src_profile = 'permissions'
+
+  def _buildPath(self, directory):
+    return self._findBuildPath('dmg', directory)
+  
+  def _GetRootPassword(self):
+    """ Read root password from file ~/.password. """
+    home = os.getenv('HOME')
+    password_path = os.path.join(home, '.password')
+    if os.path.exists(password_path):
+      f = open(password_path, 'r')
+      pw = f.read()
+      f.close()
+      return pw
+    else:
+      print ('Could not find ~/.password file.  This file '
+             'must exist and contain the root password.')
+      return ''      
   
   def _RunAsRoot(self, root_cmd):
     import pexpect
+    print 'Running "%s" from "%s"' % (root_cmd, os.getcwd())
     p = pexpect.spawn('sudo %s' % root_cmd)
     try:
-      p.expect('Password:')
-      p.sendline(MacSafariInstaller.ROOT_PASSWORD)
-    except:
+      p.expect('Password', timeout=10)
+      p.sendline(self._GetRootPassword())
+    except pexpect.EOF:
       print 'Was not prompted for root password'
+    except pexpect.TIMEOUT:
+      print 'Was not prompted for password within timeout'
   
   def install(self):
     """ Copy extension and profile for Safari. """
+    print 'Running Safari uninstall script'
+    clean_command = os.path.abspath('tools/osx/clean_gears.sh')
+    self._RunAsRoot(clean_command)
+
     print 'Running Safari install script'
-    install_command = 'tools/osx/install_gears.sh %s' % self.build_type
-    os.chdir('../..')
+    build_path = self._buildPath(BaseInstaller.BUILDS)
+    installer = os.path.abspath('bin-%s/installers/Safari/gears.pkg' 
+                                % self.build_type)
+    install_command = ('/usr/sbin/installer -pkg %s -target /' % installer)
     self._RunAsRoot(install_command)    
-    os.chdir('test/runner')
     self._copyProfile(self.src_profile, self.profile_path, self.profile_name)
     self._saveInstalledBuild()
 
