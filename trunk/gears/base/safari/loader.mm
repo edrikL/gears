@@ -57,15 +57,27 @@
   for (i = 0; i < count; ++i) {
     NSString *path = [paths objectAtIndex:i];
     NSString *internetPlugins = @"Internet Plug-Ins";
-    NSString *ident = [NSString stringWithFormat:@"%s.plugin",
-      PRODUCT_SHORT_NAME_ASCII];
     
     path = [path stringByAppendingPathComponent:internetPlugins];
-    path = [path stringByAppendingPathComponent:ident];
     
     BOOL isDir;
-    if ([fileManager fileExistsAtPath:path isDirectory:&isDir] && isDir)
-      return path;
+    NSString *ident = [NSString stringWithFormat:@"%s.plugin",
+      PRODUCT_SHORT_NAME_ASCII];
+    NSString *tmp_path = [path stringByAppendingPathComponent:ident];
+    if (![fileManager fileExistsAtPath:tmp_path isDirectory:&isDir] || !isDir)
+      continue;
+      
+    // Work around a really bizarre bug where if the case of a filename
+    // is different, DYLD will load the bundle twice into a process.
+    // This causes all kinds of mayhem, e.g. pthread_once will fire twice...
+    NSArray *plugin_dir_contents = [fileManager directoryContentsAtPath:path];
+    NSEnumerator *contents = [plugin_dir_contents objectEnumerator];
+    while (id filename = [contents nextObject]) {
+      if ([ident caseInsensitiveCompare:filename] == NSOrderedSame) {
+        path = [path stringByAppendingPathComponent:filename];
+        return path;
+      }
+    }
   }
   
   return nil;
