@@ -696,6 +696,10 @@ endif
 
 # LINK TARGETS
 
+# Split the list of OBJS to avoid "input line is too long" errors.
+$(BROWSER)_OBJS1 = $(wordlist 1, 100, $($(BROWSER)_OBJS))
+$(BROWSER)_OBJS2 = $(wordlist 101, 999, $($(BROWSER)_OBJS))
+
 # WARNING: Must keep the following two rules (FF2|FF3_MODULE_DLL) in sync!
 # The only difference should be the rule name.
 $(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
@@ -703,7 +707,8 @@ $(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
-	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
@@ -719,7 +724,8 @@ $(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
-	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
@@ -734,8 +740,13 @@ $(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS)
 $(FF3_MODULE_TYPELIB): $(FF3_GEN_TYPELIBS)
 	$(GECKO_BIN)/xpt_link $@ $^
 
+# Split the list of OBJS to avoid "input line is too long" errors.
+IE_OBJS1 = $(wordlist 1, 100, $(IE_OBJS))
+IE_OBJS2 = $(wordlist 101, 999, $(IE_OBJS))
+
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $(IE_OBJS) $(IE_LINK_EXTRAS)
-	$(ECHO) $(IE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(IE_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(IE_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
@@ -752,14 +763,9 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 
 ifneq ($(OS),android)
 ifneq ($(OS),symbian)
-# Too many NPAPI_OBJS - the input line is too long!  Split them up by putting
-# *[a-hst] in one list, and the rest in another.  The breakup was decided
-# upon by trying to equalize the # of files in each list.  We use the last 
-# letter(s) instead of the first because using the first letter matched the
-# directory name and everything got grouped together.
-# Is there a better way to do this?
-NPAPI_OBJS1 = $(filter %a.obj %b.obj %c.obj %d.obj %e.obj %f.obj %g.obj %h.obj %s.obj %t.obj,$(NPAPI_OBJS))
-NPAPI_OBJS2 = $(filter-out %a.obj %b.obj %c.obj %d.obj %e.obj %f.obj %g.obj %h.obj %s.obj %t.obj,$(NPAPI_OBJS))
+# Split the list of OBJS to avoid "input line is too long" errors.
+NPAPI_OBJS1 = $(wordlist 1, 100, $(NPAPI_OBJS))
+NPAPI_OBJS2 = $(wordlist 101, 999, $(NPAPI_OBJS))
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(SKIA_LIB) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	$(ECHO) $(NPAPI_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(NPAPI_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
