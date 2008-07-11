@@ -32,31 +32,38 @@
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
-#include "gears/console/console.h"
 #include "gears/database/database.h"
-#include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
-
-#ifdef OFFICIAL_BUILD
-// The Dummy module is not included in official builds.
-#else
-#include "gears/dummy/dummy_module.h"
-#endif
-
 #include "gears/factory/common/factory_utils.h"
-#include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/localserver_module.h"
-#include "gears/media/audio.h"
-#include "gears/media/audio_recorder.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/workerpool.h"
+#include "genfiles/product_constants.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+
+#ifdef OFFICIAL_BUILD
+// The Canvas, Console, Database2, Geolocation, Image and Media APIs have not
+// been finalized for official builds.
+#else
+#include "gears/database2/manager.h"
+#include "gears/dummy/dummy_module.h"
+#include "gears/geolocation/geolocation.h"
+#ifdef WINCE
+// Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
+#else
+#include "gears/canvas/canvas.h"
+#include "gears/console/console.h"
+#include "gears/image/image_loader.h"
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
+#endif  // WINCE
+#endif  // OFFICIAL_BUILD
+
 #ifdef WIN32
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/ui/ie/string_table.h"
 #endif
-#include "genfiles/product_constants.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifdef USING_CCTESTS
 #include "gears/cctests/test.h"
@@ -67,8 +74,8 @@ DECLARE_GEARS_WRAPPER(GearsFactoryImpl);
 // static
 template <>
 void Dispatcher<GearsFactoryImpl>::Init() {
-  RegisterProperty("version", &GearsFactoryImpl::GetVersion, NULL);
   RegisterProperty("hasPermission", &GearsFactoryImpl::GetHasPermission, NULL);
+  RegisterProperty("version", &GearsFactoryImpl::GetVersion, NULL);
   RegisterMethod("create", &GearsFactoryImpl::Create);
   RegisterMethod("getBuildInfo", &GearsFactoryImpl::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
@@ -168,52 +175,59 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
   
-  if (module_name == STRING16(L"beta.console")) {
-    CreateModule<GearsConsole>(module_environment_.get(), context, &object);
-  } else if (module_name == STRING16(L"beta.database")) {
+  if (module_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(module_environment_.get(), context, &object);
+  } else if (module_name == STRING16(L"beta.httprequest")) {
+    CreateModule<GearsHttpRequest>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(module_environment_.get(),
                                    context, &object);
+  } else if (module_name == STRING16(L"beta.timer")) {
+    CreateModule<GearsTimer>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(module_environment_.get(),
                                   context, &object);
 #ifdef OFFICIAL_BUILD
-  // The Database2, Geolocation and Media API have not been finalized for
-  // official builds.
+  // The Canvas, Console, Database2, Geolocation, Image and Media APIs have not
+  // been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
     CreateModule<Database2Manager>(module_environment_.get(),
                                    context, &object);
+  } else if (module_name == STRING16(L"beta.dummymodule")) {
+    CreateModule<DummyModule>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(module_environment_.get(),
                                    context, &object);
+#ifdef WINCE
+  // Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
+#else
   } else if (module_name == STRING16(L"beta.audio")) {
     CreateModule<GearsAudio>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.audiorecorder")) {
     CreateModule<GearsAudioRecorder>(module_environment_.get(),
                                      context, &object);
+#ifdef WIN32
+  } else if (module_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
+#endif  // WIN32
+  } else if (module_name == STRING16(L"beta.console")) {
+    CreateModule<GearsConsole>(module_environment_.get(), context, &object);
+  } else if (module_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(module_environment_.get(), context, &object);
+#endif  // WINCE
 #endif  // OFFICIAL_BUILD
-#ifdef OFFICIAL_BUILD
-  // The Dummy module is not included in official builds.
-#else
-  } else if (module_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(module_environment_.get(), context, &object);
-#endif // OFFICIAL_BUILD
-  } else if (module_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(module_environment_.get(),
-                                   context, &object);
-  } else if (module_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
     CreateModule<GearsTest>(module_environment_.get(), context, &object);
 #else
-    context->SetException(STRING16(L"Object is only available in debug build."));
+    context->SetException(STRING16(
+        L"The beta.test module is only available in the debug build."));
     return;
-#endif
+#endif  // USING_CCTESTS
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;
