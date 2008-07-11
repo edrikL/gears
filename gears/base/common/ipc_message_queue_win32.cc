@@ -1605,9 +1605,8 @@ void OutboundQueue::DieWhileHoldingWriteLock() {
   TerminateProcess(GetCurrentProcess(), 3);
 }
 
-
-void TestingIpcMessageQueueWin32_GetCounters(IpcMessageQueueCounters *counters,
-                                             bool reset) {
+void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
+                                        bool reset) {
   MutexLock lock(&g_counters_mutex);
   if (counters)
     *counters = g_counters;

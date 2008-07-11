@@ -452,9 +452,9 @@ LIBFLAGS = $@
 MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
-DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
+DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices -framework Cocoa
 ifeq ($(BROWSER),SF)
-DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit -lcurl
+DLLFLAGS += -mmacosx-version-min=10.4 -framework WebKit -lcurl
 DLLFLAGS += -Ltools/osx -lleopard_support
 else
 DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin

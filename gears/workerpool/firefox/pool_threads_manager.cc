@@ -87,6 +87,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
@@ -783,7 +784,7 @@ class JsThreadRecycler {
     // Clean up the runtime.
     if (pooled_thread.js_runtime_) {
       JS_DestroyRuntime(pooled_thread.js_runtime_);
-    }
+    }    
   }
 
   struct PooledThread {
@@ -938,6 +939,10 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->threads_manager->AddWorkerRef();
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
+#ifdef OS_MACOSX
+  void *pool = InitAutoReleasePool();
+#endif  // OS_MACOSX
+
 #if RECYCLE_JS_RUNTIME
 #else
 
@@ -1022,6 +1027,10 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     JS_DestroyRuntime(js_runtime);
   }
 #endif
+
+#ifdef OS_MACOSX
+    DestroyAutoReleasePool(pool);
+#endif  // OS_MACOSX
   // PRThread functions don't return a value
 }
 

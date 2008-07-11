@@ -101,17 +101,6 @@ void WebKitNPN_SetException(NPObject* obj, const char *message)
 }
 
 //------------------------------------------------------------------------------
-void *InitAutoReleasePool() {
-  return [[NSAutoreleasePool alloc] init];
-}
-
-//------------------------------------------------------------------------------
-void DestroyAutoReleasePool(void *pool) {
-  assert(pool);
-  [(NSAutoreleasePool *)pool release];
-}
-
-//------------------------------------------------------------------------------
 // Returns 0 if there was an error.
 // Otherwise output is as returned from gestaltSystemVersion.
 static SInt32 SystemVersion() {
@@ -130,4 +119,3 @@ bool IsLeopardOrGreater() {
   // We only support Leopard >= 10.5.3.
   return SystemVersion() >= 0x1053; // 10.5.3
 }
-

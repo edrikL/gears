@@ -156,9 +156,10 @@ bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
 bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
 bool TestBlob(std::string16 *error);  // from blob_test.cc
 #if (defined(WIN32) && !defined(WINCE)) || \
-    (defined(LINUX) && !defined(OS_MACOSX))
+    defined(LINUX) || defined(OS_MACOSX)
 // from ipc_message_queue_test.cc
-bool TestIpcMessageQueue(std::string16 *error);
+bool TestIpcSystemQueue(std::string16 *error);
+bool TestIpcPeerQueue(std::string16 *error);
 #endif
 #ifdef OS_ANDROID
 bool TestThreadMessageQueue(std::string16* error);
@@ -308,20 +309,11 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestBlob(&error);
 
 #if (defined(WIN32) && !defined(WINCE)) || \
-    (defined(LINUX) && !defined(OS_MACOSX))
-  bool run_ipc_test = true;
-  // TODO (jianli): Under Linux, we use fork() to create slave process. When
-  // running as worker, the slave process might not terminate correctly.
-  // Enable the test for worker when we figure out another way to start slave
-  // process.
-#if defined(LINUX) && !defined(OS_MACOSX)
-  if (is_worker) {
-    run_ipc_test = false;
-  }
-#endif  
-  if (run_ipc_test) {
-    ok &= TestIpcMessageQueue(&error);
-  }
+     defined(LINUX) || defined(OS_MACOSX)
+  ok &= TestIpcSystemQueue(&error);
+#if BROWSER_IE
+  ok &= TestIpcPeerQueue(&error);
+#endif
 #endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);

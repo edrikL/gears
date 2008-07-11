@@ -57,6 +57,8 @@
 
 #ifdef WIN32
 #include "gears/base/common/common_win32.h"
+#elif defined(OS_MACOSX)
+#include "gears/base/common/common_osx.h"
 #endif
 
 

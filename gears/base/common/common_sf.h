@@ -103,12 +103,6 @@ void ThrowExceptionKey(NSString *key, ...);
 // We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
 void WebKitNPN_SetException(NPObject* obj, const char *message);
 
-// Initialize an NSAutoReleasePool.
-void *InitAutoReleasePool();
-
-// Destroys an autoreleas pool, passing in NULL is legal and is a no-op.
-void DestroyAutoReleasePool(void *pool);
-
 // Check system version.
 bool IsLeopardOrGreater();
 
