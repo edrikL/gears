@@ -1983,7 +1983,7 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
 
 JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                              int argc, JsToken *argv, JsToken *retval)
-    : js_context_(cx), is_exception_set_(false),
+    : js_context_(cx), is_exception_set_(false), is_return_value_set_(false),
       argc_(argc), argv_(argv), retval_(retval),
       js_runner_(js_runner) {}
 
@@ -1992,7 +1992,9 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the JS caller is expecting a return value.
   if (retval_) {
     JsParamToSend retval = { type, value_ptr };
-    if (!ConvertJsParamToToken(retval, js_context(), retval_)) {
+    if (ConvertJsParamToToken(retval, js_context(), retval_)) {
+      is_return_value_set_ = true;
+    } else {
       SetException(STRING16(L"Return value is out of range."));
     }
   }
@@ -2086,6 +2088,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
     JsParamToSend retval = { type, value_ptr };
     JsScopedToken scoped_retval;
     if (ConvertJsParamToToken(retval, js_context(), &scoped_retval)) {
+      is_return_value_set_ = true;
       // In COM, return values are released by the caller.
       scoped_retval.Detach(retval_);
     } else {
@@ -2201,6 +2204,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   ScopedNPVariant np_retval;
   if (ConvertJsParamToToken(retval, js_context(), &np_retval)) {
     *retval_ = np_retval;
+    is_return_value_set_ = true;
     // In NPAPI, return values from callbacks are released by the browser.
     // Therefore, we give up ownership of this variant without releasing it.
     np_retval.Release();

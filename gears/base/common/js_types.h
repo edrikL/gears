@@ -543,13 +543,14 @@ class JsCallContext {
 #if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval)
-      : js_context_(js_context), is_exception_set_(false), object_(object),
+      : js_context_(js_context), is_exception_set_(false),
+        is_return_value_set_(false), object_(object),
         argc_(argc), argv_(argv), retval_(retval) {}
 #elif BROWSER_IE
   JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
                 EXCEPINFO FAR *excep_info)
       : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
-        is_exception_set_(false) {}
+        is_exception_set_(false), is_return_value_set_(false) {}
 #elif BROWSER_FF
   JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                 int argc, JsToken *argv, JsToken *retval);
@@ -590,6 +591,7 @@ class JsCallContext {
 
   JsContextPtr js_context() { return js_context_; }
   bool is_exception_set() { return is_exception_set_; }
+  bool is_return_value_set() { return is_return_value_set_; }
 #if BROWSER_FF
   JsRunnerInterface *js_runner() { return js_runner_; }
 #endif
@@ -600,6 +602,7 @@ class JsCallContext {
 
   JsContextPtr js_context_;
   bool is_exception_set_;
+  bool is_return_value_set_;
 #if BROWSER_NPAPI
   NPObject *object_;
   int argc_;
