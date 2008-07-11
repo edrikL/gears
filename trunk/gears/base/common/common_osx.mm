@@ -23,21 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WINCE) || defined(OS_ANDROID)
+#import <Cocoa/Cocoa.h>
 
-#include "gears/base/common/ipc_message_queue.h"
+#include "gears/base/common/common_osx.h"
 
-// An ipc message facility may or may not be needed depending on the browsers
-// process and threading model. For browser architectures that don't
-// require it, we use this file.
-
-// static
-IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-  return NULL;
+void *InitAutoReleasePool() {
+  return [[NSAutoreleasePool alloc] init];
 }
 
-IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  return NULL;
+void DestroyAutoReleasePool(void *pool) {
+  assert(pool);
+  [(NSAutoreleasePool *)pool release];
 }
-
-#endif  // defined(WINCE) || defined(OS_ANDROID)

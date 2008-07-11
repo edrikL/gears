@@ -23,21 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WINCE) || defined(OS_ANDROID)
 
-#include "gears/base/common/ipc_message_queue.h"
+#ifndef GEARS_BASE_COMMON_COMMON_OSX_H__
+#define GEARS_BASE_COMMON_COMMON_OSX_H__
 
-// An ipc message facility may or may not be needed depending on the browsers
-// process and threading model. For browser architectures that don't
-// require it, we use this file.
+// TODO: Move all generally applicable OS X code from common_sf.h here.
 
-// static
-IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-  return NULL;
-}
+// Initialize an NSAutoReleasePool.
+void *InitAutoReleasePool();
 
-IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  return NULL;
-}
+// Destroys an autorelease pool, passing in NULL is legal and is a no-op.
+void DestroyAutoReleasePool(void *pool);
 
-#endif  // defined(WINCE) || defined(OS_ANDROID)
+#endif  // GEARS_BASE_COMMON_COMMON_OSX_H__

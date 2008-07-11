@@ -900,6 +900,12 @@ $(BROWSER)_CPPSRCS	+= \
 		url_utils_test.cc \
 		$(NULL)
 
+ifeq ($(OS),osx)
+$(BROWSER)_CPPSRCS	+= \
+		common_osx.mm \
+		$(NULL)
+endif
+
 #-----------------------------------------------------------------------------
 # base/firefox
 
@@ -924,6 +930,8 @@ FF3_CPPSRCS	+= \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
+		ipc_message_queue_test_linux.cc \
+		ipc_message_queue_test_win32.cc \
 		ipc_message_queue_win32.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
@@ -934,6 +942,13 @@ FF3_CPPSRCS	+= \
 		time_utils_win32.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
+
+ifeq ($(OS),osx)
+FF3_CPPSRCS	+= \
+		ipc_message_queue_osx.mm \
+		ipc_message_queue_test_osx.mm \
+		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # base/ie
@@ -957,9 +972,9 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
 		detect_version_collision_win32.cc \
-		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
+		ipc_message_queue_test_win32.cc \
 		ipc_message_queue_win32.cc \
 		js_runner_ie.cc \
 		message_queue_ie.cc \
@@ -1009,6 +1024,8 @@ NPAPI_CPPSRCS	+= \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
+		ipc_message_queue_test_linux.cc \
+		ipc_message_queue_test_win32.cc \
 		ipc_message_queue_win32.cc \
 		js_runner_np.cc \
 		module.cc \
@@ -1071,7 +1088,9 @@ SF_CPPSRCS	+= \
 		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
-		ipc_message_queue_null.cc \
+		ipc_message_queue_osx.mm \
+		ipc_message_queue_test.cc \
+		ipc_message_queue_test_osx.mm \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
 		messagebox.mm \
@@ -1389,10 +1408,10 @@ NOTIFIER_CPPSRCS += \
 
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
+		ipc_message_queue_osx.mm \
 		notifier_osx.mm \
 		$(NULL)
 endif
-
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
@@ -1444,6 +1463,40 @@ NOTIFIER_TEST_CPPSRCS += \
 endif
 
 NOTIFIER_TEST_CSRCS += \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# ipc_test
+
+IPC_TEST_CPPSRCS += \
+		ipc_message_queue_linux.cc \
+		ipc_message_queue_null.cc \
+		ipc_message_queue_test.cc \
+		ipc_message_queue_test_linux.cc \
+		ipc_message_queue_test_win32.cc \
+		ipc_message_queue_win32.cc \
+		mutex.cc \
+		mutex_posix.cc \
+		mutex_win32.cc \
+		serialization.cc \
+		stopwatch.cc \
+		stopwatch_posix.cc \
+		stopwatch_win32.cc \
+		string16.cc \
+		string_utils.cc \
+		string_utils_osx.cc \
+		time_utils_win32.cc \
+		$(NULL)
+
+ifeq ($(OS),osx)
+IPC_TEST_CPPSRCS += \
+		ipc_message_queue_osx.mm \
+		ipc_message_queue_test_osx.mm \
+		$(NULL)
+endif
+
+IPC_TEST_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 

@@ -237,13 +237,6 @@ class LinuxIpcMessageQueue : public IpcMessageQueue {
   bool HandleMessage(const FifoMessageHeader &message_header,
                      InboundIpcMessage* inbound_message);
 
-  // Handlers to help clean up the locks when fork is encountered.
-#ifdef USING_CCTESTS
-  static void ForkPrepareHandler();
-  static void ForkParentHandler();
-  static void ForkChildHandler();
-#endif  // USING_CCTESTS
-
   static std::string BuildFifoPath(IpcProcessId process_id);
 
   bool die_;
@@ -407,16 +400,6 @@ bool LinuxIpcMessageQueue::StartWorkerThread() {
     return false;
   }
 
-#ifdef USING_CCTESTS
-  rv = pthread_atfork(LinuxIpcMessageQueue::ForkPrepareHandler,
-                      LinuxIpcMessageQueue::ForkParentHandler,
-                      LinuxIpcMessageQueue::ForkChildHandler);
-  if (rv) {
-    LOG(("pthread_atfork failed with errno=%d\n", rv));
-    return false;
-  }
-#endif  // USING_CCTESTS
-
   rv = pthread_create(&worker_thread_id_,
                       &worker_thread_attr,
                       StaticThreadProc,
@@ -459,37 +442,9 @@ void LinuxIpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
   LOG(("Worker thread of process %u terminated\n", current_process_id_));
 }
 
-#ifdef USING_CCTESTS
-void LinuxIpcMessageQueue::ForkPrepareHandler() {
-  if (self_) {
-    self_->thread_sync_mutex_.Lock();
-  }
-}
-
-void LinuxIpcMessageQueue::ForkParentHandler() {
-  if (self_) {
-    self_->thread_sync_mutex_.Unlock();
-  }
-}
-
-void LinuxIpcMessageQueue::ForkChildHandler() {
-  if (self_) {
-    self_->thread_sync_mutex_.Unlock();
-  }
-}
-#endif  // USING_CCTESTS
-
 void LinuxIpcMessageQueue::OnSignalTerminate(int sig_num) {
   if (self_) {
-#ifdef USING_CCTESTS
-    bool same_pid = self_->current_process_id_ == 
-                    static_cast<IpcProcessId>(getpid());
-#else
-    bool same_pid = true;
-#endif  // USING_CCTESTS
-    if (same_pid) {
-      unlink(self_->inbound_fifo_path_.c_str());
-    }
+    unlink(self_->inbound_fifo_path_.c_str());
 
     SigHandler* handler = NULL;
     for (size_t i = 0; i < ARRAYSIZE(kTerminateSignalsToCatch); ++i) {
@@ -513,15 +468,9 @@ void LinuxIpcMessageQueue::Terminate() {
   LOG(("Terminating LinuxIpcMessageQueue of process %d\n",
        current_process_id_));
 
-#ifdef USING_CCTESTS
-  bool same_pid = current_process_id_ == static_cast<IpcProcessId>(getpid());
-#else
-  bool same_pid = true;
-#endif  // USING_CCTESTS
-
   // Signal and wait for the worker thread to finish.
   die_ = true;
-  if (worker_thread_id_ && same_pid) {
+  if (worker_thread_id_) {
     char ch = 'q';
     if (write(outbound_signaling_fds_[1], &ch, 1) < 1) {
       LOG(("Writing to the signaling pipe failed with errno=%d\n", errno));
@@ -539,9 +488,7 @@ void LinuxIpcMessageQueue::Terminate() {
     close(inbound_fifo_fd_);
   }
   if (!inbound_fifo_path_.empty()) {
-    if (same_pid) {
-      unlink(inbound_fifo_path_.c_str());
-    }
+    unlink(inbound_fifo_path_.c_str());
   }
   if (outbound_signaling_fds_[0]) {
     close(outbound_signaling_fds_[0]);
@@ -1003,6 +950,11 @@ void LinuxIpcMessageQueue::Send(IpcProcessId dest_process_id,
   // Does not support sending a message to itself.
   assert(dest_process_id != static_cast<IpcProcessId>(getpid()));
 
+  if (die_) {
+    delete message_data;
+    return;
+  }
+
   AddToOutboundList(dest_process_id, new OutboundIpcMessage(message_type,
                                                             message_data));
 }
@@ -1043,39 +995,22 @@ void LinuxIpcMessageQueue::AddToOutboundList(
 
 namespace {
 Mutex g_system_queue_instance_lock;
-scoped_ptr<LinuxIpcMessageQueue> g_system_queue_instance;
+LinuxIpcMessageQueue * volatile g_system_queue_instance = NULL;
 }
 
 // static
 IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  MutexLock locker(&g_system_queue_instance_lock);
-
-  // If the process id associated with the message queue is not equal to the
-  // current process id, it means that a child process is forked and thus
-  // we need to create a new instance.
-#ifdef USING_CCTESTS
-  if (g_system_queue_instance.get() &&
-      g_system_queue_instance->GetCurrentIpcProcessId() !=
-          static_cast<IpcProcessId>(getpid())) {
-    LOG(("Current pid %d is different from registered pid %d. "
-         "Create new instance of IpcMessageQueue\n",
-         getpid(), g_system_queue_instance->GetCurrentIpcProcessId()));
-
-    g_system_queue_instance.reset(NULL);
-  }
-#endif  // USING_CCTESTS
-
-  if (!g_system_queue_instance.get()) {
-    LinuxIpcMessageQueue *instance = new LinuxIpcMessageQueue();
-    if (instance->Init()) {
-      g_system_queue_instance.reset(instance);
-    } else {
-      LOG(("IpcMessageQueue initialization failed\n"));
-      delete instance;
+  if (!g_system_queue_instance) {
+    MutexLock locker(&g_system_queue_instance_lock);
+    if (!g_system_queue_instance) {
+      LinuxIpcMessageQueue *instance = new LinuxIpcMessageQueue();
+      if (!instance->Init()) {
+        LOG(("IpcMessageQueue initialization failed.\n"));
+      }
+      g_system_queue_instance = instance;
     }
   }
-
-  return g_system_queue_instance.get();
+  return g_system_queue_instance;
 }
 
 // static
@@ -1084,5 +1019,13 @@ IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
   return NULL;
 }
 
-#endif  // defined(LINUX) && !defined(OS_MACOSX)
+#ifdef USING_CCTESTS
+void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
+                                        bool reset) {
+  // Not supported. Always set to zero.
+  if (counters)
+    memset(&counters, 0, sizeof(IpcMessageQueueCounters));
+}
+#endif  // USING_CCTESTS
 
+#endif  // defined(LINUX) && !defined(OS_MACOSX)

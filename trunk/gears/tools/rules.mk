@@ -51,6 +51,7 @@ NONE_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/none
 NPAPI_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/npapi
 SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
+IPC_TEST_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/ipc_test
 OSX_LAUNCHURL_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/launch_url_with_browser
 VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 
@@ -88,6 +89,7 @@ SUBSTITUTE_OBJ_SUFFIX = $(foreach SUFFIX,$(SOURCECODE_SUFFIXES), \
 COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COMMON_CPPSRCS) $(COMMON_CSRCS))
 $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $($(BROWSER)_CPPSRCS) $($(BROWSER)_CSRCS))
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
+IPC_TEST_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(IPC_TEST_OUTDIR), $(IPC_TEST_CPPSRCS) $(IPC_TEST_CSRCS))
 NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS) $(NOTIFIER_CSRCS))
 NOTIFIER_SHELL_OBJS      = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_SHELL_CPPSRCS))
 NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_TEST_CPPSRCS)  $(NOTIFIER_TEST_CSRCS))
@@ -130,6 +132,7 @@ DEPS = \
 	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(IPC_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_SHELL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -202,6 +205,7 @@ SF_INPUTMANAGER_EXE = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 # Note: crash_sender.exe name needs to stay in sync with name used in
 # exception_handler_win32.cc and exception_handler_osx/google_breakpad.mm.
 CRASH_SENDER_EXE        = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
+IPC_TEST_EXE            = $(IPC_TEST_OUTDIR)/$(EXE_PREFIX)ipc_test$(EXE_SUFFIX)
 NOTIFIER_DLL            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(DLL_SUFFIX)
 NOTIFIER_EXE            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
 NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
@@ -395,14 +399,18 @@ endif
 endif
 
 ifeq ($(OS),linux)
+prereqs:: $(IPC_TEST_OUTDIR)
+modules:: $(IPC_TEST_EXE)
 installers:: $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),osx)
-prereqs:: $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(OSX_LAUNCHURL_EXE)
+prereqs:: $(IPC_TEST_OUTDIR) $(OSX_LAUNCHURL_OUTDIR)
+modules:: $(IPC_TEST_EXE) $(OSX_LAUNCHURL_EXE)
 installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
+prereqs:: $(IPC_TEST_OUTDIR)
+modules:: $(IPC_TEST_EXE)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
 else
 ifeq ($(OS),wince)
@@ -449,6 +457,8 @@ $(COMMON_OUTDIR)/genfiles:
 $(COMMON_OUTDIRS_I18N):
 	"mkdir" -p $@
 $(INSTALLERS_OUTDIR):
+	"mkdir" -p $@
+$(IPC_TEST_OUTDIR):
 	"mkdir" -p $@
 $(LIBGD_OUTDIR):
 	"mkdir" -p $@
@@ -542,6 +552,16 @@ $(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.m
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
 $(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.mm
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+
+$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	@$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
+$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.mm
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
@@ -675,6 +695,7 @@ $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	  -dOurWin32ProductId=$(OUR_WIN32_PRODUCT_ID) \
 	  -dOurCommonPath=$(OUTDIR)/$(OS)-$(ARCH)/common \
 	  -dOurIEPath=$(OUTDIR)/$(OS)-$(ARCH)/ie \
+	  -dOurIpcTestPath=$(OUTDIR)/$(OS)-$(ARCH)/ipc_test \
 	  -dOurFFPath=$(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) \
 	  -dOurComponentGUID_FFComponentsDirFiles=$(OUR_COMPONENT_GUID_FF_COMPONENTS_DIR_FILES) \
 	  -dOurComponentGUID_FFContentDirFiles=$(OUR_COMPONENT_GUID_FF_CONTENT_DIR_FILES) \
@@ -909,6 +930,9 @@ endif
 $(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS) $(NOTIFIER_LIBS)
 
+$(IPC_TEST_EXE): $(IPC_TEST_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(IPC_TEST_OBJS) $(IPC_LIBS)
+
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
 
@@ -949,7 +973,7 @@ endif
 endif
 
 ifeq ($(OS),osx)
-$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
+$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(IPC_TEST_EXE) $(OSX_LAUNCHURL_EXE)
 else
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N)
 endif
@@ -998,11 +1022,14 @@ ifeq ($(USING_CCTESTS),1)
 	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif
 endif
+ifeq ($(USING_CCTESTS),1)
+	cp $(IPC_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@
@@ -1020,6 +1047,10 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCH
 	mkdir -p $@/Contents/Resources/
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
+# Copy ipc_test
+ifeq ($(USING_CCTESTS),1)
+	cp "$(IPC_TEST_EXE)" "$@/Contents/Resources/"
+endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
 # Create fresh copies of the GoogleGearsEnabler directories.

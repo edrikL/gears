@@ -53,3 +53,7 @@ bool GetUserTempDirectory(std::string16 *tmp_dir) {
   // As of OSX 10.4+ this is a per-user temp directory.
   return [NSTemporaryDirectory() string16:tmp_dir];
 }
+
+bool GetComponentDirectory(std::string16 *path) {
+  return GetBaseResourcesDirectory(path);
+}
