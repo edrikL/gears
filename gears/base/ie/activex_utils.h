@@ -112,8 +112,6 @@ class ActiveXUtils {
 
   // Determine whether an optional variant parameter was specified. Handles
   // unpassed params, as well as <undefined> and <null> valued params.
-  // TODO(cprince): When JsParamFetcher is implemented for IE, move this
-  // function there.
   static bool OptionalVariantIsPresent(const VARIANT *arg) {
     // If an optional variant was not passed, we get this
     // See: http://msdn2.microsoft.com/en-us/library/ms931135.aspx

@@ -260,7 +260,6 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
                                          const VARIANT *extra_message_in,
                                          VARIANT_BOOL *retval) {
   // Guard against NULL BSTRs.
-  // TODO(cprince): Do this automatically in JsParamFetcher for IE.
   std::string16 site_name;
   std::string16 image_url;
   std::string16 extra_message;

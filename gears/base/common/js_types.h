@@ -633,67 +633,7 @@ class JsCallContext {
 bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token);
 
-//-----------------------------------------------------------------------------
-#if BROWSER_FF  // the rest of this file only applies to Firefox, for now
-
-// Helper class to extract JavaScript parameters (including optional params
-// and varargs), in a way that hides differences between main-thread and
-// worker-thread environments.
-// NOTE: Use of this class is deprecated in new Gears modules. Use Dispatcher
-// and JsCallContext instead.
-class JsParamFetcher {
- public:
-  explicit JsParamFetcher(ModuleImplBaseClass *obj);
-
-  JsContextPtr GetContextPtr() { return js_context_; }
-  int GetCount(bool has_mysterious_retval) {
-    return has_mysterious_retval ? js_argc_ - 1 : js_argc_;
-  }
-  // In Firefox, set has_string_retval iff method has a string return value.
-  bool IsOptionalParamPresent(int i, bool has_string_retval);
-  
-  bool GetAsInt(int i, int *out);
-  bool GetAsString(int i, std::string16 *out);
-  bool GetAsBool(int i, bool *out);
-  bool GetAsDouble(int i, double *out);
-  bool GetAsArray(int i, JsArray *out);
-  bool GetAsObject(int i, JsObject *out);
-
-  bool GetAsDispatcherModule(int i, JsRunnerInterface *js_runner,
-                             ModuleImplBaseClass **out);
-
-  // NOTE: This method returns true if the argument at position i is null or
-  // undefined. The JsRootedCallback at that point will be valid, but its
-  // token() will be null or undefined. This is weird, but it is the expected
-  // behavior by several older Gears modules. Since JsParamFetcher is
-  // deprecated, this method keeps its old, weird behavior. JsCallContext, which
-  // new code should use, does not share this quirk.
-  bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
-  
-  // Method to get the type of a parameter
-  JsParamType GetType(int i);
-
-  bool GetAsMarshaledJsToken(int i, JsRunnerInterface *js_runner,
-                             MarshaledJsToken **out,
-                             std::string16 *error_message_out);
-
-  void SetReturnValue(JsToken retval);
-
- private:
-  JsContextPtr  js_context_;
-  int           js_argc_;
-  JsToken      *js_argv_;
-  JsToken      *js_retval_;
-
-  nsCOMPtr<nsIXPConnect> xpc_;
-#if BROWSER_FF3
-  nsAXPCNativeCallContext *ncc_;
-#else
-  nsCOMPtr<nsIXPCNativeCallContext> ncc_;
-#endif
-};
-
-
+#if BROWSER_FF
 // Sets JavaScript exceptions, in a way that hides differences
 // between main-thread and worker-thread environments.
 // Returns the value the caller should return to the JavaScript host engine.
@@ -704,10 +644,7 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
 
 // Garbage collection helper functions
 bool RootJsToken(JsContextPtr cx, JsToken t);
-
-
-#endif // BROWSER_FF
-//-----------------------------------------------------------------------------
+#endif
 
 
 #endif  // GEARS_BASE_COMMON_JS_TYPES_H__
