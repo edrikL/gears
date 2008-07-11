@@ -143,9 +143,8 @@ if __name__ == '__main__':
       launchers.append(browser_launchers.Firefox3MacLauncher('gears-ff3'))
       installers.append(installer.Firefox2MacInstaller('gears-ff2'))
       installers.append(installer.Firefox3MacInstaller('gears-ff3'))
-      # TODO(ace): uncomment safari when working
-      #launchers.append(browser_launchers.SafariMacLauncher())
-      #installers.append(installer.SafariMacInstaller(build_type))
+      launchers.append(browser_launchers.SafariMacLauncher())
+      installers.append(installer.SafariMacInstaller(build_type))
     else:
       launchers.append(browser_launchers.Firefox2LinuxLauncher('gears-ff2'))
       launchers.append(browser_launchers.Firefox3LinuxLauncher('gears-ff3'))
