@@ -48,9 +48,9 @@ BEGIN
             VALUE "CompanyName", "Google Inc."
             VALUE "FileVersion", "PRODUCT_VERSION"
             VALUE "LegalCopyright", "Copyright 2006-2008 Google Inc. All Rights Reserved."
-            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
+            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ PRODUCT_VERSION"
             VALUE "ProductVersion", "PRODUCT_VERSION"
-            VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
+            VALUE "FileDescription", "These are the Gears that power the tubes! :-)"
             VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
             VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
 #if BROWSER_NPAPI
