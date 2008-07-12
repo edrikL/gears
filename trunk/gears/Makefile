@@ -104,7 +104,7 @@ BREAKPAD_CPPSRCS	+= \
 		protected_memory_allocator.cc \
 		string_conversion.cc \
 		string_utilities.cc \
-		$(NULL)		
+		$(NULL)
 
 THIRD_PARTY_VPATH	+= \
 		$(BREAKPAD_VPATH) \
@@ -1390,7 +1390,6 @@ NOTIFIER_CORE	+= \
 		string_utils.cc \
 		string_utils_osx.cc \
 		system_linux.cc \
-		system_osx.cc \
 		system_win32.cc \
 		time_utils_win32.cc \
 		timed_call.cc \
@@ -1410,6 +1409,7 @@ ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
 		ipc_message_queue_osx.mm \
 		notifier_osx.mm \
+		system_osx.mm \
 		$(NULL)
 endif
 NOTIFIER_CSRCS += \
@@ -1459,7 +1459,9 @@ NOTIFIER_TEST_CPPSRCS += \
 
 ifeq ($(OS),osx)
 NOTIFIER_TEST_CPPSRCS += \
-		unit_test_osx.mm
+		system_osx.mm \
+		unit_test_osx.mm \
+		$(NULL)
 endif
 
 NOTIFIER_TEST_CSRCS += \

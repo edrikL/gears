@@ -26,29 +26,62 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-#ifdef OS_MACOSX
-
-#include <string>
-#include "gears/notifier/system.h"
+#import "gears/notifier/system.h"
+#import <Cocoa/Cocoa.h>
+#import <string>
+#import "third_party/glint/include/rectangle.h"
 
 std::string System::GetResourcePath() {
-  // TODO(dimich): Implement this.
-  assert(false && "Not implemented");
-  return std::string();
+  return [[[NSBundle mainBundle] resourcePath] fileSystemRepresentation];
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
-  // TODO(dimich): Implement this.
-  assert(false && "Not implemented");
+  assert(bounds);
+  // Reset - makes rectangle 'empty'.
+  bounds->Reset();
+
+  NSArray *screens = [NSScreen screens];
+  if ([screens count] == 0)
+    return;
+  // Get the screen with main menu.Should work even if screens is empty
+  NSScreen *screen = [screens objectAtIndex:0];
+
+  NSRect full_bounds = [screen frame];
+  NSRect work_bounds = [screen visibleFrame];
+
+  // We need to make an adjustment here. If we returned the work area as it is,
+  // using visibleFrame, the caller will think the dock is on the top and the
+  // menubar is at the bottom, because the caller uses top-left origin. So we
+  // adjust the origin to reverse the dock and menubar constraints.
+  int menubar_size = NSMaxY(full_bounds) - NSMaxY(work_bounds);
+#ifdef DEBUG
+  // only used in the assert below
+  int dock_size = NSMinY(work_bounds) - NSMinY(full_bounds);
+#endif
+
+  work_bounds.origin.y = NSMinY(full_bounds) + menubar_size;
+
+  // Both sizes have been switched; compare the asserts to the statements above.
+
+  assert(NSMinY(work_bounds) - NSMinY(full_bounds) == menubar_size);
+  assert(NSMaxY(full_bounds) - NSMaxY(work_bounds) == dock_size);
+
+  bounds->set_left(static_cast<int>(NSMinX(work_bounds)));
+  bounds->set_top(static_cast<int>(NSMinY(work_bounds)));
+  bounds->set_right(static_cast<int>(NSMaxX(work_bounds)));
+  bounds->set_bottom(static_cast<int>(NSMaxY(work_bounds)));
 }
 
 double System::GetSystemFontScaleFactor() {
-  // TODO(dimich): Implement this.
-  assert(false && "Not implemented");
-  return 1.0;
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  id val = [defaults objectForKey:@"AppleDisplayScaleFactor"];
+  if (val == nil) {
+    return 1.0;
+  }
+
+  return [val doubleValue];
 }
 
-#endif  // OS_MACOSX
 #endif  // OFFICIAL_BUILD
 
 
