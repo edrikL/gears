@@ -54,7 +54,7 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 var TEST_TIMEOUT_SECONDS = 6 * 60 * 1000;
 var suites = [];
 
-if (!isSafari && !isWince) {
+if (!isOfficial && !isSafari && !isWince) {
   var audioSuite = new TestSuite('Audio');
   audioSuite.addFile('../testcases/audio_tests.js', 
                      {useWorker: true, useIFrame: true});
@@ -117,6 +117,10 @@ internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
 internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
                           {useWorker: true, useIFrame: true});
+if (isUsingCCTests) {
+  internalTestSuite.addFile('../testcases/internal_audio_recorder_tests.js',
+                            {useWorker: true, useIFrame: true});
+}
 suites.push(internalTestSuite);
 
 var localServerSuite = new TestSuite('LocalServer');

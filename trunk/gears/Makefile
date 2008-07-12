@@ -2075,7 +2075,10 @@ $(BROWSER)_VPATH += \
 $(BROWSER)_CPPSRCS += \
 		audio.cc \
 		audio_recorder.cc \
+		audio_recorder_test.cc \
+		base_audio_recorder.cc \
 		media.cc \
+		mock_audio_recorder.cc \
 		pa_audio_recorder.cc \
 		time_ranges.cc \
 		$(NULL)

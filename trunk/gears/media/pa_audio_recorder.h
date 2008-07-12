@@ -29,48 +29,35 @@
 #define GEARS_MEDIA_PA_AUDIO_RECORDER_H__
 
 #include "gears/base/common/basictypes.h"
+#include "gears/media/base_audio_recorder.h"
+
 #include "third_party/portaudio/include/portaudio.h"
 
 // TODO(vamsikrishna): Replace the portaudio calls with calls to thread-safe
 // wrapper functions once aprasath's CL 7307473 is submitted (this CL has
 // implemetation for thread-safe wrappers).
 
-// TODO(vamsikrishna): Remove these once the recording state attributes
-// (channelType, ...) are implemented.
-#define NUM_CHANNELS  (2)
-#define SAMPLE_FORMAT paInt16
-#define SAMPLE_RATE   (16000)
-#define SAMPLE_SIZE   (2)
-#define FRAME_SIZE    (NUM_CHANNELS * SAMPLE_SIZE)
-#define SILENCE       (0)
-
-class GearsAudioRecorder;
-
-// TODO(vamsikrishna): Abstract out the generic AudioRecorder class,
-// (when need comes) ?
-
-class PaAudioRecorder {
+class PaAudioRecorder : public BaseAudioRecorder {
  public:
-  PaAudioRecorder(GearsAudioRecorder *gears_audio_recorder);
-  ~PaAudioRecorder();
+  PaAudioRecorder();
+  virtual ~PaAudioRecorder();
 
-  // Initialize the devices, buffers, etc.,.
-  void Init();
+  // Factory method for use with BaseAudioRecorder::SetFactory.
+  static BaseAudioRecorder* Create() {
+    return reinterpret_cast<BaseAudioRecorder*>(new PaAudioRecorder());
+  }
 
-  // Terminate the recording by releasing the devices, buffers, etc.,.
-  void Terminate();
+  virtual bool Init(int number_of_channels,
+                    double *sample_rate,
+                    int sample_format,
+                    BaseAudioRecorder::Listener *listener);
+  virtual bool Terminate();
+  virtual bool StartCapture();
+  virtual bool StopCapture();
 
-  // The recorder will start receiving the media data after this
-  // function completes.
-  void StartCapture();
-
-  // The recorder will stop receiving the media data after this
-  // function completes.
-  void StopCapture();
-
-private:
+ private:
   PaStream *stream_;
-  GearsAudioRecorder *gears_audio_recorder_;
+  BaseAudioRecorder::Listener *listener_;
 
   // The callback function invoked by PortAudio. This method is where the input
   // buffer is to be read for the raw audio signal values. Read this buffer for
@@ -78,10 +65,13 @@ private:
   // platforms. Portaudio does all the magic behind the scenes, reading into
   // this buffer from the appropriate audio recording device/driver internally.
   // Look at portaudio.h for more details on the method parameters.
-  static int PaCallback(const void *input, void *output, \
-                        unsigned long frame_count, \
-                        const PaStreamCallbackTimeInfo *time_info, \
+  static int PaCallback(const void *input, void *output,
+                        unsigned long frame_count,
+                        const PaStreamCallbackTimeInfo *time_info,
                         PaStreamCallbackFlags status_flags, void *user_data);
+
+  static PaSampleFormat ToPaSampleFormat(int sample_format);
+  static int ToLengthInBytes(int sample_format);
 
   DISALLOW_EVIL_CONSTRUCTORS(PaAudioRecorder);
 };

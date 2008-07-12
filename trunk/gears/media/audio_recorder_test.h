@@ -23,28 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function testDefaultAttributeValues() {
-  var recorder = google.gears.factory.create('beta.audiorecorder');
+#ifdef USING_CCTESTS
 
-  assertEqual(null, recorder.error);
+#ifndef GEARS_MEDIA_AUDIO_RECORDER_TEST_H__
+#define GEARS_MEDIA_AUDIO_RECORDER_TEST_H__
 
-  assertEqual(false, recorder.recording);
-  assertEqual(false, recorder.paused);
-  assertEqual(0, recorder.activityLevel);
-  assertEqual(0.0, recorder.duration);
-  
-  // The attributes numberOfChannels, sampleRate, sampleFormat
-  // are set based on the device. However, the numberOfChannels
-  // and the sampleFormat take a specific set of values.
-  assert(recorder.numberOfChannels == 1 || recorder.numberOfChannels == 2,
-                   "Problem in numberOfChannels attribute.");
-  assert(recorder.sampleFormat == recorder.S16_LE,
-                   "Problem in sampleFormat attribute.");
-  assert(recorder.type == "audio/wav",
-                   "Problem in type attribute.");
+class JsCallContext;
 
-  assertEqual(0.5, recorder.volume);
-  assertEqual(false, recorder.muted);
-  assertEqual(0, recorder.silenceLevel);
-}
+// Sets the (audio recorder) device factories to use mock device.
+// This means that subsequent calls to the methods of the AudioRecorder API
+// will return constant data (actually nothing), thus allowing it to be tested.
+// IN: nothing
+// OUT: nothing
+void ConfigureAudioRecorderForTest(JsCallContext *context);
 
+#endif  // GEARS_MEDIA_AUDIO_RECORDER_TEST_H__
+
+#endif  // USING_CCTESTS

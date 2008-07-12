@@ -34,19 +34,16 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/string16.h"
 #include "gears/media/audio_recorder_constants.h"
-#include "gears/media/pa_audio_recorder.h"
+#include "gears/media/base_audio_recorder.h"
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsAudioRecorder
-    : public ModuleImplBaseClassVirtual {
+    : public ModuleImplBaseClassVirtual,
+      public BaseAudioRecorder::Listener {
  public:
   GearsAudioRecorder();
   ~GearsAudioRecorder();
-
-  // TODO(vamsikrishna): Instead of making it a friend, make it clear what
-  // exactly a PaAudioRecorder needs.
-  friend class PaAudioRecorder;
 
   // ---- ERROR STATE ----
   // readonly attribute AudioRecorderError error;
@@ -139,7 +136,7 @@ class GearsAudioRecorder
   bool recording_;
   bool paused_;
   int activity_level_;
-  double duration_;
+  int64 number_of_frames_;  // for duration
 
   int number_of_channels_;
   double sample_rate_;
@@ -150,8 +147,13 @@ class GearsAudioRecorder
   bool muted_;
   int silence_level_;
 
-  std::vector<uint8> buffer_;
-  scoped_ptr<PaAudioRecorder> p_pa_audio_recorder_;
+  std::vector< std::vector<uint8>* > buffer_table_;
+  scoped_ptr<BaseAudioRecorder> base_audio_recorder_;
+
+  // BaseAudioRecorder::Listener implementation.
+  void NewDataAvailable(const void *input, unsigned long frame_count);
+
+  int NumberOfBytesPerSample(int sample_format);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsAudioRecorder);
 };

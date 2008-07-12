@@ -148,6 +148,17 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void ConfigureGeolocationForTest(JsCallContext *context);
 #endif
 
+#ifdef OFFICIAL_BUILD
+  // The Audio API has not been finalized for official builds.
+#else
+  // Audio internal tests.
+
+  // Sets the (audio recorder) device factories to use mock device.
+  // IN: nothing
+  // OUT: nothing
+  void ConfigureAudioRecorderForTest(JsCallContext *context);
+#endif
+
   // IN: string input
   // OUT: GearsBlob
   // The resultant Blob's contents will the input string in UTF-8 format.
