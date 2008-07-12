@@ -28,81 +28,103 @@
 #include <assert.h>
 #include <vector>
 
-#include "gears/media/audio_recorder.h"
+#include "gears/media/audio_recorder_constants.h"
 
 #include "third_party/portaudio/include/portaudio.h"
 
-PaAudioRecorder::PaAudioRecorder(GearsAudioRecorder *gears_audio_recorder)
-  : stream_(NULL), gears_audio_recorder_(gears_audio_recorder){
-  // TODO(vamsikrishna): Use pa_manager framework once aprasath's CL is submitted.
+#define PA_BUFFER_SIZE (1024)
+
+PaAudioRecorder::PaAudioRecorder()
+  : stream_(NULL), listener_(NULL) {
+  // TODO(vamsikrishna): Use pa_manager framework once aprasath's CL is
+  // submitted.
   // Initialize portaudio.
   Pa_Initialize();
-  // TODO(vamsikrishna): Check the portaudio error.
 }
 
 PaAudioRecorder::~PaAudioRecorder() {
   if (stream_ != NULL) {
     Terminate();
   }
-  // TODO(vamsikrishna): Use pa_manager framework once aprasath's CL is submitted.
+  // TODO(vamsikrishna): Use pa_manager framework once aprasath's CL is
+  // submitted.
   // Terminate portaudio.
   Pa_Terminate();
-  // TODO(vamsikrishna): Check the portaudio error.
 }
 
-void PaAudioRecorder::Init() {
-  assert(stream_ == NULL);
-  // TODO(vamsikrishna): Open the stream according to the
-  // attributes bitrate, etc.,  currently using default stream with
-  // default values).
-  Pa_OpenDefaultStream(&stream_, NUM_CHANNELS, 0, SAMPLE_FORMAT,
-                       SAMPLE_RATE, 1024, PaCallback, this);
-  // TODO(vamsikrishna): Set error based on result.
-}
+bool PaAudioRecorder::Init(int number_of_channels,
+                           double *sample_rate,
+                           int sample_format,
+                           BaseAudioRecorder::Listener *listener) {
+  if (stream_ != NULL) return false;
 
-void PaAudioRecorder::Terminate() {
-  assert(stream_ != NULL);
-  Pa_CloseStream(stream_);
-  // TODO(vamsikrishna): Set error based on result.
+  // TODO(vamsikrishna): Validate the parameters,
+  // (also set sample_rate accordingly).
+  PaError error = Pa_OpenDefaultStream(&stream_, number_of_channels, 0,
+                                       ToPaSampleFormat(sample_format),
+                                       *sample_rate, PA_BUFFER_SIZE,
+                                       PaCallback, this);
 
-  stream_ = NULL;
-}
-
-void PaAudioRecorder::StartCapture() {
-  assert(stream_ != NULL);
-  Pa_StartStream(stream_);
-  // TODO(vamsikrishna): Set error based on result.
-}
-
-void PaAudioRecorder::StopCapture() {
-  assert(stream_ != NULL);
-  Pa_StopStream(stream_);
-  // TODO(vamsikrishna): Set error based on result.
-}
-
-int PaAudioRecorder::PaCallback(const void *input, void *output, \
-                                unsigned long frame_count, \
-                                const PaStreamCallbackTimeInfo *time_info, \
-                                PaStreamCallbackFlags status_flags, \
-                                void *user_data) {
-  // TODO(vamsikrishna): Add some preprocessing like noise cancelling ?
-
-  PaAudioRecorder *p_pa_audio_recorder = reinterpret_cast<PaAudioRecorder *>(user_data);
-  std::vector<uint8> *p_buffer = &(p_pa_audio_recorder->gears_audio_recorder_->buffer_);
-
-  // TODO(vamsikrishna): Remove FRAME_SIZE and SILENCE once the
-  // recording state attributes (channelType, ...) are implemented.
-
-  // Append the recorded data from stream to the buffer.
-  // If the recorder is muted then append 'silence'.
-  std::vector<uint8>::size_type length = p_buffer->size();
-
-  p_buffer->resize(length + FRAME_SIZE*frame_count, SILENCE);
-
-  bool muted = p_pa_audio_recorder->gears_audio_recorder_->muted_;
-  if (!muted) {
-    memcpy(&((*p_buffer)[length]), input, FRAME_SIZE*frame_count);
+  if (error != paNoError) {
+    stream_ = NULL;
+    listener_ = NULL;
+  } else {
+    listener_ = listener;
   }
 
+  return (error != paNoError);
+}
+
+bool PaAudioRecorder::Terminate() {
+  if (stream_ == NULL) return false;
+
+  PaError error = Pa_CloseStream(stream_);
+
+  stream_ = NULL;
+  listener_ = NULL;
+
+  return (error != paNoError);
+}
+
+bool PaAudioRecorder::StartCapture() {
+  if (stream_ == NULL) return false;
+
+  PaError error = Pa_StartStream(stream_);
+
+  return (error != paNoError);
+}
+
+bool PaAudioRecorder::StopCapture() {
+  if (stream_ == NULL) return false;
+
+  PaError error = Pa_StopStream(stream_);
+
+  return (error != paNoError);
+}
+
+int PaAudioRecorder::PaCallback(const void *input, void *output,
+                                unsigned long frame_count,
+                                const PaStreamCallbackTimeInfo *time_info,
+                                PaStreamCallbackFlags status_flags,
+                                void *user_data) {
+  // TODO(vamsikrishna): Add some preprocessing like noise cancelling ?
+  PaAudioRecorder *p_pa_audio_recorder =
+      reinterpret_cast<PaAudioRecorder *>(user_data);
+  // TODO(vamsikrishna): Invoking the data processing directly (in the
+  // portaudio callback) may not be safe. Replace this with a safer approach.
+  // http://www.portaudio.com/trac/wiki/TutorialDir/WritingACallback
+  p_pa_audio_recorder->listener_->NewDataAvailable(input, frame_count);
+
   return paContinue;
+}
+
+PaSampleFormat PaAudioRecorder::ToPaSampleFormat(int sample_format) {
+  switch (sample_format) {
+    case AudioRecorderConstants::SAMPLE_FORMAT_S16_LE:
+      return paInt16;
+    default:
+      // Will never reach here.
+      assert(false);
+      return 0;
+  }
 }

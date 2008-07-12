@@ -23,28 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function testDefaultAttributeValues() {
-  var recorder = google.gears.factory.create('beta.audiorecorder');
+#include "gears/media/base_audio_recorder.h"
 
-  assertEqual(null, recorder.error);
+#include "gears/media/pa_audio_recorder.h"
 
-  assertEqual(false, recorder.recording);
-  assertEqual(false, recorder.paused);
-  assertEqual(0, recorder.activityLevel);
-  assertEqual(0.0, recorder.duration);
-  
-  // The attributes numberOfChannels, sampleRate, sampleFormat
-  // are set based on the device. However, the numberOfChannels
-  // and the sampleFormat take a specific set of values.
-  assert(recorder.numberOfChannels == 1 || recorder.numberOfChannels == 2,
-                   "Problem in numberOfChannels attribute.");
-  assert(recorder.sampleFormat == recorder.S16_LE,
-                   "Problem in sampleFormat attribute.");
-  assert(recorder.type == "audio/wav",
-                   "Problem in type attribute.");
-
-  assertEqual(0.5, recorder.volume);
-  assertEqual(false, recorder.muted);
-  assertEqual(0, recorder.silenceLevel);
-}
-
+// static
+BaseAudioRecorder::ImplFactoryFunction
+    BaseAudioRecorder::factory_function = PaAudioRecorder::Create;

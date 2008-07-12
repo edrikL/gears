@@ -79,6 +79,12 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("configureGeolocationForTest",
                  &GearsTest::ConfigureGeolocationForTest);
 #endif
+#ifdef OFFICIAL_BUILD
+  // The Audio API has not been finalized for official builds.
+#else
+  RegisterMethod("configureAudioRecorderForTest",
+                 &GearsTest::ConfigureAudioRecorderForTest);
+#endif
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
   RegisterMethod("testLocalServerPerformance",
                  &GearsTest::TestLocalServerPerformance);
@@ -120,6 +126,11 @@ void Dispatcher<GearsTest>::Init() {
 // The Geolocation API has not been finalized for official builds.
 #else
 #include "gears/geolocation/geolocation_test.h"
+#endif
+#ifdef OFFICIAL_BUILD
+// The Audio API has not been finalized for official builds.
+#else
+#include "gears/media/audio_recorder_test.h"
 #endif
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
@@ -2114,6 +2125,14 @@ void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
 
 void GearsTest::ConfigureGeolocationForTest(JsCallContext *context) {
   ::ConfigureGeolocationForTest(context);
+}
+#endif
+
+#ifdef OFFICIAL_BUILD
+// The Audio API has not been finalized for official builds.
+#else
+void GearsTest::ConfigureAudioRecorderForTest(JsCallContext *context) {
+  ::ConfigureAudioRecorderForTest(context);
 }
 #endif
 

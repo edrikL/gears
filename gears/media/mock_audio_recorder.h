@@ -22,29 +22,34 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// The Mock audio recorder for Gears.
 
-function testDefaultAttributeValues() {
-  var recorder = google.gears.factory.create('beta.audiorecorder');
+#ifndef GEARS_MEDIA_MOCK_AUDIO_RECORDER_H__
+#define GEARS_MEDIA_MOCK_AUDIO_RECORDER_H__
 
-  assertEqual(null, recorder.error);
+#include "gears/base/common/basictypes.h"
+#include "gears/media/base_audio_recorder.h"
 
-  assertEqual(false, recorder.recording);
-  assertEqual(false, recorder.paused);
-  assertEqual(0, recorder.activityLevel);
-  assertEqual(0.0, recorder.duration);
-  
-  // The attributes numberOfChannels, sampleRate, sampleFormat
-  // are set based on the device. However, the numberOfChannels
-  // and the sampleFormat take a specific set of values.
-  assert(recorder.numberOfChannels == 1 || recorder.numberOfChannels == 2,
-                   "Problem in numberOfChannels attribute.");
-  assert(recorder.sampleFormat == recorder.S16_LE,
-                   "Problem in sampleFormat attribute.");
-  assert(recorder.type == "audio/wav",
-                   "Problem in type attribute.");
+class MockAudioRecorder : public BaseAudioRecorder {
+ public:
+  MockAudioRecorder();
+  virtual ~MockAudioRecorder();
 
-  assertEqual(0.5, recorder.volume);
-  assertEqual(false, recorder.muted);
-  assertEqual(0, recorder.silenceLevel);
-}
+  // Factory method for use with BaseAudioRecorder::SetFactory.
+  static BaseAudioRecorder* Create() {
+    return reinterpret_cast<BaseAudioRecorder*>(new MockAudioRecorder());
+  }
 
+  virtual bool Init(int number_of_channels,
+                    double *sample_rate,
+                    int sample_format,
+                    BaseAudioRecorder::Listener *listener);
+  virtual bool Terminate();
+  virtual bool StartCapture();
+  virtual bool StopCapture();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(MockAudioRecorder);
+};
+#endif  // GEARS_MEDIA_MOCK_AUDIO_RECORDER_H__
