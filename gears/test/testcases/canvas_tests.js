@@ -24,7 +24,50 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-// Test that properties have the correct initial values, and that they can be
+function assertBlobsEqual(blob1, blob2) {
+  if (isDebug)
+    assert(blob1.hasSameContentsAs(blob2));
+  else
+    assertEqual(blob1.length, blob2.length);
+}
+
+function loadBlob(filename, callback) {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', '/testcases/data/' + filename);
+  request.onreadystatechange = function(){
+    if (request.readyState == 4) {
+      callback(request.responseBlob, filename);
+    }
+  };
+  request.send();
+}
+
+// Loads a bunch of blobs and when all of them are loaded, calls the callback
+// passing a map from filename to blob.
+function loadBlobs(filenames, callback) {
+  var numLoaded = 0;
+  var blobs = {};
+
+  for (var i = 0; i < filenames.length; ++i) {
+    loadBlob(filenames[i], function(blob, filename) {
+      blobs[filename] = blob;
+      if (++numLoaded == filenames.length) {
+        callback(blobs);
+      }
+    });
+  }
+}
+
+function testGetContext() {
+  var canvas = google.gears.factory.create('beta.canvas');
+  var ctx = canvas.getContext('gears-2d');
+  assertEqual(canvas, ctx.canvas);
+  var ctx2 = canvas.getContext('gears-2d');
+  assertEqual(ctx2, ctx);
+  assertEqual(null, canvas.getContext('foobar'));
+ }
+
+// Tests that properties have the correct initial values, and that they can be
 // read and written.
 function testProperties() {
   var canvas = google.gears.factory.create('beta.canvas');
@@ -62,47 +105,71 @@ function testProperties() {
   assertEqual(fillStyle , ctx.fillStyle);
 }
 
-function testGetContext() {
-  var canvas = google.gears.factory.create('beta.canvas');
-  var ctx = canvas.getContext('gears-2d');
-  assertEqual(canvas, ctx.canvas);
-  var ctx2 = canvas.getContext('gears-2d');
-  assertEqual(ctx2, ctx);
-  assertEqual(null, canvas.getContext('foobar'));
- }
 
-function assertBlobsEqual(blob1, blob2) {
-  if (isDebug)
-    assert(blob1.hasSameContentsAs(blob2));
-  else
-    assertEqual(blob1.length, blob2.length);
+function testCanvasBlankInitially() {
+  startAsync();
+  loadBlob('blank-300x150.png', function(blankBlob) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    assertBlobsEqual(blankBlob, canvas.toBlob());
+    completeAsync();
+  });
 }
 
-function loadBlob(filename, callback) {
-  var request = google.gears.factory.create('beta.httprequest');
-  request.open('GET', '/testcases/data/' + filename);
-  request.onreadystatechange = function(){
-    if (request.readyState == 4) {
-      callback(filename, request.responseBlob);
-    }
-  };
-  request.send();
+// Tests that changing width or height resets all pixels to transparent black.
+function testCanvasBlankAfterChangingDimensions() {
+  var originalFilename = 'sample-original.jpeg';
+  var filenames = [originalFilename,
+                   'blank-313x120.png',
+                   'blank-240x234.png'];
+  startAsync();
+  loadBlobs(filenames, function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    var originalBlob = blobs[originalFilename];
+    canvas.load(originalBlob);
+    assertEqual(313, canvas.width);
+    assertEqual(234, canvas.height);
+
+    // Test that changing the height resets the canvas.
+    canvas.height = 120;
+    assertBlobsEqual(blobs['blank-313x120.png'], canvas.toBlob());
+    
+    // Test that changing the width resets the canvas.
+    canvas.load(originalBlob);
+    canvas.width = 240;
+    assertBlobsEqual(blobs['blank-240x234.png'], canvas.toBlob());
+    
+    completeAsync();
+  });
 }
 
-// Loads a bunch of blobs and when all of them are loaded, calls the callback
-// passing a map from filename to blob.
-function loadBlobs(filenames, callback) {
-  var numLoaded = 0;
-  var blobs = {};
-
-  for (var i = 0; i < filenames.length; ++i) {
-    loadBlob(filenames[i], function(filename, blob) {
-      blobs[filename] = blob;
-      if (++numLoaded == filenames.length) {
-        callback(blobs);
-      }
-    });
-  }
+// Tests that assigning the width or height its present value
+// resets all pixels to transparent black,
+// as the HTML5 canvas spec requires.
+function testCanvasBlankAfterDimensionsSelfAssignment() {
+  var originalFilename = 'sample-original.jpeg';
+  var filenames = [originalFilename,
+                   'blank-313x234.png'];
+  startAsync();
+  loadBlobs(filenames, function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    var originalBlob = blobs[originalFilename];
+    canvas.load(originalBlob);
+    assertEqual(313, canvas.width);
+    assertEqual(234, canvas.height);
+    // The canvas is not blank.
+    assertNotEqual(canvas.toBlob().length, blobs['blank-313x234.png'].length);
+    
+    // Setting width to current width must blank the canvas:
+    canvas.width = canvas.width;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    
+    // Test the same for height:
+    canvas.load(originalBlob);
+    canvas.height = canvas.height;
+    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    
+    completeAsync();
+  });
 }
 
 function runLoadAndExportTest(blobs) {
@@ -129,8 +196,6 @@ function runLoadAndExportTest(blobs) {
   completeAsync();
 }
 
-// TODO(kart): Add negative tests. Example: load an unsupported blob,
-// export to an unsupported format. What else?
 function testLoadAndExport() {
   startAsync();
   var filenames = [
@@ -145,6 +210,123 @@ function testLoadAndExport() {
   loadBlobs(filenames, runLoadAndExportTest);
 }
 
+function testLoadUnsupportedFormat() {
+  var canvas = google.gears.factory.create('beta.canvas');
+  startAsync();
+  loadBlob('sample.txt', function(blob) {
+    assertError(function() {
+      canvas.load(blob);
+    });
+    completeAsync();
+  });
+}
+
+function testExportToUnsupportedFormat() {
+  var canvas = google.gears.factory.create('beta.canvas');
+  assertError(function() {
+    canvas.toBlob('image/gif');
+  });
+}
+
+function runCloneTest(blob, dummyBlob) {
+  var originalCanvas = google.gears.factory.create('beta.canvas');
+  originalCanvas.load(blob);
+  var originalWidth = originalCanvas.width;
+  var originalHeight = originalCanvas.height;
+  var originalBlob = originalCanvas.toBlob();
+  
+  var clonedCanvas = originalCanvas.clone();
+  // Make sure the clone is identical to the original.
+  assertEqual(originalWidth, clonedCanvas.width);
+  assertEqual(originalHeight, clonedCanvas.height);
+  assertBlobsEqual(originalBlob, clonedCanvas.toBlob());
+  
+  // Now perform various operations on the clone and check that the original
+  // isn't affected.
+  clonedCanvas.resize(500, 400);
+  function checkOriginal() {
+    assertEqual(originalWidth, originalCanvas.width);
+    assertEqual(originalHeight, originalCanvas.height);
+    assertBlobsEqual(originalBlob, originalCanvas.toBlob());
+  }
+  checkOriginal();
+  
+  clonedCanvas.crop(60, 60, 130, 10);
+  checkOriginal();
+  
+  clonedCanvas.width = 70;
+  checkOriginal();
+
+  clonedCanvas.height = 65;
+  checkOriginal();
+  
+  // Load a random image into the clone and
+  // check that the original isn't affected.
+  // We don't care what the dummy is, just that it's a valid image.
+  clonedCanvas.load(dummyBlob);
+  checkOriginal();
+}
+
+function testClone() {
+  startAsync();
+  var dummy = 'blank-313x234.png';
+  loadBlobs(['sample-original.jpeg', 'sample-original.png', dummy],
+      function (blobs) {
+        runCloneTest(blobs['sample-original.jpeg'], blobs[dummy]);
+        runCloneTest(blobs['sample-original.png'], blobs[dummy]);
+        completeAsync();
+      });
+}
+
+function testCrop() {
+  startAsync();
+  var goldenFilename = 'sample-jpeg-cropped-40-40-100-100.png';
+  loadBlobs(['sample-original.jpeg', goldenFilename], function(blobs) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    canvas.load(blobs['sample-original.jpeg']);
+    canvas.crop(40, 40, 100, 100);
+    var exportedBlob = canvas.toBlob();
+    
+    var goldenBlob = blobs[goldenFilename];
+    // Ensure that the golden file is what we think it is.
+    var goldenCanvas = google.gears.factory.create('beta.canvas');
+    goldenCanvas.load(goldenBlob);
+    assertEqual(100, goldenCanvas.width);
+    assertEqual(100, goldenCanvas.height);
+    
+    assertBlobsEqual(goldenBlob, exportedBlob);
+    completeAsync();
+  });
+}
+
+function testCropToZeroSize() {
+  startAsync();
+  loadBlob('sample-original.png', function(blob) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    canvas.load(blob);
+    canvas.crop(40, 40, 0, 0);
+    assertEqual(0, canvas.width);
+    assertEqual(0, canvas.height);
+    completeAsync();
+  });
+}
+
+function testCropNoop() {
+  startAsync();
+  loadBlob('sample-original.jpeg', function(blob) {
+    var canvas = google.gears.factory.create('beta.canvas');
+    canvas.load(blob);
+    var originalBlob = canvas.toBlob();
+    var originalWidth = canvas.width;
+    var originalHeight = canvas.height;
+    canvas.crop(0, 0, canvas.width, canvas.height);
+    assertBlobsEqual(originalBlob, canvas.toBlob());
+    assertEqual(originalWidth, canvas.width);
+    assertEqual(originalHeight, canvas.height);
+    completeAsync();
+  });
+}
+
 function testResize() {
   var originalFilename = 'sample-original.jpeg';
   var resizedFilename = 'sample-jpeg-resized-to-400x40.png';
@@ -152,7 +334,7 @@ function testResize() {
   loadBlobs([originalFilename , resizedFilename], function(blobs) {
     var canvas = google.gears.factory.create('beta.canvas');
     canvas.load(blobs[originalFilename]);
-    
+
     var newWidth = 400;
     var newHeight = 40;
     canvas.resize(newWidth, newHeight);
@@ -163,72 +345,14 @@ function testResize() {
   });
 }
 
-function testCanvasInitiallyBlank() {
+function testResizeWeirdCases() {
   var canvas = google.gears.factory.create('beta.canvas');
-  var blob = canvas.toBlob();
-  startAsync();
-  loadBlob('blank-300x150.png', function(filename, blankBlob) {
-    assertBlobsEqual(blankBlob, blob);
-    completeAsync();
+  assertError(function() {
+    canvas.resize(-4, 9);
   });
-}
-
-// Tests that changing width or height
-// resets the pixels to all transparent black.
-function testCanvasBlankAfterChangingDimensions() {
-  var originalFilename  = 'sample-original.jpeg';
-  var filenames = [originalFilename,
-                   'blank-313x120.png',
-                   'blank-240x234.png'];
-  startAsync();
-  loadBlobs(filenames, function(blobs) {
-    var canvas = google.gears.factory.create('beta.canvas');
-    var originalBlob = blobs[originalFilename ];
-    canvas.load(originalBlob);
-    assertEqual(313, canvas.width);
-    assertEqual(234, canvas.height);
-
-    // Changing the height must reset the canvas:
-    canvas.height = 120;
-    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x120.png']);
-    
-    // Changing the width must reset the canvas:
-    canvas.load(originalBlob);
-    canvas.width = 240;
-    assertBlobsEqual(canvas.toBlob(), blobs['blank-240x234.png']);
-    
-    completeAsync();
-  });
-}
-
-// Tests that assigning the width or height its present value
-// resets the pixels to all transparent black,
-// as the HTML5 canvas spec requires.
-function testCanvasBlankAfterDimensionsSelfAssignment() {
-  var originalFilename  = 'sample-original.jpeg';
-  var filenames = [originalFilename,
-                   'blank-313x234.png'];
-  startAsync();
-  loadBlobs(filenames, function(blobs) {
-    var canvas = google.gears.factory.create('beta.canvas');
-    var originalBlob = blobs[originalFilename ];
-    canvas.load(originalBlob);
-    assertEqual(313, canvas.width);
-    assertEqual(234, canvas.height);
-    // The canvas is not blank.
-    assertNotEqual(canvas.toBlob().length, blobs['blank-313x234.png'].length);
-    
-    // Setting width to current width must blank the canvas:
-    canvas.width = canvas.width;
-    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
-    
-    // Test the same for height:
-    canvas.load(originalBlob);
-    canvas.height = canvas.height;
-    assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
-    
-    completeAsync();
-  });
+  canvas.resize(0, 0);
+  assertEqual(0, canvas.width);
+  assertEqual(0, canvas.height);
 }
 
 

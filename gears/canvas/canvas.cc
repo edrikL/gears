@@ -37,6 +37,7 @@
 
 DECLARE_GEARS_WRAPPER(GearsCanvas);
 const std::string GearsCanvas::kModuleName("GearsCanvas");
+
 namespace {
 const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
 }  // namespace
@@ -51,7 +52,6 @@ GearsCanvas::GearsCanvas()
       text_align_(STRING16(L"start")) {
   // Initial dimensions as per the HTML5 canvas spec.
   ResetSkiaBitmap(300, 150);
-  skia_canvas_.reset(new SkCanvas(*skia_bitmap_));
 }
 
 GearsCanvas::~GearsCanvas() {
@@ -116,7 +116,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
       STRING16(L"image/jpeg")) == 0) {
     type = SkImageEncoder::kJPEG_Type;
   } else {
-    // TODO(kart): support BMP. create it manually?
+    // TODO(kart): Support BMP. Create it manually?
     // Skia doesn't support BMP encoding.
     context->SetException(STRING16(L"Unsupported MIME type."));
     return;
@@ -158,7 +158,28 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
 }
 
 void GearsCanvas::Clone(JsCallContext *context) {
-  context->SetException(STRING16(L"Unimplemented"));
+  scoped_refptr<GearsCanvas> clone;
+  if (!CreateModule<GearsCanvas>(module_environment_.get(), context, &clone)) {
+    return;
+    }
+
+  clone->ResetSkiaBitmap(Width(), Height());
+  // See comment about isOpaque() below (in Crop()).
+  clone->skia_bitmap_->setIsOpaque(skia_bitmap_->isOpaque());
+  clone->skia_canvas_->drawBitmap(*skia_bitmap_, 0, 0);
+
+  assert(clone->skia_bitmap_->getSize() == skia_bitmap_->getSize());
+  assert(memcmp(clone->skia_bitmap_->getPixels(),
+      skia_bitmap_->getPixels(), skia_bitmap_->getSize()) == 0);
+
+  clone->set_alpha(alpha());
+  clone->set_fill_style(fill_style());
+  clone->set_font(font());
+  clone->set_text_align(text_align());
+  // TODO(kart): Copy the transformation matrix and generally make sure that
+  // all state is copied.
+
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, clone.get());
 }
 
 void GearsCanvas::Crop(JsCallContext *context) {
@@ -180,12 +201,20 @@ void GearsCanvas::Crop(JsCallContext *context) {
   }
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, width, height);
+  // If the isOpaque flag on SkBitmap is set, the encoder creates a file
+  // without alpha channel.
+  // Since canvas.crop(0, 0, canvas.width, canvas.height) must be a noop,
+  // the cropped image when exported must have an alpha channel iff the original
+  // image when exported has one.
+  new_bitmap.setIsOpaque(SkiaBitmap()->isOpaque());
+  new_bitmap.allocPixels();
   SkCanvas new_canvas(new_bitmap);
   SkRect dest_rect = { SkIntToScalar(0),
                        SkIntToScalar(0),
                        SkIntToScalar(width),
                        SkIntToScalar(height) };
   new_canvas.drawBitmapRect(*skia_bitmap_, &src_rect, dest_rect);
+
   new_bitmap.swap(*skia_bitmap_);
 }
 
@@ -283,28 +312,6 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, rendering_context_);
 }
 
-void GearsCanvas::ResetSkiaBitmap(int width, int height) {
-  // Create a fresh SkBitmap to avoid picking up flags from a previous state.
-  // For instance, following a load of a file without alpha channel,
-  // the isOpaque flag is set, and not cleared by setConfig. As a result,
-  // exported blobs will not an alpha channel. To eliminate such issues,
-  // create a fresh SkBitmap.
-  skia_bitmap_.reset(new SkBitmap);
-  skia_bitmap_->setConfig(skia_config, width, height);
-  // Must allocate pixels before performing any operations,
-  // or assertions fire and some operations (like eraseARGB) fail silently.
-  skia_bitmap_->allocPixels();
-  skia_bitmap_->eraseARGB(0, 0, 0, 0);
-}
-
-SkBitmap *GearsCanvas::SkiaBitmap() {
-  return skia_bitmap_.get();
-}
-
-SkCanvas *GearsCanvas::SkiaCanvas() {
-  return skia_canvas_.get();
-}
-
 int GearsCanvas::Width() {
   return skia_bitmap_->width();
 }
@@ -373,6 +380,39 @@ void GearsCanvas::set_text_align(std::string16 new_text_align) {
     return;
   }
   text_align_ = new_text_align;
+}
+
+void GearsCanvas::ResetSkiaBitmap(int width, int height) {
+  // Create a fresh SkBitmap to avoid picking up flags from a previous state.
+  // Consider this usage:
+  //   canvas.load(blob);
+  //   canvas.width = 100;
+  //   do some drawing on the canvas
+  //   var outputBlob = canvas.toBlob();
+  //
+  // When the image is loaded, the isOpaque flag is updated, and is not modified
+  // again anywhere. This flag controls whether the encoder creates an image
+  // with alpha channel. As a result, exported blobs will have an alpha channel
+  // or not, depending on whether the image that was loaded *before*
+  // resetting the dimensions has an alpha channel.
+  // Since setting the dimensions must clear the canvas of all previous state,
+  // we create a fresh SkBitmap.
+  skia_bitmap_.reset(new SkBitmap);
+  skia_bitmap_->setConfig(skia_config, width, height);
+
+  // Must allocate pixels before performing any operations,
+  // or assertions fire and some operations (like eraseARGB) fail silently.
+  skia_bitmap_->allocPixels();
+  skia_bitmap_->eraseARGB(0, 0, 0, 0);
+  skia_canvas_.reset(new SkCanvas(*skia_bitmap_));
+}
+
+SkBitmap *GearsCanvas::SkiaBitmap() {
+  return skia_bitmap_.get();
+}
+
+SkCanvas *GearsCanvas::SkiaCanvas() {
+  return skia_canvas_.get();
 }
 
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {
