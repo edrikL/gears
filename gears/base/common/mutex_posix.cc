@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
+#if defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
 
 #include <assert.h>
 #include <errno.h>
@@ -43,7 +43,7 @@ void ThreadYield() {
 
 Mutex::Mutex()
 #ifdef DEBUG
-    : is_locked_(false)
+    : owner_(0)
 #endif
 {
   pthread_mutex_init(&mutex_, NULL);
@@ -56,20 +56,40 @@ Mutex::~Mutex() {
 
 
 void Mutex::Lock() {
+#ifdef DEBUG
+  // Google frowns upon mutex re-entrancy
+  if (owner_ == pthread_self()) {
+    LOG(("Thread %p locked mutex %p recursively\n",
+         reinterpret_cast<void *>(pthread_self()),
+         this));
+    assert(false);
+  }
+#endif
   pthread_mutex_lock(&mutex_);
 #ifdef DEBUG
-  assert(!is_locked_); // Google frowns upon mutex re-entrancy
-  is_locked_ = true;
+  if (owner_ != 0) {
+    LOG(("Thread %p locked mutex %p despite ownership by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         this,
+         reinterpret_cast<void *>(owner_)));
+    assert(false);
+  }
+  owner_ = pthread_self();
 #endif
 }
 
 
 void Mutex::Unlock() {
 #ifdef DEBUG
-  assert(is_locked_);
-  is_locked_ = false;
+  if (owner_ != pthread_self()) {
+    LOG(("Thread %p tried to unlock mutex %p owned by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         this,
+         reinterpret_cast<void *>(owner_)));
+    assert(false);
+  }
+  owner_ = 0;
 #endif
-
   pthread_mutex_unlock(&mutex_);
 }
 
@@ -97,12 +117,25 @@ CondVar::~CondVar() {
 
 void CondVar::Wait(Mutex *mutex) {
 #ifdef DEBUG
-  assert(mutex->is_locked_);
-  mutex->is_locked_ = false;
+  if (mutex->owner_ != pthread_self()) {
+    LOG(("Thread %p called CondVar::Wait() with mutex %p owned by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         mutex,
+         reinterpret_cast<void *>(mutex->owner_)));
+    assert(false);
+  }
+  mutex->owner_ = 0;
 #endif
   pthread_cond_wait(&cond_, &(mutex->mutex_));
 #ifdef DEBUG
-  mutex->is_locked_ = true;
+  if (mutex->owner_ != 0) {
+    LOG(("Thread %p left CondVar::Wait() with mutex %p owned by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         mutex,
+         reinterpret_cast<void *>(mutex->owner_)));
+    assert(false);
+  }
+  mutex->owner_ = pthread_self();
 #endif
 }
 
@@ -121,15 +154,30 @@ bool CondVar::WaitWithTimeout(Mutex *mutex, int milliseconds) {
     timeout.tv_nsec -= 1000000000;
   }
 #ifdef DEBUG
-  assert(mutex->is_locked_);
-  mutex->is_locked_ = false;
+  if (mutex->owner_ != pthread_self()) {
+    LOG(("Thread %p called CondVar::WaitWithTimeout() "
+         "with mutex %p owned by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         mutex,
+         reinterpret_cast<void *>(mutex->owner_)));
+    assert(false);
+  }
+  mutex->owner_ = 0;
 #endif
   int retcode;
   do {
     retcode = pthread_cond_timedwait(&cond_, &(mutex->mutex_), &timeout);
   } while (retcode == EINTR);
 #ifdef DEBUG
-  mutex->is_locked_ = true;
+  if (mutex->owner_ != 0) {
+    LOG(("Thread %p left CondVar::WaitWithTimeout() "
+         "with mutex %p owned by thread %p\n",
+         reinterpret_cast<void *>(pthread_self()),
+         mutex,
+         reinterpret_cast<void *>(mutex->owner_)));
+    assert(false);
+  }
+  mutex->owner_ = pthread_self();
 #endif
   return retcode == ETIMEDOUT;
 }
@@ -139,4 +187,4 @@ void CondVar::SignalAll() {
   pthread_cond_broadcast(&cond_);
 }
 
-#endif  // defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
+#endif  // defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)

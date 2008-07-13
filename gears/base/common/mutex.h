@@ -77,12 +77,20 @@ class Mutex {
   bool AwaitImpl(const Condition &cond, int64 end_time);
   friend class CondVar;
 #ifdef DEBUG
+#if defined(WIN32) || defined(WINCE)
+  // Track whether the mutex is locked to detect recursive usage.
   bool is_locked_;
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
+  // Track the owner of the mutex to detect recursive usage.
+  // TODO(jripley): Some patterns of pthread_t may not work if it is
+  // 64 bit and the system does not perform atomic 64 bit operations.
+  pthread_t owner_;
+#endif
 #endif // DEBUG
 
 #if defined(WIN32) || defined(WINCE)
   CRITICAL_SECTION crit_sec_;
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
   pthread_mutex_t mutex_;
 #endif
 };
@@ -242,7 +250,7 @@ class CondVar {
   class Event;  // This is a win32 event with reference counting added.
   Mutex current_event_mutex_;
   scoped_refptr<Event> current_event_;
-#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
   pthread_cond_t cond_;
 #endif
 };
