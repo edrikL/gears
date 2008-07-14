@@ -25,8 +25,17 @@
 
 #include "gears/media/base_audio_recorder.h"
 
+#include "gears/media/mock_audio_recorder.h"
 #include "gears/media/pa_audio_recorder.h"
 
+#ifdef OS_ANDROID
+// Android is lacking a PortAudio back-end so far. Substitute a mock
+// instead.
+// static
+BaseAudioRecorder::ImplFactoryFunction
+    BaseAudioRecorder::factory_function = MockAudioRecorder::Create;
+#else
 // static
 BaseAudioRecorder::ImplFactoryFunction
     BaseAudioRecorder::factory_function = PaAudioRecorder::Create;
+#endif
