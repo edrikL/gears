@@ -25,8 +25,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "gears/base/common/common_osx.h"
-#import "gears/base/safari/nsstring_utils.h"
+#include "gears/base/common/common_osx.h"
 
 void *InitAutoReleasePool() {
   return [[NSAutoreleasePool alloc] init];
@@ -35,29 +34,4 @@ void *InitAutoReleasePool() {
 void DestroyAutoReleasePool(void *pool) {
   assert(pool);
   [(NSAutoreleasePool *)pool release];
-}
-
-void OSXGearsLog(const char *msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  NSLogv([NSString stringWithCString:msg], args);
-  va_end(args);
-}
-
-void OSXGearsLog16(const char16 *msg_utf16, ...) {
-  va_list args;
-  va_start(args, msg_utf16);
-  
-  NSMutableString *msg = [[NSMutableString alloc] init]; 
-  [msg setString:[NSString stringWithString16:msg_utf16]];
-  
-  // LOG16 takes char16 literals.
-  [msg replaceOccurrencesOfString:@"%s" 
-                       withString:@"%S "
-                          options:NSLiteralSearch
-                            range:NSMakeRange(0, [msg length])];
-  
-  NSLogv(msg, args);
-  va_end(args);
-  [msg release];
 }

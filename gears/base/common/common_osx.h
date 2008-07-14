@@ -27,8 +27,6 @@
 #ifndef GEARS_BASE_COMMON_COMMON_OSX_H__
 #define GEARS_BASE_COMMON_COMMON_OSX_H__
 
-#include "gears/base/common/string16.h"
-
 // TODO: Move all generally applicable OS X code from common_sf.h here.
 
 // Initialize an NSAutoReleasePool.
@@ -36,23 +34,5 @@ void *InitAutoReleasePool();
 
 // Destroys an autorelease pool, passing in NULL is legal and is a no-op.
 void DestroyAutoReleasePool(void *pool);
-
-#ifdef DEBUG
-#define LOG(a) OSXGearsLog a
-#define LOG16(a) OSXGearsLog16 a
-#else
-#define LOG(a) 0
-#define LOG16(a) 0
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-void OSXGearsLog(const char *fn, ...);
-void OSXGearsLog16(const char16 *msg_utf16, ...);
-#if defined(__cplusplus)
-}
-#endif
-
 
 #endif  // GEARS_BASE_COMMON_COMMON_OSX_H__
