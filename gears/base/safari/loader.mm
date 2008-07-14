@@ -34,8 +34,27 @@
   NSString *key = (NSString *)kCFBundleVersionKey;
   NSString *vers = [webkitBundle objectForInfoDictionaryKey:key];
   
-  // 4525 corresponds to Safari 3.1.1.
-  if ([vers floatValue] >= 4525)
+  // Check the version of WebKit that the current application is using and
+  // see if it's new enough to load with.
+  
+  // A (somewhat dated list) of Safari Version strings and equivalent
+  // CFBundleVersions can be found here: 
+  // http://developer.apple.com/internet/safari/uamatrix.html
+  // It seems that the most significant digit is the OS Version, and the
+  // rest denote the real safari version number.
+  // Some values we've seen empirically:
+  // 5523.15.1 - Safari 3.0.4 on 10.5.2
+  // 4525.18   - Safari 3.1.1 on 10.4
+  // 5525.18   - Safari 3.1.1 on 10.5
+  // 4525.22   - Safari 3.1.2 on 10.4
+  // 5525.18   - Safari 3.1.2 on 10.5
+  int version = floor([vers floatValue]);
+  
+  // Strip off MSD, apparently corresponding to OS Version.
+  version = version % 1000;
+  
+  // 525 is Safari 3.1.1
+  if (version >= 525)
     return YES;
   
   NSLog(@"%s requires WebKit 4525 or later (Current: %d)",
