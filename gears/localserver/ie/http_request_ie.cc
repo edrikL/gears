@@ -555,6 +555,32 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
 // IBindStatusCallback::OnDataAvailable
 // Called by URLMON to inform us of data being available for reading
 //------------------------------------------------------------------------------
+namespace {
+
+class Writer : public ByteStore::Writer {
+ public:
+  explicit Writer(STGMEDIUM *stgmed) : stgmed_(stgmed), hr_(S_OK) {
+  }
+  virtual int64 WriteToBuffer(uint8 *buffer, int64 max_length) {
+    // Force quit if last operation failed or indicated that we should be done.
+    if (Finished()) return 0;
+    DWORD amount_read = 0;
+    hr_ = stgmed_->pstm->Read(buffer, static_cast<size_t>(max_length),
+                              &amount_read);
+    assert(amount_read >= 0);
+    return static_cast<int64>(amount_read);
+  }
+  bool Finished() const {
+    return (hr_ == E_PENDING || hr_ == S_FALSE || FAILED(hr_));
+  }
+  HRESULT GetResult() const { return hr_; }
+ private:
+  STGMEDIUM *stgmed_;
+  HRESULT hr_;
+};
+
+}  // namespace
+
 STDMETHODIMP IEHttpRequest::OnDataAvailable(
     DWORD flags,
     DWORD unreliable_stream_size,  // With IE6, this value is not reliable
@@ -602,24 +628,17 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   // beyond the end of what's currently available to encourage
   // the stream to read from the wire, otherwise the bind will stall
   // http://msdn2.microsoft.com/en-us/library/aa380034.aspx
-  scoped_ptr_malloc<uint8> buffer;
-  buffer.reset(static_cast<uint8*>(malloc(kReadAheadAmount)));
+  Writer writer(stgmed);
   do {
-    // Read in big gulps to spin as little as possible
-    DWORD amount_read = 0;
-    hr = stgmed->pstm->Read(buffer.get(), kReadAheadAmount, &amount_read);
-    // TODO(bgarcia):  Add an interface to ByteStore to allow us to directly
-    // write data to the ByteStore's internal buffer, to remove the extra
-    // copying done here.
-    response_body_->AddData(buffer.get(), amount_read);
-    is_new_data_available |= (amount_read != 0);
-  } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
+    int64 added = response_body_->AddDataDirect(&writer, kReadAheadAmount);
+    is_new_data_available |= (added > 0);
+  } while (!writer.Finished());
 
   if (is_new_data_available && listener_ && listener_data_available_enabled_) {
     listener_->DataAvailable(this, response_body_->Length());
   }
 
-  return hr;
+  return writer.GetResult();
 }
 
 //------------------------------------------------------------------------------
