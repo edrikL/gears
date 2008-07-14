@@ -1481,13 +1481,13 @@ bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    std::stringstream ss; \
-    ss << "TestObject - failed (" << __LINE__ << ": " << __FILE__ \
-       << std::endl; \
-    std::string message8(ss.str()); \
-    std::string16 message16; \
-    if (UTF8ToString16(message8.c_str(), message8.size(), &message16)) { \
-      context->SetException(message16); \
+    char tmp[256]; \
+    snprintf(tmp, sizeof(tmp), "TestObject - failed ( %u: %s\n", \
+             __LINE__, __FILE__); \
+    LOG(("%s", tmp)); \
+    std::string16 message; \
+    if (UTF8ToString16(tmp, &message)) { \
+      context->SetException(message); \
     } else { \
       context->SetException(STRING16(L"Failed to convert error message.")); \
     } \
@@ -1827,14 +1827,13 @@ void TestObjectFunction(JsCallContext* context,
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    std::stringstream ss; \
-    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ << ")" \
-       << std::endl; \
-    std::string message8(ss.str()); \
-    printf("%s\n", message8.c_str()); \
-    std::string16 message16; \
-    if (UTF8ToString16(message8.c_str(), message8.size(), &message16)) { \
-      context->SetException(message16); \
+    char tmp[256]; \
+    snprintf(tmp, sizeof(tmp), "CreateObject - failed ( %u: %s\n", \
+             __LINE__, __FILE__); \
+    LOG(("%s", tmp)); \
+    std::string16 message; \
+    if (UTF8ToString16(tmp, &message)) { \
+      context->SetException(message); \
     } else { \
       context->SetException(STRING16(L"Failed to convert error message.")); \
     } \
