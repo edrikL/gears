@@ -398,19 +398,23 @@ endif
 endif
 endif
 
-ifeq ($(OS),linux)
+
+ifneq ($(findstring $(OS),linux|osx|win32),)
+ifeq ($(USING_CCTESTS),1)
 prereqs:: $(IPC_TEST_OUTDIR)
 modules:: $(IPC_TEST_EXE)
+endif
+endif
+
+ifeq ($(OS),linux)
 installers:: $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),osx)
-prereqs:: $(IPC_TEST_OUTDIR) $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(IPC_TEST_EXE) $(OSX_LAUNCHURL_EXE)
+prereqs:: $(OSX_LAUNCHURL_OUTDIR)
+modules:: $(OSX_LAUNCHURL_EXE)
 installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
-prereqs:: $(IPC_TEST_OUTDIR)
-modules:: $(IPC_TEST_EXE)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
 else
 ifeq ($(OS),wince)
