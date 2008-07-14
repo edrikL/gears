@@ -47,6 +47,9 @@
 #ifdef WIN32
 #include "gears/base/common/scoped_win32_handles.h"
 #endif
+#ifdef OS_ANDROID
+#include "gears/base/android/java_jni.h"
+#endif
 
 #ifdef OS_MACOSX
 const CFTimeInterval kRunLoopWakeupTimeout = 0.2; // 0.2 seconds.
@@ -526,14 +529,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     // For URL params we start an async fetch here.  The created thread will
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
-#ifdef OS_ANDROID
-    // TODO(jripley): remove once HTTP request is in.
-    LOG(("createWorkerFromUrl() doesn't yet work on Android"));
-    assert(false);
-    return false;
-#else
     if (!HttpRequest::Create(&wi->http_request)) { return false; }
-#endif
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
@@ -604,6 +600,9 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   
 #ifdef OS_MACOSX
   void *autorelease_pool = InitAutoReleasePool();
+#endif
+#ifdef OS_ANDROID
+  JniAttachCurrentThread();
 #endif
   
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
@@ -686,6 +685,9 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->threads_manager->ReleaseWorkerRef();
   wi->module_environment.reset(NULL);
 
+#ifdef OS_ANDROID
+  JniDetachCurrentThread();
+#endif
 #ifdef OS_MACOSX
   DestroyAutoReleasePool(autorelease_pool);
 #endif
