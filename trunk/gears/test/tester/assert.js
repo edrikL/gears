@@ -193,6 +193,21 @@ function assertObjectEqual(expected, actual, optDescription) {
   }
 }
 
+/**
+ * Assert that two blobs probably have the same content. Checks the content of
+ * the blob in debug mode, and the lengths in release mode.
+ *
+ * @param expected The expected blob.
+ * @param actual The actual blob.
+ * @param optDescription An optional description of what went wrong.
+ */
+function assertBlobProbablyEqual(expectedBlob, actualBlob, optDescription) {
+  if (isDebug) {
+    assert(actualBlob.hasSameContentsAs(expectedBlob), optDescription);
+  } else {
+    assertEqual(expectedBlob.length, actualBlob.length, optDescription);
+  }
+}
 
 /**
  * Assert that two values are not equal. A strict equality test is used; 4 and
