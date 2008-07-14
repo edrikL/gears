@@ -85,7 +85,11 @@ Canvas class
 
 As in HTML Canvas, our context has a state, which is a subset of the state in HTML Canvas's context. Our state consists of:
   * The current transformation matrix
-  * globalAlpha, globalCompositeOperation and fillStyle. HTML Canvas supports a richer state with more attributes pertaining to drawing that we don't support. See the spec for details.
+  * globalAlpha
+  * globalCompositeOperation
+  * fillStyle
+
+HTML Canvas supports a richer state with more attributes pertaining to drawing that we don't support. See the spec for details.
 
 The 'transform' function just sets the current transformation matrix and does not apply it on the underlying image on the canvas. Just as with HTML Canvas, the drawing functions (drawImage, clearRect, fillRect, strokeRect below) respect the state, and apply the necessary transforms on the clipping region. However color transforms, convolution transforms, etc are not part of the state, and invocations of these functions apply the changes on the underlying image directly. Hence, functions such as 'crop', 'resize', etc. apply the changes right then, whereas 'scale', 'rotate', etc just update the state (the transformation matrix to be precise) and the operations are applied only when a draw function is called.
 
