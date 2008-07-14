@@ -25,6 +25,8 @@
 
 #ifdef USING_CCTESTS
 
+#include <stdio.h>
+
 #include "gears/cctests/test.h"
 
 #include "third_party/jsoncpp/json.h"
@@ -38,6 +40,11 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
+
+#ifdef WIN32
+// For some reason Win32 thinks snprintf() needs to be marked as non-standard.
+#define snprintf _snprintf
+#endif
 
 DECLARE_GEARS_WRAPPER(GearsTest);
 
