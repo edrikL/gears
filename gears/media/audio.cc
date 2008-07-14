@@ -40,7 +40,8 @@ GearsAudio::~GearsAudio() {
 }
 
 void GearsAudio::GetError(JsCallContext *context) {
-  if (last_error_ == MediaConstants::MEDIA_NO_ERROR) {
+  int last_error = media_data_->GetLastError();
+  if (last_error == MediaConstants::MEDIA_NO_ERROR) {
     context->SetReturnValue(JSPARAM_NULL, MediaConstants::MEDIA_NO_ERROR);
     return;
   }
@@ -51,7 +52,7 @@ void GearsAudio::GetError(JsCallContext *context) {
     context->SetException(STRING16(L"Failed to create new javascript object."));
   }
 
-  error_object->SetPropertyInt(STRING16(L"code"), last_error_);
+  error_object->SetPropertyInt(STRING16(L"code"), last_error);
   error_object->SetPropertyInt(STRING16(L"MEDIA_ERR_ABORTED"),
                                MediaConstants::MEDIA_ERR_ABORTED);
   error_object->SetPropertyInt(STRING16(L"MEDIA_ERR_NETWORK"),
