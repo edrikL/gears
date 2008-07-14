@@ -2078,6 +2078,7 @@ $(BROWSER)_CPPSRCS += \
 		audio_recorder_test.cc \
 		base_audio_recorder.cc \
 		media.cc \
+		media_data.cc \
 		mock_audio_recorder.cc \
 		pa_audio_recorder.cc \
 		time_ranges.cc \

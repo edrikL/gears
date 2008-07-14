@@ -23,56 +23,62 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if (isOfficial) {
-// Audio API is not available on official builds yet.
-} else {
-  var player = google.gears.factory.create('beta.audio');
+function testLoadBlob() {
+  startAsync();
+  var request = google.gears.factory.create('beta.httprequest');
+  request.onreadystatechange = function() {
+    var state = request.readyState;
+    if (state != 4) {
+      return;
+    }
+    var audio = google.gears.factory.create('beta.audio');
+    
+    // This should not raise an exception
+    audio.loadBlob(request.responseBlob);
+    completeAsync();
+  }
+  request.open('GET', '/testcases/data/audio_int16_file1.raw', true);
+  request.send();
 }
 
 function testDefaultsAndGetterSetters() {
-  if (isOfficial) {
-  // Audio API is not available on official builds yet.
-  } else {
-    var aud1 = google.gears.factory.create('beta.audio');
+  var aud1 = google.gears.factory.create('beta.audio');
 
-    // error conditions
-    assertError(function() {
-      aud1.volume = 5.0;
-    }, null, 'INDEX_SIZE_ERR');
+  // error conditions
+  assertError(function() {
+    aud1.volume = 5.0;
+  }, null, 'INDEX_SIZE_ERR');
 
-    assertError(function() {
-      aud1.defaultPlaybackRate = 0.0;
-    }, null, 'NOT_SUPPORTED_ERR');
+  assertError(function() {
+    aud1.defaultPlaybackRate = 0.0;
+  }, null, 'NOT_SUPPORTED_ERR');
+  assertError(function() {
+    aud1.playbackRate = 0.0;
+  }, null, 'NOT_SUPPORTED_ERR');
 
-    assertError(function() {
-      aud1.playbackRate = 0.0;
-    }, null, 'NOT_SUPPORTED_ERR');
-
-    // defaults
-    assert(!aud1.error);
-    assertEqual(0.5, aud1.volume);
-    assertEqual(1.0, aud1.defaultPlaybackRate);
-    assertEqual(aud1.DATA_UNAVAILABLE, aud1.readyState);
-    assertEqual(false, aud1.seeking);
-    assertEqual(true, aud1.paused);
-    assertEqual(true, aud1.autoplay);
-    assertEqual(1, aud1.playCount);
-    assertEqual(false, aud1.muted);
-
-    // getters and setters
-    aud1.volume = 0.9;
-    assertEqual(0.9, aud1.volume);
-    aud1.defaultPlaybackRate = 0.5;
-    assertEqual(0.5, aud1.defaultPlaybackRate);
-    aud1.playbackRate = 0.7;
-    assertEqual(0.7, aud1.playbackRate);
-    aud1.playCount = 5;
-    assertEqual(5, aud1.playCount);
-    aud1.currentLoop = 4;
-    assertEqual(4, aud1.currentLoop);
-    aud1.muted = true;
-    assertEqual(true, aud1.muted);
-    aud1.autoplay = false;
-    assertEqual(false, aud1.autoplay);
-  }
+  // defaults
+  assert(!aud1.error);
+  assertEqual(0.5, aud1.volume);
+  assertEqual(1.0, aud1.defaultPlaybackRate);
+  assertEqual(aud1.DATA_UNAVAILABLE, aud1.readyState);
+  assertEqual(false, aud1.seeking);
+  assertEqual(true, aud1.paused);
+  assertEqual(true, aud1.autoplay);
+  assertEqual(1, aud1.playCount);
+  assertEqual(false, aud1.muted);
+  // getters and setters
+  aud1.volume = 0.9;
+  assertEqual(0.9, aud1.volume);
+  aud1.defaultPlaybackRate = 0.5;
+  assertEqual(0.5, aud1.defaultPlaybackRate);
+  aud1.playbackRate = 0.7;
+  assertEqual(0.7, aud1.playbackRate);
+  aud1.playCount = 5;
+  assertEqual(5, aud1.playCount);
+  aud1.currentLoop = 4;
+  assertEqual(4, aud1.currentLoop);
+  aud1.muted = true;
+  assertEqual(true, aud1.muted);
+  aud1.autoplay = false;
+  assertEqual(false, aud1.autoplay);
 }

@@ -27,9 +27,10 @@
 
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/blob/blob.h"
 
 GearsMedia::GearsMedia()
-    : last_error_(MediaConstants::MEDIA_NO_ERROR),
+    : media_data_(new MediaData()),
       loaded_first_frame_(false),
       ready_state_(MediaConstants::READY_STATE_DATA_UNAVAILABLE),
       seeking_(false),
@@ -45,10 +46,6 @@ GearsMedia::GearsMedia()
       muted_(false),
       src_(STRING16(L"")) {
 }
-
-GearsMedia::~GearsMedia() {
-}
-
 
 // API methods
 void GearsMedia::GetError(JsCallContext *context) {
@@ -70,6 +67,12 @@ void GearsMedia::SetSrc(JsCallContext *context) {
     return;
   }
   src_ = proposed_src;
+
+  // If the src attribute that is already in a document and whose networkState
+  // is in the EMPTY state, is added, changed or removed, the user agent must
+  // implicitly invoke the load() method. In this way,
+  // GearsMedia behaves similarly to other DOM elements, such as <img>
+  // TODO(aprasath): Implement the above
 }
 
 void GearsMedia::GetCurrentSrc(JsCallContext *context) {
@@ -388,12 +391,24 @@ void GearsMedia::SetMuted(JsCallContext *context) {
   // TODO(aprasath): Fire 'volumechange' event.
 }
 
-void GearsMedia::GetMediaBlob(JsCallContext *context) {
-  const int argc = 0;
-  JsArgument argv[1];
-  context->GetArguments(argc, argv);
-  if (context->is_exception_set()) return;
-  // TODO(aprasath): Implement me
+void GearsMedia::LoadBlob(JsCallContext *context) {
+  ModuleImplBaseClass *other_module;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+  assert(other_module);
+  if (GearsBlob::kModuleName != other_module->get_module_name()) {
+    context->SetException(STRING16(L"Argument must be a Blob."));
+    return;
+  }
+  scoped_refptr<BlobInterface> blob;
+  static_cast<GearsBlob*>(other_module)->GetContents(&blob);
+  assert(blob.get());
+
+  media_data_->LoadBlob(blob.get());
 }
 
 void GearsMedia::GetEventCanShowCurrentFrame(JsCallContext *context) {

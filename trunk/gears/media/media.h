@@ -35,6 +35,7 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/media/media_constants.h"
+#include "gears/media/media_data.h"
 
 // This represents a list of time periods.
 struct TimeRanges {
@@ -207,7 +208,7 @@ class GearsMedia {
   void SetMuted(JsCallContext *context);
 
   // ---- BLOB ----
-  void GetMediaBlob(JsCallContext *context);
+  void LoadBlob(JsCallContext *context);
 
   // ---- EVENTS ----
   // begin, progress, loadedmetadata, loadedfirstframe, load, abort, error,
@@ -258,10 +259,7 @@ class GearsMedia {
   void SetEventVolumeChange(JsCallContext *context);
 
  protected:
-  virtual ~GearsMedia();
-
-  // error state
-  int last_error_;
+  scoped_refptr<MediaData> media_data_;
 
   // network state
   bool loaded_first_frame_;
@@ -366,7 +364,7 @@ class GearsMedia {
     RegisterProperty("muted", &GearsMediaType::IsMuted,                       \
                      &GearsMediaType::SetMuted);                              \
                                                                               \
-    RegisterMethod("getMediaBlob", &GearsMediaType::GetMediaBlob);            \
+    RegisterMethod("loadBlob", &GearsMediaType::LoadBlob);                    \
                                                                               \
     RegisterProperty("onbegin", &GearsMediaType::GetEventBegin,               \
                      &GearsMediaType::SetEventBegin);                         \
