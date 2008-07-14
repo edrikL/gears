@@ -19,11 +19,15 @@ interface Geolocation {
   readonly Position lastPosition;
 
   // Get the current position.
-  // The callback function will be called with the result.
+  // The callback function is always called exactly once ...
+  // - with a good position, as soon as one is available, or
+  // - with an error message, if none of the location providers find a good fix.
   void getCurrentPosition(PositionCallback callback, optional PositionOptions options);
 
   // Watch the current position over time.
-  // The callback function will be called with the result.
+  // The callback function will be called when ...
+  // - with a good position, as soon as one is available, or
+  // - whenever the position changes significantly, subject to a maximum callback frequency.
   int watchPosition(PositionCallback callback, optional PositionOptions options);
 
   // Stop watching the current position.
