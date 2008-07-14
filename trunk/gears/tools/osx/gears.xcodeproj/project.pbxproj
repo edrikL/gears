@@ -56,6 +56,14 @@
 		B507A4070DEC70FD00DC9D6A /* transaction.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FE0DEC70FD00DC9D6A /* transaction.cc */; };
 		B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */ = {isa = PBXBuildFile; fileRef = B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
+		B531A15C0E2BBC5600147648 /* media_data.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15A0E2BBC5600147648 /* media_data.cc */; };
+		B531A1610E2BBC7B00147648 /* mock_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */; };
+		B531A1660E2BBCBF00147648 /* ipc_message_queue_test_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1650E2BBCBF00147648 /* ipc_message_queue_test_osx.mm */; };
+		B531A1690E2BBCD300147648 /* common_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1670E2BBCD300147648 /* common_osx.mm */; };
+		B531A16E0E2BBD3A00147648 /* ipc_message_queue_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */; };
+		B531A1730E2BBD7300147648 /* ipc_message_queue_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */; };
+		B531A1760E2BBDA600147648 /* base_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A1740E2BBDA600147648 /* base_audio_recorder.cc */; };
+		B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A17B0E2BBDE100147648 /* audio_recorder_test.cc */; };
 		B532BAB20E2536EA00912490 /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB10E2536EA00912490 /* capture_task.cc */; };
 		B532BAB60E25374600912490 /* localserver_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB50E25374600912490 /* localserver_module.cc */; };
 		B532BAB80E25375F00912490 /* localserver_perf_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB70E25375E00912490 /* localserver_perf_test.cc */; };
@@ -726,6 +734,20 @@
 		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
+		B531A15A0E2BBC5600147648 /* media_data.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_data.cc; path = ../../media/media_data.cc; sourceTree = SOURCE_ROOT; };
+		B531A15B0E2BBC5600147648 /* media_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_data.h; path = ../../media/media_data.h; sourceTree = SOURCE_ROOT; };
+		B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mock_audio_recorder.cc; path = ../../media/mock_audio_recorder.cc; sourceTree = SOURCE_ROOT; };
+		B531A1600E2BBC7B00147648 /* mock_audio_recorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mock_audio_recorder.h; path = ../../media/mock_audio_recorder.h; sourceTree = SOURCE_ROOT; };
+		B531A1650E2BBCBF00147648 /* ipc_message_queue_test_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ipc_message_queue_test_osx.mm; path = ../../base/common/ipc_message_queue_test_osx.mm; sourceTree = SOURCE_ROOT; };
+		B531A1670E2BBCD300147648 /* common_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = common_osx.mm; path = ../../base/common/common_osx.mm; sourceTree = SOURCE_ROOT; };
+		B531A1680E2BBCD300147648 /* common_osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common_osx.h; path = ../../base/common/common_osx.h; sourceTree = SOURCE_ROOT; };
+		B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ipc_message_queue_test.cc; path = ../../base/common/ipc_message_queue_test.cc; sourceTree = SOURCE_ROOT; };
+		B531A16D0E2BBD3A00147648 /* ipc_message_queue_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ipc_message_queue_test.h; path = ../../base/common/ipc_message_queue_test.h; sourceTree = SOURCE_ROOT; };
+		B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ipc_message_queue_osx.mm; path = ../../base/common/ipc_message_queue_osx.mm; sourceTree = SOURCE_ROOT; };
+		B531A1740E2BBDA600147648 /* base_audio_recorder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = base_audio_recorder.cc; path = ../../media/base_audio_recorder.cc; sourceTree = SOURCE_ROOT; };
+		B531A1750E2BBDA600147648 /* base_audio_recorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base_audio_recorder.h; path = ../../media/base_audio_recorder.h; sourceTree = SOURCE_ROOT; };
+		B531A17A0E2BBDE100147648 /* audio_recorder_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_recorder_test.h; path = ../../media/audio_recorder_test.h; sourceTree = SOURCE_ROOT; };
+		B531A17B0E2BBDE100147648 /* audio_recorder_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio_recorder_test.cc; path = ../../media/audio_recorder_test.cc; sourceTree = SOURCE_ROOT; };
 		B532BAB10E2536EA00912490 /* capture_task.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = capture_task.cc; path = ../../localserver/common/capture_task.cc; sourceTree = SOURCE_ROOT; };
 		B532BAB40E25374600912490 /* localserver_module.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = localserver_module.h; path = ../../localserver/localserver_module.h; sourceTree = SOURCE_ROOT; };
 		B532BAB50E25374600912490 /* localserver_module.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = localserver_module.cc; path = ../../localserver/localserver_module.cc; sourceTree = SOURCE_ROOT; };
@@ -1637,8 +1659,16 @@
 				B507A3E20DEC70AF00DC9D6A /* audio.cc */,
 				B507A3D90DEC70AF00DC9D6A /* audio_recorder.h */,
 				B507A3DA0DEC70AF00DC9D6A /* audio_recorder.cc */,
+				B531A17A0E2BBDE100147648 /* audio_recorder_test.h */,
+				B531A17B0E2BBDE100147648 /* audio_recorder_test.cc */,
+				B531A1750E2BBDA600147648 /* base_audio_recorder.h */,
+				B531A1740E2BBDA600147648 /* base_audio_recorder.cc */,
 				B507A3E00DEC70AF00DC9D6A /* media.h */,
 				B507A3DB0DEC70AF00DC9D6A /* media.cc */,
+				B531A15B0E2BBC5600147648 /* media_data.h */,
+				B531A15A0E2BBC5600147648 /* media_data.cc */,
+				B531A1600E2BBC7B00147648 /* mock_audio_recorder.h */,
+				B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */,
 				B5F09C8E0E156A7A00C7ACB7 /* pa_audio_recorder.cc */,
 				B5F09C8F0E156A7A00C7ACB7 /* pa_audio_recorder.h */,
 				B507A3DD0DEC70AF00DC9D6A /* time_ranges.h */,
@@ -1973,6 +2003,8 @@
 				B5A9BD550E06C23800DCA259 /* byte_store.h */,
 				B5A9BD530E06C23800DCA259 /* byte_store_test.cc */,
 				B55D10DF0D992C3F00B405E4 /* common.h */,
+				B531A1670E2BBCD300147648 /* common_osx.mm */,
+				B531A1680E2BBCD300147648 /* common_osx.h */,
 				B58EFF630D52A5DC00B0A65D /* common_sf.h */,
 				B544D97D0D2EE5D000D30561 /* common_sf.mm */,
 				B54D29110D9287D20029F7EF /* dispatcher.h */,
@@ -1997,7 +2029,11 @@
 				B544D9870D2EE5D000D30561 /* file.cc */,
 				B57F3BDC0DA11D860088FE52 /* file_test.cc */,
 				B58E00680D5BB32B00B0A65D /* ipc_message_queue.h */,
+				B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */,
 				B58E00690D5BB32B00B0A65D /* ipc_message_queue_null.cc */,
+				B531A16D0E2BBD3A00147648 /* ipc_message_queue_test.h */,
+				B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */,
+				B531A1650E2BBCBF00147648 /* ipc_message_queue_test_osx.mm */,
 				B5D5FC090DEF3A470033ABE2 /* js_marshal.h */,
 				B5D5FC0A0DEF3A470033ABE2 /* js_marshal.cc */,
 				B544D9930D2EE5D000D30561 /* js_runner.h */,
@@ -3746,6 +3782,14 @@
 				B53838E10E27C0BB00A45832 /* jquant1.c in Sources */,
 				B53838E20E27C0BB00A45832 /* jutils.c in Sources */,
 				B53838F50E27C28C00A45832 /* timed_callback.cc in Sources */,
+				B531A15C0E2BBC5600147648 /* media_data.cc in Sources */,
+				B531A1610E2BBC7B00147648 /* mock_audio_recorder.cc in Sources */,
+				B531A1660E2BBCBF00147648 /* ipc_message_queue_test_osx.mm in Sources */,
+				B531A1690E2BBCD300147648 /* common_osx.mm in Sources */,
+				B531A16E0E2BBD3A00147648 /* ipc_message_queue_test.cc in Sources */,
+				B531A1730E2BBD7300147648 /* ipc_message_queue_osx.mm in Sources */,
+				B531A1760E2BBDA600147648 /* base_audio_recorder.cc in Sources */,
+				B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
