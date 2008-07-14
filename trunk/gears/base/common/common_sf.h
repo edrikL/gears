@@ -46,6 +46,8 @@ struct NPObject;
 #if defined(__cplusplus)
 extern "C" {
 #endif
+void SafariGearsLog(const char *fn, ...);
+void SafariGearsLog16(const char16 *msg_utf16, ...);
   
 #ifdef __OBJC__
 
@@ -65,6 +67,14 @@ void ThrowExceptionKey(NSString *key, ...);
 
 #if defined(__cplusplus)
 }
+#endif
+
+#ifdef DEBUG
+#define LOG(a) SafariGearsLog a
+#define LOG16(a) SafariGearsLog16 a
+#else
+#define LOG(a) 0
+#define LOG16(a) 0
 #endif
 
 // Wrappers for throwing localized vararg exceptions

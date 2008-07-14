@@ -1493,7 +1493,6 @@ IPC_TEST_CPPSRCS += \
 
 ifeq ($(OS),osx)
 IPC_TEST_CPPSRCS += \
-		common_osx.mm \
 		ipc_message_queue_osx.mm \
 		ipc_message_queue_test_osx.mm \
 		$(NULL)
