@@ -45,10 +45,10 @@ Gears code utilizes intrusive reference counting on some objects via `Ref()` and
  
   * Try to minimize the use of Objective-C - Objective-C can't be utilized in other platforms, the more common code we have in Gears the better.
   * Use Cocoa for UI - The Carbon UI elements are deprecated and supposedly won't make the 64-bit transition.  Use Cocoa instead.
-  * In .mm files containing Objective-C++ code, use "#import" for all include files (C/C++/Obj-C) and don't use  "#include" - even if the included file contains #define guards. "#import" is common in OSX community and prevents from multiple include of the same file in the same manner as #define guards do (and some OSX headers may depend on it); in other respects it's the same thing.
 
 == Notable Departures from common Objective-C coding style ==
-
+  * In .mm (obj-c++) files, use #import (rather than #include) for both obj-c and pure c++ header files.
+  * Add #define guards to obj-c headers files.
   * In contrast to common Objective-C style, long variable names follow the same conventions as C++ rather than the traditional Apple camelCase convention, e.g.
 {{{
 // Don't:
