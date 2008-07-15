@@ -173,6 +173,7 @@ void GearsCanvas::Clone(JsCallContext *context) {
       skia_bitmap_->getPixels(), skia_bitmap_->getSize()) == 0);
 
   clone->set_alpha(alpha());
+  clone->set_composite_operation(composite_operation());
   clone->set_fill_style(fill_style());
   clone->set_font(font());
   clone->set_text_align(text_align());
@@ -196,7 +197,8 @@ void GearsCanvas::Crop(JsCallContext *context) {
   
   SkIRect src_rect = { x, y, x + width, y + height};
   if (!IsRectValid(src_rect)) {
-    context->SetException(STRING16(L"Invalid arguments."));
+    context->SetException(STRING16(L"Rectangle to crop stretches beyond the "
+        L"bounds of the bitmap or has negative dimensions"));
     return;
   }
   SkBitmap new_bitmap;
@@ -214,7 +216,6 @@ void GearsCanvas::Crop(JsCallContext *context) {
                        SkIntToScalar(width),
                        SkIntToScalar(height) };
   new_canvas.drawBitmapRect(*skia_bitmap_, &src_rect, dest_rect);
-
   new_bitmap.swap(*skia_bitmap_);
 }
 
@@ -417,8 +418,8 @@ SkCanvas *GearsCanvas::SkiaCanvas() {
 
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {
   return rect.fLeft <= rect.fRight && rect.fTop <= rect.fBottom &&
-     rect.fLeft >= 0 && rect.fTop >= 0 &&
-     rect.fRight <= Width() && rect.fBottom <= Height();
+      rect.fLeft >= 0 && rect.fTop >= 0 &&
+      rect.fRight <= Width() && rect.fBottom <= Height();
 }
 
 // Skia's SkPorterDuff values are all non-negative.

@@ -26,6 +26,7 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/canvas/canvas_rendering_context_2d.h"
+#include "third_party/skia/include/SkPorterDuff.h"
 
 DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
 const std::string
@@ -160,6 +161,9 @@ void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
+  // TODO(kart): Remove this after unit testing.
+  context->SetException(STRING16(L"Unimplemented"));
+  return;
   double angle;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle },
@@ -250,7 +254,13 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  canvas_->set_composite_operation(new_composite_op);
+  if (!canvas_->set_composite_operation(new_composite_op)) {
+    // HTML5 canvas-only composite operation.
+    context->SetException(
+        STRING16(L"This composite operation is implemented only in HTML5 canvas"
+                 L" and not in Gears' canvas."));
+    return;
+  }
 }
 
 void GearsCanvasRenderingContext2D::GetFillStyle(
@@ -259,8 +269,9 @@ void GearsCanvasRenderingContext2D::GetFillStyle(
   context->SetReturnValue(JSPARAM_STRING16, &fill_style);
 }
 
-// TODO(kart): Generate an error if given a CanvasGradient or CanvasPattern
-// object (from the browser's canvas implementation).
+// TODO(kart): If given a CanvasGradient or CanvasPattern object (from the
+// browser's canvas implementation), generate an error saying we don't support
+// them; do *not* fail silently.
 void GearsCanvasRenderingContext2D::SetFillStyle(
     JsCallContext *context) {
   std::string16 new_fill_style;
@@ -268,7 +279,8 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  // TODO(kart): Do not generate error on type mismatch.
+  // TODO(kart): Do not generate error on type mismatch; fail silently
+  // (as per HTML5 canvas spec).
   if (context->is_exception_set())
     return;
 
@@ -374,6 +386,8 @@ void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
+  // TODO(kart): Generate a better error message if given a HTMLImageElement
+  // or a HTMLCanvasElement.
   ModuleImplBaseClass *other_module;
   int sx, sy, sw, sh, dx, dy, dw, dh;
   JsArgument args[] = {
@@ -403,8 +417,8 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
       dw = sw;
       dh = sh;
     } else if (num_args == 3) {
-      dw = canvas_->Width();
-      dh = canvas_->Height();
+      dw = source->Width();
+      dh = source->Height();
     } else {
       context->SetException(STRING16(L"Unsupported number of arguments."));
       return;
@@ -424,38 +438,50 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // exception, but it does not say what to do if the dest rect is invalid.
   // So, if both rects are invalid, it's more spec-compliant to raise an error
   // for the src rect.
-  if (!canvas_->IsRectValid(src_irect)) {
+  if (!source->IsRectValid(src_irect)) {
     context->SetException(STRING16(
-        L"Source rectangle stretches beyond the bounds of its bitmap or "
-        L"has negative dimensions."));
+        L"INDEX_SIZE_ERR: Source rectangle stretches beyond the bounds"
+        L"of its bitmap or has negative dimensions."));
     return;
   }
   if (src_irect.isEmpty()) {
     context->SetException(STRING16(
-        L"Source rectangle has zero width or height."));
+        L"INDEX_SIZE_ERR: Source rectangle has zero width or height."));
     return;
   }
   if (!canvas_->IsRectValid(dest_irect)) {
     context->SetException(STRING16(
-        L"Destination rectangle stretches beyond the bounds of its bitmap or "
-        L"has negative dimensions."));
+        L"INDEX_SIZE_ERR: Destination rectangle stretches beyond the bounds"
+        L"of its bitmap or has negative dimensions."));
     return;
   }
   if (dest_irect.isEmpty()) {
     context->SetException(STRING16(
-        L"Destination rectangle has zero width or height."));
+        L"INDEX_SIZE_ERR: Destination rectangle has zero width or height."));
     return;
   }
   
   SkRect dest_rect;
   dest_rect.set(dest_irect);
 
+  // TODO(kart): Add unit tests for alpha and composite operation.
+  SkPaint paint;
+  paint.setAlpha(static_cast<U8CPU>(canvas_->alpha() * 255));
+  SkPorterDuff::Mode porter_duff = static_cast<SkPorterDuff::Mode>(
+      canvas_->ParseCompositeOperationString(canvas_->composite_operation()));
+
+  // Make sure it's a supported mode (neither a HTML5 canvas-only mode like
+  // 'source-atop' nor some gibberish like 'foobar').
+  assert(static_cast<int>(porter_duff) >= 0);
+
+  paint.setPorterDuffXfermode(porter_duff);
+
   // When drawBitmapRect() is called with a source rectangle, it (also) handles
   // the case where source canvas is same as this canvas.
   // TODO(kart): This function silently fails on errors. Find out what can be
   // done about this.
   canvas_->SkiaCanvas()->drawBitmapRect(
-      *(source->SkiaBitmap()), &src_irect, dest_rect);
+      *(source->SkiaBitmap()), &src_irect, dest_rect, &paint);
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
