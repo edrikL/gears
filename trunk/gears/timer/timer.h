@@ -39,6 +39,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/scoped_token.h"
 
 // TODO(mpcomplete): remove when we have a cross-platform timer abstraction
 #if BROWSER_NPAPI && defined(WIN32)
@@ -78,16 +79,6 @@ class WindowsPlatformTimer
   bool in_handler_;
 
   DISALLOW_EVIL_CONSTRUCTORS(WindowsPlatformTimer);
-};
-#elif BROWSER_WEBKIT
-class ReleaseCFTimerFunctor {
- public:
-  void operator()(CFRunLoopTimerRef x) const {
-    if (x != NULL) { 
-      CFRunLoopTimerInvalidate(x);
-      CFRelease(x);
-    }
-  }
 };
 #endif
 
@@ -153,7 +144,15 @@ class GearsTimer
     // act as an intermediary.
     // scoped_timer ensures that timer is released properly by OS when
     // deleted.
-    typedef scoped_token<CFRunLoopTimerRef, ReleaseCFTimerFunctor> scoped_timer;
+    class CFRunLoopTimerTraits {
+     public:
+      static void Free(CFRunLoopTimerRef x) {
+        CFRunLoopTimerInvalidate(x);
+        CFRelease(x);
+      }
+      static CFRunLoopTimerRef Default() { return NULL; }
+    };
+    typedef scoped_token<CFRunLoopTimerRef, CFRunLoopTimerTraits> scoped_timer;
     linked_ptr<scoped_timer> platform_timer;
 #elif BROWSER_FF
     nsCOMPtr<nsITimer> platform_timer;

@@ -46,7 +46,6 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
-#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"

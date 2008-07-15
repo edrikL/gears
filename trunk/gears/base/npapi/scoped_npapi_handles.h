@@ -39,12 +39,8 @@
 #endif
 
 // ScopedNPObject: automatically call NPN_ReleaseObject()
-class ReleaseObjectFunctor {
- public:
-  void operator()(NPObject* x) const {
-    if (x != NULL) { NPN_ReleaseObject(x); }
-  }
-};
-typedef scoped_token<NPObject*, ReleaseObjectFunctor> ScopedNPObject;
+typedef DECLARE_SCOPED_TRAITS(NPObject*, NPN_ReleaseObject, NULL)
+    NPObjectTraits;
+typedef scoped_token<NPObject*, NPObjectTraits> ScopedNPObject;
 
 #endif // GEARS_BASE_NPAPI_SCOPED_NPAPI_HANDLES_H__

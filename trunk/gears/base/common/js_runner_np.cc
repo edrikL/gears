@@ -44,7 +44,6 @@
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #include "gears/base/common/js_standalone_engine.h"
 #include "gears/base/common/mutex.h"
-#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"

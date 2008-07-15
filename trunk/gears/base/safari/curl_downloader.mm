@@ -43,13 +43,8 @@ static size_t write_data_callback(void *buffer, size_t size, size_t nmemb,
   return nmemb;
 }
 
-class CloseCURLHandleFuctor {
- public:
-  void operator()(CURL *handle) const {
-    if (handle) { curl_easy_cleanup(handle); }
-  }
-};
-typedef scoped_token<CURL *, CloseCURLHandleFuctor> ScopedCURLHandle;
+typedef DECLARE_SCOPED_TRAITS(CURL*, curl_easy_cleanup, NULL) CURLTraits;
+typedef scoped_token<CURL*, CURLTraits> ScopedCURLHandle;
 
 bool GetURLDataAsVector(const std::string16 &url, 
                          const std::string16 &user_agent,

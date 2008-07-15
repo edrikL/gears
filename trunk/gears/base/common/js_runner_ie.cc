@@ -51,7 +51,6 @@
 #include "gears/base/common/html_event_monitor.h"
 #endif
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
-#include "gears/base/common/scoped_token.h"
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For CallWindowOnerror()
 #endif

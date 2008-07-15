@@ -30,7 +30,6 @@
 #define GEARS_BASE_COMMON_JS_RUNNER_H__
 
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 

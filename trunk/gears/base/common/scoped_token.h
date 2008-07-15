@@ -22,107 +22,133 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Provides a scoped container for automatic destruction.
-// Is based on scoped_ptr_malloc from google3 but makes some important changes:
-//   (a) supports pointers to objects that are not fully defined
-//   (b) support non-pointer values (e.g. handles)
-// I assume there was some good reason for the old restrictions, so prefer
-// scoped_ptr[_malloc] whenever possible, and use this new container carefully.
 
 #ifndef GEARS_BASE_COMMON_SCOPED_TOKEN_H__
 #define GEARS_BASE_COMMON_SCOPED_TOKEN_H__
 
 #include <assert.h>
+#include <algorithm>
 
-template<typename T, typename FreeFunctor>
+// scoped_token manages the lifetime of a data structure with an opaque type,
+// analogously to how scoped_ptr manages the lifetime of an object.
+
+// Each scoped_token must provide a traits class which defines a Free function
+// and a Default value.  The Free function will release all resources associated
+// with the token.  The Default value represents an inactive token which is
+// not managing any resources.  A token with the Default value will never be
+// Freed.
+//
+//class TokenTypeTraits {
+// public:
+//  static void Free(TokenType x) { ... }
+//  static TokenType Default() { return ...; }
+//};
+
+// Forward declaration of scoped_token.
+template<typename TokenType, typename TokenTraits>
+class scoped_token;
+ 
+// Forward declaration of as_out_parameter.
+template<typename TokenType, typename TokenTraits>
+TokenType* as_out_parameter(scoped_token<TokenType, TokenTraits>&);
+
+template<typename TokenType, typename TokenTraits>
 class scoped_token {
- private:
-
-  T val;
-
-  scoped_token(scoped_token const &);
-  scoped_token & operator=(scoped_token const &);
-
  public:
+  typedef TokenType element_type;
 
-  typedef T element_type;
+  scoped_token() : val_(TokenTraits::Default()) {}
 
-  explicit scoped_token(T v): val(v), has_value_(true) {}
+  explicit scoped_token(TokenType v): val_(v) {}
 
   ~scoped_token() {
-    if (has_value_) {
-      free_(val);
+    if (TokenTraits::Default() != val_) {
+      TokenTraits::Free(val_);
     }
   }
 
-  void reset(T v) {
-    if (has_value_) {
-      free_(val);
+  void reset(TokenType v) {
+    if (TokenTraits::Default() != val_) {
+      TokenTraits::Free(val_);
     }
-    val = v;
-    has_value_ = true;
+    val_ = v;
   }
 
-  bool operator==(T v) const {
-    assert(has_value_);
-    return val == v;
+  bool operator==(TokenType v) const {
+    return val_ == v;
   }
 
-  bool operator!=(T v) const {
-    assert(has_value_);
-    return val != v;
+  bool operator!=(TokenType v) const {
+    return val_ != v;
   }
 
-  T get() const {
-    assert(has_value_);
-    return val;
+  TokenType get() const {
+    return val_;
   }
 
-  void swap(scoped_token & b) {
-    T v_tmp = b.val;
-    b.val = val;
-    val = v_tmp;
-
-    bool b_tmp = b.has_value_;
-    b.has_value_ = has_value_;
-    has_value_ = b_tmp;
+  void swap(scoped_token& b) {
+    std::swap(val_, b.val_);
   }
 
-  T release() {
-    has_value_ = false;
-    return val;
+  TokenType release() {
+    TokenType v = val_;
+    val_ = TokenTraits::Default();
+    return v;
   }
 
  private:
+  TokenType val_;
 
-  // no reason to use these: each scoped_token should have its own object
-  template <typename U, typename GP>
-  bool operator==(scoped_token<U, GP> const& v) const;
-  template <typename U, typename GP>
-  bool operator!=(scoped_token<U, GP> const& v) const;
+  friend TokenType* as_out_parameter<>(scoped_token<TokenType, TokenTraits>&);
 
-  bool has_value_;
-  static FreeFunctor const free_;
+  // Disallow copy construction and assignment.
+  scoped_token(const scoped_token&);
+  scoped_token& operator=(const scoped_token&);
+
+  // No reason to use these: each scoped_token should have its own object.
+  template <typename U1, typename U2>
+  bool operator==(scoped_token<U1, U2> const& v) const;
+  template <typename U1, typename U2>
+  bool operator!=(scoped_token<U1, U2> const& v) const;
 };
 
-template<typename T, typename FF>
-FF const scoped_token<T,FF>::free_ = FF();
-
-template<typename T, typename FF> inline
-void swap(scoped_token<T,FF>& a, scoped_token<T,FF>& b) {
+template<typename TokenType, typename TokenTraits>
+void swap(scoped_token<TokenType, TokenTraits>& a,
+          scoped_token<TokenType, TokenTraits>& b) {
   a.swap(b);
 }
 
-template<typename T, typename FF> inline
-bool operator==(T v, const scoped_token<T,FF>& b) {
+template<typename TokenType, typename TokenTraits>
+bool operator==(TokenType v, const scoped_token<TokenType, TokenTraits>& b) {
   return v == b.get();
 }
 
-template<typename T, typename FF> inline
-bool operator!=(T v, const scoped_token<T,FF>& b) {
+template<typename TokenType, typename TokenTraits>
+bool operator!=(TokenType v, const scoped_token<TokenType, TokenTraits>& b) {
   return v != b.get();
 }
 
+// Returns the internal address of the token, suitable for passing to functions
+// that return a token as an out parameter.
+// Example:
+//   bool CreateToken(Foo* created);
+//   scoped_token<Foo, FreeFoo, NULL> foo;
+//   CreateObject(as_out_parameter(foo));
+template<typename TokenType, typename TokenTraits>
+TokenType* as_out_parameter(scoped_token<TokenType, TokenTraits>& p) {
+  assert(TokenTraits::Default() == p.val_);
+  return &p.val_;
+}
+
+// DECLARE_SCOPED_TRAITS conveniently declares a scoped_token traits class.
+//  Usage:
+//   typedef DECLARE_SCOPED_TRAITS(Handle, FreeHandle, NULL) HandleTraits;
+//   typedef scoped_token<Handle, HandleTraits> scoped_Handle;
+#define DECLARE_SCOPED_TRAITS(TokenType, FreeFunction, DefaultValue) \
+class { \
+ public: \
+  static void Free(TokenType x) { FreeFunction(x); } \
+  static TokenType Default() { return DefaultValue; } \
+}
 
 #endif // GEARS_BASE_COMMON_SCOPED_TOKEN_H__

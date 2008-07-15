@@ -81,6 +81,9 @@
 template <typename T>
 class scoped_ptr;
 
+template<typename T>
+T** as_out_parameter(scoped_ptr<T>&);
+
 template <typename T>
 class scoped_ptr {
  private:
@@ -150,6 +153,7 @@ class scoped_ptr {
   }
 
  private:
+  friend T** as_out_parameter<>(scoped_ptr<T>&);
 
   // no reason to use these: each scoped_ptr should have its own object
   template <typename U> bool operator==(scoped_ptr<U> const& p) const;
@@ -169,6 +173,18 @@ bool operator==(T* p, const scoped_ptr<T>& b) {
 template<typename T> inline
 bool operator!=(T* p, const scoped_ptr<T>& b) {
   return p != b.get();
+}
+
+// Returns the internal pointer, suitable for passing to functions that
+// return an object as an out parameter.
+// Example:
+//   int CreateObject(Foo** created);
+//   scoped_ptr<Foo> foo;
+//   CreateObject(as_out_parameter(foo));
+template<typename T>
+T** as_out_parameter(scoped_ptr<T>& p) {
+  assert(p.ptr == 0);
+  return &p.ptr;
 }
 
 //  scoped_array extends scoped_ptr to arrays. Deletion of the array pointed to
