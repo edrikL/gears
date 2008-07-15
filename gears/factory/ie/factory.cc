@@ -185,7 +185,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   // been finalized for official builds.
 #else
   } else if (object_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<Database2Manager>(module_environment_.get(), NULL, &object);
+    CreateModule<GearsDatabase2Manager>(
+        module_environment_.get(), NULL, &object);
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(module_environment_.get(), NULL, &object);
 #ifdef WINCE
@@ -209,7 +210,7 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   // The Dummy module is not included in official builds.
 #else
   } else if (object_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(module_environment_.get(), NULL, &object);
+    CreateModule<GearsDummyModule>(module_environment_.get(), NULL, &object);
 #endif // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.

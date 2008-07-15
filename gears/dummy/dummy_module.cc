@@ -35,22 +35,22 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
 
-// TODO: Replace DummyModule with the name of your module.
+// TODO: Replace GearsDummyModule with the name of your module.
 
 // Define the dispatcher for your Module.
-DECLARE_GEARS_WRAPPER(DummyModule);
+DECLARE_GEARS_WRAPPER(GearsDummyModule);
 
 template<>
-void Dispatcher<DummyModule>::Init() {
+void Dispatcher<GearsDummyModule>::Init() {
   // TODO: Register methods and properties that are exposed to JavaScript.
-  RegisterMethod("method", &DummyModule::Method);
+  RegisterMethod("method", &GearsDummyModule::Method);
   // Property can have both a getter and a setter. To make property read-only,
   // specify NULL as the setter.
-  RegisterProperty("property", &DummyModule::GetProperty,
-                   &DummyModule::SetProperty);
+  RegisterProperty("property", &GearsDummyModule::GetProperty,
+                   &GearsDummyModule::SetProperty);
 }
 
-void DummyModule::Method(JsCallContext *context) {
+void GearsDummyModule::Method(JsCallContext *context) {
   std::string16 first_argument;
   int second_argument;
 
@@ -81,14 +81,14 @@ void DummyModule::Method(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_INT, &second_argument);
 }
 
-void DummyModule::GetProperty(JsCallContext *context) {
+void GearsDummyModule::GetProperty(JsCallContext *context) {
   // TODO: Implement additional property getter logic here.
 
   // Reaturn value of specified type.
   context->SetReturnValue(JSPARAM_BOOL, &property_value_);
 }
 
-void DummyModule::SetProperty(JsCallContext *context) {
+void GearsDummyModule::SetProperty(JsCallContext *context) {
   // Specify arguments and types. The mechanism is consistent with the way
   // method arguments are read.
   JsArgument argv[] = {

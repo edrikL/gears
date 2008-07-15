@@ -38,29 +38,31 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // forward declarations
-class Database2;
+class GearsDatabase2;
 class Database2Statement;
 
-// TODO(dimitri.glazkov): Currently, Database2Transaction has to listen for the
-// JSEVENT_UNLOAD event and release its callbacks, because it appears that the
-// js engine may go away before the Database2Transaction is garbage-collected,
-// which causes a crash trying to unroot the callbacks in destructor. This
-// problem was only observed when the module instance is created in an iframe.
-// Figure out whether there is a better way to handle this.
-class Database2Transaction
+// TODO(dimitri.glazkov): Currently, GearsDatabase2Transaction has to listen for
+// the JSEVENT_UNLOAD event and release its callbacks, because it appears that
+// the js engine may go away before the GearsDatabase2Transaction is
+// garbage-collected, which causes a crash trying to unroot the callbacks in
+// destructor. This problem was only observed when the module instance is
+// created in an iframe. Figure out whether there is a better way to handle
+// this.
+class GearsDatabase2Transaction
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
-  Database2Transaction() : ModuleImplBaseClassVirtual("Database2Transaction") {}
-  ~Database2Transaction() {}
-  // creates Database2Transaction instance
-  static bool Create(const Database2 *database,
+  GearsDatabase2Transaction()
+      : ModuleImplBaseClassVirtual("GearsDatabase2Transaction") {}
+  ~GearsDatabase2Transaction() {}
+  // creates GearsDatabase2Transaction instance
+  static bool Create(const GearsDatabase2 *database,
                      Database2Connection *connection,
                      Database2Interpreter *interpreter,
                      JsRootedCallback *callback,
                      JsRootedCallback *error_callback,
                      JsRootedCallback *success_callback,
-                     scoped_refptr<Database2Transaction> *instance);
+                     scoped_refptr<GearsDatabase2Transaction> *instance);
 
   void Start();
 
@@ -122,7 +124,7 @@ class Database2Transaction
   scoped_ptr<JsRootedCallback> error_callback_;
   scoped_ptr<JsRootedCallback> success_callback_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(Database2Transaction);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase2Transaction);
 };
 
 #endif // GEARS_DATABASE2_TRANSACTION_H__

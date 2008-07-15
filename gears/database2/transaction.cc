@@ -34,35 +34,35 @@
 #include "gears/database2/database2_common.h"
 #include "gears/database2/statement.h"
 
-DECLARE_GEARS_WRAPPER(Database2Transaction);
+DECLARE_GEARS_WRAPPER(GearsDatabase2Transaction);
 
 template<>
-void Dispatcher<Database2Transaction>::Init() {
-  RegisterMethod("executeSql", &Database2Transaction::ExecuteSql);
+void Dispatcher<GearsDatabase2Transaction>::Init() {
+  RegisterMethod("executeSql", &GearsDatabase2Transaction::ExecuteSql);
 }
 
 
 // static
-bool Database2Transaction::Create(
-                               const Database2 *database,
-                               Database2Connection *connection,
-                               Database2Interpreter *interpreter,
-                               JsRootedCallback *callback,
-                               JsRootedCallback *error_callback,
-                               JsRootedCallback *success_callback,
-                               scoped_refptr<Database2Transaction> *instance) {
+bool GearsDatabase2Transaction::Create(
+    const GearsDatabase2 *database,
+    Database2Connection *connection,
+    Database2Interpreter *interpreter,
+    JsRootedCallback *callback,
+    JsRootedCallback *error_callback,
+    JsRootedCallback *success_callback,
+    scoped_refptr<GearsDatabase2Transaction> *instance) {
   assert(instance);
   // TODO(nigeltao/glazkov): does this method have to take a
   // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
   // JsCallContext) suffice?
   scoped_refptr<ModuleEnvironment> module_environment;
   database->GetModuleEnvironment(&module_environment);
-  if (!CreateModule<Database2Transaction>(module_environment.get(),
+  if (!CreateModule<GearsDatabase2Transaction>(module_environment.get(),
                                           NULL, instance)) {
     return false;
   }
 
-  Database2Transaction *tx = instance->get();
+  GearsDatabase2Transaction *tx = instance->get();
   tx->connection_.reset(connection);
   tx->interpreter_.reset(interpreter);
   // set callbacks
@@ -75,12 +75,12 @@ bool Database2Transaction::Create(
   return true;
 }
 
-void Database2Transaction::Start() {
+void GearsDatabase2Transaction::Start() {
   // queue operation to begin transaction
   interpreter_->Run(new Database2BeginCommand(this));
 }
 
-void Database2Transaction::InvokeCallback() {
+void GearsDatabase2Transaction::InvokeCallback() {
   assert(callback_.get());
   // prepare to return transaction
   JsParamToSend send_argv[] = {
@@ -91,7 +91,7 @@ void Database2Transaction::InvokeCallback() {
                                 send_argv, NULL);
 }
 
-void Database2Transaction::ExecuteSql(JsCallContext *context) {
+void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
   std::string16 sql_statement;
   JsArray temp_sql_arguments;
   JsRootedCallback *temp_callback = NULL;
@@ -144,7 +144,7 @@ void Database2Transaction::ExecuteSql(JsCallContext *context) {
   // in queue
 }
 
-void Database2Transaction::ExecuteNextStatement(JsCallContext *context) {
+void GearsDatabase2Transaction::ExecuteNextStatement(JsCallContext *context) {
   // pop statement from the end of the queue
   Database2Statement *statement = statement_queue_.Pop();
   // if no more statements,
@@ -162,7 +162,7 @@ void Database2Transaction::ExecuteNextStatement(JsCallContext *context) {
   }
 }
 
-void Database2Transaction::InvokeErrorCallback() {
+void GearsDatabase2Transaction::InvokeErrorCallback() {
   // for synchronous transaction, throw an error in case of transaction failure,
   // otherwise, invoke callback or fail silently (per HTML5 spec)
   if (!interpreter_->async()) {
@@ -175,7 +175,7 @@ void Database2Transaction::InvokeErrorCallback() {
   }
 
   JsObject* error = new JsObject();
-  if (!Database2::CreateError(this, connection()->error_code(),
+  if (!GearsDatabase2::CreateError(this, connection()->error_code(),
       connection()->error_message(), error)) {
     // unable to create an error object
     GetJsRunner()->ThrowGlobalError(GET_INTERNAL_ERROR_MESSAGE());
@@ -190,7 +190,7 @@ void Database2Transaction::InvokeErrorCallback() {
                                 send_argv, NULL);
 }
 
-void Database2Transaction::InvokeSuccessCallback() {
+void GearsDatabase2Transaction::InvokeSuccessCallback() {
   // success callback may only exist for asynchronous transaction
   // InvokeSucessCallback() is called from CommitCommand, which doesn't know
   // whether it exists or not
@@ -203,7 +203,7 @@ void Database2Transaction::InvokeSuccessCallback() {
   }
 }
 
-void Database2Transaction::HandleEvent(JsEventType event_type) {
+void GearsDatabase2Transaction::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
 
   // clear callbacks, because in FF, the JS runtime may go away without

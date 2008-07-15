@@ -195,10 +195,10 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   // been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<Database2Manager>(module_environment_.get(),
+    CreateModule<GearsDatabase2Manager>(module_environment_.get(),
                                    context, &object);
   } else if (module_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<DummyModule>(module_environment_.get(), context, &object);
+    CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(module_environment_.get(),
                                    context, &object);

@@ -32,30 +32,31 @@
 #include "gears/database2/database2_common.h"
 #include "gears/database2/transaction.h"
 
-DECLARE_GEARS_WRAPPER(Database2);
+DECLARE_GEARS_WRAPPER(GearsDatabase2);
 
 template<>
-void Dispatcher<Database2>::Init() {
-  RegisterProperty("version", &Database2::GetVersion, NULL);
-  RegisterMethod("transaction", &Database2::Transaction);
-  RegisterMethod("synchronousTransaction", &Database2::SynchronousTransaction);
-  RegisterMethod("changeVersion", &Database2::ChangeVersion);
+void Dispatcher<GearsDatabase2>::Init() {
+  RegisterProperty("version", &GearsDatabase2::GetVersion, NULL);
+  RegisterMethod("transaction", &GearsDatabase2::Transaction);
+  RegisterMethod(
+      "synchronousTransaction", &GearsDatabase2::SynchronousTransaction);
+  RegisterMethod("changeVersion", &GearsDatabase2::ChangeVersion);
 }
 
 
 // static
-bool Database2::Create(const ModuleImplBaseClass *sibling, 
+bool GearsDatabase2::Create(const ModuleImplBaseClass *sibling, 
                        const std::string16 &name,
                        const std::string16 &version,
                        Database2Connection *connection,
-                       scoped_refptr<Database2> *instance) {
+                       scoped_refptr<GearsDatabase2> *instance) {
   assert(instance);
   // TODO(nigeltao/glazkov): does this method have to take a
   // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
   // JsCallContext) suffice?
   scoped_refptr<ModuleEnvironment> module_environment;
   sibling->GetModuleEnvironment(&module_environment);
-  if (!CreateModule<Database2>(module_environment.get(), NULL, instance)) {
+  if (!CreateModule<GearsDatabase2>(module_environment.get(), NULL, instance)) {
     return false;
   }
 
@@ -65,7 +66,7 @@ bool Database2::Create(const ModuleImplBaseClass *sibling,
 }
 
 // static
-bool Database2::CreateError(const ModuleImplBaseClass *sibling,
+bool GearsDatabase2::CreateError(const ModuleImplBaseClass *sibling,
                             const int code,
                             const std::string16 &message,
                             JsObject *instance) {
@@ -73,12 +74,12 @@ bool Database2::CreateError(const ModuleImplBaseClass *sibling,
   return false;
 }
 
-Database2TransactionQueue *Database2::GetQueue() {
+Database2TransactionQueue *GearsDatabase2::GetQueue() {
   // Use EnvPageSecurityOrigin()'s and name as key to query transaction table
   return NULL;
 }
 
-void Database2::QueueTransaction(Database2Transaction *transaction) {
+void GearsDatabase2::QueueTransaction(GearsDatabase2Transaction *transaction) {
   // Database2TransactionQueue queue = GetQueue(name, origin);
   // bool first = false;
   // queue->Push(tx, &first);
@@ -88,7 +89,7 @@ void Database2::QueueTransaction(Database2Transaction *transaction) {
   // }
 }
 
-void Database2::ChangeVersion(JsCallContext *context) {
+void GearsDatabase2::ChangeVersion(JsCallContext *context) {
   std::string16 old_version;
   std::string16 new_version;
   JsRootedCallback *callback = NULL;
@@ -112,7 +113,7 @@ void Database2::ChangeVersion(JsCallContext *context) {
   // ...
 }
 
-void Database2::SynchronousTransaction(JsCallContext *context) {
+void GearsDatabase2::SynchronousTransaction(JsCallContext *context) {
   JsRootedCallback *callback = NULL;
 
   JsArgument argv[] = {
@@ -126,9 +127,9 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   // instantiated once here. Local static is used to express the local nature
   // of where we neeed to know the specific kind of interpreter instance
   static Database2Interpreter interpreter;
-  scoped_refptr<Database2Transaction> tx;
+  scoped_refptr<GearsDatabase2Transaction> tx;
   // populate with interpreter (not threaded)
-  if (!Database2Transaction::Create(this, connection_.get(), &interpreter,
+  if (!GearsDatabase2Transaction::Create(this, connection_.get(), &interpreter,
                                  callback, NULL, NULL, &tx)) {
     // raise internal error exception
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
@@ -155,7 +156,7 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   tx->ExecuteNextStatement(NULL);
 }
 
-void Database2::Transaction(JsCallContext *context) {
+void GearsDatabase2::Transaction(JsCallContext *context) {
   JsRootedCallback *callback = NULL;
   JsRootedCallback *error_callback = NULL;
   JsRootedCallback *success_callback = NULL;
