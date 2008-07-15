@@ -162,6 +162,7 @@ bool TestByteStore(std::string16 *error);  // from byte_store_test.cc
 bool TestHttpCookies(BrowsingContext *context, std::string16 *error);
 bool TestHttpRequest(BrowsingContext *context, std::string16 *error);
 bool TestManifest(std::string16 *error);
+bool TestMemoryBuffer(std::string16 *error);  // from memory_buffer_test.cc
 bool TestMessageService(std::string16 *error);  // from message_service_test.cc
 bool TestLocalServerDB(BrowsingContext *context, std::string16 *error);
 bool TestResourceStore(std::string16 *error);
@@ -322,6 +323,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestResourceStore(&error);
   ok &= TestManifest(&error);
   ok &= TestManagedResourceStore(&error);
+  ok &= TestMemoryBuffer(&error);
   ok &= TestMessageService(&error);
   ok &= TestSerialization(&error);
   ok &= TestCircularBuffer(&error);

@@ -858,6 +858,8 @@ $(BROWSER)_CPPSRCS	+= \
 		js_marshal.cc \
 		js_runner_utils.cc \
 		js_types.cc \
+		memory_buffer.cc \
+		memory_buffer_test.cc \
 		message_queue.cc \
 		message_service.cc \
 		message_service_test.cc \
