@@ -230,6 +230,12 @@ m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/local_data.png" />
                       <File Id='ff_location_data.png' Name='location_data.png'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/location_data.png" />
+                      <File Id='ff_permissions_dialog.html' Name='permissions_dialog.html'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/permissions_dialog.html" />
+                      <File Id='ff_settings_dialog.html' Name='settings_dialog.html'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/settings_dialog.html" />
+                      <File Id='ff_shortcuts_dialog.html' Name='shortcuts_dialog.html'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/shortcuts_dialog.html" />
                     </Component>
                   </Directory>
                   <Directory Id='OurFFLocaleDir' Name='locale'>
@@ -239,12 +245,6 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
                         Guid='$(var.~`OurComponentGUID_FFLang`~m4_underscore(LANG)~`DirFiles`~)'>
                         <File Id='~`ff_`~m4_underscore(LANG)~`_i18n.dtd`~' Name='i18n.dtd'
                           DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/i18n.dtd" />
-                        <File Id='~`ff_`~m4_underscore(LANG)~`_permissions_dialog.html`~' Name='permissions_dialog.html'
-                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/permissions_dialog.html" />
-                        <File Id='~`ff_`~m4_underscore(LANG)~`_settings_dialog.html`~' Name='settings_dialog.html'
-                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/settings_dialog.html" />
-                        <File Id='~`ff_`~m4_underscore(LANG)~`_shortcuts_dialog.html`~' Name='shortcuts_dialog.html'
-                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/shortcuts_dialog.html" />
                       </Component>
                     </Directory>
 `~)m4_dnl
