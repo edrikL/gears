@@ -41,6 +41,27 @@
 #include "gears/geolocation/network_location_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+static const char16 *kAgeString = STRING16(L"age");
+static const char16 *kCellIdString = STRING16(L"cell_id");
+static const char16 *kLocationAreaCodeString =
+    STRING16(L"location_area_code");
+static const char16 *kMobileNetworkCodeString =
+    STRING16(L"mobile_network_code");
+static const char16 *kMobileCountryCodeString =
+    STRING16(L"mobile_country_code");
+static const char16 *kRadioSignalStrengthString =
+    STRING16(L"radio_signal_strength");
+static const char16 *kTimingAdvanceString = STRING16(L"timing_advance");
+
+// Local function
+// Retrives a named integer property from a JavaScript object. Does nothing if
+// the property is undefined but throws an exception if the property is of any
+// other non-integer type.
+static void GetIntegerPropertyIfDefined(JsCallContext *context,
+                                        const JsObject& jsObject,
+                                        const std::string16& name,
+                                        int *value);
+
 // A mock implementation of DeviceDataProviderImplBase for testing. It simply
 // calls back once every second with constant data.
 template<typename DataType>
@@ -79,23 +100,26 @@ class MockRadioDataProviderImpl : public MockDeviceDataProviderImpl<RadioData> {
     return new MockRadioDataProviderImpl();
   }
 
+  // DeviceDataProviderImplBase implementation.
   virtual bool GetData(RadioData *data) {
     assert(data);
-    // The following are real-world values, captured in May 2008.
-    CellData cell_data;
-    cell_data.cell_id = 23874;
-    cell_data.location_area_code = 98;
-    cell_data.mobile_network_code = 15;
-    cell_data.mobile_country_code = 234;
-    cell_data.radio_signal_strength = -65;
-    data->cell_data.clear();
-    data->cell_data.push_back(cell_data);
-    data->radio_type = RADIO_TYPE_GSM;
+    *data = radio_data;
     // We always have all the data we can get, so return true.
     return true;
   }
+
+  static void SetData(const RadioData &radio_data_in) { 
+    radio_data = radio_data_in;
+  }
+
+ private:
+  static RadioData radio_data;
+
   DISALLOW_EVIL_CONSTRUCTORS(MockRadioDataProviderImpl);
 };
+
+// static
+RadioData MockRadioDataProviderImpl::radio_data;
 
 // Implements MockDeviceDataProviderImpl for WifiData and provides sample data.
 class MockWifiDataProviderImpl : public MockDeviceDataProviderImpl<WifiData> {
@@ -124,6 +148,8 @@ class MockWifiDataProviderImpl : public MockDeviceDataProviderImpl<WifiData> {
     // We always have all the data we can get, so return true.
     return true;
   }
+
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(MockWifiDataProviderImpl);
 };
 
@@ -272,9 +298,68 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   context->SetReturnValue(JSPARAM_OBJECT, position_object.get());
 }
 
-void ConfigureGeolocationForTest(JsCallContext *context) {
+void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
+  assert(context);
+
+  // Get the arguments provided from JavaScript. 
+  JsObject jsObject;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &jsObject },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  
+  CellData cell_data;
+  // Update the fields of cell_data, if they have been provided.
+  GetIntegerPropertyIfDefined(context, jsObject, kCellIdString,
+                              &cell_data.cell_id);
+  GetIntegerPropertyIfDefined(context, jsObject, kLocationAreaCodeString,
+                              &cell_data.location_area_code);
+  GetIntegerPropertyIfDefined(context, jsObject, kMobileNetworkCodeString,
+                              &cell_data.mobile_network_code);
+  GetIntegerPropertyIfDefined(context, jsObject, kMobileCountryCodeString,
+                              &cell_data.mobile_country_code);
+  GetIntegerPropertyIfDefined(context, jsObject, kAgeString, &cell_data.age);
+  GetIntegerPropertyIfDefined(context, jsObject, kRadioSignalStrengthString,
+                              &cell_data.radio_signal_strength);
+  GetIntegerPropertyIfDefined(context, jsObject, kTimingAdvanceString,
+                              &cell_data.timing_advance);
+
+  RadioData radio_data;
+  radio_data.cell_data.push_back(cell_data); 
+  MockRadioDataProviderImpl::SetData(radio_data);
   RadioDataProvider::SetFactory(MockRadioDataProviderImpl::Create);
+}
+
+void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
+  // TODO(baran): Enable passing a wifi data object as a JavaScript object, so
+  // that callers of this method can specify the wifi data.
   WifiDataProvider::SetFactory(MockWifiDataProviderImpl::Create);
+}
+
+// Local function.
+static void GetIntegerPropertyIfDefined(JsCallContext *context,
+                                        const JsObject& jsObject,
+                                        const std::string16& name,
+                                        int *value) {
+  // GetProperty should always succeed, but will get a token of type
+  // JSPARAM_UNDEFINED if the requested property is not present.
+  JsScopedToken token;
+  if (!jsObject.GetProperty(name, &token)) {
+    assert(false);
+    return;
+  }
+  if (JsTokenGetType(token, context->js_context()) == JSPARAM_UNDEFINED) {
+    return;
+  }
+  if (!JsTokenToInt_NoCoerce(token, context->js_context(), value)) {
+    std::string16 error = STRING16(L"cell_data.");
+    error += name;
+    error += STRING16(L" should be an integer.");
+    context->SetException(error);
+  }
 }
 
 #endif  // USING_CCTESTS

@@ -141,11 +141,21 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: object position
   void TestGeolocationGetLocationFromResponse(JsCallContext *context);
 
-  // Sets the device data provider factories to use mock radio and WiFi device
-  // data providers.
+  // Configures the radio data provider factory to use a mock radio device data
+  // provider and sets the cell data that the mock provider will provide.
+  // IN: object cell_data (Fields are cell_id, location_area_code,
+  //     mobile_network_code, mobile_country_code, age and timing_advance, all
+  //     as integers.)
+  // OUT: nothing
+  void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
+
+  // Configures the wifi data provider factory to use a mock wifi device data
+  // provider.
+  // TODO(baran): Enable passing a wifi data object as a JavaScript object, so
+  // that callers can specify the wifi data.
   // IN: nothing
   // OUT: nothing
-  void ConfigureGeolocationForTest(JsCallContext *context);
+  void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 #endif
 
 #ifdef OFFICIAL_BUILD
