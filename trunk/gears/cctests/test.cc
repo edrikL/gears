@@ -83,8 +83,10 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestGeolocationFormRequestBody);
   RegisterMethod("testGeolocationGetLocationFromResponse",
                  &GearsTest::TestGeolocationGetLocationFromResponse);
-  RegisterMethod("configureGeolocationForTest",
-                 &GearsTest::ConfigureGeolocationForTest);
+  RegisterMethod("configureGeolocationRadioDataProviderForTest",
+                 &GearsTest::ConfigureGeolocationRadioDataProviderForTest);
+  RegisterMethod("configureGeolocationWifiDataProviderForTest",
+                 &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
 #endif
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
@@ -2129,8 +2131,14 @@ void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
   ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
 }
 
-void GearsTest::ConfigureGeolocationForTest(JsCallContext *context) {
-  ::ConfigureGeolocationForTest(context);
+void GearsTest::ConfigureGeolocationRadioDataProviderForTest(
+    JsCallContext *context) {
+  ::ConfigureGeolocationRadioDataProviderForTest(context);
+}
+
+void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
+    JsCallContext *context) {
+  ::ConfigureGeolocationWifiDataProviderForTest(context);
 }
 #endif
 

@@ -510,7 +510,12 @@ function testNotifier() {
 // data providers.
 function testGeolocationGetCurrentPosition() {
   if (isUsingCCTests && !isOfficial) {
-    internalTests.configureGeolocationForTest();
+    internalTests.configureGeolocationRadioDataProviderForTest(
+        { cell_id: 23874,
+          location_area_code: 98,
+          mobile_network_code: 15,
+          mobile_country_code: 234,
+          radio_signal_strength: -65 });
     // TODO(steveblock): Complete this test once the Geolocation API is
     // complete.
     //var geolocation = google.gears.factory.create('beta.geolocation');
