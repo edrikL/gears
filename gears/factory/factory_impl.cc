@@ -151,6 +151,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   // inside a worker that hasn't yet called allowCrossOrigin().
   if (is_creation_suspended_) {
     context->SetException(kPermissionExceptionString);
+    return;
   }
 
   // Check if the module requires local data permission to be created.
@@ -160,6 +161,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     if (!GetPermissionsManager()->AcquirePermission(
         PermissionsDB::PERMISSION_LOCAL_DATA)) {
       context->SetException(kPermissionExceptionString);
+      return;
     }
   }
 
