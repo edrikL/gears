@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #ifdef WINCE
@@ -30,6 +31,7 @@
 #else
 #include "gears/ui/ie/html_dialog_host.h"
 #endif
+#include "gears/ui/ie/string_table.h"
 
 bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
                              const char16 *arguments_string) {
@@ -43,4 +45,14 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
   }
 
   return SetResult(result_bstr.m_str);
+}
+
+bool HtmlDialog::GetLocale(std::string16 *locale) {
+  char16 locale_string[MAX_PATH];
+  if (LoadString(GetGearsModuleHandle(), IDS_LOCALE,
+                 locale_string, MAX_PATH)) {
+    *locale = locale_string;
+    return true;
+  }
+  return false;
 }

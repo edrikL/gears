@@ -68,11 +68,14 @@ class HtmlDialog {
   // Platform-specific implementation of DoModal().
   bool DoModalImpl(const char16 *html_filename, int width, int height,
                    const char16 *arguments_string);
-                   
+
   bool DoModelessImpl(const char16 *html_filename, int width, int height,
-                      const char16 *arguments_string, 
-                      ModelessCompletionCallback callback, 
+                      const char16 *arguments_string,
+                      ModelessCompletionCallback callback,
                       void *closure);
-}; 
+
+  // GetLocale() is in the browser-specific HtmlDialog code.
+  bool GetLocale(std::string16 *locale);
+};
 
 #endif  // GEARS_UI_COMMON_HTML_DIALOG_H__
