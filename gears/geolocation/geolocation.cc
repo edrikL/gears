@@ -501,7 +501,6 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     LocationProviderBase *provider) {
   // Update the last known position, which is the best position estimate we
   // currently have. This is shared between all repeating fix requests.
-  bool new_last_position = false;
   Position position;
   provider->GetPosition(&position);
   last_position_mutex_.Lock();
@@ -509,7 +508,6 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
       IsNewPositionMoreAccurate(last_position_, position) ||
       IsNewPositionMoreTimely(last_position_, position)) {
     last_position_ = position;
-    new_last_position = true;
   }
   last_position_mutex_.Unlock();
 
@@ -537,15 +535,12 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     }
   }
 
-  // Iterate over all repeating fix requests. We call back if the new position
-  // represents movement from the last position we called back with.
-  if (new_last_position) {
-    for (FixRequestInfoMap::const_iterator iter = watches_.begin();
-         iter != watches_.end();
-         iter++) {
-      FixRequestInfo *fix_info = const_cast<FixRequestInfo*>(iter->second);
-      HandleRepeatingRequestUpdate(fix_info);
-    }
+  // Iterate over all repeating fix requests.
+  for (FixRequestInfoMap::const_iterator iter = watches_.begin();
+       iter != watches_.end();
+       iter++) {
+    FixRequestInfo *fix_info = const_cast<FixRequestInfo*>(iter->second);
+    HandleRepeatingRequestUpdate(fix_info);
   }
 }
 
