@@ -30,6 +30,10 @@
 var crossOriginUrl = 'http://localhost:8002';
 crossOriginUrl += '/testcases/test_file_1024.txt';
 
+// TODO(bgarcia): Add a test that examines the responseText after the request
+// has entered the interactive state, but before any part of the response has
+// been received.
+
 function testGet200() {
   startAsync();
   doRequest(

@@ -108,7 +108,7 @@ class SafeHttpRequest
     scoped_ptr<HTTPHeaders> parsed_headers;
     // Valid when the ReadyState is either INTERACTIVE or COMPLETE.
     scoped_refptr<BlobInterface> body;
-    ResponseInfo() : status(0), was_redirected(false) {}
+    ResponseInfo() : status(0), was_redirected(false), body(new EmptyBlob()) {}
   };
 
   struct ProgressInfo {
@@ -202,7 +202,7 @@ class SafeHttpRequest
   RequestInfo request_info_;
   bool was_aborted_;
   bool was_sent_;
-  bool was_response_text_accessed_;
+  bool was_response_accessed_;
   bool was_data_available_called_;
 
   RefCount ref_count_;
