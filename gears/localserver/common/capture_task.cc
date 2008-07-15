@@ -29,6 +29,8 @@
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -118,6 +120,8 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
                              WebCacheDB::PayloadInfo *payload) {
   // TODO(michaeln): see UpdateTask::HttpGetUrl for details
 
+  // TODO(andreip): remove this once WebCacheDB::PayloadInfo.data is a Blob.
+  scoped_refptr<BlobInterface> payload_data;
   // Fetch the url from a server
   if (!AsyncTask::HttpGet(full_url,
                           true,  // is_capturing
@@ -125,6 +129,7 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
                           if_mod_since_date,
                           store_.GetRequiredCookie(),
                           payload,
+                          &payload_data,
                           NULL, NULL, NULL)) {
     LOG(("CaptureTask::HttpGetUrl - failed to get url\n"));
     return false;  // TODO(michaeln): retry?
@@ -134,6 +139,14 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
     ExceptionManager::ReportAndContinue();
     LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
     return false;  // TODO(michaeln): retry?
+  }
+
+  if (payload_data.get()) {
+    payload->data.reset(new std::vector<uint8>(
+                            static_cast<size_t>(payload_data->Length())));
+    if (!BlobToVector(payload_data.get(), payload->data.get())) {
+      LOG(("CaptureTask::HttpGetUrl - could not extract the payload\n"));
+    }
   }
 
   return true;

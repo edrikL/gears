@@ -64,3 +64,22 @@ bool BlobToString16(BlobInterface* blob, const std::string16 &charset,
   // If no charset is provided, assume UTF8.
   return UTF8ToString16(utf8_text.get(), static_cast<int>(length), text);
 }
+
+// Convert the blob's contents to a vector.
+bool BlobToVector(BlobInterface *blob, std::vector<uint8>* vector_out) {
+  assert(blob);
+  int64 blob_length(blob->Length());
+  assert(blob_length >= 0);
+  assert(vector_out);
+  assert(blob_length <= static_cast<int64>(vector_out->max_size()));
+  if (blob_length == 0) {
+    vector_out->clear();
+    return true;
+  }
+
+  vector_out->resize(static_cast<std::vector<uint8>::size_type>(
+      blob_length));
+  int64 length = blob->Read(&((*vector_out)[0]), 0, blob_length);
+
+  return (length == blob_length);
+}

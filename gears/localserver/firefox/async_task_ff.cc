@@ -229,6 +229,7 @@ struct AsyncTask::HttpRequestParameters {
   const char16 *required_cookie;
   BlobInterface *post_body;
   WebCacheDB::PayloadInfo *payload;
+  scoped_refptr<BlobInterface>* payload_data;
   bool *was_redirected;
   std::string16 *full_redirect_url;
   std::string16 *error_message;
@@ -247,6 +248,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                         const char16 *if_mod_since_date,
                         const char16 *required_cookie,
                         WebCacheDB::PayloadInfo *payload,
+                        scoped_refptr<BlobInterface> *payload_data,
                         bool *was_redirected,
                         std::string16 *full_redirect_url,
                         std::string16 *error_message) {
@@ -258,6 +260,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                          required_cookie,
                          NULL,
                          payload,
+                         payload_data,
                          was_redirected,
                          full_redirect_url,
                          error_message);
@@ -273,6 +276,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          const char16 *required_cookie,
                          BlobInterface *post_body,
                          WebCacheDB::PayloadInfo *payload,
+                         scoped_refptr<BlobInterface> *payload_data,
                          bool *was_redirected,
                          std::string16 *full_redirect_url,
                          std::string16 *error_message) {
@@ -284,6 +288,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          required_cookie,
                          post_body,
                          payload,
+                         payload_data,
                          was_redirected,
                          full_redirect_url,
                          error_message);
@@ -300,6 +305,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 const char16 *required_cookie,
                                 BlobInterface *post_body,
                                 WebCacheDB::PayloadInfo *payload,
+                                scoped_refptr<BlobInterface> *payload_data,
                                 bool *was_redirected,
                                 std::string16 *full_redirect_url,
                                 std::string16 *error_message) {
@@ -342,6 +348,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   params.required_cookie = required_cookie;
   params.post_body = post_body;
   params.payload = payload;
+  params.payload_data = payload_data;
   params.was_redirected = was_redirected;
   params.full_redirect_url = full_redirect_url;
   params.error_message = error_message;
@@ -355,7 +362,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
 
   params_ = NULL;
 
-  return !is_aborted_ && payload->data.get();
+  return !is_aborted_ && payload_data->get();
 }
 
 
@@ -462,26 +469,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
           payload->status_code = status;
           if (http_request->GetStatusLine(&payload->status_line)) {
             if (http_request->GetAllResponseHeaders(&payload->headers)) {
-              // TODO(bgarcia): Make WebCacheDB::PayloadInfo.data a Blob.
-              // That will remove the copying done here.
-              scoped_refptr<BlobInterface> blob;
-              if (http_request->GetResponseBody(&blob)) {
-                int64 blob_length(blob->Length());
-                assert(blob_length >= 0);
-                // Make sure blob is small enough to fit inside std::vector.
-                assert(blob_length <= static_cast<int64>(kuint32max));
-                payload->data.reset(new std::vector<uint8>(
-                                        static_cast<size_t>(blob_length)));
-                if (blob_length > 0) {
-#ifdef DEBUG
-                  int64 length = blob->Read(&(*payload->data)[0], 0,
-                                            blob_length);
-                  assert(length == blob_length);
-#else
-                  blob->Read(&(*payload->data)[0], 0, blob_length);
-#endif  // DEBUG
-                }
-              }
+              http_request->GetResponseBody(params_->payload_data);
             }
           }
         }
