@@ -23,7 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "blob_backed_skia_input_stream.h"
+#include "gears/canvas/blob_backed_skia_input_stream.h"
+#include <algorithm>
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 template<class T, class S> T checked_cast(S in) {
@@ -36,16 +37,18 @@ BlobBackedSkiaInputStream::BlobBackedSkiaInputStream(BlobInterface *blob)
     : blob_(blob), blob_offset_(0) {
 }
 
+BlobBackedSkiaInputStream::~BlobBackedSkiaInputStream() {
+}
+
 size_t BlobBackedSkiaInputStream::read(void* buffer, size_t size) {
   if (buffer == NULL && size == 0) {
     // Must return total length of stream.
     return checked_cast<size_t>(blob_->Length());
   }
   if (buffer == NULL) {
-    // Must skip over `size` bytes.
-    if (size > blob_->Length() - blob_offset_) {
-      size = checked_cast<size_t>(blob_->Length() - blob_offset_);
-    }
+    // Must skip over `size` bytes. 
+    // Don't go past the end.
+    size = std::min(size, checked_cast<size_t>(blob_->Length() - blob_offset_));
     blob_offset_ += size;
     return size;
   }

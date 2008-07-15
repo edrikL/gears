@@ -32,11 +32,23 @@
 
 class BlobBackedSkiaInputStream : public SkStream {
  public:
-  BlobBackedSkiaInputStream(BlobInterface *blob);
+  explicit BlobBackedSkiaInputStream(BlobInterface *blob);
+  virtual ~BlobBackedSkiaInputStream();
+
+  // If buffer is NULL and size > 0, skips that many bytes,
+  // returning how many were skipped.
+  // If buffer is NULL and size == 0, returns the total length of the stream.
+  // If buffer != NULL, copies the requested number of bytes into buffer,
+  // returning how many were copied.
   virtual size_t read(void* buffer, size_t size);
+
+  // Rewinds the stream. The next read will start from the beginning of the
+  // stream (or blob, in this case).
   virtual bool rewind();
   
  private:
+  // Unimplemented.
+  BlobBackedSkiaInputStream();
   scoped_refptr<BlobInterface> blob_;
   int64 blob_offset_;
   DISALLOW_EVIL_CONSTRUCTORS(BlobBackedSkiaInputStream);

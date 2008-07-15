@@ -91,7 +91,7 @@ void GearsCanvas::Load(JsCallContext *context) {
   
   BlobBackedSkiaInputStream blob_stream(blob.get());
   if (!SkImageDecoder::DecodeStream(&blob_stream,
-                                    skia_bitmap_.get(),
+                                    skia_bitmap(),
                                     skia_config,
                                     SkImageDecoder::kDecodePixels_Mode)) {
     context->SetException(STRING16(L"Couldn't decode blob."));
@@ -124,7 +124,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
 
   // Pixels should have been allocated, either in the contructor,
   // or in SetWidth() and SetHeight().
-  assert(SkiaBitmap()->getPixels());
+  assert(skia_bitmap()->getPixels());
 
   BlobBackedSkiaOutputStream output_stream;
   scoped_ptr<SkImageEncoder> encoder(SkImageEncoder::Create(type));
@@ -136,10 +136,10 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
       context->SetException(STRING16(L"quality must be between 0.0 and 1.0"));
       return;
     }
-    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap_,
+    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap(),
         static_cast<int> (quality * 100));
   } else {
-    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap_);
+    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap());
   }
   if (!encode_succeeded) {
     context->SetException(STRING16(L"Could not encode image."));
@@ -163,14 +163,14 @@ void GearsCanvas::Clone(JsCallContext *context) {
     return;
     }
 
-  clone->ResetSkiaBitmap(Width(), Height());
+  clone->ResetSkiaBitmap(width(), height());
   // See comment about isOpaque() below (in Crop()).
-  clone->skia_bitmap_->setIsOpaque(skia_bitmap_->isOpaque());
-  clone->skia_canvas_->drawBitmap(*skia_bitmap_, 0, 0);
+  clone->skia_bitmap()->setIsOpaque(skia_bitmap()->isOpaque());
+  clone->skia_canvas()->drawBitmap(*skia_bitmap_, 0, 0);
 
-  assert(clone->skia_bitmap_->getSize() == skia_bitmap_->getSize());
-  assert(memcmp(clone->skia_bitmap_->getPixels(),
-      skia_bitmap_->getPixels(), skia_bitmap_->getSize()) == 0);
+  assert(clone->skia_bitmap()->getSize() == skia_bitmap()->getSize());
+  assert(memcmp(clone->skia_bitmap()->getPixels(),
+      skia_bitmap()->getPixels(), skia_bitmap()->getSize()) == 0);
 
   clone->set_alpha(alpha());
   clone->set_composite_operation(composite_operation());
@@ -208,7 +208,7 @@ void GearsCanvas::Crop(JsCallContext *context) {
   // Since canvas.crop(0, 0, canvas.width, canvas.height) must be a noop,
   // the cropped image when exported must have an alpha channel iff the original
   // image when exported has one.
-  new_bitmap.setIsOpaque(SkiaBitmap()->isOpaque());
+  new_bitmap.setIsOpaque(skia_bitmap()->isOpaque());
   new_bitmap.allocPixels();
   SkCanvas new_canvas(new_bitmap);
   SkRect dest_rect = { SkIntToScalar(0),
@@ -238,12 +238,12 @@ void GearsCanvas::Resize(JsCallContext *context) {
   // No need to clear the allocated pixels since
   // we overwrite them all during the resize.
 
-  if (Width() != 0 && Height() != 0) {
+  if (width() != 0 && height() != 0) {
     SkCanvas new_canvas(new_bitmap);
     SkScalar x_scale = SkDoubleToScalar(
-        static_cast<double>(new_width) / Width());
+        static_cast<double>(new_width) / width());
     SkScalar y_scale = SkDoubleToScalar(
-        static_cast<double>(new_height) / Height());
+        static_cast<double>(new_height) / height());
     if (!new_canvas.scale(x_scale, y_scale)) {
       context->SetException(STRING16(L"Could not resize the image."));
       return;
@@ -256,13 +256,13 @@ void GearsCanvas::Resize(JsCallContext *context) {
 }
 
 void GearsCanvas::GetWidth(JsCallContext *context) {
-  int width = Width();
-  context->SetReturnValue(JSPARAM_INT, &width);
+  int its_width = width();
+  context->SetReturnValue(JSPARAM_INT, &its_width);
 }
 
 void GearsCanvas::GetHeight(JsCallContext *context) {
-  int height = Height();
-  context->SetReturnValue(JSPARAM_INT, &height);
+  int its_height = height();
+  context->SetReturnValue(JSPARAM_INT, &its_height);
 }
 
 void GearsCanvas::SetWidth(JsCallContext *context) {
@@ -273,7 +273,7 @@ void GearsCanvas::SetWidth(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  ResetSkiaBitmap(new_width, Height());
+  ResetSkiaBitmap(new_width, height());
 }
 
 void GearsCanvas::SetHeight(JsCallContext *context) {
@@ -284,7 +284,7 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  ResetSkiaBitmap(Width(), new_height);
+  ResetSkiaBitmap(width(), new_height);
 }
 
 void GearsCanvas::GetContext(JsCallContext *context) {
@@ -313,12 +313,12 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, rendering_context_);
 }
 
-int GearsCanvas::Width() {
-  return skia_bitmap_->width();
+int GearsCanvas::width() const {
+  return skia_bitmap()->width();
 }
 
-int GearsCanvas::Height() {
-  return skia_bitmap_->height();
+int GearsCanvas::height() const {
+  return skia_bitmap()->height();
 }
 
 double GearsCanvas::alpha() const {
@@ -408,18 +408,18 @@ void GearsCanvas::ResetSkiaBitmap(int width, int height) {
   skia_canvas_.reset(new SkCanvas(*skia_bitmap_));
 }
 
-SkBitmap *GearsCanvas::SkiaBitmap() {
+SkBitmap *GearsCanvas::skia_bitmap() const {
   return skia_bitmap_.get();
 }
 
-SkCanvas *GearsCanvas::SkiaCanvas() {
+SkCanvas *GearsCanvas::skia_canvas() const {
   return skia_canvas_.get();
 }
 
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {
   return rect.fLeft <= rect.fRight && rect.fTop <= rect.fBottom &&
       rect.fLeft >= 0 && rect.fTop >= 0 &&
-      rect.fRight <= Width() && rect.fBottom <= Height();
+      rect.fRight <= width() && rect.fBottom <= height();
 }
 
 // Skia's SkPorterDuff values are all non-negative.

@@ -32,7 +32,12 @@
 class BlobBackedSkiaOutputStream : public SkWStream {
  public:
   BlobBackedSkiaOutputStream();
+  virtual ~BlobBackedSkiaOutputStream();
+
+  // Writes `size` bytes to stream, returning true on success.
   virtual bool write(const void* buffer, size_t size);
+
+  // Returns a blob containing the data written so far.
   void CreateBlob(scoped_refptr<BlobInterface> *blob);
 
  private:
