@@ -436,7 +436,7 @@ class SafariMacInstaller(BaseInstaller):
   
   def _RunAsRoot(self, root_cmd):
     import pexpect
-    print 'Running "%s" from "%s"' % (root_cmd, os.getcwd())
+    print 'Running "%s"' % root_cmd
     p = pexpect.spawn('sudo %s' % root_cmd)
     try:
       p.expect('Password', timeout=10)
@@ -449,12 +449,12 @@ class SafariMacInstaller(BaseInstaller):
   def install(self):
     """ Copy extension and profile for Safari. """
     print 'Running Safari uninstall script'
-    clean_command = os.path.abspath('tools/osx/clean_gears.sh')
+    clean_command = os.path.abspath('../../tools/osx/clean_gears.sh')
     self._RunAsRoot(clean_command)
 
     print 'Running Safari install script'
     build_path = self._buildPath(BaseInstaller.BUILDS)
-    installer = os.path.abspath('bin-%s/installers/Safari/gears.pkg' 
+    installer = os.path.abspath('../../bin-%s/installers/Safari/gears.pkg' 
                                 % self.build_type)
     install_command = ('/usr/sbin/installer -pkg %s -target /' % installer)
     self._RunAsRoot(install_command)    
