@@ -1540,7 +1540,7 @@ I18N_LANGS	+= \
 $(BROWSER)_VPATH += \
 		$(NULL)
 
-$(BROWSER)_M4SRCS_I18N += \
+$(BROWSER)_M4SRCS += \
 		permissions_dialog.html.m4 \
 		settings_dialog.html.m4 \
 		shortcuts_dialog.html.m4 \
@@ -1553,16 +1553,8 @@ FF3_M4SRCS_I18N	+= \
 		i18n.dtd.m4 \
 		$(NULL)
 
-IE_M4SRCS	+= \
-		ui_html.rc.m4 \
-		$(NULL)
-
 NPAPI_VPATH	+= \
 		ui/generated \
-		$(NULL)
-
-NPAPI_M4SRCS	+= \
-		ui_html.rc.m4 \
 		$(NULL)
 
 # Some files should be omitted on Mac and Linux...
@@ -1596,6 +1588,12 @@ $(BROWSER)_CPPSRCS += \
 		html_dialog.cc \
 		permissions_dialog.cc \
 		settings_dialog.cc \
+		$(NULL)
+
+$(BROWSER)_STABSRCS += \
+		permissions_dialog.stab \
+		settings_dialog.stab \
+		shortcuts_dialog.stab \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

@@ -125,7 +125,10 @@ COMMON_RESOURCES = \
 
 FF3_RESOURCES = \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.js \
-	$(FF3_OUTDIR)/genfiles/browser-overlay.xul
+	$(FF3_OUTDIR)/genfiles/browser-overlay.xul \
+	$(FF3_OUTDIR)/genfiles/permissions_dialog.html \
+	$(FF3_OUTDIR)/genfiles/settings_dialog.html \
+	$(FF3_OUTDIR)/genfiles/shortcuts_dialog.html
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
@@ -163,6 +166,8 @@ NPAPI_GEN_TYPELIBS = \
 
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
+$(BROWSER)_STABFILES = \
+	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%.js,$($(BROWSER)_STABSRCS))
 COMMON_M4FILES = \
 	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 
@@ -339,7 +344,7 @@ endif
 
 
 # Cross-browser targets.
-prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N)
+prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N) $($(BROWSER)_STABFILES)
 prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
 prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(PORTAUDIO_OUTDIR) $(LIBSPEEX_OUTDIR) $(LIBTREMOR_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
@@ -485,6 +490,10 @@ $(VISTA_BROKER_OUTDIR):
 
 # M4 (GENERIC PREPROCESSOR) TARGETS
 
+# HTML files depend on their string table.
+$($(BROWSER)_OUTDIR)/genfiles/%.html: %.html.m4 $($(BROWSER)_OUTDIR)/genfiles/%.js
+	m4 $(M4FLAGS) $< > $@
+
 $($(BROWSER)_OUTDIR)/genfiles/%: %.m4
 	m4 $(M4FLAGS) $< > $@
 $(COMMON_OUTDIR)/genfiles/%: %.m4
@@ -496,6 +505,11 @@ $($(BROWSER)_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
 $(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
+
+# STAB (String Table) TARGETS
+
+$($(BROWSER)_OUTDIR)/genfiles/%.js: %.stab
+	"tools/parse_stab.py" $(M4FLAGS) $@ $< $(I18N_INPUTS_BASEDIR)
 
 # IDL TARGETS
 
@@ -636,9 +650,9 @@ $(SF_OUTDIR)/%.res: $(COMMON_RESOURCES) $(SF_M4FILES_I18N)
 # Bundle ui files into the executable itself by first generating .webarchive files, and then
 # including those in the dylib by converting them into .h files with xxd. 
 # TODO(playmobil): Handle localization correctly.
-	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/permissions_dialog.html $(COMMON_RESOURCES)
-	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/settings_dialog.html $(COMMON_RESOURCES)
-	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/i18n/en-US/shortcuts_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/permissions_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/settings_dialog.html $(COMMON_RESOURCES)
+	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/shortcuts_dialog.webarchive $(SF_OUTDIR)/genfiles/shortcuts_dialog.html $(COMMON_RESOURCES)
 	xxd -i "$(SF_OUTDIR)/settings_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h"
 	xxd -i "$(SF_OUTDIR)/permissions_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h"
 	xxd -i "$(SF_OUTDIR)/shortcuts_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h"

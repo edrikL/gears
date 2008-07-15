@@ -988,6 +988,7 @@ endif
 
 CPPFLAGS += $(INCLUDES)
 M4FLAGS  += --prefix-builtins
+M4FLAGS  += -I$($(BROWSER)_OUTDIR)
 
 ifeq ($(MODE),dbg)
 CPPFLAGS += -DDEBUG=1
