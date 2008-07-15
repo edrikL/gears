@@ -35,7 +35,7 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"
 
-//class BlobInterface;
+class BlobInterface;
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -95,12 +95,18 @@ class AsyncTask : protected HttpRequest::HttpListener {
   // If Abort() is called from another thread of control while a request
   // is pending, the request is cancelled and HttpGet will return
   // shortly thereafter.
+
+  // 'payload.data' will not be initialized upon return. Instead, the
+  // response body will be contained by the 'payload_data' Blob.
+  // TODO(andreip): remove payload_data argument once
+  // WebCacheDB::PayloadInfo.data is a Blob.
   bool HttpGet(const char16 *full_url,
                bool is_capturing,
                const char16 *reason_header_value,
                const char16 *if_mod_since_date,
                const char16 *required_cookie,
                WebCacheDB::PayloadInfo *payload,
+               scoped_refptr<BlobInterface> *payload_data,
                bool *was_redirected,
                std::string16 *full_redirect_url,
                std::string16 *error_message);
@@ -113,6 +119,7 @@ class AsyncTask : protected HttpRequest::HttpListener {
                 const char16 *required_cookie,
                 BlobInterface *post_body,
                 WebCacheDB::PayloadInfo *payload,
+                scoped_refptr<BlobInterface> *payload_data,
                 bool *was_redirected,
                 std::string16 *full_redirect_url,
                 std::string16 *error_message);
@@ -132,6 +139,7 @@ class AsyncTask : protected HttpRequest::HttpListener {
                        const char16 *required_cookie,
                        BlobInterface *post_body,
                        WebCacheDB::PayloadInfo *payload,
+                       scoped_refptr<BlobInterface> *payload_data,
                        bool *was_redirected,
                        std::string16 *full_redirect_url,
                        std::string16 *error_message);

@@ -26,6 +26,7 @@
 #ifndef GEARS_BLOB_BLOB_UTILS_H_
 #define GEARS_BLOB_BLOB_UTILS_H_
 
+#include <vector>
 #include "gears/base/common/string16.h"
 
 class BlobInterface;
@@ -34,5 +35,8 @@ class BlobInterface;
 // If charset is empty, assumes UTF8.
 bool BlobToString16(BlobInterface *blob, const std::string16 &charset,
                     std::string16 *text);
+
+// Convert the blob's contents to a vector.
+bool BlobToVector(BlobInterface *blob, std::vector<uint8> *vector_out);
 
 #endif  // GEARS_BLOB_BLOB_UTILS_H_

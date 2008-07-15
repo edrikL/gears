@@ -37,6 +37,8 @@
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/manifest.h"
 
@@ -264,6 +266,10 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
   // task while a new version of the server-side of the app is being deployed.
   const int kMax503Retries = 3;
   int url_503_attempt = 0;
+
+  // TODO(andreip): remove this once WebCacheDB::PayloadInfo.data is a Blob.
+  scoped_refptr<BlobInterface> payload_data;
+
   while (url_503_attempt < kMax503Retries) {
     // Fetch the url from a server
     if (!AsyncTask::HttpGet(full_url,
@@ -272,6 +278,7 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
                             if_mod_since_date,
                             store_.GetRequiredCookie(),
                             payload,
+                            &payload_data,
                             was_redirected,
                             full_redirect_url,
                             &error_msg_)) {
@@ -288,6 +295,15 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
       // the reason for overall task failure.
       SetHttpError(full_url, NULL);
       return false;  // TODO(michaeln): retry?
+    }
+
+    // Extract the payload data.
+    if (payload_data.get()) {
+      payload->data.reset(new std::vector<uint8>(
+                              static_cast<size_t>(payload_data->Length())));
+      if (!BlobToVector(payload_data.get(), payload->data.get())) {
+        LOG(("UpdateTask::HttpGetUrl - could not extract the payload\n"));
+      }
     }
 
     if (payload->status_code != HttpConstants::HTTP_SERVICE_UNAVAILABLE) {

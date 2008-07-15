@@ -32,6 +32,8 @@
 #include "gears/base/common/wince_compatibility.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/bho.h"
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/installer/iemobile/resource.h"
 
 const char16* kUpgradeUrl = reinterpret_cast<const char16*>(  // STRING16()
@@ -276,6 +278,7 @@ const char16* VersionFetchTask::Url() const {
 // AsyncTask
 void VersionFetchTask::Run() {
   WebCacheDB::PayloadInfo payload;
+  scoped_refptr<BlobInterface> payload_data;
   bool was_redirected;
   std::string16 error_msg;
   std::string16 url;
@@ -287,19 +290,18 @@ void VersionFetchTask::Run() {
                          NULL,
                          NULL,
                          &payload,
+                         &payload_data,
                          &was_redirected,
                          &url,
                          &error_msg)) {
     std::string16 xml;
+    const std::string16 charset;
     // payload.data can be empty in case of a 30x response.
     // The update server does not redirect, so we treat this as an error.
-    if (payload.data->size() &&
-        UTF8ToString16(reinterpret_cast<const char*>(&(*payload.data)[0]),
-                       payload.data->size(),
-                       &xml)) {
-      if (ExtractVersionAndDownloadUrl(xml)) {
-        success = true;
-      }
+    if (payload_data->Length() &&
+        BlobToString16(payload_data.get(), charset, &xml) &&
+        ExtractVersionAndDownloadUrl(xml)) {
+      success = true;
     }
   }
   NotifyListener(VERSION_FETCH_TASK_COMPLETE, success);

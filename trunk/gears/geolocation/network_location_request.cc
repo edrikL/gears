@@ -29,6 +29,7 @@
 
 #include "gears/geolocation/network_location_request.h"
 
+#include "gears/blob/blob_utils.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_constants.h"
 #include "third_party/jsoncpp/reader.h"
@@ -97,6 +98,8 @@ bool NetworkLocationRequest::MakeRequest(const RadioData &radio_data,
 
 void NetworkLocationRequest::Run() {
   WebCacheDB::PayloadInfo payload;
+  // TODO(andreip): remove this once WebCacheDB::PayloadInfo.data is a Blob.
+  scoped_refptr<BlobInterface> payload_data;
   bool result = HttpPost(url_.c_str(),
                          false,            // Not capturing, so follow redirects
                          NULL,             // reason_header_value
@@ -104,6 +107,7 @@ void NetworkLocationRequest::Run() {
                          NULL,             // required_cookie
                          post_body_.get(),
                          &payload,
+                         &payload_data,
                          NULL,             // was_redirected
                          NULL,             // full_redirect_url
                          NULL);            // error_message
@@ -117,13 +121,13 @@ void NetworkLocationRequest::Run() {
 
   if (listener_) {
     Position position;
-    // If HttpPost succeeded, payload.data is guaranteed to be non-NULL,
-    // even if the vector it points to is empty.
     std::string response_body;
-    if (result && !payload.data->empty()) {
-      response_body.assign(
-          reinterpret_cast<const char*>(&payload.data->front()),
-          payload.data->size());
+    if (result && payload_data.get() && payload_data->Length()) {
+      std::vector<uint8> buffer;
+      if (BlobToVector(payload_data.get(), &buffer)) {
+        response_body.resize(buffer.size());
+        std::copy(buffer.begin(), buffer.end(), response_body.begin());
+      }
     }
     GetLocationFromResponse(result, payload.status_code, response_body,
                             timestamp_, url_, &position);
