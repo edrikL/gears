@@ -31,7 +31,7 @@
 
 SafeHttpRequest::SafeHttpRequest(ThreadId safe_thread_id)
     : was_aborted_(false), was_sent_(false),
-      was_response_text_accessed_(false), was_data_available_called_(false),
+      was_response_accessed_(false), was_data_available_called_(false),
       listener_(NULL), listener_data_available_enabled_(false), 
       safe_thread_id_(safe_thread_id), apartment_thread_id_(0) {
   ThreadMessageQueue *msg_q = ThreadMessageQueue::GetInstance();
@@ -71,6 +71,7 @@ bool SafeHttpRequest::GetResponseBody(scoped_refptr<BlobInterface>* blob) {
   if (!IsValidResponse()) {
     return false;
   }
+  was_response_accessed_ = true;
   *blob = request_info_.response.body;
   return true;
 }
@@ -484,9 +485,9 @@ void SafeHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
                      request_info_.download_progress.reported);
     request_info_.download_progress.position = position;
 
-    if (was_response_text_accessed_ || !was_data_available_called_) {
+    if (was_response_accessed_ || !was_data_available_called_) {
       // We don't know if your caller is going to try to read the response
-      // text incrementally or not. Here we try to decode and copy the response
+      // incrementally or not. Here we try to decode and copy the response
       // only if needed. On the first call to DataAvailable, we do so in case
       // our client will access it. On subsequent calls, only do so if the
       // caller has been accessing it.
