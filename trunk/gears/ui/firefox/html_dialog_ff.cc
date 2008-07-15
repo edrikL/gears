@@ -23,10 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsIProperties.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_internal/nsIDOMWindowInternal.h>
+#include <gecko_internal/nsIChromeRegistry.h>
 
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -118,4 +121,51 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
 
   // Set up the result property
   return SetResult(output_nsstring.BeginReading());
+}
+
+bool HtmlDialog::GetLocale(std::string16 *locale) {
+  // On Firefox, the UI locale can be different from the system locale, and
+  // there is no way to directly query for it.  We deal with this by requesting
+  // a locale URL from the chrome registry, then parsing the adjusted result to
+  // extract the locale name.
+  nsresult nr;
+  nsCOMPtr<nsIIOService> io_service =
+      do_GetService("@mozilla.org/network/io-service;1", &nr);
+  if (NS_SUCCEEDED(nr)) {
+    nsCOMPtr<nsIURI> base_locale_uri;
+    nr = io_service->NewURI(NS_LITERAL_CSTRING("chrome://gears/locale"), nsnull,
+                            nsnull, getter_AddRefs(base_locale_uri));
+    if (NS_SUCCEEDED(nr)) {
+      nsCOMPtr<nsIChromeRegistry> chrome_registry =
+          do_GetService("@mozilla.org/chrome/chrome-registry;1", &nr);
+      if (NS_SUCCEEDED(nr)) {
+        nsCOMPtr<nsIURI> locale_uri;
+        nr = chrome_registry->ConvertChromeURL(base_locale_uri,
+                                               getter_AddRefs(locale_uri));
+        if (NS_SUCCEEDED(nr)) {
+          nsCString locale_string;
+          locale_uri->GetPath(locale_string);
+
+          // Once we get the path from the chrome registry, the UI locale will
+          // be the last path component.
+          const char *locale_path = locale_string.BeginReading();
+          const char *locale_end = strrchr(locale_path, '/');
+          if (!locale_end) {
+            return false;
+          }
+          const char *locale_start = locale_end;
+          while (locale_start > locale_path) {
+            --locale_start;
+            if (*locale_start == '/') {
+              ++locale_start;
+              break;
+            }
+          }
+          std::string locale_utf8(locale_start, locale_end);
+          return UTF8ToString16(locale_utf8.c_str(), locale);
+        }
+      }
+    }
+  }
+  return false;
 }
