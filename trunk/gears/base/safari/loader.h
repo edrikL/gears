@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_SAFARI_LOADER_H__
+#define GEARS_BASE_SAFARI_LOADER_H__
+
 // Provide a way of loading the Gears bundle dynamically
 
 #import <Foundation/Foundation.h>
@@ -40,3 +43,4 @@
 + (BOOL)loadGearsBundle;
 
 @end
+#endif  // GEARS_BASE_SAFARI_LOADER_H__

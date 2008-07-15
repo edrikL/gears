@@ -23,11 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
-#include "gears/base/common/common.h"
-#include "gears/base/safari/messagebox.h"
-#include "gears/base/safari/nsstring_utils.h"
+#import "gears/base/common/common.h"
+#import "gears/base/safari/messagebox.h"
+#import "gears/base/safari/nsstring_utils.h"
 
 void MessageBox(const char16 *title,
                 const char16 *message) {

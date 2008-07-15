@@ -23,11 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/http_utils.h"
+#import "gears/base/common/http_utils.h"
 #import "gears/base/safari/nsstring_utils.h"
-#include "gears/blob/blob_input_stream_sf.h"
-#include "gears/blob/blob_interface.h"
-#include "gears/localserver/common/http_request.h"
+#import "gears/blob/blob_input_stream_sf.h"
+#import "gears/blob/blob_interface.h"
+#import "gears/localserver/common/http_request.h"
 #import "gears/localserver/safari/http_request_delegate.h"
 
 @implementation HttpRequestDelegate

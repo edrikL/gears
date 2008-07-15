@@ -31,8 +31,8 @@
 //  g++ -arch ppc -arch i386 -o webarchiver -framework WebKit \
 // -framework Cocoa webarchiver.mm
 
-#include <Cocoa/Cocoa.h>
-#include <WebKit/WebKit.h>
+#import <Cocoa/Cocoa.h>
+#import <WebKit/WebKit.h>
 
 void usage() {
   printf("Usage: output.webarchive mainresource [resources]");

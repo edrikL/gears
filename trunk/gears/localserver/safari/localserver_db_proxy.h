@@ -22,6 +22,8 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#ifndef GEARS_LOCALSERVER_SAFARI_LOCALSERVER_DB_PROXY_H__
+#define GEARS_LOCALSERVER_SAFARI_LOCALSERVER_DB_PROXY_H__
 
 // Provide a Cocoa wrapper to the WebCacheDB functions required to check and
 // fetch stored content.  This is used so that the Enabler (InputManager)
@@ -44,3 +46,4 @@
       redirectURL:(NSURL **)redirectURL;
 
 @end
+#endif  // GEARS_LOCALSERVER_SAFARI_LOCALSERVER_DB_PROXY_H__

@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_CRASH_SENDER_CRASH_SENDER_OSX__
+#define GEARS_CRASH_SENDER_CRASH_SENDER_OSX__
+
 // This component uses the HTTPMultipartUpload of the breakpad project to send
 // the minidump and associated data to the Google crash reporting servers.
 // It will perform throttling based on the parameters passed to it and will
@@ -40,3 +43,4 @@
 }
 
 @end
+#endif  // GEARS_CRASH_SENDER_CRASH_SENDER_OSX__

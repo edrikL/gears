@@ -25,8 +25,8 @@
 
 #import "gears/localserver/safari/progress_input_stream.h"
 
-#include "gears/localserver/common/progress_event.h"
-#include "gears/localserver/safari/http_request_sf.h"
+#import "gears/localserver/common/progress_event.h"
+#import "gears/localserver/safari/http_request_sf.h"
 
 //------------------------------------------------------------------------------
 // ProgressInputStream implementation

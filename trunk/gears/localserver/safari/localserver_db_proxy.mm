@@ -23,11 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/string_utils.h"
-#include "gears/base/common/http_utils.h"
+#import "gears/base/common/string_utils.h"
+#import "gears/base/common/http_utils.h"
 #import "gears/base/safari/nsstring_utils.h"
-#include "gears/localserver/common/http_constants.h"
-#include "gears/localserver/common/localserver_db.h"
+#import "gears/localserver/common/http_constants.h"
+#import "gears/localserver/common/localserver_db.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"
 
 @implementation GearsWebCacheDB

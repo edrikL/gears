@@ -28,7 +28,7 @@
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/string_utils.h"
-#include "gears/base/common/string_utils_osx.h"
+#import "gears/base/common/string_utils_osx.h"
 #import "third_party/scoped_ptr/scoped_ptr.h"
 
 @implementation NSString(GearsString16Conversion)

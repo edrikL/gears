@@ -27,18 +27,18 @@
 
 #ifdef USING_CCTESTS
 
-#include "gears/base/common/ipc_message_queue_test.h"
+#import "gears/base/common/ipc_message_queue_test.h"
 
 #import <Cocoa/Cocoa.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <unistd.h>
+#import <errno.h>
+#import <signal.h>
+#import <stdio.h>
+#import <unistd.h>
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/paths.h"
-#include "gears/base/common/stopwatch.h"
-#include "gears/base/common/string_utils.h"
+#import "gears/base/common/common.h"
+#import "gears/base/common/paths.h"
+#import "gears/base/common/stopwatch.h"
+#import "gears/base/common/string_utils.h"
 
 const char16 *kIpcTestApp = STRING16(L"ipc_test");
 

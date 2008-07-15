@@ -22,6 +22,8 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#ifndef GEARS_UI_SAFARI_HTML_DIALOG_SF_H__
+#define GEARS_UI_SAFARI_HTML_DIALOG_SF_H__
 
 // Class to display a Modal dialog in WebKit.
 @interface HTMLDialogImp : NSObject {
@@ -62,3 +64,4 @@
 // JS callback for setting the result string.
 - (void)setResults: (NSString *)window_results;
 @end
+#endif  // GEARS_UI_SAFARI_HTML_DIALOG_SF_H__

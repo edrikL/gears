@@ -27,7 +27,7 @@
 
 #import "gears/base/common/paths.h"
 #import "gears/base/common/paths_sf_more.h"
-#include "gears/base/common/string_utils_osx.h"
+#import "gears/base/common/string_utils_osx.h"
 #import "gears/base/safari/nsstring_utils.h"
   
 bool GetInstallDirectory(std::string16 *path) {

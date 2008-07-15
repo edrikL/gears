@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common_sf.h"
+#import "gears/base/common/common_sf.h"
 #import "gears/base/safari/loader.h"
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"

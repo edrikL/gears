@@ -248,7 +248,7 @@ bool GoogleBreakpad::ExceptionHandlerDirectCallback(void *context,
 //=============================================================================
 #pragma mark -
 
-#include <mach-o/dyld.h>
+#import <mach-o/dyld.h>
 
 //=============================================================================
 // Returns the pathname to the Resources directory for this version of
