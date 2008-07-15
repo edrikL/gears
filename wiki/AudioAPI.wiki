@@ -19,8 +19,8 @@ The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/c
   * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source [http://www.portaudio.com PortAudio] project. To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems to be another possible candidate.
 
   * *_Formats:_*
-    * _WAV_: As proposed by the HTML5 spec, the WAVE format will be supported with audio encoded using the PCM format.
-    * _OGG_: The opensource libOGG project will be used, pending discussion about patent and license issues. The _Tremor_ variant needs to be used for integer-only encoding.
+    * _WAV_: As proposed by the HTML5 spec, the WAV format will be supported with audio in the PCM format.
+    * _OGG_: The OGG format will be supported with audio encoded using the SPEEX format. The opensource libOGG and libSPEEX projects will be used, pending discussion about patent and license issues.
     * _MP3_: There is no clear plan for MP3 yet. No open source or free integer-only MP3 encoder available. LAME codec is LGPL, and not integer-only and hence not suitable. Madplay codec is integer-only decode, but GPL. Also not suitable. Probably no suitable codecs exist for us. 
     Integer-only encoding needs to be supported so that this can work on mobiles (where FP emulation is way slower than realtime). The only open/free codec known with integer-only encoding seems to be _speex_. If royalty and license issues cause trouble with codecs, speex can be the fallback since most audio recorded will be human speech.
 
