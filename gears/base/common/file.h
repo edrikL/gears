@@ -28,7 +28,6 @@
 
 #include <vector>
 #include "gears/base/common/basictypes.h"
-#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 
 class SecurityOrigin;  // base/common/security_model.h

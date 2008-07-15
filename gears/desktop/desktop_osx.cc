@@ -382,9 +382,7 @@ static bool RunAppleScript(const std::string16 &applescript) {
   std::string applescript_utf8;
   String16ToUTF8(applescript.c_str(), &applescript_utf8);
   
-  AEDesc script_text_desc;
-  AECreateDesc(typeNull, NULL, 0, &script_text_desc);
-  scoped_AEDesc scoped_script_text_desc(script_text_desc);
+  scoped_AEDesc script_text_desc;
 
   // Open the scripting component.
   ComponentInstance the_component = OpenDefaultComponent(kOSAComponentType, 
@@ -396,13 +394,14 @@ static bool RunAppleScript(const std::string16 &applescript) {
   
   // Make the script an aedesc.
   if (AECreateDesc(typeChar, applescript_utf8.c_str(), 
-                  applescript_utf8.length(), &script_text_desc) != noErr) {
+                   applescript_utf8.length(),
+                   as_out_parameter(script_text_desc)) != noErr) {
     return false;  
   }
 
   // Compile the script.
   OSAID scriptID = kOSANullScript;
-  if (OSACompile(the_component, &script_text_desc, kOSAModeNull, 
+  if (OSACompile(the_component, script_text_desc.get(), kOSAModeNull, 
                  &scriptID) != noErr) {
     if (scriptID != kOSANullScript) {
       OSADispose(the_component, scriptID);

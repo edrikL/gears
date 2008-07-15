@@ -42,15 +42,9 @@ static Mutex engine_creation_mutex;
 // Defined in js_runner_np.cc
 void HandleJSError(const JsRunner *js_runner, JsErrorInfo &error_info);
 
-// Taken from js_runner_ff.cc
-// TODO(playmobil): refactor these into a common header.
-class JS_DestroyContextFunctor {
- public:
-  inline void operator()(JSContext* x) const {
-    if (x != NULL) { JS_DestroyContext(x); }
-  }
-};
-typedef scoped_token<JSContext*, JS_DestroyContextFunctor> scoped_jscontext_ptr;
+typedef DECLARE_SCOPED_TRAITS(JSContext*, JS_DestroyContext, NULL)
+    JSContextTraits;
+typedef scoped_token<JSContext*, JSContextTraits> scoped_jscontext_ptr;
 
 // Spidermonkey callback for error handling.
 static void JS_DLL_CALLBACK JsErrorHandler(JSContext *cx, const char *message,

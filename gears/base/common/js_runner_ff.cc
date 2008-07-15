@@ -491,13 +491,9 @@ bool JsRunner::GetProtoFromIID(const nsIID iface_id, JSObject **proto) {
   }
 }
 
-class JS_DestroyContextFunctor {
- public:
-  inline void operator()(JSContext* x) const {
-    if (x != NULL) { JS_DestroyContext(x); }
-  }
-};
-typedef scoped_token<JSContext*, JS_DestroyContextFunctor> scoped_jscontext_ptr;
+typedef DECLARE_SCOPED_TRAITS(JSContext*, JS_DestroyContext, NULL)
+    JSContextTraits;
+typedef scoped_token<JSContext*, JSContextTraits> scoped_jscontext_ptr;
 
 bool JsRunner::InitJavaScriptEngine() {
   JSBool js_ok;

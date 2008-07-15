@@ -37,62 +37,136 @@
 
 #include "gears/base/common/scoped_token.h"
 
-class ReleaseCFTypeFunctor {
+template<typename CFTokenType>
+class CFTokenTraits {
  public:
-  void operator()(CFTypeRef x) const {
-    if (x != NULL) { CFRelease(x); }
+  static void Free(CFTokenType x) { CFRelease(x); }
+  static CFTokenType Default() { return NULL; }
+};
+
+template<typename CFTokenType>
+class scoped_cftype : public scoped_token<CFTokenType,
+                                          CFTokenTraits<CFTokenType> > {
+ public:
+  scoped_cftype() {
+  }
+  explicit scoped_cftype(CFTokenType value)
+      : scoped_token<CFTokenType, CFTokenTraits<CFTokenType> >(value) {
   }
 };
 
-template<typename T>
-class scoped_cftype : public scoped_token<T, ReleaseCFTypeFunctor> {
+// CFDictionaryRef
+typedef scoped_cftype<CFDictionaryRef> scoped_CFDictionary;
+
+// CFHTTPMessageRef
+typedef scoped_cftype<CFHTTPMessageRef> scoped_CFHTTPMessage;
+
+// CFMachPortRef
+typedef scoped_cftype<CFMachPortRef> scoped_CFMachPort;
+
+// CFMessagePortRef
+typedef scoped_cftype<CFMessagePortRef> scoped_CFMessagePort;
+
+// CFMutableDataRef
+typedef scoped_cftype<CFMutableDataRef> scoped_CFMutableData;
+
+// CFMutableStringRef
+typedef scoped_cftype<CFMutableStringRef> scoped_CFMutableString;
+
+// CFReadStreamRef
+typedef scoped_cftype<CFReadStreamRef> scoped_CFReadStream;
+
+// CFRunLoopSourceRef
+typedef scoped_cftype<CFRunLoopSourceRef> scoped_CFRunLoopSource;
+
+// CFStringRef
+typedef scoped_cftype<CFStringRef> scoped_CFString;
+
+// CFURLRef
+typedef scoped_cftype<CFURLRef> scoped_CFURL;
+
+// CFUUIDRef
+typedef scoped_cftype<CFUUIDRef> scoped_CFUUID;
+
+// Handle
+typedef DECLARE_SCOPED_TRAITS(Handle, DisposeHandle, NULL) HandleTraits;
+typedef scoped_token<Handle, HandleTraits> scoped_Handle;
+
+// ComponentInstance
+typedef DECLARE_SCOPED_TRAITS(ComponentInstance, CloseComponent, NULL)
+    ComponentInstanceTraits;
+typedef scoped_token<ComponentInstance, ComponentInstanceTraits>
+    scoped_ComponentInstance;
+
+// NavDialogRef
+typedef DECLARE_SCOPED_TRAITS(NavDialogRef, NavDialogDispose, NULL)
+    NavDialogTraits;
+typedef scoped_token<NavDialogRef, NavDialogTraits> scoped_NavDialogRef;
+
+// NavReplyRecord and AEDesc behave differently than most other Carbon objects,
+// in that the caller must allocate the structure.  Thus, a simple check for
+// a NULL pointer isn't sufficient to determine if the structure requires
+// releasing.  Instead, we have a custom check for each type, and we initialize
+// the object to a known state that does not require releasing.
+
+// NavReplyRecord
+class NavReplyRecordTraits {
  public:
-  explicit scoped_cftype(T value) :
-      scoped_token<T, ReleaseCFTypeFunctor>(value) {
+  static void Free(NavReplyRecord* x) {
+    if (x->validRecord) {
+      NavDisposeReply(x);
+    }
   }
+  static NavReplyRecord* Default() { return NULL; }
 };
 
-
-class ReleaseHandleFunctor {
+class scoped_NavReplyRecord : public scoped_token<NavReplyRecord*,
+                                                  NavReplyRecordTraits> {
  public:
-  void operator()(Handle x) const {
-    if (x != NULL) { DisposeHandle(x); }
+  scoped_NavReplyRecord()
+      : scoped_token<NavReplyRecord*, NavReplyRecordTraits>(&record_) {
+    // Implicitly sets validRecord to false.
+    memset(&record_, 0, sizeof(record_));
   }
+  scoped_NavReplyRecord(NavReplyRecord* record)
+      : scoped_token<NavReplyRecord*, NavReplyRecordTraits>(record) {
+  }
+ private:
+  NavReplyRecord record_;
 };
 
-class ReleaseComponentFunctor {
+inline NavReplyRecord* as_out_parameter(scoped_NavReplyRecord& p) {
+  assert(p.get() && !p.get()->validRecord);
+  return p.get();
+}  
+
+// AEDesc
+class AEDescTraits {
  public:
-  void operator()(ComponentInstance x) const {
-    if (x != NULL) { CloseComponent(x); }
+  static void Free(AEDesc* x) {
+    if (typeNull != x->descriptorType) {
+      AEDisposeDesc(x);
+    }
   }
+  static AEDesc* Default() { return NULL; }
 };
 
-class ReleaseAEDescFunctor {
+class scoped_AEDesc : public scoped_token<AEDesc*, AEDescTraits> {
  public:
-  void operator()(AEDesc x) const {
-    AEDisposeDesc(&x);
+  scoped_AEDesc() : scoped_token<AEDesc*, AEDescTraits>(&desc_) {
+    // Initialize desc_ to a null descriptor.
+    AECreateDesc(typeNull, NULL, 0, &desc_);
   }
+  scoped_AEDesc(AEDesc* desc) : scoped_token<AEDesc*, AEDescTraits>(desc) {
+  }
+ private:
+  AEDesc desc_;
 };
 
-class ReleaseNavReplyRecord {
- public:
-  void operator()(NavReplyRecord* x) const {
-    NavDisposeReply(x);
-  }
-};
-
-class ReleaseNavDialogRef {
- public:
-  void operator()(NavDialogRef x) const {
-    if (x != NULL)
-      NavDialogDispose(x);
-  }
-};
-
-typedef scoped_token<Handle, ReleaseHandleFunctor> scoped_Handle;
-
-
-// TODO(aa): Replace usages of the below with scoped_cftype above?
+inline AEDesc* as_out_parameter(scoped_AEDesc& p) {
+  assert(p.get() && (typeNull == p.get()->descriptorType));
+  return p.get();
+}  
 
 #if defined(__OBJC__) && defined(__cplusplus)
 class ReleaseObjCRef {
@@ -103,57 +177,5 @@ class ReleaseObjCRef {
   }
 };
 #endif
-
-// CFDictionaryRef
-typedef scoped_token<CFDictionaryRef, ReleaseCFTypeFunctor> scoped_CFDictionary;
-
-// CFHTTPMessageRef
-typedef scoped_token<CFHTTPMessageRef, ReleaseCFTypeFunctor>
-  scoped_CFHTTPMessage;
-
-// CFMachPortRef
-typedef scoped_token<CFMachPortRef, ReleaseCFTypeFunctor> scoped_CFMachPort;
-
-// CFMessagePortRef
-typedef scoped_token<CFMessagePortRef, ReleaseCFTypeFunctor>
-  scoped_CFMessagePort;
-
-// CFMutableDataRef
-typedef scoped_token<CFMutableDataRef, ReleaseCFTypeFunctor>
-  scoped_CFMutableData;
-
-// CFMutableStringRef
-typedef scoped_token<CFMutableStringRef, ReleaseCFTypeFunctor>
-  scoped_CFMutableString;
-
-// CFReadStreamRef
-typedef scoped_token<CFReadStreamRef, ReleaseCFTypeFunctor> scoped_CFReadStream;
-
-// CFRunLoopSourceRef
-typedef scoped_token<CFRunLoopSourceRef, ReleaseCFTypeFunctor>
-  scoped_CFRunLoopSource;
-
-// CFStringRef
-typedef scoped_token<CFStringRef, ReleaseCFTypeFunctor> scoped_CFString;
-
-// CFURLRef
-typedef scoped_token<CFURLRef, ReleaseCFTypeFunctor> scoped_CFURL;
-
-// CFUUIDRef
-typedef scoped_token<CFUUIDRef, ReleaseCFTypeFunctor> scoped_CFUUID;
-
-// ComponentInstance
-typedef scoped_token<ComponentInstance, ReleaseComponentFunctor>
-            scoped_ComponentInstance;
-
-// AEDesc
-typedef scoped_token<AEDesc, ReleaseAEDescFunctor> scoped_AEDesc;
-
-// NavReplyRecord
-typedef scoped_token<NavReplyRecord*, ReleaseNavReplyRecord>
-  scoped_NavReplyRecord;
-
-// NavDialogRef
-typedef scoped_token<NavDialogRef, ReleaseNavDialogRef> scoped_NavDialogRef;
 
 #endif  // GEARS_BASE_SAFARI_SCOPED_CF_H__

@@ -37,65 +37,37 @@
 #include <wininet.h>
 #include "gears/base/common/scoped_token.h"
 
-
 // SAFE_HANDLE: automatically call CloseHandle()
-class CloseHandleFunctor {
- public:
-  void operator()(HANDLE x) const {
-    if (x != INVALID_HANDLE_VALUE) { ::CloseHandle(x); }
-  }
-};
-typedef scoped_token<HANDLE, CloseHandleFunctor> SAFE_HANDLE;
-
+typedef DECLARE_SCOPED_TRAITS(HANDLE, ::CloseHandle, INVALID_HANDLE_VALUE)
+    HANDLETraits;
+typedef scoped_token<HANDLE, HANDLETraits> SAFE_HANDLE;
 
 // SAFE_MAPPEDVIEW: automatically call UnmapViewOfFile()
-class UnmapViewOfFileFunctor {
- public:
-  void operator()(LPVOID x) const {
-    if (x != NULL) { ::UnmapViewOfFile(x); }
-  }
-};
-typedef scoped_token<LPVOID, UnmapViewOfFileFunctor> SAFE_MAPPEDVIEW;
-
+typedef DECLARE_SCOPED_TRAITS(LPVOID, ::UnmapViewOfFile, NULL)
+    MAPPEDVIEWTraits;
+typedef scoped_token<LPVOID, MAPPEDVIEWTraits> SAFE_MAPPEDVIEW;
 
 // SAFE_HINTERNET: automatically call InternetCloseHandle()
-class InternetCloseHandleFunctor {
- public:
-  void operator()(HINTERNET x) const {
-    if (x != NULL) { ::InternetCloseHandle(x); }
-  }
-};
-typedef scoped_token<HINTERNET, InternetCloseHandleFunctor> SAFE_HINTERNET;
-
+typedef DECLARE_SCOPED_TRAITS(HINTERNET, ::InternetCloseHandle, NULL)
+    HINTERNETTraits;
+typedef scoped_token<HINTERNET, HINTERNETTraits> SAFE_HINTERNET;
 
 // SAFE_HCRYPTPROV: automatically call CryptReleaseContext()
-class CryptReleaseContextFunctor {
+class HCRYPTPROVTraits {
  public:
-  void operator()(HCRYPTPROV x) const {
-    if (x != NULL) { ::CryptReleaseContext(x, 0); }
-  }
+  static void Free(HCRYPTPROV x) { ::CryptReleaseContext(x, 0); }
+  static HCRYPTPROV Default() { return NULL; }
 };
-typedef scoped_token<HCRYPTPROV, CryptReleaseContextFunctor> SAFE_HCRYPTPROV;
-
+typedef scoped_token<HCRYPTPROV, HCRYPTPROVTraits> SAFE_HCRYPTPROV;
 
 // SAFE_HCRYPTKEY: automatically call CryptDestroyKey()
-class CryptDestroyKeyFunctor {
- public:
-  void operator()(HCRYPTKEY x) const {
-    if (x != NULL) { ::CryptDestroyKey(x); }
-  }
-};
-typedef scoped_token<HCRYPTKEY, CryptDestroyKeyFunctor> SAFE_HCRYPTKEY;
-
+typedef DECLARE_SCOPED_TRAITS(HCRYPTKEY, ::CryptDestroyKey, NULL)
+    HCRYPTKEYTraits;
+typedef scoped_token<HCRYPTKEY, HCRYPTKEYTraits> SAFE_HCRYPTKEY;
 
 // SAFE_HCRYPTHASH: automatically call CryptDestroyHash()
-class CryptDestroyHashFunctor {
- public:
-  void operator()(HCRYPTHASH x) const {
-    if (x != NULL) { ::CryptDestroyHash(x); }
-  }
-};
-typedef scoped_token<HCRYPTHASH, CryptDestroyHashFunctor> SAFE_HCRYPTHASH;
-
+typedef DECLARE_SCOPED_TRAITS(HCRYPTHASH, ::CryptDestroyHash, NULL)
+    HCRYPTHASHTraits;
+typedef scoped_token<HCRYPTHASH, HCRYPTHASHTraits> SAFE_HCRYPTHASH;
 
 #endif  // GEARS_BASE_COMMON_SCOPED_WIN32_HANDLES_H__

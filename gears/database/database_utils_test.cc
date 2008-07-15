@@ -33,13 +33,9 @@
 
 // Hack together a scoped sqlite3 * so that TEST_ASSERT() failures
 // dont't leave the database wedged.
-class Sqlite3CloseFunctor {
- public:
-  void operator()(sqlite3 *db) const {
-    sqlite3_close(db);
-  }
-};
-typedef scoped_token<sqlite3 *, Sqlite3CloseFunctor> scoped_sqlite3_handle;
+typedef DECLARE_SCOPED_TRAITS(sqlite3*, sqlite3_close, NULL)
+    sqlite3Traits;
+typedef scoped_token<sqlite3*, sqlite3Traits> scoped_sqlite3_handle;
 
 bool TestDatabaseUtilsAll(std::string16 *error) {
 // TODO(aa): Refactor into a common location for all the internal tests.
@@ -87,13 +83,9 @@ bool TestDatabaseUtilsAll(std::string16 *error) {
   File::Delete(filename.c_str());
 
   // Open a couple handles to the database.
-  sqlite3 *dbh = NULL, *db2h = NULL;
-
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, &dbh));
-  scoped_sqlite3_handle db(dbh);
-
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, &db2h));
-  scoped_sqlite3_handle db2(db2h);
+  scoped_sqlite3_handle db, db2;
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db)));
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db2)));
 
   // Test that the database works.
   const char *kInsertSql("INSERT INTO t VALUES ('x')");
@@ -131,8 +123,7 @@ bool TestDatabaseUtilsAll(std::string16 *error) {
   TEST_ASSERT(basename == current_basename);
 
   // Open the database again.  It should work.
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, &dbh));
-  db.reset(dbh);
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db)));
 
   // The basename should be different.
   TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,
