@@ -172,7 +172,14 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td class="text-alignment" valign="middle">
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~
+          <img id="icon" src="data:image/png;base64,
+m4_include(ui/common/icon_32x32.png.base64)m4_dnl
+           ">
+~,~
           <img id="icon" src="icon_32x32.png" width="32" height="32">
+~)
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
