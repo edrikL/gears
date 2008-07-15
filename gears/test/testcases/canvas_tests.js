@@ -24,11 +24,11 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-function assertBlobsEqual(blob1, blob2) {
+function assertBlobsEqual(expectedBlob, actualBlob) {
   if (isDebug)
-    assert(blob1.hasSameContentsAs(blob2));
+    assert(actualBlob.hasSameContentsAs(expectedBlob));
   else
-    assertEqual(blob1.length, blob2.length);
+    assertEqual(expectedBlob.length, actualBlob.length);
 }
 
 function loadBlob(filename, callback) {
@@ -64,7 +64,7 @@ function testGetContext() {
   assertEqual(canvas, ctx.canvas);
   var ctx2 = canvas.getContext('gears-2d');
   assertEqual(ctx2, ctx);
-  assertEqual(null, canvas.getContext('foobar'));
+  assertNull(canvas.getContext('foobar'));
  }
 
 // Tests that properties have the correct initial values, and that they can be
@@ -132,19 +132,18 @@ function testCanvasBlankAfterChangingDimensions() {
     // Test that changing the height resets the canvas.
     canvas.height = 120;
     assertBlobsEqual(blobs['blank-313x120.png'], canvas.toBlob());
-    
+
     // Test that changing the width resets the canvas.
     canvas.load(originalBlob);
     canvas.width = 240;
     assertBlobsEqual(blobs['blank-240x234.png'], canvas.toBlob());
-    
+
     completeAsync();
   });
 }
 
-// Tests that assigning the width or height its present value
-// resets all pixels to transparent black,
-// as the HTML5 canvas spec requires.
+// Tests that assigning the width or height its present value resets all
+// pixels to transparent black, as the HTML5 canvas spec requires.
 function testCanvasBlankAfterDimensionsSelfAssignment() {
   var originalFilename = 'sample-original.jpeg';
   var filenames = [originalFilename,
@@ -154,20 +153,23 @@ function testCanvasBlankAfterDimensionsSelfAssignment() {
     var canvas = google.gears.factory.create('beta.canvas');
     var originalBlob = blobs[originalFilename];
     canvas.load(originalBlob);
+
+    // Make sure the original file has the right dimensions.
     assertEqual(313, canvas.width);
     assertEqual(234, canvas.height);
+
     // The canvas is not blank.
     assertNotEqual(canvas.toBlob().length, blobs['blank-313x234.png'].length);
-    
+
     // Setting width to current width must blank the canvas:
     canvas.width = canvas.width;
     assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
-    
+
     // Test the same for height:
     canvas.load(originalBlob);
     canvas.height = canvas.height;
     assertBlobsEqual(canvas.toBlob(), blobs['blank-313x234.png']);
-    
+
     completeAsync();
   });
 }
@@ -176,19 +178,22 @@ function runLoadAndExportTest(blobs) {
   var formats = ['png', 'jpeg'];
   for (var i = 0; i < formats.length; ++i) {
     var format = formats[i];
-    var canvas = google.gears.factory.create('beta.canvas');  
+    var canvas = google.gears.factory.create('beta.canvas');
     canvas.load(blobs['sample-original.' + format]);
-    
+
     var pngBlob = canvas.toBlob('image/png');
+
     // The default format is png.
     assertBlobsEqual(canvas.toBlob(), pngBlob);
+
     var jpegBlob = canvas.toBlob('image/jpeg');
     var jpegLowBlob = canvas.toBlob('image/jpeg', { quality: 0.02 });
+
     // Now compare the exported versions with golden files.
     // The golden files have been manually checked for format and size.
-    assertBlobsEqual(pngBlob, 
+    assertBlobsEqual(pngBlob,
         blobs['sample-' + format + '-exported-as-png.png']);
-    assertBlobsEqual(jpegBlob, 
+    assertBlobsEqual(jpegBlob,
         blobs['sample-' + format + '-exported-as-jpeg.jpeg']);
     assertBlobsEqual(jpegLowBlob,
         blobs['sample-' + format + '-exported-as-jpeg-with-quality-0.02.jpeg']);
@@ -229,40 +234,73 @@ function testExportToUnsupportedFormat() {
 }
 
 function runCloneTest(blob, dummyBlob) {
+  // Create a canvas and set various properties on it and on its context.
   var originalCanvas = google.gears.factory.create('beta.canvas');
+  var originalCtx = originalCanvas.getContext('gears-2d');
   originalCanvas.load(blob);
+
   var originalWidth = originalCanvas.width;
   var originalHeight = originalCanvas.height;
   var originalBlob = originalCanvas.toBlob();
-  
+
+  var alpha = 0.5;
+  var compositeOperation = 'copy';
+  var fillStyle = '#397F90';
+  var font = '24px tahoma';
+  var textAlign = 'center';
+
+  originalCtx.globalAlpha = alpha;
+  originalCtx.globalCompositeOperation = compositeOperation;
+  originalCtx.fillStyle = fillStyle;
+  // TODO(kart): After implementing font and textAlign, uncomment these.
+  // originalCtx.font = font;
+  // originalCtx.textAlign = textAlign;
+
+
+  // Now clone the canvas and check that the clone and its context are
+  // identical to the originals.
   var clonedCanvas = originalCanvas.clone();
-  // Make sure the clone is identical to the original.
+  var cloneCtx = clonedCanvas.getContext('gears-2d');
+
   assertEqual(originalWidth, clonedCanvas.width);
   assertEqual(originalHeight, clonedCanvas.height);
   assertBlobsEqual(originalBlob, clonedCanvas.toBlob());
-  
+
+  assertEqual(originalCtx.globalAlpha, cloneCtx.globalAlpha);
+  assertEqual(originalCtx.globalCompositeOperation,
+      cloneCtx.globalCompositeOperation);
+  assertEqual(originalCtx.fillStyle, cloneCtx.fillStyle);
+  // assertEqual(originalCtx.font, cloneCtx.font);
+  // assertEqual(originalCtx.textAlign, cloneCtx.textAlign);
+
+
   // Now perform various operations on the clone and check that the original
-  // isn't affected.
+  // and its context aren't affected.
   clonedCanvas.resize(500, 400);
   function checkOriginal() {
     assertEqual(originalWidth, originalCanvas.width);
     assertEqual(originalHeight, originalCanvas.height);
     assertBlobsEqual(originalBlob, originalCanvas.toBlob());
+
+    assertEqual(alpha, originalCtx.globalAlpha);
+    assertEqual(compositeOperation, originalCtx.globalCompositeOperation);
+    assertEqual(fillStyle, originalCtx.fillStyle);
+    // assertEqual(font, ctx.font);
+    // assertEqual(textAlign, ctx.textAlign);
   }
   checkOriginal();
-  
+
   clonedCanvas.crop(60, 60, 130, 10);
   checkOriginal();
-  
+
   clonedCanvas.width = 70;
   checkOriginal();
 
   clonedCanvas.height = 65;
   checkOriginal();
-  
-  // Load a random image into the clone and
-  // check that the original isn't affected.
-  // We don't care what the dummy is, just that it's a valid image.
+
+  // Load a random image into the clone and check that the original isn't
+  // affected. We don't care what the dummy is, just that it's a valid image.
   clonedCanvas.load(dummyBlob);
   checkOriginal();
 }
@@ -286,14 +324,14 @@ function testCrop() {
     canvas.load(blobs['sample-original.jpeg']);
     canvas.crop(40, 40, 100, 100);
     var exportedBlob = canvas.toBlob();
-    
+
     var goldenBlob = blobs[goldenFilename];
     // Ensure that the golden file is what we think it is.
     var goldenCanvas = google.gears.factory.create('beta.canvas');
     goldenCanvas.load(goldenBlob);
     assertEqual(100, goldenCanvas.width);
     assertEqual(100, goldenCanvas.height);
-    
+
     assertBlobsEqual(goldenBlob, exportedBlob);
     completeAsync();
   });
@@ -355,20 +393,150 @@ function testResizeWeirdCases() {
   assertEqual(0, canvas.height);
 }
 
+// Use the two-argument drawImage() to clone an image.
+function testDraw2ImageClone() {
+  startAsync();
+  loadBlob('sample-original.png', function(inputBlob) {
+    var srcCanvas = google.gears.factory.create('beta.canvas');
+    srcCanvas.load(inputBlob);
+    var srcCanvasBeforeDrawBlob = srcCanvas.toBlob();
 
-/*
-function testDrawImage() {
-  if(isOfficial)
-    return;
-  var canvas = google.gears.factory.create('beta.canvas');
-  var ctx = canvas.getContext('gears-2d');
-  var canvas2 = google.gears.factory.create('beta.canvas');
-  // assertError(ctx.drawImage(canvas2, 1000, 1000, 30, 20, 0, 0, 10, 10));
-    // TODO(kart): check for INDEX_SIZE_ERR
-  // assertError(ctx.drawImage(42));
-    // TODO(kart): check for TYPE_MISMATCH_ERR
+    var destCanvas = google.gears.factory.create('beta.canvas');
+    destCanvas.width = srcCanvas.width;
+    destCanvas.height = srcCanvas.height;
+    var ctx = destCanvas.getContext('gears-2d');
+    ctx.drawImage(srcCanvas, 0, 0);
+
+    // The source should not have been affected.
+    assertBlobsEqual(srcCanvasBeforeDrawBlob, srcCanvas.toBlob());
+
+    // Both canvii must be the same.
+    assertBlobsEqual(srcCanvas.toBlob(), destCanvas.toBlob());
+
+    completeAsync();
+  });
 }
-*/
+
+function runDrawImage2SmallerAndBiggerTest(srcFilename, goldenFilename, blobs,
+    isSrcBigger, offsetX, offsetY) {
+  var srcCanvas = google.gears.factory.create('beta.canvas');
+  srcCanvas.load(blobs[srcFilename]);
+  var srcCanvasBlobBeforeDraw = srcCanvas.toBlob();
+
+  var destCanvas = google.gears.factory.create('beta.canvas');
+  if (isSrcBigger) {
+    assert(srcCanvas.width > destCanvas.width);
+    assert(srcCanvas.height > destCanvas.height);
+  } else {
+    assert(srcCanvas.width < destCanvas.width);
+    assert(srcCanvas.height < destCanvas.height);
+  }
+
+  var destCanvasOriginalWidth = destCanvas.width;
+  var destCanvasOriginalHeight = destCanvas.height;
+
+  var destCtx = destCanvas.getContext('gears-2d');
+  destCtx.drawImage(srcCanvas, offsetX, offsetY);
+
+  // The source should not have been affected.
+  assertBlobsEqual(srcCanvasBlobBeforeDraw, srcCanvas.toBlob());
+
+  // The destination's dimensions should remain untouched.
+  assertEqual(destCanvasOriginalWidth, destCanvas.width);
+  assertEqual(destCanvasOriginalHeight, destCanvas.height);
+
+  assertBlobsEqual(blobs[goldenFilename], destCanvas.toBlob());
+}
+
+// Use the two-argument drawImage() (which does not resize the image while
+// drawing) to draw a canvas onto a bigger one, which should leave a part of
+//  the destination canvas untouched.
+// Then run the same test but draw onto a smaller canvas, which should fail
+// because the bigger image won't fit onto the smaller one.
+// In both cases, the destination canvas's dimensions and the source canvas
+// should remain unchanged.
+function testDrawImage2SmallerAndBigger() {
+  var smallerSrcFile = 'sample-jpeg-cropped-40-40-100-100.png';
+  var biggerSrcFile = 'sample-original.png';
+  var smallerGoldenFile = 'drawImage2Smaller-output.png';
+
+  startAsync();
+  loadBlobs([smallerSrcFile, biggerSrcFile, smallerGoldenFile],
+      function(blobs) {
+        runDrawImage2SmallerAndBiggerTest(smallerSrcFile, smallerGoldenFile,
+            blobs, false, 10, 35);
+        assertError(function() {
+            runDrawImage2SmallerAndBiggerTest(biggerSrcFile, null,
+              blobs, true, 0, 0);
+            }, 'Destination rectangle stretches beyond');
+        completeAsync();
+      });
+}
+
+// Use the two-argument drawImage() to draw an image at various invalid offsets.
+// Since a rectangle has four edges and four corners, there are eight kinds of
+// invalid offsets, all of which we test.
+function testDrawImage2ToBadOffset() {
+  startAsync();
+  loadBlob('sample-original.png', function(inputBlob) {
+    var srcCanvas = google.gears.factory.create('beta.canvas');
+    srcCanvas.load(inputBlob);
+
+    var destCanvas = google.gears.factory.create('beta.canvas');
+    var ctx = destCanvas.getContext('gears-2d');
+
+    assertError(function() {
+      ctx.drawImage(srcCanvas, -4, -3);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, -4, 0);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, 0, -3);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, 2 * canvas.width, 2 * canvas.height);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, 2 * canvas.width, 0);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, 0, 2 * canvas.height);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, 2 * canvas.width, -3);
+    });
+    assertError(function() {
+      ctx.drawImage(srcCanvas, -4, 2 * canvas.height);
+    });
+
+    completeAsync();
+  });
+}
+
+function testDrawImage2WithAlphaZeroIsNoop() {
+  startAsync();
+  loadBlob('sample-original.png', function(inputBlob) {
+    var srcCanvas = google.gears.factory.create('beta.canvas');
+    srcCanvas.load(inputBlob);
+
+    var destCanvas = google.gears.factory.create('beta.canvas');
+    // Make the destCanvas big enough to hold the image in the srcCanvas.
+    destCanvas.width = 400;
+    destCanvas.height = 400;
+    var ctx = destCanvas.getContext('gears-2d');
+    var destSnapshot = destCanvas.toBlob();
+
+    ctx.globalAlpha = 0;
+
+    // Should be a noop.
+    ctx.drawImage(srcCanvas, 3, 9);
+
+    assertBlobsEqual(destSnapshot, destCanvas.toBlob());
+    completeAsync();
+    });
+}
+
 
 // TODO(kart): restore should do nothing if the stack is
 // empty (i.e, blank canvas)
