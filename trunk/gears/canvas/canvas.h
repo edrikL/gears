@@ -29,7 +29,6 @@
 #if !defined(OFFICIAL_BUILD) && defined(WIN32)
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 // Can't include any Skia header here, or factory.cc will fail to compile due
@@ -62,8 +61,7 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
   // OUT: Blob
   void ToBlob(JsCallContext *context);
 
-  // Returns a new Canvas object with the
-  // same state (width, height, color mode, pixels).
+  // Returns a new Canvas object with the same state (width, height, pixels).
   // IN: -
   // OUT: Canvas
   void Clone(JsCallContext *context);
@@ -79,7 +77,7 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
   // OUT: -
   void Crop(JsCallContext *context);
 
-  // Resizes the canvas to the supplied dimensions. In-place.
+  // Resizes the canvas to the supplied dimensions, in-place.
   // IN: int width, int height
   // OUT: -
   void Resize(JsCallContext *context);
@@ -102,10 +100,12 @@ class GearsCanvas : public ModuleImplBaseClassVirtual {
   // fail silently without returning an error, as per the HTML5 canvas spec.
   // But if given an argument that HTML5 canvas supports but we don't,
   // the setters (set_composite_operation, to be precise) returns false.
-  SkBitmap *SkiaBitmap();
-  SkCanvas *SkiaCanvas();
-  int Width();
-  int Height();
+  // Returns the SkBitmap backing store for this canvas.
+  SkBitmap *skia_bitmap() const;
+  // Returns the SkCanvas object used to draw onto this canvas.
+  SkCanvas *skia_canvas() const;
+  int width() const;
+  int height() const;
   double alpha() const;
   void set_alpha(double new_alpha);
   std::string16 composite_operation() const;

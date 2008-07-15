@@ -28,6 +28,9 @@
 BlobBackedSkiaOutputStream::BlobBackedSkiaOutputStream() {
 }
 
+BlobBackedSkiaOutputStream::~BlobBackedSkiaOutputStream() {
+}
+
 bool BlobBackedSkiaOutputStream::write(
     const void* buffer, size_t size) {
   return blob_builder_.AddData(buffer, size);

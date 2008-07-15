@@ -23,9 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/canvas/canvas_rendering_context_2d.h"
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/module_wrapper.h"
 #include "third_party/skia/include/SkPorterDuff.h"
 
 DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
@@ -33,8 +34,7 @@ const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
-    : ModuleImplBaseClassVirtual(kModuleName),
-      canvas_(NULL) {
+    : ModuleImplBaseClassVirtual(kModuleName) {
 }
 
 void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {
@@ -144,17 +144,17 @@ void GearsCanvasRenderingContext2D::Restore(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
-  double x, y;
+  double scale_x, scale_y;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
-    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &y }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &scale_x },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &scale_y }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   if (context->GetArgumentType(1) == JSPARAM_UNDEFINED) {
     // If only one scale argument is supplied, use it for both dimensions.
-    y = x;
+    scale_y = scale_x;
     // TODO(kart): Test this.
   }
   context->SetException(STRING16(L"Unimplemented"));
@@ -171,10 +171,12 @@ void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  // Convert to radians.
-  angle = angle * 180.0 / 3.1415926535;
+  // Convert to degrees.
+  const double kPi = 3.1415926535;
+  const double kDegreesPerRadian = 180.0/kPi;
+  angle *= kDegreesPerRadian;
 
-  canvas_->SkiaCanvas()->rotate(SkDoubleToScalar(angle));
+  canvas_->skia_canvas()->rotate(SkDoubleToScalar(angle));
 }
 
 void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
@@ -389,19 +391,20 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // TODO(kart): Generate a better error message if given a HTMLImageElement
   // or a HTMLCanvasElement.
   ModuleImplBaseClass *other_module;
-  int sx, sy, sw, sh, dx, dy, dw, dh;
+  int source_x, source_y, source_width, source_height;
+  int dest_x, dest_y, dest_width, dest_height;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &sx },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &sy },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &sw },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &sh },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dx },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dy },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dw },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dh }
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &source_x },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &source_y },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &source_width },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &source_height },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_x },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_y },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_width },
+    { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_height }
   };
-  int num_args = context->GetArguments(ARRAYSIZE(args), args);
+  int num_arguments = context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
   assert(other_module);
@@ -411,28 +414,30 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   }
   scoped_refptr<GearsCanvas> source = static_cast<GearsCanvas*>(other_module);
   
-  if (num_args != 9) {
+  if (num_arguments != 9) {
     // Handle missing arguments.
-    if (num_args == 5) {
-      dw = sw;
-      dh = sh;
-    } else if (num_args == 3) {
-      dw = source->Width();
-      dh = source->Height();
+    if (num_arguments == 5) {
+      dest_width = source_width;
+      dest_height = source_height;
+    } else if (num_arguments == 3) {
+      dest_width = source->width();
+      dest_height = source->height();
     } else {
       context->SetException(STRING16(L"Unsupported number of arguments."));
       return;
     }
-    sw = source->Width();
-    sh = source->Height();
-    dx = sx;
-    dy = sy;
-    sx = 0;
-    sy = 0;
+    source_width = source->width();
+    source_height = source->height();
+    dest_x = source_x;
+    dest_y = source_y;
+    source_x = 0;
+    source_y = 0;
   }
   
-  SkIRect src_irect = { sx, sy, sx + sw, sy + sh };
-  SkIRect dest_irect = { dx, dy, dx + dw, dy + dh };
+  SkIRect src_irect = {
+      source_x, source_y, source_x + source_width, source_y + source_height };
+  SkIRect dest_irect = {
+      dest_x, dest_y, dest_x + dest_width, dest_y + dest_height };
 
   // The HTML5 canvas spec says that an invalid src rect must trigger an
   // exception, but it does not say what to do if the dest rect is invalid.
@@ -480,8 +485,8 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // the case where source canvas is same as this canvas.
   // TODO(kart): This function silently fails on errors. Find out what can be
   // done about this.
-  canvas_->SkiaCanvas()->drawBitmapRect(
-      *(source->SkiaBitmap()), &src_irect, dest_rect, &paint);
+  canvas_->skia_canvas()->drawBitmapRect(
+      *(source->skia_bitmap()), &src_irect, dest_rect, &paint);
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {

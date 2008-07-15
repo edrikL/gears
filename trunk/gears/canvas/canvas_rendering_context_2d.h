@@ -28,6 +28,7 @@
 
 #if !defined(OFFICIAL_BUILD) && defined(WIN32)
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/canvas/canvas.h"
 #include "third_party/skia/include/SkCanvas.h"
@@ -98,26 +99,36 @@ class GearsCanvasRenderingContext2D
   // The following items constitute the state of the context.
   // They affect future operations on the canvas.
 
+  // Returns the current global alpha, which is used for future drawing
+  // operations.
   // IN: -
   // OUT: double
   void GetGlobalAlpha(JsCallContext *context);
 
+  // Sets the global alpha, which must be between 0.0 and 1.0.
   // IN: double
   // OUT: -
   void SetGlobalAlpha(JsCallContext *context);
 
+  // Returns the current global composite operation, which defines how future
+  // drawing operations are composited onto the canvas.
   // IN: -
   // OUT: int
   void GetGlobalCompositeOperation(JsCallContext *context);
 
+  // Sets the global composite operation, which must be one of 'source-over'
+  // and 'copy'.
   // IN: int
   // OUT: -
   void SetGlobalCompositeOperation(JsCallContext *context);
 
+  // Returns the current fill style, which is used for future drawing
+  // operations.
   // IN: -
   // OUT: string
   void GetFillStyle(JsCallContext *context);
 
+  // Sets the fill style, which must be a valid CSS3 color specification.
   // IN: string
   // OUT: -
   void SetFillStyle(JsCallContext *context);
