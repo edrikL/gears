@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BLOB_BLOB_INPUT_STREAM_SF__
+#define GEARS_BLOB_BLOB_INPUT_STREAM_SF__
+
 #import <Foundation/NSStream.h>
 
 #include "gears/base/common/common.h"
@@ -52,3 +55,4 @@ class BlobInterface;
 - (void)reset:(BlobInterface *)blob;
 
 @end
+#endif  // GEARS_BLOB_BLOB_INPUT_STREAM_SF__

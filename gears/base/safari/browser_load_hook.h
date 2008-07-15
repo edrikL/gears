@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_SAFARI_BROWSER_LOAD_HOOK_H__
+#define GEARS_BASE_SAFARI_BROWSER_LOAD_HOOK_H__
+
 #import <Cocoa/Cocoa.h>
 
 // Class that's compiled in as part of the browser plugin and is called by
@@ -30,3 +33,4 @@
 @interface GearsBrowserLoadHook : NSObject
 + (BOOL)installHook;
 @end
+#endif  // GEARS_BASE_SAFARI_BROWSER_LOAD_HOOK_H__

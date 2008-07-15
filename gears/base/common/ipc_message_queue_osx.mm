@@ -24,12 +24,12 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <Cocoa/Cocoa.h>
-#include <unistd.h>
-#include <vector>
+#import <unistd.h>
+#import <vector>
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/ipc_message_queue.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#import "gears/base/common/common.h"
+#import "gears/base/common/ipc_message_queue.h"
+#import "third_party/scoped_ptr/scoped_ptr.h"
 
 static const int kGearsIpcVersion = 1;
 static const char *kGearsIpcMessageName = "GearsIpc";

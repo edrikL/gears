@@ -25,6 +25,9 @@
 //
 // Shared utility for creating desktop shortcut files.
 
+#ifndef GEARS_DESKTOP_SHORTCUT_UTILS_WIN32_H__
+#define GEARS_DESKTOP_SHORTCUT_UTILS_WIN32_H__
+
 #include "gears/base/common/string16.h"
 
 bool CreateShortcutFileWin32(const std::string16 &name,
@@ -33,3 +36,4 @@ bool CreateShortcutFileWin32(const std::string16 &name,
                              const std::string16 &ico_path,
                              uint32 location,
                              std::string16 *error);
+#endif  // GEARS_DESKTOP_SHORTCUT_UTILS_WIN32_H__

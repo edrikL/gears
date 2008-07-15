@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_SCOPED_RELEASER_H__
+#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_SCOPED_RELEASER_H__
+
 #include <new>
 #include <Foundation/Foundation.h>
 
@@ -94,3 +97,4 @@ template <typename T> class GMCFScopedReleaser {
   GMCFScopedReleaser(const GMCFScopedReleaser&);
   GMCFScopedReleaser & operator=(GMCFScopedReleaser&);
 };
+#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_SCOPED_RELEASER_H__

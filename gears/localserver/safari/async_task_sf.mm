@@ -23,12 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+#import <assert.h>
 
-#include "gears/blob/blob_interface.h"
-#include "gears/localserver/common/http_constants.h"
-#include "gears/localserver/common/http_cookies.h"
-#include "gears/localserver/safari/async_task_sf.h"
+#import "gears/blob/blob_interface.h"
+#import "gears/localserver/common/http_constants.h"
+#import "gears/localserver/common/http_cookies.h"
+#import "gears/localserver/safari/async_task_sf.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");

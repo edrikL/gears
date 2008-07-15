@@ -23,8 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_LOCALSERVER_SAFARI_PROGRESS_INPUT_STREAM_H__
+#define GEARS_LOCALSERVER_SAFARI_PROGRESS_INPUT_STREAM_H__
+
 #import <Foundation/NSStream.h>
-#include "gears/base/common/basictypes.h"
+#import "gears/base/common/basictypes.h"
 
 class SFHttpRequest;
 
@@ -47,3 +50,4 @@ class SFHttpRequest;
                total:(int64)total;
 
 @end
+#endif  // GEARS_LOCALSERVER_SAFARI_PROGRESS_INPUT_STREAM_H__

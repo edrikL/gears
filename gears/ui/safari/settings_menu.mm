@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/detect_version_collision.h"
-#include "gears/ui/safari/settings_menu.h"
-#include "gears/ui/common/settings_dialog.h"
+#import "gears/base/common/detect_version_collision.h"
+#import "gears/ui/safari/settings_menu.h"
+#import "gears/ui/common/settings_dialog.h"
 
 @implementation GearsSettingsMenuEnabler
 + (void)installSettingsMenu {

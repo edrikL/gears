@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_LOCALSERVER_SAFARI_HTTP_COOKIES_SF_H__
+#define GEARS_LOCALSERVER_SAFARI_HTTP_COOKIES_SF_H__
+
 // C wrapper for ObjC NSHTTPCookie/NSHTTPCookieStorage classes
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -30,3 +33,4 @@
 // Return the semicolon delimited concatenation of cookies mapped to |urlStr|.
 // If there are none, a zero-length string will be returned.
 CFStringRef GetHTTPCookieString(CFStringRef urlStr);
+#endif  // GEARS_LOCALSERVER_SAFARI_HTTP_COOKIES_SF_H__

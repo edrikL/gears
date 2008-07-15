@@ -26,9 +26,13 @@
 // OS X Input Manager plugin to inject our HTTP protocol handler and get
 // in the way of HTTP requests.
 
+#ifndef GEARS_BASE_SAFARI_ENABLER_H__
+#define GEARS_BASE_SAFARI_ENABLER_H__
+
 #import <Cocoa/Cocoa.h>
 
 @interface GearsEnabler : NSObject
 - (id)init;
 
 @end
+#endif  // GEARS_BASE_SAFARI_ENABLER_H__

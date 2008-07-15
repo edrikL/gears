@@ -24,13 +24,13 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <Cocoa/Cocoa.h>
-#include </usr/include/curl/curl.h>
+#import </usr/include/curl/curl.h>
 
-#include "gears/base/common/mutex.h"
-#include "gears/base/common/scoped_token.h"
-#include "gears/base/npapi/browser_utils.h"
-#include "gears/base/safari/curl_downloader.h"
-#include "gears/localserver/common/http_cookies.h"
+#import "gears/base/common/mutex.h"
+#import "gears/base/common/scoped_token.h"
+#import "gears/base/npapi/browser_utils.h"
+#import "gears/base/safari/curl_downloader.h"
+#import "gears/localserver/common/http_cookies.h"
 
 static bool curl_was_initialised = false;
 static Mutex curl_init_mutex;

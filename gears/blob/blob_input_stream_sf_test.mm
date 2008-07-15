@@ -23,11 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstring>
+#import <cstring>
 
 #import "gears/blob/blob_input_stream_sf.h"
-#include "gears/blob/buffer_blob.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#import "gears/blob/buffer_blob.h"
+#import "third_party/scoped_ptr/scoped_ptr.h"
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

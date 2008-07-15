@@ -37,6 +37,9 @@
 // By specifying parameters to the GoogleBreakpadCreate function, you can modify
 // the default behavior to suit your needs and wants and desires.
 
+#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_GOOGLE_BREAKPAD_H__
+#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_GOOGLE_BREAKPAD_H__
+
 typedef void *GoogleBreakpadRef;
 
 #ifdef __cplusplus
@@ -120,3 +123,4 @@ void GoogleBreakpadGenerateAndSendReport(GoogleBreakpadRef ref);
 #ifdef __cplusplus
 }
 #endif
+#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_GOOGLE_BREAKPAD_H__

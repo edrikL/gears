@@ -92,9 +92,9 @@
 // See proposed patch for this bug:
 // https://bugs.webkit.org/attachment.cgi?id=21681&action=prettypatch
 
-#include <dlfcn.h>
+#import <dlfcn.h>
 #import <Cocoa/Cocoa.h>
-#include <mach-o/nlist.h>
+#import <mach-o/nlist.h>
 
 // Workaround for Webkit bug 18941. 
 // Returns address of WebCore::TimerBase::fireTimersInNestedEventLoop() static

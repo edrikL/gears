@@ -30,18 +30,18 @@
 
 // Safari implementation of HttpRequest using an NSURLConnection.
 
-#include <iostream>
+#import <iostream>
 
-#include "gears/base/common/atomic_ops.h"
-#include "gears/base/common/http_utils.h"
-#include "gears/base/common/string_utils.h"
-#include "gears/base/common/url_utils.h"
-#include "gears/base/npapi/browser_utils.h"
-#include "gears/blob/blob_input_stream_sf.h"
-#include "gears/blob/blob_interface.h"
-#include "gears/localserver/common/http_request.h"
-#include "gears/localserver/safari/http_request_delegate.h"
-#include "gears/localserver/safari/progress_input_stream.h"
+#import "gears/base/common/atomic_ops.h"
+#import "gears/base/common/http_utils.h"
+#import "gears/base/common/string_utils.h"
+#import "gears/base/common/url_utils.h"
+#import "gears/base/npapi/browser_utils.h"
+#import "gears/blob/blob_input_stream_sf.h"
+#import "gears/blob/blob_interface.h"
+#import "gears/localserver/common/http_request.h"
+#import "gears/localserver/safari/http_request_delegate.h"
+#import "gears/localserver/safari/progress_input_stream.h"
 
 // PIMPL store for Objective-C delegate.
 struct SFHttpRequest::HttpRequestData {

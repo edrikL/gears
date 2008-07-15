@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_SAFARI_PREFIX_HEADER_H__
+#define GEARS_BASE_SAFARI_PREFIX_HEADER_H__
+
 // This file is added as a prefix header to all files compiled for Safari.
 
 #if defined(__cplusplus)
@@ -40,3 +43,4 @@
 #pragma GCC visibility pop
 #endif
 #endif  // #if defined(__cplusplus)
+#endif  // GEARS_BASE_SAFARI_PREFIX_HEADER_H__

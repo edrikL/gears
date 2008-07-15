@@ -24,16 +24,16 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <Cocoa/Cocoa.h>
-#include <WebKit/WebKit.h>
+#import <WebKit/WebKit.h>
 
-#include "gears/base/common/string16.h"
-#include "gears/base/common/js_runner.h"
-#include "gears/base/common/paths_sf_more.h"
-#include "gears/base/common/string_utils.h"
-#include "gears/base/npapi/browser_utils.h"
+#import "gears/base/common/string16.h"
+#import "gears/base/common/js_runner.h"
+#import "gears/base/common/paths_sf_more.h"
+#import "gears/base/common/string_utils.h"
+#import "gears/base/npapi/browser_utils.h"
 #import "gears/base/safari/nsstring_utils.h"
-#include "gears/base/safari/scoped_cf.h"
-#include "gears/ui/common/html_dialog.h"
+#import "gears/base/safari/scoped_cf.h"
+#import "gears/ui/common/html_dialog.h"
 #import  "gears/ui/safari/html_dialog_sf.h"
 
 // Class to display a Modal dialog in WebKit.

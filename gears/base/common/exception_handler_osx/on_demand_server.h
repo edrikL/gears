@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_ON_DEMAND_SERVER_H__
+#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_ON_DEMAND_SERVER_H__
+
 #import <iostream>
 #import <mach/mach.h>
 #import <servers/bootstrap.h>
@@ -140,3 +143,4 @@ class OnDemandServer {
   mach_port_t service_port_;
   bool        unregister_on_cleanup_;
 };
+#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_ON_DEMAND_SERVER_H__

@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/exception_handler.h"
+#import "gears/base/common/common.h"
+#import "gears/base/common/exception_handler.h"
 #import "gears/base/common/exception_handler_osx/google_breakpad.h"
 
 static GoogleBreakpadRef gBreakpadRef = 0;

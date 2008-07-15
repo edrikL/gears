@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "genfiles/product_constants.h"
+#import "genfiles/product_constants.h"
 #import "gears/base/safari/loader.h"
 
 @implementation GearsLoader

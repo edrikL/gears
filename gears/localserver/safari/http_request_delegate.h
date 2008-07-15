@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_DELEGATE_H__
+#define GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_DELEGATE_H__
+
 // Wrapper for an NSURLconnection - encapsulates as much of the Objective C
 // code as possible, delegating everything else to an "owner" C++ object
 // through which the rest of the Gears code interfaces
@@ -113,3 +116,4 @@
 - (void)responseBody:(scoped_refptr<BlobInterface> *)body;
 
 @end
+#endif  // GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_DELEGATE_H__

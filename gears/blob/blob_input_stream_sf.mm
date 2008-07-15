@@ -23,10 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cassert>
+#import <cassert>
 
 #import "gears/blob/blob_input_stream_sf.h"
-#include "gears/blob/blob_interface.h"
+#import "gears/blob/blob_interface.h"
 
 @implementation BlobInputStream
 

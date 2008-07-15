@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/detect_version_collision.h"
-#include "gears/base/common/exception_handler.h"
+#import "gears/base/common/common.h"
+#import "gears/base/common/detect_version_collision.h"
+#import "gears/base/common/exception_handler.h"
 #import "gears/base/safari/browser_load_hook.h"
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"

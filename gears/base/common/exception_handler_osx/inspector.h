@@ -26,6 +26,9 @@
 // Interface file between the GoogleBreakpad.framework and
 // the Inspector process.
 
+#ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_INSPECTOR_H__
+#define GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_INSPECTOR_H__
+
 #import "gears/base/common/exception_handler_osx/simple_string_dictionary.h"
 
 // Types of mach messsages (message IDs)
@@ -58,3 +61,4 @@ struct KeyValueMessageData {
   char key[google_breakpad::KeyValueEntry::MAX_STRING_STORAGE_SIZE];
   char value[google_breakpad::KeyValueEntry::MAX_STRING_STORAGE_SIZE];
 };
+#endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_OSX_INSPECTOR_H__
