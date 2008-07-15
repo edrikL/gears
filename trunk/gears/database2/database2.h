@@ -36,9 +36,9 @@
 #include "gears/database2/thread_safe_queue.h"
 
 // forward declarations
-class Database2Transaction;
+class GearsDatabase2Transaction;
 
-typedef Database2ThreadSafeQueue<Database2Transaction> 
+typedef Database2ThreadSafeQueue<GearsDatabase2Transaction> 
     Database2TransactionQueue;
 
 // Implements the HTML5 database interface, which allows the creation of 
@@ -46,17 +46,17 @@ typedef Database2ThreadSafeQueue<Database2Transaction>
 // synchronousTransaction() method.
 // This class creates and holds a reference to a Database2Connection object
 // which it shares with all transactions it creates.
-class Database2 : public ModuleImplBaseClassVirtual {
+class GearsDatabase2 : public ModuleImplBaseClassVirtual {
  public:
-  Database2() : ModuleImplBaseClassVirtual("Database2") {}
-  ~Database2() {}
+  GearsDatabase2() : ModuleImplBaseClassVirtual("GearsDatabase2") {}
+  ~GearsDatabase2() {}
 
-  // creates an instance of Database2
+  // creates an instance of GearsDatabase2
   static bool Create(const ModuleImplBaseClass *sibling, 
                      const std::string16 &name,
                      const std::string16 &version,
                      Database2Connection *connection,
-                     scoped_refptr<Database2> *instance);
+                     scoped_refptr<GearsDatabase2> *instance);
 
   // creates an object, implementing HTML5 SQLError interface
   static bool CreateError(const ModuleImplBaseClass *sibling, 
@@ -89,7 +89,7 @@ class Database2 : public ModuleImplBaseClassVirtual {
   void Transaction(JsCallContext *context);
 
  private:
-  void QueueTransaction(Database2Transaction *transaction);
+  void QueueTransaction(GearsDatabase2Transaction *transaction);
 
   std::string16 name_;
   std::string16 origin_;
@@ -104,7 +104,7 @@ class Database2 : public ModuleImplBaseClassVirtual {
   // require counting and thus does not need to be accounted for.
   scoped_refptr<Database2ThreadedInterpreter> threaded_interpreter_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(Database2);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase2);
 };
 
 #endif // GEARS_DATABASE2_DATABASE2_H__

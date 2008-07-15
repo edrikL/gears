@@ -26,7 +26,7 @@
 #include "gears/database2/statement.h"
 #include "gears/database2/transaction.h"
 
-void Database2Statement::InvokeCallback(Database2Transaction *tx) {
+void Database2Statement::InvokeCallback(GearsDatabase2Transaction *tx) {
   // for now, just return the Database2Statement
   JsParamToSend send_argv[] = {
     { JSPARAM_STRING16, &sql_statement_ }
@@ -38,7 +38,7 @@ void Database2Statement::InvokeCallback(Database2Transaction *tx) {
   }
 }
 
-void Database2Statement::InvokeErrorCallback(Database2Transaction *tx,
+void Database2Statement::InvokeErrorCallback(GearsDatabase2Transaction *tx,
                                              JsObject *error) {
 }
 

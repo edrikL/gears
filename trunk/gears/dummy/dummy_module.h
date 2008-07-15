@@ -31,10 +31,10 @@
 #include "gears/base/common/js_types.h"
 
 // TODO: Provide detailed description of the module.
-class DummyModule : public ModuleImplBaseClassVirtual {
+class GearsDummyModule : public ModuleImplBaseClassVirtual {
  public:
-  DummyModule()
-      : ModuleImplBaseClassVirtual("DummyModule"),
+  GearsDummyModule()
+      : ModuleImplBaseClassVirtual("GearsDummyModule"),
         property_value_(false) {}
   // TODO: For each method and property, provide input/output specification
 
@@ -51,7 +51,7 @@ class DummyModule : public ModuleImplBaseClassVirtual {
   bool property_value_;
 
   // make copy constructors private
-  DISALLOW_EVIL_CONSTRUCTORS(DummyModule);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsDummyModule);
 };
 
 #endif // GEARS_DUMMY_DUMMY_MODULE_H__

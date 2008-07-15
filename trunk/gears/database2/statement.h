@@ -32,8 +32,7 @@
 #include "gears/database2/connection.h"
 
 // forward declarations
-class Database2;
-class Database2Transaction;
+class GearsDatabase2Transaction;
 
 // represents statement, for both synchronous and asynchronous operations
 class Database2Statement {
@@ -46,8 +45,8 @@ class Database2Statement {
     return error_callback_.get() != NULL;
   }
 
-  void InvokeCallback(Database2Transaction *tx);
-  void InvokeErrorCallback(Database2Transaction *tx, JsObject *error);
+  void InvokeCallback(GearsDatabase2Transaction *tx);
+  void InvokeErrorCallback(GearsDatabase2Transaction *tx, JsObject *error);
 
   // create a statement instance
   // must passs NULL for arguments or callbacks if they are not specified

@@ -36,14 +36,14 @@
 #include "gears/database2/database2_common.h"
 #include "gears/database2/database2_metadata.h"
 
-DECLARE_GEARS_WRAPPER(Database2Manager);
+DECLARE_GEARS_WRAPPER(GearsDatabase2Manager);
 
 template<>
-void Dispatcher<Database2Manager>::Init() {
-  RegisterMethod("openDatabase", &Database2Manager::OpenDatabase);
+void Dispatcher<GearsDatabase2Manager>::Init() {
+  RegisterMethod("openDatabase", &GearsDatabase2Manager::OpenDatabase);
 }
 
-void Database2Manager::OpenDatabase(JsCallContext *context) {
+void GearsDatabase2Manager::OpenDatabase(JsCallContext *context) {
   std::string16 name;
   std::string16 version;
   JsArgument argv[] = {
@@ -84,8 +84,9 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
       new Database2Connection(EnvPageSecurityOrigin(), filename, version_cookie,
                               database2_metadata));
 
-  scoped_refptr<Database2> database;
-  if (!Database2::Create(this, name, found_version, connection.get(), &database)) {
+  scoped_refptr<GearsDatabase2> database;
+  if (!GearsDatabase2::Create(
+      this, name, found_version, connection.get(), &database)) {
     // raise broken gear exception
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;

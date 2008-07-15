@@ -36,7 +36,7 @@
 // base command, represents a typical execution pattern
 class Database2Command : public MessageData {
  public:
-  Database2Command(Database2Transaction *tx) : tx_(tx) {};
+  Database2Command(GearsDatabase2Transaction *tx) : tx_(tx) {};
   // executes a command and sets has_results to true, if there are any results
   // to process
   virtual void Execute(bool *has_results) = 0;
@@ -45,14 +45,14 @@ class Database2Command : public MessageData {
   virtual void HandleResults() = 0;
 
  protected:
-  Database2Transaction *tx() const { return tx_.get(); }
+  GearsDatabase2Transaction *tx() const { return tx_.get(); }
   Database2Connection *connection() const { return tx_->connection(); }
   bool success() const { return success_; }
   void SetResult(bool success) { success_ = success; }
 
  private:
   bool success_;
-  scoped_refptr<Database2Transaction> tx_;
+  scoped_refptr<GearsDatabase2Transaction> tx_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Command);
 };
@@ -61,7 +61,7 @@ class Database2Command : public MessageData {
 // begins a transaction
 class Database2BeginCommand : public Database2Command {
  public:
-  Database2BeginCommand(Database2Transaction *tx) : Database2Command(tx) {}
+  Database2BeginCommand(GearsDatabase2Transaction *tx) : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
@@ -72,7 +72,7 @@ class Database2BeginCommand : public Database2Command {
 // asynchronously executes a SQL statement
 class Database2AsyncExecuteCommand : public Database2Command {
  public:
-  Database2AsyncExecuteCommand(Database2Transaction *tx,
+  Database2AsyncExecuteCommand(GearsDatabase2Transaction *tx,
                                Database2Statement *statement)
       : Database2Command(tx), statement_(statement) {}
   virtual void Execute(bool *has_results);
@@ -90,7 +90,7 @@ class Database2SyncExecuteCommand : public Database2Command {
  public:
   // constructor accepts JsCallContext, which is ok, because
   // this command is only instantiated if the interpreter is synchronous
-  Database2SyncExecuteCommand(Database2Transaction *tx,
+  Database2SyncExecuteCommand(GearsDatabase2Transaction *tx,
                               JsCallContext *context,
                               Database2Statement *statement)
       : Database2Command(tx), context_(context), statement_(statement) {}
@@ -108,7 +108,8 @@ class Database2SyncExecuteCommand : public Database2Command {
 // commits a transaction
 class Database2CommitCommand : public Database2Command {
  public:
-   Database2CommitCommand(Database2Transaction *tx) : Database2Command(tx) {}
+   Database2CommitCommand(GearsDatabase2Transaction *tx)
+       : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
@@ -119,7 +120,8 @@ class Database2CommitCommand : public Database2Command {
 // rolls back a transaction
 class Database2RollbackCommand : public Database2Command {
  public:
-  Database2RollbackCommand(Database2Transaction *tx) : Database2Command(tx) {}
+  Database2RollbackCommand(GearsDatabase2Transaction *tx)
+      : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
