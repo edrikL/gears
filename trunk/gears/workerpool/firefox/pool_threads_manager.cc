@@ -344,6 +344,7 @@ PoolThreadsManager::PoolThreadsManager(
       is_shutting_down_(false),
       unrefed_owner_(owner),
       page_security_origin_(page_security_origin),
+      owner_permissions_manager_(page_security_origin),
       browsing_context_(owner->EnvPageBrowsingContext()) {
   // Make sure we have a ThreadId for this thread.
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
@@ -356,6 +357,9 @@ PoolThreadsManager::PoolThreadsManager(
   wi->is_owning_worker = true;
   InitWorkerThread(wi);
   worker_info_.push_back(wi);
+
+  owner_permissions_manager_.ImportPermissions(
+      *owner->GetPermissionsManager());
 }
 
 
@@ -1067,10 +1071,9 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   } else {
     // For same-origin workers, just copy the permission state from the
     // owning worker.
-    JavaScriptWorkerInfo *owner_info =
-      wi->threads_manager->worker_info_[kOwningWorkerId];
+    MutexLock lock(&wi->threads_manager->mutex_);
     wi->module_environment->permissions_manager_.ImportPermissions(
-        owner_info->module_environment->permissions_manager_);
+        wi->threads_manager->owner_permissions_manager_);
   }
 
   // This WorkerPool needs the same underlying PoolThreadsManager as its parent.
