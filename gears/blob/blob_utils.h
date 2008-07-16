@@ -33,14 +33,20 @@ class BlobInterface;
 
 // Converts the blob's contents to a UTF16 string.
 // If charset is empty, assumes UTF8.
+// The length of the blob must be smaller or equal to kuint32max,
+// otherwise an assertion is triggered.
 bool BlobToString16(BlobInterface *blob, const std::string16 &charset,
                     std::string16 *text);
 
 // Copy the blob's contents to a string. No assumptions are made about the data
 // type of the content, it is copied verbatim into the string.
+// The length of the blob must be smaller or equal to largest possible size
+// of the string, otherwise an assertion is triggered.
 bool BlobToString(BlobInterface *blob, std::string *string_out);
 
 // Convert the blob's contents to a vector.
+// The length of the blob must be smaller or equal to largest possible size
+// of the vector, otherwise an assertion is triggered.
 bool BlobToVector(BlobInterface *blob, std::vector<uint8> *vector_out);
 
 #endif  // GEARS_BLOB_BLOB_UTILS_H_
