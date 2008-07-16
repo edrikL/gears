@@ -23,6 +23,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Delete all default suffixes as we don't need this feature.
+# This reduces the time taken for make to parse VPATH files by 80%.
+.SUFFIXES:
+
 include tools/version.mk
 include tools/config.mk
 include tools/sanity.mk
