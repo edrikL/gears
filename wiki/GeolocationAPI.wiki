@@ -81,13 +81,13 @@ interface PositionOptions {
   // the flag wasn't specified.
   bool enableHighAccuracy;
 
-  // Optional. Requests reverse geocoded address information as part of
+  // Optional. Gears extension. Requests reverse geocoded address information as part of
   // the position data. Reverse geocoding is not performed if this flag is not
   // specified or set to false.
-  bool requestAddress;
+  bool gearsRequestAddress;
 
-  // Optional. Specifies the language in which the address (if requested) should be returned. Uses RFC 3066.
-  string addressLanguage.
+  // Optional. Gears extension. Specifies the language in which the address (if requested) should be returned. Uses RFC 3066.
+  string gearsAddressLanguage.
 
   // Optional. This is a Gears extension that specifies one or more URLs to
   // contact to convert geolocation signals into positions. Each URL is
