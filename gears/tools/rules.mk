@@ -1047,7 +1047,7 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(NOTIFER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
 	rm -rf $@
@@ -1059,16 +1059,6 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(NOTIFER_EXE) $(OSX_CR
 # Copy breakpad exes.
 	cp -r $(CRASH_SENDER_EXE) $@/Contents/Resources/
 	cp -r $(OSX_CRASH_INSPECTOR_EXE) $@/Contents/Resources/
-ifneq ($(OFFICIAL_BUILD),1)
-# Create notifier bundle
-	mkdir -p $@/Contents/Resources/Notifier.app/Contents/MacOS/
-	mkdir -p $@/Contents/Resources/Notifier.app/Contents/Resources/
-	cp $($(BROWSER)_OUTDIR)/genfiles/Notifier-Info.plist $@/Contents/Resources/Notifier.app/Contents/Info.plist
-# Copy notifier exe
-	cp -r $(NOTIFIER_EXE) $@/Contents/Resources/Notifier.app/Contents/MacOS/
-# Copy notifier resources
-	cp $(NOTIFIER_RESOURCES) $@/Contents/Resources/Notifier.app/Contents/Resources/
-endif # not OFFICIAL_BUILD
 # Copy the actual plugin.
 	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
 # Copy launch_url
