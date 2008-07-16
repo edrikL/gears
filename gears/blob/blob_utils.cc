@@ -65,6 +65,27 @@ bool BlobToString16(BlobInterface* blob, const std::string16 &charset,
   return UTF8ToString16(utf8_text.get(), static_cast<int>(length), text);
 }
 
+bool BlobToString(BlobInterface *blob, std::string *string_out) {
+  assert(blob);
+  int64 blob_length(blob->Length());
+  assert(blob_length >= 0);
+  assert(string_out);
+  assert(blob_length <= static_cast<int64>(string_out->max_size()));
+  if (blob_length == 0) {
+    string_out->clear();
+    return true;
+  }
+  // TODO(bgarcia): Rewrite this to remove the copy once blobs provide
+  // an interface to directly access their internal memory.
+  scoped_ptr_malloc<char> utf8_text;
+  utf8_text.reset(static_cast<char*>(malloc(static_cast<int>(blob_length))));
+  int64 length = blob->Read(reinterpret_cast<uint8*>(utf8_text.get()), 0,
+                            blob_length);
+  assert(length == blob_length);
+  *string_out = utf8_text.get();
+  return true;
+}
+
 // Convert the blob's contents to a vector.
 bool BlobToVector(BlobInterface *blob, std::vector<uint8>* vector_out) {
   assert(blob);

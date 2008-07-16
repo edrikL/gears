@@ -122,11 +122,12 @@ void NetworkLocationRequest::Run() {
   if (listener_) {
     Position position;
     std::string response_body;
-    if (result && payload_data.get() && payload_data->Length()) {
-      std::vector<uint8> buffer;
-      if (BlobToVector(payload_data.get(), &buffer)) {
-        response_body.resize(buffer.size());
-        std::copy(buffer.begin(), buffer.end(), response_body.begin());
+    if (result) {
+      // If HttpPost succeeded, payload_data is guaranteed to be non-NULL.
+      assert(payload_data.get());
+      if (!payload_data->Length() ||
+          !BlobToString(payload_data.get(), &response_body)) {
+        LOG(("NetworkLocationRequest::Run() : Failed to get response body.\n"));
       }
     }
     GetLocationFromResponse(result, payload.status_code, response_body,

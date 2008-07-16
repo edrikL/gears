@@ -36,6 +36,10 @@ class BlobInterface;
 bool BlobToString16(BlobInterface *blob, const std::string16 &charset,
                     std::string16 *text);
 
+// Copy the blob's contents to a string. No assumptions are made about the data
+// type of the content, it is copied verbatim into the string.
+bool BlobToString(BlobInterface *blob, std::string *string_out);
+
 // Convert the blob's contents to a vector.
 bool BlobToVector(BlobInterface *blob, std::vector<uint8> *vector_out);
 
