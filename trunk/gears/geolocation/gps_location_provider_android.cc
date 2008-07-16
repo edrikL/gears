@@ -33,6 +33,8 @@
 
 #include "gears/geolocation/location_provider.h"
 
+#include <assert.h>
+
 LocationProviderBase *NewGpsLocationProvider() {
   // TODO(jripley): Implement GPS location provider for Android.
   assert(false);
