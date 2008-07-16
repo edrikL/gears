@@ -25,6 +25,8 @@
 
 #include "gears/base/common/event.h"
 
+#include <assert.h>
+
 Event::Event()
     : mutex_(),
       signal_(false),
