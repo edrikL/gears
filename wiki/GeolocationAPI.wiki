@@ -28,9 +28,9 @@ interface Geolocation {
   // The success callback function will be called when ...
   // - with a good position, as soon as one is available, or
   // - whenever the position changes significantly, subject to a maximum callback 
-frequency.
+  //    frequency.
   // The error callback is called if a fatal error occurs which will prevent a position
-  // fix from ever being obtained by this watch
+  // fix from ever being obtained by this watch.
   int watchPosition(function successCallback, function errorCallback, optional PositionOptions options);
 
   // Stop watching the current position.
