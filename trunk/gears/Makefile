@@ -1417,13 +1417,6 @@ NOTIFIER_CPPSRCS += \
 		notifier_osx.mm \
 		system_osx.mm \
 		$(NULL)
-		
-NOTIFIER_RESOURCES += \
-		notifier/resources/background.png \
-		notifier/resources/button_strip.png \
-		notifier/resources/close_button_strip.png \
-		$(NULL)
-    
 endif
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
@@ -2035,7 +2028,6 @@ SF_VPATH	+= \
 SF_M4SRCS	+= \
 		installer.packproj.m4 \
 		Info.plist.m4 \
-		Notifier-Info.plist.m4 \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
