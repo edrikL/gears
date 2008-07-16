@@ -70,7 +70,7 @@ if (!isOfficial && isWin32) {
   suites.push(canvasSuite);
 }
 
-if (!isWince && !isOfficial) {
+if (!isWince && !isOfficial && !isNPAPI) {
   var consoleSuite = new TestSuite('Console');
   consoleSuite.addFile('../testcases/console_tests.js',
                         {useWorker: true, useIFrame: true});
