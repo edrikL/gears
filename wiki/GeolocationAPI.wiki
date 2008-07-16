@@ -51,7 +51,7 @@ interface Position {
   readonly int accuracy;  // in meters
   readonly int altitudeAccuracy;  // in meters, or null if unsupported
   readonly Date timestamp;      // time when location was established
-  readonly Address address;     // reverse geocoded address, if requested and available
+  readonly Address gearsAddress;     // reverse geocoded address, if requested and available. Gears extension
   // TODO: Consider adding heading
   // TODO: Consider adding speed
 };
