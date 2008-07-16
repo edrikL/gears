@@ -41,9 +41,9 @@ void PositionCallback(Position position);
 interface Position {
   readonly double latitude;  // latitude in degrees (WGS84 datum)
   readonly double longitude;  // longitude in degrees (WGS84 datum)
-  readonly double altitude;  // height in meters (WGS84 datum), or null if unsupported by device.
-  readonly double horizontalAccuracy;  // in meters
-  readonly double verticalAccuracy;  // in meters, or null if unsupported
+  readonly int altitude;  // height in meters (WGS84 datum), or null if unsupported by device.
+  readonly int horizontalAccuracy;  // in meters
+  readonly int verticalAccuracy;  // in meters, or null if unsupported
   readonly Date timestamp;      // time when location was established
   readonly string errorMessage; // human readable, suitable for logs
   readonly Address address;     // reverse geocoded address, if requested and available
