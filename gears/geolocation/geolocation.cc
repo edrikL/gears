@@ -105,7 +105,7 @@ class LocationAvailableNotificationData : public NotificationDataGeoBase {
 
  friend class GearsGeolocation;
 
-private:
+ private:
   LocationProviderBase *provider;
 
   DISALLOW_EVIL_CONSTRUCTORS(LocationAvailableNotificationData);
@@ -312,16 +312,18 @@ void GearsGeolocation::OnNotify(MessageService *service,
                                 const NotificationData *data) {
   assert(data);
 
+  // Only respond to notifications made by this object.
+  const NotificationDataGeoBase *geolocation_data =
+      reinterpret_cast<const NotificationDataGeoBase*>(data);
+  if (this != geolocation_data->object) {
+    return;
+  }
+
   if (char16_wmemcmp(kLocationAvailableObserverTopic,
                      topic,
                      char16_wcslen(topic)) == 0) {
     const LocationAvailableNotificationData *location_available_data =
         reinterpret_cast<const LocationAvailableNotificationData*>(data);
-
-    // Only respond to notifications made by this object.
-    if (this != location_available_data->object) {
-      return;
-    }
 
     // Invoke the implementation.
     LocationUpdateAvailableImpl(location_available_data->provider);
@@ -330,11 +332,6 @@ void GearsGeolocation::OnNotify(MessageService *service,
                             char16_wcslen(topic)) == 0) {
     const CallbackRequiredNotificationData *callback_required_data =
         reinterpret_cast<const CallbackRequiredNotificationData*>(data);
-
-    // Only respond to notifications made by this object.
-    if (this != callback_required_data->object) {
-      return;
-    }
 
     // Delete this callback timer.
     FixRequestInfo *fix_info = callback_required_data->fix_info;
