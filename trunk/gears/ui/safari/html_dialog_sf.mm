@@ -68,6 +68,7 @@ static NSDictionary *ScriptableMethods() {
     return false;
   }
   
+  [window_ setMinSize:NSMakeSize(width_, height_)];
   [window_ setReleasedWhenClosed:YES];
   
   // Create a WebView and attach it.
@@ -359,6 +360,18 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
   }
   
   SetResult(results.c_str());
+  return true;
+}
+
+bool HtmlDialog::GetLocale(std::string16 *locale) {
+  assert(locale);
+  NSLocale *current_locale = [NSLocale currentLocale];
+  NSString *language = [current_locale objectForKey:NSLocaleLanguageCode];
+  NSString *country = [current_locale objectForKey:NSLocaleCountryCode];
+  
+  // Put together a string like en-US.
+  NSString *ret = [NSString stringWithFormat:@"%@-%@", language, country];
+  [ret string16:locale];
   return true;
 }
 
