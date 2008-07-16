@@ -28,6 +28,8 @@
 
 #ifdef WIN32
 
+#include <windows.h>
+
 // Gets a reference to the Windows module containing the Gears code.
 HMODULE GetGearsModuleHandle();
 
