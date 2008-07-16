@@ -19,23 +19,29 @@ interface Geolocation {
   readonly Position lastPosition;
 
   // Get the current position.
-  // The callback function is always called exactly once ...
-  // - with a good position, as soon as one is available, or
-  // - with an error message, if none of the location providers find a good fix.
-  void getCurrentPosition(PositionCallback callback, optional PositionOptions options);
+  // The success callback function is always called exactly once with a good position,
+  // as soon as one is available, or the error callback is called exactly once with an
+  // error message, if none of the location providers find a good fix.
+  void getCurrentPosition(function successCallback, function errorCallback, optional PositionOptions options);
 
   // Watch the current position over time.
-  // The callback function will be called when ...
+  // The success callback function will be called when ...
   // - with a good position, as soon as one is available, or
-  // - whenever the position changes significantly, subject to a maximum callback frequency.
-  int watchPosition(PositionCallback callback, optional PositionOptions options);
+  // - whenever the position changes significantly, subject to a maximum callback 
+frequency.
+  // The error callback is called if a fatal error occurs which will prevent a position
+  // fix from ever being obtained by this watch
+  int watchPosition(function successCallback, function errorCallback, optional PositionOptions options);
 
   // Stop watching the current position.
   void clearWatch(int watchId);
 };
 
+The signature of the success callback is ...
+function successCallback(Position position);
 
-void PositionCallback(Position position);
+The signature of the error callback is ...
+function errorCallback(PositionError error);
 
 
 interface Position {
@@ -45,11 +51,15 @@ interface Position {
   readonly int horizontalAccuracy;  // in meters
   readonly int verticalAccuracy;  // in meters, or null if unsupported
   readonly Date timestamp;      // time when location was established
-  readonly string errorMessage; // human readable, suitable for logs
   readonly Address address;     // reverse geocoded address, if requested and available
   // TODO: Consider adding heading
   // TODO: Consider adding speed
 };
+
+interface PositionError {
+  readonly int code;
+  readonly string message; // human readable, suitable for logs
+}
 
 interface Address {
   readonly string streetNumber; // street number
