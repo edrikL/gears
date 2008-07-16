@@ -180,7 +180,7 @@ class BaseInstaller:
       print 'invalid path'
       return False
 
-    os.mkdir(target)
+    os.makedirs(target)
     try:
       zf = zipfile.ZipFile(file)
     except zipfile.BadZipfile:
