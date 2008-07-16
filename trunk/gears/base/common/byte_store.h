@@ -26,9 +26,9 @@
 #ifndef GEARS_BASE_COMMON_BYTE_STORE_H_
 #define GEARS_BASE_COMMON_BYTE_STORE_H_
 
-#include <vector>
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
+#include "gears/base/common/memory_buffer.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
@@ -104,19 +104,21 @@ class ByteStore : public RefCounted {
   bool AddDataToFile(const void *data, int64 length);
   class Blob;
   void GetDataElement(DataElement *elements);
+  int64 ReadFromFile(uint8 *destination, int64 offset, int64 max_length) const;
 
   // Helpers that return whether the store is working out of a file
   // or an in memory data buffer.
   bool IsUsingFile() const { return file_.get() ? true : false; }
   bool IsUsingData() const { return !IsUsingFile(); }
 
-  std::vector<uint8> data_;
+  MemoryBuffer data_;
   scoped_ptr<File> file_;
   mutable File::OpenAccessMode file_op_;
   mutable Mutex mutex_;
   bool is_finalized_;
   bool preserve_data_;
-  mutable std::vector<uint8> buffer_;
+  mutable MemoryBuffer read_buffer_;
+  mutable MemoryBuffer write_buffer_;
   int64 async_add_length_;
   DISALLOW_EVIL_CONSTRUCTORS(ByteStore);
 };
