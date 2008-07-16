@@ -79,9 +79,13 @@ bool BlobToString(BlobInterface *blob, std::string *string_out) {
   // an interface to directly access their internal memory.
   scoped_ptr_malloc<char> utf8_text;
   utf8_text.reset(static_cast<char*>(malloc(static_cast<int>(blob_length))));
+#ifdef DEBUG
   int64 length = blob->Read(reinterpret_cast<uint8*>(utf8_text.get()), 0,
                             blob_length);
   assert(length == blob_length);
+#else
+  blob->Read(reinterpret_cast<uint8*>(utf8_text.get()), 0, blob_length);
+#endif
   *string_out = utf8_text.get();
   return true;
 }
