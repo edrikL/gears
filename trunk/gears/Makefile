@@ -1343,6 +1343,9 @@ IE_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # gtest
 
+ifeq ($(OFFICIAL_BUILD),1)
+# Don't include gtest in official builds.
+else
 GTEST_VPATH	+= \
 		../third_party/gtest/src \
 		$(NULL)
@@ -1353,6 +1356,7 @@ GTEST_CPPSRCS	+= \
 		gtest-filepath.cc \
 		gtest-port.cc \
 		$(NULL)
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # notifier
