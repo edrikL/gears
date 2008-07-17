@@ -121,7 +121,6 @@ CanvasRenderingContext2D class
   // drawing rectangles
   void clearRect(int x, int y, int w, int h);
   void fillRect(int x, int y, int w, int h);  // see fillStyle.
-  void strokeRect(int x, int y, int w, int h);  // does not support stroke styles; draws a one-pixel border.  
   
   // text
   attribute string font;  // default: 10px sans-serif
