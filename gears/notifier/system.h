@@ -31,6 +31,7 @@
 #else
 
 #include <string>
+#include "gears/base/common/string16.h"
 
 namespace glint {
 class Rectangle;
@@ -39,6 +40,9 @@ class Rectangle;
 class System {
  public:
   static std::string GetResourcePath();
+
+  // Returns the path to store the application-specific data for the user.
+  static bool GetUserDataLocation(std::string16 *path);
 
   // Returns bounds suitable for showing UI (does not include system menu,
   // taskbar or sidebars that occupy the space on a side).

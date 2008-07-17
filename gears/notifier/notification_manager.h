@@ -42,14 +42,19 @@
 #if USING_CCTESTS
 class BalloonCollectionMock;
 #endif  // USING_CCTESTS
+class DelayedRestartInterface;
+class File;
 class GearsNotification;
 class QueuedNotification;
 class UserActivityInterface;
 
 // Handles all aspects of the notifications to be displayed.
+// Note: do not forget to increase kNotificationManagerVersion if you make any 
+// change to this class which could affect saving notifications.
 class NotificationManager : public BalloonCollectionObserver {
  public:
-  NotificationManager(UserActivityInterface *activity);
+  NotificationManager(UserActivityInterface *activity,
+                      DelayedRestartInterface *delayed_restart);
   ~NotificationManager();
 
   // Adds/Updates a notification (which may already be displayed).
@@ -86,11 +91,23 @@ class NotificationManager : public BalloonCollectionObserver {
   // BalloonCollectionObserver implementation.
   virtual void OnBalloonSpaceChanged();
 
+  // Saves notifications so that they can be reloaded when notifier is
+  // restarted.
+  bool SaveNotifications();
+
+  // Loads notifications during restart.
+  bool LoadNotifications();
+
+  // Are we showing any notifications?
+  bool showing_notifications() const;
+
 #if USING_CCTESTS
   BalloonCollectionMock *UseBalloonCollectionMock();
 #endif  // USING_CCTESTS
 
  private:
+  static const int kNotificationManagerVersion;
+
   // Attempts to display notifications from the show_queue.
   void ShowNotifications();
 
@@ -127,7 +144,22 @@ class NotificationManager : public BalloonCollectionObserver {
                           int64 delay_ms,
                           bool user_delayed);
 
+  // Check if we need to do the delayed restart.
+  bool CheckDelayedRestart();
+
+  // Helper function to load notifications.
+  bool InternalLoadNotifications(File *file);
+
+  // Helper function to get the path for saving notifications.
+  static bool GetNotificationSavePath(std::string16 *file_path);
+
+  // Helper function to write a notification.
+  static bool WriteNotification(File *file,
+                                const GearsNotification &notification);
+
+  bool intiailized_;
   UserActivityInterface *activity_;
+  DelayedRestartInterface *delayed_restart_;
   scoped_ptr<BalloonCollectionInterface> balloon_collection_;
   std::deque<QueuedNotification*> show_queue_;
   std::deque<QueuedNotification*> delayed_queue_;

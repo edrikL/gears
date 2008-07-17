@@ -48,11 +48,13 @@ class LinuxNotifier : public Notifier {
   virtual bool Initialize();
   virtual int Run();
   virtual void Terminate();
+  virtual void RequestQuit();
 
  private:
   bool CheckSingleInstance(bool is_parent);
   bool StartAsDaemon();
-  bool RegisterProcess();
+  virtual bool RegisterProcess();
+  virtual bool UnregisterProcess();
 
   int single_instance_locking_fd_;
 
@@ -116,6 +118,15 @@ bool LinuxNotifier::RegisterProcess() {
     return false;
   }
 
+  return true;
+}
+
+// Unregister the process by clearing the lock file.
+bool LinuxNotifier::UnregisterProcess() {
+  if (ftruncate(single_instance_locking_fd_, 0) < 0) {
+    LOG(("truncating lock file failed with errno=%d\n", errno));
+    return false;
+  }
   return true;
 }
 
@@ -221,6 +232,10 @@ void LinuxNotifier::Terminate() {
   }
 
   return Notifier::Terminate();
+}
+
+void LinuxNotifier::RequestQuit() {
+  // TODO
 }
 
 int LinuxNotifier::Run() {

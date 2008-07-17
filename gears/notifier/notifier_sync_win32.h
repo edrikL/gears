@@ -23,55 +23,63 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
-#define GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
+#ifndef GEARS_NOTIFIER_SYNC_WIN32_H__
+#define GEARS_NOTIFIER_SYNC_WIN32_H__
+
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-#if USING_CCTESTS
-#include <map>
 
-#include "gears/notifier/balloons.h"
+#include "gears/base/common/event.h"
 
-class BalloonCollectionMock : public BalloonCollectionInterface {
+// TODO(jianli): Extend to other platforms.
+class NotifierSyncGate {
  public:
-  BalloonCollectionMock();
-  virtual ~BalloonCollectionMock();
-
-  virtual void Show(const GearsNotification &notification);
-  virtual bool Update(const GearsNotification &notification);
-  virtual bool Delete(const SecurityOrigin &security_origin,
-                      const std::string16 &bare_id);
-
-  virtual bool has_space() const;
-  virtual int count() const;
-  virtual const GearsNotification *notification_at(int i) const;
-  
-  void set_capacity(int capacity) {
-    capacity_ = capacity;
+   NotifierSyncGate(const char16 *name) : handle_(NULL), opened_(false) {
+    handle_ = ::CreateEvent(NULL, true, false, name);
+    assert(handle_);
   }
 
-  int show_call_count() const {
-    return show_call_count_;
+  ~NotifierSyncGate() {
+    if (opened_) {
+      BOOL res = ::ResetEvent(handle_);
+      assert(res);
+    }
+    if (handle_) {
+      ::CloseHandle(handle_);
+    }
   }
 
-  void set_show_call_count(int show_call_count);
-  void set_update_call_count(int update_call_count);
-  void set_delete_call_count(int delete_call_count);
+  bool Open() {
+    assert(handle_);
+    assert(!opened_);
+    if (!::SetEvent(handle_)) {
+      return false;
+    }
+    opened_ = true;
+    return true;
+  }
 
+  bool Wait(Event *stop_event, int timeout_ms) {
+    assert(handle_);
+    // TODO (jianli): Add support for WaitMultiple.
+    while (timeout_ms > 0) {
+      if (::WaitForSingleObject(handle_, 1000) == WAIT_OBJECT_0) {
+        return true;
+      }
+      if (stop_event && stop_event->WaitWithTimeout(1)) {
+        return false;
+      }
+      timeout_ms -= 1000;
+    }
+    return false;
+  }
 
  private:
-  int capacity_;
-  int count_;
-  int show_call_count_;
-  int update_call_count_;
-  int delete_call_count_;
-
-  typedef std::pair<std::string16, std::string16> NotificationId;
-
-  std::map<NotificationId, int> displayed_;
-  DISALLOW_EVIL_CONSTRUCTORS(BalloonCollectionMock);
+  HANDLE handle_;
+  bool opened_;
 };
-#endif  // USING_CCTESTS
+
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_NOTIFIER_NOTIFICATION_MANAGER_TEST_H__
+
+#endif  // GEARS_NOTIFIER_SYNC_WIN32_H__

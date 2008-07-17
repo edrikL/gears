@@ -37,6 +37,12 @@ std::string System::GetResourcePath() {
   return std::string();
 }
 
+bool System::GetUserDataLocation(std::string16 *path) {
+  // TODO(jianli): Implement this.
+  assert(false && "Not implemented");
+  return false;
+}
+
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
   // TODO(dimich): Implement this.
   assert(false && "Not implemented");

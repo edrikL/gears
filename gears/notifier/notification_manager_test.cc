@@ -50,7 +50,8 @@ BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
 }
 
 BalloonCollectionMock::BalloonCollectionMock()
-    : has_space_(false),
+    : capacity_(0),
+      count_(0),
       show_call_count_(0),
       update_call_count_(0),
       delete_call_count_(0) {
@@ -71,6 +72,7 @@ void BalloonCollectionMock::Show(const GearsNotification &notification) {
   show_call_count_--;
 
   displayed_[id] = 1;
+  count_++;
 }
 
 bool BalloonCollectionMock::Update(const GearsNotification &notification) {
@@ -91,15 +93,20 @@ bool BalloonCollectionMock::Delete(const SecurityOrigin &security_origin,
   }
   delete_call_count_--;
   displayed_.erase(id);
+  count_--;
   return true;
 }
 
-bool BalloonCollectionMock::has_space() {
-  return has_space_;
+bool BalloonCollectionMock::has_space() const {
+  return count_ < capacity_;
 }
 
-void BalloonCollectionMock::set_has_space(bool has_space) {
-  has_space_ = has_space;
+int BalloonCollectionMock::count() const {
+  return count_;
+}
+
+const GearsNotification *BalloonCollectionMock::notification_at(int i) const {
+  return NULL;
 }
 
 void BalloonCollectionMock::set_show_call_count(int show_call_count) {
@@ -140,12 +147,12 @@ class UserActivityMock : public UserActivityInterface {
 
 TEST(NotificationManagerTest, BasicFunctionality) {
   UserActivityMock activity;
-  NotificationManager manager(&activity);
+  NotificationManager manager(&activity, NULL);
   BalloonCollectionMock *balloon_collection =
       manager.UseBalloonCollectionMock();
 
   // Start with no room in the balloon collection.
-  balloon_collection->set_has_space(false);
+  balloon_collection->set_capacity(0);
 
   // Add a notification when there is no space.
   GearsNotification notification1;
@@ -156,17 +163,16 @@ TEST(NotificationManagerTest, BasicFunctionality) {
   manager.Add(notification1);
 
   // Make space available and expect the balloon to be shown.
-  balloon_collection->set_has_space(true);
+  balloon_collection->set_capacity(1);
   balloon_collection->set_show_call_count(1);
   manager.OnBalloonSpaceChanged();
 
   // Update the notification with no space available.
-  balloon_collection->set_has_space(false);
   balloon_collection->set_update_call_count(1);
   manager.Add(notification1);
 
   // Add a notification while the user is away.
-  balloon_collection->set_has_space(true);
+  balloon_collection->set_capacity(1);
   activity.set_user_mode(USER_AWAY_MODE);
 
   GearsNotification notification2;
@@ -226,12 +232,12 @@ void RunMessageLoop(int max_time_ms) {
 
 TEST(NotificationManagerTest, DisplayAtTime) {
   UserActivityMock activity;
-  NotificationManager manager(&activity);
+  NotificationManager manager(&activity, NULL);
   BalloonCollectionMock *balloon_collection =
       manager.UseBalloonCollectionMock();
 
   // Start with room in the balloon collection.
-  balloon_collection->set_has_space(true);
+  balloon_collection->set_capacity(1);
 
   // Add a notification when there is no space.
   GearsNotification notification1;

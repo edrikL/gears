@@ -47,25 +47,85 @@ __declspec(dllexport) int WINAPI DllEntry(const wchar_t *) {
 
 #include "gears/notifier/notifier.h"
 
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
+#include "gears/notifier/const_notifier.h"
+#include "gears/notifier/notifier_sync_win32.h"
+#include "gears/notifier/notifier_utils_win32.h"
+
+// Work around the header including errors.
+#include <atlbase.h>
+#include <atlwin.h>
+#include <objbase.h>
+#include <windows.h>
+
+// Constants
 static const char16 *kSingleInstanceMutexId =
     L"Local\\929B4371-2230-49b2-819F-6A34D5A11DED";
+static const int kWaitProcessExitTimeoutMs = 5000;    // 5s
+
+// Dummy window
+class NotifierDummyWindow :
+    public CWindowImpl<NotifierDummyWindow> {
+ public:
+  DECLARE_WND_CLASS(kNotifierDummyWndClassName);
+
+  NotifierDummyWindow() : CWindowImpl() {}
+
+  ~NotifierDummyWindow() {
+    if (m_hWnd) {
+      DestroyWindow();
+    }
+  }
+
+  bool NotifierDummyWindow::Initialize() {
+    return Create(NULL, 0, L"GearsNotifier", WS_POPUP) != NULL;
+  }
+
+  BEGIN_MSG_MAP(NotifierDummyWindow)
+    MESSAGE_HANDLER(WM_CREATE, OnCreate)
+    MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+  END_MSG_MAP()
+
+  LRESULT OnCreate(UINT msg, WPARAM wparam, LPARAM lparam, BOOL& handled) {
+    return 0;
+  }
+
+  LRESULT OnDestroy(UINT msg, WPARAM wparam, LPARAM lparam, BOOL& handled) {
+    ::PostQuitMessage(0);
+    return 0;
+  }
+};
 
 class Win32Notifier : public Notifier {
  public:
-  Win32Notifier();
+  Win32Notifier(const wchar_t *running_version);
   virtual bool Initialize();
   virtual int Run();
   virtual void Terminate();
+  virtual void RequestQuit();
+
+  virtual bool IsRestartNeeded() const;
+
+  void WaitParentProcessExitOnRestart();
+
+ protected:
+  virtual bool RegisterProcess();
+  virtual bool UnregisterProcess();
 
  private:
   bool CheckAlreadyRunning(bool *already_running);
 
+  std::string16 running_version_;
   HANDLE single_instance_mutex_handle_;
+  scoped_ptr<NotifierDummyWindow> dummy_wnd_;
+  scoped_ptr<NotifierSyncGate> sync_gate_;
   DISALLOW_EVIL_CONSTRUCTORS(Win32Notifier);
 };
 
-Win32Notifier::Win32Notifier()
-    : single_instance_mutex_handle_(NULL) {
+Win32Notifier::Win32Notifier(const wchar_t *running_version)
+    : running_version_(running_version),
+      single_instance_mutex_handle_(NULL) {
 }
 
 bool Win32Notifier::CheckAlreadyRunning(bool *already_running) {
@@ -104,10 +164,13 @@ bool Win32Notifier::Initialize() {
 }
 
 void Win32Notifier::Terminate() {
+  // Release the single instance protection.
   if (single_instance_mutex_handle_) {
     ::ReleaseMutex(single_instance_mutex_handle_);
     single_instance_mutex_handle_ = NULL;
   }
+
+  Notifier::Terminate();
 }
 
 int Win32Notifier::Run() {
@@ -120,21 +183,86 @@ int Win32Notifier::Run() {
   return 0;
 }
 
+void Win32Notifier::RequestQuit() {
+  ::PostQuitMessage(0);
+}
+
+bool Win32Notifier::RegisterProcess() {
+  assert(!dummy_wnd_.get());
+  dummy_wnd_.reset(new NotifierDummyWindow);
+  if (!dummy_wnd_->Initialize()) {
+    return false;
+  }
+
+  sync_gate_.reset(new NotifierSyncGate(kNotifierStartUpSyncGateName));
+  return sync_gate_->Open();
+}
+
+bool Win32Notifier::UnregisterProcess() {
+  sync_gate_.reset(NULL);
+
+  assert(dummy_wnd_.get());
+  dummy_wnd_.reset(NULL);
+
+  return true;
+}
+
+bool Win32Notifier::IsRestartNeeded() const {
+  std::string16 new_version;
+  if (!GetNotifierVersion(&new_version)) {
+    return false;
+  }
+  if (new_version == running_version_) {
+    return false;
+  }
+
+  std::string16 path;
+  GetMainModulePath(&path);
+  path += running_version_;
+  path += kPathSeparator;
+  path += kCoreDllName;
+  return File::Exists(path.c_str());
+}
+
+void Win32Notifier::WaitParentProcessExitOnRestart() {
+  uint32 parent_process_id = 0;
+  if (!GetParentProcessId(::GetCurrentProcessId(), &parent_process_id)) {
+    return;
+  }
+
+  HANDLE process_handle = ::OpenProcess(SYNCHRONIZE, FALSE, parent_process_id);
+  if (!process_handle) {
+    return;
+  }
+
+  DWORD res = ::WaitForSingleObject(process_handle, kWaitProcessExitTimeoutMs);
+  if (res == WAIT_TIMEOUT) {
+    LOG(("Failed to wait parent process %d\n", parent_process_id));
+  }
+
+  ::CloseHandle(process_handle);
+}
+
 extern "C" {
 
 __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
   return TRUE;
 }
 
-__declspec(dllexport) int WINAPI DllEntry(const wchar_t *command_line) {
+__declspec(dllexport) int WINAPI DllEntry(const wchar_t *running_version) {
   int argc = 0;
-  char16 **argv = CommandLineToArgvW(command_line, &argc);
+  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
   if (!argv) { return __LINE__; }  // return line as a lame error code
-  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
 
   LOG(("Gears Notifier started.\n"));
 
-  Win32Notifier notifier;
+  Win32Notifier notifier(running_version);
+
+  if (argc > 1 && wcscmp(argv[1], kRestartCmdLineSwitch) == 0) {
+    notifier.WaitParentProcessExitOnRestart();
+  }
+
+  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
 
   int retval = -1;
   if (notifier.Initialize()) {

@@ -31,7 +31,11 @@
 #include "gears/notifier/notifier_utils_win32.h"
 
 #include <assert.h>
+#include <shlwapi.h>
+#include <tlhelp32.h>
 #include <windows.h>
+
+#include "gears/base/common/common.h"
 
 // Constants
 static const char16 *kNotifierRootRegKey = L"Software\\Google\\Gears";
@@ -94,6 +98,87 @@ bool GetNotifierVersion(std::string16 *version) {
                      kNotifierRootRegKey,
                      kNotifierInstallVersion,
                      version);
+}
+
+void GetMainModulePath(std::string16 *path) {
+  assert(path);
+
+  char16 temp[MAX_PATH + 1] = {0};
+  ::GetModuleFileName(NULL, temp, ARRAYSIZE(temp));
+  ::PathRemoveFileSpec(temp);
+
+  path->assign(temp);
+
+  // Make sure the path ends with the path separator.
+  if (path->at(path->length() - 1) != L'\\') {
+    path->append(1, L'\\');
+  }
+}
+
+// Function pointer to be called when enumerating processes
+// Return true to abort the enumeration
+typedef bool EnumProcessesFunc(const PROCESSENTRY32 &process, LONG_PTR param);
+
+// Helper function to enumerate all processes.
+bool EnumProcesses(EnumProcessesFunc *handler, LONG_PTR param) {
+  assert(handler);
+
+  HANDLE snapshot= ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snapshot == INVALID_HANDLE_VALUE) {
+    LOG(("CreateToolhelp32Snapshot failed with error=%u\n", ::GetLastError()));
+    return false;
+  }
+  
+  PROCESSENTRY32 process = {0};
+  process.dwSize = sizeof(PROCESSENTRY32);
+  for (BOOL found = ::Process32First(snapshot, &process);
+       found;
+       found = ::Process32Next(snapshot, &process)) {
+
+    bool res = (*handler)(process, param);
+    if (res) {
+      break;
+    }
+  }
+
+  ::CloseHandle(snapshot);
+
+  return true;
+}
+
+struct GetParentProcessIdData {
+  uint32 process_id;
+  uint32 parent_process_id;
+};
+
+// Callback for EnumProcesses in order to get parent process ID.
+bool GetParentProcessIdHandler(const PROCESSENTRY32 &process, LONG_PTR param) {
+  assert(param);
+
+  GetParentProcessIdData* data = 
+      reinterpret_cast<GetParentProcessIdData*>(param);
+
+  if (process.th32ProcessID == data->process_id) {
+    data->parent_process_id = process.th32ParentProcessID;
+    return true;
+  }
+
+  return false;
+}
+
+bool GetParentProcessId(uint32 process_id, uint32 *parent_process_id) {
+  assert(parent_process_id);
+
+  GetParentProcessIdData data;
+  data.process_id = process_id;
+  data.parent_process_id = 0;
+  if (!EnumProcesses(&GetParentProcessIdHandler,
+                     reinterpret_cast<LONG_PTR>(&data))) {
+    return false;
+  }
+
+  *parent_process_id = data.parent_process_id;
+  return S_OK;
 }
 
 #endif  // WIN32

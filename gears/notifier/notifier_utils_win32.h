@@ -31,6 +31,7 @@
 #else
 #ifdef WIN32
 
+#include <windows.h>
 #include "gears/base/common/string16.h"
 
 // Get the installed path to the notifier executable.
@@ -38,6 +39,12 @@ bool GetNotifierPath(std::string16 *path);
 
 // Get the installed version of the notifier executable.
 bool GetNotifierVersion(std::string16 *version);
+
+// Get the path to the main module.
+void GetMainModulePath(std::string16 *path);
+
+// Get the parent process ID of the specified process.
+bool GetParentProcessId(uint32 process_id, uint32 *parent_process_id);
 
 #endif  // WIN32
 

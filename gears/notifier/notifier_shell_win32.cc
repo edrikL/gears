@@ -35,44 +35,22 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
 #else
 
 #include <assert.h>
-#include <shlwapi.h>
 #include <windows.h>
+#include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notifier_utils_win32.h"
 
 // Constants
-static const char16 *kCoreDllName = L"notifier.dll";
 static const char *kCoreEntryPoint = "_DllEntry@4";
 static const int kFailedToLoadCoreDll = 1;
 static const int kFailedToRunCoreDll = 2;
 static const int kGenericShellError = 3;
-static const int kReloadCoreDll = 4;
 
 typedef int (WINAPI *DLL_ENTRY_POINT)(const wchar_t *);
 
-void GetMainModulePath(std::string16 *path) {
-  assert(path);
-
-  char16 temp[MAX_PATH + 1] = {0};
-  ::GetModuleFileName(NULL, temp, ARRAYSIZE(temp));
-  ::PathRemoveFileSpec(temp);
-
-  path->assign(temp);
-
-  // Make sure the path ends with the path separator.
-  if (path->at(path->length() - 1) != L'\\') {
-    path->append(1, L'\\');
-  }
-}
-
-int InvokeNotifierCore(LPTSTR command_line, const std::string16 &prev_version) {
+int InvokeNotifierCore(LPTSTR command_line) {
   // Get the install version.
   std::string16 version;
   GetNotifierVersion(&version);
-
-  // If reloading the same version, bail out immediately.
-  if (!prev_version.empty() && prev_version == version) {
-    return kFailedToLoadCoreDll;
-  }
 
   // Get the path to the current module.
   std::string16 module_path;
@@ -100,6 +78,7 @@ int InvokeNotifierCore(LPTSTR command_line, const std::string16 &prev_version) {
   // This is for easy debugging.
 #ifdef DEBUG
   if (!core_dll_module) {
+    version.clear();
     core_path = module_path;
     std::string16 core_dll_path = core_path + kCoreDllName;
     core_dll_module = ::LoadLibrary(core_dll_path.c_str());
@@ -125,24 +104,11 @@ int InvokeNotifierCore(LPTSTR command_line, const std::string16 &prev_version) {
   }
 
   // Call the entry point to do all the work.
-  int rv = (*dll_entry_point)(command_line);
-
-  // Execute additional logic per the return code from the entry point.
-  // For example, the core dll can return an error code to request to reload
-  // the newer core dll.
-  switch (rv) {
-    case S_OK:
-      return 0;
-    case kReloadCoreDll:
-      return InvokeNotifierCore(command_line, version);
-    default:
-      return -1;
-  }
+  return (*dll_entry_point)(version.c_str());
 }
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR command_line, int) {
-  std::string16 no_version;
-  return InvokeNotifierCore(command_line, no_version);
+  return InvokeNotifierCore(command_line);
 }
 
 #endif  // OFFICIAL_BUILD

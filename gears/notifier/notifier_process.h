@@ -30,15 +30,16 @@
   // The notification API has not been finalized for official builds.
 #else
 
+#include "gears/base/common/string16.h"
+
 class Event;
 
 class NotifierProcess {
  public:
   // Starts the Desktop Notifier process.
-  static bool StartProcess(Event *stop_event);
-
-  // Registers the Desktop Notifier process.
-  static bool RegisterProcess();
+  static bool StartProcess(const char16 *cmd_line_options,
+                           Event *stop_event,
+                           bool async);
 
   // Finds the Desktop Notifier process. Returns the process id if found.
   // Otherwise returns 0.

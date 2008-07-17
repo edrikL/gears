@@ -39,7 +39,11 @@
 
 
 // The path separator character for the current platform.
-extern const char16 kPathSeparator;
+#if defined(WIN32)
+const char16 kPathSeparator = L'\\';
+#else
+const char16 kPathSeparator = L'/';
+#endif
 
 // All data for a given security origin lives in a single directory.
 // Here are the unique suffixes each module uses to identify its files/dirs.

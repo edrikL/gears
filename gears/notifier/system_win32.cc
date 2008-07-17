@@ -30,6 +30,9 @@
 
 #include <string>
 #include <assert.h>
+#include <atlbase.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <windows.h>
 #include "gears/notifier/system.h"
 #include "gears/base/common/basictypes.h"
@@ -63,6 +66,46 @@ std::string System::GetResourcePath() {
   std::string result;
   String16ToUTF8(path.c_str(), &result);
   return result;
+}
+
+bool GetSpecialFolder(DWORD csidl, std::string16 *folder_path) {
+  assert(folder_path);
+
+  folder_path->clear();
+
+  // Get the path of a special folder as an ITEMIDLIST structure.
+  ITEMIDLIST *folder_location = NULL;
+  if (FAILED(::SHGetFolderLocation(NULL, csidl, NULL, 0, &folder_location))) {
+    return false;
+  }
+
+  // Get an interface to the desktop folder.
+  CComPtr<IShellFolder> desktop_folder;
+  if (SUCCEEDED(::SHGetDesktopFolder(&desktop_folder))) {
+    assert(desktop_folder);
+
+    // Ask the desktop for the display name of the special folder.
+    STRRET str_ret = {0};
+    str_ret.uType = STRRET_WSTR;
+    if (SUCCEEDED(desktop_folder->GetDisplayNameOf(folder_location,
+                                                   SHGDN_FORPARSING,
+                                                   &str_ret))) {
+      wchar_t *folder_name = NULL;
+      if (SUCCEEDED(::StrRetToStr(&str_ret, folder_location, &folder_name))) {
+        *folder_path = folder_name;
+      }
+      ::CoTaskMemFree(folder_name);
+    }
+  }
+
+  ::CoTaskMemFree(folder_location);
+
+  return !folder_path->empty();
+}
+
+bool System::GetUserDataLocation(std::string16 *path) {
+  assert(path);
+  return GetSpecialFolder(CSIDL_APPDATA | CSIDL_FLAG_CREATE, path);
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
@@ -152,4 +195,3 @@ double System::GetSystemFontScaleFactor() {
 
 #endif  // WIN32
 #endif  // OFFICIAL_BUILD
-

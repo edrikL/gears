@@ -43,7 +43,8 @@ enum IpcMessageTypes {
   // For desktop notification. They can not be changed for cross-version
   // compatibility.
   kDesktop_AddNotification = 1000,
-  kDesktop_RemoveNotification
+  kDesktop_RemoveNotification,
+  kDesktop_RestartNotifierImmediately 
 };
 
 // A facility for sending and receiving messages asynchronously 

@@ -685,7 +685,7 @@ else # wince
 IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib iphlpapi.lib gpsapi.lib
 endif
 NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
-NOTIFIER_SHELL_LIBS = advapi32.lib shlwapi.lib
+NOTIFIER_SHELL_LIBS = advapi32.lib shell32.lib shlwapi.lib
 
 # Other tools specific to win32/wince builds.
 RC = rc
