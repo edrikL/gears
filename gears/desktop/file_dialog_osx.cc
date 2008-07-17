@@ -26,359 +26,260 @@
 #ifdef OS_MACOSX
 #include "gears/desktop/file_dialog_osx.h"
 
-#include <Carbon/Carbon.h>
-
 #include <algorithm>
 #include <sys/syslimits.h>
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/common.h"
-#include "gears/base/safari/scoped_cf.h"
 
-FileDialogCarbon::FileDialogCarbon(bool multiselect)
-    : multiselect_(multiselect) {
+// In MacOS 10.4 and better, the preferred way to classify filesystem objects
+// is via Uniform Type Identifiers (aka, UTIs).  Each UTI has one or more
+// distinguishing criteria, such as file extensions, mime type, os types, etc.
+// In addition, UTIs participate in a hierarchy.  For example, a file with
+// .jpeg extension has UTI type "public.jpeg", which is a subtype of
+// "public.image", which is a subtype of "public.data", etc.
+
+// TODO(bpm): Localize and unify with other copies of these strings for other
+// platforms.
+CFStringRef kDefaultFilterLabel = CFSTR("All Readable Documents");
+CFStringRef kAllDocumentsLabel = CFSTR("All Documents");
+
+// This callback wraps the FileDialogCarbon::Event member, and is called during
+// NavDialogRun at various points during the lifetime of the dialog.
+static void EventCallBack(NavEventCallbackMessage message,
+                          NavCBRecPtr parameters, void* closure) {
+  assert(closure);
+  FileDialogCarbon* file_dialog = static_cast<FileDialogCarbon*>(closure);
+  file_dialog->Event(message, parameters);
+}
+
+// This callback wraps the FileDialogCarbon::Filter member, and is called
+// during NavDialogRun to determine whether theItem should be selectable based
+// on user-selected filter.
+static Boolean FilterCallback(AEDesc* theItem, void* info,
+                              void* closure, NavFilterModes filterMode) {
+  assert(closure);
+  FileDialogCarbon* file_dialog = static_cast<FileDialogCarbon*>(closure);
+  return file_dialog->Filter(theItem, static_cast<NavFileOrFolderInfo*>(info),
+                             filterMode);
+}
+
+FileDialogCarbon::FileDialogCarbon(const ModuleImplBaseClass* module,
+                                   WindowRef parent)
+    : FileDialog(module), parent_(parent), selected_filter_(0) {
 }
 
 FileDialogCarbon::~FileDialogCarbon() {
 }
 
-// A filter to use with callbacks. Does filter matching and conversion to the
-// correct format.
-class CarbonFilter {
- public:
-  CarbonFilter() {
-  }
-
-  ~CarbonFilter() {
-  }
-
-  CarbonFilter(const CarbonFilter& other)
-      : description_(other.description_), filters_(other.filters_) {
-  }
-
-  CarbonFilter& operator=(const CarbonFilter& other) {
-    if (this != &other) {
-      description_ = other.description_;
-      filters_ = other.filters_;
-    }
-    return *this;
-  }
-
-  bool init(const std::string16& description, const std::string16& filter) {
-    if (!String16ToUTF8(description.c_str(), &description_))
-      return false;
-
-    std::string filter_8;
-    if (!String16ToUTF8(filter.c_str(), &filter_8))
-      return false;
-
-    static const std::string kDelimeter(";");
-    return Tokenize(filter_8, kDelimeter, &filters_) != 0;
-  }
-
-  const std::string& description() const {
-    return description_;
-  }
-
-  const std::vector<std::string>& filters() const {
-    return filters_;
-  }
-
-  bool Match(const std::string& file) const {
-    for (std::vector<std::string>::const_iterator it = filters_.begin();
-         it != filters_.end(); ++it) {
-      if (StringMatch(file.c_str(), it->c_str()))
-        return true;
-    }
-    return false;
-  }
-
- private:
-  std::string description_;  // display name
-  std::vector<std::string> filters_;  // tokenized filter string
-};
-
-// Holds filters and current selection for use during callbacks.
-class Filters {
- public:
-  Filters() : selected_(0) {
-  }
-
-  ~Filters() {
-  }
-
-  typedef std::vector<CarbonFilter> CarbonFilterList;
-  typedef CarbonFilterList::const_iterator const_iterator;
-
-  const_iterator begin() const {
-    return filters_.begin();
-  }
-
-  const_iterator end() const {
-    return filters_.end();
-  }
-
-  size_t empty() const {
-    return filters_.empty();
-  }
-
-  size_t size() const {
-    return filters_.size();
-  }
-
-  // returns NULL when the selection is invalid
-  const CarbonFilter* SelectedFilter() const {
-    if (SelectionValid(selected_)) {
-      return &filters_[selected_];
-    } else {
-      return NULL;
-    }
-  }
-
-  bool Add(const std::string16& description, const std::string16& filter) {
-    CarbonFilter new_filter;
-    if (new_filter.init(description, filter)) {
-      filters_.push_back(new_filter);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  size_t selected() const {
-    return selected_;
-  }
-
-  bool set_selected(const size_t selected) {
-    if (SelectionValid(selected)) {
-      selected_ = selected;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
- private:
-  bool SelectionValid(const size_t selected) const {
-    return selected < filters_.size();
-  }
-
-  CarbonFilterList filters_;
-  size_t selected_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(Filters);
-};
-
-// Add filters to an open file dialog.
-static bool AddFilters(const std::vector<FileDialog::Filter>& filters,
-                       Filters* data,
-                       NavDialogCreationOptions* dialog_options,
-                       std::string16* error) {
-  // convert to format easy to deal with while using carbon
-  typedef std::vector<FileDialog::Filter>::const_iterator FilterIter;
-  for (FilterIter it = filters.begin(); it != filters.end(); ++it) {
-    if (!data->Add(it->description, it->filter)) {
-      *error = STRING16(L"Failed to convert filter.");
-      return false;
-    }
-  }
-
-  if (data->empty()) {
-    *error = STRING16(L"Failed to convert any filters.");
-    return false;
-  }
-
-  // add filters to dialog
-  scoped_cftype<CFMutableArrayRef> popup(CFArrayCreateMutable(
-      kCFAllocatorDefault, data->size(), &kCFTypeArrayCallBacks));
-  if (!popup.get()) {
-    *error = STRING16(L"Failed to create CFArrayCreateMutable.");
-    return false;
-  }
-
-  for (Filters::const_iterator it = data->begin(); it != data->end(); ++it) {
-    scoped_cftype<CFStringRef> name(CFStringCreateWithCString(
-        kCFAllocatorDefault, it->description().c_str(), kCFStringEncodingUTF8));
-    if (!name.get()) {
-      *error = STRING16(L"Failed to create CFStringRef.");
-      return false;
-    }
-    // TODO(cdevries): Determine if name needs to be cleaned up later, after
-    //                 the dialog has been used (outside this function).
-    CFArrayAppendValue(popup.get(), name.release());
-  }
-
-  // TODO(cdevries): Determine if name needs to be cleaned up later, after
-  //                 the dialog has been used (outside this function).
-  dialog_options->popupExtension = popup.release();
-  return true;
-}
-
-// Process events from dialog to add filter selections or set selection.
-static void EventCallBack(NavEventCallbackMessage message,
-                          NavCBRecPtr parameters,
-                          void* user_data) {
-  Filters* data = reinterpret_cast<Filters*>(user_data);
-
-  if (message == kNavCBStart) {
-    // dialog is ready to be displayed
-    const CarbonFilter* selected = data->SelectedFilter();
-    if (selected) {
-      // set the default selection to the current selection
-      const std::string& description = selected->description();
-      scoped_cftype<CFStringRef> cf_description(
-          CFStringCreateWithCString(
-              kCFAllocatorDefault, description.c_str(), kCFStringEncodingUTF8));
-      if (!cf_description.get())
-        return;
-      NavMenuItemSpec menu_item;
-      menu_item.version = kNavMenuItemSpecVersion;
-      menu_item.menuCreator = 'GEAR';
-      menu_item.menuType = data->selected();
-      // menuItemName is a Str255 and only holds a 255 character pascal string.
-      // ^ is substituted for characters that can not be converted to the
-      // Mac Roman encoding.
-      int length = std::min(CFStringGetLength(cf_description.get()),
-          static_cast<CFIndex>(255));
-      menu_item.menuItemName[0] = CFStringGetBytes(cf_description.get(),
-          CFRangeMake(0, length), kTextEncodingMacRoman, '^', false,
-          &(menu_item.menuItemName[1]), 255, NULL);
-      if (0 == menu_item.menuItemName[0])
-        return;
-      NavCustomControl(parameters->context, kNavCtlSelectCustomType,
-          &menu_item);
-    }
-  } else if (message == kNavCBPopupMenuSelect) {
-    // a selection was made from the available filters
-    NavMenuItemSpec* menu = reinterpret_cast<NavMenuItemSpec*>(
-        parameters->eventData.eventDataParms.param);
-
-    data->set_selected(menu->menuType);
-  }
-}
-
-// returns true if the file/directory should be displayed
-static Boolean FilterFileCallBack(AEDesc* theItem, void* info,
-    void* user_data, NavFilterModes filterMode) {
-  if (!user_data || !info)
+bool FileDialogCarbon::Filter(AEDesc* theItem, NavFileOrFolderInfo* info,
+                              NavFilterModes filterMode) {
+  // The first filter is numbered 0, which is the only one that filters.
+  // The second filter matches everything, so we just return true.
+  if (selected_filter_ > 0)  
     return true;
 
-  NavFileOrFolderInfo* file_info = reinterpret_cast<NavFileOrFolderInfo*>(info);
-  if (file_info->isFolder)
+  // On the following lines, we conservatively return true (allow selection)
+  // for any error related to this file.
+  if (!info || info->isFolder)
     return true;
 
-  Filters* data = reinterpret_cast<Filters*>(user_data);
-  if (data->empty())
+  scoped_AEDesc fsDesc;
+  if (noErr != AECoerceDesc(theItem, typeFSRef, as_out_parameter(fsDesc)))
     return true;
 
-  AECoerceDesc(theItem, typeFSRef, theItem);
-  FSRef ref;
-  if (AEGetDescData(theItem, &ref, sizeof(FSRef)) == noErr) {
-    char file_path_8[PATH_MAX];
-    OSStatus status = FSRefMakePath(&ref,
-        reinterpret_cast<UInt8*>(file_path_8), PATH_MAX);
-    if (noErr != status)
-      return false;
+  FSRef fsRef;
+  if (noErr != AEGetDescData(fsDesc.get(), &fsRef, sizeof(FSRef)))
+    return true;
 
-    const CarbonFilter* selected = data->SelectedFilter();
-    if (!selected)
-      return true;
+  // Get the content type (UTI) of this file.
+  scoped_cftype<CFTypeRef> uti;
+  if ((noErr != LSCopyItemAttribute(&fsRef, kLSRolesViewer, kLSItemContentType,
+                                    as_out_parameter(uti)))
+      || (NULL == uti.get()))
+    return true;
 
-    if (selected->Match(file_path_8))
+  // Check if the file conforms to any of the UTIs set up in SetFilter.
+  CFIndex count = CFArrayGetCount(utis_.get());
+  for (CFIndex i = 0; i < count; ++i) {
+    const CFStringRef supportedUTI =
+        static_cast<const CFStringRef>(CFArrayGetValueAtIndex(utis_.get(), i));
+    if (UTTypeConformsTo(static_cast<const CFStringRef>(uti.get()),
+                         supportedUTI)) {
       return true;
+    }
   }
 
+  // No match, so don't allow the user to select this file.
   return false;
 }
 
-// Initialize an open file dialog to open multiple files.
-static bool InitDialog(bool multiselect,
-    const std::vector<FileDialog::Filter>& filters,
-    scoped_NavDialogRef* dialog, Filters* data, std::string16* error) {
+void FileDialogCarbon::Event(NavEventCallbackMessage message,
+                             NavCBRecPtr parameters) {
+  switch (message) {
+  case kNavCBPopupMenuSelect:
+    // Dynamically change the file filter.
+    NavMenuItemSpec* menu = reinterpret_cast<NavMenuItemSpec*>(
+        parameters->eventData.eventDataParms.param);
+    selected_filter_ = menu->menuType;
+    break;
+  case kNavCBUserAction: {
+    std::string16 error;
+    if (!ProcessSelection(&selected_files_, &error)) {
+      HandleError(error);
+    }
+    break; }
+  case kNavCBTerminate:
+    CompleteSelection(selected_files_);
+    break;
+  }
+}
+
+bool FileDialogCarbon::BeginSelection(const FileDialog::Options& options,
+                                      std::string16* error) {
+  if (!InitDialog(options, error))
+    return false;
+  if (!Display(error))
+    return false;
+  return true;
+}
+
+void FileDialogCarbon::CancelSelection() {
+  // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
+}
+
+bool FileDialogCarbon::InitDialog(const Options& options,
+                                  std::string16* error) {
   NavDialogCreationOptions dialog_options;
   OSStatus status = NavGetDefaultDialogCreationOptions(&dialog_options);
   if (noErr != status) {
     *error = STRING16(L"Failed to create dialog options.");
     return false;
   }
-
-  // set application wide modality and multiple file selections
-  dialog_options.modality = kWindowModalityAppModal;
-  if (multiselect) {
+  if (parent_) {
+    dialog_options.parentWindow = parent_;
+    dialog_options.modality = kWindowModalityWindowModal;
+  } else {
+    dialog_options.modality = kWindowModalityNone;
+  }
+  if (MULTIPLE_FILES == options.mode) {
     dialog_options.optionFlags |= kNavAllowMultipleFiles;
   } else {
     dialog_options.optionFlags &= ~kNavAllowMultipleFiles;
   }
-
-  if (!AddFilters(filters, data, &dialog_options, error))
+  if (!SetFilter(options.filter, &dialog_options, error))
     return false;
-
-  NavDialogRef new_dialog = NULL;
-  status = NavCreateGetFileDialog(&dialog_options, NULL, &EventCallBack, NULL,
-               &FilterFileCallBack, data, &new_dialog);
-  if (noErr != status) {
+  if (noErr != NavCreateGetFileDialog(&dialog_options, NULL, &EventCallBack,
+                                      NULL, &FilterCallback, this,
+                                      as_out_parameter(dialog_))) {
     *error = STRING16(L"Failed to create dialog.");
     return false;
   }
-
-  dialog->reset(new_dialog);
   return true;
 }
 
-// Display a dialog to open multiple files and return the selected files.
-static bool Display(NavDialogRef dialog,
-    std::vector<std::string16>* selected_files,
-    std::string16* error) {
-  // display the dialog
-  OSStatus status = NavDialogRun(dialog);
+bool FileDialogCarbon::SetFilter(const StringList& filter,
+                                 NavDialogCreationOptions* dialog_options,
+                                 std::string16* error) {
+  // Populate a list of UTIs which will be used for the default filter.
+  utis_.reset(CFArrayCreateMutable(NULL, filter.size(),
+                                   &kCFTypeArrayCallBacks));
+  if (!utis_.get()) {
+    *error = STRING16(L"Failed to create CFArrayMutable.");
+    return false;
+  }
+  for (size_t i = 0; i < filter.size(); ++i) {
+    CFStringRef tagClass;
+    scoped_cftype<CFStringRef> tag;
+    if (L'.' == filter[i][0]) {
+      // The filter is an extension of the form ".html".
+      tagClass = kUTTagClassFilenameExtension;
+      tag.reset(CFStringCreateWithCharacters(NULL, filter[i].data() + 1,
+          filter[i].length() - 1));
+    } else {
+      // The filter is a media type of the form "text/html".
+      tagClass = kUTTagClassMIMEType;
+      tag.reset(CFStringCreateWithCharacters(NULL, filter[i].data(),
+          filter[i].length()));
+      // TODO(bpm): Handle wildcard media types.
+    }
+    // The following function will create a dynamic UTI for criteria that does
+    // not match any registered UTI.  In the media type case, those UTIs will
+    // never match anything, but the dynamic extension UTIs are still useful.
+    scoped_cftype<CFStringRef> uti(UTTypeCreatePreferredIdentifierForTag(
+        tagClass, tag.get(), NULL));
+    CFArrayAppendValue(utis_.get(), uti.get());
+  }
+
+  // Add entries to the filter drop-down.  The first entry displays any file
+  // that conforms to a UTI in utis_.  The second entry displays all files.
+  const void* kFilterNames[] = {
+    kDefaultFilterLabel,
+    kAllDocumentsLabel
+  };
+  labels_.reset(CFArrayCreate(NULL, kFilterNames, ARRAYSIZE(kFilterNames),
+                              &kCFTypeArrayCallBacks));
+  if (!labels_.get()) {
+    *error = STRING16(L"Failed to create CFArray.");
+    return false;
+  }
+  dialog_options->popupExtension = labels_.get();
+  return true;
+}
+
+bool FileDialogCarbon::Display(std::string16* error) {
+  OSStatus status = NavDialogRun(dialog_.get());
   if (noErr != status) {
     *error = STRING16(L"Failed to display dialog.");
     return false;
   }
+  return true;
+}
 
-  // get the user's input
-  NavUserAction action = NavDialogGetUserAction(dialog);
-  if (action == kNavUserActionNone || action == kNavUserActionCancel)
+bool FileDialogCarbon::ProcessSelection(StringList* selected_files,
+                                        std::string16* error) {
+  // Determine how the user dismissed the dialog.
+  NavUserAction action = NavDialogGetUserAction(dialog_.get());
+  if (kNavUserActionNone == action  || kNavUserActionCancel == action) {
+    // The user did not select files.
     return true;
-  NavReplyRecord reply_record;
-  status = NavDialogGetReply(dialog, &reply_record);
-  if (noErr != status) {
+  }
+
+  // Process the selected files.
+  scoped_NavReplyRecord reply_record;
+  OSStatus status = NavDialogGetReply(dialog_.get(),
+                                      as_out_parameter(reply_record));
+  if ((noErr != status) || !reply_record.get()->validRecord) {
     *error = STRING16(L"Failed to get the dialog reply.");
     return false;
   }
 
-  // ensure the reply record is cleaned up after use
-  scoped_NavReplyRecord free_reply_record(&reply_record);
-
-  // get the files
-  long file_count = -1;
-  status = AECountItems(&reply_record.selection, &file_count);
+  long file_count = 0;
+  status = AECountItems(&reply_record.get()->selection, &file_count);
   if (noErr != status) {
     *error = STRING16(L"Failed to get the number of selected files.");
     return false;
   }
 
   UInt8 file_path_8[PATH_MAX];
-
   for (long i = 1; i <= file_count; ++i) {
-    // get current file
     FSRef file;
-    status = AEGetNthPtr(&reply_record.selection, i, typeFSRef, NULL,
-        NULL, &file, sizeof(FSRef), NULL);
+    status = AEGetNthPtr(&reply_record.get()->selection, i, typeFSRef, NULL,
+                         NULL, &file, sizeof(FSRef), NULL);
     if (noErr != status) {
       *error = STRING16(L"Failed to get selected files.");
       return false;
     }
 
-    // convert it to a string
-    status = FSRefMakePath(&file, file_path_8, PATH_MAX);
+    // Convert filename to a string16.
+    status = FSRefMakePath(&file, file_path_8, ARRAYSIZE(file_path_8));
     if (noErr != status) {
-      *error = STRING16(L"Failed to get string of selected file.");
+      *error = STRING16(L"Failed to get filename of selected file.");
       return false;
     }
     std::string16 file_path_16;
     if (!UTF8ToString16(reinterpret_cast<const char*>(&file_path_8),
-            &file_path_16)) {
+                        &file_path_16)) {
       *error = STRING16(L"Failed to convert string to unicode.");
       return false;
     }
@@ -386,20 +287,6 @@ static bool Display(NavDialogRef dialog,
   }
 
   return true;
-}
-
-bool FileDialogCarbon::OpenDialog(const std::vector<Filter>& filters,
-    std::vector<std::string16>* selected_files,
-    std::string16* error) {
-  bool success = false;
-  scoped_NavDialogRef dialog(NULL);
-  Filters data;
-
-  if ((success = InitDialog(multiselect_, filters, &dialog, &data, error))) {
-    success = Display(dialog.get(), selected_files, error);
-  }
-
-  return success;
 }
 
 #endif  // OS_MACOSX

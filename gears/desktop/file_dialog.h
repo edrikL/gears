@@ -29,55 +29,84 @@
 #include <vector>
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_types.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
+struct ModuleEnvironment;
 class ModuleImplBaseClass;
 
 // An interface to file dialogs on multiple platforms.
 class FileDialog {
  public:
-  // Used for constructing dialogs.
-  // This is intended to allow for different types of file pickers in future.
-  // For example, FILES_AND_DIRECTORIES, for a custom dialog that allows the
-  // user to select files and directories at the same time.
   enum Mode {
-    SINGLE_FILE,    // exactly one file
-    MULTIPLE_FILES  // one or more files
+    SINGLE_FILE,     // Let the user select exactly one file.
+    MULTIPLE_FILES,  // Let the user select one or more files.
+    // Future modes may allow selection of directories.
   };
 
-  struct Filter {
-    // The text the user sees. For example "Images".
-    std::string16 description;
+  typedef std::vector<std::string16> StringList;
 
-    // A semi-colon separated list of filters. For example "*.jpg;*.gif;*.png".
-    std::string16 filter;
+  struct Options {
+    Options() : mode(MULTIPLE_FILES) { }
+
+    Mode mode;
+    // filter is a vector of Internet Media Types (eg, text/plain) and
+    // filename extensions (eg, .txt).  If non-empty, the file dialog will
+    // filter the selectable files by this criteria.
+    StringList filter;
   };
+
+  static FileDialog* Create(const ModuleImplBaseClass* module);
 
   virtual ~FileDialog();
 
-  // Displays a file dialog.
-  // Returns: false on failure (user selecting cancel is not failure)
-  // Parameters:
-  //   filters - in - A vector of filters to add to the dialog. This must not be
-  //     empty. file_dialog_utils.h has helper functions to create this from
-  //     a JsArray.
-  //
-  //   files - out - An array of files selected by the user in placed here.
-  //     If the user canceled the dialog this will be an empty array.
-  //
-  //   error - out - The error message if the function returned false.
-  //
-  virtual bool OpenDialog(const std::vector<Filter>& filters,
-                          std::vector<std::string16>* selected_files,
-                          std::string16* error) = 0;
+  // Displays a file selection dialog according to the provided options, and
+  // emits a callback with the selected files when complete.
+  bool Open(const FileDialog::Options& options, JsRootedCallback* callback,
+            std::string16* error);
+
+  // Prematurely terminates the dialog selection.
+  void Cancel();
+
+  static bool ParseOptions(JsCallContext* context, const JsObject& map,
+                           Options* options);
+
+  // Creates an array of javascript objects from files.
+  // Each javascript object has the following properties.
+  //  name - the filename without path
+  //  blob - the blob representing the contents of the file
+  static bool FilesToJsObjectArray(const StringList& selected_files,
+                                   ModuleEnvironment* module_environment,
+                                   JsArray* files,
+                                   std::string16* error);
 
  protected:
-  FileDialog();
+  FileDialog(const ModuleImplBaseClass* module);
+
+  // Implemented per platform to create and display a dialog with the provided
+  // options, or returns false and sets error.  The dialog displays
+  // asynchronously, and calls CompleteSelection() when dismissed.
+  virtual bool BeginSelection(const FileDialog::Options& options,
+                              std::string16* error) = 0;
+
+  // Implemented per platform to cancel the asynchronous dialog.
+  virtual void CancelSelection() = 0;
+
+  // Called by platform implementations when the user has dismissed the dialog.
+  // selected_files will be empty if the user cancelled the selection.
+  void CompleteSelection(const StringList& selected_files);
+
+  // Handles errors that occur during asynchronous processing (and therefore
+  // can't be returned as exceptions to JavaScript).
+  void HandleError(const std::string16& error);
+
+  static bool IsLegalFilter(const std::string16& filter);
 
  private:
+  const ModuleImplBaseClass* module_;
+  scoped_ptr<JsRootedCallback> callback_;
+
   DISALLOW_EVIL_CONSTRUCTORS(FileDialog);
 };
-
-FileDialog* NewFileDialog(const FileDialog::Mode mode,
-                          const ModuleImplBaseClass& module);
 
 #endif  // GEARS_DESKTOP_FILE_DIALOG_H__

@@ -27,123 +27,178 @@
 
 #include "gears/desktop/file_dialog_gtk.h"
 
-#include <gtk/gtk.h>
-
 #include "gears/base/common/string_utils.h"
-#include "gears/desktop/file_dialog_utils.h"
+#include "gears/desktop/file_dialog.h"
 
-FileDialogGtk::FileDialogGtk(GtkWindow* parent, bool multiselect)
-  : parent_(parent), multiselect_(multiselect) {
+namespace {
+
+// TODO(bpm): Localize
+const char* kDialogTitle = "Open File";
+
+// TODO(bpm): Localize and unify with other copies of these strings for other
+// platforms.
+const char* kDefaultFilterLabel = "All Readable Documents";
+const char* kAllDocumentsLabel = "All Documents";
+
+// Degenerate filter callbacks which allow any file to be selected.
+gboolean AnyFileFilter(const GtkFileFilterInfo* /*filter_info*/,
+                       gpointer /*data*/) {
+  return TRUE;
+}
+
+void AnyFileFilterDestroy(gpointer /*data*/) {
+}
+
+void ResponseHandler(GtkWidget* dialog, gint response_id, gpointer data) {
+  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
+  file_dialog->HandleResponse(response_id);
+}
+
+#if 0  // TODO(bpm): Determine if we'd ever need these.
+void UnmapHandler(GtkWidget* dialog, gpointer data) {
+  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
+  file_dialog->HandleClose();
+}
+
+gint DeleteHandler(GtkWidget* dialog, GdkEventAny* event, gpointer data) {
+  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
+  file_dialog->HandleClose();
+  return TRUE;  // Prevent destruction
+}
+
+void DestroyHandler(GtkWidget* dialog, gpointer data) {
+  // TODO: Determine if this is called in addition to unmap.
+  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
+  file_dialog->HandleClose();
+}
+#endif
+
+}  // anonymous namespace
+
+FileDialogGtk::FileDialogGtk(const ModuleImplBaseClass* module,
+                             GtkWindow* parent)
+    : FileDialog(module), parent_(parent) {
 }
 
 FileDialogGtk::~FileDialogGtk() {
 }
 
-// Initialize a GTK dialog to open multiple files.
-static bool InitDialog(GtkWindow* parent,
-                       bool multiselect,
-                       GtkFileChooser** dialog,
-                       std::string16* error) {
-  *dialog = GTK_FILE_CHOOSER(gtk_file_chooser_dialog_new("Open File",
-      parent, GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL,
-      GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL));
-  if (!*dialog) {
+void FileDialogGtk::HandleResponse(gint response_id) {
+  StringList selected_files;
+  std::string16 error;
+  if (GTK_RESPONSE_ACCEPT == response_id) {
+    if (!ProcessSelection(&selected_files, &error)) {
+      HandleError(error);
+    }
+  }
+  CompleteSelection(selected_files);
+}
+
+void FileDialogGtk::HandleClose() {
+  StringList selected_files;
+  CompleteSelection(selected_files);
+}
+
+bool FileDialogGtk::BeginSelection(const FileDialog::Options& options,
+                                   std::string16* error) {
+  if (!InitDialog(parent_, options, error))
+    return false;
+  if (!SetFilter(options.filter, error))
+    return false;
+  if (!Display(error))
+    return false;
+  return true;
+}
+
+void FileDialogGtk::CancelSelection() {
+  // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
+}
+
+bool FileDialogGtk::InitDialog(GtkWindow* parent,
+                               const FileDialog::Options& options,
+                               std::string16* error) {
+  dialog_.reset(gtk_file_chooser_dialog_new(kDialogTitle, parent,
+                                            GTK_FILE_CHOOSER_ACTION_OPEN,
+                                            GTK_STOCK_CANCEL,
+                                            GTK_RESPONSE_CANCEL,
+                                            GTK_STOCK_OPEN,
+                                            GTK_RESPONSE_ACCEPT,
+                                            NULL));
+  if (!dialog_.get()) {
     *error = STRING16(L"Failed to create dialog.");
     return false;
   }
-
   if (parent && parent->group) {
-    gtk_window_group_add_window(parent->group, GTK_WINDOW(*dialog));
+    gtk_window_group_add_window(parent->group, GTK_WINDOW(dialog_.get()));
   }
-  gtk_file_chooser_set_select_multiple(*dialog, multiselect ? TRUE : FALSE);
+  bool multipleFiles = (MULTIPLE_FILES == options.mode);
+  gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(dialog_.get()),
+                                       multipleFiles ? TRUE : FALSE);
   return true;
 }
 
-// Add filters to a GTK open file dialog.
-static bool AddFilters(const std::vector<FileDialog::Filter>& filters,
-                       GtkFileChooser* dialog,
-                       std::string16* error) {
-  // process filter pairs
-  typedef std::vector<FileDialog::Filter>::const_iterator FILTER_ITER;
-  for (FILTER_ITER it = filters.begin(); it != filters.end(); ++it) {
-    // convert strings to UTF8 for GTK
-    std::string description, filter;
-    if (!String16ToUTF8(it->description.c_str(), &description)
-        || !String16ToUTF8(it->filter.c_str(), &filter)) {
-      return false;
-    }
-
-    std::vector<std::string> tokens;
-    const std::string delimiter(";");
-    if (0 == Tokenize(filter, delimiter, &tokens)) {
-      *error = STRING16(L"Failed to tokenize filter.");
-      return false;
-    }
-
-    // create filter
+bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
+  if (!filter.empty()) {
     GtkFileFilter* gtk_filter = gtk_file_filter_new();
-    if (!gtk_filter) {
-      *error = STRING16(L"Failed to create filter.");
-      return false;
-   }
-
-    // add filter
-    gtk_file_filter_set_name(gtk_filter, description.c_str());
-    for (std::vector<std::string>::const_iterator it = tokens.begin();
-        it != tokens.end(); ++it) {
-      gtk_file_filter_add_pattern(gtk_filter, it->c_str());
-    }
-    gtk_file_chooser_add_filter(dialog, gtk_filter);
-  }
-
-  return true;
-}
-
-// Display a GTK open file dialog and return the files selected by the user.
-static bool Display(GtkFileChooser* dialog,
-                    std::vector<std::string16>* selected_files,
-                    std::string16* error) {
-  // display dialog and process selection
-  if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-    GSList* files = gtk_file_chooser_get_filenames(dialog);
-    if (!files) {
-      *error = STRING16(L"Failed to get selected files from dialog.");
-      return false;
-    }
-
-    std::string16 file;
-    for (GSList* curr = files; curr != NULL; curr = curr->next) {
-      if (UTF8ToString16(static_cast<const char*>(curr->data), &file)) {
-        selected_files->push_back(file);
+    gtk_file_filter_set_name(gtk_filter, kDefaultFilterLabel);
+    for (size_t i = 0; i < filter.size(); ++i) {
+      std::string filter_item;
+      if (!String16ToUTF8(filter[i].c_str(), &filter_item))
+        continue;
+      if ('.' == filter_item[0]) {
+        std::string pattern("*");
+        pattern.append(filter_item);
+        gtk_file_filter_add_pattern(gtk_filter, pattern.c_str());
       } else {
-        *error = STRING16(L"Failed to convert string to unicode.");
-        g_slist_free(files);
-        return false;
+        gtk_file_filter_add_mime_type(gtk_filter, filter_item.c_str());
       }
     }
-
-    g_slist_free(files);
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);
   }
 
+  GtkFileFilter* gtk_filter = gtk_file_filter_new();
+  gtk_file_filter_set_name(gtk_filter, kAllDocumentsLabel);
+  gtk_file_filter_add_custom(gtk_filter, static_cast<GtkFileFilterFlags>(0),
+                             &AnyFileFilter, NULL, &AnyFileFilterDestroy);
+  gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);
   return true;
 }
 
-bool FileDialogGtk::OpenDialog(const std::vector<Filter>& filters,
-                               std::vector<std::string16>* selected_files,
-                               std::string16* error) {
-  bool success = false;
-  GtkFileChooser* dialog = NULL;
+bool FileDialogGtk::Display(std::string16* error) {
+  g_signal_connect(dialog_.get(), "response", G_CALLBACK(ResponseHandler),
+                   this);
+#if 0
+  // It appears these handlers are unnecessary.  I can't find a way to close
+  // the dialog that doesn't trigger "response".
+  g_signal_connect(dialog_.get(), "unmap", G_CALLBACK(UnmapHandler), this);
+  g_signal_connect(dialog_.get(), "delete-event", G_CALLBACK(DeleteHandler),
+                   this);
+  g_signal_connect(dialog_.get(), "destroy", G_CALLBACK(DestroyHandler), this);
+#endif
+  gtk_widget_show_all(dialog_.get());
+  return true;
+}
 
-  if ((success = InitDialog(parent_, multiselect_, &dialog, error))) {
-    if ((success = AddFilters(filters, dialog, error))) {
-      success = Display(dialog, selected_files, error);
-    }
+bool FileDialogGtk::ProcessSelection(StringList* selected_files,
+                                     std::string16* error) {
+  GSList* files =
+      gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog_.get()));
+  if (!files) {
+    *error = STRING16(L"Failed to get selected files from dialog.");
+    return false;
   }
 
-  if (dialog)
-    gtk_widget_destroy(GTK_WIDGET(dialog));
-
-  return success;
+  std::string16 file;
+  for (GSList* curr = files; curr != NULL; curr = curr->next) {
+    if (UTF8ToString16(static_cast<const char*>(curr->data), &file)) {
+      selected_files->push_back(file);
+    } else {
+      // Failed to convert string to unicode... ignore it.
+    }
+    g_free(curr->data);
+  }
+  g_slist_free(files);
+  return true;
 }
 
 #endif  // defined(LINUX) && !defined(OS_MACOSX)

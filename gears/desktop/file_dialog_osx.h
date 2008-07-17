@@ -26,22 +26,58 @@
 #ifndef GEARS_DESKTOP_FILE_DIALOG_OSX_H__
 #define GEARS_DESKTOP_FILE_DIALOG_OSX_H__
 
+#ifdef OS_MACOSX
+
+#include <Carbon/Carbon.h>
+
+#include "gears/base/safari/scoped_cf.h"
 #include "gears/desktop/file_dialog.h"
+
+class Filters;
 
 class FileDialogCarbon : public FileDialog {
  public:
-  // Parameters:
-  //  multiselect - The user may shift-click to select multiple files vs one.
-  FileDialogCarbon(bool multiselect);
+  FileDialogCarbon(const ModuleImplBaseClass* module, WindowRef parent);
   virtual ~FileDialogCarbon();
 
-  virtual bool OpenDialog(const std::vector<Filter>& filters,
-                          std::vector<std::string16>* selected_files,
-                          std::string16* error);
+  // Determines whether the selected file matches our active filter.
+  bool Filter(AEDesc* theItem, NavFileOrFolderInfo* info,
+              NavFilterModes filterMode);
+
+  // Processes events from the dialog.
+  void Event(NavEventCallbackMessage message, NavCBRecPtr parameters);
+
+ protected:
+  // FileDialog Interface
+  virtual bool BeginSelection(const FileDialog::Options& options,
+                              std::string16* error);
+  virtual void CancelSelection();
 
  private:
-  bool multiselect_;
+  // Initializes the dialog, based on options.
+  bool InitDialog(const Options& options, std::string16* error);
+
+  // Converts the input filter list into the Mac-native filter type, UTIs.
+  bool SetFilter(const StringList& filter,
+                 NavDialogCreationOptions* dialog_options,
+                 std::string16* error);
+
+  // Creates and displays the file dialog.
+  bool Display(std::string16* error);
+
+  // Extracts the selected files from the file dialog.
+  bool ProcessSelection(StringList* selected_files, std::string16* error);
+
+  WindowRef parent_;
+  scoped_NavDialogRef dialog_;
+  scoped_cftype<CFMutableArrayRef> utis_;
+  scoped_cftype<CFArrayRef> labels_;
+  int selected_filter_;
+  StringList selected_files_;
+
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogCarbon);
 };
+
+#endif  // OS_MACOSX
 
 #endif  // GEARS_DESKTOP_FILE_DIALOG_OSX_H__

@@ -501,6 +501,9 @@ class JsObject {
   // Method to get the type of a property. Returns JSPARAM_UNDEFINED if the
   // requested property does not exist.
   JsParamType GetPropertyType(const std::string16 &name) const;
+  bool HasProperty(const std::string16 &name) const {
+    return JSPARAM_UNDEFINED != GetPropertyType(name);
+  }
   
   // GetPropertyNames fills the given vector with the (string) names of this
   // JsObject's properties.  There is no guarantee that it retrieves (or does

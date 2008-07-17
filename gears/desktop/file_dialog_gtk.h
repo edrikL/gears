@@ -29,24 +29,48 @@
 #if defined(LINUX) && !defined(OS_MACOSX)
 
 #include "gears/desktop/file_dialog.h"
+#include "gears/base/common/scoped_token.h"
 
+#include <gtk/gtk.h>
 #include <gtk/gtkwindow.h>
+
+typedef DECLARE_SCOPED_TRAITS(GtkWidget*, gtk_widget_destroy, NULL)
+    GtkWidgetTraits;
+typedef scoped_token<GtkWidget*, GtkWidgetTraits> scoped_GtkWidget;
 
 class FileDialogGtk : public FileDialog {
  public:
-  // Parameters:
-  //  parent - The parent window. May be NULL.
-  //  multiselect - The user may select multiple files vs one.
-  FileDialogGtk(GtkWindow* parent, bool multiselect);
+  FileDialogGtk(const ModuleImplBaseClass* module, GtkWindow* parent);
   virtual ~FileDialogGtk();
 
-  virtual bool OpenDialog(const std::vector<Filter>& filters,
-                          std::vector<std::string16>* selected_files,
-                          std::string16* error);
+  // Called when the user dismisses the dialog normally.
+  void HandleResponse(gint response_id);
+
+  // Called when the dialog is closed abnormally.
+  void HandleClose();
+
+ protected:
+  // FileDialog Interface
+  virtual bool BeginSelection(const FileDialog::Options& options,
+                              std::string16* error);
+  virtual void CancelSelection();
 
  private:
+  // Initializes the dialog, based on options.
+  bool InitDialog(GtkWindow* parent, const FileDialog::Options& options,
+                  std::string16* error);
+
+  // Installs the default filename filter.
+  bool SetFilter(const StringList& filter, std::string16* error);
+
+  // Creates and displays the file dialog.
+  bool Display(std::string16* error);
+
+  // Extracts the selected files from the file dialog.
+  bool ProcessSelection(StringList* selected_files, std::string16* error);
+
   GtkWindow* parent_;
-  bool multiselect_;
+  scoped_GtkWidget dialog_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogGtk);
 };

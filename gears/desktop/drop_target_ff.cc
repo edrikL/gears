@@ -38,7 +38,7 @@
 #include <gecko_sdk/include/nsIURI.h>
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/desktop/drag_and_drop_registry.h"
-#include "gears/desktop/file_dialog_utils.h"
+#include "gears/desktop/file_dialog.h"
 
 
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
@@ -158,8 +158,8 @@ bool DropTarget::GetDroppedFiles(
     filenames.push_back(std::string16(filename.get()));
   }
 
-  return FileDialogUtils::FilesToJsObjectArray(
-      filenames, *module_environment_, files_out, error_out);
+  return FileDialog::FilesToJsObjectArray(
+      filenames, module_environment_.get(), files_out, error_out);
 }
 
 

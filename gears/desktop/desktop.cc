@@ -44,7 +44,7 @@
 #endif
 #include "gears/blob/blob_interface.h"
 #include "gears/desktop/drag_and_drop_registry.h"
-#include "gears/desktop/file_dialog_utils.h"
+#include "gears/desktop/file_dialog.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notifier_proxy.h"
 #include "gears/localserver/common/http_constants.h"
@@ -58,7 +58,7 @@ DECLARE_GEARS_WRAPPER(GearsDesktop);
 template<>
 void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
-  RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
+  RegisterMethod("openFiles", &GearsDesktop::OpenFiles);
 
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
@@ -391,80 +391,38 @@ bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
   return allow_shortcut_creation;
 }
 
-// Display an open file dialog returning the selected files.
-// Parameters:
-//  mode - in - whether to allow single or multiple selection of files
-//  filters - in - a vector of filters
-//  module - in - used to create javascript objects and arrays
-//  files - out - a vector of filenames
-//  error - out - the error message is placed in here
-static bool DisplayFileDialog(const FileDialog::Mode mode,
-                              const std::vector<FileDialog::Filter> &filters,
-                              const ModuleImplBaseClass& module,
-                              std::vector<std::string16> *files,
-                              std::string16* error) {
-  assert(files);
-  assert(error);
-  // create and display dialog
-  scoped_ptr<FileDialog> dialog(NewFileDialog(mode, module));
-  if (!dialog.get()) {
-    *error = STRING16(L"Failed to create dialog.");
-    return false;
-  }
-  return dialog->OpenDialog(filters, files, error);
-}
-
-void GearsDesktop::GetLocalFiles(JsCallContext *context) {
-  JsArray filters;
-
-  bool multiselect = true;
+void GearsDesktop::OpenFiles(JsCallContext *context) {
+  scoped_ptr<JsRootedCallback> callback;
+  JsObject options_map;
   JsArgument argv[] = {
-    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &filters },
-    { JSPARAM_OPTIONAL, JSPARAM_BOOL, &multiselect },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, as_out_parameter(callback) },
+    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options_map },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
   // TODO(cdevries): set focus to tab where this function was called
 
-  // Form the vector of filters.
-  std::vector<FileDialog::Filter> vec_filters;
-  std::string16 error;
-  // If the optional JavaScript array was provided, convert it.
-  if (argc == 1) {
-    if (!FileDialogUtils::FiltersToVector(filters, &vec_filters, &error)) {
-      context->SetException(error);
+  FileDialog::Options options;
+  if (argc > 1) {
+    if (!FileDialog::ParseOptions(context, options_map, &options)) {
+      assert(context->is_exception_set());
       return;
     }
   }
-  // If the optional JavaScript array was not provided, or has zero length,
-  // set a default value.
-  if (vec_filters.empty()) {
-    FileDialog::Filter filter = { STRING16(L"All Files"), STRING16(L"*.*") };
-    vec_filters.push_back(filter);
-  }
 
-  std::vector<std::string16> files;
-  if (!DisplayFileDialog(multiselect ? FileDialog::MULTIPLE_FILES
-                                     : FileDialog::SINGLE_FILE,
-                         vec_filters, *this, &files, &error)) {
+  std::string16 error;
+  scoped_ptr<FileDialog> dialog(FileDialog::Create(this));
+  if (!dialog.get()) {
+    context->SetException(STRING16(L"Failed to create dialog."));
+    return;
+  }
+  if (!dialog->Open(options, callback.release(), &error)) {
     context->SetException(error);
     return;
   }
-
-  // Convert returned files.
-  scoped_ptr<JsArray> files_array(GetJsRunner()->NewArray());
-  if (!files_array.get()) {
-    context->SetException(STRING16("Failed to create file array."));
-    return;
-  }
-  if (!FileDialogUtils::FilesToJsObjectArray(
-          files, *module_environment_, files_array.get(), &error)) {
-    context->SetException(error);
-    return;
-  }
-
-  context->SetReturnValue(JSPARAM_ARRAY, files_array.get());
+  // The dialog will destroy itself when it completes. 
+  dialog.release();
 }
 
 // Handle all the icon creation and creation call required to actually install
