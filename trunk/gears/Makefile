@@ -2036,6 +2036,26 @@ SF_M4SRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# installer/android
+
+ifeq ($(OS),android)
+NPAPI_VPATH	+= \
+		installer/android \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		lib_updater.cc \
+		version_check_task.cc \
+		zip_download_task.cc \
+		$(NULL)
+
+NPAPI_JAVASRCS	+= \
+		VersionExtractor.java \
+		ZipInflater.java \
+		$(NULL)
+endif # android
+
+#-----------------------------------------------------------------------------
 # geolocation
 
 ifeq ($(OFFICIAL_BUILD),1)
