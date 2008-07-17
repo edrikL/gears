@@ -126,7 +126,7 @@ void GearsNotification::CopyFrom(const GearsNotification& from) {
   actions_ = from.actions_;
 }
 
-bool GearsNotification::Serialize(Serializer *out) {
+bool GearsNotification::Serialize(Serializer *out) const {
   out->WriteInt(version_);
   out->WriteString(title_.c_str());
   out->WriteString(subtitle_.c_str());

@@ -58,10 +58,10 @@ class IpcTestMessage : public Serializable {
   IpcTestMessage(const char16 *str, int bytes_length);
 
   // Serializable methods
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_IPC_TEST_MESSAGE;
   }
-  virtual bool Serialize(Serializer *out);
+  virtual bool Serialize(Serializer *out) const;
   virtual bool Deserialize(Deserializer *in);
 
   // Accessors

@@ -40,7 +40,7 @@ class SerializationTest : public Serializable {
     memcpy(test_bytes_, test_bytes, kTestBytesSize);
   }
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
       return SERIALIZABLE_TEST_OBJECT;
   }
 
@@ -55,7 +55,7 @@ class SerializationTest : public Serializable {
         in->ReadBytes(test_bytes_, kTestBytesSize);
   }
 
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     out->WriteBool(test_bool_);
     out->WriteInt(test_int_);
     out->WriteString(test_string_.c_str());

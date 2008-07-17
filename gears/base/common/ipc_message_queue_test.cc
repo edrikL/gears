@@ -157,11 +157,12 @@ IpcTestMessage::IpcTestMessage(const char16 *str, int bytes_length)
       bytes_(MallocTestData(bytes_length)) {
 }
 
-bool IpcTestMessage::Serialize(Serializer *out) {
+bool IpcTestMessage::Serialize(Serializer *out) const {
   out->WriteString(string_.c_str());
 
-  TestingIpcMessageQueue_GetCounters(&counters_, false);
-  out->WriteBytes(&counters_, sizeof(counters_));
+  IpcMessageQueueCounters counters;
+  TestingIpcMessageQueue_GetCounters(&counters, false);
+  out->WriteBytes(&counters, sizeof(counters));
 
   out->WriteInt(bytes_length_);
   if (bytes_length_) {

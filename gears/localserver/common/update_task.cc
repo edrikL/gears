@@ -724,7 +724,7 @@ bool UpdateTask::ProgressEvent::Deserialize(Deserializer *in) {
 // UpdateTask::ProgressEvent::Serialize
 // Serializes a progress event into a byte stream.
 //------------------------------------------------------------------------------
-bool UpdateTask::ProgressEvent::Serialize(Serializer *out) {
+bool UpdateTask::ProgressEvent::Serialize(Serializer *out) const {
   out->WriteInt(files_total_);
   out->WriteInt(files_complete_);
   return true;
@@ -743,7 +743,7 @@ bool UpdateTask::ErrorEvent::Deserialize(Deserializer *in) {
 // UpdateTask::ErrorEvent::Serialize
 // Serializes an error event into a byte stream.
 //------------------------------------------------------------------------------
-bool UpdateTask::ErrorEvent::Serialize(Serializer *out) {
+bool UpdateTask::ErrorEvent::Serialize(Serializer *out) const {
   out->WriteString(error_message_.c_str());
   return true;
 }
@@ -761,7 +761,7 @@ bool UpdateTask::CompletionEvent::Deserialize(Deserializer *in) {
 // UpdateTask::CompletionEvent::Serialize
 // Serializes a completion event into a byte stream.
 //------------------------------------------------------------------------------
-bool UpdateTask::CompletionEvent::Serialize(Serializer *out) {
+bool UpdateTask::CompletionEvent::Serialize(Serializer *out) const {
   out->WriteString(new_version_string_.c_str());
   return true;
 }

@@ -77,10 +77,10 @@ class UpdateTask : public AsyncTask {
     int files_total() const { return files_total_; }
     int files_complete() const { return files_complete_; }
 
-    virtual SerializableClassId GetSerializableClassId() {
+    virtual SerializableClassId GetSerializableClassId() const {
       return SERIALIZABLE_UPDATE_TASK_PROGRESS_EVENT;
     }
-    virtual bool Serialize(Serializer *out);
+    virtual bool Serialize(Serializer *out) const;
     virtual bool Deserialize(Deserializer *in);
 
     static Serializable *SerializableFactoryMethod() {
@@ -105,10 +105,10 @@ class UpdateTask : public AsyncTask {
       return new_version_string_;
     }
 
-    virtual SerializableClassId GetSerializableClassId() {
+    virtual SerializableClassId GetSerializableClassId() const {
       return SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT;
     }
-    virtual bool Serialize(Serializer *out);
+    virtual bool Serialize(Serializer *out) const;
     virtual bool Deserialize(Deserializer *in);
 
     static Serializable *SerializableFactoryMethod() {
@@ -127,10 +127,10 @@ class UpdateTask : public AsyncTask {
       : Event(ERROR_EVENT), error_message_(error_message) {}
     const std::string16 &error_message() const { return error_message_; }
 
-    virtual SerializableClassId GetSerializableClassId() {
+    virtual SerializableClassId GetSerializableClassId() const {
       return SERIALIZABLE_UPDATE_TASK_ERROR_EVENT;
     }
-    virtual bool Serialize(Serializer *out);
+    virtual bool Serialize(Serializer *out) const;
     virtual bool Deserialize(Deserializer *in);
 
     static Serializable *SerializableFactoryMethod() {

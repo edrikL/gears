@@ -47,10 +47,10 @@ class LogEvent : public NotificationData {
   const std::string16& sourceUrl() const { return source_url_; }
   const int64& date() const { return date_; }
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_CONSOLE_LOG_EVENT;
   }
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     out->WriteString(message_.c_str());
     out->WriteString(type_.c_str());
     out->WriteString(source_url_.c_str());

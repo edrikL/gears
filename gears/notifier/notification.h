@@ -129,10 +129,10 @@ class GearsNotification :
   // Serializable interface
   //
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_DESKTOP_NOTIFICATION;
   }
-  virtual bool Serialize(Serializer *out);
+  virtual bool Serialize(Serializer *out) const;
 
   virtual bool Deserialize(Deserializer *in);
 

@@ -77,11 +77,11 @@ class NotificationDataGeoBase : public NotificationData {
 
  private:
   // NotificationData implementation. These methods are not required.
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     assert(false);
     return SERIALIZABLE_NULL;
   }
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     assert(false);
     return false;
   }

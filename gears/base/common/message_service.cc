@@ -87,11 +87,11 @@ class NotificationMessage : public Serializable {
 
   scoped_refptr<SharedNotificationData> shared_;
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_NOTIFICATION;
   }
 
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     if (!shared_) return false;
     out->WriteString(shared_->topic_.c_str());
     return out->WriteObject(shared_->data_.get());
