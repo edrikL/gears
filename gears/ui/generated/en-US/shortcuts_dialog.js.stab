@@ -1,4 +1,4 @@
-<string id="string-title-default"><TRANS_BLOCK desc="Window title for default style">PRODUCT_FRIENDLY_NAME_UQ - Create Desktop Shortcut</TRANS_BLOCK></string>
+<string id="string-title-default"><TRANS_BLOCK desc="Window title for default style">Gears - Create Desktop Shortcut</TRANS_BLOCK></string>
 <string id="string-title-simple"><TRANS_BLOCK desc="Window title for the simple style">Create Application Shortcuts</TRANS_BLOCK></string>
 <string id="string-header-desktop"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">This website wants to create a shortcut on your computer. Do you want to allow this?</TRANS_BLOCK></string>
 <string id="string-header-wince"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">This website wants to create a shortcut in your list of programs. Do you want to allow this?</TRANS_BLOCK></string>

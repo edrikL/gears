@@ -7,7 +7,7 @@
 <string id="string-denied"><TRANS_BLOCK desc="States that a site is denied from using this permission class.">Denied</TRANS_BLOCK></string>
 <string id="string-local-storage"><TRANS_BLOCK desc="Describes the permission class for storing local data.">Local storage</TRANS_BLOCK></string>
 <string id="string-location-data"><TRANS_BLOCK desc="Describes the permission class for accessing location information.">Location</TRANS_BLOCK></string>
-<string id="string-gears-settings"><TRANS_BLOCK>PRODUCT_FRIENDLY_NAME_UQ Settings</TRANS_BLOCK></string>
-<string id="string-permissions-description"><TRANS_BLOCK desc="Description of table listing permissions granted to each site.">The table below shows the permissions you have granted to each site that has attempted to use PRODUCT_FRIENDLY_NAME_UQ.</TRANS_BLOCK></string>
-<string id="string-version"><TRANS_BLOCK desc="Version string.">PRODUCT_FRIENDLY_NAME_UQ version PRODUCT_VERSION</TRANS_BLOCK></string>
-<string id="string-html-title"><TRANS_BLOCK>PRODUCT_FRIENDLY_NAME_UQ Settings</TRANS_BLOCK></string>
+<string id="string-gears-settings"><TRANS_BLOCK>Gears Settings</TRANS_BLOCK></string>
+<string id="string-permissions-description"><TRANS_BLOCK desc="Description of table listing permissions granted to each site.">The table below shows the permissions you have granted to each site that has attempted to use Gears.</TRANS_BLOCK></string>
+<string id="string-version"><TRANS_BLOCK desc="Version string.">Gears version PRODUCT_VERSION</TRANS_BLOCK></string>
+<string id="string-html-title"><TRANS_BLOCK>Gears Settings</TRANS_BLOCK></string>

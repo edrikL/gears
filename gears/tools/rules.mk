@@ -508,7 +508,7 @@ $(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 
 # STAB (String Table) TARGETS
 
-$($(BROWSER)_OUTDIR)/genfiles/%.js: %.stab
+$($(BROWSER)_OUTDIR)/genfiles/%: %.stab
 	python tools/parse_stab.py $(M4FLAGS) $@ $< $(I18N_INPUTS_BASEDIR)
 
 # IDL TARGETS
