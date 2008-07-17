@@ -75,6 +75,7 @@
 
 #include "gears/geolocation/wifi_data_provider_linux.h"
 
+#include <ctype.h>  // For isxdigit()
 #include <stdio.h>
 #include "gears/base/common/string_utils.h"
 
@@ -132,37 +133,64 @@ void LinuxWifiDataProvider::Run() {
 
 // Local functions
 
-static void ParseLine(std::string line, AccessPointData *access_point_data) {
-  static const std::string kMacAddressString("Address: ");
-  static const std::string kSsidString("ESSID:\"");
-  static const std::string kSignalStrengthString("Signal level=");
+static bool IsValidMacAddress(const char *mac_address) {
+  return isxdigit(mac_address[0]) &&
+         isxdigit(mac_address[1]) &&
+         mac_address[2] == ':' &&
+         isxdigit(mac_address[3]) &&
+         isxdigit(mac_address[4]) &&
+         mac_address[5] == ':' &&
+         isxdigit(mac_address[6]) &&
+         isxdigit(mac_address[7]) &&
+         mac_address[8] == ':' &&
+         isxdigit(mac_address[9]) &&
+         isxdigit(mac_address[10]) &&
+         mac_address[11] == ':' &&
+         isxdigit(mac_address[12]) &&
+         isxdigit(mac_address[13]) &&
+         mac_address[14] == ':' &&
+         isxdigit(mac_address[15]) &&
+         isxdigit(mac_address[16]);
+}
+
+static void ParseLine(const std::string &line,
+                      const std::string &mac_address_string,
+                      const std::string &ssid_string,
+                      const std::string &signal_strength_string,
+                      AccessPointData *access_point_data) {
   std::string::size_type index;
-  if ((index = line.find(kMacAddressString)) != std::string::npos) {
+  if ((index = line.find(mac_address_string)) != std::string::npos) {
     // MAC address
-    UTF8ToString16(&line.at(index + kMacAddressString.size()),
-                   17,  // XX:XX:XX:XX:XX:XX
-                   &access_point_data->mac_address);
-  } else if ((index = line.find(kSsidString)) != std::string::npos) {
+    if (IsValidMacAddress(&line.at(index + mac_address_string.size()))) {
+      UTF8ToString16(&line.at(index + mac_address_string.size()),
+                     17,  // XX:XX:XX:XX:XX:XX
+                     &access_point_data->mac_address);
+    }
+  } else if ((index = line.find(ssid_string)) != std::string::npos) {
     // SSID
-    std::string::size_type start = index + kSsidString.size();
+    // The string should be quoted.
+    std::string::size_type start = index + ssid_string.size() + 1;
     std::string::size_type end = line.find('\"', start);
     // If we can't find a trailing quote, something has gone wrong.
     if (end != std::string::npos) {
       UTF8ToString16(&line.at(start), end - start, &access_point_data->ssid);
     }
-  } else if ((index = line.find(kSignalStrengthString)) != std::string::npos) {
+  } else if ((index = line.find(signal_strength_string)) != std::string::npos) {
     // Signal strength
     // iwlist will convert to dBm if it can. If it has failed to do so, we can't
     // make use of the data.
     if (line.find("dBm") != std::string::npos) {
       // atoi will ignore trailing non-numeric characters
       access_point_data->radio_signal_strength =
-          atoi(&line.at(index + kSignalStrengthString.size()));
+          atoi(&line.at(index + signal_strength_string.size()));
     }
   }
 }
 
-static void ParseAccessPoint(std::string text,
+static void ParseAccessPoint(const std::string &text,
+                             const std::string &mac_address_string,
+                             const std::string &ssid_string,
+                             const std::string &signal_strength_string,
                              AccessPointData *access_point_data) {
   // Split response into lines to aid parsing.
   std::string::size_type start = 0;
@@ -171,48 +199,78 @@ static void ParseAccessPoint(std::string text,
     end = text.find('\n', start);
     std::string::size_type length = (end == std::string::npos) ?
                                     std::string::npos : end - start;
-    ParseLine(text.substr(start, length), access_point_data);
+    ParseLine(text.substr(start, length),
+              mac_address_string,
+              ssid_string,
+              signal_strength_string,
+              access_point_data);
     start = end + 1;
   } while (end != std::string::npos);
 }
 
-#define MAX_LINE_LENGTH (256)
-
-static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
-  // Issue iwlist command
-  const char *kIwlistCommand = "iwlist scan";
+// Issues the specified command, and parses the response. Data for each access
+// point is separated by the given delimiter. Within each block of data, the
+// repsonse is split into lines and data is extracted by searching for the MAC
+// address, SSID and signal strength strings.
+bool IssueCommandAndParseResult(const char *command,
+                                const char *delimiter,
+                                const std::string &mac_address_string,
+                                const std::string &ssid_string,
+                                const std::string &signal_strength_string,
+                                std::vector<AccessPointData> *access_points) {
   // Open pipe in read mode.
-  FILE *result_pipe = popen(kIwlistCommand, "r");
+  FILE *result_pipe = popen(command, "r");
   if (result_pipe == NULL) {
-    LOG(("Failed to open pipe.\n"));
+    LOG(("IssueCommand(): Failed to open pipe.\n"));
     return false;
   }
 
-  // Read results of iwlist.
+  // Read results of command.
   static const int kBufferSize = 1024;
   char buffer[kBufferSize];
-  std::string result;
   size_t bytes_read;
+  std::string result;
   do {
     bytes_read = fread(buffer, 1, kBufferSize, result_pipe);
     result.append(buffer, bytes_read);
   } while (static_cast<int>(bytes_read) == kBufferSize);
   pclose(result_pipe);
 
-  // Parse results
-  static const char *kStartOfAccessPoint = "Cell ";
-  std::string::size_type start = result.find(kStartOfAccessPoint);
+
+  // Parse results.
+  assert(access_points);
+  access_points->clear();
+  std::string::size_type start = result.find(delimiter);
   while (start != std::string::npos) {
-    std::string::size_type end = result.find(kStartOfAccessPoint, start + 1);
-    AccessPointData access_point_data;
+    std::string::size_type end = result.find(delimiter, start + 1);
     std::string::size_type length = (end == std::string::npos) ?
                                     std::string::npos : end - start;
-    ParseAccessPoint(result.substr(start, length), &access_point_data);
+    AccessPointData access_point_data;
+    ParseAccessPoint(result.substr(start, length),
+                     mac_address_string,
+                     ssid_string,
+                     signal_strength_string,
+                     &access_point_data);
     access_points->push_back(access_point_data);
     start = end;
   }
 
-  return true;
+  return !access_points->empty();
+}
+
+static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
+  return IssueCommandAndParseResult("iwlist scan",
+                                    "Cell ",
+                                    "Address: ",
+                                    "ESSID:",
+                                    "Signal level=",
+                                    access_points) ||
+         IssueCommandAndParseResult("iwconfig",
+                                    "ESSID:\"",
+                                    "Access Point: ",
+                                    "ESSID:",
+                                    "Signal level=",
+                                    access_points);
 }
 
 #endif  // LINUX && !OS_MACOSX
