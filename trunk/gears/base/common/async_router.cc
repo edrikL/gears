@@ -40,8 +40,8 @@ AsyncRouter::AsyncRouter() {
 AsyncRouter::~AsyncRouter() {
 }
 
-void AsyncRouter::CallAsync(ThreadId thread_id, AsyncFunctor *functor) {
-  ThreadMessageQueue::GetInstance()->Send(
+bool AsyncRouter::CallAsync(ThreadId thread_id, AsyncFunctor *functor) {
+  return ThreadMessageQueue::GetInstance()->Send(
       thread_id, kAsyncRouter_Call, functor);
 }
 

@@ -45,7 +45,7 @@ class AsyncRouter : public ThreadMessageQueue::HandlerInterface {
 
   // Calls the functor's Run() method from the thread specified by thread_id.
   // Ownership of the functor is transferred to the AsyncRouter.
-  void CallAsync(ThreadId thread_id, AsyncFunctor *functor);
+  bool CallAsync(ThreadId thread_id, AsyncFunctor *functor);
 
  private:
   AsyncRouter();
