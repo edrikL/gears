@@ -36,7 +36,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/desktop/drag_and_drop_registry.h"
-#include "gears/desktop/file_dialog_utils.h"
+#include "gears/desktop/file_dialog.h"
 
 
 HRESULT DropTarget::Detach(void) {
@@ -256,8 +256,8 @@ HRESULT DropTarget::HandleOnDragDrop()
     std::string16 error;
     scoped_ptr<JsArray> file_objects(
         module_environment_->js_runner_->NewArray());
-    if (!FileDialogUtils::FilesToJsObjectArray(
-            filenames, *module_environment_, file_objects.get(), &error)) {
+    if (!FileDialog::FilesToJsObjectArray(
+            filenames, module_environment_.get(), file_objects.get(), &error)) {
       return E_FAIL;
     }
 

@@ -26,138 +26,312 @@
 #if defined(WIN32)
 
 #include "gears/desktop/file_dialog_win32.h"
-
 #include "gears/base/common/string_utils.h"
 
-FileDialogWin32::FileDialogWin32(HWND parent, bool multiselect)
-  : parent_(parent), multiselect_(multiselect) {
+namespace {
+
+// TODO(bpm): Localize and unify with other copies of these strings for other
+// platforms.
+const char16* kDefaultFilterLabel = STRING16(L"All Readable Documents");
+const char16* kAllDocumentsLabel = STRING16(L"All Documents");
+
+const char16 *kSelectionCompleteTopic = STRING16(L"selection complete");
+
+// Maximum number of characters for the selected path and all filenames,
+// combined.
+const size_t kFilenameBufferSize = 32768;
+
+// Utility class for passing StringList between threads.
+class FileDialogData : public NotificationData {
+ public:
+  FileDialogData() {}
+  virtual ~FileDialogData() {}
+
+  FileDialog::StringList selected_files;
+
+ private:
+  // NotificationData implementation. These methods are not required.
+  virtual SerializableClassId GetSerializableClassId() const {
+    assert(false);
+    return SERIALIZABLE_NULL;
+  }
+  virtual bool Serialize(Serializer *out) const {
+    assert(false);
+    return false;
+  }
+  virtual bool Deserialize(Deserializer *in) {
+    assert(false);
+    return false;
+  }
+
+  DISALLOW_EVIL_CONSTRUCTORS(FileDialogData);
+};
+
+void ExitDialog(HWND dlg) {
+  ::PostMessage(dlg, WM_COMMAND, MAKEWPARAM(IDCANCEL, 0), NULL);
+}
+
+}  // anonymous namespace
+
+FileDialogWin32::FileDialogWin32(const ModuleImplBaseClass* module, HWND parent)
+    : FileDialog(module), parent_(parent), should_exit_(false), wnd_(NULL) {
+  static unsigned long id = 0;
+  topic_.assign(kSelectionCompleteTopic);
+  topic_.append(IntegerToString16(++id));
+
+  // Set up the thread message queue.
+  if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {
+    LOG(("Failed to set up thread message queue.\n"));
+    assert(false);
+    return;
+  }
+
+  MessageService::GetInstance()->AddObserver(this, topic_.c_str());
 }
 
 FileDialogWin32::~FileDialogWin32() {
+  MessageService::GetInstance()->RemoveObserver(this, topic_.c_str());
+}
+
+bool FileDialogWin32::BeginSelection(const FileDialog::Options& options,
+                                     std::string16* error) {
+  InitDialog(options);
+
+  std::string16 filter_buffer;
+  if (!SetFilter(options.filter, error))
+    return false;
+
+  if (0 == Start()) {
+    *error = STRING16(L"Thread creation failed.");
+    return false;
+  }
+  return true;
+}
+
+void FileDialogWin32::CancelSelection() {
+  MutexLock lock(&mutex_);
+  if (wnd_) {
+    ExitDialog(wnd_);
+  } else {
+    should_exit_ = true;
+  }
+}
+
+void FileDialogWin32::Run() {
+  scoped_ptr<FileDialogData> data(new FileDialogData);
+  std::string16 error;
+  if (!Display(&data->selected_files, &error)) {
+    HandleError(error);
+  }
+  MessageService::GetInstance()->NotifyObservers(topic_.c_str(),
+                                                 data.release());
+}
+
+void FileDialogWin32::OnNotify(MessageService *service,
+                               const char16 *topic,
+                               const NotificationData *data) {
+  assert(topic_ == topic);
+  Join();  // The worker thread has completed.
+  const FileDialogData* dialog_data = static_cast<const FileDialogData*>(data);
+  CompleteSelection(dialog_data->selected_files);
 }
 
 // Initialize an open file dialog to open multiple files.
-static void InitDialog(HWND parent,
-                       bool multiselect,
-                       OPENFILENAME* ofn,
-                       std::vector<TCHAR>* file_buffer) {
-  const static int kFileBufferSize = 32768;
-  file_buffer->resize(kFileBufferSize);
+void FileDialogWin32::InitDialog(const FileDialog::Options& options) {
+  filename_buffer_.resize(kFilenameBufferSize);
 
   // Initialize OPENFILENAME
-  memset(ofn, 0, sizeof(*ofn));
-  ofn->lStructSize = sizeof(*ofn);
-  ofn->hwndOwner = parent;
-  ofn->lpstrFile = &file_buffer->at(0);
-  ofn->lpstrFile[0] = '\0';
-  ofn->lpstrFilter = L"All Files\0*.*\0\0";
-  ofn->nFilterIndex = 1;
-  ofn->nMaxFile = kFileBufferSize;
-  ofn->lpstrFileTitle = NULL;
-  ofn->nMaxFileTitle = 0;
-  ofn->lpstrInitialDir = NULL;
-  ofn->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-  if (multiselect) {
+  memset(&ofn_, 0, sizeof(ofn_));
+  ofn_.lStructSize = sizeof(ofn_);
+  ofn_.hwndOwner = parent_;
+  ofn_.lpstrFile = &filename_buffer_[0];
+  ofn_.lpstrFile[0] = '\0';
+  ofn_.nMaxFile = kFilenameBufferSize;
+  ofn_.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER
+               | OFN_HIDEREADONLY;
+  if (MULTIPLE_FILES == options.mode) {
 #ifdef WINCE
     // The native WinCE file picker does not support multi-select.
 #else
-    ofn->Flags |= OFN_ALLOWMULTISELECT;
+    ofn_.Flags |= OFN_ALLOWMULTISELECT;
 #endif
   }
 }
 
-static void AddToBuffer(const std::string16& str,
-                        std::vector<TCHAR>* buffer) {
-  buffer->insert(buffer->end(), str.begin(), str.end());
-}
+bool FileDialogWin32::SetFilter(const StringList& filter,
+                                std::string16* error) {
+  MediaMap media_map;
+  GetMediaTypeMap(&media_map);
 
-// Add filters to an open file dialog.
-static bool AddFilters(const std::vector<FileDialog::Filter>& filters,
-                       OPENFILENAME* ofn,
-                       std::vector<TCHAR>* filter_buffer,
-                       std::string16* error) {
-  // process filter pairs
-  typedef std::vector<FileDialog::Filter>::const_iterator FILTER_ITER;
-  for (FILTER_ITER it = filters.begin(); it != filters.end(); ++it) {
-    AddToBuffer(it->description, filter_buffer);
-    filter_buffer->push_back('\0');
-    AddToBuffer(it->filter, filter_buffer);
-    filter_buffer->push_back('\0');
+  std::string16 default_filter;
+  for (StringList::const_iterator it = filter.begin(); it != filter.end();
+       ++it) {
+    // Handle extensions of the form ".foo".
+    if (L'.' == (*it)[0]) {
+      if (!default_filter.empty()) {
+        default_filter.push_back(L';');
+      }
+      default_filter.push_back(L'*');
+      default_filter.append(*it);
+      continue;
+    }
+
+    // Handle media types of the form "application/foo".
+    MediaMap::const_iterator entry = media_map.find(*it);
+    if (entry != media_map.end()) {
+      if (!default_filter.empty()) {
+        default_filter.push_back(L';');
+      }
+      default_filter.append(entry->second);
+    }
+
+    // TODO(bpm): Handle wildcard media types.
+  }
+  if (!default_filter.empty()) {
+    filter_.append(kDefaultFilterLabel);
+    filter_.push_back('\0');
+    filter_.append(default_filter);
+    filter_.push_back('\0');
   }
 
-  // empty string terminates the list
-  filter_buffer->push_back('\0');
+  // An unrestricted filter is always available.  On Win32, *.* matches
+  // everything, even files with no extension.
+  filter_.append(kAllDocumentsLabel);
+  filter_.push_back('\0');
+  filter_.append(STRING16(L"*.*"));
+  filter_.push_back('\0');
 
-  // set filter
-  ofn->lpstrFilter = &filter_buffer->at(0);
-  ofn->nFilterIndex = 1;
+  // Terminate the filter with an extra null.
+  filter_.push_back('\0');
+
+  ofn_.lpstrFilter = filter_.c_str();
+  ofn_.nFilterIndex = 1;
   return true;
 }
 
-// Process the selection from GetOpenFileName.
-// Parameters:
-//  selection - in - The string from OPENFILENAME member lpstrFile after
-//                   calling ::GetOpenFileName().
-//
-//  selected_files - out - The files selected by the user are placed in here.
-//
-static bool ProcessSelection(const TCHAR* selection,
-                             std::vector<std::string16>* selected_files,
-                             std::string16* error) {
-  std::vector<std::string16> temp_files;
-  const TCHAR* p = selection;
-  while (*p) { // empty string indicates end of list
-    temp_files.push_back(p);
-    // move to next string
-    // + 1 is for NULL terminator
-    p += temp_files.back().length() + 1;
+bool FileDialogWin32::GetMediaTypeMap(MediaMap* map) {
+  map->clear();
+
+  for (DWORD index = 0; true; ++index) {
+    TCHAR name[32];  // Ignore any extensions larger than 30 chars.
+    DWORD len = ARRAYSIZE(name);
+    LONG result = RegEnumKeyEx(HKEY_CLASSES_ROOT, index, name, &len, NULL, NULL,
+                               NULL, NULL);
+    if (ERROR_NO_MORE_ITEMS == result)
+      break;
+    if (ERROR_SUCCESS != result)
+      continue;
+    if (name[0] != L'.')
+      continue;
+    HKEY key;
+    result = RegOpenKeyEx(HKEY_CLASSES_ROOT, name, 0, KEY_QUERY_VALUE, &key);
+    if (ERROR_SUCCESS != result)
+      continue;
+    DWORD regtype;
+    TCHAR content_type[128];  // Ignore content types larger than 127 chars.
+    // Note: content_type length is expressed in bytes, not char16s, and may not
+    // be null-terminated.
+    len = sizeof(content_type) - 2;
+    result = RegQueryValueEx(key, L"Content Type", NULL, &regtype,
+                             reinterpret_cast<BYTE*>(content_type), &len);
+    if ((ERROR_SUCCESS == result) && (REG_SZ == regtype)) {
+      content_type[len / 2] = L'\0';  // Ensure null-termination. (len in bytes)
+      std::string16& extensions = (*map)[content_type];
+      if (!extensions.empty()) {
+        extensions.push_back(L';');
+      }
+      extensions.push_back(L'*');
+      extensions.append(name);
+    }
+    RegCloseKey(key);
   }
 
-  if (temp_files.empty()) {
+  return true;
+}
+
+bool FileDialogWin32::Display(StringList* selected_files,
+                              std::string16* error) {
+  if (FAILED(CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL))) {
+    *error = STRING16("Failed to initialize new thread.");
+    return false;
+  }
+  ofn_.lpfnHook = &FileDialogWin32::HookProc;
+  ofn_.lCustData = reinterpret_cast<LPARAM>(this);
+  bool success = (FALSE != ::GetOpenFileName(&ofn_));
+  if (success) {
+    success = ProcessSelection(selected_files, error);
+  }
+  ::CoUninitialize();
+  return success;
+}
+
+UINT_PTR FileDialogWin32::HookProc(HWND hdlg, UINT uiMsg, WPARAM wParam,
+                                   LPARAM lParam) {
+  if (WM_INITDIALOG == uiMsg) {
+    OPENFILENAME* ofn = reinterpret_cast<OPENFILENAME*>(lParam);
+    FileDialogWin32* dialog =
+        reinterpret_cast<FileDialogWin32*>(ofn->lCustData);
+    MutexLock lock(&dialog->mutex_);
+    if (dialog->should_exit_) {
+      ExitDialog(::GetParent(hdlg));
+    } else {
+      dialog->wnd_ = ::GetParent(hdlg);
+    }
+  } else if (WM_NOTIFY == uiMsg) {
+    NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
+    if (CDN_INITDONE == nmhdr->code) {
+#if 0
+      // TODO(bpm): Determine if we want this.
+      // This code sets a customized icon for the dialog, and centers it on the
+      // screen.
+      HWND dialog_handle = ::GetParent(hdlg);
+      if (HICON icon = ::LoadIcon(::GetModuleHandle(NULL), L"IDI_ICON")) {
+        ::SendMessage(dialog_handle, WM_SETICON, ICON_BIG,
+                      reinterpret_cast<LPARAM>(icon));
+      }
+      RECT desktop_area, dialog_area;
+      ::GetWindowRect(::GetDesktopWindow(), &desktop_area);
+      desktop_area.right -= desktop_area.left;
+      desktop_area.bottom -= desktop_area.top;
+      ::GetWindowRect(dialog_handle, &dialog_area);
+      dialog_area.right -= dialog_area.left;
+      dialog_area.bottom -= dialog_area.top;
+      desktop_area.left += (desktop_area.right - dialog_area.right) / 2;
+      desktop_area.top += (desktop_area.bottom - dialog_area.bottom) / 2;
+      ::SetWindowPos(dialog_handle, NULL,
+                     desktop_area.left, desktop_area.top,
+                     0, 0, SWP_NOSIZE | SWP_NOZORDER);
+#endif
+    }
+  }
+  return 0;
+}
+
+bool FileDialogWin32::ProcessSelection(StringList* selected_files,
+                                       std::string16* error) {
+  StringList files;
+  const TCHAR* selection = ofn_.lpstrFile;
+  while (*selection) {  // Empty string indicates end of list.
+    files.push_back(selection);
+    // Skip over filename and null-terminator.
+    selection += files.back().length() + 1;
+  }
+  if (files.empty()) {
     *error = STRING16(L"Selection contained no files. A minimum of one was "
                       L"expected.");
     return false;
-  } else if (temp_files.size() == 1) {
-    // if there is one string, the user selected a single file
-     *selected_files = temp_files;
+  }
+  if (files.size() == 1) {
+    // When there is one file, it contains the path and filename.
+    selected_files->swap(files);
   } else {
-    assert(temp_files.size() >= 2);
-
-    // the first string is the path
-    // all following strings are files at that path
-    std::vector<std::string16>::iterator itPath = temp_files.begin();
-    for (std::vector<std::string16>::iterator itFile = ++(temp_files.begin());
-      itFile != temp_files.end(); ++itFile) {
-        selected_files->push_back(*itPath + L"\\" + *itFile);
+    // Otherwise, the first string is the path, and the remainder are filenames.
+    StringList::iterator path = files.begin();
+    for (StringList::iterator file = path + 1; file != files.end(); ++file) {
+      selected_files->push_back(*path + L'\\' + *file);
     }
   }
   return true;
-}
-
-// Display a dialog to open multiple files and return the selected files.
-static bool Display(OPENFILENAME* ofn,
-                    std::vector<std::string16>* selected_files,
-                    std::string16* error) {
-  if (::GetOpenFileName(ofn)) {
-    return ProcessSelection(ofn->lpstrFile, selected_files, error);
-  } else {
-    // user selected cancel
-    return true;
-  }
-}
-
-bool FileDialogWin32::OpenDialog(const std::vector<Filter>& filters,
-                                 std::vector<std::string16>* selected_files,
-                                 std::string16* error) {
-  OPENFILENAME ofn;
-  std::vector<TCHAR> file_buffer;
-  InitDialog(parent_, multiselect_, &ofn, &file_buffer);
-
-  std::vector<TCHAR> filter_buffer;
-  if (!AddFilters(filters, &ofn, &filter_buffer, error))
-    return false;
-
-  return Display(&ofn, selected_files, error);
 }
 
 #endif  // WIN32

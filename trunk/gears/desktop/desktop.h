@@ -181,9 +181,9 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   // OUT: void
   void CreateShortcut(JsCallContext *context);
 
-  // IN: optional string[] filters
-  // OUT: GearsBlob[] files
-  void GetLocalFiles(JsCallContext *context);
+  // IN: function callback, optional object open_file_options
+  // OUT: void
+  void OpenFiles(JsCallContext *context);
 
 #if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
   // The notification API has not been finalized for official builds.

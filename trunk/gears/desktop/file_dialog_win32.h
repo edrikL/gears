@@ -28,28 +28,74 @@
 
 #ifdef WIN32
 
-#include "gears/desktop/file_dialog.h"
-
 #include <windows.h>
-
+#include <map>
+#include "gears/base/common/message_service.h"
+#include "gears/base/common/thread.h"
+#include "gears/desktop/file_dialog.h"
 
 class JsRunnerInterface;
 
-class FileDialogWin32 : public FileDialog {
+class FileDialogWin32 : public FileDialog, public Thread,
+                        public MessageObserverInterface {
  public:
-  // Parameters:
-  //  parent - The parent window. May be NULL.
-  //  multiselect - The user may shift-click to select multiple files vs one.
-  FileDialogWin32(HWND parent, bool multiselect);
+  FileDialogWin32(const ModuleImplBaseClass* module, HWND parent);
   virtual ~FileDialogWin32();
 
-  virtual bool OpenDialog(const std::vector<Filter>& filters,
-                          std::vector<std::string16>* selected_files,
-                          std::string16* error);
+ protected:
+  // FileDialog Interface
+  virtual bool BeginSelection(const FileDialog::Options& options,
+                              std::string16* error);
+  virtual void CancelSelection();
+
+  // Thread Interface
+  virtual void Run();
+
+  // MessageObserverInterface
+  virtual void OnNotify(MessageService *service,
+                        const char16 *topic,
+                        const NotificationData *data);
 
  private:
+  typedef std::map<std::string16, std::string16> MediaMap;
+
+  // Initializes the dialog, based on options.
+  void InitDialog(const FileDialog::Options& options);
+
+  // Installs the default filename filter.
+  bool SetFilter(const StringList& filter, std::string16* error);
+
+  // Creates a mapping from media types to filename extensions.
+  bool GetMediaTypeMap(MediaMap* map);
+
+  // Creates and displays the file dialog.
+  bool Display(StringList* selected_files, std::string16* error);
+
+  // Handles OS events while the dialog is running.
+  static UINT_PTR CALLBACK HookProc(HWND hdlg, UINT uiMsg, WPARAM wParam,
+                                    LPARAM lParam);
+
+  // Extracts the selected files from the file dialog.
+  bool ProcessSelection(StringList* selected_files, std::string16* error);
+
+  // The parent window of the dialog.
   HWND parent_;
-  bool multiselect_;
+  // The OS specification for the dialog.
+  OPENFILENAME ofn_;
+  // Provides the backing memory for ofn_.lpstrFilter.
+  std::string16 filter_;
+  // Provides the backing memory for ofn_.lpstrFile.
+  std::vector<TCHAR> filename_buffer_;
+  // MessageService topic for communication from worker to main thread.
+  std::string16 topic_;
+
+  // Protects access to the following members, which are accessed from multiple
+  // threads.
+  Mutex mutex_;
+  // The main thread sets this to true, when the dialog should exit.
+  bool should_exit_;
+  // The window handle of the dialog.
+  HWND wnd_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogWin32);
 };
