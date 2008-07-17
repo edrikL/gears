@@ -344,7 +344,7 @@ PoolThreadsManager::PoolThreadsManager(
       is_shutting_down_(false),
       unrefed_owner_(owner),
       page_security_origin_(page_security_origin),
-      owner_permissions_manager_(page_security_origin),
+      owner_permissions_manager_(page_security_origin, owner->EnvIsWorker()),
       browsing_context_(owner->EnvPageBrowsingContext()) {
   // Make sure we have a ThreadId for this thread.
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();

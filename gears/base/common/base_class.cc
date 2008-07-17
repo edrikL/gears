@@ -57,7 +57,7 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
       is_worker_(is_worker),
       js_runner_(js_runner),
       browsing_context_(browsing_context),
-      permissions_manager_(security_origin) {
+      permissions_manager_(security_origin, is_worker) {
 #if BROWSER_FF
   assert(js_context_ != NULL);
 #endif

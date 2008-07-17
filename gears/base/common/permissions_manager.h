@@ -33,7 +33,7 @@
 
 class PermissionsManager {
  public:
-  explicit PermissionsManager(const SecurityOrigin &security_origin);
+  PermissionsManager(const SecurityOrigin &security_origin, bool is_worker);
 
   // Attempts to acquire the given type of permission. If the permission is not
   // currently set (either temporarily or in the database), it prompts the user.
@@ -57,7 +57,8 @@ class PermissionsManager {
   PermissionState GetPriorDecision(PermissionsDB::PermissionType type);
 
   std::map<PermissionsDB::PermissionType, PermissionState> permission_state_;
-  SecurityOrigin security_origin_;
+  const SecurityOrigin security_origin_;
+  const bool is_worker_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PermissionsManager);
 };
