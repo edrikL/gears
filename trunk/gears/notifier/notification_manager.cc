@@ -31,11 +31,17 @@
 #include "gears/notifier/notification_manager.h"
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
+#include "gears/base/common/serialization.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/timed_call.h"
+#include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager_test.h"
+#include "gears/notifier/notifier.h"
 #include "gears/notifier/user_activity.h"
+#include "gears/notifier/system.h"
 
 // TODO(levin): Add logging support to gears for exe's.
 // LOG_F is like LOG but it also includes the function name in
@@ -43,6 +49,9 @@
 #define LOG_F(x) LOG(x)
 
 typedef std::deque<QueuedNotification*> QueuedNotifications;
+
+// Constants.
+const int kDelayedRestartCheckIntervalMs = 60000;   // 1m
 
 // Holds a notification plus additional information needed while the
 // notification is waiting to be displayed.
@@ -121,10 +130,16 @@ void Clear(std::deque<QueuedNotification*> *notifications) {
   }
 }
 
-NotificationManager::NotificationManager(UserActivityInterface *activity)
-    : activity_(activity) {
+const int NotificationManager::kNotificationManagerVersion = 1;
+
+NotificationManager::NotificationManager(
+      UserActivityInterface *activity, DelayedRestartInterface *delayed_restart)
+    : intiailized_(false),
+      activity_(activity),
+      delayed_restart_(delayed_restart) {
   assert(activity);
   balloon_collection_.reset(new BalloonCollection(this));
+  intiailized_ = true;
 }
 
 NotificationManager::~NotificationManager() {
@@ -338,10 +353,221 @@ void NotificationManager::OnUserPresentationModeChange(
 }
 
 void NotificationManager::OnUserActivityChange() {
+  if (CheckDelayedRestart()) {
+    return;
+  }
+
   ShowNotifications();
 }
 
 void NotificationManager::OnBalloonSpaceChanged() {
+  if (CheckDelayedRestart()) {
+    return;
+  }
+
   ShowNotifications();
 }
+
+bool NotificationManager::CheckDelayedRestart() {
+  if (intiailized_ && delayed_restart_) {
+    // Only perform the restart if the user is away or idle.
+    UserMode user_mode = activity_->CheckUserActivity();
+    if (user_mode != USER_AWAY_MODE && user_mode != USER_IDLE_MODE) {
+      // Only perform the restart if no notification is showing.
+      if (!showing_notifications()) {
+        // Perform the restart if needed.
+        if (delayed_restart_->IsRestartNeeded()) {
+          delayed_restart_->Restart();
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+bool NotificationManager::showing_notifications() const {
+  return balloon_collection_.get() && balloon_collection_->count() > 0;
+}
+
+// Helper function to write a notification.
+bool NotificationManager::WriteNotification(
+    File *file, const GearsNotification &notification) {
+  assert(file);
+
+  std::vector<uint8> serialized_data;
+  Serializer serializer(&serialized_data);
+  if (!notification.Serialize(&serializer)) {
+    return false;
+  }
+
+  int size = static_cast<int>(serialized_data.size());
+  if (file->Write(reinterpret_cast<const uint8*>(&size), sizeof(size)) !=
+      sizeof(size)) {
+    return false;
+  }
+  return file->Write(reinterpret_cast<const uint8*>(&serialized_data.at(0)),
+                     size) == size;
+}
+
+bool NotificationManager::GetNotificationSavePath(std::string16 *file_path) {
+  assert(file_path);
+
+  if (!System::GetUserDataLocation(file_path)) {
+    return false;
+  }
+  *file_path += kPathSeparator;
+  *file_path += STRING16(PRODUCT_SHORT_NAME);
+  *file_path += kNotifierShortName;
+  *file_path += STRING16(L".dat");
+  return true;
+}
+
+bool NotificationManager::SaveNotifications() {
+  // Get number of all notifications being shown and queued. If it is zero,
+  // no need to save.
+  int count = static_cast<int>(show_queue_.size()) +
+              static_cast<int>(delayed_queue_.size());
+  if (balloon_collection_.get()) {
+    count += balloon_collection_->count();
+  }
+  if (count == 0) {
+    return true;
+  }
+
+  // Create the saved file.
+  std::string16 file_path;
+  if (!GetNotificationSavePath(&file_path)) {
+    return false;
+  }
+  scoped_ptr<File> file(File::Open(file_path.c_str(),
+                                   File::WRITE,
+                                   File::NEVER_FAIL));
+  if (!file.get()) {
+    return false;
+  }
+
+  // Write version.
+  if (file->Write(reinterpret_cast<const uint8*>(&kNotificationManagerVersion), 
+                  sizeof(kNotificationManagerVersion)) !=
+      sizeof(kNotificationManagerVersion)) {
+    return false;
+  }
+
+  // Write number of all notifications being shown and queued.
+  if (file->Write(reinterpret_cast<const uint8*>(&count), sizeof(count)) !=
+      sizeof(count)) {
+    return false;
+  }
+
+  // Write the notifications being displayed.
+  bool res = true;
+  if (balloon_collection_.get()) {
+    for (int i = 0; i < balloon_collection_->count(); ++i) {
+      if (!WriteNotification(file.get(),
+                             *(balloon_collection_->notification_at(i)))) {
+        res = false;
+        break;
+      }
+    }
+  }
+
+  // Write the notifications in the show queue.
+  if (res) {
+    for (size_t i = 0; i < show_queue_.size(); ++i) {
+      if (!WriteNotification(file.get(),
+                             show_queue_[i]->notification())) {
+        res = false;
+        break;
+      }
+    }
+  }
+
+  // Write the notifications in the delayed queue.
+  if (res) {
+    for (size_t i = 0; i < delayed_queue_.size(); ++i) {
+      if (!WriteNotification(file.get(),
+                             delayed_queue_[i]->notification())) {
+        res = false;
+        break;
+      }
+    }
+  }
+
+  // Delete the intermediate file if failed.
+  if (!res) {
+    file.reset();
+    File::Delete(file_path.c_str());
+  }
+
+  return res;
+}
+
+bool NotificationManager::LoadNotifications() {
+  // Open the saved file.
+  std::string16 file_path;
+  if (!GetNotificationSavePath(&file_path)) {
+    return false;
+  }
+  scoped_ptr<File> file(File::Open(file_path.c_str(),
+                                   File::READ,
+                                   File::FAIL_IF_NOT_EXISTS));
+  if (!file.get()) {
+    return false;
+  }
+
+  bool res = InternalLoadNotifications(file.get());
+
+  // Delete the file not matter if the loading is successful or failed.
+  file.reset();
+  File::Delete(file_path.c_str());
+
+  return res;
+}
+
+bool NotificationManager::InternalLoadNotifications(File *file) {
+  assert(file);
+
+  // Read and validate the version.
+  int version = 0;
+  int64 bytes_read = file->Read(reinterpret_cast<uint8*>(&version),
+                                sizeof(version));
+  if (bytes_read != sizeof(version) || version != kNotificationManagerVersion) {
+    return false;
+  }
+
+  // Read number of notifications.
+  int count = 0;
+  bytes_read = file->Read(reinterpret_cast<uint8*>(&count), sizeof(count));
+  if (bytes_read != sizeof(count) || count <= 0) {
+    return false;
+  }
+
+  // Read each notification and add it.
+  for (int i = 0; i < count; ++i) {
+    int size = 0;
+    bytes_read = file->Read(reinterpret_cast<uint8*>(&size), sizeof(size));
+    if (bytes_read != sizeof(size) || size <= 0) {
+      return false;
+    }
+
+    std::vector<uint8> serialized_data;
+    serialized_data.resize(size);
+    if (!file->Read(reinterpret_cast<uint8*>(&serialized_data.at(0)), size)) {
+      return false;
+    }
+
+    Deserializer deserializer(&serialized_data[0], size);
+    GearsNotification notification;
+    if (!notification.Deserialize(&deserializer)) {
+      return false;
+    }
+
+    Add(notification);
+  }
+
+  return true;
+}
+
 #endif  // OFFICIAL_BUILD

@@ -37,6 +37,11 @@ class MacNotifier : public Notifier {
  public:
   MacNotifier();
   virtual int Run();
+  virtual void RequestQuit();
+
+ protected:
+  virtual bool RegisterProcess();
+  virtual bool UnregisterProcess();
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(MacNotifier);
@@ -48,6 +53,20 @@ MacNotifier::MacNotifier() {
 int MacNotifier::Run() {
   [NSApp run];
   return 0;
+}
+
+void MacNotifier::RequestQuit() {
+  [NSApp terminate:NSApp];
+}
+
+bool MacNotifier::RegisterProcess() {
+  // TODO: to be implemented.
+  return false;
+}
+
+bool MacNotifier::UnregisterProcess() {
+  // TODO: to be implemented.
+  return false;
 }
 
 extern "C" {

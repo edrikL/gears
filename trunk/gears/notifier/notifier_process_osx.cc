@@ -32,12 +32,9 @@
 
 #include "gears/base/common/event.h"
 
-bool NotifierProcess::StartProcess(Event *stop_event) {
-  // TODO (jianli): to be implemented.
-  return false;
-}
-
-bool NotifierProcess::RegisterProcess() {
+bool NotifierProcess::StartProcess(const char16 *cmd_line_options,
+                                   Event *stop_event,
+                                   bool async) {
   // TODO (jianli): to be implemented.
   return false;
 }

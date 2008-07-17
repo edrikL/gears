@@ -33,116 +33,37 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/string16.h"
+#include "gears/notifier/const_notifier.h"
+#include "gears/notifier/notifier_sync_win32.h"
 #include "gears/notifier/notifier_utils_win32.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Work around the header including errors.
-#include <atlbase.h>
-#include <atlwin.h>
-#include <objbase.h>
 #include <windows.h>
 
-static const char16 *kNotifierDummyWndClassName =
-    L"DAAC6F7D-4BAB-403b-AC79-D09E165BC509";
-static const char16 *kNotifierStartUpSyncGateName =
-    L"C2304258-5112-4fed-B162-FCA6E224F873";
 static const int kNotifierStartUpSyncTimeoutMs = 5000;    // 5s
 
-// Dummy window
-class NotifierDummyWindow :
-    public CWindowImpl<NotifierDummyWindow> {
- public:
-  DECLARE_WND_CLASS(kNotifierDummyWndClassName);
-
-  NotifierDummyWindow() : CWindowImpl() {}
-
-  ~NotifierDummyWindow() {
-    if (m_hWnd) {
-      DestroyWindow();
-    }
-  }
-
-  bool NotifierDummyWindow::Initialize() {
-    return Create(NULL, 0, L"GearsNotifier", WS_POPUP) != NULL;
-  }
-
-  BEGIN_MSG_MAP(NotifierDummyWindow)
-    MESSAGE_HANDLER(WM_CREATE, OnCreate)
-    MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-  END_MSG_MAP()
-
-  LRESULT OnCreate(UINT msg, WPARAM wparam, LPARAM lparam, BOOL& handled) {
-    return 0;
-  }
-
-  LRESULT OnDestroy(UINT msg, WPARAM wparam, LPARAM lparam, BOOL& handled) {
-    ::PostQuitMessage(0);
-    return 0;
-  }
-};
-
-static scoped_ptr<NotifierDummyWindow> g_dummy_wnd;
-
-class NotifierSyncGate {
- public:
-   NotifierSyncGate(const char16 *name) : handle_(NULL), opened_(false) {
-    handle_ = ::CreateEvent(NULL, true, false, name);
-    assert(handle_);
-  }
-
-  ~NotifierSyncGate() {
-    if (opened_) {
-      BOOL res = ::ResetEvent(handle_);
-      assert(res);
-    }
-    if (handle_) {
-      ::CloseHandle(handle_);
-    }
-  }
-
-  bool Open() {
-    assert(handle_);
-    assert(!opened_);
-    if (!::SetEvent(handle_)) {
-      return false;
-    }
-    opened_ = true;
-    return true;
-  }
-
-  bool Wait(Event *stop_event, int timeout_ms) {
-    assert(handle_);
-    // TODO (jianli): Add support for WaitMultiple.
-    while (timeout_ms > 0) {
-      if (::WaitForSingleObject(handle_, 1000) == WAIT_OBJECT_0) {
-        return true;
-      }
-      if (stop_event && stop_event->WaitWithTimeout(1)) {
-        return false;
-      }
-      timeout_ms -= 1000;
-    }
-    return false;
-  }
-
- private:
-  HANDLE handle_;
-  bool opened_;
-};
-
-static scoped_ptr<NotifierSyncGate> g_sync_gate;
-
-bool NotifierProcess::StartProcess(Event *stop_event) {
+bool NotifierProcess::StartProcess(const char16 *cmd_line_options,
+                                   Event *stop_event,
+                                   bool async) {
   std::string16 notifier_path;
   if (!GetNotifierPath(&notifier_path)) {
     return false;
   }
 
+  std::string16 cmd_line(L"\"");
+  cmd_line += notifier_path;
+  cmd_line += L"\"";
+  if (cmd_line_options) {
+    cmd_line += L" ";
+    cmd_line += cmd_line_options;
+  }
+
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(startup_info);
   PROCESS_INFORMATION process_info = {0};
-  if (!::CreateProcess(notifier_path.c_str(),
-                       NULL,
+  if (!::CreateProcess(NULL,
+                       &cmd_line.at(0),
                        NULL,
                        NULL,
                        FALSE,
@@ -156,19 +77,12 @@ bool NotifierProcess::StartProcess(Event *stop_event) {
   ::CloseHandle(process_info.hProcess);
   ::CloseHandle(process_info.hThread);
 
-  NotifierSyncGate gate(kNotifierStartUpSyncGateName);
-  return gate.Wait(stop_event, kNotifierStartUpSyncTimeoutMs);
-}
-
-bool NotifierProcess::RegisterProcess() {
-  assert(g_dummy_wnd.get() == NULL);
-  g_dummy_wnd.reset(new NotifierDummyWindow);
-  if (!g_dummy_wnd->Initialize()) {
-    return false;
+  if (async) {
+    return true;
+  } else {
+    NotifierSyncGate gate(kNotifierStartUpSyncGateName);
+    return gate.Wait(stop_event, kNotifierStartUpSyncTimeoutMs);
   }
-
-  g_sync_gate.reset(new NotifierSyncGate(kNotifierStartUpSyncGateName));
-  return g_sync_gate->Open();
 }
 
 unsigned int NotifierProcess::FindProcess() {

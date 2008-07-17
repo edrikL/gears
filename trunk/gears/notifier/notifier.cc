@@ -31,6 +31,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager.h"
 #include "gears/notifier/notifier_process.h"
@@ -88,7 +89,9 @@ class NotificationTask : public glint::WorkItem {
 
 Notifier::Notifier()
   : running_(false),
-    notification_manager_(new NotificationManager(new UserActivityMonitor())) {
+    to_restart_(false),
+    notification_manager_(new NotificationManager(new UserActivityMonitor(),
+                                                  this)) {
 }
 
 Notifier::~Notifier() {
@@ -103,8 +106,13 @@ bool Notifier::Initialize() {
   ipc_message_queue->RegisterHandler(kDesktop_AddNotification, this);
   ipc_message_queue->RegisterHandler(kDesktop_RemoveNotification, this);
 
-  if (!NotifierProcess::RegisterProcess()) {
+  if (!RegisterProcess()) {
     return false;
+  }
+
+  // Load saved notifications if needed.
+  if (!notification_manager_->LoadNotifications()) {
+    LOG(("Failed to load saved notifications\n"));
   }
 
   running_ = true;
@@ -113,6 +121,26 @@ bool Notifier::Initialize() {
 }
 
 void Notifier::Terminate() {
+  // Restart the instance if needed.
+  if (to_restart_) {
+    NotifierProcess::StartProcess(kRestartCmdLineSwitch, NULL, true);
+  }
+}
+
+void Notifier::Restart() {
+  // Protect from multiple restart.
+  if (to_restart_) {
+    return;
+  }
+
+  // Unregister notifier process so that we will not receive messages.
+  UnregisterProcess();
+
+  // Save the notifiations.
+  notification_manager_->SaveNotifications();
+
+  to_restart_ = true;
+  RequestQuit();
 }
 
 // This call comes on a worker thread that services the inter-process
@@ -140,10 +168,18 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
       break;
     }
 
+    case kDesktop_RestartNotifierImmediately:
+      Restart();
+      break;
+
     default:
       assert(false);
       break;
   }
+}
+
+bool Notifier::IsRestartNeeded() const {
+  return false;
 }
 
 void Notifier::AddNotification(const GearsNotification &notification) {

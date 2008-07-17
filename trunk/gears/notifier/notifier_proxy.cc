@@ -80,7 +80,7 @@ class NotifierProxyThread : public Thread {
 
  private:
   virtual void Run() {
-    if (!NotifierProcess::StartProcess(&stop_event_)) {
+    if (!NotifierProcess::StartProcess(NULL, &stop_event_, false)) {
       return;
     }
     uint32 process_id = NotifierProcess::FindProcess();

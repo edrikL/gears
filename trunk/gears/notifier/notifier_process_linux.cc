@@ -53,15 +53,11 @@ std::string GetSingleInstanceLockFilePath() {
 
 }
 
-bool NotifierProcess::StartProcess(Event *stop_event) {
+bool NotifierProcess::StartProcess(const char16 *cmd_line_options,
+                                   Event *stop_event,
+                                   bool async) {
   // TODO (jianli): to be implemented.
   return false;
-}
-
-bool NotifierProcess::RegisterProcess() {
-  // Nothing to do since it has already been done in
-  // LinuxNotifier::CheckSingleInstance
-  return true;
 }
 
 unsigned int NotifierProcess::FindProcess() {

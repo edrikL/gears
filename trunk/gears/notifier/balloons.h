@@ -70,7 +70,13 @@ class BalloonCollectionInterface {
                       const std::string16 &id) = 0;
 
   // Is there room to add another notification?
-  virtual bool has_space() = 0;
+  virtual bool has_space() const = 0;
+
+  // Number of balloons being shown.
+  virtual int count() const = 0;
+
+  // Gets notification of the balloon at the specified index.
+  virtual const GearsNotification *notification_at(int i) const = 0;
 };
 
 // Represents a Notification on the screen.
@@ -140,7 +146,12 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual bool Update(const GearsNotification &notification);
   virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &id);
-  virtual bool has_space() { return has_space_; }
+  virtual bool has_space() const { return has_space_; }
+  virtual int count() const { return static_cast<int>(balloons_.size()); }
+  virtual const GearsNotification *notification_at(int i) const {
+    return (i < static_cast<int>(balloons_.size())) 
+           ? &balloons_[i]->notification() : NULL;
+  }
 
   // Adds and removes the balloons to this collection (to both internal
   // list and UI tree).

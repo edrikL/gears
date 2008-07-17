@@ -1324,6 +1324,7 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
+		const_notifier.cc \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
 		notifier_process_win32.cc \
@@ -1364,6 +1365,7 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_SHELL_CPPSRCS += \
+    const_notifier.cc \
 		notifier_shell_win32.cc \
 		notifier_utils_win32.cc \
 		$(NULL)
@@ -1372,7 +1374,11 @@ NOTIFIER_CORE	+= \
 		$(ICU_CPPSRCS) \
 		$(URL_PARSING_CPPSRCS) \
 		balloons.cc \
+		const_notifier.cc \
 		event.cc \
+		file.cc \
+		file_posix.cc \
+		file_win32.cc \
 		http_constants.cc \
 		http_utils.cc \
 		ipc_message_queue_linux.cc \

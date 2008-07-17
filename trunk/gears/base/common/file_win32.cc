@@ -59,6 +59,39 @@ static const std::string16 kLongPathPrefixUNC(STRING16(L"\\\\?\\UNC\\"));
 // '\\' Prefix for network shares.
 static const std::string16 kSharePrefix(STRING16(L"\\\\"));
 
+// Convert to the long form if it is in 8.3 file name format. Note that this
+// is not supported for WinCE.
+static std::string16 ToLongFileName(const std::string16 &path) {
+#ifdef WINCE
+  return path;
+#else
+  std::string16 long_path;
+  DWORD length_to_try = path.length() * 2;
+  long_path.resize(length_to_try);
+  DWORD actual_length = ::GetLongPathName(path.c_str(),
+                                          &long_path.at(0),
+                                          length_to_try);
+  if (actual_length == 0) {
+    return path;
+  } else if (actual_length <= length_to_try) {
+    long_path.resize(actual_length);
+    return long_path;
+  }
+
+  length_to_try = actual_length;
+  long_path.resize(length_to_try);
+  actual_length = ::GetLongPathName(path.c_str(),
+                                    &long_path.at(0),
+                                    length_to_try + 1);
+  if (actual_length > 0 && actual_length <= length_to_try) {
+    long_path.resize(actual_length);
+    return long_path;
+  } else {
+    return path;
+  }
+#endif  // WINCE
+}
+
 // Prepend long path prefix onto pathname so we can handle long filenames.
 // This function does nothing if the prefix already exists.
 static std::string16 ToLongPath(const std::string16 &path) {
@@ -67,10 +100,13 @@ static std::string16 ToLongPath(const std::string16 &path) {
     return path;
   }
 
+  // Note that the 8.3 short file name can not be simply prefixed with the long
+  // path prefix. It has to be converted to long file name first.
   if (StartsWith(path, kSharePrefix)) {
-    return kLongPathPrefixUNC + path.substr(kSharePrefix.length());
+    return kLongPathPrefixUNC + ToLongFileName(
+        path.substr(kSharePrefix.length()));
   } else {
-    return kLongPathPrefix + path;
+    return kLongPathPrefix + ToLongFileName(path);
   }
 }
 

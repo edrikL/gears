@@ -32,12 +32,6 @@
 #include "genfiles/product_constants.h"
 
 
-#if defined(WIN32)
-const char16 kPathSeparator = L'\\';
-#else
-const char16 kPathSeparator = L'/';
-#endif
-
 // Define the unique suffixes for each module.
 const char16 *kDataSuffixForDatabase    = STRING16(L"#database");
 const char16 *kDataSuffixForDesktop     = STRING16(L"#desktop");

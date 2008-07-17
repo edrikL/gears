@@ -35,6 +35,12 @@ std::string System::GetResourcePath() {
   return [[[NSBundle mainBundle] resourcePath] fileSystemRepresentation];
 }
 
+bool System::GetUserDataLocation(std::string16 *path) {
+  // TODO(jianli): Implement this.
+  assert(false && "Not implemented");
+  return false;
+}
+
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
   assert(bounds);
   // Reset - makes rectangle 'empty'.
