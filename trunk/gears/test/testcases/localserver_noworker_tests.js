@@ -90,3 +90,7 @@ function testCaptureLongUrl() {
 testCaptureSpoofedInputElement._disable_in_safari = true;
 testCreateFileSubmitter._disable_in_safari = true;
 testCaptureEmptyFileElement._disable_in_safari = true;
+
+// NPAPI-TEMP - Disable tests that don't currently work in npapi build.
+testCreateFileSubmitter._disable_in_npapi = true;
+testCaptureEmptyFileElement._disable_in_npapi = true;

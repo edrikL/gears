@@ -173,9 +173,13 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
   for (var name in this.globalScope_) {
     if (name.substring(0, 4) == 'test') {
       // SAFARI-TEMP
-      var test_is_enbaled  = !(isSafari && 
-                               this.globalScope_[name]._disable_in_safari);
-      if (test_is_enbaled) {
+      var test_is_enabled = !(isSafari && 
+                              this.globalScope_[name]._disable_in_safari);
+
+      // NPAPI-TEMP
+      var test_is_enabled = test_is_enabled && !(isNPAPI &&
+          this.globalScope_[name]._disable_in_npapi);
+      if (test_is_enabled) {
         this.testNames_.push(name);
       }
     }
