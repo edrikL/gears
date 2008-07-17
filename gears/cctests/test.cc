@@ -331,11 +331,9 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestBlob(&error);
 
 #if (defined(WIN32) && !defined(WINCE)) || \
-     defined(LINUX) || defined(OS_MACOSX)
-#ifdef BROWSER_WEBKIT
-// SAFARI-TEMP
-// Disabled this test for Safari till we can resolve wedging when TestIPC
-// executable isn't present.
+    defined(LINUX) || defined(OS_MACOSX)
+#ifdef OS_MACOSX
+  // Temporarily disabled this test for OSX, see bug 585 for details.
 #else
   ok &= TestIpcSystemQueue(&error);
 #endif
