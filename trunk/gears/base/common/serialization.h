@@ -62,10 +62,10 @@ class Serializable: public Deletable {
   static Serializable *CreateClass(SerializableClassId class_id);
 
   // Returns the class id.
-  virtual SerializableClassId GetSerializableClassId() = 0;
+  virtual SerializableClassId GetSerializableClassId() const = 0;
 
   // Write the serialized object.  The class id and data size are not written.
-  virtual bool Serialize(Serializer *out) = 0;
+  virtual bool Serialize(Serializer *out) const = 0;
 
   // Read the serialized data into this object.  The class id and size are
   // not read.
@@ -83,7 +83,7 @@ class Serializer {
 
   // Serialize the provided object to the internal buffer.  If this is NULL,
   // SERIALIZABLE_NULL will be written with a size of 0.
-  bool WriteObject(Serializable *obj);
+  bool WriteObject(const Serializable *obj);
 
   void WriteInt(const int data);
   void WriteInt64(const int64 data);
@@ -100,7 +100,7 @@ class Deserializer {
  public:
   // Create a Deserializer that will extract objects from the provided
   // buffer.
-  Deserializer(uint8 *buf, size_t len) :
+  Deserializer(const uint8 *buf, size_t len) :
     buffer_(buf), length_(len), read_pos_(0) {}
 
   // Fill the provided pointer with a new object as read from the
@@ -114,7 +114,7 @@ class Deserializer {
   bool ReadBytes(void *output, size_t length);
 
  private:
-  uint8 *buffer_;
+  const uint8 *buffer_;
   size_t length_;
   size_t read_pos_;
 };
@@ -127,10 +127,10 @@ class SerializableString16 : public Serializable {
 
   std::string16 string_;
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_STRING16;
   }
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     out->WriteString(string_.c_str());
     return true;
   }

@@ -34,11 +34,11 @@ class TestNotification : public NotificationData {
   TestNotification(const char *s) : data_string_(s) {}
   std::string data_string_;
 
-  virtual SerializableClassId GetSerializableClassId() {
+  virtual SerializableClassId GetSerializableClassId() const {
     return SERIALIZABLE_NULL;
   }
 
-  virtual bool Serialize(Serializer *out) {
+  virtual bool Serialize(Serializer *out) const {
     return false;
   }
 

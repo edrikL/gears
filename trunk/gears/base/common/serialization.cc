@@ -82,7 +82,7 @@ void Serializer::WriteBytes(const void *data, size_t length) {
   buffer_->insert(buffer_->end(), (uint8 *)data, ((uint8 *)data)+length);
 }
 
-bool Serializer::WriteObject(Serializable *obj) {
+bool Serializer::WriteObject(const Serializable *obj) {
   if (!obj) {
     WriteInt(SERIALIZABLE_NULL);
     WriteInt(0);
