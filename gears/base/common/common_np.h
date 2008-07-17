@@ -46,12 +46,13 @@ extern "C" void android_log_helper(const char *tag,
                          __LINE__, \
                          fmt , \
                          ## args ); \
-    } while(0)
-
-#define LOG(args) \
-    do { LOG_INNER args ; } while(0)
+    } while (0)
 
 #ifdef DEBUG
+
+#define LOG(args) \
+    do { LOG_INNER args ; } while (0)
+
 #include <assert.h>
 #include <pthread.h>
 
@@ -74,8 +75,11 @@ class CurrentThreadID {
     assert(pthread_equal(pthread_self(), thread_id_.get()))
 
 #else  // !DEBUG
+
+#define LOG(args) do { } while (0)
 #define DECL_SINGLE_THREAD
 #define ASSERT_SINGLE_THREAD()
+
 #endif
 
 #else  // !ANDROID
