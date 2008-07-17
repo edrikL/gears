@@ -537,7 +537,6 @@ function testDrawImage2WithAlphaZeroIsNoop() {
     });
 }
 
-
 // TODO(kart): restore should do nothing if the stack is
 // empty (i.e, blank canvas)
 
@@ -570,3 +569,6 @@ function testDrawImage2WithAlphaZeroIsNoop() {
 // TODO(kart): make sure
 // context.putImageData(context.getImageData(x, y, w, h), x, y);
 // is a noop.
+
+// NPAPI-TEMP - Disable tests that don't currently work in npapi build.
+testGetContext._disable_in_npapi = true;

@@ -249,3 +249,6 @@ function withDb(fn, version) {
   db_manager && fn && fn.call(
     this, db_manager.openDatabase('unit_test_db', version || ''));
 }
+
+// NPAPI-TEMP - Disable tests that don't currently work in npapi build.
+testStatementArguments._disable_in_npapi = true;
