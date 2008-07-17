@@ -29,7 +29,15 @@
 #include "gears/blob/blob_interface.h"
 
 namespace {
+// Tune the maximum in-memory buffer size for some platforms. Mobile
+// platforms will generally want to use a very small buffer as they
+// have limited memory compared to desktop, but also have fast
+// storage.
+#ifdef OS_ANDROID
+const int64 kMaxBufferSize = 32 * 1024;  // 32KB
+#else
 const int64 kMaxBufferSize = 1024 * 1024;  // 1MB
+#endif
 }  // namespace
 
 // Presents a blob interface of a snapshot of a ByteStore.
