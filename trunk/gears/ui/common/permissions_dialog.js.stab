@@ -1,4 +1,4 @@
-<string id="string-html-title"><TRANS_BLOCK>PRODUCT_FRIENDLY_NAME_UQ Security Warning</TRANS_BLOCK></string>
+<string id="string-html-title"><TRANS_BLOCK>Gears Security Warning</TRANS_BLOCK></string>
 <string id="string-allow"><TRANS_BLOCK desc="Button user can press to allow the use of Gears.">Allow</TRANS_BLOCK></string>
 <string id="string-allow-accesskey"><TRANS_BLOCK desc="Access key for the allow button.">A</TRANS_BLOCK></string>
 <string id="string-deny"><TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">Deny</TRANS_BLOCK></string>
@@ -8,7 +8,7 @@
 <string id="string-never-allow-link-wince"><TRANS_BLOCK desc="Link that disallows Gears on this site for WinCE.">Never allow it</TRANS_BLOCK></string>
 <string id="string-description">
   <TRANS_BLOCK desc="Header for basic help section.">
-    PRODUCT_FRIENDLY_NAME_UQ is an open source browser extension that enables
+    Gears is an open source browser extension that enables
     web applications to provide offline functionality using the following
     JavaScript APIs:
   </TRANS_BLOCK>
@@ -31,13 +31,13 @@
 <string id="string-query-data">
   <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to store data locally on her device / computer.">
     The website below wants to store information on your computer
-    using PRODUCT_FRIENDLY_NAME_UQ.
+    using Gears.
   </TRANS_BLOCK>
 </string>
 <string id="string-query-location">
   <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears to access her geolocation information">
     The website below wants to access information about your location
-    using PRODUCT_FRIENDLY_NAME_UQ.
+    using Gears.
   </TRANS_BLOCK>
 </string>
 <string id="string-location-privacy-statement">
@@ -48,6 +48,6 @@
 <string id="string-trust-site">
   <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
     &nbsp;I <span class="accesskey">t</span>rust this site. Allow
-    it to use PRODUCT_FRIENDLY_NAME_UQ.
+    it to use Gears.
   </TRANS_BLOCK>
 </string>
