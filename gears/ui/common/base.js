@@ -136,5 +136,9 @@ var browser = {};
   browser.mac = navigator.platform.indexOf("Mac") > -1;
   browser.linux = navigator.platform.indexOf("Linux") > -1;
   browser.windows = navigator.platform.indexOf("Win") > -1;
+  browser.android = ua.indexOf("Android") > -1;
+  if (browser.android) {
+    browser.safari = false;
+  }
   // TODO(aa): Add detection for more browsers, as necessary.
 })();
