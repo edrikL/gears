@@ -499,6 +499,8 @@
 		B59AC9D80E267C3800961DD4 /* timed_call.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59AC9D60E267C3800961DD4 /* timed_call.cc */; };
 		B59AC9ED0E267D3800961DD4 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B59AC9EC0E267D3800961DD4 /* CoreAudio.framework */; };
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
+		B5A2DB950E2FBEA500C69CE7 /* memory_buffer_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */; };
+		B5A2DB960E2FBEA500C69CE7 /* memory_buffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
 		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
 		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
@@ -1297,6 +1299,9 @@
 		B59AC9EC0E267D3800961DD4 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
 		B59CE65B0DD8EC24000B31AE /* httprequest.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = httprequest.cc; path = ../../httprequest/httprequest.cc; sourceTree = SOURCE_ROOT; };
 		B59CE65C0DD8EC24000B31AE /* httprequest.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest.h; path = ../../httprequest/httprequest.h; sourceTree = SOURCE_ROOT; };
+		B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory_buffer_test.cc; path = ../../base/common/memory_buffer_test.cc; sourceTree = SOURCE_ROOT; };
+		B5A2DB930E2FBEA500C69CE7 /* memory_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memory_buffer.h; path = ../../base/common/memory_buffer.h; sourceTree = SOURCE_ROOT; };
+		B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory_buffer.cc; path = ../../base/common/memory_buffer.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
 		B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_module.cc; path = ../../localserver/managed_resource_store_module.cc; sourceTree = SOURCE_ROOT; };
@@ -2044,6 +2049,9 @@
 				B578D26B0DE228EF006FD633 /* js_standalone_engine_mozjs.cc */,
 				B544D9940D2EE5D000D30561 /* js_types.h */,
 				B544D9910D2EE5D000D30561 /* js_types.cc */,
+				B5A2DB930E2FBEA500C69CE7 /* memory_buffer.h */,
+				B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */,
+				B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */,
 				B58E00650D5BB30500B0A65D /* message_queue.cc */,
 				B58EFEB70D529D5900B0A65D /* message_queue.h */,
 				B58E00610D5BB2D900B0A65D /* message_service.h */,
@@ -3481,6 +3489,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SRCROOT/build_scripts/generate_headers.sh\"";
+			showEnvVarsInLog = 0;
 		};
 		B57A583E0DA9292C001B0CC6 /* Assemble InputManager */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3790,6 +3799,8 @@
 				B531A1730E2BBD7300147648 /* ipc_message_queue_osx.mm in Sources */,
 				B531A1760E2BBDA600147648 /* base_audio_recorder.cc in Sources */,
 				B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */,
+				B5A2DB950E2FBEA500C69CE7 /* memory_buffer_test.cc in Sources */,
+				B5A2DB960E2FBEA500C69CE7 /* memory_buffer.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
