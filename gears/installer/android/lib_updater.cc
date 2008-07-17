@@ -25,6 +25,9 @@
 
 #include "gears/installer/android/lib_updater.h"
 
+#include <dirent.h>
+#include <errno.h>
+#include <stdio.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,87 +35,40 @@
 #include "gears/base/android/java_class.h"
 #include "gears/base/android/java_exception_scope.h"
 #include "gears/base/android/java_global_ref.h"
-#include "gears/base/android/java_jni.h"
 #include "gears/base/android/java_local_frame.h"
+#include "gears/base/android/java_jni.h"
 #include "gears/base/android/java_string.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/stopwatch.h"
-
-#define ANDROID_UID L"%7B99CED90A-A262-42B5-A819-FE32148F2FAB%7D"
-
-static const char16* kUpgradeUrl = reinterpret_cast<const char16*>(
-    L"http://tools.google.com/service/update2/ff?"
-    L"guid=" ANDROID_UID
-    L"&version=" PRODUCT_VERSION_STRING
-    L"&application=" ANDROID_UID
-    L"&appversion=1.0"
-#ifdef OFFICIAL_BUILD
-    L"&os=android&dist=google");
-#else
-    L"&os=android&dist=google&dev=1");
-#endif
+#include "gears/installer/android/version_check_task.h"
+#include "gears/installer/android/zip_download_task.h"
 
 static const char16* kUpdateTimestampFile =
      STRING16(L"/" PRODUCT_SHORT_NAME L"timestamp");
 
+static const char16* kTempDirectory =
+    STRING16(L"/" PRODUCT_SHORT_NAME L"temp/");
+
+static const char16* kGearsLibrary =
+    STRING16(L"/" PRODUCT_SHORT_NAME L".so");
+
+static const char16* kGearsLibrarySymlink =
+    STRING16(L"/" PRODUCT_SHORT_NAME L".so.sym");
+
 // The delay before the first update.
 static const int kFirstUpdateDelayMs = (1000 * 60 * 2);  // 2 minutes
+
 // The time interval between the rest of the update checks.
-static const int kUpdatePeriodMs = (1000 * 60 * 60 * 24);  // 24 hours
+static const int kUpdatePeriodMs = (1000 * 60 * 60 * 25);  // 25 hours
 
-// A simple task that checks for a new Gears version.
-class VersionCheckTask : public AsyncTask {
- public:
-  VersionCheckTask() : AsyncTask(NULL) {}
-  bool Init();
+static const char* kZipInflaterClass =
+    "com/google/android/gears/ZipInflater";
 
-  enum {
-    VERSION_CHECK_TASK_COMPLETE = 0,
-  };
+static const char* kZipInflateMethodName = "inflate";
 
-  // Returns the URL of the Gears zip package.
-  const char16* Url() const;
-  // Returns the version number of Gears on the update server.
-  const char16* Version() const;
-
- private:
-  // AsyncTask
-  virtual void Run();
-
-  // Parses XML and extracts the Gears version number and download URL.
-  bool ExtractVersionAndDownloadUrl(const std::string16& xml);
-
-  // Native callback, invoked if the parsing of the XML succeeds.
-  static void SetVersionAndUrl(JNIEnv* env, jclass cls, jstring version,
-                               jstring url, jlong self);
-
-  static JNINativeMethod native_methods_[];
-
-  std::string16 url_;
-  std::string16 version_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(VersionCheckTask);
-};
-
-JNINativeMethod VersionCheckTask::native_methods_[] = {
-  {"setVersionAndUrl",
-   "(Ljava/lang/String;Ljava/lang/String;J)V",
-   reinterpret_cast<void*>(VersionCheckTask::SetVersionAndUrl)
-  },
-};
-
-static const char* kVersionExtractorClass =
-    "com/google/android/gears/VersionExtractor";
-
-static JavaClass::Method methods[] = {
-  { JavaClass::kStatic, "extract", "(Ljava/lang/String;J)Z"},
-};
-
-enum VersionExtractorMethodID {
-  VERSION_EXTRACTOR_METHOD_ID_EXTRACT = 0,
-};
-
+static const char* kZipInflateMethodSignature =
+    "(Ljava/lang/String;Ljava/lang/String;)Z";
 
 //------------------------------------------------------------------------------
 // LibUpdater
@@ -132,8 +88,8 @@ void LibUpdater::StopUpdateChecks() {
 }
 
 LibUpdater::~LibUpdater() {
-  LOG(("Stopping Gears updater..."));
   version_check_task_->Abort();
+  download_task_->Abort();
   timer_event_.Signal();
   AndroidMessageLoop::Stop(thread_id_);
   Join();
@@ -144,18 +100,42 @@ LibUpdater::~LibUpdater() {
 void LibUpdater::HandleEvent(int msg_code,
                              int msg_param,
                              AsyncTask *source) {
-  if (source && source == version_check_task_.get()) {
-    assert(VersionCheckTask::VERSION_CHECK_TASK_COMPLETE == msg_code);
+  if (source) {
     bool success = static_cast<bool>(msg_param);
-    if (success) {
-      // TODO(andreip): Check version number and start download if needed.
-      std::string version;
-      String16ToUTF8(version_check_task_->Version(), &version);
-      LOG(("The server returned: %s", version.c_str()));
+    if (source == version_check_task_.get()) {
+      assert(VersionCheckTask::VERSION_CHECK_TASK_COMPLETE == msg_code);
+      if (success && StartDownloadTask()) {
+        // We have a new version of Gears and the download task was
+        // started successfully
+        return;
+      }  // else fallthru to StartVersionCheckTask again after kUpdatePeriodMs.
+    } else if (source == download_task_.get()) {
+      assert(ZipDownloadTask::DOWNLOAD_COMPLETE == msg_code);
+      if (success) {
+        // Unzip the file.
+        // TODO(andreip): check for free space first.
+        if (Inflate(download_task_->Filename())) {
+          // Move the files and update the symlink. This should not leave
+          // any stale Gears directory behind if it fails.
+          if (!MoveFromTempAndUpdateSymlink(download_task_->Version())) {
+            LOG(("Failed to move files"));
+          }
+        } else {
+          LOG(("Failed to unzip files"));
+        }
+        // Remove the temp directory.
+        PostCleanup();
+      }
+    } else {
+      // We're not listening to any other tasks.
+      LOG(("Unknown task."));
+      assert(false);
+      return;
     }
 
-    // We finished processing an update. Record the timestamp and wait
-    // some time before trying again.
+    // Either a version check failed or the download task was
+    // completed. Record the timestamp and wait some time before
+    // doing another update check.
     RecordUpdateTimestamp();
     if (timer_event_.WaitWithTimeout(kUpdatePeriodMs)) {
       // timer_event_ must have been signaled directly in the destructor.
@@ -167,7 +147,15 @@ void LibUpdater::HandleEvent(int msg_code,
   }
 }
 
-LibUpdater::LibUpdater() : version_check_task_(new VersionCheckTask()) {
+LibUpdater::LibUpdater() : version_check_task_(new VersionCheckTask()),
+                           download_task_(new ZipDownloadTask()) {
+  if (!GetInstallDirectory(&temp_path_)) {
+    LOG(("LibUpdater ctor: Could not get resources directory."));
+    assert(false);
+  };
+
+  temp_path_ += kTempDirectory;
+
   thread_id_ = Start();
   assert(thread_id_ != 0);
 }
@@ -175,6 +163,10 @@ LibUpdater::LibUpdater() : version_check_task_(new VersionCheckTask()) {
 // Thread
 void LibUpdater::Run() {
   LOG(("Gears updater started."));
+  if (!PreCleanup()) {
+    LOG(("Pre-cleanup operation failed."));
+  }
+
   int delay = 0;
   // Determine what the initial delay should be.
   if (!MillisUntilNextUpdateCheck(&delay)) {
@@ -201,12 +193,29 @@ bool LibUpdater::StartVersionCheckTask() {
   // Initialize the task.
   if (!version_check_task_->Init()) {
     // The task could not be initialized.
+    LOG(("StartVersionCheckTask:: Could not initialize version check task."));
     return false;
   }
   // Set ourselves as the listener.
   version_check_task_->SetListener(this);
   // Start the task.
   return version_check_task_->Start();
+}
+
+bool LibUpdater::StartDownloadTask() {
+  // Initialize the task.
+  if (!download_task_->Init(version_check_task_->Url(),
+                            version_check_task_->Version(),
+                            temp_path_.c_str())) {
+    // The task could not be initialized.
+    LOG(("StartDownloadTask:: Could not initialize download task."));
+    return false;
+  }
+
+  // Set ourselves as the listener.
+  download_task_->SetListener(this);
+  // Start the task.
+  return download_task_->Start();
 }
 
 bool LibUpdater::RecordUpdateTimestamp() {
@@ -224,7 +233,12 @@ bool LibUpdater::RecordUpdateTimestamp() {
       File::Open(timestamp_file_path.c_str(), File::WRITE, File::NEVER_FAIL));
 
   if (!timestamp_file.get()) {
-    LOG(("RecordUpdateTimestamp: Failed to create or open timestamp file."));
+    std::string timestamp_file_utf8;
+    String16ToUTF8(timestamp_file_path.c_str(), &timestamp_file_utf8);
+    LOG(("RecordUpdateTimestamp: Failed to create or open timestamp file: %s",
+         timestamp_file_utf8.c_str()));
+
+    LOG(("RecordUpdateTimestamp: Errno is : %d", errno));
     return false;
   }
 
@@ -286,111 +300,190 @@ bool LibUpdater::MillisUntilNextUpdateCheck(int *milliseconds_out) {
   return true;
 }
 
-// -----------------------------------------------------------------------------
-// VersionCheckTask
+bool LibUpdater::Inflate(const char16* filename) {
+  JavaExceptionScope scope;
+  JavaLocalFrame frame;
+  JavaClass inflater_java_class;
 
-bool VersionCheckTask::Init() {
-  if (is_initialized_) return true;
-  return AsyncTask::Init();
+  if (!inflater_java_class.FindClass(kZipInflaterClass)) {
+    LOG(("Could not find the ZipInflater class.\n"));
+    assert(false);
+    return false;
+  }
+
+  // Get the Java method ID.
+  jmethodID inflate_id = inflater_java_class.GetMethodID(
+      JavaClass::kStatic,
+      kZipInflateMethodName,
+      kZipInflateMethodSignature);
+
+  if (inflate_id == 0) {
+    LOG(("Could not find the ZipInflater methods.\n"));
+    assert(false);
+    return false;
+  }
+
+  return JniGetEnv()->CallStaticBooleanMethod(
+      inflater_java_class.Get(),
+      inflate_id,
+      JavaString(filename).Get(),
+      JavaString(temp_path_).Get());
 }
 
-const char16* VersionCheckTask::Version() const {
-  return version_.c_str();
+bool LibUpdater::MoveFromTempAndUpdateSymlink(const char16* new_version) {
+  std::string16 install_dir;
+  if (!GetInstallDirectory(&install_dir)) {
+    LOG(("Could not get the install directory."));
+    return false;
+  }
+
+  RemoveName(&install_dir);
+  install_dir += STRING16(L"/");
+
+  // The convention is that Gears lives in a directory named 'gears-versionNr'.
+  std::string16 new_gears_dir;
+  new_gears_dir += STRING16(PRODUCT_SHORT_NAME);
+  new_gears_dir += STRING16(L"-");
+  new_gears_dir += new_version;
+
+  // gears_dest is /data/data/com.browser.android/app_plugins/gears-newVersion.
+  std::string16 gears_dest = new_gears_dir;
+  gears_dest.insert(0, install_dir);
+
+  // gears_src is
+  // /data/data/com.browser.android/app_plugins/gearstemp/gears-newVersion.
+  std::string16 gears_src = new_gears_dir;
+  gears_src.insert(0, temp_path_);
+
+  // Update new_gears_dir so we can delete it easily if something goes wrong.
+  // The gears_dest variable gets reused later.
+  new_gears_dir = gears_dest;
+
+  // Convert to UTF8.
+  std::string gears_src_utf8;
+  if (!String16ToUTF8(gears_src.c_str(), &gears_src_utf8)) {
+    LOG(("Could not convert source directory name string."));
+    return false;
+  }
+
+  std::string gears_dest_utf8;
+  if (!String16ToUTF8(gears_dest.c_str(), &gears_dest_utf8)) {
+    LOG(("Could not convert destination directory name string."));
+    return false;
+  }
+  // Move the directory.
+  int rez = rename(gears_src_utf8.c_str(), gears_dest_utf8.c_str());
+  if (rez != 0) {
+    LOG(("Could not move from temp: %d", errno));
+    LOG(("Old was %s", gears_src_utf8.c_str()));
+    LOG(("New was %s", gears_dest_utf8.c_str()));
+    return false;
+  }
+
+  // Now create a new symlink to point to the new Gears file.
+  gears_src = gears_dest + kGearsLibrary;
+  gears_dest += kGearsLibrarySymlink;
+  if (!String16ToUTF8(gears_src.c_str(), &gears_src_utf8)) {
+    LOG(("Could not convert source symlink string."));
+    File::DeleteRecursively(new_gears_dir.c_str());
+    return false;
+  }
+
+  if (!String16ToUTF8(gears_dest.c_str(), &gears_dest_utf8)) {
+    LOG(("Could not convert destination symlink name string."));
+    File::DeleteRecursively(new_gears_dir.c_str());
+    return false;
+  }
+
+  LOG(("Symlink source: %s", gears_src_utf8.c_str()));
+  LOG(("Symlink dest: %s", gears_dest_utf8.c_str()));
+  rez = symlink(gears_src_utf8.c_str(), gears_dest_utf8.c_str());
+  if (rez != 0) {
+    LOG(("Could not create symlink: %d", errno));
+    File::DeleteRecursively(new_gears_dir.c_str());
+    return false;
+  }
+  LOG(("Symlink created successfully"));
+  // Finally atomically move the symlink.
+  gears_src_utf8 = gears_dest_utf8;
+  install_dir += kGearsLibrary;
+  if (!String16ToUTF8(install_dir.c_str(), &gears_dest_utf8)) {
+    LOG(("Could not convert the symlink name string."));
+    File::DeleteRecursively(new_gears_dir.c_str());
+    return false;
+  }
+
+  rez = rename(gears_src_utf8.c_str(), gears_dest_utf8.c_str());
+  if (rez != 0) {
+    LOG(("Could not move symlink: %d", errno));
+    File::DeleteRecursively(new_gears_dir.c_str());
+    return false;
+  }
+
+  return true;
 }
 
-const char16* VersionCheckTask::Url() const {
-  return url_.c_str();
-}
+bool LibUpdater::PreCleanup() {
+  std::string16 install_dir;
+  if (!GetInstallDirectory(&install_dir)) {
+    LOG(("Could not get the install directory."));
+    return false;
+  }
 
-// AsyncTask
-void VersionCheckTask::Run() {
-  WebCacheDB::PayloadInfo payload;
-  bool was_redirected;
-  std::string16 error_msg;
-  std::string16 url;
-  bool success = false;
-  if (AsyncTask::HttpGet(kUpgradeUrl,
-                         true,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &payload,
-                         &was_redirected,
-                         &url,
-                         &error_msg)) {
-    std::string16 xml;
-    // payload.data can be empty in case of a 30x response.
-    // The update server does not redirect, so we treat this as an error.
-    if (payload.data->size() &&
-        UTF8ToString16(reinterpret_cast<const char*>(&(*payload.data)[0]),
-                       payload.data->size(),
-                       &xml)) {
-      if (ExtractVersionAndDownloadUrl(xml)) {
-        success = true;
+  RemoveName(&install_dir);
+  install_dir += STRING16(L"/");
+
+  std::string install_dir_utf8;
+  if (!String16ToUTF8(install_dir.c_str(), &install_dir_utf8)) {
+    LOG(("Could not convert install directory name to UTF8."));
+    return false;
+  }
+
+  // Open a directory iterator
+  DIR* dir = opendir(install_dir_utf8.c_str());
+  if(!dir) {
+    LOG(("Could not open install directory."));
+    return false;
+  }
+
+  // Scan the directory for "gears-oldVersionNr" subdirectories.
+  std::string search_pattern = install_dir_utf8 + PRODUCT_SHORT_NAME_ASCII "-";
+  std::string current_directory_utf8;
+  std::vector<std::string16> dirs_to_delete;
+  struct dirent* entry;
+  while((entry = readdir(dir)) != NULL) {
+    const char* name = entry->d_name;
+    // Skip current and parent directory entries and anything that is not
+    // a directory.
+    if(!strcmp(name, ".") || !strcmp(name, "..") || entry->d_type != DT_DIR) {
+      continue;
+    }
+
+    current_directory_utf8 = install_dir_utf8 + name;
+    LOG(("Processing: %s", current_directory_utf8.c_str()));
+    if (current_directory_utf8.find(search_pattern) == 0 &&
+        current_directory_utf8.find(PRODUCT_VERSION_STRING_ASCII) ==
+        std::string::npos) {
+      LOG(("Found stale Gears directory: %s", current_directory_utf8.c_str()));
+      std::string16 current_directory;
+      if (UTF8ToString16(current_directory_utf8.c_str(), &current_directory)) {
+        dirs_to_delete.push_back(current_directory);
       }
     }
   }
-  NotifyListener(VERSION_CHECK_TASK_COMPLETE, success);
-}
 
-bool VersionCheckTask::ExtractVersionAndDownloadUrl(const std::string16& xml) {
-  JavaExceptionScope scope;
-  JavaLocalFrame frame;
-  JavaClass extractor_java_class;
+  closedir(dir);
+  int result = true;
 
-  if (!extractor_java_class.FindClass(kVersionExtractorClass)) {
-    LOG(("Could not find the VersionExtractor class.\n"));
-    assert(false);
-    return false;
+  for(std::vector<std::string16>::size_type i = 0;
+      i < dirs_to_delete.size();
+      ++i) {
+    result &= File::DeleteRecursively(dirs_to_delete[i].c_str());
   }
-
-  // Register the native callback.
-  jniRegisterNativeMethods(JniGetEnv(),
-                           kVersionExtractorClass,
-                           native_methods_,
-                           NELEM(native_methods_));
-
-
-  // Get the Java method ID.
-  if (!extractor_java_class.GetMultipleMethodIDs(methods, NELEM(methods))) {
-    LOG(("Could not find the VersionExtractor methods.\n"));
-    assert(false);
-    return false;
-  }
-
-  jlong native_object_ptr = reinterpret_cast<jlong>(this);
-  jboolean result = JniGetEnv()->CallStaticBooleanMethod(
-      extractor_java_class.Get(),
-      methods[VERSION_EXTRACTOR_METHOD_ID_EXTRACT].id,
-      JavaString(xml).Get(),
-      native_object_ptr);
 
   return result;
 }
 
-
-// static
-void VersionCheckTask::SetVersionAndUrl(JNIEnv* env, jclass cls,
-                                        jstring version, jstring url,
-                                        jlong self) {
-
-  JavaString version_string(version);
-  JavaString url_string(url);
-  VersionCheckTask* task = reinterpret_cast<VersionCheckTask*>(self);
-
-  // version, url and self must not be NULL. Currently there seems to
-  // be a bug in JNI that manifests itself by creating jstrings that
-  // point to a string containing the word "null" instead of the
-  // jstrings being NULL themselves. TODO(andreip): remove the
-  // comparison against "null" once the bug is fixed.
-  assert(version_string.Get() != NULL &&
-         version_string.ToString8().compare("null") != 0);
-
-  assert(url_string.Get() != NULL &&
-         url_string.ToString8().compare("null") != 0);
-
-  assert(task);
-
-  task->version_ = version_string.ToString16();
-  task->url_ = url_string.ToString16();
+bool LibUpdater::PostCleanup() {
+  return File::DeleteRecursively(temp_path_.c_str());
 }

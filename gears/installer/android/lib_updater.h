@@ -52,6 +52,7 @@
 //     app_plugins\gearsLink.so and goes to step 2.
 
 class VersionCheckTask;
+class ZipDownloadTask;
 
 class LibUpdater : public Thread,
                    public AsyncTask::Listener {
@@ -74,11 +75,27 @@ class LibUpdater : public Thread,
   // Initiates and starts the version check task.
   bool StartVersionCheckTask();
 
+  // Initiates and starts the zip download task.
+  bool StartDownloadTask();
+
   // Records the time of the update check to a file.
   bool RecordUpdateTimestamp();
 
   // Determines the number of milliseconds until the next update is due.
   bool MillisUntilNextUpdateCheck(int *milliseconds_out);
+
+  // Unzips the downloaded file.
+  bool Inflate(const char16* filename);
+
+  // Moves the Gears directory from the temp directory into the browser's
+  // plugins directory. Updates the symlink to point to the new .so file.
+  bool MoveFromTempAndUpdateSymlink(const char16* new_version);
+
+  // Removes any stale Gears directories, plus the temp directory.
+  bool PreCleanup();
+
+  // Removes the temp directory.
+  bool PostCleanup();
 
   ThreadId thread_id_;
 
@@ -86,8 +103,14 @@ class LibUpdater : public Thread,
   // if a new version of Gears is on the download server.
   scoped_ptr<VersionCheckTask> version_check_task_;
 
+  // The task that is used to download the new Gears zip.
+  scoped_ptr<ZipDownloadTask> download_task_;
+
   // Event used for waiting between updates.
   Event timer_event_;
+
+  // Path to the temporary directory used by the updater.
+  std::string16 temp_path_;
 
   static LibUpdater* instance_;
 
