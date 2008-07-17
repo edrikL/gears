@@ -32,8 +32,9 @@ static PermissionState ConvertValueToState(PermissionsDB::PermissionValue);
 //------------------------------------------------------------------------------
 // PermissionsManager
 
-PermissionsManager::PermissionsManager(const SecurityOrigin &security_origin)
-    : security_origin_(security_origin) {
+PermissionsManager::PermissionsManager(const SecurityOrigin &security_origin,
+                                       bool is_worker)
+    : security_origin_(security_origin), is_worker_(is_worker) {
 }
 
 bool PermissionsManager::AcquirePermission(PermissionsDB::PermissionType type) {
@@ -45,7 +46,7 @@ bool PermissionsManager::AcquirePermission(
     const PermissionsDialog::CustomContent *custom) {
 
   // Check if we already have a decision.
-  if (GetPriorDecision(type) == NOT_SET) {
+  if (GetPriorDecision(type) == NOT_SET && !is_worker_) {
     // Could not find a prior decision. Ask the user.
     permission_state_[type] = PermissionsDialog::Prompt(security_origin_,
                                                         type,
