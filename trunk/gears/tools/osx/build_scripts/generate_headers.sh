@@ -15,25 +15,32 @@ FRIENDLY_NAME="Google Gears"
 SHORT_NAME="gears"
 
 # Generate plugin Info.plist file
-/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH="x86" -DPRODUCT_GCC_VERSION="gcc4" -DPRODUCT_MAINTAINER="google" -DPRODUCT_TARGET_APPLICATION="safari" -DI18N_LANGUAGES="(en-US)" -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" tools/osx/Info.plist.m4 > "$GEN_FILE_DIR/Info.plist"
+/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH='x86' -DPRODUCT_GCC_VERSION='gcc4' -DPRODUCT_MAINTAINER='google' -DPRODUCT_TARGET_APPLICATION='safari' -DI18N_LANGUAGES='(en-US)' "-DPRODUCT_FRIENDLY_NAME_UQ=$FRIENDLY_NAME" "-DPRODUCT_SHORT_NAME_UQ=$SHORT_NAME" tools/osx/Info.plist.m4 > "$GEN_FILE_DIR/Info.plist"
 
 # Create the product_constants.h file
-/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH="x86" -DPRODUCT_GCC_VERSION="gcc4" -DPRODUCT_MAINTAINER="google" -DPRODUCT_TARGET_APPLICATION="safari" -DI18N_LANGUAGES="(en-US)" -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" base/common/product_constants.h.m4 > "$GEN_FILE_DIR/product_constants.h"
+/usr/bin/m4 --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH='x86' -DPRODUCT_GCC_VERSION='gcc4' -DPRODUCT_MAINTAINER='google' -DPRODUCT_TARGET_APPLICATION='safari' -DI18N_LANGUAGES='(en-US)' "-DPRODUCT_FRIENDLY_NAME_UQ=$FRIENDLY_NAME" "-DPRODUCT_SHORT_NAME_UQ=$SHORT_NAME" base/common/product_constants.h.m4 > "$GEN_FILE_DIR/product_constants.h"
 echo "$GEN_FILE_DIR/product_constants.h" built.
+
+#-------- .stabs -> .js ---------
+GEN_UI_DIR="$BUILD_DIR/genfiles/ui"
+mkdir -p "$GEN_UI_DIR"
+"tools/parse_stab.py" --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH='x86' -DPRODUCT_GCC_VERSION='gcc4' -DPRODUCT_MAINTAINER='google' -DPRODUCT_TARGET_APPLICATION='safari' '-DI18N_LANGUAGES=(en-US)' "-DPRODUCT_FRIENDLY_NAME_UQ=$FRIENDLY_NAME" "-DPRODUCT_SHORT_NAME_UQ=$SHORT_NAME" "$BUILD_DIR/genfiles/settings_dialog.js" ui/common/settings_dialog.stab ui/generated
+"tools/parse_stab.py" --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH='x86' -DPRODUCT_GCC_VERSION='gcc4' -DPRODUCT_MAINTAINER='google' -DPRODUCT_TARGET_APPLICATION='safari' '-DI18N_LANGUAGES=(en-US)' "-DPRODUCT_FRIENDLY_NAME_UQ=$FRIENDLY_NAME" "-DPRODUCT_SHORT_NAME_UQ=$SHORT_NAME" "$BUILD_DIR/genfiles/permissions_dialog.js" ui/common/permissions_dialog.stab ui/generated
+"tools/parse_stab.py" --prefix-builtins -DDEBUG=1 -DPRODUCT_VERSION=$VERSION -DPRODUCT_VERSION_MAJOR=$MAJOR -DPRODUCT_VERSION_MINOR=$MINOR -DPRODUCT_VERSION_BUILD=$BUILD -DPRODUCT_VERSION_PATCH=$PATCH -DPRODUCT_OS=osx -DPRODUCT_ARCH='x86' -DPRODUCT_GCC_VERSION='gcc4' -DPRODUCT_MAINTAINER='google' -DPRODUCT_TARGET_APPLICATION='safari' '-DI18N_LANGUAGES=(en-US)' "-DPRODUCT_FRIENDLY_NAME_UQ=$FRIENDLY_NAME" "-DPRODUCT_SHORT_NAME_UQ=$SHORT_NAME" "$BUILD_DIR/genfiles/shortcuts_dialog.js" ui/common/shortcuts_dialog.stab ui/generated
 
 #-------- Now Generate the UI Files ---------
 # This script is run from the gears/tools/osx directory
 
 COMMON_RESOURCES="	ui/common/button_bg.gif ui/common/button_corner_black.gif ui/common/button_corner_blue.gif ui/common/button_corner_grey.gif ui/common/icon_32x32.png ui/common/local_data.png ui/common/location_data.png"
 RESOURCES_DIR="$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/"
-GEN_UI_DIR="$BUILD_DIR/genfiles/ui"
+
 
 # TODO(playmobil):Add support for localizations.
 mkdir -p "$RESOURCES_DIR/en-US"
 mkdir -p "$GEN_UI_DIR/en-US"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > "$GEN_UI_DIR/en-US/settings_dialog.html"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > "$GEN_UI_DIR/en-US/permissions_dialog.html"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > "$GEN_UI_DIR/en-US/shortcuts_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/settings_dialog.html.m4 > "$GEN_UI_DIR/en-US/settings_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/permissions_dialog.html.m4 > "$GEN_UI_DIR/en-US/permissions_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/shortcuts_dialog.html.m4 > "$GEN_UI_DIR/en-US/shortcuts_dialog.html"
 
 tools/osx/webarchiver/webarchiver "$RESOURCES_DIR/en-US/settings_dialog.webarchive" "$GEN_UI_DIR/en-US/settings_dialog.html" $COMMON_RESOURCES
 tools/osx/webarchiver/webarchiver "$RESOURCES_DIR/en-US/permissions_dialog.webarchive" "$GEN_UI_DIR/en-US/permissions_dialog.html" $COMMON_RESOURCES
