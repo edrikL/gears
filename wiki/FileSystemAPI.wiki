@@ -87,9 +87,9 @@ interface File {
 }
 
 interface OpenFileOptions {
-  // By default, the user may select only one file.  If true, the user may select
-  // multiple files.
-  bool multiSelect;
+  // By default, the user may select multiple files.  If true, the user is limited to
+  // selecting only one file.
+  bool singleFile;
 
   // By default, all files on the local disk are shown as selectable.  If a filter is
   // provided, only files matching the filter are shown.  The user can turn the filter
