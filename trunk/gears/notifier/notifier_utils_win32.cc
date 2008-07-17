@@ -31,7 +31,6 @@
 #include "gears/notifier/notifier_utils_win32.h"
 
 #include <assert.h>
-#include <shlwapi.h>
 #include <tlhelp32.h>
 #include <windows.h>
 
@@ -105,13 +104,11 @@ void GetMainModulePath(std::string16 *path) {
 
   char16 temp[MAX_PATH + 1] = {0};
   ::GetModuleFileName(NULL, temp, ARRAYSIZE(temp));
-  ::PathRemoveFileSpec(temp);
 
   path->assign(temp);
-
-  // Make sure the path ends with the path separator.
-  if (path->at(path->length() - 1) != L'\\') {
-    path->append(1, L'\\');
+  size_t idx = path->rfind('\\');
+  if (idx != std::wstring::npos) {
+    path->erase(idx + 1);
   }
 }
 
