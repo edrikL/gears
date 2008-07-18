@@ -51,6 +51,11 @@
 #include "gears/base/safari/npapi_patches.h"
 #endif
 
+#ifdef WIN32
+// For some reason Win32 thinks snprintf() needs to be marked as non-standard.
+#define snprintf _snprintf
+#endif
+
 static inline bool DoubleIsInt64(double val) {
   return val >= kint64min && val <= kint64max && floor(val) == val;
 }
@@ -1682,12 +1687,14 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
       return false;
     }
 
-    *out = atof(str.c_str());
+    char *end;
+    *out = strtod(str.c_str(), &end);
+    if (*end)
+      return false;  // not every char was part of the number
+
     return true;
   // All other coercions
   } else {
-    // TODO(mpcomplete): implement me
-    assert(false);
     return false;
   }
   return true;
@@ -1720,8 +1727,52 @@ bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
       converted_succesfully = JsTokenToString_NoCoerce(t, cx, out);
       break;
     }
+    case JSPARAM_INT: {
+      int int_val;
+      converted_succesfully = JsTokenToInt_NoCoerce(t, cx, &int_val);
+      if (converted_succesfully) {
+        *out = IntegerToString16(int_val);
+      }
+      break;
+    }
+    case JSPARAM_DOUBLE: {
+      double double_val;
+      converted_succesfully = JsTokenToDouble_NoCoerce(t, cx, &double_val);
+      if (converted_succesfully) {
+        // Edge case: NaN
+        if (isnan(double_val)) {
+          *out = STRING16(L"NaN");
+          break;
+        }
+
+        char buf[1024];
+        int len = snprintf(buf, sizeof(buf), "%f", double_val);
+
+        // Trim trailing 0s.  This comes up, for example, with 3.14159, which
+        // is inaccurately represented, so sprintf prints it as "3.141590".
+        // (This is pretty bogus... maybe we should just change the test.)
+        while (len > 1 && buf[len-1] == '0')
+          --len;
+
+        converted_succesfully = UTF8ToString16(buf, len, out);
+      }
+      break;
+    }
+    case JSPARAM_OBJECT: {
+      // Call object.toString().
+      NPObject *object = NPVARIANT_TO_OBJECT(t);
+      ScopedNPVariant result;
+      NPIdentifier tostring_id = NPN_GetStringIdentifier("toString");
+      if (NPN_Invoke(cx, object, tostring_id, NULL, 0, &result) &&
+          NPVARIANT_IS_STRING(result)) {
+        NPString str = NPVARIANT_TO_STRING(result);
+        converted_succesfully =
+            UTF8ToString16(str.UTF8Characters, str.UTF8Length, out);
+      }
+
+      break;
+    }
     default: {
-      // TODO(mpcomplete): implement me
       break;
     }
   }
