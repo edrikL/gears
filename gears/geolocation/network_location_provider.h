@@ -61,7 +61,8 @@ class NetworkLocationProvider
   virtual void DeviceDataUpdateAvailable(WifiDataProvider *provider);
 
   // NetworkLocationRequest::ListenerInterface implementation.
-  virtual void LocationResponseAvailable(const Position &position);
+  virtual void LocationResponseAvailable(const Position &position,
+                                         bool server_error);
 
   // Thread implementation
   virtual void Run();
@@ -116,6 +117,10 @@ class NetworkLocationProvider
   typedef std::set<LocationProviderBase::ListenerInterface*> ListenerSet;
   ListenerSet new_listeners_requiring_address_;
   Mutex new_listeners_requiring_address_mutex_;
+
+  // The earliest timestamp at which the next request can be made, in
+  // milliseconds.
+  int64 earliest_next_request_time_;
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };

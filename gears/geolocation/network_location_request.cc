@@ -132,8 +132,11 @@ void NetworkLocationRequest::Run() {
     }
     GetLocationFromResponse(result, payload.status_code, response_body,
                             timestamp_, url_, &position);
+
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
-    listener_->LocationResponseAvailable(position);
+    bool server_error =
+        !result || (payload.status_code >= 500 && payload.status_code < 600);
+    listener_->LocationResponseAvailable(position, server_error);
   }
 }
 
@@ -220,6 +223,9 @@ bool NetworkLocationRequest::FormRequestBody(const std::string16 &host_name,
 
   Json::FastWriter writer;
   std::string body_string = writer.write(body_object);
+  LOG(("NetworkLocationRequest::FormRequestBody(): Formed body %s.\n",
+       body_string.c_str()));
+
   blob->reset(new BufferBlob(body_string.c_str(), body_string.size()));
   return true;
 }
