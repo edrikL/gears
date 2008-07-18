@@ -7,7 +7,9 @@ This page documents some guidelines you should follow when writing Gears code.
 
 = HTML UI Files =
 
-The *TRANS_BLOCK* tag is used inside the HTML files used for the Gears UI to mark strings for translation.
+All strings used in .html files are stored in their associated .js.stab file.  Strings should be given an id matching the id of the div or span they will appear in.
+
+The *TRANS_BLOCK* tag is used inside the .stab files to mark strings for translation.
 
   * Please try not to change the text in these blocks if not absolutely necessary as this requires sending them for retranslation.
   * Do not put HTML tags inside of <TRANS_BLOCK> tags if it can be avoided.  This adds clutter to our strings, and adds a point of failure for the UIs in localized versions of Gears.
