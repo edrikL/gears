@@ -308,7 +308,6 @@ void NetworkLocationProvider::Run() {
   // synchronise changes to is_new_data_available_ etc with signals on
   // thread_notification_event_.
   int64 remaining_time = 1;
-  bool minimum_time_elapsed = false;
   while (!is_shutting_down_) {
     // If the current request is complete, see if we need to wait for the time
     // to expire. If not, just wait for an event.
