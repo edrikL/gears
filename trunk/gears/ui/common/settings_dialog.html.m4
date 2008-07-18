@@ -299,20 +299,23 @@ m4_include(genfiles/settings_dialog.js)
       // Handy for debugging layout:
       var args = {
         locale: "en-US",
-        permissions: {
-          "http://www.google.com": {
+        permissions: [
+          {
+            name: "http://www.google.com",
             localStorage: { permissionState: 1 },
             locationData: { permissionState: 0 }
           },
-          "http://www.aaronboodman.com": {
+          { 
+            name: "http://www.aaronboodman.com",
             localStorage: { permissionState: 1 },
             locationData: { permissionState: 1 }
           },
-          "http://www.evil.org": {
+          { 
+            name: "http://www.evil.org",
             localStorage: { permissionState: 2 },
             locationData: { permissionState: 2 }
           }
-        }
+        ]
       };
     } else {
       args = getArguments();
@@ -329,10 +332,8 @@ m4_include(genfiles/settings_dialog.js)
 
     var content = "";
     var isFirstOrigin = true;
-    for (var originName in permissions) {
-      content += renderOrigin(originName,
-                              permissions[originName],
-                              isFirstOrigin);
+    for (var index = 0; index < permissions.length; index++) {
+      content += renderOrigin(index, permissions[index], isFirstOrigin);
       isFirstOrigin = false;
     }
     if (content == "") {
@@ -351,11 +352,11 @@ m4_include(genfiles/settings_dialog.js)
     table.innerHTML = content;
   }
 
-  function renderOrigin(originName, originData, isFirstOrigin) {
+  function renderOrigin(index, originData, isFirstOrigin) {
     var localStorageContent =
-        renderLocalStorage(originName, originData.localStorage);
+        renderLocalStorage(index, originData.localStorage);
     var locationDataContent =
-        renderLocationData(originName, originData.locationData);
+        renderLocationData(index, originData.locationData);
 
     // Defend against an origin having no data for any permission class.
     if (localStorageContent == "" && locationDataContent == "") {
@@ -367,7 +368,7 @@ m4_include(genfiles/settings_dialog.js)
     }
     content += "><tbody>";
     content += "<tr><td class=\"origin-name\">";
-    content += wrapDomain(originName);
+    content += wrapDomain(originData.name);
     content += "</td><td></td>";
     content += "</td></tr></tbody></table>";
 
@@ -386,7 +387,7 @@ m4_include(genfiles/settings_dialog.js)
     return content;
   }
 
-  function renderLocalStorage(originName, data) {
+  function renderLocalStorage(index, data) {
     if (data == null || data.permissionState == PERMISSION_NOT_SET) {
       return "";
     }
@@ -394,14 +395,14 @@ m4_include(genfiles/settings_dialog.js)
     content += "<td class=\"left\">";
     content += getString("string-local-storage");
     content += "</td><td class=\"right\">";
-    content += renderRadioButtons(originName, "localStorage",
+    content += renderRadioButtons(index, "localStorage",
                                   data.permissionState);
     content += "</td>";
     // Permission class-specific content goes here;
     return content;
   }
 
-  function renderLocationData(originName, data) {
+  function renderLocationData(index, data) {
     if (data == null || data.permissionState == PERMISSION_NOT_SET) {
       return "";
     }
@@ -409,7 +410,7 @@ m4_include(genfiles/settings_dialog.js)
     content += "<td class=\"left\">";
     content += getString("string-location-data");
     content += "</td><td class=\"right\">";
-    content += renderRadioButtons(originName, "locationData",
+    content += renderRadioButtons(index, "locationData",
                                   data.permissionState);
     content += "</td>";
     // Permission class-specific content goes here;
@@ -424,22 +425,24 @@ m4_include(genfiles/settings_dialog.js)
     return dom.getTextContent(textElement);
   }
 
-  function renderRadioButtons(originName, permissionClass, permissionState) {
-    var radioButtonName = getRadioButtonName(originName, permissionClass);
+  function renderRadioButtons(index, permissionClass, permissionState) {
+    var radioButtonName = getRadioButtonName(index, permissionClass);
     var content = "<div class=\"radio-buttons\">";
     content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+
     if (permissionState == PERMISSION_ALLOWED) {
       content += "checked=\"true\"";
     }
-    content += " onclick='handleRadioClick(\"" + originName + "\", \"" +
+    content += " onclick='handleRadioClick(" + index + ", \"" +
                permissionClass + "\", " + PERMISSION_ALLOWED + ");'>";
     content += getString("string-allowed");
     content += "</input>";
     content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+
     if (permissionState == PERMISSION_DENIED) {
       content += "checked=\"true\"";
     }
-    content += " onclick='handleRadioClick(\"" + originName + "\", \"" +
+    content += " onclick='handleRadioClick(" + index + ", \"" +
                permissionClass + "\", " + PERMISSION_DENIED + ");'>";
     content += getString("string-denied");
     content += "</input>";
@@ -447,22 +450,22 @@ m4_include(genfiles/settings_dialog.js)
     return content;
   }
 
-  function getRadioButtonName(originName, permissionClass) {
-    return originName + "-" + permissionClass + "-radio";
+  function getRadioButtonName(index, permissionClass) {
+    return index + "-" + permissionClass + "-radio";
   }
 
-  function handleRadioClick(originName, permissionClass, permissionState) {
-    updatePermission(originName, permissionClass, permissionState);
+  function handleRadioClick(index, permissionClass, permissionState) {
+    updatePermission(index, permissionClass, permissionState);
 
     // Return false to prevent the default link action (scrolling up to top of
     // page in this case).
     return false;
   }
 
-  function updatePermission(originName, permissionClass, permissionState) {
-    if (permissions[originName][permissionClass].permissionState !=
+  function updatePermission(index, permissionClass, permissionState) {
+    if (permissions[index][permissionClass].permissionState !=
         permissionState) {
-      permissions[originName][permissionClass].permissionState =
+      permissions[index][permissionClass].permissionState =
           permissionState;
       enableButton(dom.getElementById("confirm-button"));
     }
@@ -486,12 +489,13 @@ m4_include(genfiles/settings_dialog.js)
 
   function calculateDiff() {
     var permissionClasses = ["localStorage", "locationData"];
-    var result = { "modifiedOrigins": {} };
-    for (var originName in originalPermissions) {
-      var originalOriginData = originalPermissions[originName];
-      var originData = permissions[originName];
+    var result = { "modifiedOrigins": [] };
+    for (var index = 0; index < originalPermissions.length; index++) {
+      var originalOriginData = originalPermissions[index];
+      var originData = permissions[index];
       // Defend against a mis-match between the origins in each list.
-      if (isDefined(typeof originData)) {
+      if (isDefined(typeof originData) && 
+          originData.name == originalOriginData.name) {
         var modifiedOriginData = new Object();
         var modified = false;
         for (var i = 0; i < permissionClasses.length; i++) {
@@ -509,7 +513,8 @@ m4_include(genfiles/settings_dialog.js)
           }
         }
         if (modified) {
-          result.modifiedOrigins[originName] = modifiedOriginData;
+          modifiedOriginData.name = originData.name;
+          result.modifiedOrigins.push(modifiedOriginData);
         }
       }
     }
