@@ -11,9 +11,8 @@ When an HTTP _request_ is resumed, the initial request combined with all subsequ
 
 = Protocol Overview =
 
- # Prior to initiating an operation, the client must first obtain a unique per-operation URL which will be used to identify all subsequent resume requests with the original operation. In other words, all requests to a given URL form a single logical operation.
- # The client initiates a request (e.g. POST/PUT) to the unique URL obtained in step (1). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 308 (Resume Incomplete) response code is expected.
- # Once the server has received all bytes of the request, it responds with a final response code, and the operation is complete. If not all data bytes have been received, then the server responds with a 308 (Resume Incomplete) response code, indicating that the transferred bytes were succesfully received, but additional bytes are still expected.
+ # Prior to initiating an operation, the client must first obtain a unique per-operation identifier which the server can use to group requests that are part of the same operation. This could be a unique URL, an ETag, or some other mechanism.
+ # The client initiates a request (e.g. POST/PUT). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 308 (Resume Incomplete) response code is expected.
  # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 (Service Unavailable) status code, then the client queries the server by sending a resume request (e.g. POST/PUT) with no body.
  # If the server has succesfully received all bytes from the operation, it responds with a final status code; otherwise it responds with a 308 (Resume Incomplete), indicating which bytes of the operation it has successfully received.
  # If the client receives a 308 (Resume Incomplete), it sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). A Content-Range header is added to specify the byte range which is being transfered.
@@ -54,7 +53,7 @@ The server SHOULD process the data from a resumable operation in the same way it
 
 If a client's connection to the server is terminated prior to the receipt of a final response code, or if the client receives a 503 (Service Unavailable), exponential backoff should be used to separate series of sequential retries, per HTTP/1.1 section 8.2.4.
 
-If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same entity tag are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
+If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same operation are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
 
 = Query Requests =
 
@@ -68,7 +67,7 @@ Query requests could be used by clients to probe servers for resumability suppor
 
 = Use Cases =
 
-The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could issue a HEAD request to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. While this should be the standard mode of operation, alternatively a client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate Content-Range header.
+The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could issue a query request to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. While this should be the standard mode of operation, alternatively a client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate Content-Range header.
 
 = ETag Example =
 
@@ -78,6 +77,7 @@ Client sends initial handshake:
 POST /upload HTTP/1.1
 Host: example.com
 Content-Length: 0
+Content-Range: bytes */100
 }}}
 
 Server assigns ETag:
@@ -109,6 +109,7 @@ POST /upload HTTP/1.1
 Host: example.com
 If-Match: vEpr6barcD
 Content-Length: 0
+Content-Range: bytes */100
 }}}
 
 Server responds with the current byte range:
@@ -150,6 +151,7 @@ Client sends initial handshake:
 POST /upload HTTP/1.1
 Host: example.com
 Content-Length: 0
+Content-Range: bytes */100
 }}}
 
 Server assigns unique URL:
@@ -179,6 +181,7 @@ Client polls the server to determine which bytes it has received:
 POST /upload/eCn14NjNAy HTTP/1.1
 Host: example.com
 Content-Length: 0
+Content-Range: bytes */100
 }}}
 
 Server responds with the current byte range:
