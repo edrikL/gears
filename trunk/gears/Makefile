@@ -909,6 +909,7 @@ $(BROWSER)_CPPSRCS	+= \
 ifeq ($(OS),osx)
 $(BROWSER)_CPPSRCS	+= \
 		common_osx.mm \
+		nsstring_utils.mm \
 		$(NULL)
 endif
 
@@ -1105,7 +1106,6 @@ SF_CPPSRCS	+= \
 		np_utils.cc \
 		npn_bindings.cc \
 		npp_bindings.cc \
-		nsstring_utils.mm \
 		paths_sf.mm \
 		paths_sf_more.mm \
 		plugin.cc \

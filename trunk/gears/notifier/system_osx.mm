@@ -27,18 +27,44 @@
   // The notification API has not been finalized for official builds.
 #else
 #import "gears/notifier/system.h"
+
 #import <Cocoa/Cocoa.h>
 #import <string>
+
+#import "gears/base/common/common.h"
+#import "gears/base/common/file.h"
+#import "gears/base/common/string_utils.h"
 #import "third_party/glint/include/rectangle.h"
 
 std::string System::GetResourcePath() {
   return [[[NSBundle mainBundle] resourcePath] fileSystemRepresentation];
 }
 
-bool System::GetUserDataLocation(std::string16 *path) {
-  // TODO(jianli): Implement this.
-  assert(false && "Not implemented");
-  return false;
+bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
+  assert(path);
+
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(
+                      NSApplicationSupportDirectory, NSUserDomainMask, YES);
+  if ([paths count] < 1) {
+    return false;
+  }
+  assert([paths count] == 1);
+
+  NSString *path_ns = [paths objectAtIndex:0];
+  path_ns = [path_ns stringByAppendingPathComponent:@PRODUCT_SHORT_NAME_ASCII];
+
+  std::string narrow_path = [path_ns fileSystemRepresentation];
+  if (!UTF8ToString16(narrow_path.c_str(), path)) {
+    return false;
+  }
+
+  if (create_if_missing && !File::DirectoryExists(path->c_str())) {
+    if (!File::RecursivelyCreateDir(path->c_str())) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {

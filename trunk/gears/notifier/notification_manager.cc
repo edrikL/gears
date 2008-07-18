@@ -411,17 +411,33 @@ bool NotificationManager::WriteNotification(
                      size) == size;
 }
 
-bool NotificationManager::GetNotificationSavePath(std::string16 *file_path) {
+bool NotificationManager::GetNotificationSavePath(std::string16 *file_path,
+                                                  bool create_if_missing) {
   assert(file_path);
 
-  if (!System::GetUserDataLocation(file_path)) {
+  if (!System::GetUserDataLocation(file_path, create_if_missing)) {
     return false;
   }
   *file_path += kPathSeparator;
-  *file_path += STRING16(PRODUCT_SHORT_NAME);
   *file_path += kNotifierShortName;
   *file_path += STRING16(L".dat");
   return true;
+}
+
+void NotificationManager::CleanupNotificationSavePath(
+        const std::string16 &file_path) {
+  File::Delete(file_path.c_str());
+
+  // We save notifications in the user data folder, which is not created and
+  // deleted by the installer. Thus we have to do the cleanup here.
+  // TODO: This is not an ideal solution. It also have a small chance of risk.
+  // Consider moving the management of user data folder to the installer.
+  std::string16 user_data_folder;
+  if (File::GetParentDirectory(file_path, &user_data_folder) &&
+      File::DirectoryExists(user_data_folder.c_str()) &&
+      File::GetDirectoryFileCount(user_data_folder.c_str()) == 0) {
+    File::DeleteRecursively(user_data_folder.c_str());
+  }
 }
 
 bool NotificationManager::SaveNotifications() {
@@ -438,7 +454,7 @@ bool NotificationManager::SaveNotifications() {
 
   // Create the saved file.
   std::string16 file_path;
-  if (!GetNotificationSavePath(&file_path)) {
+  if (!GetNotificationSavePath(&file_path, /*create_if_missing*/ true)) {
     return false;
   }
   scoped_ptr<File> file(File::Open(file_path.c_str(),
@@ -507,7 +523,7 @@ bool NotificationManager::SaveNotifications() {
 bool NotificationManager::LoadNotifications() {
   // Open the saved file.
   std::string16 file_path;
-  if (!GetNotificationSavePath(&file_path)) {
+  if (!GetNotificationSavePath(&file_path, /*create_if_missing*/ false)) {
     return false;
   }
   scoped_ptr<File> file(File::Open(file_path.c_str(),
@@ -521,7 +537,7 @@ bool NotificationManager::LoadNotifications() {
 
   // Delete the file not matter if the loading is successful or failed.
   file.reset();
-  File::Delete(file_path.c_str());
+  CleanupNotificationSavePath(file_path);
 
   return res;
 }
