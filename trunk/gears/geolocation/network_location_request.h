@@ -43,8 +43,12 @@ class NetworkLocationRequest : public AsyncTask {
   // Interface for receiving callbacks from a NetworkLocationRequest object.
   class ListenerInterface {
    public:
-    virtual void LocationResponseAvailable(const Position &position) = 0;
+    // Updates the listener with a new position. server_error indicates whether
+    // was a server or network error - either no response or a 500 error code.
+    virtual void LocationResponseAvailable(const Position &position,
+                                           bool server_error) = 0;
   };
+
   static NetworkLocationRequest* Create(const std::string16 &url,
                                         const std::string16 &host_name,
                                         ListenerInterface *listener);
@@ -61,6 +65,7 @@ class NetworkLocationRequest : public AsyncTask {
   // which the thread will not attempt to access external resources such as the
   // listener.
   void StopThreadAndDelete();
+
  private:
   // Private constructor and destructor. Callers should use Create() and
   // StopThreadAndDelete().

@@ -35,8 +35,69 @@
 // The maximum period of time we'll wait for a complete set of device data
 // before sending the request.
 static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
-// The minimum period between network requests.
-static const int kMinimumRequestInterval = 1000 * 5;  // 5 seconds
+// The baseline minimum period between network requests.
+static const int kBaselineMinimumRequestInterval = 1000 * 5;  // 5 seconds
+// The upper limit of the minimum period between network requests.
+static const int kMinimumRequestIntervalLimit = 1000 * 60 * 60 * 3;  // 3 hours
+
+
+// The BackoffManager class is used to implement exponential back-off for
+// network requests in case of sever errors. Users report to the BackoffManager
+// class when they make a request to or receive a response from a given url. The
+// BackoffManager class provides the earliest time at which subsequent requests
+// should be made.
+class BackoffManager {
+ public:
+  static void ReportRequest(const std::string16 &url) {
+    MutexLock lock(&servers_mutex_);
+    ServerMap::iterator iter = servers_.find(url);
+    if (iter != servers_.end()) {
+      iter->second.first = GetCurrentTimeMillis();
+    } else {
+      servers_[url] = std::make_pair(GetCurrentTimeMillis(),
+                                     kBaselineMinimumRequestInterval);
+    }
+  }
+
+  static int64 ReportResponse(const std::string16 &url, bool server_error) {
+    // Use exponential back-off on server error.
+    MutexLock lock(&servers_mutex_);
+    ServerMap::iterator iter = servers_.find(url);
+    assert(iter != servers_.end());
+    int64 *interval = &iter->second.second;
+    if (server_error) {
+      if (*interval < kMinimumRequestIntervalLimit) {
+        // Increase interval by between 90% and 110%.
+        srand(static_cast<unsigned int>(GetCurrentTimeMillis()));
+        double increment_proportion = 0.9 + 0.2 * rand() / RAND_MAX;
+        int64 increment = static_cast<int64>(*interval * increment_proportion);
+        if (increment > kMinimumRequestIntervalLimit - *interval) {
+          *interval = kMinimumRequestIntervalLimit;
+        } else {
+          *interval += increment;
+        }
+      }
+    } else {
+      *interval = kBaselineMinimumRequestInterval;
+    }
+    return iter->second.first + *interval;
+  }
+
+ private:
+  // A map from server URL to a pair of integers representing the last request
+  // time and the current minimum interval between requests, both in
+  // milliseconds.
+  typedef std::map<std::string16, std::pair<int64, int64> > ServerMap;
+  static ServerMap servers_;
+
+  // The mutex used to protect the map.
+  static Mutex servers_mutex_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(BackoffManager);
+};
+
+BackoffManager::ServerMap BackoffManager::servers_;
+Mutex BackoffManager::servers_mutex_;
 
 
 LocationProviderBase *NewNetworkLocationProvider(
@@ -172,11 +233,16 @@ void NetworkLocationProvider::DeviceDataUpdateAvailable(
 
 // NetworkLocationRequest::ListenerInterface implementation.
 void NetworkLocationProvider::LocationResponseAvailable(
-    const Position &position) {
+    const Position &position,
+    bool server_error) {
   // Cache the position
   position_mutex_.Lock();
   position_ = position;
   position_mutex_.Unlock();
+
+  // Get earliest time for next request.
+  earliest_next_request_time_ = BackoffManager::ReportResponse(url_,
+                                                               server_error);
 
   // Signal to the worker thread that this request has completed.
   is_last_request_complete_ = true;
@@ -241,28 +307,25 @@ void NetworkLocationProvider::Run() {
   // This loop is structured such that we don't require mutex locks to
   // synchronise changes to is_new_data_available_ etc with signals on
   // thread_notification_event_.
-  int64 last_request_time = GetCurrentTimeMillis();
+  int64 remaining_time = 1;
   bool minimum_time_elapsed = false;
   while (!is_shutting_down_) {
-    if (minimum_time_elapsed) {
-      // If the minimum time period has elapsed, just wait for the event.
-      thread_notification_event_.Wait();
-    } else {
+    // If the current request is complete, see if we need to wait for the time
+    // to expire. If not, just wait for an event.
+    if (is_last_request_complete_ && remaining_time > 0) {
+      // earliest_next_request_time_ is updated when the current request
+      // completes.
+      remaining_time = earliest_next_request_time_ - GetCurrentTimeMillis();
       // If the minimum time period has not yet elapsed, set the timeout such
-      // that the wait times out kMinimumRequestInterval after the last request
-      // was made.
-      int64 elapsed_time = GetCurrentTimeMillis() - last_request_time;
-      int timeout = kMinimumRequestInterval - static_cast<int>(elapsed_time);
-      // If the last call to WaitWithTimeout was interrupted by the event just
-      // before the time expired, timeout may be non-positive. In this case, we
-      // should try again to make the request without waiting.
-      if (timeout <= 0 ) {
-        minimum_time_elapsed = true;
+      // that the wait expires when the period has elapsed.
+      if (remaining_time > 0) {
+        thread_notification_event_.WaitWithTimeout(
+            static_cast<int>(remaining_time));
       } else {
-        if (!thread_notification_event_.WaitWithTimeout(timeout)) {
-          minimum_time_elapsed = true;
-        }
+        thread_notification_event_.Wait();
       }
+    } else {
+      thread_notification_event_.Wait();
     }
 
     bool make_request = false;
@@ -302,7 +365,7 @@ void NetworkLocationProvider::Run() {
     if (!is_shutting_down_ &&
         is_new_data_available_ &&
         is_last_request_complete_ &&
-        minimum_time_elapsed) {
+        remaining_time <= 0) {
       make_request = true;
     }
 
@@ -310,8 +373,7 @@ void NetworkLocationProvider::Run() {
     // time period, we should kill it and start a new request.
     if (make_request) {
       MakeRequest();
-      last_request_time = GetCurrentTimeMillis();
-      minimum_time_elapsed = false;
+      remaining_time = 1;
     }
   }
 }
@@ -339,6 +401,8 @@ bool NetworkLocationProvider::MakeRequest() {
   new_listeners_requiring_address_.clear();
 
   request_address_from_last_request_ = request_address_;
+
+  BackoffManager::ReportRequest(url_);
 
   return request_->MakeRequest(radio_data_,
                                wifi_data_,
