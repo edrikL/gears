@@ -1582,8 +1582,8 @@ $(BROWSER)_VPATH += \
 		ui/generated \
 		$(NULL)
 
-$(BROWSER)_LINK_EXTRAS += \
-		$($(BROWSER)_OUTDIR)/string_table.res \
+IE_LINK_EXTRAS += \
+		$(IE_OUTDIR)/string_table.res \
 		$(NULL)
 
 VISTA_BROKER_LINK_EXTRAS += \
@@ -1606,9 +1606,9 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 $(BROWSER)_STABSRCS += \
-		permissions_dialog.stab \
-		settings_dialog.stab \
-		shortcuts_dialog.stab \
+		permissions_dialog.js.stab \
+		settings_dialog.js.stab \
+		shortcuts_dialog.js.stab \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1654,6 +1654,10 @@ IE_CPPSRCS	+= \
 
 IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
+		$(NULL)
+
+IE_STABSRCS += \
+		string_table.rc.stab \
 		$(NULL)
 
 # Additional files specific to Win32 or WinCE.

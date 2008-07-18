@@ -48,11 +48,12 @@ This takes in a set of string table files, and produces a .js file that can be
 included in our html dialogs.
 """
 
+import codecs
 import os
 import re
 import sys
 
-kJavascriptTemplate = """
+JAVASCRIPT_TEMPLATE = """
 // Insert all localized strings for the specified locale into the div or span
 // matching the id.
 function loadI18nStrings(locale) {
@@ -99,6 +100,76 @@ function loadI18nStrings(locale) {
 """
 
 
+# Template for the header of .rc files.  This is basically just the standard
+# include files.
+RC_TEMPLATE = u"""
+#ifdef WINCE
+  #include "aygshell.h"
+  #include "afxres.h"
+  #include "genfiles/product_constants.h"
+#else
+  #include "WinResrc.h"
+#endif
+#include "ui/ie/string_table.h"
+"""
+
+
+# This is the set of languages and the LANGIDs associated with each.
+language_ids = {'ar': ['0401', '0x01', '0x01'],
+                'bg': ['0402', '0x02', '0x01'],
+                'ca': ['0403', '0x03', '0x01'],
+                'cs': ['0405', '0x05', '0x01'],
+                'da': ['0406', '0x06', '0x01'],
+                'de': ['0407', '0x07', '0x01'],
+                'el': ['0408', '0x08', '0x01'],
+                'en-GB': ['0809', '0x09', '0x02'],
+                'en-US': ['0409', '0x09', '0x01'],
+                'es': ['0c0a', '0x0a', '0x01'],
+                'et': ['0425', '0x25', '0x01'],
+                'fa': ['0429', '0x29', '0x01'],
+                'fi': ['040b', '0x0b', '0x01'],
+                'fil': ['0464', '0x64', '0x01'],
+                'fr': ['080c', '0x0c', '0x01'],
+                'he': ['040d', '0x0d', '0x01'],
+                'hi': ['0439', '0x39', '0x01'],
+                'hr': ['041a', '0x1a', '0x01'],
+                'hu': ['040e', '0x0e', '0x01'],
+                'id': ['0421', '0x21', '0x01'],
+                'is': ['040f', '0x0f', '0x01'],
+                'it': ['0410', '0x10', '0x01'],
+                'ja': ['0411', '0x11', '0x01'],
+                'ko': ['0412', '0x12', '0x01'],
+                'lt': ['0427', '0x27', '0x01'],
+                'lv': ['0426', '0x26', '0x01'],
+                'ms': ['083e', '0x3e', '0x01'],
+                'nl': ['0413', '0x13', '0x01'],
+                'no': ['0414', '0x14', '0x01'],
+                'pl': ['0415', '0x15', '0x01'],
+                'pt-BR': ['0416', '0x16', '0x01'],
+                'pt-PT': ['0816', '0x16', '0x02'],
+                'ro': ['0418', '0x18', '0x01'],
+                'ru': ['0419', '0x19', '0x01'],
+                'sk': ['041b', '0x1b', '0x01'],
+                'sl': ['0424', '0x24', '0x01'],
+                'sr': ['0c1a', '0x1a', '0x02'],
+                'sv': ['081d', '0x1d', '0x01'],
+                'th': ['041e', '0x1e', '0x01'],
+                'tr': ['041f', '0x1f', '0x01'],
+                'uk': ['0422', '0x22', '0x01'],
+                'ur': ['0820', '0x20', '0x01'],
+                'vi': ['042a', '0x2a', '0x01'],
+                'zh-CN': ['0804', '0x04', '0x02'],
+                'zh-TW': ['0404', '0x04', '0x01'],
+                'ml': ['044c', '0x4c','0x01'],
+                'te': ['044a', '0x4a','0x01'],
+                'kn': ['044b', '0x4b','0x01'],
+                'gu': ['0447', '0x47','0x01'],
+                'or': ['0448', '0x48','0x01'],
+                'bn': ['0445', '0x45','0x01'],
+                'ta': ['0449', '0x49','0x01'],
+                'mr': ['044e', '0x4e','0x01']}
+
+
 def getStrings(filename):
   """Read in the strings from the filename, and store them in a dictionary.
   An empty file is considered a valid input.
@@ -121,6 +192,10 @@ def getStrings(filename):
   for match in string_matches:
     string_name = match[0]
     string_text = match[1]
+
+    if strings.has_key(string_name):
+      print "Error: Duplicate string id encountered: %s" % string_name
+      sys.exit(1)
 
     # Canonicalize the strings.
     strings[string_name] = re.sub(r'</?TRANS_BLOCK(?: desc="[^"]*")?>', '',
@@ -166,8 +241,50 @@ var localized_strings = {
   output += '\n};\n'
 
   # Append the function that loads the strings into the dialog.
-  output += kJavascriptTemplate
+  output += JAVASCRIPT_TEMPLATE
   return output
+
+
+def createRCFromStrings(localized_strings):
+  """Generate .rc script containing the strings.  It'll look like:
+
+LANGUAGE 0x09, 0x01
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LOCALE "en-US"
+  IDS_STRING_PIE "pie is delicious"
+END
+
+LANGUAGE 0x11, 0x01
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LOCALE "ja"
+  IDS_STRING_PIE "pai ga oishii desu"
+END
+  """
+  # Start with the Byte order marker and .rc boilerplate.
+  output = RC_TEMPLATE
+
+  for locale, strings in localized_strings.items():
+    if not language_ids.has_key(locale):
+      print 'Unknown locale: %s' % locale
+      sys.exit(1)
+
+    lang_id = language_ids[locale][1]
+    sublang_id = language_ids[locale][2]
+    output += u"""
+LANGUAGE %s, %s
+STRINGTABLE DISCARDABLE
+BEGIN
+""" % (lang_id, sublang_id)
+
+    for id, string in strings.items():
+      string = string.replace('"', r'\"')
+      output += u'  %s "%s"\n' % (id, string)
+
+  output += u'END\n'
+
+  return output.encode('utf-16')
 
 
 def getDefines(argv):
@@ -256,7 +373,7 @@ def main(argv):
 
     for id in source_strings.keys():
       # If there is no localized string, substitute the string from the source.
-      string = strings.get(id, source_strings[id])
+      string = localized_strings.get(id, source_strings[id])
 
       # Replace any macros as specified on the commandline
       for define, value in defines.items():
@@ -264,13 +381,29 @@ def main(argv):
 
       strings[locale][id] = string
 
+  # Extract the file extension from the target filename.
+  match = re.search(r'\.(.*?)$', target_file)
+  if not match:
+    print 'Target %s does not have a file extension' % target_file
+    sys.exit(1)
+  file_type = match.group(1)
+
+  parse_funcs = {'js': createJavaScriptFromStrings,
+                 'rc': createRCFromStrings}
+
+  if parse_funcs.has_key(file_type):
+    output = parse_funcs[file_type](strings)
+  else:
+    print "Unknown output file type: %s\n" % (file_type)
+    sys.exit(3)
+
   try:
     output_file = open(target_file, 'w')
   except IOError, err:
     print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
     sys.exit(3)
 
-  print >> output_file, createJavaScriptFromStrings(strings)
+  print >> output_file, output
 
   output_file.close()
 

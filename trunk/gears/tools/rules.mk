@@ -167,7 +167,7 @@ NPAPI_GEN_TYPELIBS = \
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
 $(BROWSER)_STABFILES = \
-	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%.js,$($(BROWSER)_STABSRCS))
+	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_STABSRCS))
 COMMON_M4FILES = \
 	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 
