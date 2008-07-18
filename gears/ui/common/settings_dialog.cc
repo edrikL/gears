@@ -30,15 +30,17 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 static const char *kPermissionsString = "permissions";
+static const char *kNameString = "name";
 static const char *kLocalStorageString = "localStorage";
 static const char *kLocationDataString = "locationData";
 static const char *kPermissionStateString = "permissionState";
 static const char16 *kSettingsDialogString = STRING16(L"settings_dialog.html");
 
-// Gets sites where the permission for local data has the given value and
-// appends them to the array.
-static bool GetLocalDataPermissions(PermissionsDB::PermissionValue value,
-                                    Json::Value *json_object);
+// Helper that populates a permission state if one is set in the map.
+// Otherwise, it does nothing.
+static void AddPermissionState(const PermissionsDB::OriginPermissions &map,
+                               PermissionsDB::PermissionType type,
+                               Json::Value *entry_out);
 
 #ifdef BROWSER_WEBKIT
 bool SettingsDialog::visible_ = false;
@@ -59,7 +61,7 @@ void SettingsDialog::Run() {
 
   // Populate the arguments property.
   settings_dialog->arguments[kPermissionsString] =
-      Json::Value(Json::objectValue);
+      Json::Value(Json::arrayValue);
   if (!PopulatePermissions(&(settings_dialog->arguments[kPermissionsString]))) {
     return;
   }
@@ -89,39 +91,68 @@ void SettingsDialog::Run() {
 // static
 bool SettingsDialog::PopulatePermissions(Json::Value *json_object) {
   // Populate the supplied object with permissions for all origins. The object
-  // has a property named for each domain. Each of these properties is an object
-  // with properties named for each class of permissions. Each of these is also
+  // is an array of objects. Each object has a property with the domain name and
+  // properties named for each class of permissions. Each of these is also
   // an object, with a 'permissionState' property and other properties specific
   // to the class. For example, the localStorage permission class may have
   // members describing current disk space use and whether the storage should be
   // cleared.
   // eg.
-  // permissions: {
-  //   "http://www.google.com": {
+  // permissions: [
+  //   {
+  //     name: "http://www.google.com",
   //     localStorage: { permissionState: 1 },
-  //     locationData: { permissionState: 0 }
+  //     locationData: { permissionState: 2 }
+  //   },
+  //   { 
+  //     name: "http://www.evil.org", 
+  //     localStorage: { permissionState: 2 }
   //   }
-  // }
-  // TODO(aa): Pass list of created shortcuts here.
+  // ]
   //
-  // TODO(steveblock): Domains which are denied for all classes of permissions
-  // should come last. Sites should be sorted alphabetically within each group.
+  // TODO(aa): Pass list of created shortcuts here.
 
-  // For now, we only get permissions for local storage.
-  // TODO(andreip): Add
-  // PermissionsDB::GetAllPermissions(*map<origin_name,
-  //                                  map<permission_class, permission_state> >)
-  // or equivalent.
-  return
-      GetLocalDataPermissions(PermissionsDB::PERMISSION_ALLOWED, json_object) &&
-      GetLocalDataPermissions(PermissionsDB::PERMISSION_DENIED, json_object);
+  PermissionsDB *capabilities = PermissionsDB::GetDB();
+  if (!capabilities) {
+    return false;
+  }
+
+  PermissionsDB::PermissionsList list;
+  if (!capabilities->GetPermissionsSorted(&list)) {
+    LOG(("SettingsDialog::PopulatePermissions: Could not get origins."));
+    return false;
+  }
+
+  assert(json_object->isArray());
+  for (PermissionsDB::PermissionsList::size_type i = 0; i < list.size(); ++i) {
+    // JSON needs UTF-8.
+    std::string origin_string;
+    if (!String16ToUTF8(list[i].first.c_str(), &origin_string)) {
+      LOG(("SettingsDialog::PopulatePermissions: Could not convert origin "
+           "string."));
+      return false;
+    }
+    Json::Value entry;
+    entry[kNameString] = origin_string.c_str();
+    AddPermissionState(list[i].second,
+                       PermissionsDB::PERMISSION_LOCAL_DATA,
+                       &entry);
+
+    AddPermissionState(list[i].second,
+                       PermissionsDB::PERMISSION_LOCATION_DATA,
+                       &entry);
+
+    json_object->append(entry);
+  }
+
+  return true;
 }
 
 void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
   // Note: the logic here is coupled to the way the JS inside of
   // settings_dialog.html.m4 packages it's results. As implemented now, the
   // dialog should only ever return null or an object containing ...
-  // - modifiedOrigins : an object where each property gives the permission
+  // - modifiedOrigins : an array where each element gives the permission
   //                     classes modified for a given origin.
   // - TODO            : an array containing zero or more shortcuts to remove.
 
@@ -142,16 +173,16 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
   }
 
   const Json::Value modified_origins = (*dialog_result)["modifiedOrigins"];
-  if (!modified_origins.isObject()) {
+  if (!modified_origins.isArray()) {
     LOG(("SettingsDialog::ProcessResult: Invalid modified_origins type."));
     assert(false);
     return;
   }
 
-  std::vector<std::string> origin_names = modified_origins.getMemberNames();
-  for (int i = 0; i < static_cast<int>(origin_names.size()); ++i) {
+  for (int i = 0; i < static_cast<int>(modified_origins.size()); ++i) {
     std::string16 origin;
-    if (!UTF8ToString16(origin_names[i].c_str(), &origin)) {
+    Json::Value entry = modified_origins[i];
+    if (!UTF8ToString16(entry[kNameString].asCString(), &origin)) {
       LOG(("SettingsDialog::ProcessResult: Could not convert name."));
       continue;
     }
@@ -161,7 +192,6 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
       continue;
     }
 
-    Json::Value entry = modified_origins[origin_names[i]];
     if (!entry.isObject()) {
       LOG(("SettingsDialog::ProcessResult: Invalid entry type."));
       assert(false);
@@ -192,35 +222,25 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
   }
 }
 
-// Local function
-bool GetLocalDataPermissions(PermissionsDB::PermissionValue value,
-                             Json::Value *json_object) {
-  PermissionsDB *capabilities = PermissionsDB::GetDB();
-  if (!capabilities) {
-    return false;
-  }
-
-  std::vector<SecurityOrigin> list;
-  if (!capabilities->GetOriginsByValue(value,
-                                       PermissionsDB::PERMISSION_LOCAL_DATA,
-                                       &list)) {
-    return false;
-  }
-
-  assert(json_object->isObject());
-  for (size_t i = 0; i < list.size(); ++i) {
-    // JSON needs UTF-8.
-    std::string origin_string;
-    if (!String16ToUTF8(list[i].url().c_str(), &origin_string)) {
-      LOG(("SettingsDialog::PopulateSites: Could not convert origin string."));
-      return false;
+void AddPermissionState(const PermissionsDB::OriginPermissions &map,
+                        PermissionsDB::PermissionType type,
+                        Json::Value *entry_out) {
+  assert(entry_out);
+  PermissionsDB::OriginPermissions::const_iterator iter = map.find(type);
+  if (iter != map.end()) {
+    const char* type_string = NULL;
+    switch (type) {
+      case PermissionsDB::PERMISSION_LOCAL_DATA:
+        type_string = kLocalStorageString;
+        break;
+      case PermissionsDB::PERMISSION_LOCATION_DATA:
+        type_string = kLocationDataString;
+        break;
+      default:
+        assert(false);
     }
-    Json::Value localStorage;
-    localStorage[kPermissionStateString] = Json::Value(value);
-    Json::Value entry;
-    entry[kLocalStorageString] = localStorage;
-    (*json_object)[origin_string] = entry;
+    Json::Value permission;
+    permission[kPermissionStateString] = iter->second;
+    (*entry_out)[type_string] = permission;
   }
-
-  return true;
 }
