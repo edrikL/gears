@@ -100,6 +100,13 @@ class PermissionsDB {
                          PermissionType type,
                          std::vector<SecurityOrigin> *result);
 
+  // Returns a vector of pairs of origin names and sets of
+  // (PermissionType, PermissionValue) pairs.
+  typedef std::map<PermissionType, PermissionValue> OriginPermissions;
+  typedef std::vector<std::pair<std::string16, OriginPermissions> >
+      PermissionsList;
+  bool GetPermissionsSorted(PermissionsList *permission_list_out);
+
   // Attempts to enable access to Gears for a worker with the given
   // SecurityOrigin.
   bool EnableGearsForWorker(const SecurityOrigin &worker_origin,
