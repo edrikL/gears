@@ -116,6 +116,47 @@ NS_IMETHODIMP BlobInputStream::Read(char *buffer,
   return NS_OK;
 }
 
+namespace {
+class ReadSegmentsReader : public BlobInterface::Reader {
+ public:
+  ReadSegmentsReader(BlobInputStream *stream, nsWriteSegmentFun writer,
+                     void *writer_arg)
+      : stream_(stream), writer_(writer), writer_arg_(writer_arg) {
+  }
+  virtual int64 ReadFromBuffer(const uint8 *buffer, int64 max_bytes) {
+    PRUint32 available(static_cast<uint32>(
+                           std::min(max_bytes,
+                                    static_cast<int64>(kuint32max))));
+    PRUint32 consumed(0);
+    // The fourth argument to writer is supposed to be "The number of bytes
+    // already consumed during this call to nsIInputStream::readSegments",
+    // presumably to allow writer to skip that far into the buffer before
+    // writing. However, I found several implementations of nsWriteSegmentFun
+    // within Firefox source code, and every one of them simply ignores
+    // that argument. So we'll ignore that argument too.
+    nsresult result = writer_(stream_, writer_arg_,
+                              reinterpret_cast<const char*>(buffer), 0,
+                              available, &consumed);
+    if (NS_FAILED(result)) {
+      // If the writer returns an error, then ReadSegments should exit.
+      // Any error returned from writer is not passed on to the
+      // caller of ReadSegments.
+      return 0;
+    }
+    // Confirm that writer consumed <= number of bytes provided to it.
+    assert(consumed <= available);
+    // Returning NS_OK with consumed == 0 has undefined meaning.
+    assert(consumed > 0);
+    return consumed;
+  }
+
+ private:
+  BlobInputStream *stream_;
+  nsWriteSegmentFun writer_;
+  void *writer_arg_;
+};
+}
+
 // Low-level read method that has access to the stream's underlying buffer.
 // The writer function may be called multiple times for segmented buffers.
 // ReadSegments is expected to keep calling the writer until either there is
@@ -132,52 +173,23 @@ NS_IMETHODIMP BlobInputStream::ReadSegments(nsWriteSegmentFun writer,
     return NS_ERROR_NULL_POINTER;
   }
   *out_num_bytes_read = 0;
-  const PRUint32 kMaxBufferSize = 1024 * 1024;
-  PRUint32 bytes_in_buffer = std::min(kMaxBufferSize, num_bytes_to_read);
-  std::vector<char> buffer(bytes_in_buffer);
+
+  ReadSegmentsReader reader(this, writer, writer_arg);
 
   while (num_bytes_to_read) {
-    bytes_in_buffer = std::min(kMaxBufferSize, num_bytes_to_read);
-    int64 num_read = blob_->Read(reinterpret_cast<uint8*>(&buffer[0]),
-                                 offset_, static_cast<int64>(bytes_in_buffer));
+    int64 num_read = blob_->ReadDirect(&reader, offset_, num_bytes_to_read);
     if (num_read < 0) {
       return NS_ERROR_FAILURE;
     }
     if (num_read == 0) {
       // No more data to read.
-      return NS_OK;
+      break;
     }
     // Confirm that BlobInterface::Read returned <= bytes requested
-    assert(num_read <= static_cast<int64>(bytes_in_buffer));
-
-    PRUint32 num_written = 0;
-    while (num_written < num_read) {
-      PRUint32 num_written_inner = 0;
-      // The fourth argument to writer is supposed to be "The number of bytes
-      // already consumed during this call to nsIInputStream::readSegments",
-      // presumably to allow writer to skip that far into the buffer before
-      // writing.  However, I found several implementations of nsWriteSegmentFun
-      // within Firefox source code, and every one of them simply ignores
-      // that argument.  So we'll ignore that argument too.
-      nsresult result = writer(this, writer_arg, &buffer[num_written], 0,
-                               static_cast<PRUint32>(num_read) - num_written,
-                               &num_written_inner);
-      if (NS_SUCCEEDED(result)) {
-        // Confirm that writer consumed <= number of bytes provided to it.
-        assert(num_written_inner <= num_read - num_written);
-        // Returning NS_OK with num_written_inner == 0 has undefined meaning.
-        assert(num_written_inner > 0);
-        num_written += num_written_inner;
-      } else {
-        // If the writer returns an error, then ReadSegments should exit.
-        // Any error returned from writer is not passed on to the
-        // caller of ReadSegments.
-        return NS_OK;
-      }
-    }
-    offset_ += num_written;
-    *out_num_bytes_read += num_written;
-    num_bytes_to_read -= num_written;
+    assert(num_read <= static_cast<int64>(num_bytes_to_read));
+    offset_ += num_read;
+    *out_num_bytes_read += static_cast<uint32>(num_read);
+    num_bytes_to_read -= static_cast<uint32>(num_read);
   }
   // EOS is indicated by setting *out_num_bytes_read = 0.
   // This is indistinguishable from the writer failing case.

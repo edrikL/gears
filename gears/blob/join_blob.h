@@ -39,6 +39,7 @@ class JoinBlob : public BlobInterface {
   explicit JoinBlob(const List &blob_list);
 
   virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  virtual int64 ReadDirect(Reader *reader, int64 offset, int64 max_bytes) const;
   virtual int64 Length() const { return length_; }
   virtual bool GetDataElements(std::vector<DataElement> *elements) const;
  private:

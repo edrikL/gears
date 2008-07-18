@@ -62,6 +62,28 @@ class ByteStore::Blob : public BlobInterface {
     return byte_store_->Read(destination, offset, max_bytes);
   }
 
+  class Reader : public ByteStore::Reader {
+   public:
+    explicit Reader(BlobInterface::Reader *reader) : reader_(reader) {
+    }
+    virtual int64 ReadFromBuffer(const uint8 *buffer, int64 max_bytes) {
+      return reader_->ReadFromBuffer(buffer, max_bytes);
+    }
+   private:
+    BlobInterface::Reader *reader_;
+  };
+
+  virtual int64 ReadDirect(BlobInterface::Reader *reader, int64 offset,
+                           int64 max_bytes) const {
+    if (offset >= length_) {
+      return 0;
+    } else if (offset + max_bytes >= length_) {
+      max_bytes = length_ - offset;
+    }
+    ByteStore::Blob::Reader bsb_reader(reader);
+    return byte_store_->ReadDirect(&bsb_reader, offset, max_bytes);
+  }
+
   virtual bool GetDataElements(std::vector<DataElement> *elements) const {
     if (length_ == 0) {
       return true;  // don't add an element for no data

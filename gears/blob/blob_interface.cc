@@ -23,27 +23,32 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BLOB_SLICE_BLOB_H__
-#define GEARS_BLOB_SLICE_BLOB_H__
-
 #include "gears/blob/blob_interface.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 
-// SliceBlob exposes a subset of an existing blob.
-class SliceBlob : public BlobInterface {
- public:
-  // SliceBlob always returns the provided length as its own length, even if
-  // the underlying blob length is less.
-  SliceBlob(BlobInterface *source, int64 offset, int64 length);
+#include "gears/base/common/memory_buffer.h"
 
-  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
-  virtual int64 ReadDirect(Reader *reader, int64 offset, int64 max_bytes) const;
-  virtual int64 Length() const;
-  virtual bool GetDataElements(std::vector<DataElement> *elements) const;
- private:
-  scoped_refptr<BlobInterface> blob_;
-  int64 offset_, length_;
-  DISALLOW_EVIL_CONSTRUCTORS(SliceBlob);
-};
+namespace {
+const int64 kTempBufferSize = 1024 * 1024;  // 1MB
+}
 
-#endif  // GEARS_BLOB_SLICE_BLOB_H__
+// Default implementation of ReadDirect, for blobs that do not have an
+// internal data buffer from which to read (ex - files).
+// It creates a temporary buffer and calls Read() to fill it.
+int64 BlobInterface::ReadDirect(Reader *reader, int64 offset,
+                                int64 max_bytes) const {
+  int64 buffer_size(std::min(max_bytes, kTempBufferSize));
+  MemoryBuffer buffer(buffer_size);
+  int64 total_bytes_read(0);
+  while (max_bytes > 0) {
+    int64 bytes_read1 = Read(buffer.Data(0), offset, buffer_size);
+    if (bytes_read1 <= 0) break;  // No more data available, or error.
+    int64 bytes_read = reader->ReadFromBuffer(buffer.Data(0), bytes_read1);
+    assert(bytes_read >= 0);
+    if (bytes_read == 0) break;
+    total_bytes_read += bytes_read;
+    offset += bytes_read;
+    max_bytes -= bytes_read;
+    buffer_size = std::min(max_bytes, buffer_size);
+  }
+  return total_bytes_read;
+}

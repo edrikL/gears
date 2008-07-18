@@ -50,6 +50,22 @@ int64 SliceBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   return blob_->Read(destination, offset_ + offset, available);
 }
 
+int64 SliceBlob::ReadDirect(Reader *reader, int64 offset,
+                            int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
+  if (offset >= length_) {
+    return 0;
+  }
+  int64 available = length_ - offset;
+  if (available > max_bytes) {
+    available = max_bytes;
+  }
+  return blob_->ReadDirect(reader, offset_ + offset, available);
+}
+
+
 int64 SliceBlob::Length() const {
   return length_;
 }

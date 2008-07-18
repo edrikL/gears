@@ -44,7 +44,9 @@ JoinBlob::JoinBlob(const List &blob_list) : length_(0) {
 // all of its remaining bytes.  If it returns fewer than it has remaining,
 // then this function will return at that point.
 int64 JoinBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
-  assert(offset >= 0);
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
   Map::const_iterator itr(blob_map_.upper_bound(offset));
   // The first entry should always have key 0, so it should never be returned
   // by upper_bound unless the map is empty.
@@ -57,6 +59,35 @@ int64 JoinBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     int64 part_max_bytes = max_bytes - bytes_read;
     int64 part_read = itr->second->Read(part_destination,
                                         part_offset, part_max_bytes);
+    if (part_read == -1) return -1;
+    bytes_read += part_read;
+    ++itr;
+    if (itr == blob_map_.end()) break;
+    if (itr->first != offset + bytes_read) break;
+  }
+  return bytes_read;
+}
+
+// This implementation of ReadDirect attempts to cross member Blob boundaries
+// within a single call.  But that only occurs when the member Blob returns
+// all of its remaining bytes.  If it returns fewer than it has remaining,
+// then this function will return at that point.
+int64 JoinBlob::ReadDirect(Reader *reader, int64 offset,
+                           int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
+  Map::const_iterator itr(blob_map_.upper_bound(offset));
+  // The first entry should always have key 0, so it should never be returned
+  // by upper_bound unless the map is empty.
+  if (itr == blob_map_.begin()) return 0;
+  --itr;
+  int64 bytes_read = 0;
+  while (bytes_read < max_bytes) {
+    int64 part_offset = (itr->first < offset) ? offset - itr->first : 0;
+    int64 part_max_bytes = max_bytes - bytes_read;
+    int64 part_read = itr->second->ReadDirect(reader, part_offset,
+                                              part_max_bytes);
     if (part_read == -1) return -1;
     bytes_read += part_read;
     ++itr;
