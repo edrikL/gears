@@ -206,6 +206,78 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
   return true;
 }
 
+bool PermissionsDB::GetPermissionsSorted(PermissionsList *permission_list_out) {
+  assert(permission_list_out);
+  // This query first does an outer join on attribute 'Name' between the
+  // LOCAL_DATA and LOCATION_DATA access tables. This yields all origins
+  // that have either a LOCAL_DATA permission or both LOCAL_DATA and
+  // LOCATION_DATA permissions set. We compose this query with a second query
+  // that selects all origins that have only the LOCATION_DATA set. Note that
+  // RIGHT or FULL OUTER JOINs are not implemented by SQLite.
+  // Finally, we sort the result based on the following rule:
+  // - all origins that are allowed any permission type are listed first,
+  //   ordered lexicographically.
+  // - all origins that are denied both permission types, or that are denied
+  //   one permission type while the other one is not set, are listed last,
+  //   ordered lexicographically.
+  // To make the distinction between the two groups above, we look at the
+  // permission values: 1 denotes 'allowed' and 2 denotes 'denied'. For the 
+  // sorting purposes, 2 also denotes 'not set'. It then follows that if the
+  // summed permission value for an origin is less than 4 (i.e. (1,2) or (1,1)),
+  // then the origin must belong to the first group. If the summed value is
+  // equal to 4 (i.e. (2,2)) then the origin must belong to the second group.
+  static const char16 *select_query =
+      STRING16(L"SELECT Name, Storage, Location "
+          L"         FROM (SELECT Access.Name AS Name, "
+          L"                   LocationAccess.Value AS Location, "
+          L"                   Access.Value AS Storage FROM " 
+          L"                   Access LEFT OUTER JOIN LocationAccess ON "
+          L"                   Access.Name = LocationAccess.Name "
+          L"               UNION "
+          L"               SELECT DISTINCT LocationAccess.Name, "
+          L"                   LocationAccess.Value AS Location, "
+          L"                   null AS Storage "
+          L"                   FROM LocationAccess, Access "
+          L"                   WHERE LocationAccess.Name NOT IN "
+          L"                       (SELECT Access.Name FROM Access)) "
+          L"         ORDER BY "
+          L"         ((coalesce(Location, 2) + coalesce(Storage, 2)) < 4) "
+          L"         DESC, Name");
+
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(&db_, select_query)) {
+    return false;
+  }
+
+  int rv;
+  while (SQLITE_DONE != (rv = statement.step())) {
+    if (SQLITE_ROW != rv) {
+      LOG(("PermissionsDB::GetPermissionsByOrigin: Iterate failed: %d",
+           db_.GetErrorCode()));
+      return false;
+    }
+    const char16* origin = statement.column_text16(0);
+    assert(origin);
+    OriginPermissions origin_permissions;
+    PermissionValue value =
+        static_cast<PermissionValue>(statement.column_int(1));
+    // If the Storage column is null, column_int returns 0.
+    if (value != PERMISSION_NOT_SET) {
+      origin_permissions[PERMISSION_LOCAL_DATA] = value;
+    }
+
+    value = static_cast<PermissionValue>(statement.column_int(2));
+    // If the Location column is null, column_int returns 0.
+    if (value != PERMISSION_NOT_SET) {
+      origin_permissions[PERMISSION_LOCATION_DATA] = value;
+    }
+    assert(origin_permissions.size() > 0);
+    permission_list_out->push_back(std::make_pair(origin, origin_permissions));
+  }
+
+  return true;
+}
+
 
 bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &worker_origin,
                                          const SecurityOrigin &host_origin) {

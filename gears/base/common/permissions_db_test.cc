@@ -119,6 +119,160 @@ bool TestPermissionsDBAll(std::string16 *error) {
       bar, PermissionsDB::PERMISSION_LOCAL_DATA) ==
       PermissionsDB::PERMISSION_NOT_SET);
 
+  // Test GetPermissionsByOrigin().
+  // We already have foo in the permission table with LOCAL_DATA allowed.
+  // We add bar back with LOCAL_DATA denied.
+  // We then add totally_good (has both LOCAL_DATA and LOCATION_DATA allowed),
+  // totally_evil (has has both LOCAL_DATA and LOCATION_DATA denied),
+  // partially_evil (has LOCAL_DATA allowed and LOCATION_DATA denied),
+  // location_good (has LOCATION_DATA allowed) and, finally,
+  // location_evil (has LOCATION_DATA denied).
+  permissions->SetPermission(bar,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
+
+  SecurityOrigin totally_good;
+  totally_good.InitFromUrl(STRING16(L"http://unittest.totallygood.com"));
+  permissions->SetPermission(totally_good,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(totally_good,
+                             PermissionsDB::PERMISSION_LOCATION_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
+
+  SecurityOrigin partially_bad;
+  partially_bad.InitFromUrl(STRING16(L"http://unittest.partiallyevil.com"));
+  permissions->SetPermission(partially_bad,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
+  permissions->SetPermission(partially_bad,
+                             PermissionsDB::PERMISSION_LOCATION_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
+
+  SecurityOrigin totally_bad;
+  totally_bad.InitFromUrl(STRING16(L"http://unittest.totallybad.com"));
+  permissions->SetPermission(totally_bad,
+                             PermissionsDB::PERMISSION_LOCAL_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
+  permissions->SetPermission(totally_bad,
+                             PermissionsDB::PERMISSION_LOCATION_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
+
+  SecurityOrigin location_good;
+  location_good.InitFromUrl(STRING16(L"http://unittest.locationgood.com"));
+  permissions->SetPermission(location_good,
+                             PermissionsDB::PERMISSION_LOCATION_DATA,
+                             PermissionsDB::PERMISSION_ALLOWED);
+
+  SecurityOrigin location_bad;
+  location_bad.InitFromUrl(STRING16(L"http://unittest.locationbad.com"));
+  permissions->SetPermission(location_bad,
+                             PermissionsDB::PERMISSION_LOCATION_DATA,
+                             PermissionsDB::PERMISSION_DENIED);
+
+  PermissionsDB::PermissionsList permissions_list;
+  TEST_ASSERT(permissions->GetPermissionsSorted(&permissions_list));
+  // The permissions vector should then contain our test entries in the
+  // following order (note that there may be other origins as well) :
+  // foo,           (<LOCAL_DATA -> PERMISSION_ALLOWED>)
+  // location_good, (<LOCATION_DATA -> PERMISSION_ALLOWED>)
+  // partially_evil,(<LOCAL_DATA -> PERMISSION_ALLOWED>,
+  //                 <LOCATION_DATA -> PERMISSION_DENIED>)
+  // totally_good,  (<LOCAL_DATA -> PERMISSION_ALLOWED>,
+  //                 <LOCATION_DATA -> PERMISSION_ALLOWED>)
+  // bar,           (<LOCAL_DATA -> PERMISSION_DENIED>)
+  // location_bad,  (<LOCATION_DATA -> PERMISSION_DENIED>)
+  // totally_bad,   (<LOCAL_DATA -> PERMISSION_DENIED>,
+  //                 <LOCATION_DATA-> PERMISSION_DENIED>)
+
+  SecurityOrigin *next_expected_origin = &foo;
+  int count = 0;
+  for (int i = 0; i < static_cast<int>(permissions_list.size()); ++i) {
+    if (permissions_list[i].first == foo.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url() == foo.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 1);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCAL_DATA] ==
+              PermissionsDB::PERMISSION_ALLOWED);
+      next_expected_origin = &location_good;
+      count++;
+
+    } else if (permissions_list[i].first == location_good.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url()  ==
+          location_good.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 1);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCATION_DATA] ==
+              PermissionsDB::PERMISSION_ALLOWED);
+      next_expected_origin = &partially_bad;
+      count++;
+
+    } else if (permissions_list[i].first == partially_bad.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url()  ==
+          partially_bad.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 2);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCAL_DATA] ==
+              PermissionsDB::PERMISSION_ALLOWED);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCATION_DATA] ==
+              PermissionsDB::PERMISSION_DENIED);
+      next_expected_origin = &totally_good;
+      count++;
+
+    } else if (permissions_list[i].first == totally_good.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url()  == totally_good.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 2);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCAL_DATA] ==
+              PermissionsDB::PERMISSION_ALLOWED);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCATION_DATA] ==
+              PermissionsDB::PERMISSION_ALLOWED);
+      next_expected_origin = &bar;
+      count++;
+
+    } else if (permissions_list[i].first == bar.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url() == bar.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 1);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCAL_DATA] ==
+              PermissionsDB::PERMISSION_DENIED);
+      next_expected_origin = &location_bad;
+      count++;
+
+    } else if (permissions_list[i].first == location_bad.full_url()) {
+    
+      TEST_ASSERT(next_expected_origin->full_url() == location_bad.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 1);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCATION_DATA] ==
+              PermissionsDB::PERMISSION_DENIED);
+      next_expected_origin = &totally_bad;
+      count++;
+
+    } else if (permissions_list[i].first == totally_bad.full_url()) {
+
+      TEST_ASSERT(next_expected_origin->full_url() == totally_bad.full_url());
+      TEST_ASSERT(permissions_list[i].second.size() == 2);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCAL_DATA] ==
+              PermissionsDB::PERMISSION_DENIED);
+      TEST_ASSERT(
+          permissions_list[i].second[PermissionsDB::PERMISSION_LOCATION_DATA] ==
+              PermissionsDB::PERMISSION_DENIED);
+      count++;
+
+    }
+  }
+
+  TEST_ASSERT(count == 7);
+
   // TODO(shess) Constants for later comparison.
   const std::string16 kFooTest1(STRING16(L"Test"));
   const std::string16 kFooTest1Url(STRING16(L"http://www.foo.com/Test.html"));
