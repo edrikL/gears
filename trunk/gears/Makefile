@@ -1901,6 +1901,7 @@ $(BROWSER)_VPATH += \
 $(BROWSER)_CPPSRCS += \
 		blob.cc \
 		blob_builder.cc \
+		blob_interface.cc \
 		blob_test.cc \
 		blob_utils.cc \
 		buffer_blob.cc \

@@ -24,14 +24,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "blob_input_stream_ff.h"
-#include "buffer_blob.h"
+#include <algorithm>
+#include "gears/base/common/string_utils.h"
+#include "gears/blob/blob_input_stream_ff.h"
+#include "gears/blob/buffer_blob.h"
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOCATION __FILE__ ", line " TOSTRING(__LINE__)
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestBlobInputStreamFf - failed (%d)\n", __LINE__)); \
+    LOG(("failed at " LOCATION)); \
+    assert(error); \
+    if (!error->empty()) *error += STRING16(L", "); \
+    *error += STRING16(L"failed at "); \
+    std::string16 location; \
+    UTF8ToString16(LOCATION, &location); \
+    *error += location; \
     return false; \
   } \
 }
@@ -58,7 +69,7 @@ int ExpectedCount(int bytes) {
   return ((bytes - 1) / rs_buffer_size) + 1;
 }
 
-// This consumer accepts all input.
+// This consumer accepts up to 1MB of input at a time.
 NS_IMETHODIMP ConsumerIdeal(nsIInputStream *aInStream,
                             void *aClosure,
                             const char *aFromSegment,
@@ -66,11 +77,12 @@ NS_IMETHODIMP ConsumerIdeal(nsIInputStream *aInStream,
                             PRUint32 aCount,
                             PRUint32 *aWriteCount) {
   ++consumer_count;
-  *aWriteCount = aCount;
+  *aWriteCount = std::min(aCount, static_cast<PRUint32>(1024 * 1024));
   return NS_OK;
 }
 
-// This consumer accepts all input until it is called for the Nth time.
+// This consumer accepts all input up to 1MB at a time
+// until it is called for the Nth time.
 NS_IMETHODIMP ConsumerFails(nsIInputStream *aInStream,
                             void *aClosure,
                             const char *aFromSegment,
@@ -81,7 +93,7 @@ NS_IMETHODIMP ConsumerFails(nsIInputStream *aInStream,
   if (consumer_count >= consumer_fail) {
     return NS_ERROR_FAILURE;
   }
-  *aWriteCount = aCount;
+  *aWriteCount = std::min(aCount, static_cast<PRUint32>(1024 * 1024));
   return NS_OK;
 }
 
@@ -117,7 +129,8 @@ enum Writer {
 // This function creates a BlobInputStream filled with data_size bytes of data.
 // It then calls ReadSegments() on that stream, passing in various writers
 // to confirm correct behavior of the stream's ReadSegments function.
-bool TestBlobInputStreamFfReadSegments(Writer type,
+bool TestBlobInputStreamFfReadSegments(std::string16 *error,
+                                       Writer type,
                                        BlobInterface* blob,
                                        PRUint32 in_bytes) {
   // Initialize all of these variables because some compilers complain that they
@@ -144,7 +157,8 @@ bool TestBlobInputStreamFfReadSegments(Writer type,
     case FAIL8:
       writer = &ConsumerFails;
       expected_count = consumer_fail = static_cast<int>(type);
-      expected_bytes = rs_buffer_size * (expected_count - 1);
+      if (consumer_fail > 1) ++expected_count;
+      expected_bytes = rs_buffer_size * (consumer_fail - 1);
       expected_result = NS_OK;
       // There's no reason to set the failure count too high for the
       // number of bytes we have to read.  Just use SUCCEED instead.
@@ -177,53 +191,70 @@ bool TestBlobInputStreamFf(std::string16 *error) {
 
   // Test a writer that always succeeds.
   // Try to read all available data.
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          data_size);
   // Try to read 1KB of data (less than a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024);
   // Try to read 1MB of data (exactly a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024 * 1024);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024 * 1024);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024 * 1024 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024 * 1024 * 2);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024*1024*2 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024*1024*2 + 1);
   // Try to read 10MB of data (more than available).  Expect to return 8MB.
-  ok &= TestBlobInputStreamFfReadSegments(SUCCEED, blob.get(), 1024*1024*10);
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+                                          1024*1024*10);
 
   // Test a writer failing on the first call.
   // Try to read all available data.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(), data_size);
   // Try to read 1KB of data (less than a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(), 1024);
   // Try to read 1MB of data (exactly a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024 * 1024);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+                                          1024 * 1024);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024 * 1024 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+                                          1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024 * 1024 * 2);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+                                          1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024*1024*2 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+                                          1024*1024*2 + 1);
   // Try to read 10MB of data (more than available).
-  ok &= TestBlobInputStreamFfReadSegments(FAIL1, blob.get(), 1024 * 1024 * 10);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+                                          1024 * 1024 * 10);
 
   // Test a writer that fails on a later call.
   // Try to read all available data, fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL2, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(), data_size);
   // Try to read all available data, fail on 8.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL8, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL8, blob.get(), data_size);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL2, blob.get(), 1024 * 1024 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+                                          1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL2, blob.get(), 1024 * 1024 * 2);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+                                          1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL2, blob.get(), 1024*1024*2 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+                                          1024*1024*2 + 1);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers), fail on 3.
-  ok &= TestBlobInputStreamFfReadSegments(FAIL3, blob.get(), 1024*1024*2 + 1);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL3, blob.get(),
+                                          1024*1024*2 + 1);
 
   // Test a writer that returns NS_OK and a byte count of 0.
   // NOTE - this should result in an assert, so do NOT enable this by default!
-  //ok &= TestBlobInputStreamFfReadSegments(READ_ZERO, blob.get(), data_size);
+  //ok &= TestBlobInputStreamFfReadSegments(error, READ_ZERO, blob.get(),
+  //                                        data_size);
 
   if (!ok) {
     assert(error);

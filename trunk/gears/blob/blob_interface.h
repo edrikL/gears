@@ -130,6 +130,14 @@ class DataElement {
 
 class BlobInterface : public RefCounted {
  public:
+  // Interface used to read directly from a blob's internal buffer.
+  class Reader {
+   public:
+    // Reads at most max_length bytes from buffer.  Returns the number
+    // of bytes read.  Returns 0 when finished.
+    virtual int64 ReadFromBuffer(const uint8 *buffer, int64 max_bytes) = 0;
+  };
+
   // Reads up to max_bytes from the blob beginning at the absolute position
   // indicated by offset, and writes the data into destination.  Multiple Reads
   // are unrelated.  Returns the number of bytes successfully read, or -1 on
@@ -138,6 +146,13 @@ class BlobInterface : public RefCounted {
   // bytes.
   virtual int64 Read(uint8 *destination, int64 offset,
                      int64 max_bytes) const = 0;
+
+  // Reads data directly from the internal data buffer (if applicable).
+  // Otherwise, will copy data into a temporary buffer and pass that buffer
+  // to the Reader.
+  // max_bytes is the upper limit on the amount of data to be read.
+  // Returns the number of bytes read.
+  virtual int64 ReadDirect(Reader *reader, int64 offset, int64 max_bytes) const;
 
   // Note that Length can be volatile, e.g. a file-backed Blob can have that
   // file's size change underneath it.
@@ -164,6 +179,13 @@ class EmptyBlob : public BlobInterface {
 
   virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
     if (!destination || (offset < 0) || (max_bytes < 0))
+      return -1;
+    return 0;
+  }
+
+  virtual int64 ReadDirect(Reader *reader, int64 offset,
+                           int64 max_bytes) const {
+    if (!reader || (offset < 0) || (max_bytes < 0))
       return -1;
     return 0;
   }

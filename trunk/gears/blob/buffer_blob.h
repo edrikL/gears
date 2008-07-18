@@ -43,6 +43,7 @@ class BufferBlob : public BlobInterface {
   BufferBlob(const void *source, int64 num_bytes);
 
   virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
+  virtual int64 ReadDirect(Reader *reader, int64 offset, int64 max_bytes) const;
   virtual int64 Length() const;
   virtual bool GetDataElements(std::vector<DataElement> *elements) const;
  private:

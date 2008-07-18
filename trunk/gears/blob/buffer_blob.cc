@@ -59,6 +59,31 @@ int64 BufferBlob::Read(uint8 *destination, int64 offset,
   return num_bytes;
 }
 
+int64 BufferBlob::ReadDirect(Reader *reader, int64 offset,
+                             int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
+  if (offset >= buffer_.size() || max_bytes == 0) {
+    return 0;
+  }
+  if (buffer_.size() - offset < max_bytes) {
+    max_bytes = buffer_.size() - offset;
+  }
+  int64 total_bytes_read(0);
+  size_type pos(static_cast<size_type>(offset));
+  while (max_bytes > 0) {
+    int64 bytes_read = reader->ReadFromBuffer(&buffer_[pos], max_bytes);
+    assert(bytes_read >= 0);
+    if (bytes_read == 0) break;
+    assert(bytes_read <= max_bytes);
+    total_bytes_read += bytes_read;
+    pos += static_cast<size_type>(bytes_read);
+    max_bytes -= bytes_read;
+  }
+  return total_bytes_read;
+}
+
 int64 BufferBlob::Length() const {
   return buffer_.size();
 }
