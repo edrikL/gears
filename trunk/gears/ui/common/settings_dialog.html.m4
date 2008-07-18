@@ -62,11 +62,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     }
 
     #content table {
-      border:1px #ccc;
+      border: 1px #ccc;
       /* Only set the sides and bottom border of the table because
       border-colapse doesn't work on WinCE. */
       border-style: none solid;
-      border-bottom-style: solid;
       border-collapse: collapse;
       /* A bug in Mozilla with border-collapse:collapse along with the overflow
       settings we have on the scroll element causes the left border to be
@@ -77,11 +76,15 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     #content td {
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
-      padding:4px;
+      padding: 2px;
 ~,
 ~
-      padding:0.5em; 
+      padding: 4px; 
 ~)
+    }
+
+    #content table.permissions {
+      border-bottom-style: solid;
     }
 
     #version {
@@ -130,8 +133,8 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~,~~)
 
     td.origin-name {
-      border-top: 1px solid #ccc;
       font-weight: bold;
+      width: 100%;
     }
 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
@@ -325,27 +328,30 @@ m4_include(genfiles/settings_dialog.js)
     var table = dom.getElementById('div-permissions');
 
     var content = "";
+    var isFirstOrigin = true;
     for (var originName in permissions) {
-      content += renderOrigin(originName, permissions[originName]);
+      content += renderOrigin(originName,
+                              permissions[originName],
+                              isFirstOrigin);
+      isFirstOrigin = false;
     }
     if (content == "") {
-      content = "<tr><td class=\"left\"><em>";
-      var allowedText = dom.getElementById("string-nosites");
-      if (allowedText) {
-        if (isDefined(typeof allowedText.innerText)) {
-          content += allowedText.innerText;
+      content = "<table style=\"border-style: solid;\"><tbody>";
+      content += "<tr><td class=\"left\"><em>";
+      var noSitesText = dom.getElementById("string-nosites");
+      if (noSitesText) {
+        if (isDefined(typeof noSitesText.innerText)) {
+          content += noSitesText.innerText;
         } else {
-          content += allowedText.textContent;
+          content += noSitesText.textContent;
         }
       }
-      content += "</em></td><td></td></tr>";
+      content += "</em></td><td></td></tr></tbody></table>";
     } 
-    table.innerHTML = "<table><tbody>" +
-                      content +
-                      "</tbody></table>";
+    table.innerHTML = content;
   }
 
-  function renderOrigin(originName, originData) {
+  function renderOrigin(originName, originData, isFirstOrigin) {
     var localStorageContent =
         renderLocalStorage(originName, originData.localStorage);
     var locationDataContent =
@@ -355,9 +361,17 @@ m4_include(genfiles/settings_dialog.js)
     if (localStorageContent == "" && locationDataContent == "") {
       return "";
     }
-    var content = "<tr><td class=\"origin-name\" colspan=\"2\">";
+    var content = "<table";
+    if (isFirstOrigin) {
+      content += " style=\"border-top-style: solid;\"";
+    }
+    content += "><tbody>";
+    content += "<tr><td class=\"origin-name\">";
     content += wrapDomain(originName);
-    content += "</td></tr>";
+    content += "</td><td></td>";
+    content += "</td></tr></tbody></table>";
+
+    content += "<table class=\"permissions\"><tbody>";
     if (localStorageContent != "") {
       content += "<tr>";
       content += localStorageContent;
@@ -368,6 +382,7 @@ m4_include(genfiles/settings_dialog.js)
       content += locationDataContent;
       content += "</tr>";
     }
+    content += "</td></tr></tbody></table>";
     return content;
   }
 
