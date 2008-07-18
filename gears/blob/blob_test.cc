@@ -30,6 +30,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_builder.h"
+#include "gears/blob/blob_utils.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/file_blob.h"
 #include "gears/blob/join_blob.h"
@@ -464,6 +465,110 @@ static bool TestBlobDataElements(std::string16 *error) {
   return true;
 }
 
+static bool TestBlobUtils(std::string16 *error) {
+  static const int kBufferSize = 128;
+  uint8 buffer[kBufferSize];
+
+  const char data1[] = "plain ascii text";
+  scoped_refptr<BlobInterface> blob1(new BufferBlob(data1, strlen(data1)));
+  // Test BlobToVector on plain ascii text.
+  std::vector<uint8> vector1;
+  TEST_ASSERT(BlobToVector(blob1.get(), &vector1));
+  TEST_ASSERT(static_cast<int64>(vector1.size()) == blob1->Length());
+  TEST_ASSERT(blob1->Length() == blob1->Read(buffer, 0, kBufferSize));
+  TEST_ASSERT(0 == memcmp(buffer, &vector1[0], vector1.size()));
+  // Test BlobToString on plain ascii text.
+  std::string string1;
+  TEST_ASSERT(BlobToString(blob1.get(), &string1));
+  TEST_ASSERT(static_cast<int64>(string1.size()) == blob1->Length());
+  TEST_ASSERT(blob1->Length() == blob1->Read(buffer, 0, kBufferSize));
+  TEST_ASSERT(0 == memcmp(buffer, &string1[0], string1.size()));
+  // Test BlobToString16 on plain ascii text.
+  std::string16 utf16_1;
+  std::string16 expected1;
+  TEST_ASSERT(UTF8ToString16(data1, &expected1));
+  TEST_ASSERT(BlobToString16(blob1.get(), STRING16(L"UTF-8"), &utf16_1));
+  TEST_ASSERT(utf16_1 == expected1);
+
+  // Test BlobToString16 with some multi-byte utf8 characters.
+  const char data2[] = "some multi-byte utf8: \xCF\x8F";
+  scoped_refptr<BlobInterface> blob2(new BufferBlob(data2, strlen(data2)));
+  std::string16 utf16_2;
+  std::string16 expected2;
+  TEST_ASSERT(UTF8ToString16(data2, &expected2));
+  TEST_ASSERT(BlobToString16(blob2.get(), STRING16(L"UTF-8"), &utf16_2));
+  TEST_ASSERT(utf16_2 == expected2);
+
+  // Test BlobToString16 on invalid UTF-8 data.
+  const char data3[] = "some invalid utf8: \xFF\xFF";
+  scoped_refptr<BlobInterface> blob3(new BufferBlob(data3, strlen(data3)));
+  std::string16 utf16_3;
+  std::string16 expected3;
+  TEST_ASSERT(!UTF8ToString16(data3, &expected3));
+  TEST_ASSERT(!BlobToString16(blob3.get(), STRING16(L"UTF-8"), &utf16_3));
+
+  // Test BlobToString16 on a UTF-8 string ending in an incomplete character.
+  const char data4[] = "Last char should be three bytes: \xEF\x8F";
+  scoped_refptr<BlobInterface> blob4(new BufferBlob(data4, strlen(data4)));
+  std::string16 utf16_4;
+  std::string16 expected4;
+  TEST_ASSERT(!UTF8ToString16(data4, &expected4));
+  TEST_ASSERT(!BlobToString16(blob4.get(), STRING16(L"UTF-8"), &utf16_4));
+
+  // Test BlobToString16 on a JoinBlob.
+  const char data5_1[] = "this";
+  const char data5_2[] = "is";
+  const char data5_3[] = "a";
+  const char data5_4[] = "test";
+  JoinBlob::List blob_list5;
+  blob_list5.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data5_1, strlen(data5_1))));
+  blob_list5.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data5_2, strlen(data5_2))));
+  blob_list5.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data5_3, strlen(data5_3))));
+  blob_list5.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data5_4, strlen(data5_4))));
+  scoped_refptr<BlobInterface> blob5(new JoinBlob(blob_list5));
+  std::string text5;
+  text5.append(data5_1);
+  text5.append(data5_2);
+  text5.append(data5_3);
+  text5.append(data5_4);
+  std::string16 expected5;
+  std::string16 utf16_5;
+  TEST_ASSERT(UTF8ToString16(text5.c_str(), &expected5));
+  TEST_ASSERT(BlobToString16(blob5.get(), STRING16(L"UTF-8"), &utf16_5));
+  TEST_ASSERT(utf16_5 == expected5);
+
+  // Test BlobToString16 on a JoinBlob with split characters.
+  const char data6_1[] = "Two byte character: \xCF";
+  const char data6_2[] = "\x8F.  A 4-byte character split twice: \xF4";
+  const char data6_3[] = "\x8F";
+  const char data6_4[] = "\xAF\xAF.  See if that works!";
+  JoinBlob::List blob_list6;
+  blob_list6.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data6_1, strlen(data6_1))));
+  blob_list6.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data6_2, strlen(data6_2))));
+  blob_list6.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data6_3, strlen(data6_3))));
+  blob_list6.push_back(scoped_refptr<BlobInterface>(
+                           new BufferBlob(data6_4, strlen(data6_4))));
+  scoped_refptr<BlobInterface> blob6(new JoinBlob(blob_list6));
+  std::string text6;
+  text6.append(data6_1);
+  text6.append(data6_2);
+  text6.append(data6_3);
+  text6.append(data6_4);
+  std::string16 expected6;
+  std::string16 utf16_6;
+  TEST_ASSERT(UTF8ToString16(text6.c_str(), &expected6));
+  TEST_ASSERT(BlobToString16(blob6.get(), STRING16(L"UTF-8"), &utf16_6));
+  TEST_ASSERT(utf16_6 == expected6);
+
+  return true;
+}
 
 bool TestBlob(std::string16 *error) {
   bool ok = true;
@@ -472,6 +577,7 @@ bool TestBlob(std::string16 *error) {
   ok &= TestJoinBlob(error);
   ok &= TestSliceBlob(error);
   ok &= TestBlobDataElements(error);
+  ok &= TestBlobUtils(error);
   return ok;
 }
 
