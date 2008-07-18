@@ -151,7 +151,11 @@ class NotificationManager : public BalloonCollectionObserver {
   bool InternalLoadNotifications(File *file);
 
   // Helper function to get the path for saving notifications.
-  static bool GetNotificationSavePath(std::string16 *file_path);
+  static bool GetNotificationSavePath(std::string16 *file_path,
+                                      bool create_if_missing);
+
+  // Helper function to clean up the path used to save notifications.
+  static void CleanupNotificationSavePath(const std::string16 &file_path);
 
   // Helper function to write a notification.
   static bool WriteNotification(File *file,

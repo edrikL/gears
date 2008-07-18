@@ -28,8 +28,12 @@
 #else
 #if defined(LINUX) && !defined(OS_MACOSX)
 
-#include <string>
 #include "gears/notifier/system.h"
+
+#include <string>
+
+#include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
 
 std::string System::GetResourcePath() {
   // TODO(dimich): Implement this.
@@ -37,10 +41,19 @@ std::string System::GetResourcePath() {
   return std::string();
 }
 
-bool System::GetUserDataLocation(std::string16 *path) {
-  // TODO(jianli): Implement this.
-  assert(false && "Not implemented");
-  return false;
+bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
+  assert(path);
+
+  *path = STRING16(L"~/.");
+  *path += STRING16(PRODUCT_SHORT_NAME);
+  
+  if (create_if_missing && !File::DirectoryExists(path->c_str())) {
+    if (!File::RecursivelyCreateDir(path->c_str())) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {

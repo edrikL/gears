@@ -28,14 +28,19 @@
 #else
 #if WIN32
 
+#include "gears/notifier/system.h"
+
 #include <string>
 #include <assert.h>
 #include <atlbase.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <windows.h>
-#include "gears/notifier/system.h"
+
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "third_party/glint/include/rectangle.h"
@@ -103,9 +108,30 @@ bool GetSpecialFolder(DWORD csidl, std::string16 *folder_path) {
   return !folder_path->empty();
 }
 
-bool System::GetUserDataLocation(std::string16 *path) {
+bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
   assert(path);
-  return GetSpecialFolder(CSIDL_APPDATA | CSIDL_FLAG_CREATE, path);
+
+  // Get the path to the special folder holding application-specific data.
+  int folder_id = CSIDL_APPDATA;
+  if (create_if_missing) {
+    folder_id |= CSIDL_FLAG_CREATE;
+  }
+  if (!GetSpecialFolder(folder_id, path)) {
+    return false;
+  }
+
+  // Add the directory for our product. If the directory does not exist, create
+  // it.
+  *path += kPathSeparator;
+  *path += STRING16(PRODUCT_SHORT_NAME);
+
+  if (create_if_missing && !File::DirectoryExists(path->c_str())) {
+    if (!File::RecursivelyCreateDir(path->c_str())) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void System::GetMainScreenBounds(glint::Rectangle *bounds) {
