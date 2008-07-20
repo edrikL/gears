@@ -30,6 +30,7 @@
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
 #import "gears/ui/safari/settings_menu.h"
+#import "gears/ui/safari/native_dialogs_osx.h"
 
 static ExceptionManager exception_manager(true);
 
@@ -100,6 +101,8 @@ static ExceptionManager exception_manager(true);
   LOG(("Gears: finishlaunching hook called"));
   // Install Settings Menu.
   [GearsSettingsMenuEnabler installSettingsMenu];
+  LOG(("Gears: Loading Nibs"));
+  PreloadNibFiles();
   LOG(("Gears: finishlaunching hook exited"));
 }
 @end

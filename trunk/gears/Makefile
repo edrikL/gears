@@ -1714,6 +1714,7 @@ SF_VPATH	+= \
 SF_CPPSRCS	+= \
 		html_dialog_sf.mm \
 		html_modeless_dialog_sf.mm \
+		native_dialogs_osx.mm \
 		settings_menu.mm \
 		$(NULL)
 
