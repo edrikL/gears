@@ -148,7 +148,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="string-deny"></div>
     <div id="string-deny-accesskey"></div>
     <div id="string-cancel"></div>
-    <div id="string-trust-site-accesskey"></div>
   </div>
 
   <!--
@@ -225,7 +224,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           </td>
           <td valign="middle">
             <label for="unlock">
-              &nbsp;<span id="string-trust-site"></span>
+          <span id="string-trust-site"></span>
             </label>
           </td>
         </tr>
@@ -325,14 +324,6 @@ m4_include(genfiles/permissions_dialog.js)
 
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
   setButtonLabel("string-deny", "deny-button", "string-deny-accesskey");
-
-  // Highlight the access key in the 'trust' text.
-  // TODO(zork): Cause this to be based on the localized string, and figure out
-  // how to programmatically set the access key for the checkbox.
-  var trustTextElement = dom.getElementById("string-trust-site");
-  text = trustTextElement.innerHTML;
-  text = text.replace(/t/, "<span class='accesskey'>t</span>");
-  trustTextElement.innerHTML = text;
 
   if (!browser.ie_mobile) {
     CustomButton.initializeAll();
