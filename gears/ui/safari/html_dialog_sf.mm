@@ -37,7 +37,8 @@
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/base/safari/scoped_cf.h"
 #import "gears/ui/common/html_dialog.h"
-#import  "gears/ui/safari/html_dialog_sf.h"
+#import "gears/ui/safari/html_dialog_sf.h"
+#import "gears/ui/safari/native_dialogs_osx.h"
 
 @implementation HTMLDialogImp
 
@@ -174,9 +175,11 @@ static NSDictionary *ScriptableMethods() {
  // Credit goes to David Sinclair of Dejal software for this method of running
  // a modal WebView.
  NSModalSession session = [NSApp beginModalSessionForWindow:window_];
+ NSRunLoop *runloop = [NSRunLoop currentRunLoop];
+ NSDate *oneHunderMS = [NSDate dateWithTimeIntervalSinceNow:0.1];
   while (!window_dismissed_ && 
           [NSApp runModalSession:session] == NSRunContinuesResponse) {
-     [[NSRunLoop currentRunLoop] limitDateForMode:NSDefaultRunLoopMode];
+     [runloop runMode:NSDefaultRunLoopMode beforeDate:oneHunderMS];
   }
   [NSApp endModalSession:session];
   
@@ -345,6 +348,9 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
     return false;
   }
   
+  // We've temporarily disalbed HTML dialogs till we can resolve the underlying
+  // bug in WebKit.  For now we use Native dialogs.
+# if 0  
   HTMLDialogImp *dialog = [[[HTMLDialogImp alloc]
                                  initWithHtmlFile:html_filename 
                                         arguments:arguments_string
@@ -354,10 +360,16 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
   if (!dialog) {
     return false;
   }
-  std::string16 results;
+  std::string16 result;
   if (![dialog showModal:&results]) {
     return false;
   }
+#else
+  std::string16 results;
+  if (!ShowNativeModal(html_filename, arguments_string, &results)) {
+    return false;
+  }
+#endif
   
   SetResult(results.c_str());
   return true;

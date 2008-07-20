@@ -656,8 +656,11 @@ $(SF_OUTDIR)/%.res: $(COMMON_RESOURCES) $(SF_M4FILES_I18N)
 	xxd -i "$(SF_OUTDIR)/settings_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h"
 	xxd -i "$(SF_OUTDIR)/permissions_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h"
 	xxd -i "$(SF_OUTDIR)/shortcuts_dialog.webarchive" > "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h"
+# Resources for native dialogs
+	xxd -i "ui/common/location_data.png" > "$($(BROWSER)_OUTDIR)/genfiles/location_data.h"
+	xxd -i "ui/common/local_data.png" > "$($(BROWSER)_OUTDIR)/genfiles/local_data.h"
 	
-	tools/osx/gen_resource_list.py "$($(BROWSER)_OUTDIR)/genfiles/resource_list.h" "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h"
+	tools/osx/gen_resource_list.py "$($(BROWSER)_OUTDIR)/genfiles/resource_list.h" "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/location_data.h" "$($(BROWSER)_OUTDIR)/genfiles/local_data.h"
 	
 	$(CC) $(SF_CPPFLAGS) $(SF_CXXFLAGS) $(CPPFLAGS) -include base/safari/prefix_header.h -fshort-wchar -c base/safari/resource_archive.cc -o $@
 	
@@ -1056,6 +1059,8 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_E
 # Add Info.plist file & localized strings.
 	cp $($(BROWSER)_OUTDIR)/genfiles/Info.plist $@/Contents/
 	cp tools/osx/English.lproj/InfoPlist.strings $@/Contents/Resources/English.lproj/InfoPlist.strings
+# Copy Native dialog resources
+	cp -R ui/safari/*.nib $@/Contents/Resources/
 # Copy breakpad exes.
 	cp -r $(CRASH_SENDER_EXE) $@/Contents/Resources/
 	cp -r $(OSX_CRASH_INSPECTOR_EXE) $@/Contents/Resources/
