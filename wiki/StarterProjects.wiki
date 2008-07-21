@@ -26,6 +26,8 @@ factory.parseJson('function() {alert(\"Not JSON!\");}');  // throws an Exception
 
 The key question is whether or not the performance gain is big enough that we should care. Benchmark evidence will be as important as actual working code.
 
+!WebKit's Bugzilla has [https://bugs.webkit.org/show_bug.cgi?id=20031 some working code] that we could possibly re-use. There's also a [http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2008-June/015078.html WHAT-WG mail thread] that might be worth reading.
+
 
 = Other Sources for Project Ideas =
 
