@@ -1426,7 +1426,22 @@ NOTIFIER_CPPSRCS += \
 		notifier_osx.mm \
 		system_osx.mm \
 		$(NULL)
+		
+NOTIFIER_RESOURCES += \
+		notifier/resources/background.png \
+		notifier/resources/button_strip.png \
+		notifier/resources/close_button_strip.png \
+		$(NULL)
+
+COMMON_VPATH	+= \
+		tools/osx \
+		$(NULL)
+
+COMMON_M4SRCS += \
+		Notifier-Info.plist.m4 \
+		$(NULL)
 endif
+
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
