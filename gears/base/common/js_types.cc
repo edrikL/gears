@@ -359,12 +359,6 @@ bool JsArray::SetElementComModule(int index, IScriptable *value) {
   }
 }
 
-bool JsArray::SetElementDispatcherModule(int index,
-                                         ModuleImplBaseClass *value) {
-  return SetElement(index, value->GetWrapperToken());
-}
-
-
 #elif BROWSER_IE
 
 JsArray::JsArray() : js_context_(NULL) {
@@ -447,11 +441,6 @@ bool JsArray::SetElementComModule(int index, IScriptable *value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementDispatcherModule(int index,
-                                         ModuleImplBaseClass *value) {
-  return SetElement(index, value->GetWrapperToken());
-}
-
 #elif BROWSER_NPAPI
 
 JsArray::JsArray() : js_context_(NULL) {
@@ -527,13 +516,6 @@ bool JsArray::SetElementComModule(int index, IScriptable *value) {
   return false;
 }
 
-bool JsArray::SetElementDispatcherModule(int index,
-                                         ModuleImplBaseClass *value) {
-  // TODO(nigeltao): implement this
-  assert(false);
-  return false;
-}
-
 #endif
 
 // Common JsArray functions
@@ -604,6 +586,11 @@ bool JsArray::SetElementObject(int index, JsObject *value) {
 
 bool JsArray::SetElementFunction(int index, JsRootedCallback *value) {
   return SetElement(index, value->token());
+}
+
+bool JsArray::SetElementDispatcherModule(int index,
+                                         ModuleImplBaseClass *value) {
+  return SetElement(index, value->GetWrapperToken());
 }
 
 // Browser specific JsObject functions.
@@ -729,11 +716,6 @@ bool JsObject::SetPropertyComModule(const std::string16& name,
   }
 }
 
-bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
-                                           ModuleImplBaseClass *value) {
-  return SetProperty(name, value->GetWrapperToken());
-}
-
 #elif BROWSER_IE
 
 JsObject::JsObject() : js_context_(NULL) {
@@ -805,11 +787,6 @@ bool JsObject::SetPropertyString(const std::string16 &name,
 bool JsObject::SetPropertyComModule(const std::string16& name,
                                     IScriptable* value) {
   return SetProperty(name, CComVariant(value));
-}
-
-bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
-                                           ModuleImplBaseClass *value) {
-  return SetProperty(name, value->GetWrapperToken());
 }
 
 #elif BROWSER_NPAPI
@@ -908,12 +885,6 @@ bool JsObject::SetPropertyComModule(const std::string16& name,
   return false;
 }
 
-bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
-                                           ModuleImplBaseClass *value) {
-  // TODO(nigeltao): implement
-  return false;
-}
-
 #endif
 
 // Common JsObject functions
@@ -990,6 +961,11 @@ bool JsObject::SetPropertyObject(const std::string16& name, JsObject* value) {
 bool JsObject::SetPropertyFunction(const std::string16& name,
                                    JsRootedCallback* value) {
   return SetProperty(name, value->token());
+}
+
+bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
+                                           ModuleImplBaseClass *value) {
+  return SetProperty(name, value->GetWrapperToken());
 }
 
 
