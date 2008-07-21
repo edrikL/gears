@@ -1,6 +1,10 @@
 ﻿#summary A proposal for supporting resumable non-idempotent HTTP requests in HTTP/1.1.
 #labels DesignDoc
 
+= DEPRECATION WARNING =
+
+This document has been deprecated. Please see the new protocol specification at ResumableHttp10RequestsProposal. In the long term the two documents will be combined, adding 103s as optional optimistic responses to HTTP/1.1 clients/proxies. But for now, please focus your attention on the HTTP/1.0 document ResumableHttp10RequestsProposal.
+
 = Introduction =
 
 Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose a related set of straight-forward, consistent extensions to HTTP/1.1 which provide native support for resuming non-idempotent HTTP requests, whose adoption would obviate the need for custom clients to reliably perform large non-idempotent operations, such as uploading large files. These extensions work completely transparently to the uploading web application, allowing deployment solely via browser and server updates, retrofitting all existing web applications and forms, and thereby improving the quality of upload across the entire web. Further, these extensions could be implemented by proxies, independent of support on either the client or server.
