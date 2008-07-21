@@ -2067,9 +2067,6 @@ endif # android
 #-----------------------------------------------------------------------------
 # geolocation
 
-ifeq ($(OFFICIAL_BUILD),1)
-# The Geolocation API has not been finalized for official builds.
-else
 $(BROWSER)_VPATH	+= \
 		geolocation \
 		$(NULL)
@@ -2098,7 +2095,6 @@ $(BROWSER)_CPPSRCS	+= \
 		wifi_data_provider_wince.cc \
 		wifi_data_provider_windows_common.cc \
 		$(NULL)
-endif
 
 #-----------------------------------------------------------------------------
 # media

@@ -28,10 +28,6 @@
 // osx_wifi_.h. This file is taken from the iStumbler project
 // (http://www.istumbler.net).
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
 #ifdef OS_MACOSX
@@ -163,5 +159,3 @@ void OsxWifiDataProvider::GetAccessPointData(
 }
 
 #endif  // OS_MACOSX
-
-#endif  // OFFICIAL_BUILD

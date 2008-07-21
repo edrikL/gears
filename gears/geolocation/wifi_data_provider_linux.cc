@@ -65,10 +65,6 @@
 // TODO(steveblock): Investigate the possibility of the author of Wireless Tools
 // releasing libiw under a Gears-compatible license.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
 #if defined(LINUX) && !defined(OS_MACOSX)
@@ -274,5 +270,3 @@ static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
 }
 
 #endif  // LINUX && !OS_MACOSX
-
-#endif  // OFFICIAL_BUILD

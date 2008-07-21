@@ -46,10 +46,6 @@
 // As recommended by the MSDN, we use the WLAN API where available, and WZC
 // otherwise.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
 #if defined(WIN32) && !defined(WINCE)
@@ -330,5 +326,3 @@ static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
 }
 
 #endif  // WIN32 && !WINCE
-
-#endif  // OFFICIAL_BUILD

@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented.
 #ifdef OS_ANDROID
@@ -42,5 +38,3 @@ LocationProviderBase *NewGpsLocationProvider() {
 }
 
 #endif  // OS_ANDROID
-
-#endif  // OFFICIAL_BUILD
