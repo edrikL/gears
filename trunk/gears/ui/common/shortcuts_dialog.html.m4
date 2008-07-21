@@ -68,6 +68,7 @@ m4_include(ui/common/html_dialog.css)
     
     #shortcut-name {
       margin-bottom:2px;
+      font-weight: bold;
     }
 
     #shortcut-description {
@@ -154,7 +155,7 @@ m4_include(ui/common/icon_32x32.png.base64)m4_dnl
             <tr>
               <td valign="top"><img id="shortcut-icon" width="32" height="32" src="blank.gif"></td>
               <td align="left" width="100%" valign="middle">
-                <div id="shortcut-name"><b></b></div
+                <div id="shortcut-name"></div
                 ><div id="shortcut-description"></div>
               </td>
             </tr>
@@ -267,6 +268,16 @@ m4_include(genfiles/shortcuts_dialog.js)
 
   if (debug) {
     // Handy for debugging layout:
+    if (browser.ie_mobile) {
+      window.pie_dialog = new Object();
+      window.pie_dialog.IsSmartPhone = function() { return false; };
+      window.pie_dialog.SetCancelButton = function() {};
+      window.pie_dialog.SetButton = function() {};
+      window.pie_dialog.SetButtonEnabled = function() {};
+      window.pie_dialog.SetScriptContext = function() {};
+      window.pie_dialog.ResizeDialog = function() {};
+    }
+
     args = {
       locale: "en-US",
       style: "simple",
@@ -378,7 +389,7 @@ m4_include(genfiles/shortcuts_dialog.js)
     var descriptionElement = dom.getElementById("shortcut-description");
     
     loadImage(iconElement, pickIconToRender(shortcutData));
-    dom.setTextContent(nameElement.firstChild, shortcutData.name);
+    dom.setTextContent(nameElement, shortcutData.name);
 
     if (isDefined(typeof shortcutData.description) &&
         shortcutData.description) {
