@@ -46,8 +46,8 @@
   </TRANS_BLOCK>
 </string>
 <string id="string-trust-site">
-  <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
-    &nbsp;I <span class="accesskey">t</span>rust this site. Allow
-    it to use Gears.
+  <TRANS_BLOCK desc="This is the Trust string.  It indicates the user lets the site use Gears.">
+    I trust this site. Allow it to use Gears.
   </TRANS_BLOCK>
 </string>
+<string id="string-trust-site-accesskey"><TRANS_BLOCK desc="Access key for the trust check.  This should match an important character in the Trust string.">t</TRANS_BLOCK></string>
