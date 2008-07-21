@@ -54,6 +54,8 @@ NS_IMETHODIMP GearsFactory::InitFactoryFromDOM() {
   if (!module_environment) {
     return NS_ERROR_FAILURE;
   }
+  unload_monitor_.reset(new JsEventMonitor(module_environment->js_runner_,
+                                           JSEVENT_UNLOAD, this));
   if (!CreateModule<GearsFactoryImpl>(module_environment.get(),
                                       NULL, &factory_impl_)) {
     return NS_ERROR_FAILURE;
@@ -89,6 +91,11 @@ NS_IMETHODIMP GearsFactory::GetVersion(nsAString &retval) {
 
 NS_IMETHODIMP GearsFactory::DelegateToFactoryImpl(const char *name,
                                                   bool is_property) {
+  // If the factory no longer exists, fail early.
+  if (!factory_impl_.get()) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult nr;
   nsCOMPtr<nsIXPConnect> xpc =
       do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
@@ -140,4 +147,10 @@ NS_IMETHODIMP GearsFactory::DelegateToFactoryImpl(const char *name,
     ncc->SetReturnValueWasSet(PR_TRUE);
   }
   return NS_OK;
+}
+
+void GearsFactory::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  factory_impl_.reset();
 }

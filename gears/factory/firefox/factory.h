@@ -41,7 +41,8 @@ extern const nsCID kGearsFactoryClassId;
 
 // This is just a thin XPCOM wrapper around a Dispatcher-backed
 // GearsFactoryImpl instance.
-class GearsFactory : public GearsFactoryInterface {
+class GearsFactory : public GearsFactoryInterface,
+                     public JsEventHandlerInterface {
  public:
   NS_DECL_ISUPPORTS
 
@@ -56,7 +57,11 @@ class GearsFactory : public GearsFactoryInterface {
   NS_IMETHOD GetVersion(nsAString &retval);
 
  private:
+  // This is the callback used to handle the 'JSEVENT_UNLOAD' event.
+  virtual void HandleEvent(JsEventType event_type);
+
   scoped_refptr<GearsFactoryImpl> factory_impl_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   NS_IMETHOD DelegateToFactoryImpl(const char *name, bool is_property);
 
