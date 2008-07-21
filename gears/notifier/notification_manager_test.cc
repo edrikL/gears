@@ -172,7 +172,8 @@ TEST(NotificationManagerTest, BasicFunctionality) {
   manager.Add(notification1);
 
   // Add a notification while the user is away.
-  balloon_collection->set_capacity(1);
+  // Bump capacity to make sure there is space for it.
+  balloon_collection->set_capacity(2);
   activity.set_user_mode(USER_AWAY_MODE);
 
   GearsNotification notification2;
