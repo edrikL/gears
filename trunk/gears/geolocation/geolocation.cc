@@ -26,10 +26,6 @@
 // This file implements GearsGeolocation, the main class of the Gears
 // Geolocation API.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 #include "gears/geolocation/geolocation.h"
 
 #include <math.h>
@@ -979,5 +975,3 @@ static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
   }
   return true;
 }
-
-#endif  // OFFICIAL_BUILD

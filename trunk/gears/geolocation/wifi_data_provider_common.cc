@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 #if defined(WIN32) || defined(OS_MACOSX)
 
 #include "gears/geolocation/wifi_data_provider_common.h"
@@ -74,5 +70,3 @@ std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
 }
 
 #endif  // WIN32 || OS_MACOSX
-
-#endif  // OFFICIAL_BUILD

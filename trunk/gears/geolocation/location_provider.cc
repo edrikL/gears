@@ -26,10 +26,6 @@
 // This file implements a mock location provider and the factory functions for
 // creating various types of location provider.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 #include "gears/geolocation/location_provider.h"
 
 #include <assert.h>
@@ -106,5 +102,3 @@ LocationProviderBase *NewGpsLocationProvider() {
 }
 
 #endif
-
-#endif  // OFFICIAL_BUILD

@@ -37,10 +37,6 @@
 // TODO(steveblock): consider adding this information to the Geolocation API
 // documentation so that developers can communicate it to users if appropriate.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
 #ifdef WINCE
@@ -276,5 +272,3 @@ void WinceGpsLocationProvider::HandleStateChange() {
 }
 
 #endif  // WINCE
-
-#endif  // OFFICIAL_BUILD

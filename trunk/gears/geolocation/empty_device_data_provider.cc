@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 // Win32, Linux and OSX use the empty device data provider for radio data.
 #if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
 
@@ -39,5 +35,3 @@ RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
 }
 
 #endif  // (WIN32 && !WINCE) || LINUX || OS_MACOSX
-
-#endif  // OFFICIAL_BUILD

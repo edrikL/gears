@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-
 #if defined(WIN32) || defined(WINCE)
 
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
@@ -74,5 +70,3 @@ int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST &bss_id_list,
 }
 
 #endif  // WIN32 || WINCE
-
-#endif  // OFFICIAL_BUILD

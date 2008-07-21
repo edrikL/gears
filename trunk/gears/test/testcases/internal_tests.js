@@ -242,7 +242,7 @@ function testBrowserCache() {
 // Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
 // Geolocation.WatchPosition.
 function testParseGeolocationOptions() {
-  if (isUsingCCTests && !isOfficial) {
+  if (isUsingCCTests) {
     var dummyFunction = function() {};
     // All good.
     internalTests.testParseGeolocationOptions(dummyFunction);
@@ -337,7 +337,7 @@ function testParseGeolocationOptions() {
 // Tests forming the JSON request body for a network location provider. Note
 // that the inputs to the conversion are set on the C++ side.
 function testGeolocationFormRequestBody() {
-  if (isUsingCCTests && !isOfficial) {
+  if (isUsingCCTests) {
     var body = internalTests.testGeolocationFormRequestBody();
     var correctBody = '{ ' +
                       '"address_language" : "en-GB", ' +
@@ -372,7 +372,7 @@ function testGeolocationFormRequestBody() {
 // Tests extracting a position object from the JSON reposnse from a network
 // location provider.
 function testGeolocationGetLocationFromResponse() {
-  if (isUsingCCTests && !isOfficial) {
+  if (isUsingCCTests) {
     var dummy_server = 'http://test.server.com';
     var position;
     var correctPosition;
@@ -500,16 +500,10 @@ function testGeolocationGetLocationFromResponse() {
   }
 }
 
-function testNotifier() {
-  if (isUsingCCTests && !isOfficial) {
-    internalTests.testNotifier();
-  }
-}
-
 // Tests GearsGeolocation::GetCurrentPosition, using mock radio and WiFi device
 // data providers.
 function testGeolocationGetCurrentPosition() {
-  if (isUsingCCTests && !isOfficial) {
+  if (isUsingCCTests) {
     internalTests.configureGeolocationRadioDataProviderForTest(
         { cell_id: 23874,
           location_area_code: 98,
@@ -524,6 +518,12 @@ function testGeolocationGetCurrentPosition() {
     //};
     //startAsync();
     //geolocation.getCurrentPosition(locationAvailable);
+  }
+}
+
+function testNotifier() {
+  if (isUsingCCTests && !isOfficial) {
+    internalTests.testNotifier();
   }
 }
 

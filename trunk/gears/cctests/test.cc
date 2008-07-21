@@ -74,9 +74,6 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("getSystemTime", &GearsTest::GetSystemTime);
   RegisterMethod("getTicks", &GearsTest::GetTimingTicks);
   RegisterMethod("getTickDeltaMicros", &GearsTest::GetTimingTickDeltaMicros);
-#ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
-#else
   RegisterMethod("testParseGeolocationOptions",
                  &GearsTest::TestParseGeolocationOptions);
   RegisterMethod("testGeolocationFormRequestBody",
@@ -87,7 +84,6 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::ConfigureGeolocationRadioDataProviderForTest);
   RegisterMethod("configureGeolocationWifiDataProviderForTest",
                  &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
-#endif
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
 #else
@@ -131,11 +127,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/database/database_utils_test.h"
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
 #include "gears/geolocation/geolocation_test.h"
-#endif
 #ifdef OFFICIAL_BUILD
 // The Audio API has not been finalized for official builds.
 #else
@@ -2122,9 +2114,6 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
 }
 #endif
 
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
 void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
   ::TestParseGeolocationOptions(context, GetJsRunner());
 }
@@ -2146,7 +2135,6 @@ void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationWifiDataProviderForTest(context);
 }
-#endif
 
 #ifdef OFFICIAL_BUILD
 // The Audio API has not been finalized for official builds.

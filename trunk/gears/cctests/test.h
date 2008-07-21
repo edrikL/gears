@@ -124,9 +124,6 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void TestEntriesPresentInBrowserCache(JsCallContext *context);
 #endif
 
-#ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
-#else
   // Geolocation internal tests.
 
   // IN: object position_options
@@ -156,7 +153,6 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // IN: nothing
   // OUT: nothing
   void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
-#endif
 
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
