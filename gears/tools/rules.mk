@@ -227,6 +227,8 @@ PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 # TODO(aa): This can move to common_outdir like crash_sender.exe
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
+NOTIFIER_BUNDLE         = $(INSTALLERS_OUTDIR)/Safari/Notifier.app
+
 SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
 SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 
@@ -253,6 +255,11 @@ ifneq "$(BROWSER)" ""
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
+
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
+
 	$(MAKE) prereqs    BROWSER=FF2
 	$(MAKE) genheaders BROWSER=FF2
 	$(MAKE) modules    BROWSER=FF2
@@ -260,15 +267,16 @@ else
 	$(MAKE) prereqs    BROWSER=FF3
 	$(MAKE) genheaders BROWSER=FF3
 	$(MAKE) modules    BROWSER=FF3
-
-	$(MAKE) prereqs    BROWSER=NONE
-	$(MAKE) genheaders BROWSER=NONE
-	$(MAKE) modules    BROWSER=NONE
 
 	$(MAKE) installers
 
   else
   ifeq ($(OS),win32)
+
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
+
 	$(MAKE) prereqs    BROWSER=FF2
 	$(MAKE) genheaders BROWSER=FF2
 	$(MAKE) modules    BROWSER=FF2
@@ -280,27 +288,29 @@ else
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
-
-	$(MAKE) prereqs    BROWSER=NONE
-	$(MAKE) genheaders BROWSER=NONE
-	$(MAKE) modules    BROWSER=NONE
-
+	
 	$(MAKE) installers
 
   else
   ifeq ($(OS),wince)
-	$(MAKE) prereqs    BROWSER=IE
-	$(MAKE) genheaders BROWSER=IE
-	$(MAKE) modules    BROWSER=IE
 
 	$(MAKE) prereqs    BROWSER=NONE
 	$(MAKE) genheaders BROWSER=NONE
 	$(MAKE) modules    BROWSER=NONE
 
+	$(MAKE) prereqs    BROWSER=IE
+	$(MAKE) genheaders BROWSER=IE
+	$(MAKE) modules    BROWSER=IE
+
 	$(MAKE) installers
+
   else
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
+	$(MAKE) prereqs    BROWSER=NONE
+	$(MAKE) genheaders BROWSER=NONE
+	$(MAKE) modules    BROWSER=NONE
+
 	$(MAKE) prereqs    BROWSER=FF2
 	$(MAKE) genheaders BROWSER=FF2
 	$(MAKE) modules    BROWSER=FF2
@@ -312,10 +322,6 @@ else
 	$(MAKE) prereqs    BROWSER=SF
 	$(MAKE) genheaders BROWSER=SF
 	$(MAKE) modules    BROWSER=SF
-
-	$(MAKE) prereqs    BROWSER=NONE
-	$(MAKE) genheaders BROWSER=NONE
-	$(MAKE) modules    BROWSER=NONE
 
 	$(MAKE) installers
   else
@@ -394,6 +400,13 @@ ifeq ($(OS),win32)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
 modules:: $(CRASH_SENDER_EXE) $(NOTIFIER_DLL)
+endif
+ifeq ($(OS),osx)
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+modules:: $(NOTIFIER_BUNDLE)
+endif
 endif
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
@@ -1028,28 +1041,26 @@ endif
 	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp -R $(FF3_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
-ifneq ($(OS),osx)
 	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
+ifeq ($(OS),osx)
+	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+	cp -r $(NOTIFIER_BUNDLE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
+endif
+else # not OSX
 ifeq ($(MODE),dbg)
 ifdef IS_WIN32_OR_WINCE
 	cp $(FF3_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE).pdb
 	cp $(FF2_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE)_ff2.pdb
 endif
 endif
-else
-	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
-	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
-	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
-endif
-ifeq ($(OS),osx)
-    # notifier_test isn't yet supported on OSX.
-else
+endif #end not OSX
 ifeq ($(USING_CCTESTS),1)
 	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-endif
 endif
 ifeq ($(USING_CCTESTS),1)
 	cp $(IPC_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
@@ -1081,6 +1092,30 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_E
 # Copy ipc_test
 ifeq ($(USING_CCTESTS),1)
 	cp "$(IPC_TEST_EXE)" "$@/Contents/Resources/"
+endif
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+# Copy notifier.app
+# Must run make BROWSER=NONE prior to this line
+	cp -r $(NOTIFIER_BUNDLE) $@/Contents/Resources/
+endif
+
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+$(NOTIFIER_BUNDLE): $(NOTIFIER_EXE) $(COMMON_M4FILES)
+	rm -rf $@
+# Create notifier bundle
+	mkdir -p $@/Contents/MacOS/
+	mkdir -p $@/Contents/Resources/
+	cp $(COMMON_OUTDIR)/genfiles/Notifier-Info.plist $@/Contents/Info.plist
+# Copy notifier exe
+	cp -r $(NOTIFIER_EXE) $@/Contents/MacOS/
+# Copy notifier resources
+	cp $(NOTIFIER_RESOURCES) $@/Contents/Resources/
+# Mark writeable to allow rebuilds
+	chmod 666 $@/Contents/Resources/*
 endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
