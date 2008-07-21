@@ -437,7 +437,7 @@ endif
 # TODO(playmobil): Remove the conditional and add to FF targets once we have
 # Breakpad working for the FF OSX release.
 ifeq ($(BROWSER),SF)
-ifeq ($(MODE),OPT)
+ifeq ($(MODE),opt)
 STRIP_EXECUTABLE = /Developer/usr/bin/strip -Sx $@
 else
 STRIP_EXECUTABLE =
