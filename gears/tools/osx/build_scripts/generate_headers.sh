@@ -50,7 +50,9 @@ tools/osx/webarchiver/webarchiver "$RESOURCES_DIR/en-US/shortcuts_dialog.webarch
 xxd -i "$RESOURCES_DIR/en-US/settings_dialog.webarchive" > "$GEN_FILE_DIR/settings_dialog.h"
 xxd -i "$RESOURCES_DIR/en-US/permissions_dialog.webarchive" > "$GEN_FILE_DIR/permissions_dialog.h"
 xxd -i "$RESOURCES_DIR/en-US/shortcuts_dialog.webarchive" > "$GEN_FILE_DIR/shortcuts_dialog.h"
+xxd -i "ui/common/location_data.png" > "$GEN_FILE_DIR/location_data.h"
+xxd -i "ui/common/local_data.png" > "$GEN_FILE_DIR/local_data.h"
 
-"$SRCROOT/gen_resource_list.py" "$GEN_FILE_DIR/resource_list.h" "$GEN_FILE_DIR/settings_dialog.h" "$GEN_FILE_DIR/permissions_dialog.h" "$GEN_FILE_DIR/shortcuts_dialog.h"
+"$SRCROOT/gen_resource_list.py" "$GEN_FILE_DIR/resource_list.h" "$GEN_FILE_DIR/settings_dialog.h" "$GEN_FILE_DIR/permissions_dialog.h" "$GEN_FILE_DIR/shortcuts_dialog.h" "$GEN_FILE_DIR/location_data.h" "$GEN_FILE_DIR/local_data.h"
 
 exit 0

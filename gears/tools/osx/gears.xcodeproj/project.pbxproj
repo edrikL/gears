@@ -176,6 +176,8 @@
 		B544D9C10D2EE5D000D30561 /* factory_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D99C0D2EE5D000D30561 /* factory_utils.cc */; };
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
+		B54770350E2FE249004BE177 /* native_dialogs_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B54770330E2FE249004BE177 /* native_dialogs_osx.mm */; };
+		B547767E0E31415D004BE177 /* blob_interface.cc in Sources */ = {isa = PBXBuildFile; fileRef = B547767D0E31415D004BE177 /* blob_interface.cc */; };
 		B547BF350E098D5900590529 /* curl_downloader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B547BF330E098D5900590529 /* curl_downloader.mm */; };
 		B5482D640E1412A200AF78CA /* exception_handler_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5482D630E1412A200AF78CA /* exception_handler_osx.mm */; };
 		B5482E220E141F9A00AF78CA /* nshost_macaddress.m in Sources */ = {isa = PBXBuildFile; fileRef = B5482E190E141F8700AF78CA /* nshost_macaddress.m */; };
@@ -432,7 +434,6 @@
 		B56B85560DE5D54C008995AB /* js_callback_logging_backend.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56B85530DE5D54C008995AB /* js_callback_logging_backend.cc */; };
 		B56F66170DAD412400A5D6C5 /* file_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F660F0DAD412400A5D6C5 /* file_dialog.cc */; };
 		B56F66180DAD412400A5D6C5 /* file_dialog_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */; };
-		B56F66190DAD412400A5D6C5 /* file_dialog_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66110DAD412400A5D6C5 /* file_dialog_utils.cc */; };
 		B56F661A0DAD412400A5D6C5 /* desktop_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66120DAD412400A5D6C5 /* desktop_osx.cc */; };
 		B56F661B0DAD412400A5D6C5 /* desktop.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66150DAD412400A5D6C5 /* desktop.cc */; };
 		B56F669D0DAD442100A5D6C5 /* png_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F669C0DAD442100A5D6C5 /* png_utils.cc */; };
@@ -501,6 +502,9 @@
 		B59CE65D0DD8EC24000B31AE /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B59CE65B0DD8EC24000B31AE /* httprequest.cc */; };
 		B5A2DB950E2FBEA500C69CE7 /* memory_buffer_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */; };
 		B5A2DB960E2FBEA500C69CE7 /* memory_buffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */; };
+		B5A2DC400E2FD0D400C69CE7 /* permissions_dialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = B5A2DC3D0E2FD0AB00C69CE7 /* permissions_dialog.nib */; };
+		B5A2DC410E2FD0D400C69CE7 /* location_permissions_dialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = B5A2DC3E0E2FD0AB00C69CE7 /* location_permissions_dialog.nib */; };
+		B5A2DC420E2FD0D400C69CE7 /* shortcuts_dialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = B5A2DC3F0E2FD0AB00C69CE7 /* shortcuts_dialog.nib */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
 		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
 		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
@@ -891,6 +895,9 @@
 		B544D9D40D2EE6B600D30561 /* libsqlite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libsqlite.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B544DB710D2EE93800D30561 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		B544DCC40D3578B000D30561 /* http_request_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_request_sf.h; path = ../../localserver/safari/http_request_sf.h; sourceTree = SOURCE_ROOT; };
+		B54770330E2FE249004BE177 /* native_dialogs_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = native_dialogs_osx.mm; path = ../../ui/safari/native_dialogs_osx.mm; sourceTree = SOURCE_ROOT; };
+		B54770340E2FE249004BE177 /* native_dialogs_osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = native_dialogs_osx.h; path = ../../ui/safari/native_dialogs_osx.h; sourceTree = SOURCE_ROOT; };
+		B547767D0E31415D004BE177 /* blob_interface.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_interface.cc; path = ../../blob/blob_interface.cc; sourceTree = SOURCE_ROOT; };
 		B547BF330E098D5900590529 /* curl_downloader.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = curl_downloader.mm; path = ../../base/safari/curl_downloader.mm; sourceTree = SOURCE_ROOT; };
 		B547BF340E098D5900590529 /* curl_downloader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = curl_downloader.h; path = ../../base/safari/curl_downloader.h; sourceTree = SOURCE_ROOT; };
 		B5482D630E1412A200AF78CA /* exception_handler_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = exception_handler_osx.mm; path = ../../base/common/exception_handler_osx.mm; sourceTree = SOURCE_ROOT; };
@@ -1185,9 +1192,7 @@
 		B56F660E0DAD412400A5D6C5 /* file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = file_dialog.h; path = ../../desktop/file_dialog.h; sourceTree = SOURCE_ROOT; };
 		B56F660F0DAD412400A5D6C5 /* file_dialog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog.cc; path = ../../desktop/file_dialog.cc; sourceTree = SOURCE_ROOT; };
 		B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog_osx.cc; path = ../../desktop/file_dialog_osx.cc; sourceTree = SOURCE_ROOT; };
-		B56F66110DAD412400A5D6C5 /* file_dialog_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog_utils.cc; path = ../../desktop/file_dialog_utils.cc; sourceTree = SOURCE_ROOT; };
 		B56F66120DAD412400A5D6C5 /* desktop_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = desktop_osx.cc; path = ../../desktop/desktop_osx.cc; sourceTree = SOURCE_ROOT; };
-		B56F66130DAD412400A5D6C5 /* file_dialog_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = file_dialog_utils.h; path = ../../desktop/file_dialog_utils.h; sourceTree = SOURCE_ROOT; };
 		B56F66140DAD412400A5D6C5 /* desktop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = desktop.h; path = ../../desktop/desktop.h; sourceTree = SOURCE_ROOT; };
 		B56F66150DAD412400A5D6C5 /* desktop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = desktop.cc; path = ../../desktop/desktop.cc; sourceTree = SOURCE_ROOT; };
 		B56F66160DAD412400A5D6C5 /* file_dialog_osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = file_dialog_osx.h; path = ../../desktop/file_dialog_osx.h; sourceTree = SOURCE_ROOT; };
@@ -1302,6 +1307,9 @@
 		B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory_buffer_test.cc; path = ../../base/common/memory_buffer_test.cc; sourceTree = SOURCE_ROOT; };
 		B5A2DB930E2FBEA500C69CE7 /* memory_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = memory_buffer.h; path = ../../base/common/memory_buffer.h; sourceTree = SOURCE_ROOT; };
 		B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory_buffer.cc; path = ../../base/common/memory_buffer.cc; sourceTree = SOURCE_ROOT; };
+		B5A2DC3D0E2FD0AB00C69CE7 /* permissions_dialog.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = permissions_dialog.nib; path = ../../ui/safari/permissions_dialog.nib; sourceTree = SOURCE_ROOT; };
+		B5A2DC3E0E2FD0AB00C69CE7 /* location_permissions_dialog.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = location_permissions_dialog.nib; path = ../../ui/safari/location_permissions_dialog.nib; sourceTree = SOURCE_ROOT; };
+		B5A2DC3F0E2FD0AB00C69CE7 /* shortcuts_dialog.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = shortcuts_dialog.nib; path = ../../ui/safari/shortcuts_dialog.nib; sourceTree = SOURCE_ROOT; };
 		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
 		B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_module.cc; path = ../../localserver/managed_resource_store_module.cc; sourceTree = SOURCE_ROOT; };
@@ -1638,6 +1646,7 @@
 				79C3E93A0DB8D8E800346806 /* blob.h */,
 				B563C48A0DF5E54E00A145D1 /* blob_builder.h */,
 				B563C48B0DF5E54E00A145D1 /* blob_builder.cc */,
+				B547767D0E31415D004BE177 /* blob_interface.cc */,
 				79C3E93B0DB8D8E800346806 /* blob_interface.h */,
 				B5950B9E0DDE033500D54424 /* blob_input_stream_sf.h */,
 				B5950B9F0DDE033500D54424 /* blob_input_stream_sf.mm */,
@@ -2642,9 +2651,7 @@
 				B56F660E0DAD412400A5D6C5 /* file_dialog.h */,
 				B56F660F0DAD412400A5D6C5 /* file_dialog.cc */,
 				B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */,
-				B56F66110DAD412400A5D6C5 /* file_dialog_utils.cc */,
 				B56F66120DAD412400A5D6C5 /* desktop_osx.cc */,
-				B56F66130DAD412400A5D6C5 /* file_dialog_utils.h */,
 				B56F66140DAD412400A5D6C5 /* desktop.h */,
 				B56F66150DAD412400A5D6C5 /* desktop.cc */,
 				B56F66160DAD412400A5D6C5 /* file_dialog_osx.h */,
@@ -2807,8 +2814,13 @@
 				B55FDB330DF754E9007FC7E1 /* html_dialog_sf.h */,
 				B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */,
 				B55FDA000DF71B8E007FC7E1 /* html_modeless_dialog_sf.mm */,
+				B54770330E2FE249004BE177 /* native_dialogs_osx.mm */,
+				B54770340E2FE249004BE177 /* native_dialogs_osx.h */,
 				B55FD9BD0DF5FB63007FC7E1 /* settings_menu.mm */,
 				B55FD9BE0DF5FB63007FC7E1 /* settings_menu.h */,
+				B5A2DC3D0E2FD0AB00C69CE7 /* permissions_dialog.nib */,
+				B5A2DC3E0E2FD0AB00C69CE7 /* location_permissions_dialog.nib */,
+				B5A2DC3F0E2FD0AB00C69CE7 /* shortcuts_dialog.nib */,
 			);
 			name = safari;
 			sourceTree = "<group>";
@@ -3443,6 +3455,9 @@
 				B589B3D80E12F01B00037BE2 /* crash_sender in Resources */,
 				B589B3D90E12F01B00037BE2 /* crash_inspector in Resources */,
 				B594F1C70E12B35400B8D38A /* launch_url_with_browser in Resources */,
+				B5A2DC400E2FD0D400C69CE7 /* permissions_dialog.nib in Resources */,
+				B5A2DC410E2FD0D400C69CE7 /* location_permissions_dialog.nib in Resources */,
+				B5A2DC420E2FD0D400C69CE7 /* shortcuts_dialog.nib in Resources */,
 				8D01CCCA0486CAD60068D4B7 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3471,6 +3486,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SRCROOT/build_scripts/install_plugin.sh\"";
+			showEnvVarsInLog = 0;
 		};
 		B55F24310DB3DB6700AF44E2 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3572,7 +3588,6 @@
 				B5AFB32E0DAD233D0058E178 /* html_dialog.cc in Sources */,
 				B56F66170DAD412400A5D6C5 /* file_dialog.cc in Sources */,
 				B56F66180DAD412400A5D6C5 /* file_dialog_osx.cc in Sources */,
-				B56F66190DAD412400A5D6C5 /* file_dialog_utils.cc in Sources */,
 				B56F661A0DAD412400A5D6C5 /* desktop_osx.cc in Sources */,
 				B56F661B0DAD412400A5D6C5 /* desktop.cc in Sources */,
 				B56F669D0DAD442100A5D6C5 /* png_utils.cc in Sources */,
@@ -3801,6 +3816,8 @@
 				B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */,
 				B5A2DB950E2FBEA500C69CE7 /* memory_buffer_test.cc in Sources */,
 				B5A2DB960E2FBEA500C69CE7 /* memory_buffer.cc in Sources */,
+				B54770350E2FE249004BE177 /* native_dialogs_osx.mm in Sources */,
+				B547767E0E31415D004BE177 /* blob_interface.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
