@@ -63,9 +63,10 @@ void Database2AsyncExecuteCommand::HandleResults() {
 void Database2SyncExecuteCommand::Execute(bool *has_results) {
   // Since this is a sync operation, this method is invoked on the main thread,
   // thus we can create a Database2ResultSet instance here.
-  if (!Database2ResultSet::Create(tx(), &result_set_)) {
-    // unable to create a result_set
-    context_->SetException(GET_INTERNAL_ERROR_MESSAGE());
+  scoped_refptr<ModuleEnvironment> module_environment;
+  tx()->GetModuleEnvironment(&module_environment);
+  if (!Database2ResultSet::Create(module_environment.get(), context_,
+                                  &result_set_)) {
     return;
   }
 

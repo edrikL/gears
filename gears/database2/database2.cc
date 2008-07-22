@@ -45,18 +45,14 @@ void Dispatcher<GearsDatabase2>::Init() {
 
 
 // static
-bool GearsDatabase2::Create(const ModuleImplBaseClass *sibling, 
-                       const std::string16 &name,
-                       const std::string16 &version,
-                       Database2Connection *connection,
-                       scoped_refptr<GearsDatabase2> *instance) {
+bool GearsDatabase2::Create(ModuleEnvironment *module_environment,
+                            JsCallContext *context,
+                            const std::string16 &name,
+                            const std::string16 &version,
+                            Database2Connection *connection,
+                            scoped_refptr<GearsDatabase2> *instance) {
   assert(instance);
-  // TODO(nigeltao/glazkov): does this method have to take a
-  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
-  // JsCallContext) suffice?
-  scoped_refptr<ModuleEnvironment> module_environment;
-  sibling->GetModuleEnvironment(&module_environment);
-  if (!CreateModule<GearsDatabase2>(module_environment.get(), NULL, instance)) {
+  if (!CreateModule<GearsDatabase2>(module_environment, context, instance)) {
     return false;
   }
 
@@ -129,10 +125,9 @@ void GearsDatabase2::SynchronousTransaction(JsCallContext *context) {
   static Database2Interpreter interpreter;
   scoped_refptr<GearsDatabase2Transaction> tx;
   // populate with interpreter (not threaded)
-  if (!GearsDatabase2Transaction::Create(this, connection_.get(), &interpreter,
-                                 callback, NULL, NULL, &tx)) {
-    // raise internal error exception
-    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+  if (!GearsDatabase2Transaction::Create(module_environment_.get(), context,
+                                         connection_.get(), &interpreter,
+                                         callback, NULL, NULL, &tx)) {
     return;
   }
   // Sync transaction never get queued; allowing them to would cause deadlock.

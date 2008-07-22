@@ -85,10 +85,8 @@ void GearsDatabase2Manager::OpenDatabase(JsCallContext *context) {
                               database2_metadata));
 
   scoped_refptr<GearsDatabase2> database;
-  if (!GearsDatabase2::Create(
-      this, name, found_version, connection.get(), &database)) {
-    // raise broken gear exception
-    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+  if (!GearsDatabase2::Create(module_environment_.get(), context, name,
+                              found_version, connection.get(), &database)) {
     return;
   }
 

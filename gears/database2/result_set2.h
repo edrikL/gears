@@ -43,7 +43,8 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual,
   Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
   ~Database2ResultSet() {}
   // Creates an instance, returns true if successful.
-  static bool Create(const ModuleImplBaseClass *sibling,
+  static bool Create(ModuleEnvironment *module_environment,
+                     JsCallContext *context,
                      scoped_refptr<Database2ResultSet> *instance);
 
   // OUT: int

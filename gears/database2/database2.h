@@ -52,7 +52,8 @@ class GearsDatabase2 : public ModuleImplBaseClassVirtual {
   ~GearsDatabase2() {}
 
   // creates an instance of GearsDatabase2
-  static bool Create(const ModuleImplBaseClass *sibling, 
+  static bool Create(ModuleEnvironment *module_environment,
+                     JsCallContext *context,
                      const std::string16 &name,
                      const std::string16 &version,
                      Database2Connection *connection,

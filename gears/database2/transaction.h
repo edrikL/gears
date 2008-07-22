@@ -56,7 +56,8 @@ class GearsDatabase2Transaction
       : ModuleImplBaseClassVirtual("GearsDatabase2Transaction") {}
   ~GearsDatabase2Transaction() {}
   // creates GearsDatabase2Transaction instance
-  static bool Create(const GearsDatabase2 *database,
+  static bool Create(ModuleEnvironment *module_environment,
+                     JsCallContext *context,
                      Database2Connection *connection,
                      Database2Interpreter *interpreter,
                      JsRootedCallback *callback,

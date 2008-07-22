@@ -44,7 +44,8 @@ void Dispatcher<GearsDatabase2Transaction>::Init() {
 
 // static
 bool GearsDatabase2Transaction::Create(
-    const GearsDatabase2 *database,
+    ModuleEnvironment *module_environment,
+    JsCallContext *context,
     Database2Connection *connection,
     Database2Interpreter *interpreter,
     JsRootedCallback *callback,
@@ -52,13 +53,8 @@ bool GearsDatabase2Transaction::Create(
     JsRootedCallback *success_callback,
     scoped_refptr<GearsDatabase2Transaction> *instance) {
   assert(instance);
-  // TODO(nigeltao/glazkov): does this method have to take a
-  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
-  // JsCallContext) suffice?
-  scoped_refptr<ModuleEnvironment> module_environment;
-  database->GetModuleEnvironment(&module_environment);
-  if (!CreateModule<GearsDatabase2Transaction>(module_environment.get(),
-                                          NULL, instance)) {
+  if (!CreateModule<GearsDatabase2Transaction>(module_environment, context,
+                                               instance)) {
     return false;
   }
 
@@ -70,7 +66,7 @@ bool GearsDatabase2Transaction::Create(
   tx->error_callback_.reset(error_callback);
   tx->success_callback_.reset(success_callback);
   // register unload handler
-  tx->unload_monitor_.reset(new JsEventMonitor(database->GetJsRunner(),
+  tx->unload_monitor_.reset(new JsEventMonitor(module_environment->js_runner_,
                                                JSEVENT_UNLOAD, tx));
   return true;
 }
