@@ -41,18 +41,18 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
 
   // IN: nothing
-  // OUT: double time
+  // OUT: int64 time
   void GetSystemTime(JsCallContext *context);
 
   // IN: nothing
-  // OUT: double ticks
+  // OUT: int64 ticks
   void GetTimingTicks(JsCallContext *context);
 
   // IN: int64 start, int64 end
-  // OUT: double elapsed
+  // OUT: int64 elapsed
   void GetTimingTickDeltaMicros(JsCallContext *context);
 
-  // IN: nothing
+  // IN: bool is_worker
   // OUT: nothing
   void RunTests(JsCallContext *context);
 
