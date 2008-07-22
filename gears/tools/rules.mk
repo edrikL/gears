@@ -941,7 +941,7 @@ $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PO
 # minidump over the wire.
 $(OSX_CRASH_INSPECTOR_EXE): $(OSX_CRASH_INSPECTOR_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(OSX_CRASH_INSPECTOR_OBJS) -framework Carbon
-	$(STRIP_EXECUTABLE) $(CRASH_SENDER_EXE)
+	$(STRIP_EXECUTABLE)
 
 ifeq ($(OS),win32)
 $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
@@ -950,7 +950,7 @@ endif
 ifeq ($(OS),osx)
 $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) -framework Carbon -framework Cocoa -framework Foundation -framework IOKit -framework SystemConfiguration -lstdc++
-	$(STRIP_EXECUTABLE) $(CRASH_SENDER_EXE)
+	$(STRIP_EXECUTABLE)
 endif
 
 ifeq ($(OS),win32)
@@ -976,11 +976,11 @@ endif
 
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
-	 $(STRIP_EXECUTABLE) $(OSX_LAUNCHURL_EXE)
+	 $(STRIP_EXECUTABLE)
 	
 $(SF_INPUTMANAGER_EXE): $(SF_INPUTMANAGER_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework Foundation -framework AppKit -bundle $(SF_INPUTMANAGER_OBJS)
-	$(STRIP_EXECUTABLE) $(SF_INPUTMANAGER_EXE)
+	$(STRIP_EXECUTABLE)
 
 $(PERF_TOOL_EXE): $(PERF_TOOL_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(PERF_TOOL_OBJS)
