@@ -84,7 +84,7 @@ Server assigns ETag:
 
 {{{
 HTTP/1.1 308 Resume Incomplete
-ETag: vEpr6barcD
+ETag: "vEpr6barcD"
 Content-Length: 0
 }}}
 
@@ -116,7 +116,7 @@ Server responds with the current byte range:
 
 {{{
 HTTP/1.1 308 Resume Incomplete
-ETag: vEpr6barcD
+ETag: "vEpr6barcD"
 Content-Length: 0
 Range: 0-42
 }}}
@@ -137,7 +137,7 @@ This time the server receives everything and sends its response:
 
 {{{
 HTTP/1.1 200 OK
-ETag: vEpr6barcD
+ETag: "vEpr6barcD"
 Content-Length: 10
 
 [response]
