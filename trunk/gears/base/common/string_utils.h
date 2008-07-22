@@ -325,16 +325,48 @@ inline char IntToHex(int i) {
 
 bool UTF8ToString16(const char *in, int len, std::string16 *out16);
 
-bool String16ToUTF8(const char16 *in, int len, std::string *out8);
-
 inline bool UTF8ToString16(const char *in, std::string16 *out16) {
   assert(in);
   return UTF8ToString16(in, strlen(in), out16);
 }
 
+inline bool UTF8ToString16(const std::string &in, std::string16 *out16) {
+  return UTF8ToString16(in.data(), in.size(), out16);
+}
+
+// Returns empty string on error. Not distinguished from legal empty string.
+inline std::string16 UTF8ToString16(const char *in) {
+  std::string16 out16;
+  return UTF8ToString16(in, &out16) ? out16 : std::string16();
+}
+
+// Returns empty string on error. Not distinguished from legal empty string.
+inline std::string16 UTF8ToString16(const std::string &in) {
+  std::string16 out16;
+  return UTF8ToString16(in, &out16) ? out16 : std::string16();
+}
+
+bool String16ToUTF8(const char16 *in, int len, std::string *out8);
+
 inline bool String16ToUTF8(const char16 *in, std::string *out8) {
   assert(in);
   return String16ToUTF8(in, std::char_traits<char16>::length(in), out8);
+}
+
+inline bool String16ToUTF8(const std::string16 &in, std::string *out8) {
+  return String16ToUTF8(in.data(), in.size(), out8);
+}
+
+// Returns empty string on error. Not distinguished from legal empty string.
+inline std::string String16ToUTF8(const char16 *in) {
+  std::string out8;
+  return String16ToUTF8(in, &out8) ? out8 : std::string();
+}
+
+// Returns empty string on error. Not distinguished from legal empty string.
+inline std::string String16ToUTF8(const std::string16 &in) {
+  std::string out8;
+  return String16ToUTF8(in, &out8) ? out8 : std::string();
 }
 
 // ----------------------------------------------------------------------

@@ -237,53 +237,99 @@ static bool TestUTFConversion() {
 }
   // string16 -> utf8 tests
   {
-    // 2 byte utf8
-    const std::string16 sample16(STRING16(L"Sample of a string \0x0430"));
-    const std::string expected8("Sample of a string \0xD0\0xB0");
+    // 1 byte utf8
+    const std::string16 sample16(STRING16(L"Sample of a string"));
+    const std::string expected8("Sample of a string");
     std::string result8;
     TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
     TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16, &result8));
+    TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16) == expected8);
+  }
+  {
+    // 2 byte utf8
+    const std::string16 sample16(STRING16(L"Sample of a string \x0430"));
+    const std::string expected8("Sample of a string \xD0\xB0");
+    std::string result8;
+    TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
+    TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16, &result8));
+    TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16) == expected8);
   }
   {
     // 3 byte utf8
-    const std::string16 sample16(STRING16(L"\0x4E8C"));
-    const std::string expected8("\0xE4\0xBA\0x8E");
+    const std::string16 sample16(STRING16(L"\x4E8C"));
+    const std::string expected8("\xE4\xBA\x8C");
     std::string result8;
     TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
     TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16, &result8));
+    TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16) == expected8);
   }
   {
     // 4 byte utf8
-    const std::string16 sample16(STRING16(L"\0xD800\xDF02"));
-    const std::string expected8("\0xF0\0x90\0x8C\0x82");
+    const std::string16 sample16(STRING16(L"\xD800\xDF02"));
+    const std::string expected8("\xF0\x90\x8C\x82");
     std::string result8;
     TEST_ASSERT(String16ToUTF8(sample16.c_str(), &result8));
     TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16, &result8));
+    TEST_ASSERT(expected8 == result8);
+    TEST_ASSERT(String16ToUTF8(sample16) == expected8);
+  }
+  {
+    // Illegal UTF-16 string
+    const std::string16 sample16(STRING16(L"\xD800\xD800"));
+    const std::string expected8;
+    std::string result8;
+    TEST_ASSERT(!String16ToUTF8(sample16.c_str(), &result8));
+    TEST_ASSERT(!String16ToUTF8(sample16, &result8));
+    TEST_ASSERT(String16ToUTF8(sample16) == expected8);
   }
   // utf8 -> string16 tests
   {
+    // 1 byte utf8
+    const std::string sample8("Sample of a string");
+    const std::string16 expected16(STRING16(L"Sample of a string"));
+    std::string16 result16;
+    TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
+    TEST_ASSERT(expected16 == result16);
+  }
+  {
     // 2 byte utf8
-    const std::string sample8("Sample of a string \0xD0\0xB0");
-    const std::string16 expected16(STRING16(L"Sample of a string \0x0430"));
+    const std::string sample8("Sample of a string \xD0\xB0");
+    const std::string16 expected16(STRING16(L"Sample of a string \x0430"));
     std::string16 result16;
     TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
     TEST_ASSERT(expected16 == result16);
   }
   {
     // 3 byte utf8
-    const std::string sample8("\0xE4\0xBA\0x8E");
-    const std::string16 expected16(STRING16(L"\0x4E8C"));
+    const std::string sample8("\xE4\xBA\x8C");
+    const std::string16 expected16(STRING16(L"\x4E8C"));
     std::string16 result16;
     TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
     TEST_ASSERT(expected16 == result16);
   }
   {
     // 4 byte utf8
-    const std::string sample8("\0xF0\0x90\0x8C\0x82");
-    const std::string16 expected16(STRING16(L"\0xD800\xDF02"));
+    const std::string sample8("\xF0\x90\x8C\x82");
+    const std::string16 expected16(STRING16(L"\xD800\xDF02"));
     std::string16 result16;
     TEST_ASSERT(UTF8ToString16(sample8.c_str(), &result16));
     TEST_ASSERT(expected16 == result16);
+  }
+  {
+    // Illegal utf8 string
+    const std::string sample8("\xFF");
+    const std::string16 expected16;
+    std::string16 result16;
+    TEST_ASSERT(!UTF8ToString16(sample8.c_str(), &result16));
+    TEST_ASSERT(!UTF8ToString16(sample8, &result16));
+    TEST_ASSERT(UTF8ToString16(sample8) == expected16);
   }
   LOG(("TestUTFConversion - passed\n"));
   return true;
