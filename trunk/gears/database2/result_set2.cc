@@ -41,24 +41,19 @@ void Dispatcher<Database2ResultSet>::Init() {
 
 
 // static
-bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
+bool Database2ResultSet::Create(ModuleEnvironment *module_environment,
+                                JsCallContext *context,
                                 scoped_refptr<Database2ResultSet> *instance) {
   assert(instance);
-  // TODO(nigeltao/glazkov): does this method have to take a
-  // ModuleImplBaseClass, or will a ModuleEnvironment (and possibly a
-  // JsCallContext) suffice?
-  scoped_refptr<ModuleEnvironment> module_environment;
-  sibling->GetModuleEnvironment(&module_environment);
-  if (!CreateModule<Database2ResultSet>(module_environment.get(),
-                                        NULL, instance)) {
+  if (!CreateModule<Database2ResultSet>(module_environment, context,
+                                        instance)) {
     return false;
   }
 
   Database2ResultSet *result_set = instance->get();
   // register unload handler
-  result_set->unload_monitor_.reset(new JsEventMonitor(sibling->GetJsRunner(),
-                                                       JSEVENT_UNLOAD,
-                                                       result_set));
+  result_set->unload_monitor_.reset(new JsEventMonitor(
+      module_environment->js_runner_, JSEVENT_UNLOAD, result_set));
   return true;
 }
 
