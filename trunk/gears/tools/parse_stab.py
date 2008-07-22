@@ -204,7 +204,7 @@ def getStrings(filename):
 
   return strings
 
-def createJavaScriptFromStrings(localized_strings):
+def createJavaScriptFromStrings(target_file, localized_strings):
   """Generate .js code containing the strings.  It'll look like:
 
 var localized_strings = {
@@ -242,10 +242,19 @@ var localized_strings = {
 
   # Append the function that loads the strings into the dialog.
   output += JAVASCRIPT_TEMPLATE
-  return output
+
+  try:
+    output_file = open(target_file, 'w')
+  except IOError, err:
+    print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
+    sys.exit(3)
+
+  print >> output_file, output
+
+  output_file.close()
 
 
-def createRCFromStrings(localized_strings):
+def createRCFromStrings(target_file, localized_strings):
   """Generate .rc script containing the strings.  It'll look like:
 
 LANGUAGE 0x09, 0x01
@@ -262,7 +271,7 @@ BEGIN
   IDS_STRING_PIE "pai ga oishii desu"
 END
   """
-  # Start with the Byte order marker and .rc boilerplate.
+  # Start with the .rc boilerplate.
   output = RC_TEMPLATE
 
   for locale, strings in localized_strings.items():
@@ -270,21 +279,32 @@ END
       print 'Unknown locale: %s' % locale
       sys.exit(1)
 
-    lang_id = language_ids[locale][1]
-    sublang_id = language_ids[locale][2]
+    lang_id = unicode(language_ids[locale][1])
+    sublang_id = unicode(language_ids[locale][2])
     output += u"""
 LANGUAGE %s, %s
 STRINGTABLE DISCARDABLE
 BEGIN
-""" % (lang_id, sublang_id)
+  IDS_LOCALE "%s"
+""" % (lang_id, sublang_id, locale)
 
     for id, string in strings.items():
       string = string.replace('"', r'\"')
-      output += u'  %s "%s"\n' % (id, string)
+      output += u'  %s "%s"\n' % (unicode(id, 'utf_8'),
+                                  unicode(string, 'utf_8'))
 
-  output += u'END\n'
+    output += u'END\n'
 
-  return output.encode('utf-16')
+  try:
+    output_file = codecs.open(target_file, 'w', 'utf-16')
+  except IOError, err:
+    print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
+    sys.exit(3)
+
+  print >> output_file, output
+
+  output_file.close()
+
 
 
 def getDefines(argv):
@@ -392,20 +412,10 @@ def main(argv):
                  'rc': createRCFromStrings}
 
   if parse_funcs.has_key(file_type):
-    output = parse_funcs[file_type](strings)
+    parse_funcs[file_type](target_file, strings)
   else:
     print "Unknown output file type: %s\n" % (file_type)
     sys.exit(3)
-
-  try:
-    output_file = open(target_file, 'w')
-  except IOError, err:
-    print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
-    sys.exit(3)
-
-  print >> output_file, output
-
-  output_file.close()
 
 
 if __name__ == '__main__':
