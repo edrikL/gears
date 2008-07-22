@@ -246,19 +246,26 @@ void GearsTest::TestLocalServerPerformance(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_STRING16, &results);
 }
 
-// Return the system time as a double (we can't return int64).
+// Return the system time as int64.
 void GearsTest::GetSystemTime(JsCallContext *context) {
-  double msec = static_cast<double>(GetCurrentTimeMillis());
-  context->SetReturnValue(JSPARAM_DOUBLE, &msec);
+  int64 msec = GetCurrentTimeMillis();
+  // SetReturnValue will fail and set an exception if msec exceeds JS_INT_MAX,
+  // but this should not happen for 300,000 years!
+  assert(msec > 0 && msec < JS_INT_MAX);
+  context->SetReturnValue(JSPARAM_INT64, &msec);
 }
 
-// Return the number of ticks as a double (we can't return int64).
+// Return the number of ticks as int64.
 void GearsTest::GetTimingTicks(JsCallContext *context) {
-  double ticks = static_cast<double>(GetTicks());
-  context->SetReturnValue(JSPARAM_DOUBLE, &ticks);
+  int64 ticks = GetTicks();
+  if (ticks > JS_INT_MAX) {
+    context->SetException(STRING16(L"GetTimingTicks(): Tick count overflow."));
+    return;
+  }
+  context->SetReturnValue(JSPARAM_INT64, &ticks);
 }
 
-// Return the elapsed time in microseconds as a double (we can't return int64).
+// Return the elapsed time in microseconds as int64.
 void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
   int64 start;
   int64 end;
@@ -270,8 +277,11 @@ void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
   if (context->is_exception_set()) {
     return;
   }
-  double elapsed = static_cast<double>(GetTickDeltaMicros(start, end));
-  context->SetReturnValue(JSPARAM_DOUBLE, &elapsed);
+  int64 elapsed = GetTickDeltaMicros(start, end);
+  // SetReturnValue will fail and set an exception if elapsed exceeds
+  // JS_INT_MAX, but this gives a timespan of 300 years!
+  assert(elapsed > JS_INT_MIN && elapsed < JS_INT_MAX);
+  context->SetReturnValue(JSPARAM_INT64, &elapsed);
 }
 
 void GearsTest::RunTests(JsCallContext *context) {
