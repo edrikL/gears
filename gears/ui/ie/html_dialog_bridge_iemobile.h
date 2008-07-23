@@ -41,8 +41,7 @@
 #include "gears/factory/common/factory_utils.h"
 
 class ATL_NO_VTABLE PIEDialogBridge
-    : public ModuleImplBaseClass,
-      public CComObjectRootEx<CComMultiThreadModel>,
+    : public CComObjectRootEx<CComMultiThreadModel>,
       public CComControl<PIEDialogBridge>,
       public CComCoClass<PIEDialogBridge, &CLSID_PIEDialogBridge>,
       public IObjectWithSiteImpl <PIEDialogBridge>,
