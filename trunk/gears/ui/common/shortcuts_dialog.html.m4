@@ -32,7 +32,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <head>
   <style type="text/css">
 
-m4_include(ui/common/button.css)
+m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
+m4_include(ui/common/button.css)~)
 m4_include(ui/common/html_dialog.css)
     #icon {
       margin-right:0.5em;
@@ -133,7 +134,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
           <img id="icon" src="data:image/png;base64,
-m4_include(ui/common/icon_32x32.png.base64)m4_dnl
+m4_include(genfiles/icon_32x32.png.base64)m4_dnl
            ">
 ~,~
           <img id="icon" src="icon_32x32.png" width="32" height="32">

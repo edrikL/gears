@@ -318,6 +318,10 @@ function resizeDialogToFitContent(opt_minDialogInnerHeight) {
     window.pie_dialog.ResizeDialog();
     return;
   }
+  // window.resize() is not working on Android, we bail out.
+  if (browser.android) {
+    return;
+  }
 
   // Resize the window to fit
   var contentDiv = dom.getElementById("content");
