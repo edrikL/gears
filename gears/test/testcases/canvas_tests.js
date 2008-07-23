@@ -393,6 +393,10 @@ function testResizeWeirdCases() {
   assertEqual(0, canvas.height);
 }
 
+// drawImage() is currently unimplemented; see canvas_rendering_context_2d.cc
+// for more.
+
+/*
 // Use the two-argument drawImage() to clone an image.
 function testDraw2ImageClone() {
   startAsync();
@@ -536,6 +540,8 @@ function testDrawImage2WithAlphaZeroIsNoop() {
     completeAsync();
     });
 }
+*/
+
 
 // TODO(kart): restore should do nothing if the stack is
 // empty (i.e, blank canvas)

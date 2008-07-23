@@ -271,9 +271,8 @@ void GearsCanvasRenderingContext2D::GetFillStyle(
   context->SetReturnValue(JSPARAM_STRING16, &fill_style);
 }
 
-// TODO(kart): If given a CanvasGradient or CanvasPattern object (from the
-// browser's canvas implementation), generate an error saying we don't support
-// them; do *not* fail silently.
+// TODO(kart): Generate a better error if given a CanvasGradient or
+// CanvasPattern object (from the browser's canvas implementation).
 void GearsCanvasRenderingContext2D::SetFillStyle(
     JsCallContext *context) {
   std::string16 new_fill_style;
@@ -390,6 +389,16 @@ void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // TODO(kart): Generate a better error message if given a HTMLImageElement
   // or a HTMLCanvasElement.
+  
+  // TODO(kart): This function has a bug that doesn't make it work after calling
+  // resize() on the target canvas. That is, if you resize() a canvas and then
+  // draw another canvas on it, the drawImage() is a noop.
+  // Also this function doesn't properly respect globalAlpha and
+  // globalCompositeOperation.
+  // Return an error code to prevent clients from getting bitten by these bugs.
+  context->SetException(STRING16(L"Unimplemented"));
+  return;
+  /*
   ModuleImplBaseClass *other_module;
   int source_x, source_y, source_width, source_height;
   int dest_x, dest_y, dest_width, dest_height;
@@ -487,6 +496,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // done about this.
   canvas_->skia_canvas()->drawBitmapRect(
       *(source->skia_bitmap()), &src_irect, dest_rect, &paint);
+  */
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
