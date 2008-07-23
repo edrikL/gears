@@ -594,7 +594,15 @@ bool GearsHttpRequest::ResolveUrl(const std::string16 &url,
 
 void GearsHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
   assert(source == request_.get());
+
+  // Guard against being destroyed in the first script callback.
+  scoped_refptr<GearsHttpRequest> reference(this);
+
+  // We repeatedly fire ready state changed, in state 3, as data arrives.
   ReadyStateChanged(source);
+  if (source != request_.get()) {
+    return;  // we may have been aborted
+  }
 
   // report progress
   JsRootedCallback *handler = onprogresshandler_.get();
