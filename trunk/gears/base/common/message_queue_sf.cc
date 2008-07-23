@@ -89,11 +89,14 @@ typedef std::map<ThreadId, linked_ptr<ThreadMessagePort> >
             ThreadIDToMessagePortMap;
 static  ThreadIDToMessagePortMap *message_ports_;
 
-static SFThreadMessageQueue g_instance;
+// Create an instance on the heap, note that we can't use a static
+// global, because during application shutdown that may be destructed while 
+// threads are still running and referencing it.
+static SFThreadMessageQueue *g_instance = new SFThreadMessageQueue;
 
 // static
 ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
-  return &g_instance;
+  return g_instance;
 }
 
 bool SFThreadMessageQueue::InitThreadMessageQueue() {
@@ -210,7 +213,7 @@ void SFThreadMessageQueue::OnThreadMessage(CFMachPortRef port,
   SFThreadMessageQueue *message_queue = 
                             static_cast<SFThreadMessageQueue *>(info);
 
-  assert(message_queue == &g_instance);
+  assert(message_queue == g_instance);
   
   // Mach ports have a finite queue length, to get aorund this we maintain our
   // own message queue, and upon receiving a notification, process all
@@ -224,7 +227,7 @@ void SFThreadMessageQueue::OnThreadMessage(CFMachPortRef port,
     
     // Retrieve data holder for this thread.
     ThreadIDToMessagePortMap::iterator it;
-    it = message_ports_->find(g_instance.GetCurrentThreadId());
+    it = message_ports_->find(g_instance->GetCurrentThreadId());
     if (it == message_ports_->end()) {
       return;
     }
