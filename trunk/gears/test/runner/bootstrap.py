@@ -13,11 +13,13 @@ DELETABLE = int('777', 8)
 # Amount of time script should sleep between checking for completed builds.
 POLL_INTERVAL_SECONDS = 10
 
+# Output directory for test results.
+OUTPUT_DIR = 'output'
+
 class Bootstrap:
   """ Set up test environment and handles test execution. """
 
-  # Output and temp directory.
-  OUTPUT_DIR = 'output'
+  # Temp installer directory.
   INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
   
   def __init__(self, gears_binaries, installers, testrunner, suites_report):
@@ -36,7 +38,6 @@ class Bootstrap:
     
   def invoke(self):
     """ Start everything, main method. """
-    self.clean()
     self.copyFilesLocally()
     self.install()
     self.startTesting()
@@ -70,16 +71,12 @@ class Bootstrap:
     self.__suites_report.writeReport(self.test_results, stream)
     stream.close()
 
-  def clean(self):
-    if os.path.exists(Bootstrap.OUTPUT_DIR):
-      shutil.rmtree(Bootstrap.OUTPUT_DIR)
-
   def __createOutputDir(self, force_recreate=False):
-    if os.path.exists(Bootstrap.OUTPUT_DIR):
+    if os.path.exists(OUTPUT_DIR):
       if force_recreate:
-        shutil.rmtree(Bootstrap.OUTPUT_DIR)
-    if not os.path.exists(Bootstrap.OUTPUT_DIR):
-      os.mkdir(Bootstrap.OUTPUT_DIR)
+        shutil.rmtree(OUTPUT_DIR)
+    if not os.path.exists(OUTPUT_DIR):
+      os.mkdir(OUTPUT_DIR)
 
 
 from config import Config
@@ -92,8 +89,15 @@ import installer
 import osutils
 
 
+def clean():
+  """ Clean up existing output directory. """
+  if os.path.exists(OUTPUT_DIR):
+    shutil.rmtree(OUTPUT_DIR)
+
+
 def serverRootDir():
     return os.path.join(os.path.dirname(__file__), '../')
+
                     
 def localIp():
   """ Returns a string with the local ip address. """
@@ -104,7 +108,11 @@ def localIp():
     raise ValueError("Host IP appears invalid: %s" % ip)
   return ip
 
-if __name__ == '__main__':
+
+def main():
+  # Clean up output directory before doing anything else
+  clean()
+
   test_url = 'http://localhost:8001/tester/gui.html'
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
@@ -155,3 +163,7 @@ if __name__ == '__main__':
   testrunner = TestRunner(launchers, test_servers, test_url)
   bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
   bootstrap.invoke()
+
+
+if __name__ == '__main__':
+  main()
