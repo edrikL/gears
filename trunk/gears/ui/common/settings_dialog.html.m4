@@ -175,7 +175,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td class="text-alignment" valign="middle">
+        <td valign="middle">
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
           <img id="icon" src="data:image/png;base64,
@@ -188,7 +188,7 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td width="100%" class="text-alignment" valign="middle">
+        <td width="100%" valign="middle">
           <h1>
           <span id="string-gears-settings"></span>
           </h1>
@@ -213,7 +213,7 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
           <div id="div-buttons">
-            <td width="50%" class="text-alignment" valign="middle">
+            <td width="50%" valign="middle">
               <input type="BUTTON" id="cancel-button"
                onclick="saveAndClose(null); return false;"></input>
             </td>

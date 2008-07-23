@@ -130,7 +130,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td class="text-alignment" valign="top">
+        <td valign="top">
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
           <img id="icon" src="data:image/png;base64,
@@ -143,7 +143,7 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td id="header" width="100%" class="text-alignment" valign="middle"></td>
+        <td id="header" width="100%" valign="middle"></td>
       </tr>
     </table>
   </div>
@@ -198,7 +198,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="button-row-smartphone">
       <table cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td class="text-alignment" valign="middle">
+        <td valign="middle">
           <a href="#" id="deny-permanently-link" onclick="denyShortcutPermanently(); return false;"></a>
         </td>
       </tr>
@@ -215,7 +215,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           does not support them.
           -->
 
-          <td width="50%" class="text-alignment" valign="middle">
+          <td width="50%" valign="middle">
             <input type="BUTTON" id="deny-permanently-button" onclick="denyShortcutPermanently(); return false;"></input>
           </td>
 
@@ -226,7 +226,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </td>
           </div>
 ~,~
-          <td width="100%" class="text-alignment" valign="middle">
+          <td width="100%" valign="middle">
             <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
           <td nowrap="true" align="right" valign="middle">

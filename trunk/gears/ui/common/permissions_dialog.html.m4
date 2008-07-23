@@ -179,7 +179,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td class="text-alignment" valign="top">
+        <td valign="top">
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
           <img id="icon-local-data" class="header-icon"
@@ -204,7 +204,7 @@ m4_include(genfiles/location_data.png.base64)m4_dnl
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
         </td>
-        <td width="100%" class="text-alignment" valign="middle">
+        <td width="100%" valign="middle">
           <div id="local-data" style="display:none">
             <span id="string-query-data"></span>
           </div>
@@ -221,10 +221,10 @@ m4_include(genfiles/location_data.png.base64)m4_dnl
       <div id="yellowbox-inner">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td id="yellowbox-left" class="text-alignment" valign="top">
+            <td id="yellowbox-left" valign="top">
               <img id="custom-icon" width="0" height="0" src="blank.gif">
             </td>
-            <td id="yellowbox-right" width="100%" class="text-alignment" valign="middle">
+            <td id="yellowbox-right" width="100%" valign="middle">
               <div id="custom-name"></div>
               <div id="origin"></div>
               <div id="origin-only"></div>
@@ -268,7 +268,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="button-row-smartphone">
       <table cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td class="text-alignment" valign="middle">
+        <td valign="middle">
           <a href="#" onclick="denyAccessPermanently(); return false;">
             <span id="string-never-allow-link"></span></a>
         </td>
@@ -282,9 +282,9 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
-          <td width="50%" class="text-alignment" valign="middle">
+          <td width="50%" valign="middle">
 ~,~
-          <td width="100%" class="text-alignment" valign="middle">
+          <td width="100%" valign="middle">
 ~)
             <a href="#" onclick="denyAccessPermanently(); return false;">
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
