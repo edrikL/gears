@@ -349,7 +349,7 @@ m4_include(genfiles/permissions_dialog.js)
       window.pie_dialog.SetCancelButton(cancelText.innerText);
     }
     // Focus allow button by default.
-    document.getElementById('allow-button').focus();
+    dom.getElementById('allow-button').focus();
   }
 
   function setTextContent(elem, content) {

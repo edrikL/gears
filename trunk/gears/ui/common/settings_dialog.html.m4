@@ -1,4 +1,4 @@
-﻿m4_changequote(`~',`~')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -257,13 +257,16 @@ m4_include(genfiles/settings_dialog.js)
 
   if (debug && browser.ie_mobile) {
     // Handy for debugging layout.
-    window.pie_dialog = new Object();
-    window.pie_dialog.IsSmartPhone = function() { return false; };
-    window.pie_dialog.SetCancelButton = function() {};
-    window.pie_dialog.SetButton = function() {};
-    window.pie_dialog.SetButtonEnabled = function() {};
-    window.pie_dialog.SetScriptContext = function() {};
-    window.pie_dialog.ResizeDialog = function() {};
+    // Remember to remove the pie_dialog object tag above when debugging on
+    // WinMo 5, otherwise the assignement below will fail with "the object does
+    // not support this property or method".
+    pie_dialog = new Object();
+    pie_dialog.IsSmartPhone = function() { return false; };
+    pie_dialog.SetCancelButton = function() {};
+    pie_dialog.SetButton = function() {};
+    pie_dialog.SetButtonEnabled = function() {};
+    pie_dialog.SetScriptContext = function() {};
+    pie_dialog.ResizeDialog = function() {};
   }
 
   initDialog();
