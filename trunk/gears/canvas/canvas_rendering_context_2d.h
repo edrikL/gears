@@ -37,7 +37,7 @@
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
 class GearsCanvasRenderingContext2D
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;

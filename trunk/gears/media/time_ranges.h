@@ -31,7 +31,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 
-class GearsTimeRanges : public ModuleImplBaseClassVirtual {
+class GearsTimeRanges : public ModuleImplBaseClass {
  public:
   GearsTimeRanges();
   

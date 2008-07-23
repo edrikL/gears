@@ -174,7 +174,7 @@ void Dispatcher<GearsResourceStore>::Init() {
 const std::string GearsResourceStore::kModuleName("GearsResourceStore");
 
 GearsResourceStore::GearsResourceStore()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
 #if BROWSER_IE
       message_hwnd_(new GearsResourceStoreMessageHwnd(this)),
 #endif

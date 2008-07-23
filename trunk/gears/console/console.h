@@ -34,12 +34,12 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsConsole
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;
 
-  GearsConsole() : ModuleImplBaseClassVirtual(kModuleName) {}
+  GearsConsole() : ModuleImplBaseClass(kModuleName) {}
   
   // IN: string type, string message, optional array params
   // OUT: -

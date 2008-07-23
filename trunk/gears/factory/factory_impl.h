@@ -40,8 +40,7 @@ class JsRunnerInterface;
 // this factory class to choose at runtime which version of an object to
 // instantiate.
 
-class GearsFactoryImpl
-    : public ModuleImplBaseClassVirtual {
+class GearsFactoryImpl : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 

@@ -33,12 +33,12 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsHttpRequestUpload
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;
 
-  GearsHttpRequestUpload() : ModuleImplBaseClassVirtual(kModuleName) {}
+  GearsHttpRequestUpload() : ModuleImplBaseClass(kModuleName) {}
 
   // IN: -
   // OUT: function

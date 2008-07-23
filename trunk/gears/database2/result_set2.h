@@ -36,11 +36,11 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // interface SQLResultSet
-class Database2ResultSet : public ModuleImplBaseClassVirtual,
+class Database2ResultSet : public ModuleImplBaseClass,
                            public Database2RowHandlerInterface,
                            public JsEventHandlerInterface {
  public:
-  Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
+  Database2ResultSet() : ModuleImplBaseClass("Database2ResultSet") {}
   ~Database2ResultSet() {}
   // Creates an instance, returns true if successful.
   static bool Create(ModuleEnvironment *module_environment,

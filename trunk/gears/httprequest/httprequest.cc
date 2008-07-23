@@ -81,7 +81,7 @@ void Dispatcher<GearsHttpRequest>::Init() {
 const std::string GearsHttpRequest::kModuleName("GearsHttpRequest");
 
 GearsHttpRequest::GearsHttpRequest()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       request_(NULL),
       content_type_header_was_set_(false),
       has_fired_completion_event_(false),

@@ -34,7 +34,7 @@ const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
-    : ModuleImplBaseClassVirtual(kModuleName) {
+    : ModuleImplBaseClass(kModuleName) {
 }
 
 void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {

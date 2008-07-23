@@ -35,11 +35,11 @@
 #include "gears/image/backing_image.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-class GearsImage : public ModuleImplBaseClassVirtual {
+class GearsImage : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 
-  GearsImage() : ModuleImplBaseClassVirtual(kModuleName) {}
+  GearsImage() : ModuleImplBaseClass(kModuleName) {}
 
   // IN: int x, int y, int width, int height
   // OUT: void

@@ -62,7 +62,7 @@ void Dispatcher<GearsWorkerPool>::Init() {
 const std::string GearsWorkerPool::kModuleName("GearsWorkerPool");
 
 GearsWorkerPool::GearsWorkerPool()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       threads_manager_(NULL),
       owns_threads_manager_(false) {
 }

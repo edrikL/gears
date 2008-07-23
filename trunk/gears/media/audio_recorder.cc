@@ -91,7 +91,7 @@ void Dispatcher<GearsAudioRecorder>::Init() {
 }
 
 GearsAudioRecorder::GearsAudioRecorder()
-    : ModuleImplBaseClassVirtual("GearsAudioRecorder"),
+    : ModuleImplBaseClass("GearsAudioRecorder"),
       last_error_(AudioRecorderConstants::AUDIO_RECORDER_NO_ERROR),
       recording_(false),
       paused_(false),

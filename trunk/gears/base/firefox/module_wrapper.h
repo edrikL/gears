@@ -45,7 +45,7 @@
 // When that happens, this object is finally deleted.
 class ModuleWrapper : public ModuleWrapperBaseClass {
  public:
-  ModuleWrapper(ModuleImplBaseClassVirtual *impl,
+  ModuleWrapper(ModuleImplBaseClass *impl,
                 DispatcherInterface *dispatcher)
       : token_(0), js_context_(NULL) {
     impl_.reset(impl);
@@ -105,7 +105,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   }
 
  private:
-  scoped_ptr<ModuleImplBaseClassVirtual> impl_;
+  scoped_ptr<ModuleImplBaseClass> impl_;
   scoped_ptr<DispatcherInterface> dispatcher_;
 
   JsToken token_;

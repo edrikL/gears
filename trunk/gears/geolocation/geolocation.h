@@ -95,7 +95,7 @@ struct Position {
 
 // The principal class of the Geolocation API.
 class GearsGeolocation
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public LocationProviderBase::ListenerInterface,
       public MessageObserverInterface,
       public TimedCallback::ListenerInterface {

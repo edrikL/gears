@@ -33,9 +33,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 
-class GearsImageLoader : public ModuleImplBaseClassVirtual {
+class GearsImageLoader : public ModuleImplBaseClass {
  public:
-  GearsImageLoader() : ModuleImplBaseClassVirtual("GearsImageLoader") {}
+  GearsImageLoader() : ModuleImplBaseClass("GearsImageLoader") {}
 
   // IN: GearsBlob blob
   // OUT: GearsImage image

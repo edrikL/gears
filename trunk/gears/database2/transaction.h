@@ -49,11 +49,11 @@ class Database2Statement;
 // created in an iframe. Figure out whether there is a better way to handle
 // this.
 class GearsDatabase2Transaction
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   GearsDatabase2Transaction()
-      : ModuleImplBaseClassVirtual("GearsDatabase2Transaction") {}
+      : ModuleImplBaseClass("GearsDatabase2Transaction") {}
   ~GearsDatabase2Transaction() {}
   // creates GearsDatabase2Transaction instance
   static bool Create(ModuleEnvironment *module_environment,

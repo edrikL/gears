@@ -49,7 +49,7 @@ class ModuleWrapper
   ModuleWrapper(NPP instance) : PluginBase(instance) {
   }
 
-  void Init(ModuleImplBaseClassVirtual *impl, DispatcherInterface *dispatcher) {
+  void Init(ModuleImplBaseClass *impl, DispatcherInterface *dispatcher) {
     PluginBase::Init(dispatcher);
     impl_.reset(impl);
     impl_->SetJsWrapper(this);
@@ -76,7 +76,7 @@ class ModuleWrapper
   virtual void Unref() { NPN_ReleaseObject(this); }
 
  protected:
-  scoped_ptr<ModuleImplBaseClassVirtual> impl_;
+  scoped_ptr<ModuleImplBaseClass> impl_;
   scoped_ptr<DispatcherInterface> dispatcher_;
 
  private:

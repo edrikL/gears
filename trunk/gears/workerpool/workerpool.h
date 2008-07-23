@@ -33,7 +33,7 @@
 class PoolThreadsManager;
 
 class GearsWorkerPool
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;

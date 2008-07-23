@@ -31,12 +31,12 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/blob/blob_interface.h"
 
-class GearsBlob : public ModuleImplBaseClassVirtual {
+class GearsBlob : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 
   GearsBlob()
-      : ModuleImplBaseClassVirtual(kModuleName),
+      : ModuleImplBaseClass(kModuleName),
         contents_(new EmptyBlob()) {}
 
   // IN: nothing

@@ -37,8 +37,7 @@ void Dispatcher<GearsTimeRanges>::Init() {
   RegisterMethod("end", &GearsTimeRanges::End);
 }
 
-GearsTimeRanges::GearsTimeRanges()
-    : ModuleImplBaseClassVirtual("GearsTimeRanges") {
+GearsTimeRanges::GearsTimeRanges() : ModuleImplBaseClass("GearsTimeRanges") {
 }
 
 GearsTimeRanges::~GearsTimeRanges() {

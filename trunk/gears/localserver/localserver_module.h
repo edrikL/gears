@@ -32,12 +32,12 @@
 //-----------------------------------------------------------------------------
 // GearsLocalServer
 //-----------------------------------------------------------------------------
-class GearsLocalServer : public ModuleImplBaseClassVirtual {
+class GearsLocalServer : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 
   // need a default constructor to instance objects from the Factory
-  GearsLocalServer() : ModuleImplBaseClassVirtual(kModuleName) {}
+  GearsLocalServer() : ModuleImplBaseClass(kModuleName) {}
 
   // IN: string url
   // OUT: bool

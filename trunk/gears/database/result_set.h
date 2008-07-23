@@ -32,8 +32,7 @@
 struct sqlite3_stmt;
 class GearsDatabase;
 
-class GearsResultSet
-    : public ModuleImplBaseClassVirtual {
+class GearsResultSet : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 

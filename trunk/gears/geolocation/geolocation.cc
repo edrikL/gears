@@ -174,7 +174,7 @@ void Dispatcher<GearsGeolocation>::Init() {
 }
 
 GearsGeolocation::GearsGeolocation()
-    : ModuleImplBaseClassVirtual("GearsGeolocation"),
+    : ModuleImplBaseClass("GearsGeolocation"),
       next_watch_id_(1) {
   // Set up the thread message queue.
   if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {

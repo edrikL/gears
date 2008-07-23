@@ -37,11 +37,12 @@
 // GearsManagedResourceStore
 //-----------------------------------------------------------------------------
 class GearsManagedResourceStore
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public MessageObserverInterface,
       public JsEventHandlerInterface {
  public:
-  GearsManagedResourceStore() {}
+  GearsManagedResourceStore()
+      : ModuleImplBaseClass("GearsManagedResourceStore") {}
 
   // IN: -
   // OUT: string

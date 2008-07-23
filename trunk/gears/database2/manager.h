@@ -32,10 +32,9 @@
 
 // Allows JavaScript to create database objects. Could be extended in the future
 // with removeDatabase() and listDatabases().
-class GearsDatabase2Manager : public ModuleImplBaseClassVirtual {
+class GearsDatabase2Manager : public ModuleImplBaseClass {
  public:
-  GearsDatabase2Manager()
-      : ModuleImplBaseClassVirtual("GearsDatabase2Manager") {}
+  GearsDatabase2Manager() : ModuleImplBaseClass("GearsDatabase2Manager") {}
   ~GearsDatabase2Manager() {}
 
   // IN: string name, string version, string display name, int estimated_size

@@ -146,17 +146,16 @@ class MarshaledModule {
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
  public:
-  // TODO_REMOVE_NSISUPPORTS: this constructor only used for isupports-based
-  // modules.
-  ModuleImplBaseClass()
-      : module_name_("") {}
   explicit ModuleImplBaseClass(const std::string &name)
       : module_name_(name) {}
+
+  virtual ~ModuleImplBaseClass() {}
 
   const std::string &get_module_name() const {
     return module_name_;
   }
 
+  virtual MarshaledModule *AsMarshaledModule() { return NULL; }
 
   void InitModuleEnvironment(ModuleEnvironment *source_module_environment);
 
@@ -208,27 +207,6 @@ class ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
 
-
-// ModuleWrapper has a member scoped_ptr<ModuleImplBaseClass>, so this
-// destructor needs to be virtual. However, adding a virtual destructor
-// causes a crash in Firefox because nsCOMPtr expects (nsISupports *)ptr ==
-// (ModuleImplBaseClass *)ptr. Therefore, until we convert all the old XPCOM-
-// based firefox modules to be Dispatcher-based, we need this separate base
-// class.
-// TODO_REMOVE_NSISUPPORTS: Remove this class and make ~ModuleImplBaseClass
-// virtual when this is the only ModuleImplBaseClass.
-class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
- public:
-  ModuleImplBaseClassVirtual() : ModuleImplBaseClass() {}
-  ModuleImplBaseClassVirtual(const std::string &name)
-      : ModuleImplBaseClass(name) {}
-  virtual ~ModuleImplBaseClassVirtual(){}
-
-  virtual MarshaledModule *AsMarshaledModule() { return NULL; }
-
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClassVirtual);
-};
 
 class DispatcherInterface;
 

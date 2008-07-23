@@ -84,7 +84,7 @@ void Dispatcher<GearsFactoryImpl>::Init() {
 const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
 
 GearsFactoryImpl::GearsFactoryImpl()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
