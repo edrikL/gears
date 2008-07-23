@@ -69,21 +69,26 @@ void SettingsDialog::Run() {
   // Show the dialog.
   const int kSettingsDialogWidth = 400;
   const int kSettingsDialogHeight = 350;
+  HtmlDialogReturnValue dialog_result;
 #ifdef BROWSER_WEBKIT
   visible_ = true;
-  if (!settings_dialog->DoModeless(STRING16(kSettingsDialogString),
+  dialog_result = settings_dialog->DoModeless(STRING16(kSettingsDialogString),
                                    kSettingsDialogWidth, kSettingsDialogHeight,
                                    ProcessResultsCallback, 
-                                   settings_dialog.get()) ) {
+                                   settings_dialog.get());
+  if (dialog_result != HTML_DIALOG_SUCCESS) {
     return;
   }
   settings_dialog.release();
 #else
-  settings_dialog->DoModal(STRING16(kSettingsDialogString),
-                           kSettingsDialogWidth, kSettingsDialogHeight);
+  dialog_result = settings_dialog->DoModal(STRING16(kSettingsDialogString),
+                                           kSettingsDialogWidth,
+                                           kSettingsDialogHeight);
 
-  // Process the result() property and update any permissions or shortcuts.
-  ProcessResult(&settings_dialog->result);
+  if (dialog_result == HTML_DIALOG_SUCCESS) {
+    // Process the result() property and update any permissions or shortcuts.
+    ProcessResult(&settings_dialog->result);
+  }
 #endif
 }
 

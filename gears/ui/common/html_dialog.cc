@@ -24,12 +24,19 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/ui/common/html_dialog.h"
 
 
-bool HtmlDialog::DoModal(const char16 *html_filename, int width, int height) {
+HtmlDialogReturnValue HtmlDialog::DoModal(const char16 *html_filename,
+                                          int width, int height) {
+  PermissionsDB *permissions_db = PermissionsDB::GetDB();
+  if (!permissions_db) return HTML_DIALOG_FAILURE;
+  if (permissions_db->ShouldSupressDialogs())
+    return HTML_DIALOG_SUPRESSED;
+
   std::string16 locale;
   if (GetLocale(&locale)) {
     std::string locale8;
@@ -41,27 +48,39 @@ bool HtmlDialog::DoModal(const char16 *html_filename, int width, int height) {
   // The Json library deals only in UTF-8, so we need to convert :(.
   std::string16 input_string;
   if (!UTF8ToString16(arguments.toStyledString().c_str(), &input_string)) {
-    return false;
+    return HTML_DIALOG_FAILURE;
   }
 
-  return DoModalImpl(html_filename, width, height, input_string.c_str());
+  if (DoModalImpl(html_filename, width, height, input_string.c_str())) {
+    return HTML_DIALOG_SUCCESS;
+  } else {
+    return HTML_DIALOG_FAILURE;
+  }
 }
 
-bool HtmlDialog::DoModeless(const char16 *html_filename, int width, int height,
-                            ModelessCompletionCallback callback, 
-                            void *closure) {
+HtmlDialogReturnValue HtmlDialog::DoModeless(const char16 *html_filename,
+    int width, int height, ModelessCompletionCallback callback, void *closure) {
 #ifdef BROWSER_WEBKIT
+  PermissionsDB *permissions_db = PermissionsDB::GetDB();
+  if (!permissions_db) return HTML_DIALOG_FAILURE;
+  if (permissions_db->ShouldSupressDialogs())
+    return HTML_DIALOG_SUPRESSED;
+
   // The Json library deals only in UTF-8, so we need to convert :(.
   std::string16 input_string;
   if (!UTF8ToString16(arguments.toStyledString().c_str(), &input_string)) {
-    return false;
+    return HTML_DIALOG_FAILURE;
   }
 
-  return DoModelessImpl(html_filename, width, height, input_string.c_str(),
-                        callback, closure);
+  if (DoModelessImpl(html_filename, width, height, input_string.c_str(),
+                     callback, closure)) {
+    return HTML_DIALOG_SUCCESS;
+  } else {
+    return HTML_DIALOG_FAILURE;
+  }
 #else
   assert(false);
-  return false;
+  return HTML_DIALOG_FAILURE;
 #endif
 }
 
