@@ -23,357 +23,162 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
-
-#include "gears/base/common/detect_version_collision.h"
-#include "gears/base/common/module_wrapper.h"
-#include "gears/base/common/process_utils_win32.h"
-#include "gears/base/common/string16.h"
-#include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
-#include "gears/console/console.h"
-#include "gears/database/database.h"
-#include "gears/database2/manager.h"
-#include "gears/desktop/desktop.h"
-
-#ifdef OFFICIAL_BUILD
-// The Dummy module is not included in official builds.
-#else
-#include "gears/dummy/dummy_module.h"
-#endif
-
-#include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
-#include "gears/geolocation/geolocation.h"
-#include "gears/httprequest/httprequest.h"
-#include "gears/localserver/localserver_module.h"
-#include "gears/timer/timer.h"
-#include "gears/ui/ie/string_table.h"
-#include "gears/workerpool/workerpool.h"
-#ifdef WINCE
-// The Image, Canvas and Media API are not yet available for WinCE.
-#else
-#include "gears/canvas/canvas.h"
-#include "gears/image/image_loader.h"
-#include "gears/media/audio.h"
-#include "gears/media/audio_recorder.h"
-#endif  // WINCE
 
-#ifdef USING_CCTESTS
-#include "gears/cctests/test.h"
-#endif
-
-
-GearsFactory::GearsFactory()
-    : ModuleImplBaseClass("GearsFactory"),
-      is_creation_suspended_(false) {
-  SetActiveUserFlag();
-}
-
-
-STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
-                                  const VARIANT *version_variant,
-                                  IDispatch **retval) {
-  const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
-
-  LOG16((L"GearsFactory::create(%s)\n", object_name_bstr));
+#include "gears/base/ie/dispatcher_to_idispatch.h"
+#include "gears/factory/common/factory_utils.h"
 
 #ifdef WINCE
-  // If privateSetGlobalObject has not been called from JavaScript (the call is
-  // made from gears_init.js), then the factory won't be sited. In this case,
-  // we should not create any Gears objects.
-  if (!IsFactoryInitialized(this)) {
-    LOG16((L"GearsFactory::create: Failed - factory has not been sited.\n"));
-    RETURN_EXCEPTION(STRING16(PRODUCT_FRIENDLY_NAME
-                              L" has not been initialized correctly. "
-                              L"Please ensure that you are using the most "
-                              L"recent version of gears_init.js."));
-  }
+// On regular Windows, the factory_impl_ is created in SetSite. On WinCE,
+// we need to explicitly call privateSetGlobalObject on the factory object,
+// and this kPrivateSetGlobalObject string plays the role of a DISPID for the
+// privateSetGlobalObject method.
+// A DISPID is just a LONG. On WinCE, we'll just re-use the address of the
+// the string objects, the same way Dispatcher just re-uses a DispatchId (which
+// is just a pointer) as a DISPID.
+// Also, gears_init.js checks getBuildInfo to see whether or not we are on
+// WinCE (and hence whether or not to call privateSetGlobalObject), so we also
+// need to be able to respond to getBuildInfo *before* the factory_impl_ is
+// initialized.
+// Finally, if we try to call create on a GearsFactory that hasn't had
+// privateSetGlobalObject called on it yet, then we should return a helpful
+// exception message, and kUninitializedGearsFactoryImpl plays the DISPID in
+// that case.
+const std::string16 GearsFactory::kGetBuildInfo(STRING16(L"getBuildInfo"));
+const std::string16 GearsFactory::kPrivateSetGlobalObject(
+    STRING16(L"privateSetGlobalObject"));
+const std::string16 GearsFactory::kUninitializedGearsFactoryImpl(
+    STRING16(L"uninitializedGearsFactoryImpl"));
 #endif
 
-  if (DetectedVersionCollision()) {
-    if (!EnvIsWorker()) {
-      MaybeNotifyUserOfVersionCollision();  // only notifies once per process
-    }
-    const int kMaxStringLength = 256;
-    char16 error_text[kMaxStringLength];
-    if (LoadString(GetGearsModuleHandle(),
-                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
-      RETURN_EXCEPTION(error_text);
-    } else {
-      RETURN_EXCEPTION(L"Internal Error");
-    }
-  }
 
-  // Check is_creation_suspended_, because the factory can be suspended
-  // inside a worker that hasn't yet called allowCrossOrigin().
-  if (is_creation_suspended_) {
-    RETURN_EXCEPTION(kPermissionExceptionString);
-  }
-
-  // Get the name of the object they're trying to create.
-  std::string16 module_name(object_name_bstr);
-
-  // Check if the module requires local data permission to be created.
-  if (RequiresLocalDataPermissionType(module_name)) {
-    // Make sure the user gives this site permission to use Gears unless the
-    // module can be created without requiring any permissions.
-    if (!GetPermissionsManager()->AcquirePermission(
-        PermissionsDB::PERMISSION_LOCAL_DATA)) {
-      RETURN_EXCEPTION(kPermissionExceptionString);
-    }
-  }
-
-  // Check the version string.
-
-  std::string16 version;
-  if (!ActiveXUtils::OptionalVariantIsPresent(version_variant)) {
-    version = STRING16(L"1.0");  // default value for this optional param
-  } else {
-    if (version_variant->vt != VT_BSTR) {
-      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
-    }
-    version = version_variant->bstrVal;
-  }
-
-  if (version != kAllowedClassVersion) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string. Must be 1.0."));
-  }
-
-  // Create an instance of the object.
-  //
-  // Do case-sensitive comparisons, which are always better in APIs. They make
-  // code consistent across callers, and they are easier to support over time.
-
-  std::string16 error;
-  bool success = false;
-
-  success = CreateDispatcherModule(module_name, retval, &error);
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  } else {
-    RETURN_EXCEPTION(STRING16(L"Unknown object."));
-  }
-}
-
-bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
-                                          IDispatch **retval,
-                                          std::string16 *error) {
-  scoped_refptr<ModuleImplBaseClass> object;
-
-  if (object_name == STRING16(L"beta.test")) {
-#ifdef USING_CCTESTS
-    CreateModule<GearsTest>(module_environment_.get(), NULL, &object);
-#else
-    *error = STRING16(L"Object is only available in test build.");
-    return false;
-#endif
-  } else if (object_name == STRING16(L"beta.database")) {
-    CreateModule<GearsDatabase>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.localserver")) {
-    CreateModule<GearsLocalServer>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.workerpool")) {
-    CreateModule<GearsWorkerPool>(module_environment_.get(), NULL, &object);
-#ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Database2, Geolocation, Media and Image APIs have not
-  // been finalized for official builds.
-#else
-  } else if (object_name == STRING16(L"beta.databasemanager")) {
-    CreateModule<GearsDatabase2Manager>(
-        module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(module_environment_.get(), NULL, &object);
-#ifdef WINCE
-  // Furthermore, Canvas, Console, Media and Image are unimplemented on WinCE.
-#else
-#ifdef WIN32
-  } else if (object_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(module_environment_.get(), NULL, &object);
-#endif
-  } else if (object_name == STRING16(L"beta.console")) {
-    CreateModule<GearsConsole>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    CreateModule<GearsImageLoader>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.audio")) {
-    CreateModule<GearsAudio>(module_environment_.get(), NULL, &object);
-  } else if (object_name == STRING16(L"beta.audiorecorder")) {
-    CreateModule<GearsAudioRecorder>(module_environment_.get(), NULL, &object);
-#endif  // WINCE
-#endif  // OFFICIAL_BUILD
-#ifdef OFFICIAL_BUILD
-  // The Dummy module is not included in official builds.
-#else
-  } else if (object_name == STRING16(L"beta.dummymodule")) {
-    CreateModule<GearsDummyModule>(module_environment_.get(), NULL, &object);
-#endif // OFFICIAL_BUILD
-  } else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  *retval = object->GetWrapperToken().pdispVal;
-  // IE expects that when you return an object up to the script engine, from
-  // an IDL-defined API, then the return value will already have been Ref()'d.
-  // The NPAPI and Firefox ports do not do this - they have a different
-  // calling convention.
-  // Note that, when this factory implementation migrates to being Dispatcher-
-  // based, then we will presumably just call JsCallContext::SetReturnValue,
-  // and we will not need to explicitly Ref() here.
-  object->Ref();
-  return true;
-}
-
-
-STDMETHODIMP GearsFactory::getBuildInfo(BSTR *retval) {
-  LOG16((L"GearsFactory::getBuildInfo()\n"));
-  std::string16 build_info;
-  AppendBuildInfo(&build_info);
-  if (DetectedVersionCollision()) {
-    build_info += L" (pending browser restart)";
-  }
-
-  *retval = SysAllocString(build_info.c_str());
-  if (*retval == NULL) {
-    RETURN_EXCEPTION(STRING16(L"Internal error."));
-  }
-  RETURN_NORMAL();
-}
-
-
-STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
-  *retval = SysAllocString(STRING16(PRODUCT_VERSION_STRING));
-  if (*retval == NULL) {
-    RETURN_EXCEPTION(STRING16(L"Internal error."));
-  }
-  RETURN_NORMAL();
-}
-
-
-STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
-                                         const VARIANT *image_url_in,
-                                         const VARIANT *extra_message_in,
-                                         VARIANT_BOOL *retval) {
-  // Guard against NULL BSTRs.
-  std::string16 site_name;
-  std::string16 image_url;
-  std::string16 extra_message;
-
-  if (ActiveXUtils::OptionalVariantIsPresent(site_name_in)) {
-    if (site_name_in->vt == VT_BSTR) {
-      site_name.assign(site_name_in->bstrVal);
-    } else {
-      RETURN_EXCEPTION(STRING16(L"siteName must be a string."));
-    }
-  }
-
-  if (ActiveXUtils::OptionalVariantIsPresent(image_url_in)) {
-    if (image_url_in->vt == VT_BSTR) {
-      image_url.assign(image_url_in->bstrVal);
-    } else {
-      RETURN_EXCEPTION(STRING16(L"imageUrl must be a string."));
-    }
-  }
-
-  if (ActiveXUtils::OptionalVariantIsPresent(extra_message_in)) {
-    if (extra_message_in->vt == VT_BSTR) {
-      extra_message.assign(extra_message_in->bstrVal);
-    } else {
-      RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
-    }
-  }
-  scoped_ptr<PermissionsDialog::CustomContent> custom_content(
-      new PermissionsDialog::CustomContent(image_url.c_str(),
-                                           site_name.c_str(),
-                                           extra_message.c_str()));
-  assert(custom_content.get());
-  if (GetPermissionsManager()->AcquirePermission(
-      PermissionsDB::PERMISSION_LOCAL_DATA,
-      custom_content.get())) {
-    *retval = VARIANT_TRUE;
-  } else {
-    *retval = VARIANT_FALSE;
-  }
-  RETURN_NORMAL();
-}
-
-
-// Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
-// indicates whether USER opt-in is still required, not whether DEVELOPER
-// methods have been called correctly (e.g. allowCrossOrigin).
-STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
-  if (GetPermissionsManager()->HasPermission(
-      PermissionsDB::PERMISSION_LOCAL_DATA)) {
-    *retval = VARIANT_TRUE;
-  } else {
-    *retval = VARIANT_FALSE;
-  }
-
-  RETURN_NORMAL();
-}
-
-
-// InitModuleEnvironmentFromDOM needs the object to be sited.  We override
+// ModuleEnvironment::CreateFromDOM needs the object to be sited.  We override
 // SetSite just to know when this happens, so we can do some one-time setup
 // afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   HRESULT hr = IObjectWithSiteImpl<GearsFactory>::SetSite(site);
 #ifdef WINCE
-  // We are unable to get IWebBrowser2 from this pointer. Instead, the user must
-  // call privateSetGlobalObject from JavaScript.
+  // See comments in GearsFactory::Invoke for why this is disabled for WinCE.
 #else
   scoped_refptr<ModuleEnvironment> module_environment(
       ModuleEnvironment::CreateFromDOM(m_spUnkSite));
-  if (!module_environment) {
+  if (!module_environment ||
+      !CreateModule<GearsFactoryImpl>(module_environment.get(),
+                                      NULL, &factory_impl_)) {
     return E_FAIL;
   }
-  InitModuleEnvironment(module_environment.get());
 #endif
   return hr;
 }
 
+
+HRESULT GearsFactory::GetTypeInfoCount(unsigned int FAR* retval) {
+  if (!factory_impl_.get()) { return E_FAIL; }
+  return DispatcherGetTypeInfoCount(
+      factory_impl_->GetWrapper()->GetDispatcher(), retval);
+}
+
+
+HRESULT GearsFactory::GetTypeInfo(unsigned int index, LCID lcid,
+                                  ITypeInfo FAR* FAR* retval) {
+  if (!factory_impl_.get()) { return E_FAIL; }
+  return DispatcherGetTypeInfo(factory_impl_->GetWrapper()->GetDispatcher(),
+                               index, lcid, retval);
+}
+
+
+HRESULT GearsFactory::GetIDsOfNames(REFIID iid, OLECHAR FAR* FAR* names,
+                                    unsigned int num_names, LCID lcid, 
+                                    DISPID FAR* retval) {
+  if (!factory_impl_.get()) {
 #ifdef WINCE
-STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
-  if (!IsFactoryInitialized(this)) {
-    scoped_refptr<ModuleEnvironment> module_environment(
-        ModuleEnvironment::CreateFromDOM(js_dispatch));
-    if (!module_environment) {
-      RETURN_EXCEPTION(STRING16(L"Failed to initialize "
-                                PRODUCT_FRIENDLY_NAME
-                                L"."));
+    std::string16 name_as_string(static_cast<char16 *>(*names));
+    if (kPrivateSetGlobalObject == name_as_string) {
+      *retval = reinterpret_cast<DISPID>(&kPrivateSetGlobalObject);
+      return S_OK;
+    } else if (kGetBuildInfo == name_as_string) {
+      *retval = reinterpret_cast<DISPID>(&kGetBuildInfo);
+      return S_OK;
+    } else {
+      *retval = reinterpret_cast<DISPID>(&kUninitializedGearsFactoryImpl);
+      return S_OK;
     }
-    InitModuleEnvironment(module_environment.get());
+#else
+    return E_FAIL;
+#endif
   }
-  RETURN_NORMAL();
-}
-#endif
-
-// TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
-// rather than just the cross-origin worker case.  (Code re-use == good.)
-void GearsFactory::SuspendObjectCreation() {
-  is_creation_suspended_ = true;
+  return DispatcherGetIDsOfNames(factory_impl_->GetWrapper()->GetDispatcher(),
+                                 iid, names, num_names, lcid, retval);
 }
 
-void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
-  // TODO(cprince): The transition from suspended to resumed is where we should
-  // propagate cross-origin opt-in to the permissions DB.
-  is_creation_suspended_ = false;
-}
 
+HRESULT GearsFactory::Invoke(DISPID member_id, REFIID iid, LCID lcid,
+                             WORD flags, DISPPARAMS FAR* params,
+                             VARIANT FAR* retval, EXCEPINFO FAR* exception,
+                             unsigned int FAR* arg_error_index) {
+  if (!factory_impl_.get()) {
 #ifdef WINCE
-// On WinCE we initialize the Factory with a call from JavaScript. Since we
-// can't guarantee that this call will be made, we need a method to determine
-// whether or not an object has been successfully initialized. This method is
-// a friend of ModuleImplBaseClass for this purpose.
-static bool IsFactoryInitialized(GearsFactory *factory) {
-  return factory->module_environment_.get() != NULL;
-}
+    // On WinCE, we intercept the privateSetGlobalObject method call. On
+    // regular Windows, this is done during SetSite, but on WinCE we are not
+    // able to get the necessary IWebBrowser2 from the IUnknown *site, and
+    // instead initialize via an explicit JS call to privateSetGlobalObject.
+    //
+    // We can't implement privateSetGlobalObject in GearsFactoryImpl and rely
+    // on the Dispatcher to dispatch the call, since we don't have a
+    // GearsFactoryImpl instance yet, since CreateModule<GearsFactoryImpl>
+    // requires a valid ModuleEnvironment. Thus, we explicitly intercept the
+    // privateSetGlobalObject method call and initialize the ModuleEnvironment
+    // here.
+    //
+    // TODO(steveblock): Ideally, we would avoid the need for this method and
+    // somehow pass this pointer to the GearsFactory constructor. This could
+    // either be through ActiveXObject() or through the OBJECT tag's parameters.
+    // However, it looks like neither approach is possible.
+    if (member_id == reinterpret_cast<DISPID>(&kPrivateSetGlobalObject)) {
+      if (factory_impl_.get()) {
+        // privateSetGlobalObject has already been called, and so subsequent
+        // calls are just a no-op.
+        return S_OK;
+      }
+      VARIANT variant;
+      JsCallContext js_call_context(params, retval, exception);
+      const int argc = 1;
+      JsArgument argv[argc] = {
+        { JSPARAM_REQUIRED, JSPARAM_TOKEN, &variant },
+      };
+      js_call_context.GetArguments(argc, argv);
+      if (js_call_context.is_exception_set() ||
+          variant.vt != VT_DISPATCH) {
+        return DISP_E_EXCEPTION;
+      }
+      scoped_refptr<ModuleEnvironment> module_environment(
+          ModuleEnvironment::CreateFromDOM(variant.pdispVal));
+      if (!module_environment ||
+          !CreateModule<GearsFactoryImpl>(module_environment.get(),
+                                          NULL, &factory_impl_)) {
+        js_call_context.SetException(STRING16(
+            L"Failed to initialize " PRODUCT_FRIENDLY_NAME L"."));
+        return DISP_E_EXCEPTION;
+      }
+      return S_OK;
+    } else if (member_id == reinterpret_cast<DISPID>(&kGetBuildInfo)) {
+      std::string16 build_info;
+      AppendBuildInfo(&build_info);
+      JsCallContext js_call_context(params, retval, exception);
+      js_call_context.SetReturnValue(JSPARAM_STRING16, &build_info);
+      return S_OK;
+    } else {
+      JsCallContext js_call_context(params, retval, exception);
+      js_call_context.SetException(STRING16(PRODUCT_FRIENDLY_NAME
+          L" has not been initialized correctly. Please ensure that"
+          L" you are using the most recent version of gears_init.js."));
+      return DISP_E_EXCEPTION;
+    }
+#else
+    return E_FAIL;
 #endif
+  }
+  return DispatcherInvoke(factory_impl_->GetWrapper()->GetDispatcher(),
+                          member_id, iid, lcid, flags, params, retval,
+                          exception, arg_error_index);
+}

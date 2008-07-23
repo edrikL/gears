@@ -136,10 +136,7 @@ struct JavaScriptWorkerInfo {
 
   scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::HttpListener> http_request_listener;
-  // TODO(cprince): Find a clean way in IE to store the native interface and
-  // keep a scoped AddRef, without requiring two separate pointers.
-  GearsFactory *factory_ptr;
-  CComPtr<IUnknown> factory_ref;
+  scoped_refptr<GearsFactoryImpl> factory_impl;
   bool is_factory_suspended;
   SAFE_HANDLE thread_handle;
 };
@@ -213,7 +210,7 @@ void PoolThreadsManager::AllowCrossOrigin() {
   // and only for cross-origin workers.
   if (wi->is_factory_suspended) {
     wi->is_factory_suspended = false;
-    wi->factory_ptr->ResumeObjectCreationAndUpdatePermissions();
+    wi->factory_impl->ResumeObjectCreationAndUpdatePermissions();
   }
 }
 
@@ -669,7 +666,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->onerror_handler.reset(NULL);
 
   // Reset on creation thread for consistency with Firefox implementation.
-  wi->factory_ref = NULL;
+  wi->factory_impl.reset(NULL);
 
   // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
   // NULL. This allows us to free up these thread resources sooner, and it
@@ -699,13 +696,11 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   // js_runner manages the lifetime of these allocated objects.
   // ::CreateInstance does not AddRef (see MSDN), but js_runner handles it.
 
-  CComObject<GearsFactory> *factory;
-  HRESULT hr = CComObject<GearsFactory>::CreateInstance(&factory);
-  if (FAILED(hr)) { return false; }
-  factory->InitModuleEnvironment(wi->module_environment.get());
-
+  scoped_refptr<GearsFactoryImpl> factory_impl;
   scoped_refptr<GearsWorkerPool> workerpool;
-  if (!CreateModule<GearsWorkerPool>(wi->module_environment.get(),
+  if (!CreateModule<GearsFactoryImpl>(wi->module_environment.get(),
+                                      NULL, &factory_impl) ||
+      !CreateModule<GearsWorkerPool>(wi->module_environment.get(),
                                      NULL, &workerpool)) {
     return false;
   }
@@ -714,7 +709,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
                                                        wi->script_origin)) {
     // For cross-origin workers, object creation is suspended until the
     // callee invokes allowCrossOrigin().
-    factory->SuspendObjectCreation();
+    factory_impl->SuspendObjectCreation();
     wi->is_factory_suspended = true;
   } else {
     // For same-origin workers, just copy the permission state from the
@@ -729,18 +724,12 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
 
   // Save an AddRef'd pointer to the factory so we can access it later.
-  wi->factory_ptr = factory;
-  wi->factory_ref = factory->_GetRawUnknown();
+  wi->factory_impl = factory_impl.get();
 
 
   // Expose created objects as globals in the JS engine.
-  if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
-                            factory->_GetRawUnknown(),
-                            0)) {
-    return false;
-  }
-
-  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName, workerpool.get())) {
+  if (!js_runner->AddGlobal(kWorkerInsertedFactoryName, factory_impl.get()) ||
+      !js_runner->AddGlobal(kWorkerInsertedWorkerPoolName, workerpool.get())) {
     return false;
   }
 

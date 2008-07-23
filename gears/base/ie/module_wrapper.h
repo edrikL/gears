@@ -32,8 +32,8 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/ie/atl_headers.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "genfiles/interfaces.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
 // ModuleWrapper wraps each Gears module instance and exposes its methods to
@@ -62,22 +62,10 @@ class ATL_NO_VTABLE ModuleWrapper
 
   ~ModuleWrapper() {}
 
-  static JsCallContext *PeekJsCallContext();
-
-  // IDispatch
-  STDMETHOD(GetTypeInfoCount)(unsigned int FAR* retval) {
-    // JavaScript does not call this
-    assert(false);
-    return E_NOTIMPL;
-  }
-
+  // IDispatch: GetTypeInfoCount, GetTypeInfo, GetIDsOfNames, Invoke.
+  STDMETHOD(GetTypeInfoCount)(unsigned int FAR* retval);
   STDMETHOD(GetTypeInfo)(unsigned int index, LCID lcid,
-                         ITypeInfo FAR* FAR* retval) {
-    // JavaScript does not call this
-    assert(false);
-    return E_NOTIMPL;
-  }
-
+                         ITypeInfo FAR* FAR* retval);
   STDMETHOD(GetIDsOfNames)(REFIID iid, OLECHAR FAR* FAR* names,
                            unsigned int num_names, LCID lcid, 
                            DISPID FAR* retval);
@@ -86,6 +74,7 @@ class ATL_NO_VTABLE ModuleWrapper
                     EXCEPINFO FAR* exception,
                     unsigned int FAR* arg_error_index);
 
+  // GearsModuleProviderInterface: get_moduleWrapper.
   STDMETHOD(get_moduleWrapper)(VARIANT *retval);
 
   // ModuleWrapperBaseClass
