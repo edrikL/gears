@@ -178,7 +178,10 @@ function testAbortAfterInteractive() {
   startAsync();
   var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
   var request = google.gears.factory.create('beta.httprequest');
-  request.open('GET', urlbase + 1000000, true);
+  // TODO(ace): Verify that intermittent failure (readyState = 4)
+  // is caused by browser caching.
+  var random_query = '&r=' + new Date().getTime();
+  request.open('GET', urlbase + 1000000 + random_query, true);
   request.onreadystatechange = function() {
     if (request.readyState >= 3) {
       assertEqual(3, request.readyState);  // we dont want it to be complete yet
@@ -210,7 +213,10 @@ function testAbortWithReusedObject() {
   request.abort();
 
   // reusing the same GHR: open, send, wait for interactive, then abort
-  request.open('GET', urlbase + 1000000, true);
+  // TODO(ace): Verify that intermittent failure (readyState = 4)
+  // is caused by browser caching.
+  var random_query = '&r=' + new Date().getTime();
+  request.open('GET', urlbase + 1000000 + random_query, true);
   request.onreadystatechange = function() {
     if (request.readyState >= 3) {
       assertEqual(3, request.readyState);  // we dont want it to be complete yet
