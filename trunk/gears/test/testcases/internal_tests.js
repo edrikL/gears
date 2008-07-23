@@ -617,20 +617,30 @@ function testGetSystemTime() {
 
 function testPerfTimer() {
   if (isUsingCCTests) {
-    // Test zero tick delta.
-    var ticks = internalTests.getTicks();
-    var elapsed = internalTests.getTickDeltaMicros(ticks, ticks);
-    assert(elapsed == 0, 'Time delta should be zero.');
-    // Test non-zero tick delta.
+    // Test uninitialised use.
+    assertError(
+        function() { internalTests.stopPerfTimer(); },
+        'Perf timer has not been started.',
+        'Calling stopPerfTimer() should fail if the timer has not been ' +
+        'started.');
+
+    // Test repeated starts.
+    internalTests.startPerfTimer();
+    assertError(
+        function() { internalTests.startPerfTimer(); },
+        'Perf timer is already running.',
+        'Calling startPerfTimer() should fail if the timer is already ' +
+        'running.');
+
+    // Test non-zero elapsed time.
     var callback = function() {
-      elapsed =
-          internalTests.getTickDeltaMicros(ticks, internalTests.getTicks());
-      assert(elapsed > 0, 'Time delta should be greater than zero.');
+      elapsed = internalTests.stopPerfTimer();
+      assert(elapsed > 0, 'Elapsed time should be greater than zero.');
       completeAsync();
     };
     var timer = google.gears.factory.create('beta.timer');
     startAsync();
-    // Tick resolution should be at most 1us.
+    // Perf timer resolution should be 1us at worst.
     timer.setTimeout(callback, 1);
   }
 }

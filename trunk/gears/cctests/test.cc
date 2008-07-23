@@ -72,8 +72,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestEntriesPresentInBrowserCache);
 #endif
   RegisterMethod("getSystemTime", &GearsTest::GetSystemTime);
-  RegisterMethod("getTicks", &GearsTest::GetTimingTicks);
-  RegisterMethod("getTickDeltaMicros", &GearsTest::GetTimingTickDeltaMicros);
+  RegisterMethod("startPerfTimer", &GearsTest::StartPerfTimer);
+  RegisterMethod("stopPerfTimer", &GearsTest::StopPerfTimer);
   RegisterMethod("testParseGeolocationOptions",
                  &GearsTest::TestParseGeolocationOptions);
   RegisterMethod("testGeolocationFormRequestBody",
@@ -251,36 +251,30 @@ void GearsTest::GetSystemTime(JsCallContext *context) {
   int64 msec = GetCurrentTimeMillis();
   // SetReturnValue will fail and set an exception if msec exceeds JS_INT_MAX,
   // but this should not happen for 300,000 years!
-  assert(msec > 0 && msec < JS_INT_MAX);
+  assert(msec > 0);
   context->SetReturnValue(JSPARAM_INT64, &msec);
 }
 
-// Return the number of ticks as int64.
-void GearsTest::GetTimingTicks(JsCallContext *context) {
-  int64 ticks = GetTicks();
-  if (ticks > JS_INT_MAX) {
-    context->SetException(STRING16(L"GetTimingTicks(): Tick count overflow."));
+// Start the perf timer.
+void GearsTest::StartPerfTimer(JsCallContext *context) {
+  if (start_ticks_ != 0) {
+    context->SetException(STRING16(L"Perf timer is already running."));
     return;
   }
-  context->SetReturnValue(JSPARAM_INT64, &ticks);
+  start_ticks_ = GetTicks();
 }
 
 // Return the elapsed time in microseconds as int64.
-void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
-  int64 start;
-  int64 end;
-  JsArgument argv[] = {
-    {JSPARAM_REQUIRED, JSPARAM_INT64, &start},
-    {JSPARAM_REQUIRED, JSPARAM_INT64, &end}
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) {
+void GearsTest::StopPerfTimer(JsCallContext *context) {
+  if (start_ticks_ == 0) {
+    context->SetException(STRING16(L"Perf timer has not been started."));
     return;
   }
-  int64 elapsed = GetTickDeltaMicros(start, end);
+  int64 elapsed = GetTickDeltaMicros(start_ticks_, GetTicks());
+  start_ticks_ = 0;
   // SetReturnValue will fail and set an exception if elapsed exceeds
-  // JS_INT_MAX, but this gives a timespan of 300 years!
-  assert(elapsed > JS_INT_MIN && elapsed < JS_INT_MAX);
+  // JS_INT_MAX, but this is an interval of 300 years!
+  assert(elapsed >= 0);
   context->SetReturnValue(JSPARAM_INT64, &elapsed);
 }
 

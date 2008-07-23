@@ -46,6 +46,8 @@ int64 GetCurrentTimeMillis() {
 
   // WinCE doesn't have GetSystemTimeAsFileTime, so we use this alternative
   // combo on all Windows platforms.
+  //
+  // Note that on WinCE, this has a precision of only 1 second.
   SYSTEMTIME systemtime;
   GetSystemTime(&systemtime);
   FILETIME filetime;

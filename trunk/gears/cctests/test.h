@@ -38,19 +38,21 @@
 
 class GearsTest : public ModuleImplBaseClass {
  public:
-  GearsTest() : ModuleImplBaseClass("GearsTest") {}
+  GearsTest()
+    : ModuleImplBaseClass("GearsTest"),
+      start_ticks_(0) {}
 
   // IN: nothing
   // OUT: int64 time
   void GetSystemTime(JsCallContext *context);
 
   // IN: nothing
-  // OUT: int64 ticks
-  void GetTimingTicks(JsCallContext *context);
+  // OUT: nothing
+  void StartPerfTimer(JsCallContext *context);
 
-  // IN: int64 start, int64 end
-  // OUT: int64 elapsed
-  void GetTimingTickDeltaMicros(JsCallContext *context);
+  // IN: nothing
+  // OUT: int64 elapsed_microseconds
+  void StopPerfTimer(JsCallContext *context);
 
   // IN: bool is_worker
   // OUT: nothing
@@ -187,6 +189,8 @@ class GearsTest : public ModuleImplBaseClass {
 #endif  // OFFICIAL_BUILD
 
  private:
+  // The tick count used by the perf timer.
+  int64 start_ticks_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
