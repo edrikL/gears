@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/event.h"
+#include "gears/base/common/stopwatch.h"
 
 #include <assert.h>
 
@@ -55,12 +56,22 @@ void Event::Wait() {
 bool Event::WaitWithTimeout(int timeout_milliseconds) {
   MutexLock lock(&mutex_);
   while (!signal_) {
+    Stopwatch stopwatch;
+    stopwatch.Start();
     // Not signalled. Wait for the condition variable, with a timeout.
     bool wait_timed_out = condition_.WaitWithTimeout(&mutex_,
                                                      timeout_milliseconds);
     if (wait_timed_out) {
       // Timed out.
       return false;
+    }
+    if (!signal_) {
+      // Update the timeout.
+      stopwatch.Stop();
+      timeout_milliseconds -= stopwatch.GetElapsed();
+      if (timeout_milliseconds <= 0) {
+        return false;
+      }
     }
   }
   // Reset signal.
