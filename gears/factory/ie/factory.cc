@@ -64,7 +64,9 @@
 #endif
 
 
-GearsFactory::GearsFactory() : is_creation_suspended_(false) {
+GearsFactory::GearsFactory()
+    : ModuleImplBaseClass("GearsFactory"),
+      is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
 
