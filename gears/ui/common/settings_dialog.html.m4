@@ -32,7 +32,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <head>
   <style type="text/css">
 
-m4_include(ui/common/button.css)
+m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
+m4_include(ui/common/button.css)~)
 m4_include(ui/common/html_dialog.css)
     h1 {
       font-size:1.2em;
@@ -140,7 +141,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~~,~
     div.radio-buttons {
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~
+      width: 150px;
+~,~
       width: 130px;
+~)
     }
 ~)
 
@@ -173,7 +179,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
           <img id="icon" src="data:image/png;base64,
-m4_include(ui/common/icon_32x32.png.base64)m4_dnl
+m4_include(genfiles/icon_32x32.png.base64)m4_dnl
            ">
 ~,~
           <img id="icon" src="icon_32x32.png" width="32" height="32">
@@ -278,7 +284,9 @@ m4_include(genfiles/settings_dialog.js)
 
   if (!browser.ie_mobile) {
     CustomButton.initializeAll();
-    initCustomLayout(layoutSettings);
+    if (!browser.android) {
+      initCustomLayout(layoutSettings);
+    }
   } else {
     var applyText = dom.getElementById("string-apply");
     if (applyText) {
@@ -432,23 +440,30 @@ m4_include(genfiles/settings_dialog.js)
     var radioButtonName = getRadioButtonName(index, permissionClass);
     var content = "<div class=\"radio-buttons\">";
     content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+    content += " id=\"" + radioButtonName + "-allow\"";
 
     if (permissionState == PERMISSION_ALLOWED) {
       content += "checked=\"true\"";
     }
     content += " onclick='handleRadioClick(" + index + ", \"" +
                permissionClass + "\", " + PERMISSION_ALLOWED + ");'>";
-    content += getString("string-allowed");
     content += "</input>";
+    content += "<label for=\"" + radioButtonName + "-allow\">";
+    content += getString("string-allowed");
+    content += "</label>";
+
     content += "<input type=\"radio\" name=\"" + radioButtonName + "\"";
+    content += " id=\"" + radioButtonName + "-deny\"";
 
     if (permissionState == PERMISSION_DENIED) {
       content += "checked=\"true\"";
     }
     content += " onclick='handleRadioClick(" + index + ", \"" +
                permissionClass + "\", " + PERMISSION_DENIED + ");'>";
-    content += getString("string-denied");
     content += "</input>";
+    content += "<label for=\"" + radioButtonName + "-deny\">";
+    content += getString("string-denied");
+    content += "</label>";
     content += "</div>";
     return content;
   }

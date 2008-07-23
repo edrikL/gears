@@ -32,7 +32,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <head>
   <style type="text/css">
 
-m4_include(ui/common/button.css)
+m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
+m4_include(ui/common/button.css)~)
 m4_include(ui/common/html_dialog.css)
     #content {
       margin:0 1em;
@@ -71,8 +72,9 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~)
     }
 
-    #icon {
+    .header-icon {
       margin-right:0.5em;
+      display:none;
     }
 
     #custom-icon {
@@ -178,7 +180,26 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td class="text-alignment" valign="top">
-          <img id="icon" width="32" height="32">
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~
+          <img id="icon-local-data" class="header-icon"
+           width="32" height="32" src="data:image/png;base64,
+m4_include(genfiles/local_data.png.base64)m4_dnl
+           ">
+~,~
+          <img id="icon-local-data" class="header-icon"
+           width="32" height="32" src="local_data.png">
+~)
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~
+          <img id="icon-locationdata" class="header-icon"
+           width="32" height="32" src="data:image/png;base64,
+m4_include(genfiles/location_data.png.base64)m4_dnl
+           ">
+~,~
+          <img id="icon-locationdata" class="header-icon"
+           width="32" height="32" src="location_data.png">
+~)
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
@@ -217,7 +238,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="string-location-privacy-statement" style="display:none; padding-top:3px;"></div>
 
     <p id="checkbox-row" style="display:none">
-      <table cellspacing="0" cellpadding="0" border="0">
+      <table width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
           <td valign="middle">
             <input type="checkbox" id="unlock" accesskey="T"
@@ -231,7 +252,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         </tr>
       </table>
     </p>
-    m4_ifelse(PRODUCT_OS,~wince~,~~,~<br>~)
+    m4_ifelse(PRODUCT_OS,~wince~,~~,m4_ifelse(PRODUCT_OS,~android~,~~,~<br>~))
   </div>
 
   <div id="foot">
@@ -408,11 +429,13 @@ m4_include(genfiles/permissions_dialog.js)
 
     elem = dom.getElementById("icon");
     if (dialogType == "localData") {
-      elem.src = "local_data.png";
+      elem = dom.getElementById("icon-local-data");
+      elem.style.display = "block";
       elem = dom.getElementById("local-data");
       elem.style.display = "block";
     } else if (dialogType == "locationData") {
-      elem.src = "location_data.png";
+      elem = dom.getElementById("icon-locationdata");
+      elem.style.display = "block";
       elem = dom.getElementById("location-data");
       elem.style.display = "block";
       elem = dom.getElementById("string-location-privacy-statement");

@@ -1587,6 +1587,14 @@ NPAPI_VPATH	+= \
 		ui/generated \
 		$(NULL)
 
+ifeq ($(OS),android)
+NPAPI_BASE64SRCS += \
+	local_data.png.base64 \
+	location_data.png.base64 \
+	icon_32x32.png.base64 \
+	$(NULL)
+endif
+
 # Some files should be omitted on Mac and Linux...
 ifeq ($(OS),osx)
 else

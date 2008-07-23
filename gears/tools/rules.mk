@@ -164,6 +164,8 @@ IE_OBJS += \
 NPAPI_GEN_TYPELIBS = \
 	$(patsubst %.idl,$(NPAPI_OUTDIR)/genfiles/%.xpt,$(NPAPI_IDLSRCS))
 
+$(BROWSER)_BASE64FILES = \
+	$(patsubst %.base64,$($(BROWSER)_OUTDIR)/genfiles/%.base64,$($(BROWSER)_BASE64SRCS))
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
 $(BROWSER)_STABFILES = \
@@ -501,13 +503,17 @@ $(THIRD_PARTY_OUTDIR):
 $(VISTA_BROKER_OUTDIR):
 	"mkdir" -p $@
 
+# Base64 targets
+$($(BROWSER)_OUTDIR)/genfiles/%.png.base64: ui/common/%.png
+	uuencode -m $< gears | sed '1d;$$d' > $@
+
 # M4 (GENERIC PREPROCESSOR) TARGETS
 
 # HTML files depend on their string table.
-$($(BROWSER)_OUTDIR)/genfiles/%.html: %.html.m4 $($(BROWSER)_OUTDIR)/genfiles/%.js
+$($(BROWSER)_OUTDIR)/genfiles/%.html: %.html.m4 $($(BROWSER)_OUTDIR)/genfiles/%.js $($(BROWSER)_BASE64FILES)
 	m4 $(M4FLAGS) $< > $@
 
-$($(BROWSER)_OUTDIR)/genfiles/%: %.m4
+$($(BROWSER)_OUTDIR)/genfiles/%: %.m4 $($(BROWSER)_BASE64FILES)
 	m4 $(M4FLAGS) $< > $@
 $(COMMON_OUTDIR)/genfiles/%: %.m4
 	m4 $(M4FLAGS) $< > $@

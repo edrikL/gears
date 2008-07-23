@@ -74,7 +74,19 @@ button {
 }
 
 #foot {
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~
+  /*
+  On Android we do not use position:absolute due to some
+  rendering limitations (absolute positioning works, but
+  the automatic resizing of dialog is confused by the
+  variable content and the display is wrong, while if we
+  remove the absolute positioning, #foot is back in the
+  flow and the dialog displays correctly)
+  */
+~,~
   position:absolute;
+~)
   background:white;
   bottom:0;
   width:100%;
