@@ -173,7 +173,7 @@ class Desktop {
   DISALLOW_EVIL_CONSTRUCTORS(Desktop);
 };
 
-class GearsDesktop : public ModuleImplBaseClassVirtual {
+class GearsDesktop : public ModuleImplBaseClass {
  public:
   GearsDesktop();
 

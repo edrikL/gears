@@ -58,7 +58,7 @@ void Dispatcher<GearsDatabase>::Init() {
 }
 
 GearsDatabase::GearsDatabase()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       db_(NULL) {
 }
 

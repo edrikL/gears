@@ -32,8 +32,7 @@
 DECLARE_GEARS_WRAPPER(GearsAudio);
 REGISTER_MEDIA_PROPERTIES_AND_METHODS(GearsAudio);
 
-GearsAudio::GearsAudio()
-    : ModuleImplBaseClassVirtual("GearsAudio") {
+GearsAudio::GearsAudio() : ModuleImplBaseClass("GearsAudio") {
 }
 
 GearsAudio::~GearsAudio() {

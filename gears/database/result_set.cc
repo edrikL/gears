@@ -48,7 +48,7 @@ void Dispatcher<GearsResultSet>::Init() {
 }
 
 GearsResultSet::GearsResultSet()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       statement_(NULL),
       is_valid_row_(false) {
 }

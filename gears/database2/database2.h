@@ -46,9 +46,9 @@ typedef Database2ThreadSafeQueue<GearsDatabase2Transaction>
 // synchronousTransaction() method.
 // This class creates and holds a reference to a Database2Connection object
 // which it shares with all transactions it creates.
-class GearsDatabase2 : public ModuleImplBaseClassVirtual {
+class GearsDatabase2 : public ModuleImplBaseClass {
  public:
-  GearsDatabase2() : ModuleImplBaseClassVirtual("GearsDatabase2") {}
+  GearsDatabase2() : ModuleImplBaseClass("GearsDatabase2") {}
   ~GearsDatabase2() {}
 
   // creates an instance of GearsDatabase2

@@ -43,7 +43,7 @@ const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
 }  // namespace
 
 GearsCanvas::GearsCanvas()
-    : ModuleImplBaseClassVirtual(kModuleName),
+    : ModuleImplBaseClass(kModuleName),
       rendering_context_(NULL),
       alpha_(1.0),
       composite_operation_(STRING16(L"source-over")),

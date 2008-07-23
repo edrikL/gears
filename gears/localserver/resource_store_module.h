@@ -43,7 +43,7 @@ class GearsResourceStoreMessageHwnd;
 // GearsResourceStore
 //-----------------------------------------------------------------------------
 class GearsResourceStore
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
 #if BROWSER_IE
       // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else

@@ -36,9 +36,9 @@
 #include "gears/base/common/common.h"
 #include "gears/geolocation/geolocation.h"
 
-class GearsTest : public ModuleImplBaseClassVirtual {
+class GearsTest : public ModuleImplBaseClass {
  public:
-  GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
+  GearsTest() : ModuleImplBaseClass("GearsTest") {}
 
   // IN: nothing
   // OUT: int64 time

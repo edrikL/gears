@@ -163,7 +163,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
               js_runner->GetContextWrapper(),
               js_context, token, &object_as_module)) {
         MarshaledModule *marshaled_module =
-            static_cast<ModuleImplBaseClassVirtual*>(object_as_module)->
+            static_cast<ModuleImplBaseClass*>(object_as_module)->
             AsMarshaledModule();
         if (marshaled_module) {
           mjt.reset(new MarshaledJsToken());

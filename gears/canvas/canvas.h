@@ -43,7 +43,7 @@ class GearsCanvasRenderingContext2D;
 // Extension of a subset of HTML5 canvas for photo manipulation.
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
-class GearsCanvas : public ModuleImplBaseClassVirtual {
+class GearsCanvas : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 

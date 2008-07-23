@@ -70,10 +70,10 @@ class ATL_NO_VTABLE FileSubmitterBehaviorFactory
 // Facilitates the inclusion of captured local files in form submissions by
 // manipulating <input type=file> elements to refer to local files that were
 // previously captured via store.CaptureFile().
-class GearsFileSubmitter : public ModuleImplBaseClassVirtual {
+class GearsFileSubmitter : public ModuleImplBaseClass {
  public:
   GearsFileSubmitter()
-      : ModuleImplBaseClassVirtual("GearsFileSubmitter")
+      : ModuleImplBaseClass("GearsFileSubmitter")
 #if BROWSER_IE
         ,html_element2_(static_cast<IHTMLElement2*>(NULL))
         ,behavior_cookie_(0)

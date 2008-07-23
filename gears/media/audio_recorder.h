@@ -39,7 +39,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsAudioRecorder
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public BaseAudioRecorder::Listener {
  public:
   GearsAudioRecorder();

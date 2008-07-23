@@ -104,7 +104,7 @@ std::string16 GenerateGuid() {
 GearsNotification::GearsNotification()
     :
 #if !BROWSER_NONE
-      ModuleImplBaseClassVirtual(kModuleName),
+      ModuleImplBaseClass(kModuleName),
 #endif
       version_(kNotificationVersion),
       display_at_time_ms_(0),

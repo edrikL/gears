@@ -129,7 +129,7 @@ bool DecodeIcon(Desktop::IconData *icon, int expected_size,
 }
 
 GearsDesktop::GearsDesktop()
-    : ModuleImplBaseClassVirtual("GearsDesktop") {
+    : ModuleImplBaseClass("GearsDesktop") {
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else

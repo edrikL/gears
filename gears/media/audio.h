@@ -34,7 +34,7 @@
 
 class GearsAudio
     : public GearsMedia,
-      public ModuleImplBaseClassVirtual {
+      public ModuleImplBaseClass {
  public:
   GearsAudio();
 

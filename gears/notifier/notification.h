@@ -51,7 +51,7 @@ const int kNotificationIconByteSize =
 // to this class.
 class GearsNotification :
 #if !BROWSER_NONE
-    public ModuleImplBaseClassVirtual,
+    public ModuleImplBaseClass,
 #endif
     public Serializable {
  public:

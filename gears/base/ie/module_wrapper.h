@@ -114,7 +114,7 @@ class ATL_NO_VTABLE ModuleWrapper
     Release();
   }
 
-  void Init(ModuleImplBaseClassVirtual *impl, DispatcherInterface *dispatcher) {
+  void Init(ModuleImplBaseClass *impl, DispatcherInterface *dispatcher) {
     assert(!impl_.get());
     assert(impl);
     impl_.reset(impl);
@@ -125,7 +125,7 @@ class ATL_NO_VTABLE ModuleWrapper
   }
 
  private:
-  scoped_ptr<ModuleImplBaseClassVirtual> impl_;
+  scoped_ptr<ModuleImplBaseClass> impl_;
   scoped_ptr<DispatcherInterface> dispatcher_;
   VARIANT token_;
 

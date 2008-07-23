@@ -39,7 +39,7 @@ struct sqlite3_stmt;
 class GearsResultSet;
 
 class GearsDatabase
-    : public ModuleImplBaseClassVirtual,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   static const std::string kModuleName;

@@ -84,11 +84,11 @@ class WindowsPlatformTimer
 
 
 class GearsTimer
-    : public ModuleImplBaseClassVirtual
+    : public ModuleImplBaseClass
     , public JsEventHandlerInterface {
  public:
   GearsTimer()
-      : ModuleImplBaseClassVirtual("GearsTimer"),
+      : ModuleImplBaseClass("GearsTimer"),
 #if BROWSER_IE
         platform_timer_(new WindowsPlatformTimer(this)),
 #endif
