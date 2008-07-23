@@ -36,7 +36,6 @@
 class SkBitmap;
 class SkCanvas;
 struct SkIRect;
-struct SkRect;
 
 class GearsCanvasRenderingContext2D;
 
@@ -65,12 +64,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   // IN: -
   // OUT: Canvas
   void Clone(JsCallContext *context);
-
-  // Returns the palette of the image this canvas was loaded from. Note that the
-  // canvas itself doesn't support an indexed mode.
-  // IN: -
-  // OUT: Array of colors (as integers)
-  void GetOriginalPalette(JsCallContext *context);
 
   // Crops the canvas to the specified rectangle, in-place.
   // IN: int x, int y, int width, int height
