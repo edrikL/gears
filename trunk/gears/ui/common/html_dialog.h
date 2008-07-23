@@ -29,6 +29,15 @@
 #include "gears/base/common/string16.h"
 #include "third_party/jsoncpp/json.h"
 
+// Return values for showing dialogs. If the dialog returns SUPRESSED, it means
+// that the SupressDialog preference in PermissionsDB is enabled for automated
+// testing.
+enum HtmlDialogReturnValue {
+  HTML_DIALOG_SUCCESS,
+  HTML_DIALOG_FAILURE,
+  HTML_DIALOG_SUPRESSED
+};
+
 // This class implements a cross-platform modal dialog using HTML for the
 // dialog UI. We use HTML because it's easy to create nice-looking UIs that
 // work across platforms.
@@ -49,11 +58,14 @@ class HtmlDialog {
   HtmlDialog() : arguments(Json::objectValue), result(Json::nullValue) {}
 
   // Open the dialog.
-  bool DoModal(const char16 *html_filename, int width, int height);
+  HtmlDialogReturnValue DoModal(const char16 *html_filename, int width,
+                                int height);
   
   // Open the dialog and call the callback when it's closed.
-  bool DoModeless(const char16 *html_filename, int width, int height,
-                  ModelessCompletionCallback callback, void *closure);
+  HtmlDialogReturnValue DoModeless(const char16 *html_filename, int width,
+                                   int height,
+                                   ModelessCompletionCallback callback,
+                                   void *closure);
 
   // Parses the result from the dialog and assings to result_.
   bool SetResult(const char16 *result_string);

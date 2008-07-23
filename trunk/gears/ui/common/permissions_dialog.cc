@@ -84,7 +84,16 @@ PermissionState PermissionsDialog::Prompt(
 #endif
   const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
 
-  dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
+  HtmlDialogReturnValue dialog_result =
+      dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
+  if (dialog_result == HTML_DIALOG_SUPRESSED) {
+    return ALLOWED_TEMPORARILY;
+  }
+
+  if (dialog_result == HTML_DIALOG_FAILURE) {
+    LOG(("PermissionsDialog::Prompt() - Unexpected result."));
+    return NOT_SET;
+  }
 
   // Extract the dialog results.
   bool allow;

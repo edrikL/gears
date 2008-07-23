@@ -31,12 +31,13 @@
 #include "gears/localserver/common/localserver_db.h"
 
 static const char16 *kDatabaseName = STRING16(L"permissions.db");
-static const char16 *kVersionTableName = STRING16(L"VersionInfo");
-static const char16 *kVersionKeyName = STRING16(L"Version");
-// The table name below should really be "LocalDataAccess". However,
-// this would break backwards compatibility so we let it be "Access".
+// TODO(aa): Rename this table "LocalDataAccess"
 static const char16 *kLocalDataAccessTableName = STRING16(L"Access");
 static const char16 *kLocationDataAccessTableName = STRING16(L"LocationAccess");
+static const char16 *kSupressDialogsKeyName = STRING16(L"SupressDialogs");
+// TODO(aa): Rename this table "Settings"
+static const char16 *kVersionTableName = STRING16(L"VersionInfo");
+static const char16 *kVersionKeyName = STRING16(L"Version");
 static const int kCurrentVersion = 9;
 static const int kOldestUpgradeableVersion = 1;
 
@@ -75,7 +76,7 @@ void PermissionsDB::DestroyDB(void *context) {
 
 
 PermissionsDB::PermissionsDB()
-    : version_table_(&db_, kVersionTableName),
+    : settings_table_(&db_, kVersionTableName),
       local_data_access_table_(&db_, kLocalDataAccessTableName),
       location_access_table_(&db_, kLocationDataAccessTableName),
       shortcut_table_(&db_),
@@ -93,7 +94,7 @@ bool PermissionsDB::Init() {
   // Examine the contents of the database and determine if we have to
   // instantiate or updgrade the schema.
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   // if its the version we're expecting, great
   if (version == kCurrentVersion) {
@@ -109,7 +110,7 @@ bool PermissionsDB::Init() {
 
   // Fetch the version again in case someone else beat us to the
   // upgrade.
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
   if (version == kCurrentVersion) {
     return true;
   }
@@ -131,12 +132,19 @@ bool PermissionsDB::Init() {
   }
 
   // Double-check that we ended up with the right version.
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
   if (version != kCurrentVersion) {
     return false;
   }
 
   return transaction.Commit();
+}
+
+
+bool PermissionsDB::ShouldSupressDialogs() {
+  int value = 0;
+  settings_table_.GetInt(kSupressDialogsKeyName, &value);
+  return value == 1;
 }
 
 
@@ -428,7 +436,7 @@ bool PermissionsDB::CreateDatabase() {
     return false;
   }
 
-  if (!version_table_.MaybeCreateTable() ||
+  if (!settings_table_.MaybeCreateTable() ||
       !local_data_access_table_.MaybeCreateTable() ||
       !location_access_table_.MaybeCreateTable() ||
       !shortcut_table_.MaybeCreateTableLatestVersion() ||
@@ -437,7 +445,7 @@ bool PermissionsDB::CreateDatabase() {
   }
 
   // set the current version
-  if (!version_table_.SetInt(kVersionKeyName, kCurrentVersion)) {
+  if (!settings_table_.SetInt(kVersionKeyName, kCurrentVersion)) {
     return false;
   }
 
@@ -451,7 +459,7 @@ bool PermissionsDB::UpgradeToVersion2() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version != 1) {
     LOG(("PermissionsDB::UpgradeToVersion2 unexpected version: %d", version));
@@ -470,7 +478,7 @@ bool PermissionsDB::UpgradeToVersion2() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 2)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 2)) {
     return false;
   }
 
@@ -484,13 +492,13 @@ bool PermissionsDB::UpgradeToVersion3() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 2) {
     if (!UpgradeToVersion2()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 2) {
@@ -502,7 +510,7 @@ bool PermissionsDB::UpgradeToVersion3() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 3)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 3)) {
     return false;
   }
 
@@ -516,13 +524,13 @@ bool PermissionsDB::UpgradeToVersion4() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 3) {
     if (!UpgradeToVersion3()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 3) {
@@ -534,7 +542,7 @@ bool PermissionsDB::UpgradeToVersion4() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 4)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 4)) {
     return false;
   }
 
@@ -548,13 +556,13 @@ bool PermissionsDB::UpgradeToVersion5() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 4) {
     if (!UpgradeToVersion4()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 4) {
@@ -566,7 +574,7 @@ bool PermissionsDB::UpgradeToVersion5() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 5)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 5)) {
     return false;
   }
 
@@ -580,13 +588,13 @@ bool PermissionsDB::UpgradeToVersion6() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 5) {
     if (!UpgradeToVersion5()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 5) {
@@ -598,7 +606,7 @@ bool PermissionsDB::UpgradeToVersion6() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 6)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 6)) {
     return false;
   }
 
@@ -612,13 +620,13 @@ bool PermissionsDB::UpgradeToVersion7() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 6) {
     if (!UpgradeToVersion6()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 6) {
@@ -632,7 +640,7 @@ bool PermissionsDB::UpgradeToVersion7() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 7)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 7)) {
     return false;
   }
 
@@ -646,13 +654,13 @@ bool PermissionsDB::UpgradeToVersion8() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 7) {
     if (!UpgradeToVersion7()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 7) {
@@ -664,7 +672,7 @@ bool PermissionsDB::UpgradeToVersion8() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 8)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 8)) {
     return false;
   }
 
@@ -678,13 +686,13 @@ bool PermissionsDB::UpgradeToVersion9() {
   }
 
   int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
+  settings_table_.GetInt(kVersionKeyName, &version);
 
   if (version < 8) {
     if (!UpgradeToVersion8()) {
       return false;
     }
-    version_table_.GetInt(kVersionKeyName, &version);
+    settings_table_.GetInt(kVersionKeyName, &version);
   }
 
   if (version != 8) {
@@ -696,7 +704,7 @@ bool PermissionsDB::UpgradeToVersion9() {
     return false;
   }
 
-  if (!version_table_.SetInt(kVersionKeyName, 9)) {
+  if (!settings_table_.SetInt(kVersionKeyName, 9)) {
     return false;
   }
 

@@ -349,15 +349,18 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   const int kShortcutsDialogHeight = 320;
 
   HtmlDialog shortcuts_dialog;
-  if (!desktop.InitializeDialog(&shortcut_info, &shortcuts_dialog,
-                                Desktop::DIALOG_STYLE_STANDARD) ||
-      !shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
-                               kShortcutsDialogWidth, kShortcutsDialogHeight) ||
-      !desktop.HandleDialogResults(&shortcut_info, &shortcuts_dialog)) {
-    if (desktop.has_error())
-      context->SetException(desktop.error());
-    return;
+  if (desktop.InitializeDialog(&shortcut_info, &shortcuts_dialog,
+                               Desktop::DIALOG_STYLE_STANDARD)) {
+    HtmlDialogReturnValue dialog_result = shortcuts_dialog.DoModal(
+        STRING16(L"shortcuts_dialog.html"), kShortcutsDialogWidth,
+        kShortcutsDialogHeight);
+    if (dialog_result == HTML_DIALOG_SUCCESS) {
+      desktop.HandleDialogResults(&shortcut_info, &shortcuts_dialog);
+    }
   }
+
+  if (desktop.has_error())
+    context->SetException(desktop.error());
 }
 
 // Check whether the user has forbidden this shortcut from being created

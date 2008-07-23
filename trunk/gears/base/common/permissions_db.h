@@ -90,6 +90,11 @@ class PermissionsDB {
   PermissionsDB::PermissionValue GetPermission(const SecurityOrigin &origin,
                                                PermissionType type);
 
+  // Returns whether Gears should supress any dialogs. This setting is used by
+  // applications that want to do automated testing of Gears where dialogs are
+  // an annoyance.
+  bool ShouldSupressDialogs();
+
   // Returns true if the origin has the requested permission type.
   bool IsOriginAllowed(const SecurityOrigin &origin, PermissionType type) {
     return GetPermission(origin, type) == PERMISSION_ALLOWED;
@@ -179,6 +184,8 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  // TODO(aa): All of these functions follow the exact same pattern. We should
+  // be able to generalize them better.
   bool UpgradeToVersion9();
   bool UpgradeToVersion8();
   bool UpgradeToVersion7();
@@ -203,8 +210,8 @@ class PermissionsDB {
   // Database we use to store capabilities information.
   SQLDatabase db_;
 
-  // Version metadata for the capabilities database.
-  NameValueTable version_table_;
+  // Stores simple name/value pairs for internal settings and configuration.
+  NameValueTable settings_table_;
 
   // Maps origins to ability to access local data in Gears.
   NameValueTable local_data_access_table_;
