@@ -200,8 +200,9 @@ class BaseFirefoxMacLauncher(BasePosixLauncher):
       self.browser_command.extend(['-P', profile])
   
   def killAllInstances(self):
-    """ Kill all firefox instances. """
+    """ Kill all firefox and ff crash reporter instances. """
     self._killInstancesByName('firefox-bin')
+    self._killInstancesByName('crashreporter')
   
 
 class Firefox2MacLauncher(BaseFirefoxMacLauncher):
