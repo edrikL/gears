@@ -62,6 +62,12 @@ class GearsFactoryImpl : public ModuleImplBaseClass {
   // OUT: string version_string
   void GetVersion(JsCallContext *context);
 
+#ifdef WINCE
+  // IN: -
+  // OUT: -
+  void PrivateSetGlobalObject(JsCallContext *context);
+#endif
+
   // Non-scriptable methods
   void SuspendObjectCreation();
   void ResumeObjectCreationAndUpdatePermissions();

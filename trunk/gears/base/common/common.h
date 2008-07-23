@@ -61,23 +61,8 @@
 #include "gears/base/common/common_osx.h"
 #endif
 
-
-// Macros for returning success/failure from scripted objects.
-//
-// TODO(cprince): Move these to base_class.h when IE has such a file.
-// This generic "common.h" should eventually go away.  Each file should
-// explicitly #include what it really needs, instead of using this catch-all.
 #if BROWSER_IE
-
 #include "gears/base/common/common_ie.h"
-
-#define RETURN_NORMAL()  return S_OK
-#define RETURN_EXCEPTION(msg)  \
-  {  \
-  /* AtlReportError has char* and WCHAR* versions */ \
-  return AtlReportError(CLSID_NULL, msg); \
-  }
-
 #elif BROWSER_FF
 #include "gears/base/common/common_ff.h"
 #elif BROWSER_WEBKIT

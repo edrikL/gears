@@ -52,8 +52,6 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
-import "factory/ie/factory.idl";
-
 // The ModuleWrapper C++ class implements GearsModuleProviderInterface in
 // order to let us distinguish VARIANTs that are ModuleWrappers from other
 // VARIANTs, and convert from a VARIANT* to a ModuleWrapper*.
@@ -130,18 +128,13 @@ library GearsTypelib
     [default] interface IDispatch;
   };
 
-  // TODO(aa): We should be able to remove most of this COM goop once we
-  // implement our own dynamic dispatch in ModuleImplBaseClass. We should test
-  // that really carefully though, on a clean machine.
-  // NOTE: We might need to keep GearsFactory a little longer than the others to
-  // maintain compatibility with existing gears_init.js scripts, which call
-  // new ActiveXObject("Gears.Factory"). Later, when we inject gears objects
-  // without gears_init.js, we can remove that too.
+  // This COM class is what gets created when one calls
+  // new ActiveXObject("Gears.Factory") in JavaScript.
   [
     uuid(C93A7319-17B3-4504-87CD-03EFC6103E6E)
   ]
   coclass GearsFactory
   {
-    [default] interface GearsFactoryInterface;
+    [default] interface IDispatch;
   };
 };

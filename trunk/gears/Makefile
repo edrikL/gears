@@ -979,6 +979,7 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		bho.cc \
 		detect_version_collision_win32.cc \
+		dispatcher_to_idispatch.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
 		ipc_message_queue_test_win32.cc \
@@ -1985,6 +1986,7 @@ FF3_CPPSRCS	+= \
 # factory/ie
 
 IE_VPATH	+= \
+		factory \
 		factory/common \
 		factory/ie \
 		$(NULL)
@@ -1993,12 +1995,9 @@ IE_M4SRCS	+= \
 		factory.rgs.m4 \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		factory.idl \
-		$(NULL)
-
 IE_CPPSRCS	+= \
 		factory.cc \
+		factory_impl.cc \
 		factory_utils.cc \
 		$(NULL)
 

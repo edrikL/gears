@@ -79,6 +79,10 @@ void Dispatcher<GearsFactoryImpl>::Init() {
   RegisterMethod("create", &GearsFactoryImpl::Create);
   RegisterMethod("getBuildInfo", &GearsFactoryImpl::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
+#ifdef WINCE
+  RegisterMethod("privateSetGlobalObject",
+                 &GearsFactoryImpl::PrivateSetGlobalObject);
+#endif
 }
 
 const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
@@ -274,6 +278,19 @@ void GearsFactoryImpl::GetVersion(JsCallContext *context) {
   std::string16 version(STRING16(PRODUCT_VERSION_STRING));
   context->SetReturnValue(JSPARAM_STRING16, &version);
 }
+
+#ifdef WINCE
+void GearsFactoryImpl::PrivateSetGlobalObject(JsCallContext *context) {
+  // This is a no-op, because to start with, on WinCE, privateSetGlobalObject
+  // is provided by the GearsFactory, not the GearsFactoryImpl. The purpose of
+  // privateSetGlobalObject is to initialize the GearsFactory with a valid
+  // GearsFactoryImpl to delegate all future method calls to, and second and
+  // subsequent calls to privateSetGlobalObject should have no effect.
+  // Nonetheless, calling factory.privateSetGlobalObject(...) should still be
+  // a valid call, rather than throw a "no such method" exception, and hence
+  // we provide that empty method here in GearsFactoryImpl.
+}
+#endif
 
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
 // rather than just the cross-origin worker case.  (Code re-use == good.)
