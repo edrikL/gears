@@ -93,7 +93,6 @@ m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 }
 
 #button-row {
-  text-align:right;
   margin:1em;
 }
 
