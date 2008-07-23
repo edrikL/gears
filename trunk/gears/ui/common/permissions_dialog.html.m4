@@ -289,7 +289,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             <a href="#" onclick="denyAccessPermanently(); return false;">
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
-            <span id="string-never-allow-link-wince"></a>
+            <span id="string-never-allow-link-wince"></span></a>
 ~,~
             <span id="string-never-allow-link"></span></a>
 ~)
