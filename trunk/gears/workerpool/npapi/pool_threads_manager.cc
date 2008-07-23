@@ -33,6 +33,7 @@
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/async_router.h"
+#include "gears/base/common/event.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/url_utils.h"
@@ -83,12 +84,12 @@ struct JavaScriptWorkerInfo {
   JavaScriptWorkerInfo()
       : threads_manager(NULL), js_runner(NULL), is_owning_worker(false),
         message_queue_initialized(false), is_invoking_error_handler(false),
-        thread_init_signalled(false), thread_init_ok(false),
-        script_signalled(false), script_ok(false), is_factory_suspended(false),
+        thread_init_ok(false),
+        script_ok(false), is_factory_suspended(false),
 #ifdef WIN32
         thread_handle(INVALID_HANDLE_VALUE),
 #endif
-        thread_spawned_succesfully(false) {}
+        thread_spawned_successfully(false) {}
 
   ~JavaScriptWorkerInfo() {
     while (!message_queue.empty()) {
@@ -118,12 +119,10 @@ struct JavaScriptWorkerInfo {
   //
   // These fields are used only for created workers (children).
   //
-  Mutex thread_init_mutex;  // Protects: thread_init_signalled
-  bool thread_init_signalled;
+  Event thread_init_event;
   bool thread_init_ok;  // Owner: child before signal, parent after signal
 
-  Mutex script_mutex;  // Protects: script_signalled
-  bool script_signalled;
+  Event script_event;
   bool script_ok;  // Owner: parent before signal, immutable after
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
@@ -137,7 +136,7 @@ struct JavaScriptWorkerInfo {
   SAFE_HANDLE thread_handle;  // TODO(mpcomplete): FIXME
 #endif
   ThreadId thread_id;
-  bool thread_spawned_succesfully;
+  bool thread_spawned_successfully;
 };
 
 
@@ -455,8 +454,8 @@ class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
         // Must use security origin of final url, in case there were redirects.
         wi_->script_origin.InitFromUrl(final_url.c_str());
       } else {
-        // Throw an error, but don't return!  Continue and set script_signalled
-        // so the worker doesn't spin forever in Mutex::Await().
+        // Throw an error, but don't return!  Continue and signal script_event
+        // so the worker doesn't wait forever in Event::Wait().
         std::string16 message(STRING16(L"Failed to load script."));
         std::string16 status_line;
         if (source->GetStatusLine(&status_line)) {
@@ -472,10 +471,7 @@ class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
         wi_->threads_manager->HandleError(error_info);
       }
 
-      wi_->script_mutex.Lock();
-      assert(!wi_->script_signalled);
-      wi_->script_signalled = true;
-      wi_->script_mutex.Unlock();
+      wi_->script_event.Signal();
     }
   }
  private:
@@ -525,10 +521,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     wi->script_ok = true;
     wi->script_text += url_or_full_script;
     wi->script_origin = page_security_origin_;
-
-    wi->script_mutex.Lock();
-    wi->script_signalled = true;
-    wi->script_mutex.Unlock();
+    wi->script_event.Signal();
   } else {
     // For URL params we start an async fetch here.  The created thread will
     // setup an incoming message queue, then Mutex::Await for the script to be
@@ -551,13 +544,11 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
       return false;
     }
 
-    // 'script_signalled' will be set when async fetch completes.
+    // 'script_event.Signal()' will be called when async fetch completes.
   }
 
   // Setup notifier to know when thread init has finished.
   // Then create thread and wait for signal.
-  wi->thread_init_mutex.Lock();
-  wi->thread_init_signalled = false;
 
 #ifdef WIN32
   wi->thread_handle.reset((HANDLE)_beginthreadex(
@@ -577,15 +568,12 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 #endif
 
   if (thread_succesfully_created) {
-    wi->thread_spawned_succesfully = true;
+    wi->thread_spawned_successfully = true;
     // thread needs to finish message queue init before we continue
-    wi->thread_init_mutex.Await(Condition(&wi->thread_init_signalled));
+    wi->thread_init_event.Wait();
   }
   
-  // cleanup notifier
-  wi->thread_init_mutex.Unlock();
-
-  if (wi->thread_spawned_succesfully == false || !wi->thread_init_ok) {
+  if (wi->thread_spawned_successfully == false || !wi->thread_init_ok) {
     return false;  // failed
   }
 
@@ -616,7 +604,7 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // Setup worker thread.
   // Then signal that initialization is done, and indicate success/failure.
   //
-  // WARNING: must fire thread_init_signalled even on failure, or caller won't
+  // WARNING: must fire thread_init_event even on failure, or caller won't
   // continue.  So fire it from a non-nested location, before any early exits.
   scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
   assert(NULL == wi->js_runner);
@@ -626,16 +614,12 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
                                wi->threads_manager->InitWorkerThread(wi);
 
   wi->thread_init_ok = thread_init_succeeded;
-  wi->thread_init_mutex.Lock();
-  wi->thread_init_signalled = true;
-  wi->thread_init_mutex.Unlock();
+  wi->thread_init_event.Signal();
 
   if (thread_init_succeeded) {
-    // Block until 'script_signalled' (i.e. wait for URL fetch, if being used).
-    // Thread shutdown will set this flag as well.
-    wi->script_mutex.Lock();
-    wi->script_mutex.Await(Condition(&wi->script_signalled));
-    wi->script_mutex.Unlock();
+    // Block until 'script_event' is signaled (i.e. wait for URL fetch, if
+    // being used). Thread shutdown will set this flag as well.
+    wi->script_event.Wait();
 
     if (wi->script_ok) {
       if (SetupJsRunner(js_runner.get(), wi)) {
@@ -931,11 +915,9 @@ void PoolThreadsManager::ShutDown() {
       }
 
       // If the worker is a created thread...
-      if (wi->thread_spawned_succesfully) {
-        // Ensure the thread isn't waiting on 'script_signalled'.
-        wi->script_mutex.Lock();
-        wi->script_signalled = true;
-        wi->script_mutex.Unlock();
+      if (wi->thread_spawned_successfully) {
+        // Ensure the thread isn't waiting on 'script_event'.
+        wi->script_event.Signal();
 
 #ifdef OS_ANDROID
         AndroidMessageLoop::Stop(wi->thread_id);
