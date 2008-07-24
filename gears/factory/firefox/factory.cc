@@ -51,15 +51,13 @@ const nsCID kGearsFactoryClassId = {0x93b2e433, 0x35ab, 0x46e7,
 NS_IMETHODIMP GearsFactory::InitFactoryFromDOM() {
   scoped_refptr<ModuleEnvironment> module_environment(
       ModuleEnvironment::CreateFromDOM());
-  if (!module_environment) {
+  if (!module_environment ||
+      !CreateModule<GearsFactoryImpl>(module_environment.get(),
+                                      NULL, &factory_impl_)) {
     return NS_ERROR_FAILURE;
   }
   unload_monitor_.reset(new JsEventMonitor(module_environment->js_runner_,
                                            JSEVENT_UNLOAD, this));
-  if (!CreateModule<GearsFactoryImpl>(module_environment.get(),
-                                      NULL, &factory_impl_)) {
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
