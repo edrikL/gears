@@ -26,7 +26,7 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-#if defined(LINUX) && !defined(OS_MACOSX)
+#if (defined(LINUX) || defined(OS_ANDROID)) && !defined(OS_MACOSX)
 
 #include "gears/notifier/notifier_process.h"
 #include "gears/notifier/notifier_process_posix.h"
