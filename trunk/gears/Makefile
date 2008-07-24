@@ -2104,7 +2104,6 @@ $(BROWSER)_CPPSRCS	+= \
 		geolocation.cc \
 		geolocation_db.cc \
 		geolocation_test.cc \
-		gps_location_provider_android.cc \
 		gps_location_provider_wince.cc \
 		location_provider.cc \
 		location_provider_pool.cc \
