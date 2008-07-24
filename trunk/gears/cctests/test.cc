@@ -1769,10 +1769,7 @@ void TestObjectArray(JsCallContext* context,
                                         0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
-  JsContextPtr js_context = NULL;
-#ifdef BROWSER_FF
-  js_context = base.EnvPageJsContext();
-#endif
+  JsContextPtr js_context = context->js_context();
   TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
                                        &string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
@@ -1825,10 +1822,7 @@ void TestObjectFunction(JsCallContext* context,
   TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
-  JsContextPtr js_context = NULL;
-#ifdef BROWSER_FF
-  js_context = base.EnvPageJsContext();
-#endif
+  JsContextPtr js_context = context->js_context();
   TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
                                        &string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
