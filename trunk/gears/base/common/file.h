@@ -41,15 +41,31 @@ class File {
   // Returns true if a new file has been created.
   static bool CreateNewFile(const char16 *full_filepath);
 
-  // Returns a File object associated with a read/write temporary file in the
-  // system temporary directory, or NULL if an error occurred. The file will be
-  // deleted automatically when the returned object is destroyed.
+  // Returns a File object associated with a read/write temporary file
+  // created in the directory returned by GetBaseTemporaryDirectory(),
+  // or NULL on error. The file will be deleted automatically when the
+  // returned object is destroyed. If supported by the operating
+  // system, the file will not have an associated path name and cannot
+  // be opened through the filesystem.
   static File *CreateNewTempFile();
+
+  // Returns a File object associated with a read/write temporary file
+  // created in the directory returned by GetBaseTemporaryDirectory(),
+  // or NULL on error. The file will be deleted automatically when the
+  // returned object is destroyed. The file also has an associated
+  // path name which is valid for the lifetime of the object.
+  static File *CreateNewNamedTempFile();
 
   // Creates a unique directory under the system temporary directory.  Returns
   // the full path of the new directory in 'path'.
   // Returns true if the function succeeds.  'path' is unmodified on failure.
   static bool CreateNewTempDirectory(std::string16 *full_filepath);
+
+  // Returns true and assigns the base path where temporary files will
+  // be created on success. Returns false if no platform temporary
+  // file directory is available and temporary file creation will
+  // fail.
+  static bool GetBaseTemporaryDirectory(std::string16 *return_path);
 
   // Ensures all directories along the specified path exist.  Any directories
   // that do not exist will be created. Returns true if the function succeeds.
@@ -200,15 +216,15 @@ class File {
   //       change.
 #ifdef WIN32
   HANDLE handle_;
-  bool auto_delete_;
   explicit File(const char16 *path)
       : handle_(NULL), auto_delete_(false), file_path_(path) {}
 #else
 // Currently all non-win32 targets are POSIX compliant.
   FILE *handle_;
   explicit File(const char16 *path)
-      : handle_(NULL), file_path_(path) {}
+      : handle_(NULL), auto_delete_(false), file_path_(path) {}
 #endif
+  bool auto_delete_;
   OpenAccessMode mode_;
   std::string16 file_path_;
 };

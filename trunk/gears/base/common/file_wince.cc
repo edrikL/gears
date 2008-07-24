@@ -269,21 +269,19 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
   return count;
 }
 
-
 bool CreateNewTempFileName(std::string16 *path) {
   static const char16 *kTempFilePrefix = STRING16(PRODUCT_SHORT_NAME);
 
   // Get the system temp directory.
-  wchar_t root[MAX_PATH];
-  DWORD chars = GetTempPathW(MAX_PATH, root);
-  if (chars >= MAX_PATH) {
+  std::string16 temp_dir;
+  if (!File::GetBaseTemporaryDirectory(&temp_dir)) {
     return false;
   }
 
   // Create a uniquely named temp file in that directory.
   // Note: GetTempFileName() uses 3 chars max of the suggested prefix
   wchar_t file[MAX_PATH];
-  UINT id = GetTempFileNameW(root, kTempFilePrefix, 0, file);
+  UINT id = GetTempFileNameW(temp_dir.c_str(), kTempFilePrefix, 0, file);
   if (0 == id) {
     return false;
   }
@@ -291,8 +289,12 @@ bool CreateNewTempFileName(std::string16 *path) {
   return true;
 }
 
-
 File *File::CreateNewTempFile() {
+  // Can't create unnamed temporary files on Win32.
+  return CreateNewNamedTempFile();
+}
+
+File *File::CreateNewNamedTempFile() {
   std::string16 filename;
   if (!CreateNewTempFileName(&filename)) {
     return NULL;
@@ -323,6 +325,17 @@ bool File::CreateNewTempDirectory(std::string16 *path) {
   return true;
 }
 
+
+bool File::GetBaseTemporaryDirectory(std::string16 *path) {
+  // Get the system temp directory.
+  wchar_t root[MAX_PATH];
+  DWORD chars = ::GetTempPathW(MAX_PATH, root);
+  if (chars >= MAX_PATH) {
+    return false;
+  }
+  *path = root;
+  return true;
+}
 
 bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
   // Note: SHCreateDirectoryEx is available in shell32.dll version 5.0+,
