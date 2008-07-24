@@ -473,7 +473,7 @@ void GearsGeolocation::HandleSingleRequestUpdate(
     const Position &position) {
   assert(!fix_info->repeats);
   assert(fix_info->last_callback_time == 0);
-  // Remove this provider from the this fix so that future to callbacks to this
+  // Remove this provider from the this fix so that future callbacks to this
   // Geolocation object don't trigger handling for this fix.
   RemoveProvider(provider, fix_info);
   // We callback in two cases ...
@@ -806,20 +806,26 @@ void GearsGeolocation::RemoveFixRequest(FixRequestInfo *fix_request) {
     // Check that we have an entry for this provider.
     ProviderMap::iterator provider_iter = providers_.find(provider);
     assert(provider_iter != providers_.end());
+
+    // Find this fix request in the list of fix requests for this provider.
     FixVector *fixes = &(provider_iter->second);
     FixVector::iterator fix_iterator =
         std::find(fixes->begin(), fixes->end(), fix_request);
-    // If we can't find this request in our map, something has gone wrong.
+
+    // If we can't find this request the list, something has gone wrong.
     assert(fix_iterator != fixes->end());
+
+    // Remove this fix request from the list of fix requests for this provider.
     fixes->erase(fix_iterator);
+
     // If this location provider is no longer used in any fixes, remove it from
-    // our map.
+    // our map and unregister from the provider, via the pool. This will cancel
+    // any pending requests and may block if a callback is currently in
+    // progress.
     if (fixes->empty()) {
       providers_.erase(provider_iter);
+      LocationProviderPool::GetInstance()->Unregister(provider, this);
     }
-    // Unregister from the provider, via the pool. This will cancel any pending
-    // requests and may block if a callback is currently in progress.
-    LocationProviderPool::GetInstance()->Unregister(provider, this);
   }
   // Delete the request object itself.
   delete fix_request;
@@ -833,8 +839,10 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
                                             provider);
   // Check that this provider is used by the fix request.
   assert(iter != member_providers->end());
+
   // Remove the location provider from the fix request.
   member_providers->erase(iter);
+
   // Remove this fix request from the provider in the map of providers.
   ProviderMap::iterator provider_iter = providers_.find(provider);
   assert(provider_iter != providers_.end());
@@ -843,14 +851,14 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
       std::find(fixes->begin(), fixes->end(), fix_request);
   assert(fix_iterator != fixes->end());
   fixes->erase(fix_iterator);
+
   // If this location provider is no longer used in any fixes, remove it from
-  // our map.
+  // our map and unregister from the provider, via the pool. This will cancel
+  // any pending requests and may block if a callback is currently in progress.
   if (fixes->empty()) {
     providers_.erase(provider_iter);
+    LocationProviderPool::GetInstance()->Unregister(provider, this);
   }
-  // Unregister from the provider, via the pool. This will cancel any pending
-  // requests and may block if a callback is currently in progress.
-  LocationProviderPool::GetInstance()->Unregister(provider, this);
 }
 
 void GearsGeolocation::MakeFutureCallback(int timeout_milliseconds,
