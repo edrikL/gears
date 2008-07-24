@@ -191,27 +191,6 @@ static NSMutableAttributedString *left_justify(const NSString *str) {
   return done_;
 }
 
-- (IBAction)allow:(id)sender {
-  result_string_ = @"{\"allow\": true, \"permanently\": true}";
-  done_ = true;
-  [window_ close];
-  [NSApp stopModal];
-}
-
-- (IBAction)deny:(id)sender  {
-  result_string_ = @"{\"allow\": false, \"permanently\": false}";
-  done_ = true;
-  [window_ close];
-  [NSApp stopModal];
-}
-
-- (IBAction)neverAllow:(id)sender  {
-  result_string_ = @"{\"allow\": false, \"permanently\": true}";
-  done_ = true;
-  [window_ close];
-  [NSApp stopModal];
-}
-
 - (IBAction)trustCheckboxValueChanged:(id)sender {
   // Allow button is only enabled if checkbox is checked.
   bool checked = [sender state] == NSOnState;
@@ -251,7 +230,7 @@ static NSMutableAttributedString *left_justify(const NSString *str) {
   [never_allow_link_ setAllowsEditingTextAttributes:YES];
   NSMutableAttributedString* string = [[NSMutableAttributedString alloc] init];
   [string setAttributedString:[NSAttributedString 
-      setUnderLineString:@"Never allow for this site"]];
+      setUnderLineString:[(id <NativeDialog>)self neverAllowLabel]]];
   [never_allow_link_ setAttributedStringValue:string];
 }
 
@@ -385,6 +364,24 @@ static NSMutableAttributedString *left_justify(const NSString *str) {
   [super dealloc];
 }
 
+// pure virtual methods.
+- (NSString *)neverAllowLabel {
+  assert(false);
+  return nil;
+}
+
+- (IBAction)allow:(id)sender {
+  assert(false);
+}
+
+- (IBAction)deny:(id)sender {
+  assert(false);
+}
+
+- (IBAction)neverAllow:(id)sender {
+  assert(false);
+}
+
 @end
 
 @implementation NativePermissionsDialog
@@ -450,6 +447,31 @@ static NSMutableAttributedString *left_justify(const NSString *str) {
     return @"permissions_dialog.nib";
 	}
 }
+
+- (IBAction)allow:(id)sender {
+  result_string_ = @"{\"allow\": true, \"permanently\": true}";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (IBAction)deny:(id)sender  {
+  result_string_ = @"{\"allow\": false, \"permanently\": false}";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (IBAction)neverAllow:(id)sender  {
+  result_string_ = @"{\"allow\": false, \"permanently\": true}";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (NSString *)neverAllowLabel {
+  return @"Never allow for this site";
+}
 @end
 
 @implementation NativeShortcutsDialog
@@ -502,6 +524,31 @@ static NSMutableAttributedString *left_justify(const NSString *str) {
   }
   
   return true;
+}
+
+- (IBAction)allow:(id)sender {
+  result_string_ = @"{\"allow\": true, \"permanently\": true}";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (IBAction)deny:(id)sender  {
+  result_string_ = @"";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (IBAction)neverAllow:(id)sender  {
+  result_string_ = @"{\"allow\": false, \"permanently\": true}";
+  done_ = true;
+  [window_ close];
+  [NSApp stopModal];
+}
+
+- (NSString *)neverAllowLabel {
+  return @"Never allow for this shortcut";
 }
 
 @end

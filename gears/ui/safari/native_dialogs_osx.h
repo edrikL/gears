@@ -57,6 +57,7 @@ void UnloadNibFiles();
 @protocol NativeDialog
 - (bool)setArgumentsString:(NSString *)args;
 - (NSString *)nibName;
+- (NSString *)neverAllowLabel;
 
 - (NSString *)results;
 - (NSWindow *)window;
@@ -115,7 +116,7 @@ NSString *result_string_;
 @end
 
 // Local & Location permissions dialogs.
-@interface NativePermissionsDialog : BaseNativeDialog <NativeDialog> {
+@interface NativePermissionsDialog : BaseNativeDialog {
   bool is_location_dialog;
 }
 - (bool)setArgumentsString:(NSString *)args;
@@ -123,7 +124,7 @@ NSString *result_string_;
 @end
 
 // Shortcuts dialog.
-@interface NativeShortcutsDialog : BaseNativeDialog <NativeDialog>
+@interface NativeShortcutsDialog : BaseNativeDialog
 - (bool)setArgumentsString:(NSString *)args;
 - (NSString *)nibName;
 @end
