@@ -26,12 +26,13 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-#if defined (LINUX) || defined(OS_MACOSX)
+#if defined(LINUX) || defined(ANDROID) || defined(OS_MACOSX)
 
 #include "gears/notifier/notifier_process_posix.h"
 
 #include <sys/errno.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -40,7 +41,9 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/common_osx.h"
 #include "gears/base/common/event.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 
 // Process-wide global file descriptor for a lock file.
 static int single_instance_locking_fd = -1;
@@ -49,9 +52,14 @@ static std::string GetSingleInstanceLockFilePath() {
   static std::string s_lock_file_path;
   if (s_lock_file_path.empty()) {
 #ifdef OS_MACOSX
-    std::string lock_file_path = TempDirectoryForCurrentUser();
+    std::string lock_file_path = TempDirectoryForCurrentUser();	 
 #else
-    std::string lock_file_path("/tmp");
+    std::string16 lock_file_path16;
+    std::string lock_file_path;
+    if (!File::GetBaseTemporaryDirectory(&lock_file_path16) ||
+        !String16ToUTF8(lock_file_path16, &lock_file_path)) {
+      return std::string();
+    }
 #endif
     lock_file_path += "/" PRODUCT_SHORT_NAME_ASCII "_notifier_";
     lock_file_path += IntegerToString(getuid());
@@ -65,6 +73,9 @@ pid_t NotifierPosixUtils::FindNotifierProcess() {
   pid_t pid = 0;
 
   std::string lock_file_path = GetSingleInstanceLockFilePath();
+  if (lock_file_path.empty()) {
+    return 0;
+  }
   int lock_file_fd = open(lock_file_path.c_str(), O_RDONLY);
   if (lock_file_fd > 0) {
     char buf[16] = { 0 };
@@ -150,6 +161,5 @@ bool NotifierPosixUtils::UnregisterIPC() {
   return true;
 }
 
-#endif  // defined (LINUX) || defined(OS_MACOSX)
+#endif  // defined(LINUX) || defined(ANDROID) || defined(OS_MACOSX)
 #endif  // OFFICIAL_BUILD
-
