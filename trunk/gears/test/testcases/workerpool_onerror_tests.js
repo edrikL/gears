@@ -60,17 +60,14 @@ function testNestedOuterError() {
 }
 
 function testWorkerOnError() {
-  // Test that onerror inside a worker gets called.
-  // NOTE: There was a bug in IE where onerror could get called multiple times
-  // when the error occurred inside an eval() call. This test detects that as
-  // well as whether onerror is working at all.
+  // Test that onerror inside a worker gets called.  
+  // If onerror is not called the test will time out.
   startAsync();
 
   var wp = google.gears.factory.create('beta.workerpool');
-  var onErrorCount = 0;
 
   wp.onmessage = function() {
-    onErrorCount++;
+    completeAsync();
   };
 
   var childId = wp.createWorker(
@@ -84,11 +81,6 @@ function testWorkerOnError() {
        'return true;',
        '}'].join('\n'));
   wp.sendMessage('hello', childId);
-
-  timer.setTimeout(function() {
-    assertEqual(1, onErrorCount, 'onerror called wrong number of times');
-    completeAsync();
-  }, 100);
 }
 
 // Helper used to test that an error thrown in a child worker is correctly
