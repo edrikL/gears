@@ -147,7 +147,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
 
-  int64 existing_store_id = WebCacheDB::kInvalidID;
+  int64 existing_store_id = WebCacheDB::kUnknownID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
                                         name.c_str(),
                                         required_cookie.c_str(),
@@ -191,7 +191,7 @@ void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
   
-  int64 existing_store_id = WebCacheDB::kInvalidID;
+  int64 existing_store_id = WebCacheDB::kUnknownID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
                                         name.c_str(),
                                         required_cookie.c_str(),
@@ -275,7 +275,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
 
-  int64 existing_store_id = WebCacheDB::kInvalidID;
+  int64 existing_store_id = WebCacheDB::kUnknownID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
                                  name.c_str(),
                                  required_cookie.c_str(),
@@ -318,7 +318,7 @@ void GearsLocalServer::RemoveStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
 
-  int64 existing_store_id = WebCacheDB::kInvalidID;
+  int64 existing_store_id = WebCacheDB::kUnknownID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
                                  name.c_str(),
                                  required_cookie.c_str(),

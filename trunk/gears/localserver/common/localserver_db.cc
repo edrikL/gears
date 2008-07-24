@@ -51,7 +51,7 @@
 #include "gears/localserver/common/update_task.h"
 
 const char16 *WebCacheDB::kFilename = STRING16(L"localserver.db");
-const int64 WebCacheDB::kInvalidID = 0;   // SQLITE rowids start at 1
+const int64 WebCacheDB::kUnknownID = 0;   // SQLITE rowids start at 1
 
 // Name of NameValueTable created to store version and browser information
 const char16 *kSystemInfoTableName = STRING16(L"SystemInfo");
@@ -633,7 +633,7 @@ bool WebCacheDB::ExecuteSqlCommands(const char *commands[], int count) {
 //------------------------------------------------------------------------------
 bool WebCacheDB::CanService(const char16 *url, BrowsingContext *context) {
   ASSERT_SINGLE_THREAD();
-  int64 payload_id = kInvalidID;
+  int64 payload_id = kUnknownID;
   std::string16 redirect_url;
   // TODO(aa): Clean up this hook at some point. Use gears:// scheme? Other
   // options?
@@ -657,13 +657,13 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
     return true;
   }
 
-  int64 payload_id = kInvalidID;
+  int64 payload_id = kUnknownID;
   std::string16 session_redirect_url;
   if (!ServiceImpl(url, context, &payload_id, &session_redirect_url)) {
     return false;
   }
 
-  if (payload_id != kInvalidID) {
+  if (payload_id != kUnknownID) {
     if (!FindPayload(payload_id, payload, head_only)) {
       return false;
     }
@@ -689,7 +689,7 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   assert(payload_id_out);
   assert(redirect_url_out);
 
-  *payload_id_out = kInvalidID;
+  *payload_id_out = kUnknownID;
   redirect_url_out->clear();
 
   // If the origin is not explicitly allowed, don't serve anything
@@ -807,7 +807,7 @@ bool WebCacheDB::DoServiceQuery(
   if (exact_match) max_possible_rank += kNoIgnoreQueryBoost;
 
   int hit_rank = 0;
-  int64 hit_server_id = kInvalidID;
+  int64 hit_server_id = kUnknownID;
 
   while ((hit_rank < max_possible_rank) && (stmt.step() == SQLITE_ROW)) {
     const int64 server_id = stmt.column_int64(0);
@@ -877,10 +877,10 @@ bool WebCacheDB::DoServiceQuery(
     *payload_id_out = payload_id;
     hit_rank = rank;
     hit_server_id = (server_type == MANAGED_RESOURCE_STORE) ? server_id 
-                                                            : kInvalidID;
+                                                            : kUnknownID;
   }
 
-  if (hit_server_id != kInvalidID) {
+  if (hit_server_id != kUnknownID) {
     // We found a match from a managed store, try to update it.
     // Note that a failure does not prevent servicing the request.
     MaybeInitiateUpdateTask(hit_server_id, context);
@@ -969,7 +969,7 @@ bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
       if (!payload) return true;
 
       // Set up fake HTTP response
-      payload->id = kInvalidID;
+      payload->id = kUnknownID;
       payload->creation_date = 0;
       payload->headers = STRING16(L"");
       payload->status_line = STRING16(L"");
@@ -1789,7 +1789,7 @@ bool WebCacheDB::InsertEntry(EntryInfo *entry) {
   } else {
     rv |= stmt.bind_null(++param);
   }
-  if (entry->payload_id != kInvalidID) {
+  if (entry->payload_id != kUnknownID) {
     rv |= stmt.bind_int64(++param, entry->payload_id);
   } else {
     rv |= stmt.bind_null(++param);
@@ -1861,7 +1861,7 @@ bool WebCacheDB::DeleteEntry(int64 id) {
   }
 
   // The payload_id may be NULL if the payload has not yet been inserted.
-  if (kInvalidID == payload_id) {
+  if (kUnknownID == payload_id) {
     LOG(("WebCacheDB.DeleteEntry - payload_id is NULL\n"));
     return transaction.Commit();
   }
@@ -2188,7 +2188,7 @@ bool WebCacheDB::UpdateEntriesWithNewPayload(int64 version_id,
                                              const char16 *redirect_url) {
   ASSERT_SINGLE_THREAD();
   assert(url);
-  assert(payload_id != kInvalidID);
+  assert(payload_id != kUnknownID);
 
   // TODO(michaeln): I think this is linear with regard to the number of
   // entries in a version, could be improved.

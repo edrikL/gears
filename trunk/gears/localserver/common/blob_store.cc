@@ -44,7 +44,7 @@ bool WebCacheBlobStore::InsertBody(int64 server_id,
                                    WebCacheDB::PayloadInfo *payload) {
   ASSERT_SINGLE_THREAD();
   assert(db_);
-  assert(payload->id != WebCacheDB::kInvalidID);
+  assert(payload->id != WebCacheDB::kUnknownID);
 
   // We only store the bodies of successful responses
   if (payload->status_code != HttpConstants::HTTP_OK) {

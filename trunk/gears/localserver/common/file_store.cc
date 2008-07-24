@@ -73,7 +73,7 @@ bool WebCacheFileStore::InsertBody(int64 server_id,
   ASSERT_SINGLE_THREAD();
   assert(db_);
   assert(began_);
-  assert(payload->id != WebCacheDB::kInvalidID);
+  assert(payload->id != WebCacheDB::kUnknownID);
   if (!began_) return false;
 
   // We only store the bodies of successful responses
@@ -323,7 +323,7 @@ bool WebCacheFileStore::CreateAndWriteFile(int64 server_id,
                                            WebCacheDB::PayloadInfo *payload) {
   ASSERT_SINGLE_THREAD();
   assert(db_);
-  assert(payload->id != WebCacheDB::kInvalidID);
+  assert(payload->id != WebCacheDB::kUnknownID);
   assert(began_);
   if (!began_) return false;
 

@@ -420,8 +420,8 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version,
     }
     std::string16 *current_version_str = NULL;
     std::string16 *downloading_version_str = NULL;
-    int64 current_version_id = WebCacheDB::kInvalidID;
-    int64 downloading_version_id = WebCacheDB::kInvalidID;
+    int64 current_version_id = WebCacheDB::kUnknownID;
+    int64 downloading_version_id = WebCacheDB::kUnknownID;
     for (int i = 0; i < static_cast<int>(versions.size()); i++) {
       switch (versions[i].ready_state) {
         case WebCacheDB::VERSION_CURRENT:
@@ -570,13 +570,13 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
   // Should already have been checked when parsing the manifest file
   assert(store_.GetSecurityOrigin().IsSameOriginAsUrl(url.c_str()));
 
-  int64 payload_id = WebCacheDB::kInvalidID;
+  int64 payload_id = WebCacheDB::kUnknownID;
   std::string16 redirect_url;
 
   // Retrieve info about our most recent entry for this url
   std::string16 previous_version_mod_date;
   std::string16 previous_version_redirect_url;
-  int64 previous_version_payload_id = WebCacheDB::kInvalidID;
+  int64 previous_version_payload_id = WebCacheDB::kUnknownID;
   FindPreviousVersionPayload(version->server_id,
                              url.c_str(),
                              &previous_version_payload_id,
@@ -620,7 +620,7 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
     return false;
   }
 
-  assert(payload_id != WebCacheDB::kInvalidID);
+  assert(payload_id != WebCacheDB::kUnknownID);
 
   // Update applicable entries to refer to this payload
   if (is_aborted_ ||

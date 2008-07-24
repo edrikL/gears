@@ -126,7 +126,7 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
 //------------------------------------------------------------------------------
 ResourceStore::ResourceStore()
     : LocalServer(WebCacheDB::RESOURCE_STORE),
-      version_id_(WebCacheDB::kInvalidID) {
+      version_id_(WebCacheDB::kUnknownID) {
 }
 
 
@@ -208,7 +208,7 @@ bool ResourceStore::GetItem(const char16 *url, Item *item, bool info_only) {
   }
 
   // All entries in a ResourceStore are expected to have a payload
-  assert(item->entry.payload_id != WebCacheDB::kInvalidID);
+  assert(item->entry.payload_id != WebCacheDB::kUnknownID);
 
   return db->FindPayload(item->entry.payload_id, &item->payload, info_only);
 }
@@ -404,7 +404,7 @@ bool ResourceStore::Copy(const char16* src_url, const char16 *dst_url) {
   }
 
   // Insert a new entry for dst_url that references the same payload
-  item.entry.id = WebCacheDB::kInvalidID;
+  item.entry.id = WebCacheDB::kUnknownID;
   item.entry.url = dst_url;
   item.entry.version_id = version_id_;
   if (!db->InsertEntry(&item.entry)) {
