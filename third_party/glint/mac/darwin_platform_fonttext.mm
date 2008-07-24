@@ -34,6 +34,8 @@
 
 namespace glint_darwin {
 
+const int kMaxWrappingWidth = 10000;  // Arbitrary, until change is required.
+
 // Check whether the passed in pointer is an NSFont we created/returned
 NSFont* DarwinPlatform::ValidateFont(PlatformFont* platform_font) {
   NSFont* ns_font = reinterpret_cast<NSFont*>(platform_font);
@@ -178,6 +180,10 @@ bool DarwinPlatform::MeasureSimpleText(PlatformFont* platform_font,
     return false;
   }
 
+  if (wrapping_width > kMaxWrappingWidth) {
+    wrapping_width = kMaxWrappingWidth;
+  }
+
   NSSize size = NSMakeSize(wrapping_width, MAXFLOAT);
   NSString* ns_text = [NSString stringWithUTF8String:text.c_str()];
 
@@ -185,8 +191,7 @@ bool DarwinPlatform::MeasureSimpleText(PlatformFont* platform_font,
   // context, and the current context may not be compatible with the bitmap
   // that we will ultimately draw in, so create a temporary bitmap to set the
   // current context to.
-  // Create a 1x1 bitmap since it shouldn't affect measurement.
-  scoped_PlatformBitmap ns_bitmap(1, 1);
+  scoped_PlatformBitmap ns_bitmap(wrapping_width, 1);
   if (!ns_bitmap.get() || [all_bitmaps_ containsObject:ns_bitmap.get()] == NO) {
     assert(false && "Invalid platform bitmap");
     return false;
