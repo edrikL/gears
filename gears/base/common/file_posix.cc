@@ -44,6 +44,7 @@
 #include <vector>
 #include "gears/base/common/android_compatibility.h"
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
@@ -53,6 +54,11 @@
 // paths.h defines a char16 version of this, but we use UTF8 internally here
 // and POSIX systems are consistent in this regard.
 static const char kPathSeparatorUTF8 = '/';
+
+// Template used by mkstemp()/mkdtemp(). This must end in 6 'X'
+// characters which are replaced to make a unique filename.
+static const char16 *const kTemporaryFileTemplate =
+    STRING16(PRODUCT_SHORT_NAME L"TempXXXXXX");
 
 // Wraps filename, "is file a directory?" pair.
 class DirEntry : public std::pair<std::string, bool> {
@@ -68,6 +74,9 @@ typedef DirContentsVector::const_iterator DirContentsVectorConstIterator;
 
 File::~File() {
   Close();
+  if (auto_delete_) {
+    Delete(file_path_.c_str());
+  }
 }
 
 void File::Close() {
@@ -347,29 +356,142 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
 }
 
 File *File::CreateNewTempFile() {
-  // TODO(michaeln): use named temp files
-  scoped_ptr<File> file(new File(STRING16(L"")));
-  file->mode_ = READ_WRITE;
-  file->handle_ = tmpfile();
-  if (file->handle_ == NULL) {
+  // Create a named temporary file.
+  scoped_ptr<File> file(CreateNewNamedTempFile());
+  if (!file.get()) {
     return NULL;
   }
+  // Unlink it from the filesystem so it becomes unnamed.
+  std::string16 path = file->GetFilePath();
+  if (unlink(String16ToUTF8(path).c_str()) != 0) {
+    LOG(("Couldn't make temporary file \"%s\" unnamed\n",
+         String16ToUTF8(path).c_str()));
+    return NULL;
+  }
+  // Clear the path and turn off auto deletion.
+  file->file_path_ = std::string16();
+  file->auto_delete_ = false;
+  return file.release();
+}
+
+File *File::CreateNewNamedTempFile() {
+  // Get the base temporary file directory.
+  std::string16 path;
+  if (!GetBaseTemporaryDirectory(&path)) {
+    return NULL;
+  }
+  // Append a temporary file template.
+  path += kPathSeparator;
+  path += kTemporaryFileTemplate;
+  std::string path8;
+  if (!String16ToUTF8(path.c_str(), &path8)) {
+    LOG(("Bad temporary directory encoding\n"));
+    return NULL;
+  }
+  // We need a non-const string to modify with mkstemp(), in UTF-8.
+  scoped_array<char> template_path(new char[path8.size() + 1]);
+  memcpy(template_path.get(), path8.c_str(), path8.size() + 1);
+  // Atomically create a temporary file with the template.
+  int fd = mkstemp(template_path.get());
+  if (fd < 0) {
+    LOG(("Failed to create temp with template \"%s\"\n", template_path.get()));
+    return NULL;
+  }
+  // And bounce back to UTF-16 again...
+  if (!UTF8ToString16(template_path.get(), &path)) {
+    LOG(("Bad encoding in template result \"%s\"\n", template_path.get()));
+    return NULL;
+  }
+  // Create a File using the handle.
+  scoped_ptr<File> file(new File(path.c_str()));
+  file->mode_ = READ_WRITE;
+  file->handle_ = fdopen(fd, "rb+");
+  if (file->handle_ == NULL) {
+    close(fd);
+    return NULL;
+  }
+  LOG(("Created temporary file \"%s\"\n", template_path.get()));
+  // Delete when this instance is destructed.
+  file->auto_delete_ = true;
   return file.release();
 }
 
 bool File::CreateNewTempDirectory(std::string16 *full_filepath) {
-  char temp_dir_template[] = "/tmp/" PRODUCT_SHORT_NAME_ASCII "TempXXXXXX";
-
+  std::string16 path;
+  if (!GetBaseTemporaryDirectory(&path)) {
+    return false;
+  }
+  // Append a directory template and ensure it exists.
+  path += kPathSeparator;
+  path += kTemporaryFileTemplate;
+  std::string path8;
+  if (!String16ToUTF8(path.c_str(), &path8)) {
+    LOG(("Bad temporary directory encoding\n"));
+    return false;
+  }
+  // We need a non-const string to modify with mkdtemp(), in UTF-8.
+  scoped_array<char> template_path(new char[path8.size() + 1]);
+  memcpy(template_path.get(), path8.c_str(), path8.size() + 1);
   // mkdtemp() creates the directory with permissions set to 0700.
-  if (mkdtemp(temp_dir_template) == NULL) {
+  if (mkdtemp(template_path.get()) == NULL) {
     return false;
   }
-
-  if (!UTF8ToString16(temp_dir_template, full_filepath)) {
+  // And bounce back to UTF-16 again...
+  if (!UTF8ToString16(template_path.get(), &path)) {
     return false;
   }
+  LOG(("Created temporary directory \"%s\"\n", template_path.get()));
+  full_filepath->swap(path);
   return true;
 }
+
+#if defined(OS_ANDROID)
+bool File::GetBaseTemporaryDirectory(std::string16 *return_path) {
+  // Create a temporary file in a specific application directory as
+  // /tmp goes to ramdisk.
+  std::string16 path;
+  // Get the base data directory.
+  if (!GetBaseDataDirectory(&path)) {
+    LOG(("Couldn't get base directory\n"));
+    return false;
+  }
+  // Append a temporary directory under the base directory.
+  path += kPathSeparator;
+  path += STRING16(L"temp");
+  // Ensure the directory exists.
+  if (!RecursivelyCreateDir(path.c_str())) {
+    LOG(("Couldn't create temporary directory \"%s\"\n",
+         String16ToUTF8(path).c_str()));
+    return false;
+  }
+  *return_path = path;
+  return true;
+}
+#elif defined(BROWSER_WEBKIT)
+bool File::GetBaseTemporaryDirectory(std::string16 *return_path) {
+  // OSX has a per-user temporary directory.
+  return GetUserTempDirectory(return_path);
+}
+#else // Other POSIX system.
+bool File::GetBaseTemporaryDirectory(std::string16 *return_path) {
+  // stdio.h defines P_tmpdir as the location for tmpfile(). This is
+  // usually "/tmp".
+  std::string16 path;
+  if (UTF8ToString16(P_tmpdir, &path)) {
+    if (File::DirectoryExists(path.c_str())) {
+      *return_path = path;
+      return true;
+    } else {
+      LOG(("Temporary directory \"%s\" doesn't exist\n", P_tmpdir));
+      return false;
+    }
+  } else {
+    LOG(("Bad encoding of P_tmpdir \"%s\"\n", P_tmpdir));
+    assert(false);
+    return false;
+  }
+}
+#endif
 
 bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
    // If directory already exists, no need to do anything.
