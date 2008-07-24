@@ -200,10 +200,12 @@ const int kCurrentVersion = 12;
 static const char16 *kCurrentBrowser = STRING16(L"ie");
 #elif BROWSER_FF
 static const char16 *kCurrentBrowser = STRING16(L"firefox");
+#elif BROWSER_SAFARI
+// Some versions of the Safari port had this incorrectly set
+// to "npapi", so be careful relying on this!
+static const char16 *kCurrentBrowser = STRING16(L"safari");
 #elif BROWSER_NPAPI
 static const char16 *kCurrentBrowser = STRING16(L"npapi");
-#elif BROWSER_SAFARI
-static const char16 *kCurrentBrowser = STRING16(L"safari");
 #else
 #error "BROWSER_?? not defined."
 #endif
@@ -252,16 +254,17 @@ bool WebCacheDB::Init() {
   system_info_table_.GetInt(kSchemaVersionName, &version);
   system_info_table_.GetString(kSchemaBrowserName, &browser);
 
-  // if its the version and browser we're expecting, great
-  if ((version == kCurrentVersion) && (browser == kCurrentBrowser)) {
+  // We used to check that the browser entry in the database matched
+  // kCurrentBrowser, we removed the test becaue of a bug where
+  // kCurrentBrowser was set to 'npapi' for the Safari port.  There may
+  // still be dbs with erroneous values in the wild, and the test
+  // doesn't seem too important, so think twice before reimplementing.
+  
+  // if its the version we're expecting and browser is valid, great
+  if ((version == kCurrentVersion) && !browser.empty()) {
     return true;
   }
-
-  // prevent the wrong browser from accessing the database
-  if (!browser.empty() && (browser != kCurrentBrowser)) {
-    return false;
-  }
-
+  
   // We have to either create or upgrade the database
   if (!CreateOrUpgradeDatabase()) {
     return false;
