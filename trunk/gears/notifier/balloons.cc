@@ -68,7 +68,7 @@ const double kAlphaTransitionDuration = 1.0;
 const double kAlphaTransitionDurationShort = 0.3;
 const double kAlphaTransitionDurationForRestore = 0.2;
 const double kMoveTransitionDuration = 0.325;
-const double kExpirationTime = 5.0;
+const double kExpirationTime = 7.0;
 const double kExpirationTimeSlice = 0.25;
 
 // Container for balloons. Implements several static methods that provide
@@ -378,6 +378,13 @@ Balloon::~Balloon() {
 }
 
 glint::Node *Balloon::CreateTree() {
+#if defined(OS_MACOSX) || defined (LINUX)
+  std::string resource_path = System::GetResourcePath();
+#else
+  // This only works for Win32
+  std::string resource_path = "res:/";
+#endif
+
   glint::Node *root = new glint::Node();
   root->set_min_width(BalloonContainer::min_balloon_width());
   root->set_min_height(BalloonContainer::min_balloon_height());
@@ -386,7 +393,7 @@ glint::Node *Balloon::CreateTree() {
   root->set_alpha(glint::colors::kTransparentAlpha);
 
   glint::NineGrid *background = new glint::NineGrid();
-  background->ReplaceImage("res://background.png");
+  background->ReplaceImage(resource_path + "/background.png");
   background->set_center_height(50);
   background->set_center_width(250);
   glint::Rectangle margin(-4, -4, -4, -4);
@@ -439,7 +446,7 @@ glint::Node *Balloon::CreateTree() {
   column->AddChild(actions);
 
   glint::Button *close_button = new glint::Button();
-  close_button->ReplaceImage("res://close_button_strip.png");
+  close_button->ReplaceImage(resource_path + "/close_button_strip.png");
   close_button->set_min_height(24);
   close_button->set_min_width(24);
   margin.Set(0, 4, 3, 0);

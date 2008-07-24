@@ -35,12 +35,10 @@ int main(int argc, char *argv[]) {
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "gears/notifier/notifier.h"
-
-namespace notifier {
-extern std::string GetSingleInstanceLockFilePath();
-}
+#include "gears/notifier/notifier_process_posix.h"
 
 class LinuxNotifier : public Notifier {
  public:
@@ -51,86 +49,28 @@ class LinuxNotifier : public Notifier {
   virtual void RequestQuit();
 
  private:
-  bool CheckSingleInstance(bool is_parent);
   bool StartAsDaemon();
   virtual bool RegisterProcess();
   virtual bool UnregisterProcess();
-
-  int single_instance_locking_fd_;
-
   DISALLOW_EVIL_CONSTRUCTORS(LinuxNotifier);
 };
 
-LinuxNotifier::LinuxNotifier()
-    : single_instance_locking_fd_(-1) {
+LinuxNotifier::LinuxNotifier() {
 }
 
-// Check if the instance has already been running.
-bool LinuxNotifier::CheckSingleInstance(bool is_parent) {
-  std::string lock_file_path = notifier::GetSingleInstanceLockFilePath();
-
-  // TODO(jianli): Add file locking to File interface and use it instead.
-  single_instance_locking_fd_ = open(lock_file_path.c_str(),
-                                     O_RDWR | O_CREAT,
-                                     S_IRUSR | S_IWUSR);
-  if (single_instance_locking_fd_ < 0) {
-    LOG(("opening lock file %s failed with errno=%d\n",
-         lock_file_path.c_str(), errno));
-    return false;
-  }
-
-  struct flock fl = { 0 };
-  fl.l_type = F_WRLCK;
-  fl.l_start = 0;
-  fl.l_whence = SEEK_SET;
-  fl.l_len = 0;
-  if (fcntl(single_instance_locking_fd_, F_SETLK, &fl) < 0) {
-    if (errno == EACCES || errno == EAGAIN) {
-      LOG(("Notifier already started\n"));
-      return false;
-    }
-
-    LOG(("locking file %s failed with errno=%d\n",
-         lock_file_path.c_str(),errno ));
-    return false;
-  }
-
-  // The file lock can not be passed from parent process to child process.
-  // So just close it.
-  if (is_parent) {
-    close(single_instance_locking_fd_);
-  }
-
-  return true;
-}
-
-// Register the process by writing a pid in the lock file.
 bool LinuxNotifier::RegisterProcess() {
-  if (ftruncate(single_instance_locking_fd_, 0) < 0) {
-    LOG(("truncating lock file failed with errno=%d\n", errno));
-    return false;
-  }
-  std::string pid_str = IntegerToString(static_cast<int32>(getpid()));
-  if (write(single_instance_locking_fd_,
-            &pid_str[0],
-            pid_str.length() + 1) < 0) {
-    LOG(("writing lock file failed with errno=%d\n", errno));
-    return false;
-  }
-
+  NotifierPosixUtils::RegisterIPC();
   return true;
 }
 
-// Unregister the process by clearing the lock file.
 bool LinuxNotifier::UnregisterProcess() {
-  if (ftruncate(single_instance_locking_fd_, 0) < 0) {
-    LOG(("truncating lock file failed with errno=%d\n", errno));
-    return false;
-  }
+  NotifierPosixUtils::UnregisterIPC();
   return true;
 }
 
 // Start the instance as a background daemon process.
+// TODO(dimich): Consider replacing this code with daemon() API, which exists
+// on Linux.
 bool LinuxNotifier::StartAsDaemon() {
   // Clear file creation mask.
   umask(0);
@@ -198,11 +138,8 @@ bool LinuxNotifier::StartAsDaemon() {
 }
 
 bool LinuxNotifier::Initialize() {
-  // We do two passes of single instance check. This is because the file lock
-  // obtained in the parent process can not be inherited by the forked child
-  // process.
-
-  if (!CheckSingleInstance(/*is_parent*/ true)) {
+  // Check if the Notifier process is already running.
+  if (NotifierPosixUtils::FindNotifierProcess() != 0) {
     return false;
   }
 
@@ -210,28 +147,18 @@ bool LinuxNotifier::Initialize() {
     return false;
   }
 
-  if (!CheckSingleInstance(/*is_parent*/ false)) {
+  // Single instance check - *nix way, with a lock file.
+  if (!NotifierPosixUtils::CreateLockFile()) {
     return false;
   }
 
-  if (!RegisterProcess()) {
-    return false;
-  }
-
+  // This will setup IPC and call LinuxNotifier::RegisterProcess
   return Notifier::Initialize();
 }
 
 void LinuxNotifier::Terminate() {
-  if (single_instance_locking_fd_ != -1) {
-    close(single_instance_locking_fd_);
-
-    std::string lock_file_path = notifier::GetSingleInstanceLockFilePath();
-    unlink(lock_file_path.c_str());
-
-    single_instance_locking_fd_ = -1;
-  }
-
-  return Notifier::Terminate();
+  NotifierPosixUtils::DeleteLockFile();
+  Notifier::Terminate();
 }
 
 void LinuxNotifier::RequestQuit() {

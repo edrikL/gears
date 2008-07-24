@@ -27,6 +27,8 @@
 #ifndef GEARS_BASE_COMMON_COMMON_OSX_H__
 #define GEARS_BASE_COMMON_COMMON_OSX_H__
 
+#import <string>
+
 // TODO: Move all generally applicable OS X code from common_sf.h here.
 
 // Initialize an NSAutoReleasePool.
@@ -34,5 +36,14 @@ void *InitAutoReleasePool();
 
 // Destroys an autorelease pool, passing in NULL is legal and is a no-op.
 void DestroyAutoReleasePool(void *pool);
+
+// Returns a resource directory of a currently loaded browser plugin (not
+// a browser app resource directory).
+// If called from out-of-browser executable, returns the resource directory
+// of that executable.
+std::string ModuleResourcesDirectory();
+
+// Returns path to the tempfile directory for the current user.
+std::string TempDirectoryForCurrentUser();
 
 #endif  // GEARS_BASE_COMMON_COMMON_OSX_H__

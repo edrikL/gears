@@ -24,8 +24,19 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <Cocoa/Cocoa.h>
+#import "gears/base/common/common_osx.h"
+#import <string>
 
-#include "gears/base/common/common_osx.h"
+@interface PathFinder : NSObject
++ (NSString *)moduleResourcesDirectory;
+@end
+
+@implementation PathFinder
++ (NSString *)moduleResourcesDirectory {
+  NSBundle *pluginBundle = [NSBundle bundleForClass:[PathFinder class]];
+  return [pluginBundle resourcePath];
+}
+@end
 
 void *InitAutoReleasePool() {
   return [[NSAutoreleasePool alloc] init];
@@ -35,3 +46,13 @@ void DestroyAutoReleasePool(void *pool) {
   assert(pool);
   [(NSAutoreleasePool *)pool release];
 }
+
+std::string ModuleResourcesDirectory() {
+  NSString * ns_path = [PathFinder moduleResourcesDirectory];
+  return std::string([ns_path fileSystemRepresentation]);
+}
+
+std::string TempDirectoryForCurrentUser() {
+  return std::string([NSTemporaryDirectory() fileSystemRepresentation]);
+}
+

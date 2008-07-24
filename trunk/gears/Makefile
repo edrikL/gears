@@ -909,6 +909,7 @@ $(BROWSER)_CPPSRCS	+= \
 ifeq ($(OS),osx)
 $(BROWSER)_CPPSRCS	+= \
 		common_osx.mm \
+		notifier_process_osx.mm \
 		nsstring_utils.mm \
 		$(NULL)
 endif
@@ -1326,7 +1327,7 @@ $(BROWSER)_VPATH += \
 $(BROWSER)_CPPSRCS += \
 		const_notifier.cc \
 		notifier_process_linux.cc \
-		notifier_process_osx.cc \
+		notifier_process_posix.cc \
 		notifier_process_win32.cc \
 		notifier_proxy.cc \
 		notifier_utils_win32.cc \
@@ -1393,7 +1394,7 @@ NOTIFIER_CORE	+= \
 		mutex_win32.cc \
 		notification_manager.cc \
 		notifier_process_linux.cc \
-		notifier_process_osx.cc \
+		notifier_process_posix.cc \
 		notifier_process_win32.cc \
 		notifier_utils_win32.cc \
 		notification.cc \
@@ -1423,11 +1424,13 @@ NOTIFIER_CPPSRCS += \
 
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
+		common_osx.mm \
 		ipc_message_queue_osx.mm \
 		notifier_osx.mm \
+		notifier_process_osx.mm \
 		system_osx.mm \
 		$(NULL)
-		
+
 NOTIFIER_RESOURCES += \
 		notifier/resources/background.png \
 		notifier/resources/button_strip.png \
