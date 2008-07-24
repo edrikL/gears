@@ -46,6 +46,10 @@ typedef FileDialogCarbon FileDialogNative;
 #include "gears/desktop/file_dialog_gtk.h"
 typedef GtkWindow* WindowPtrNative;
 typedef FileDialogGtk FileDialogNative;
+#elif defined(OS_ANDROID)
+// TODO(jripley): Not yet implemented on Android.
+typedef void* WindowPtrNative;
+typedef void* FileDialogNative;
 #endif
 
 #if BROWSER_FF
@@ -141,7 +145,12 @@ bool GetBrowserWindow(const ModuleImplBaseClass* module,
 FileDialog* FileDialog::Create(const ModuleImplBaseClass* module) {
   WindowPtrNative parent = NULL;
   GetBrowserWindow(module, &parent);
+#ifdef OS_ANDROID
+  // TODO(jripley): Not yet implemented on Android.
+  return NULL;
+#else
   return new FileDialogNative(module, parent);
+#endif
 }
 
 FileDialog::FileDialog(const ModuleImplBaseClass* module) : module_(module) {
