@@ -84,6 +84,14 @@ static ExceptionManager exception_manager(true);
                name:NSApplicationDidFinishLaunchingNotification
              object:app];
     LOG(("Gears: added finishlaunching notification hook"));
+    
+    LOG(("Gears: adding willterminate notification hook"));
+    [[NSNotificationCenter defaultCenter] 
+        addObserver:inst 
+           selector:@selector(applicationWillTerminate:) 
+               name:NSApplicationWillTerminateNotification
+             object:app];
+    LOG(("Gears: added willterminate notification hook"));
              
     notification_hook_installed = true;
   } else {
@@ -104,5 +112,12 @@ static ExceptionManager exception_manager(true);
   LOG(("Gears: Loading Nibs"));
   PreloadNibFiles();
   LOG(("Gears: finishlaunching hook exited"));
+}
+
+// Called just before the application quits.
+- (void)applicationWillTerminate:(NSNotification*)aNotification {
+  LOG(("Gears: applicationWillTerminate hook called"));
+  UnloadNibFiles();
+  LOG(("Gears: applicationWillTerminate hook exited"));
 }
 @end
