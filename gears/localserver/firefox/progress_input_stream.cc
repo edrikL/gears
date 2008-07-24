@@ -70,7 +70,12 @@ NS_IMETHODIMP ProgressInputStream::IsNonBlocking(PRBool *out_non_blocking) {
 NS_IMETHODIMP ProgressInputStream::Read(char *buffer,
                                         PRUint32 buffer_size,
                                         PRUint32 *out_num_bytes_read) {
-  return input_stream_->Read(buffer, buffer_size, out_num_bytes_read);
+  nsresult result = input_stream_->Read(buffer, buffer_size, out_num_bytes_read);
+  if (result == NS_OK && *out_num_bytes_read > 0) {
+    position_ += *out_num_bytes_read;
+    ProgressEvent::Update(request_.get(), request_.get(), position_, total_);
+  }
+  return result;
 }
 
 NS_IMETHODIMP ProgressInputStream::ReadSegments(nsWriteSegmentFun writer,
