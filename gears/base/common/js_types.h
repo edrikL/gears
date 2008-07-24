@@ -248,11 +248,7 @@ enum JsParamType {
   JSPARAM_OBJECT,
   JSPARAM_ARRAY,
   JSPARAM_FUNCTION,
-  // TODO(nigeltao): when all modules are Dispatcher-based, remove the
-  // distinction between JSPARAM_COM_MODULE and JSPARAM_DISPATCHER_MODULE,
-  // and just have JSPARAM_MODULE.
-  JSPARAM_COM_MODULE,
-  JSPARAM_DISPATCHER_MODULE,
+  JSPARAM_MODULE,
   // JSPARAM_DOM_ELEMENT should only be used from the main JavaScript thread,
   // not from worker threads.
   JSPARAM_DOM_ELEMENT,
@@ -293,10 +289,10 @@ bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out);
-bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
-                               JsContextPtr context,
-                               const JsToken in,
-                               ModuleImplBaseClass **out);
+bool JsTokenToModule(JsContextWrapperPtr context_wrapper,
+                     JsContextPtr context,
+                     const JsToken in,
+                     ModuleImplBaseClass **out);
 
 // Utility functions to coerce JsTokens to various C++ types. These functions
 // implement coercion as defined by ECMA 262-3 Section 9:
@@ -470,8 +466,7 @@ class JsArray {
   bool SetElementArray(int index, JsArray *value);
   bool SetElementObject(int index, JsObject *value);
   bool SetElementFunction(int index, JsRootedCallback *value);
-  bool SetElementComModule(int index, IScriptable *value);
-  bool SetElementDispatcherModule(int index, ModuleImplBaseClass *value);
+  bool SetElementModule(int index, ModuleImplBaseClass *value);
 
 private:
   JsContextPtr js_context_;
@@ -522,8 +517,7 @@ class JsObject {
   bool SetPropertyArray(const std::string16& name, JsArray* value);
   bool SetPropertyObject(const std::string16& name, JsObject* value);
   bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
-  bool SetPropertyComModule(const std::string16& name, IScriptable* value);
-  bool SetPropertyDispatcherModule(const std::string16& name,
+  bool SetPropertyModule(const std::string16& name,
                                    ModuleImplBaseClass* value);
   bool SetProperty(const std::string16 &name, const JsToken &value);
 
@@ -580,7 +574,7 @@ class JsCallContext {
   // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
   void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr) {
-    assert((type == JSPARAM_COM_MODULE) || (type == JSPARAM_DISPATCHER_MODULE));
+    assert(type == JSPARAM_MODULE);
     SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
   }
   void SetReturnValue(JsParamType type, int) {

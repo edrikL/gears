@@ -125,7 +125,7 @@ void GearsImage::DrawImage(JsCallContext *context) {
   int x;
   int y;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
     { JSPARAM_REQUIRED, JSPARAM_INT, &x },
     { JSPARAM_REQUIRED, JSPARAM_INT, &y },
   };
@@ -188,7 +188,7 @@ void GearsImage::ToBlob(JsCallContext *context) {
     return;
   }
   gears_blob->Reset(blob.get());
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  context->SetReturnValue(JSPARAM_MODULE, gears_blob.get());
 }
 
 #endif  // not OFFICIAL_BUILD

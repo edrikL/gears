@@ -469,7 +469,7 @@ void GearsResourceStore::CaptureBlob(JsCallContext *context) {
   ModuleImplBaseClass *other_module = NULL;
   std::string16 url;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url }
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
@@ -737,7 +737,7 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, submitter.get());
+  context->SetReturnValue(JSPARAM_MODULE, submitter.get());
 #endif
 }
 

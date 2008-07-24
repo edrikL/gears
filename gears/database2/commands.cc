@@ -87,7 +87,7 @@ void Database2SyncExecuteCommand::HandleResults() {
     return;
   }
 
-  context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set_.get());
+  context_->SetReturnValue(JSPARAM_MODULE, result_set_.get());
 }
 
 void Database2CommitCommand::Execute(bool *has_results) {

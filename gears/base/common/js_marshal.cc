@@ -66,7 +66,7 @@ MarshaledJsToken::~MarshaledJsToken() {
       DeleteMarshaledJsTokens(value_.array_value);
       delete value_.array_value;
       break;
-    case JSPARAM_DISPATCHER_MODULE:
+    case JSPARAM_MODULE:
       delete value_.marshaled_module_value;
       break;
     default:
@@ -159,7 +159,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
     case JSPARAM_OBJECT: {
       // Check to see if our JavaScript object is acutally a Gears module.
       ModuleImplBaseClass *object_as_module = NULL;
-      if (JsTokenToDispatcherModule(
+      if (JsTokenToModule(
               js_runner->GetContextWrapper(),
               js_context, token, &object_as_module)) {
         MarshaledModule *marshaled_module =
@@ -167,7 +167,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
             AsMarshaledModule();
         if (marshaled_module) {
           mjt.reset(new MarshaledJsToken());
-          mjt->type_ = JSPARAM_DISPATCHER_MODULE;
+          mjt->type_ = JSPARAM_MODULE;
           mjt->value_.marshaled_module_value = marshaled_module;
         } else {
           *error_message_out = STRING16(
@@ -286,7 +286,7 @@ bool MarshaledJsToken::Unmarshal(
       success = true;
       break;
     }
-    case JSPARAM_DISPATCHER_MODULE: {
+    case JSPARAM_MODULE: {
       success =
           value_.marshaled_module_value->Unmarshal(module_environment, out);
       break;

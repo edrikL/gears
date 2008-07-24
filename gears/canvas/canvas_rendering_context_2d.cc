@@ -132,7 +132,7 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
 
 void GearsCanvasRenderingContext2D::GetCanvas(JsCallContext *context) {
   assert(canvas_ != NULL);
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, canvas_.get());
+  context->SetReturnValue(JSPARAM_MODULE, canvas_.get());
 }
 
 void GearsCanvasRenderingContext2D::Save(JsCallContext *context) {
@@ -403,7 +403,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   int source_x, source_y, source_width, source_height;
   int dest_x, dest_y, dest_width, dest_height;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &source_x },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &source_y },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &source_width },

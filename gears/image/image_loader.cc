@@ -44,7 +44,7 @@ void GearsImageLoader::CreateImageFromBlob(JsCallContext *context) {
   ModuleImplBaseClass *other_module = NULL;
 
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
@@ -73,7 +73,7 @@ void GearsImageLoader::CreateImageFromBlob(JsCallContext *context) {
     return;
   }
   gears_image->Init(backing_image.release());
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_image.get());
+  context->SetReturnValue(JSPARAM_MODULE, gears_image.get());
 }
 
 #endif  // not OFFICIAL_BUILD
