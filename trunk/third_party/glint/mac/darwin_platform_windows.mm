@@ -106,6 +106,10 @@ PlatformWindow* DarwinPlatform::CreateInvisibleWindow(RootUI *ui,
   assert([all_windows_ containsObject:window] == NO);
   [all_windows_ addObject:window];
 
+  if (topmost) {
+    [window setLevel:NSStatusWindowLevel];
+  }
+
   return reinterpret_cast<PlatformWindow*>(window);
 }
 
