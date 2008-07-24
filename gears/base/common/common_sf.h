@@ -40,9 +40,6 @@
 
 struct NPObject;
 
-// Stupid MacTypes defines this as 0
-#undef kInvalidID
-
 #if defined(__cplusplus)
 extern "C" {
 #endif

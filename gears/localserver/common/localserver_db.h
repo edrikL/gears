@@ -71,7 +71,9 @@ class WebCacheDB : SQLTransactionListener {
   static WebCacheDB *GetDB();
 
   static const char16 *kFilename;      // the name of the database file
-  static const int64 kInvalidID;
+  // Note: This used to be kInvalidID, which conflicts with a system macro on
+  // MacOSX.
+  static const int64 kUnknownID;
 
   enum ServerType {
     MANAGED_RESOURCE_STORE = 0,
@@ -103,7 +105,7 @@ class WebCacheDB : SQLTransactionListener {
     int64 last_update_check_time;
     std::string16 manifest_date_header;
 
-    ServerInfo() : id(kInvalidID),
+    ServerInfo() : id(kUnknownID),
                    enabled(true),
                    server_type(MANAGED_RESOURCE_STORE),
                    update_status(UPDATE_OK),
@@ -117,8 +119,8 @@ class WebCacheDB : SQLTransactionListener {
     VersionReadyState ready_state;
     std::string16 session_redirect_url;
 
-    VersionInfo() : id(kInvalidID),
-                    server_id(kInvalidID),
+    VersionInfo() : id(kUnknownID),
+                    server_id(kUnknownID),
                     ready_state(VERSION_DOWNLOADING) {}
   };
 
@@ -131,10 +133,10 @@ class WebCacheDB : SQLTransactionListener {
     bool ignore_query;
     int64 payload_id;
 
-    EntryInfo() : id(kInvalidID),
-                  version_id(kInvalidID),
+    EntryInfo() : id(kUnknownID),
+                  version_id(kUnknownID),
                   ignore_query(false),
-                  payload_id(kInvalidID) {}
+                  payload_id(kUnknownID) {}
   };
 
   struct PayloadInfo {
@@ -152,7 +154,7 @@ class WebCacheDB : SQLTransactionListener {
 
     bool is_synthesized_http_redirect;
 
-    PayloadInfo() : id(kInvalidID),
+    PayloadInfo() : id(kUnknownID),
                     creation_date(0),
                     status_code(0),
                     is_synthesized_http_redirect(false) {}

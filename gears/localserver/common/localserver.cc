@@ -77,7 +77,7 @@ bool LocalServer::FindServer(const SecurityOrigin &security_origin,
 LocalServer::LocalServer(WebCacheDB::ServerType type) :
     is_initialized_(false),
     server_type_(type),
-    server_id_(WebCacheDB::kInvalidID),
+    server_id_(WebCacheDB::kUnknownID),
     store_might_exist_(true) {
 }
 
@@ -132,7 +132,7 @@ bool LocalServer::CreateOrOpen(const SecurityOrigin &security_origin,
 // Open
 //------------------------------------------------------------------------------
 bool LocalServer::Open(int64 server_id) {
-  assert(server_id != WebCacheDB::kInvalidID);
+  assert(server_id != WebCacheDB::kUnknownID);
   if (is_initialized_) {
     assert(!is_initialized_);
     return false;

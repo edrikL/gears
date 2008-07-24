@@ -976,7 +976,7 @@ bool TestManagedResourceStore(std::string16 *error) {
   TEST_ASSERT(security_origin.InitFromUrl(manifest_url));
 
   // Clear out data from previous test runs
-  int64 existing_store_id = WebCacheDB::kInvalidID;
+  int64 existing_store_id = WebCacheDB::kUnknownID;
   if (ManagedResourceStore::ExistsInDB(security_origin, name,
                                        required_cookie, &existing_store_id)) {
     ManagedResourceStore remover;
