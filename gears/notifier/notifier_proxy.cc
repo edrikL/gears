@@ -83,7 +83,7 @@ class NotifierProxyThread : public Thread {
     if (!NotifierProcess::StartProcess(NULL, &stop_event_, false)) {
       return;
     }
-    uint32 process_id = NotifierProcess::FindProcess();
+    pid_t process_id = NotifierProcess::FindProcess();
     if (!process_id) {
       return;
     }
@@ -95,7 +95,7 @@ class NotifierProxyThread : public Thread {
     IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
     assert(ipc_message_queue);
     if (ipc_message_queue) {
-      std::vector<std::pair<int, GearsNotification*> >::iterator iter = 
+      std::vector<std::pair<int, GearsNotification*> >::iterator iter =
           notifications_.begin();
       while (!stop_event_.WaitWithTimeout(1) && iter != notifications_.end()) {
         ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
@@ -135,7 +135,7 @@ void NotifierProxy::PostNotification(int message_type,
     }
   }
 
-  uint32 process_id = NotifierProcess::FindProcess();
+  pid_t process_id = NotifierProcess::FindProcess();
   if (process_id) {
     IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
     assert(ipc_message_queue);

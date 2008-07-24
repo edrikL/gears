@@ -32,12 +32,15 @@ int main(int argc, char *argv[]) {
 #else
 #import "gears/notifier/notifier.h"
 #import <Cocoa/Cocoa.h>
+#import "gears/notifier/notifier_process_posix.h"
 
 class MacNotifier : public Notifier {
  public:
   MacNotifier();
+  virtual bool Initialize();
   virtual int Run();
   virtual void RequestQuit();
+  virtual void Terminate();
 
  protected:
   virtual bool RegisterProcess();
@@ -50,6 +53,30 @@ class MacNotifier : public Notifier {
 MacNotifier::MacNotifier() {
 }
 
+bool MacNotifier::RegisterProcess() {
+  return NotifierPosixUtils::RegisterIPC();
+}
+
+bool MacNotifier::UnregisterProcess() {
+  NotifierPosixUtils::UnregisterIPC();
+  return true;
+}
+
+bool MacNotifier::Initialize() {
+  // Single instance check - *nix way, with a lock file.
+  if (!NotifierPosixUtils::CreateLockFile()) {
+    return false;
+  }
+
+  // This will setup IPC and call MacNotifier::RegisterProcess
+  return Notifier::Initialize();
+}
+
+void MacNotifier::Terminate() {
+  NotifierPosixUtils::DeleteLockFile();
+  Notifier::Terminate();
+}
+
 int MacNotifier::Run() {
   [NSApp run];
   return 0;
@@ -57,16 +84,6 @@ int MacNotifier::Run() {
 
 void MacNotifier::RequestQuit() {
   [NSApp terminate:NSApp];
-}
-
-bool MacNotifier::RegisterProcess() {
-  // TODO: to be implemented.
-  return false;
-}
-
-bool MacNotifier::UnregisterProcess() {
-  // TODO: to be implemented.
-  return false;
 }
 
 extern "C" {

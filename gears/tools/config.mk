@@ -122,7 +122,7 @@ ifeq ($(OS),osx)
   ARCH = i386+ppc
 else
 ifeq ($(OS),symbian)
-  # Don't set a value here; Symbian builds for two ARCHs by default. 
+  # Don't set a value here; Symbian builds for two ARCHs by default.
 else
   ARCH = i386
 endif
@@ -260,7 +260,7 @@ PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
 PORTAUDIO_CFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
 # for PortAudio: disable some warnings
 PORTAUDIO_CFLAGS += -Wno-unused-variable
-# for PortAudio: enable multithreading support with pthread library 
+# for PortAudio: enable multithreading support with pthread library
 PORTAUDIO_CFLAGS += -pthread
 
 # for Speex:
@@ -377,7 +377,7 @@ PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
 # for PortAudio: build only the CoreAudio hostapi for osx
 PORTAUDIO_CFLAGS += -DPA_USE_COREAUDIO
 # for PortAudio: disable some warnings
-PORTAUDIO_CFLAGS += -Wno-unused-variable -Wno-uninitialized 
+PORTAUDIO_CFLAGS += -Wno-unused-variable -Wno-uninitialized
 
 # for Ogg:
 LIBOGG_CFLAGS += -D__MACOSX__
@@ -389,7 +389,8 @@ LIBSPEEX_CFLAGS += -Wno-unused-variable
 LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
 
 # COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
-COMMON_CPPFLAGS += -fvisibility=hidden
+# -DOSX is needed by Glint 3-rd party library built into notifier.
+COMMON_CPPFLAGS += -fvisibility=hidden -DOSX
 COMMON_CXXFLAGS += -fvisibility-inlines-hidden
 
 COMPILE_FLAGS_dbg = -O0
@@ -580,7 +581,7 @@ SQLITE_CFLAGS += /wd4146
 endif
 
 THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
-# for PortAudio: 
+# for PortAudio:
 #   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'
 #   warning C4101: 'identifier' : unreferenced local variable
 PORTAUDIO_CFLAGS += /wd4133 /wd4101
@@ -862,7 +863,7 @@ COMPILE_FLAGS += \
 	$(NULL)
 endif
 
-COMPILE_FLAGS += $(COMPILE_FLAGS_$(MODE))  
+COMPILE_FLAGS += $(COMPILE_FLAGS_$(MODE))
 
 ifeq ($(ARCH),arm)
 CPPFLAGS = --preinclude $(EPOCINC)\RVCT2_2\RVCT2_2.h
@@ -924,7 +925,7 @@ STAGE1_DLLFLAGS = \
 STAGE2_DLLFLAGS = -noimplib
 endif
 
-DLL_PREFIX = 
+DLL_PREFIX =
 DLL_SUFFIX = .dll
 
 TRANSLATE_LINKER_FILE_LIST = cat -
@@ -935,7 +936,7 @@ SYMBIAN_TMP_FILE = $(SHORT_NAME){000a0000}
 SYMBIAN_TOOLS_PATH = tools\symbian
 SYMBIAN_PKG_FILE = $(NPAPI_OUTDIR)\genfiles\gears_armv5.pkg
 SYMBIAN_SIS_FILE = $(SYMBIAN_TOOLS_PATH)\gears_armv5.sis
-#SYMBIAN_CER_FILE = SSYMBIAN\N78.cer 
+#SYMBIAN_CER_FILE = SSYMBIAN\N78.cer
 SYMBIAN_CER_FILE = $(SYMBIAN_TOOLS_PATH)\s60v3_google_internal.cer
 SYMBIAN_KEY_FILE = $(SYMBIAN_TOOLS_PATH)\google_internal_private.key
 

@@ -30,6 +30,12 @@
   // The notification API has not been finalized for official builds.
 #else
 
+#ifdef WIN32
+typedef unsigned int pid_t;
+#else
+#include <sys/types.h>
+#endif
+
 #include "gears/base/common/string16.h"
 
 class Event;
@@ -43,7 +49,7 @@ class NotifierProcess {
 
   // Finds the Desktop Notifier process. Returns the process id if found.
   // Otherwise returns 0.
-  static unsigned int FindProcess();
+  static pid_t FindProcess();
 };
 
 #endif  // OFFICIAL_BUILD

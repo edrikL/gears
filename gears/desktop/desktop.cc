@@ -424,7 +424,7 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
     context->SetException(error);
     return;
   }
-  // The dialog will destroy itself when it completes. 
+  // The dialog will destroy itself when it completes.
   dialog.release();
 }
 
@@ -728,6 +728,9 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
       *error += icon->url.c_str();
       *error += STRING16(L".");
       return false;
+    }
+    if (icon_handler) {
+      icon_handler->ProcessIcon(true, *error);
     }
 #else
     // Fetch the png data
