@@ -643,9 +643,6 @@ class JsRunner : public JsRunnerBase {
   IDispatch *GetGlobalObject(bool dump_on_error = false) {
     return com_obj_->GetGlobalObject(dump_on_error);
   }
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    return com_obj_->AddGlobal(name, object);
-  }
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
     VARIANT &variant = object->GetWrapperToken();
     assert(variant.vt == VT_DISPATCH);
@@ -695,11 +692,6 @@ class DocumentJsRunner : public JsRunnerBase {
       return NULL;
     }
     return global_object;
-  }
-
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    // TODO(zork): Add this functionality to DocumentJsRunner.
-    return false;
   }
 
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {

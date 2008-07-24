@@ -89,12 +89,6 @@ class JsEventHandlerInterface {
 class JsRunnerInterface {
  public:
   virtual ~JsRunnerInterface() {};
-  // TODO_REMOVE_NSISUPPORTS: Remove the 3-arg version of AddGlobal once
-  // GearsFactory moves over to being Dispatcher-based.
-  // increments refcount
-  virtual bool AddGlobal(const std::string16 &name,
-                         IGeneric *object,
-                         gIID iface_iid) = 0;
   // increments refcount
   virtual bool AddGlobal(const std::string16 &name,
                          ModuleImplBaseClass *object) = 0;

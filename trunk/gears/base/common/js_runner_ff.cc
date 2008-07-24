@@ -58,7 +58,6 @@
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/factory/firefox/factory.h"
 
 static const int kGarbageCollectionIntervalMsec = 2000;
 
@@ -360,7 +359,6 @@ class JsRunner : public JsRunnerBase {
 
   ~JsRunner();
 
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object);
   bool Start(const std::string16 &full_script);
   bool Stop();
@@ -374,7 +372,6 @@ class JsRunner : public JsRunnerBase {
 
  private:
   bool InitJavaScriptEngine();
-  bool GetProtoFromIID(const nsIID iface_id, JSObject **proto);
 
   static void GarbageCollectionCallback(nsITimer *timer, void *context);
   static void JS_DLL_CALLBACK JsErrorHandler(JSContext *cx, const char *message,
@@ -382,7 +379,6 @@ class JsRunner : public JsRunnerBase {
 
   JsErrorHandlerInterface *error_handler_;
   JSObject *global_obj_;
-  IIDToProtoMap proto_interfaces_;
   std::vector<IGeneric *> globals_;
   JSRuntime *js_runtime_;
   JSScript *js_script_;
@@ -466,31 +462,6 @@ JsRunner::~JsRunner() {
   // JsRunner.
 }
 
-bool JsRunner::GetProtoFromIID(const nsIID iface_id, JSObject **proto) {
-  IIDToProtoMap::iterator proto_interface =
-      proto_interfaces_.find(iface_id);
-  if (proto_interface != proto_interfaces_.end()) {
-    *proto = proto_interface->second;
-    return true;
-  }
-
-  proto_interfaces_[iface_id] = NULL;
-  proto_interface = proto_interfaces_.find(iface_id);
-
-  // passing NULL for class_id and class_name prevents child workers
-  // from using "new CLASSNAME"
-  if (alloc_js_wrapper_->DefineClass(&iface_id,
-                                     NULL, // class_id
-                                     NULL, // class_name
-                                     &(proto_interface->second))) {
-    *proto = proto_interface->second;
-    return true;
-  } else {
-    proto_interfaces_.erase(iface_id);
-    return false;
-  }
-}
-
 typedef DECLARE_SCOPED_TRAITS(JSContext*, JS_DestroyContext, NULL)
     JSContextTraits;
 typedef scoped_token<JSContext*, JSContextTraits> scoped_jscontext_ptr;
@@ -567,24 +538,6 @@ bool JsRunner::InitJavaScriptEngine() {
 #endif
 
   return true;
-}
-
-bool JsRunner::AddGlobal(const std::string16 &name,
-                         IGeneric *object,
-                         gIID iface_id) {
-  JSObject *proto_object;
-  if (!GetProtoFromIID(iface_id, &proto_object)) {
-    return false;
-  }
-
-  if (!alloc_js_wrapper_->DefineGlobal(proto_object, object, name.c_str())) {
-    return false;
-  }
-
-  globals_.push_back(object);
-  NS_ADDREF(globals_.back());
-
-  return true; // succeeded
 }
 
 bool JsRunner::AddGlobal(const std::string16 &name,
@@ -698,10 +651,6 @@ class DocumentJsRunner : public JsRunnerBase {
       delete alloc_js_wrapper_;
   }
 
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    // TODO(zork): Add this functionality to DocumentJsRunner.
-    return false;
-  }
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
     // TODO(zork): Add this functionality to DocumentJsRunner.
     return false;
