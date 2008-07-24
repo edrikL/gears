@@ -28,13 +28,13 @@
 #ifdef OS_ANDROID
 
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/empty_device_data_provider.h"
 
 // static
 template<>
 WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
-  // TODO(jripley): Implement WiFi data provider for Android.
-  assert(false);
-  return NULL;
+  // TODO(andreip): Implement WiFi data provider for Android.
+  return new EmptyDeviceDataProvider<WifiData>();
 }
 
 #endif  // OS_ANDROID
