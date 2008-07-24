@@ -930,13 +930,13 @@ void GearsDesktop::CreateNotification(JsCallContext *context) {
                                        context, &notification)) {
     return;
   }
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, notification.get());
+  context->SetReturnValue(JSPARAM_MODULE, notification.get());
 }
 
 void GearsDesktop::ShowNotification(JsCallContext *context) {
   ModuleImplBaseClass *module = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &module },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;

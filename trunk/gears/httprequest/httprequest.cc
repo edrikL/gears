@@ -231,10 +231,10 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     // Dispatcher modules are also JavaScript objects, and so it is valid for
     // GetArgumentType to return JSPARAM_OBJECT for a Dispatcher module.
     // TODO(nigeltao): fix this, so that it's always just
-    // JSPARAM_DISPATCHER_MODULE, and not JSPARAM_OBJECT.
-    } else if ((post_data_type == JSPARAM_DISPATCHER_MODULE) ||
+    // JSPARAM_MODULE, and not JSPARAM_OBJECT.
+    } else if ((post_data_type == JSPARAM_MODULE) ||
                (post_data_type == JSPARAM_OBJECT)) {
-      argv[0].type = JSPARAM_DISPATCHER_MODULE;
+      argv[0].type = JSPARAM_MODULE;
       argv[0].value_ptr = &post_data_module;
     } else {
       context->SetException(
@@ -355,7 +355,7 @@ void GearsHttpRequest::GetUpload(JsCallContext *context) {
       return;
     }
   }
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, upload_.get());
+  context->SetReturnValue(JSPARAM_MODULE, upload_.get());
 }
 
 void GearsHttpRequest::GetOnProgress(JsCallContext *context) {
@@ -422,7 +422,7 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
   }
   scoped_refptr<BlobInterface> unused_blob;
   if (GetResponseBlobImpl(context, &unused_blob)) {
-    context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
+    context->SetReturnValue(JSPARAM_MODULE, response_blob_.get());
     return;
   }
   // Exception set by GetResponseBlobImpl if it fails.

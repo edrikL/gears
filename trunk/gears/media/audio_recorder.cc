@@ -442,7 +442,7 @@ void GearsAudioRecorder::GetBlob(JsCallContext *context) {
   }
   response_blob->Reset(blob.get());
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob.get());
+  context->SetReturnValue(JSPARAM_MODULE, response_blob.get());
 }
 
 void GearsAudioRecorder::GetEventRecord(JsCallContext *context) {

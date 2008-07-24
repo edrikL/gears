@@ -45,7 +45,7 @@ const std::string GearsBlob::kModuleName("GearsBlob");
 void GearsBlob::HasSameContentsAs(JsCallContext *context) {
   ModuleImplBaseClass *other_module = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
@@ -134,7 +134,7 @@ void GearsBlob::Slice(JsCallContext *context) {
     return;
   }
   gears_blob->Reset(sliced.get());
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  context->SetReturnValue(JSPARAM_MODULE, gears_blob.get());
 }
 
 class MarshaledGearsBlob : public MarshaledModule {

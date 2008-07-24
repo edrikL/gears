@@ -75,7 +75,7 @@ void Dispatcher<GearsCanvas>::Init() {
 void GearsCanvas::Load(JsCallContext *context) {
   ModuleImplBaseClass *other_module;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -154,7 +154,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
     return;
   }
   gears_blob->Reset(blob.get());
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  context->SetReturnValue(JSPARAM_MODULE, gears_blob.get());
 }
 
 void GearsCanvas::Clone(JsCallContext *context) {
@@ -180,7 +180,7 @@ void GearsCanvas::Clone(JsCallContext *context) {
   // TODO(kart): Copy the transformation matrix and generally make sure that
   // all state is copied.
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, clone.get());
+  context->SetReturnValue(JSPARAM_MODULE, clone.get());
 }
 
 void GearsCanvas::Crop(JsCallContext *context) {
@@ -310,7 +310,7 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     rendering_context_ = rendering_context_scoped_ptr.get();
     rendering_context_->InitCanvasField(this);
   }
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, rendering_context_);
+  context->SetReturnValue(JSPARAM_MODULE, rendering_context_);
 }
 
 int GearsCanvas::width() const {

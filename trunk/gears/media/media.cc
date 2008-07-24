@@ -394,7 +394,7 @@ void GearsMedia::SetMuted(JsCallContext *context) {
 void GearsMedia::LoadBlob(JsCallContext *context) {
   ModuleImplBaseClass *other_module;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())

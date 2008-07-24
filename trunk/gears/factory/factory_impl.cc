@@ -243,7 +243,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     return;  // CreateModule will set the error message.
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, object.get());
+  context->SetReturnValue(JSPARAM_MODULE, object.get());
 }
 
 void GearsFactoryImpl::GetBuildInfo(JsCallContext *context) {

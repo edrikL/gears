@@ -67,7 +67,7 @@ void GearsAudio::GetBuffered(JsCallContext *context) {
                                      context, &buffered)) {
     return;
   }
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, buffered.get());
+  context->SetReturnValue(JSPARAM_MODULE, buffered.get());
   // TODO(aprasath): Above code is just for testing purposes. Implement me.
 }
 

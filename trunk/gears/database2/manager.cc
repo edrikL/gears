@@ -92,5 +92,5 @@ void GearsDatabase2Manager::OpenDatabase(JsCallContext *context) {
 
   // transfer ownership to database2
   connection.release();
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
+  context->SetReturnValue(JSPARAM_MODULE, database.get());
 }

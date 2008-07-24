@@ -334,8 +334,7 @@ bool FileDialog::FilesToJsObjectArray(const StringList& selected_files,
       *error = STRING16(L"GearsBlob creation failed.");
       return false;
     }
-    if (!obj->SetPropertyDispatcherModule(STRING16(L"blob"),
-                                          gears_blob.get())) {
+    if (!obj->SetPropertyModule(STRING16(L"blob"), gears_blob.get())) {
       *error = STRING16(L"Failed to set blob property on File.");
       return false;
     }

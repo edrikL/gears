@@ -80,7 +80,7 @@ void GearsDatabase2Transaction::InvokeCallback() {
   assert(callback_.get());
   // prepare to return transaction
   JsParamToSend send_argv[] = {
-    { JSPARAM_DISPATCHER_MODULE, static_cast<ModuleImplBaseClass *>(this) }
+    { JSPARAM_MODULE, static_cast<ModuleImplBaseClass *>(this) }
   };
 
   GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),

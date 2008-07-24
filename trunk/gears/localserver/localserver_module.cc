@@ -124,7 +124,7 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -252,7 +252,7 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -295,7 +295,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
