@@ -44,6 +44,10 @@
 // * JS_NewObject (and similar) return values, on Define*() failure
 //   (Or maybe rely on JSContext cleanup -- at a higher level -- to handle it.)
 
+// Include this first, since gecko_internal/jsapi.h needs XP_WIN or XP_UNIX
+// defined.
+#include <gecko_sdk/include/prtypes.h>
+
 #include "gears/base/common/js_runner_ff_marshaling.h"
 
 #include "gears/base/common/base_class.h"
