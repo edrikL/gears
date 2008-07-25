@@ -182,10 +182,11 @@ class PermissionsDB {
   // Creates the database's schema.
   bool CreateDatabase();
 
-  // Schema upgrade functions.  Higher-numbered functions call
-  // lower-numbered functions as appropriate.
-  // TODO(aa): All of these functions follow the exact same pattern. We should
-  // be able to generalize them better.
+  // Upgrades the database's schema to the current version.
+  bool UpgradeDatabase(int current_version);
+
+  // Schema upgrade scripts. Don't forget to add new scripts to
+  // kSchemaUpgradeScripts as well.
   bool UpgradeToVersion9();
   bool UpgradeToVersion8();
   bool UpgradeToVersion7();

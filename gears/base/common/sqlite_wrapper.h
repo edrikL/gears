@@ -92,6 +92,10 @@ class SQLDatabase {
     assert(db_);
     return sqlite3_errmsg(db_);
   }
+
+  bool IsInTransaction() {
+    return transaction_count_ > 0;
+  }
   
   // Begin a transaction. SQLite does not support nested transactions so we
   // simulate them by keeping a count of how many open ones there are. The
