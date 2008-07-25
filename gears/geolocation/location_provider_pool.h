@@ -43,7 +43,7 @@ class LocationProviderPool {
   // Registers a listener with a given type of location provider. Creates the
   // provider if the pool does not alrerady contain an instance of that
   // provider. Returns the provider, or NULL if it cannot be created.
-  static LocationProviderBase *Register(
+  LocationProviderBase *Register(
       const std::string16 &type,
       const std::string16 &host,
       bool request_address,
@@ -53,16 +53,16 @@ class LocationProviderPool {
   // Unregister a listener from a given location provider. Deletes the provider
   // if there are no remaining listeners registered with it. Return value
   // indicates whether the provider was found in the pool.
-  static bool Unregister(LocationProviderBase *provider,
-                         LocationProviderBase::ListenerInterface *listener);
+  bool Unregister(LocationProviderBase *provider,
+                  LocationProviderBase::ListenerInterface *listener);
 
  private:
   static LocationProviderPool instance;
 
   typedef std::pair<LocationProviderBase*, RefCount*> ProviderPair;
   typedef std::map<std::string16, ProviderPair> ProviderMap;
-  static ProviderMap providers;
-  static Mutex providers_mutex;
+  ProviderMap providers_;
+  Mutex providers_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(LocationProviderPool);
 };
