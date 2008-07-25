@@ -49,7 +49,7 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
                                      JsRunnerInterface *js_runner,
                                      BrowsingContext *browsing_context)
     : security_origin_(security_origin),
-#if BROWSER_NPAPI
+#if BROWSER_FF || BROWSER_NPAPI
       js_context_(js_runner->GetContext()),
 #elif BROWSER_IE
       iunknown_site_(iunknown_site),
@@ -58,6 +58,9 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
       js_runner_(js_runner),
       browsing_context_(browsing_context),
       permissions_manager_(security_origin, is_worker) {
+#if BROWSER_FF
+  assert(js_context_ != NULL);
+#endif
 }
 
 
@@ -129,7 +132,7 @@ const std::string16& ModuleImplBaseClass::EnvPageLocationUrl() const {
   return module_environment_->security_origin_.full_url();
 }
 
-#if BROWSER_NPAPI
+#if BROWSER_FF || BROWSER_NPAPI
 JsContextPtr ModuleImplBaseClass::EnvPageJsContext() const {
   assert(module_environment_.get());
   return module_environment_->js_context_;
