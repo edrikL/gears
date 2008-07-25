@@ -63,6 +63,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(FFHttpRequest,
                               nsIChannelEventSink,
                               nsIInterfaceRequestor,
                               SpecialHttpRequestInterface)
+#if BROWSER_FF3
+NS_IMPL_THREADSAFE_ISUPPORTS5(GearsLoadGroup,
+                              nsILoadGroup,
+                              nsIDocShellTreeItem,
+                              nsIDocShellTreeNode,
+                              nsIRequest,
+                              nsIInterfaceRequestor)
+#endif
+
 
 //------------------------------------------------------------------------------
 // HttpRequest::Create
@@ -234,6 +243,15 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async,
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(channel_, false);
 
+  nsLoadFlags load_flags = 0;
+#if BROWSER_FF3
+  if (!load_group_.get()) {
+    load_group_.reset(new GearsLoadGroup);
+  }
+  channel_->SetLoadGroup(load_group_.get());
+  load_flags |= nsIChannel::LOAD_DOCUMENT_URI;
+#endif
+
   method_ = method;
   UpperString(method_);
 
@@ -254,14 +272,12 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async,
   NS_ENSURE_SUCCESS(rv, false);
 
   if (ShouldBypassBrowserCache() || IsPostOrPut()) {
-    rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
-                                nsIRequest::INHIBIT_CACHING);
-    NS_ENSURE_SUCCESS(rv, false);
+    load_flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
   } else if (!async_) {
-    rv = channel_->SetLoadFlags(
-                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-    NS_ENSURE_SUCCESS(rv, false);
+    load_flags |= nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
   }
+  rv = channel_->SetLoadFlags(load_flags);
+  NS_ENSURE_SUCCESS(rv, false);
 
   SetReadyState(HttpRequest::OPEN);
   return true;
@@ -768,3 +784,245 @@ NS_IMETHODIMP FFHttpRequest::GetNativeHttpRequest(FFHttpRequest **retval) {
   *retval = this;
   return NS_OK;
 }
+
+#if BROWSER_FF3
+//-----------------------------------------------------------------------------
+// nsILoadGroup::GetNotificationCallbacks
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP GearsLoadGroup::GetNotificationCallbacks(
+    nsIInterfaceRequestor * *aNotificationCallbacks) {
+  *aNotificationCallbacks = this;
+  NS_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIDocShellTreeItem::GetSameTypeRootTreeItem
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP GearsLoadGroup::GetSameTypeRootTreeItem(
+    nsIDocShellTreeItem * *aSameTypeRootTreeItem) {
+  *aSameTypeRootTreeItem = this;
+  NS_ADDREF(*aSameTypeRootTreeItem);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIDocShellTreeItem::GetItemType
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP GearsLoadGroup::GetItemType(PRInt32 *aItemType) {
+  *aItemType = nsIDocShellTreeItem::typeContent;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIInterfaceRequestor::GetInterface
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP GearsLoadGroup::GetInterface(const nsIID &iid, void **result) {
+  return QueryInterface(iid, result);
+}
+
+void GearsLoadGroup::Ref() {
+  AddRef();
+}
+
+void GearsLoadGroup::Unref() {
+  Release();
+}
+
+// The rest of the file is unimplemented functions from the interfaces of
+// GearsLoadGroup.
+
+/* attribute nsIRequestObserver groupObserver; */
+NS_IMETHODIMP GearsLoadGroup::GetGroupObserver(nsIRequestObserver * *aGroupObserver)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GearsLoadGroup::SetGroupObserver(nsIRequestObserver * aGroupObserver)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsIRequest defaultLoadRequest; */
+NS_IMETHODIMP GearsLoadGroup::GetDefaultLoadRequest(nsIRequest * *aDefaultLoadRequest)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GearsLoadGroup::SetDefaultLoadRequest(nsIRequest * aDefaultLoadRequest)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void addRequest (in nsIRequest aRequest, in nsISupports aContext); */
+NS_IMETHODIMP GearsLoadGroup::AddRequest(nsIRequest *aRequest, nsISupports *aContext)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void removeRequest (in nsIRequest aRequest, in nsISupports aContext, in nsresult aStatus); */
+NS_IMETHODIMP GearsLoadGroup::RemoveRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsISimpleEnumerator requests; */
+NS_IMETHODIMP GearsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long activeCount; */
+NS_IMETHODIMP GearsLoadGroup::GetActiveCount(PRUint32 *aActiveCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsIInterfaceRequestor notificationCallbacks; */
+NS_IMETHODIMP GearsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute wstring name; */
+NS_IMETHODIMP GearsLoadGroup::GetName(PRUnichar * *aName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GearsLoadGroup::SetName(const PRUnichar * aName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean nameEquals (in wstring name); */
+NS_IMETHODIMP GearsLoadGroup::NameEquals(const PRUnichar *name, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute long itemType; */
+NS_IMETHODIMP GearsLoadGroup::SetItemType(PRInt32 aItemType)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDocShellTreeItem parent; */
+NS_IMETHODIMP GearsLoadGroup::GetParent(nsIDocShellTreeItem * *aParent)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDocShellTreeItem sameTypeParent; */
+NS_IMETHODIMP GearsLoadGroup::GetSameTypeParent(nsIDocShellTreeItem * *aSameTypeParent)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDocShellTreeItem rootTreeItem; */
+NS_IMETHODIMP GearsLoadGroup::GetRootTreeItem(nsIDocShellTreeItem * *aRootTreeItem)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIDocShellTreeItem findItemWithName (in wstring name, in nsISupports aRequestor, in nsIDocShellTreeItem aOriginalRequestor); */
+NS_IMETHODIMP GearsLoadGroup::FindItemWithName(const PRUnichar *name, nsISupports *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDocShellTreeOwner treeOwner; */
+NS_IMETHODIMP GearsLoadGroup::GetTreeOwner(nsIDocShellTreeOwner * *aTreeOwner)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void setTreeOwner (in nsIDocShellTreeOwner treeOwner); */
+NS_IMETHODIMP GearsLoadGroup::SetTreeOwner(nsIDocShellTreeOwner *treeOwner)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP GearsLoadGroup::GetName(nsACString & aName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean isPending (); */
+NS_IMETHODIMP GearsLoadGroup::IsPending(PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsresult status; */
+NS_IMETHODIMP GearsLoadGroup::GetStatus(nsresult *aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void cancel (in nsresult aStatus); */
+NS_IMETHODIMP GearsLoadGroup::Cancel(nsresult aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void suspend (); */
+NS_IMETHODIMP GearsLoadGroup::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void resume (); */
+NS_IMETHODIMP GearsLoadGroup::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsILoadGroup loadGroup; */
+NS_IMETHODIMP GearsLoadGroup::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GearsLoadGroup::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsLoadFlags loadFlags; */
+NS_IMETHODIMP GearsLoadGroup::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GearsLoadGroup::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+/* readonly attribute long childCount; */
+NS_IMETHODIMP GearsLoadGroup::GetChildCount(PRInt32 *aChildCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void addChild (in nsIDocShellTreeItem child); */
+NS_IMETHODIMP GearsLoadGroup::AddChild(nsIDocShellTreeItem *child)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void removeChild (in nsIDocShellTreeItem child); */
+NS_IMETHODIMP GearsLoadGroup::RemoveChild(nsIDocShellTreeItem *child)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIDocShellTreeItem getChildAt (in long index); */
+NS_IMETHODIMP GearsLoadGroup::GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIDocShellTreeItem findChildWithName (in wstring aName, in boolean aRecurse, in boolean aSameType, in nsIDocShellTreeItem aRequestor, in nsIDocShellTreeItem aOriginalRequestor); */
+NS_IMETHODIMP GearsLoadGroup::FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif
