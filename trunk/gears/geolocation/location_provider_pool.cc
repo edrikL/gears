@@ -37,16 +37,11 @@ static LocationProviderBase *NewProvider(const std::string16 &type,
                                          const std::string16 &host,
                                          const std::string16 &language);
 
-// Global pool
-LocationProviderPool location_provider_pool;
-
 // static member variables
 LocationProviderPool LocationProviderPool::instance;
-LocationProviderPool::ProviderMap LocationProviderPool::providers;
-Mutex LocationProviderPool::providers_mutex;
 
 LocationProviderPool::~LocationProviderPool() {
-  assert(providers.empty());
+  assert(providers_.empty());
 }
 
 // static
@@ -54,7 +49,6 @@ LocationProviderPool *LocationProviderPool::GetInstance() {
   return &instance;
 }
 
-// static
 LocationProviderBase *LocationProviderPool::Register(
       const std::string16 &type,
       const std::string16 &host,
@@ -62,16 +56,16 @@ LocationProviderBase *LocationProviderPool::Register(
       const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
-  MutexLock lock(&providers_mutex);
+  MutexLock lock(&providers_mutex_);
   std::string16 key = MakeKey(type, host, language);
-  ProviderMap::iterator iter = providers.find(key);
-  if (iter == providers.end()) {
+  ProviderMap::iterator iter = providers_.find(key);
+  if (iter == providers_.end()) {
     LocationProviderBase *provider = NewProvider(type, host, language);
     if (!provider) {
       return NULL;
     }
     std::pair<ProviderMap::iterator, bool> result =
-        providers.insert(
+        providers_.insert(
         std::make_pair(key,
         std::make_pair(provider, new RefCount())));
     assert(result.second);
@@ -86,15 +80,14 @@ LocationProviderBase *LocationProviderPool::Register(
   return provider;
 }
 
-// static
 bool LocationProviderPool::Unregister(
     LocationProviderBase *provider,
     LocationProviderBase::ListenerInterface *listener) {
   assert(provider);
   assert(listener);
-  MutexLock lock(&providers_mutex);
-  for (ProviderMap::iterator iter = providers.begin();
-       iter != providers.end();
+  MutexLock lock(&providers_mutex_);
+  for (ProviderMap::iterator iter = providers_.begin();
+       iter != providers_.end();
        ++iter) {
     LocationProviderBase *current_provider = iter->second.first;
     if (current_provider == provider) {
@@ -104,7 +97,7 @@ bool LocationProviderPool::Unregister(
       if (count->Unref()) {
         delete current_provider;
         delete count;
-        providers.erase(iter);
+        providers_.erase(iter);
       }
       return true;
     }
