@@ -241,6 +241,8 @@ bool GetCookieString(const char16 *url, BrowsingContext *context,
 #include <gecko_internal/nsICookieService.h>
 #if BROWSER_FF3
 #include <gecko_internal/nsXPCOMCIDInternal.h>
+#include <gecko_sdk/include/nsIHttpChannel.h>
+#include "gears/localserver/firefox/http_request_ff.h"
 #else
 #include <gecko_internal/nsIEventQueueService.h>
 #endif
@@ -306,10 +308,22 @@ bool GetCookieString(const char16 *url, BrowsingContext *context,
   if (cookie_service_proxy != cookie_service) {
     LOG(("WARNING: GetCookieString not called on the UI thread"));
   }
+#if BROWSER_FF3
+  nsCOMPtr<nsIChannel> channel;
+  scoped_refptr<GearsLoadGroup> load_group(new GearsLoadGroup);
+  nr = ios->NewChannel(url_utf8, nsnull, nsnull, getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(nr, false);
+  NS_ENSURE_TRUE(channel, false);
+
+  channel->SetLoadGroup(load_group.get());
+  channel->SetLoadFlags(nsIChannel::LOAD_DOCUMENT_URI);
+#else
+  nsIChannel *channel = NULL;
+#endif
 
   // Finally, call the cookie service
   char *cookies_str = NULL;
-  nr = cookie_service_proxy->GetCookieString(url_obj, NULL, &cookies_str);
+  nr = cookie_service_proxy->GetCookieString(url_obj, channel, &cookies_str);
   NS_ENSURE_SUCCESS(nr, false);
 
   // A return value of NS_OK and a NULL cookie_str means an empty string

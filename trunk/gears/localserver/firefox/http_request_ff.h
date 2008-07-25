@@ -29,8 +29,10 @@
 #include <string>
 #include <vector>
 #include "gecko_sdk/include/nsIInterfaceRequestor.h"
+#include "gecko_sdk/include/nsILoadGroup.h"
 #include "gecko_sdk/include/nsIStreamListener.h"
 #include "gecko_internal/nsIChannelEventSink.h"
+#include "gecko_internal/nsIDocShellTreeItem.h"
 #include "genfiles/base_interface_ff.h"
 #include "gears/base/common/byte_store.h"
 #include "gears/base/common/common.h"
@@ -46,6 +48,24 @@ class nsIChannel;
 class nsIHttpChannel;
 class nsIRequest;
 
+
+#if BROWSER_FF3
+class GearsLoadGroup : public nsILoadGroup,
+                       public nsIDocShellTreeItem,
+                       public nsIInterfaceRequestor {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+  NS_DECL_NSILOADGROUP
+  NS_DECL_NSIDOCSHELLTREEITEM
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIDOCSHELLTREENODE
+
+  // refcounting
+  virtual void Ref();
+  virtual void Unref();
+};
+#endif
 
 //------------------------------------------------------------------------------
 // FFHttpRequest
@@ -176,6 +196,9 @@ class FFHttpRequest : public HttpRequest,
   nsCOMPtr<nsIChannel> channel_;
   HttpRequest::HttpListener *listener_;
   bool listener_data_available_enabled_;
+#if BROWSER_FF3
+  scoped_refptr<GearsLoadGroup> load_group_;
+#endif
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__
