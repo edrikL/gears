@@ -715,23 +715,24 @@ bool GearsGeolocation::ConvertPositionToJavaScriptObject(
     return result;
   }
 
-  // latitude, longitude and date should always be valid.
+  // latitude, longitude, horizontal accuracy and timestamp should always be
+  // valid.
   result &= js_object->SetPropertyDouble(STRING16(L"latitude"),
                                          position.latitude);
   result &= js_object->SetPropertyDouble(STRING16(L"longitude"),
                                          position.longitude);
+  result &= js_object->SetPropertyInt(STRING16(L"horizontalAccuracy"),
+                                      position.horizontal_accuracy);
   scoped_ptr<JsObject> date_object(js_runner->NewDate(position.timestamp));
   result &= NULL != date_object.get();
   if (date_object.get()) {
     result &= js_object->SetPropertyObject(STRING16(L"timestamp"),
                                            date_object.get());
   }
+
   // Other properties may not be valid.
   result &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
                                         position.altitude,
-                                        js_object);
-  result &= SetObjectPropertyIfValidInt(STRING16(L"horizontalAccuracy"),
-                                        position.horizontal_accuracy,
                                         js_object);
   result &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
                                         position.vertical_accuracy,
