@@ -48,6 +48,10 @@ class GearsCanvas : public ModuleImplBaseClass {
 
   GearsCanvas();
   virtual ~GearsCanvas();
+  
+  // Clears the plain pointer to GearsCanvasRenderingContext2D, to prevent a
+  // dangling pointer. The rendering context will be recreated when needed.
+  void ClearRenderingContextReference();
 
   // Loads an image from a supplied blob.
   // IN: Blob blob.
@@ -88,7 +92,22 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: CanvasRenderingContext2D
   void GetContext(JsCallContext *context);
 
-  // Convenience functions; not exported to JS.
+
+  // The following are not exported to Javascript.
+
+  // Returns true if the rectangle is contained completely within the bounds
+  // of this bitmap, and has non-negative width and height.
+  bool IsRectValid(const SkIRect &rect);
+  
+  // Parses a composite operation string (as per HTML5 canvas) and returns
+  // one of the two following values or a Skia PorterDuff enum
+  // (represented as an int since we can't include any Skia headers here due to
+  // compilation issues; see comment at top of file).
+  static const int COMPOSITE_MODE_HTML5_CANVAS_ONLY;
+  static const int COMPOSITE_MODE_UNKNOWN;
+  static int ParseCompositeOperationString(std::string16 mode);
+
+  // Accessor functions.
   // If given an argument that HTML5 canvas doesn't support, the setters below
   // fail silently without returning an error, as per the HTML5 canvas spec.
   // But if given an argument that HTML5 canvas supports but we don't,
@@ -112,23 +131,10 @@ class GearsCanvas : public ModuleImplBaseClass {
   void set_text_align(std::string16 new_text_align);
 
  private:
-  friend class GearsCanvasRenderingContext2D;
-
-  // Resets the Skia bitmap to the specified dimensions and fills it with
-  // transparent black pixels (which, of course, requires allocating pixels).
-  void ResetSkiaBitmap(int width, int height);
-
-  // Returns true if the rectangle is contained completely within the bounds
-  // of this bitmap, and has non-negative width and height.
-  bool IsRectValid(const SkIRect &rect);
-  
-  // Parses a composite operation string (as per HTML5 canvas) and returns
-  // one of the two following values or a Skia PorterDuff enum
-  // (represented as an int since we can't include any Skia headers here due to
-  // compilation issues; see comment at top of file).
-  static const int COMPOSITE_MODE_HTML5_CANVAS_ONLY;
-  static const int COMPOSITE_MODE_UNKNOWN;
-  int ParseCompositeOperationString(std::string16 mode);
+  // Resets the Canvas to the specified dimensions and fills it with transparent
+  // black pixels. All Context state is also destroyed. The HTML5 canvas spec
+  // requires this when the user sets the canvas's width or height.
+  void ResetCanvas(int width, int height);
 
   // Can't use a scoped_refptr since that will create a reference cycle.
   // Instead, use a plain pointer and clear it when the target is destroyed.

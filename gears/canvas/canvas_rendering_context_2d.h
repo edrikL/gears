@@ -33,6 +33,10 @@
 #include "gears/canvas/canvas.h"
 #include "third_party/skia/include/SkCanvas.h"
 
+namespace canvas {
+extern const SkBitmap::Config skia_config;
+}
+
 // 2D Context to manipulate the canvas.
 // See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
 // documentation.
@@ -250,8 +254,7 @@ class GearsCanvasRenderingContext2D
   void ResetTransform(JsCallContext *context);
 
  private:
-  // Removes the plain pointer to this object from its GearsCanvas, to prevent
-  // it from becoming a dangling pointer.
+  // Calls ClearRenderingContextReference() on canvas_, if canvas_ is not NULL.
   void ClearReferenceFromGearsCanvas();
 
   // Callback used to handle the 'JSEVENT_UNLOAD' event.

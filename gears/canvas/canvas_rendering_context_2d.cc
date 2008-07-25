@@ -33,6 +33,8 @@ DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
 
+using canvas::skia_config;
+
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
     : ModuleImplBaseClass(kModuleName) {
 }
@@ -41,7 +43,6 @@ void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {
   // Prevent double initialization.
   assert(canvas_ == NULL);
   assert(new_canvas != NULL);
-  assert(new_canvas->rendering_context_ == this);
   canvas_ = new_canvas;
   unload_monitor_.reset(
       new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
@@ -51,12 +52,8 @@ void GearsCanvasRenderingContext2D::ClearReferenceFromGearsCanvas() {
   // The canvas pointer will be null if this object didn't initalize in the
   // first place (that is, if InitBaseFromSibling failed), or after a page
   // unload event.
-  if (canvas_) {
-    assert(canvas_->rendering_context_ == this);
-    // Prevent dangling pointer.
-    // If the canvas later needs a context, it will create another object.
-    canvas_->rendering_context_ = NULL;
-  }
+  if (canvas_) 
+    canvas_->ClearRenderingContextReference();
 }
 
 void GearsCanvasRenderingContext2D::HandleEvent(JsEventType event_type) {
@@ -421,7 +418,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     context->SetException(STRING16(L"Argument must be a Canvas."));
     return;
   }
-  scoped_refptr<GearsCanvas> source = static_cast<GearsCanvas*>(other_module);
+  scoped_refptr<GearsCanvas> src = static_cast<GearsCanvas*>(other_module);
   
   if (num_arguments != 9) {
     // Handle missing arguments.
@@ -429,14 +426,14 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
       dest_width = source_width;
       dest_height = source_height;
     } else if (num_arguments == 3) {
-      dest_width = source->width();
-      dest_height = source->height();
+      dest_width = src->width();
+      dest_height = src->height();
     } else {
       context->SetException(STRING16(L"Unsupported number of arguments."));
       return;
     }
-    source_width = source->width();
-    source_height = source->height();
+    source_width = src->width();
+    source_height = src->height();
     dest_x = source_x;
     dest_y = source_y;
     source_x = 0;
@@ -452,7 +449,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // exception, but it does not say what to do if the dest rect is invalid.
   // So, if both rects are invalid, it's more spec-compliant to raise an error
   // for the src rect.
-  if (!source->IsRectValid(src_irect)) {
+  if (!src->IsRectValid(src_irect)) {
     context->SetException(STRING16(
         L"INDEX_SIZE_ERR: Source rectangle stretches beyond the bounds"
         L"of its bitmap or has negative dimensions."));
@@ -475,28 +472,43 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     return;
   }
   
-  SkRect dest_rect;
-  dest_rect.set(dest_irect);
+  // TODO(kart): First apply geometry xform, then alpha, then compositing.
 
-  // TODO(kart): Add unit tests for alpha and composite operation.
+  // If the globalAlpha is not 1.0, the source image must be multiplied by
+  // globalAlpha *before* compositing.
+  SkBitmap *modified_src = src->skia_bitmap();
+  scoped_ptr<SkBitmap> bitmap_to_delete;
+
+  if (canvas_->alpha() != 1.0) {
+    bitmap_to_delete.reset(new SkBitmap);
+    modified_src = bitmap_to_delete.get();
+    modified_src->setConfig(skia_config, src->width(), src->height());
+    modified_src->allocPixels();
+    SkCanvas temp_canvas(*modified_src);
+    SkPaint temp_paint;
+    temp_paint.setAlpha(static_cast<U8CPU>(canvas_->alpha() * 255));
+    temp_canvas.drawBitmap(
+        *modified_src, SkIntToScalar(0), SkIntToScalar(0), &temp_paint);
+  }
+
   SkPaint paint;
-  paint.setAlpha(static_cast<U8CPU>(canvas_->alpha() * 255));
   SkPorterDuff::Mode porter_duff = static_cast<SkPorterDuff::Mode>(
       canvas_->ParseCompositeOperationString(canvas_->composite_operation()));
-
-  // Make sure it's a supported mode (neither a HTML5 canvas-only mode like
-  // 'source-atop' nor some gibberish like 'foobar').
-  assert(static_cast<int>(porter_duff) >= 0);
-
   paint.setPorterDuffXfermode(porter_duff);
+
+
+  SkRect dest_rect;
+  dest_rect.set(dest_irect);
 
   // When drawBitmapRect() is called with a source rectangle, it (also) handles
   // the case where source canvas is same as this canvas.
   // TODO(kart): This function silently fails on errors. Find out what can be
   // done about this.
   canvas_->skia_canvas()->drawBitmapRect(
-      *(source->skia_bitmap()), &src_irect, dest_rect, &paint);
+      *modified_src, &src_irect, dest_rect);
   */
+  
+  // TODO(kart): Are the colors premultiplied? If so, unpremultiply them.
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
