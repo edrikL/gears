@@ -648,6 +648,3 @@ function testPerfTimer() {
 // SAFARI-TEMP - Disable tests that don't currently work on Safari.
 testCreateObject._disable_in_safari = true;
 testObjectProperties._disable_in_safari = true;
-
-// NPAPI-TEMP - Disable tests that don't currently work with npapi build.
-testNotifier._disable_in_npapi = true;
