@@ -103,6 +103,7 @@
   }
   
   if (post_data_stream) {
+#if 1
     // SAFARI-TEMP - Start
     // Temporary workaround for issue 568.  The root problem is that we are
     // seeing instances where posting back to the server fails if we use
@@ -116,7 +117,7 @@
       int read_bytes = 0;
       UInt8 tmp_buf[1024];
       [post_data_stream open];
-      while (read_bytes = [post_data_stream read:tmp_buf maxLength:1024]) {
+      while ((read_bytes = [post_data_stream read:tmp_buf maxLength:1024])) {
         [tmp_postdata appendBytes:tmp_buf length:read_bytes];
       }
       [post_data_stream close];
@@ -124,9 +125,11 @@
       [tmp_postdata release];
     }
     // SAFARI-TEMP - End
-    // [request_ setHTTPBodyStream:post_data_stream];
+#else
+    [request_ setHTTPBodyStream:post_data_stream];
+#endif
   }
-  
+
   [connection_ release];  // Defensive coding: stop potential memory leak in the
                           // unlikely case that we allow multiple calls of send:
                           // per instance.

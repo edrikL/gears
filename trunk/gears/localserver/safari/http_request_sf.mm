@@ -40,8 +40,10 @@
 #import "gears/blob/blob_input_stream_sf.h"
 #import "gears/blob/blob_interface.h"
 #import "gears/localserver/common/http_request.h"
+#import "gears/localserver/common/safe_http_request.h"
 #import "gears/localserver/safari/http_request_delegate.h"
 #import "gears/localserver/safari/progress_input_stream.h"
+#import "gears/localserver/safari/ui_thread.h"
 
 // PIMPL store for Objective-C delegate.
 struct SFHttpRequest::HttpRequestData {
@@ -62,13 +64,18 @@ struct SFHttpRequest::HttpRequestData {
 
 // static
 bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
-  request->reset(new SFHttpRequest);
-  return true;
+  if (IsUiThread()) {
+    request->reset(new SFHttpRequest);
+    return true;
+  } else {
+    return HttpRequest::CreateSafeRequest(request);
+  }
 }
 
 // static
 bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
-  return HttpRequest::Create(request);
+  request->reset(new SafeHttpRequest(GetUiThread()));
+  return true;
 }
 
 //------------------------------------------------------------------------------

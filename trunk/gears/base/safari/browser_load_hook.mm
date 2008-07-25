@@ -29,6 +29,7 @@
 #import "gears/base/safari/browser_load_hook.h"
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
+#import "gears/localserver/safari/ui_thread.h"
 #import "gears/ui/safari/settings_menu.h"
 #import "gears/ui/safari/native_dialogs_osx.h"
 
@@ -42,6 +43,7 @@ static ExceptionManager exception_manager(true);
   exception_manager.StartMonitoring();
   LOG(("Gears: Breakpad started"));
 #endif
+  SetUiThread();
 
   // If there is a version collision, don't register HTTP interception hoooks.  
   if (DetectedVersionCollision()) {
