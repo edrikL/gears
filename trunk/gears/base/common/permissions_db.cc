@@ -113,9 +113,7 @@ bool PermissionsDB::Init() {
   settings_table_.GetInt(kVersionKeyName, &version);
   if (version == kCurrentVersion) {
     return true;
-  }
-
-  if (0 == version) {
+  } else if (version == 0) {
     // No database in place, create it.
     //
     // TODO(shess) Verify that this is true.  Is it _no_ database, or
@@ -125,15 +123,21 @@ bool PermissionsDB::Init() {
     if (!CreateDatabase()) {
       return false;
     }
-  } else {
-    if (!UpgradeToVersion9()) {
+  } else if (version < kCurrentVersion) {
+    if (!UpgradeDatabase(version)) {
       return false;
     }
+  } else {
+    // database is too new for this code.
+    // TODO(aa): Surface this error in a better way.
+    assert(false);
+    return false;
   }
 
   // Double-check that we ended up with the right version.
   settings_table_.GetInt(kVersionKeyName, &version);
   if (version != kCurrentVersion) {
+    assert(false);
     return false;
   }
 
@@ -452,20 +456,44 @@ bool PermissionsDB::CreateDatabase() {
   return transaction.Commit();
 }
 
+bool PermissionsDB::UpgradeDatabase(int from_version) {
+  ASSERT_SINGLE_THREAD();
+
+  assert(from_version < kCurrentVersion);
+  assert(db_.IsInTransaction());
+
+  // NOTE: Each of these cases falls through to the next on purpose.
+  switch (from_version) {
+    case 1:
+      if (!UpgradeToVersion2()) return false;
+      ++from_version;
+    case 2:
+      if (!UpgradeToVersion3()) return false;
+      ++from_version;
+    case 3:
+      if (!UpgradeToVersion4()) return false;
+      ++from_version;
+    case 4:
+      if (!UpgradeToVersion5()) return false;
+      ++from_version;
+    case 5:
+      if (!UpgradeToVersion6()) return false;
+      ++from_version;
+    case 6:
+      if (!UpgradeToVersion7()) return false;
+      ++from_version;
+    case 7:
+      if (!UpgradeToVersion8()) return false;
+      ++from_version;
+    case 8:
+      if (!UpgradeToVersion9()) return false;
+      ++from_version;
+  }
+
+  return settings_table_.SetInt(kVersionKeyName, from_version);
+}
+
 bool PermissionsDB::UpgradeToVersion2() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion2");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version != 1) {
-    LOG(("PermissionsDB::UpgradeToVersion2 unexpected version: %d", version));
-    return false;
-  }
-
   // There was a bug in v1 of this db where we inserted some corrupt UTF-8
   // characters into the db. This was pre-release, so it's not worth trying
   // to clean it up. Instead just remove old permissions.
@@ -474,241 +502,35 @@ bool PermissionsDB::UpgradeToVersion2() {
   // ScourAccess".  Or, since this was from a pre-release schema,
   // "upgrade" version 1 by calling CreateDatabase(), which will drop
   // all existing tables.
-  if (SQLITE_OK != db_.Execute("DELETE FROM ScourAccess")) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 2)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return (SQLITE_OK != db_.Execute("DELETE FROM ScourAccess"));
 }
 
 bool PermissionsDB::UpgradeToVersion3() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion3");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 2) {
-    if (!UpgradeToVersion2()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 2) {
-    LOG(("PermissionsDB::UpgradeToVersion3 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!shortcut_table_.UpgradeToVersion3()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 3)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return shortcut_table_.UpgradeToVersion3();
 }
 
 bool PermissionsDB::UpgradeToVersion4() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion4");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 3) {
-    if (!UpgradeToVersion3()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 3) {
-    LOG(("PermissionsDB::UpgradeToVersion4 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!shortcut_table_.UpgradeFromVersion3ToVersion4()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 4)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return shortcut_table_.UpgradeFromVersion3ToVersion4();
 }
 
 bool PermissionsDB::UpgradeToVersion5() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion5");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 4) {
-    if (!UpgradeToVersion4()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 4) {
-    LOG(("PermissionsDB::UpgradeToVersion5 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!shortcut_table_.UpgradeFromVersion4ToVersion5()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 5)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return shortcut_table_.UpgradeFromVersion4ToVersion5();
 }
 
 bool PermissionsDB::UpgradeToVersion6() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion6");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 5) {
-    if (!UpgradeToVersion5()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 5) {
-    LOG(("PermissionsDB::UpgradeToVersion6 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!shortcut_table_.UpgradeFromVersion5ToVersion6()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 6)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return shortcut_table_.UpgradeFromVersion5ToVersion6();
 }
 
 bool PermissionsDB::UpgradeToVersion7() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion7");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 6) {
-    if (!UpgradeToVersion6()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 6) {
-    LOG(("PermissionsDB::UpgradeToVersion7 unexpected version: %d", version));
-    return false;
-  }
-
-  // No changes to shortcut_table_.
-
-  if (!database_name_table_.UpgradeToVersion7()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 7)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return database_name_table_.UpgradeToVersion7();
 }
 
 bool PermissionsDB::UpgradeToVersion8() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion8");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 7) {
-    if (!UpgradeToVersion7()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 7) {
-    LOG(("PermissionsDB::UpgradeToVersion8 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!database2_metadata_.CreateTableVersion8()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 8)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return database2_metadata_.CreateTableVersion8();
 }
 
 bool PermissionsDB::UpgradeToVersion9() {
-  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion9");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  settings_table_.GetInt(kVersionKeyName, &version);
-
-  if (version < 8) {
-    if (!UpgradeToVersion8()) {
-      return false;
-    }
-    settings_table_.GetInt(kVersionKeyName, &version);
-  }
-
-  if (version != 8) {
-    LOG(("PermissionsDB::UpgradeToVersion9 unexpected version: %d", version));
-    return false;
-  }
-
-  if (!location_access_table_.MaybeCreateTable()) {
-    return false;
-  }
-
-  if (!settings_table_.SetInt(kVersionKeyName, 9)) {
-    return false;
-  }
-
-  return transaction.Commit();
+  return location_access_table_.MaybeCreateTable();
 }
 
 NameValueTable* PermissionsDB::GetTableForPermissionType(PermissionType type) {
