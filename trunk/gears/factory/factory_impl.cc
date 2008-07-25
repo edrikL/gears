@@ -35,6 +35,7 @@
 #include "gears/database/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
+#include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/localserver_module.h"
 #include "gears/timer/timer.h"
@@ -43,12 +44,11 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifdef OFFICIAL_BUILD
-// The Canvas, Console, Database2, Geolocation, Image and Media APIs have not
+// The Canvas, Console, Database2, Image and Media APIs have not
 // been finalized for official builds.
 #else
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
-#include "gears/geolocation/geolocation.h"
 #ifdef WINCE
 // Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
 #else
@@ -185,6 +185,9 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(module_environment_.get(), context, &object);
+  } else if (module_name == STRING16(L"beta.geolocation")) {
+    CreateModule<GearsGeolocation>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(module_environment_.get(),
                                    context, &object);
@@ -197,7 +200,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsWorkerPool>(module_environment_.get(),
                                   context, &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Database2, Geolocation, Image and Media APIs have not
+  // The Canvas, Console, Database2, Image and Media APIs have not
   // been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
@@ -205,9 +208,6 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
                                    context, &object);
   } else if (module_name == STRING16(L"beta.dummymodule")) {
     CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
-  } else if (module_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(module_environment_.get(),
-                                   context, &object);
 #ifdef WINCE
   // Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
 #else
