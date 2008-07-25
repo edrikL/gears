@@ -1908,6 +1908,8 @@ SF_CPPSRCS	+= \
 		localserver_db_proxy.mm \
 		progress_event.cc \
 		progress_input_stream.mm \
+		safe_http_request.cc \
+		ui_thread.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
