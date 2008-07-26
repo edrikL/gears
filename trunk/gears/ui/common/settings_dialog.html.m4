@@ -170,6 +170,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="string-denied"></div>
     <div id="string-local-storage"></div>
     <div id="string-location-data"></div>
+    <div id="string-remove"></div>
   </div>
   
   <div id="head">
@@ -380,7 +381,11 @@ m4_include(genfiles/settings_dialog.js)
     content += "><tbody>";
     content += "<tr><td class=\"origin-name\">";
     content += wrapDomain(originData.name);
-    content += "</td><td></td>";
+    content += "</td><td><a href='#' onclick='handleRemoveClick(";
+    content += index;
+    content += ");'>";
+    content += getString("string-remove");
+    content += "</a></td>";
     content += "</td></tr></tbody></table>";
 
     content += "<table class=\"permissions\"><tbody>";
@@ -480,12 +485,24 @@ m4_include(genfiles/settings_dialog.js)
     return false;
   }
 
+  function handleRemoveClick(index) {
+    updatePermission(index, "localStorage", PERMISSION_NOT_SET);
+    updatePermission(index, "locationData", PERMISSION_NOT_SET);
+    updatePermissionsList();
+
+    // Return false to prevent the default link action (scrolling up to top of
+    // page in this case).
+    return false;
+  }
+
   function updatePermission(index, permissionClass, permissionState) {
-    if (permissions[index][permissionClass].permissionState !=
-        permissionState) {
-      permissions[index][permissionClass].permissionState =
+    if (permissions[index][permissionClass]) {
+      if (permissions[index][permissionClass].permissionState !=
+          permissionState) {
+        permissions[index][permissionClass].permissionState =
           permissionState;
-      enableButton(dom.getElementById("confirm-button"));
+        enableButton(dom.getElementById("confirm-button"));
+      }
     }
   }
 

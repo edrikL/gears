@@ -11,3 +11,4 @@
 <string id="string-permissions-description"><TRANS_BLOCK desc="Description of table listing permissions granted to each site.">The table below shows the permissions you have granted to each site that has attempted to use Gears.</TRANS_BLOCK></string>
 <string id="string-version"><TRANS_BLOCK desc="Version string.">Gears version PRODUCT_VERSION</TRANS_BLOCK></string>
 <string id="string-html-title"><TRANS_BLOCK>Gears Settings</TRANS_BLOCK></string>
+<string id="string-remove"><TRANS_BLOCK desc="Button user can press to remove a site from the list.">Remove</TRANS_BLOCK></string>
