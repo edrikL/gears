@@ -30,6 +30,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/ui/common/window_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 struct ModuleEnvironment;
@@ -81,12 +82,15 @@ class FileDialog {
                                    std::string16* error);
 
  protected:
-  FileDialog(const ModuleImplBaseClass* module);
+  FileDialog();
+
+  void Init(const ModuleImplBaseClass* module, NativeWindowPtr parent);
 
   // Implemented per platform to create and display a dialog with the provided
   // options, or returns false and sets error.  The dialog displays
   // asynchronously, and calls CompleteSelection() when dismissed.
-  virtual bool BeginSelection(const FileDialog::Options& options,
+  virtual bool BeginSelection(NativeWindowPtr parent,
+                              const FileDialog::Options& options,
                               std::string16* error) = 0;
 
   // Implemented per platform to cancel the asynchronous dialog.
@@ -104,6 +108,7 @@ class FileDialog {
 
  private:
   const ModuleImplBaseClass* module_;
+  NativeWindowPtr parent_;
   scoped_ptr<JsRootedCallback> callback_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialog);

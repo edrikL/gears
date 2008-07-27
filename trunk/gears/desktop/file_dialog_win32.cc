@@ -73,8 +73,7 @@ void ExitDialog(HWND dlg) {
 
 }  // anonymous namespace
 
-FileDialogWin32::FileDialogWin32(const ModuleImplBaseClass* module, HWND parent)
-    : FileDialog(module), parent_(parent), should_exit_(false), wnd_(NULL) {
+FileDialogWin32::FileDialogWin32() : should_exit_(false), wnd_(NULL) {
   static unsigned long id = 0;
   topic_.assign(kSelectionCompleteTopic);
   topic_.append(IntegerToString16(++id));
@@ -93,9 +92,10 @@ FileDialogWin32::~FileDialogWin32() {
   MessageService::GetInstance()->RemoveObserver(this, topic_.c_str());
 }
 
-bool FileDialogWin32::BeginSelection(const FileDialog::Options& options,
+bool FileDialogWin32::BeginSelection(NativeWindowPtr parent,
+                                     const FileDialog::Options& options,
                                      std::string16* error) {
-  InitDialog(options);
+  InitDialog(parent, options);
 
   std::string16 filter_buffer;
   if (!SetFilter(options.filter, error))
@@ -137,13 +137,14 @@ void FileDialogWin32::OnNotify(MessageService *service,
 }
 
 // Initialize an open file dialog to open multiple files.
-void FileDialogWin32::InitDialog(const FileDialog::Options& options) {
+void FileDialogWin32::InitDialog(NativeWindowPtr parent,
+                                 const FileDialog::Options& options) {
   filename_buffer_.resize(kFilenameBufferSize);
 
   // Initialize OPENFILENAME
   memset(&ofn_, 0, sizeof(ofn_));
   ofn_.lStructSize = sizeof(ofn_);
-  ofn_.hwndOwner = parent_;
+  ofn_.hwndOwner = parent;
   ofn_.lpstrFile = &filename_buffer_[0];
   ofn_.lpstrFile[0] = '\0';
   ofn_.nMaxFile = kFilenameBufferSize;
@@ -257,7 +258,14 @@ bool FileDialogWin32::Display(StringList* selected_files,
   }
   ofn_.lpfnHook = &FileDialogWin32::HookProc;
   ofn_.lCustData = reinterpret_cast<LPARAM>(this);
+  if (ofn_.hwndOwner) {
+    // Fake modal behavior by disabling our parent.
+    ::EnableWindow(ofn_.hwndOwner, FALSE);
+  }
   bool success = (FALSE != ::GetOpenFileName(&ofn_));
+  if (ofn_.hwndOwner) {
+    ::EnableWindow(ofn_.hwndOwner, TRUE);
+  }
   if (success) {
     success = ProcessSelection(selected_files, error);
   }

@@ -87,9 +87,7 @@ struct ModuleEnvironment : public RefCounted {
   SecurityOrigin security_origin_;
 
 #if BROWSER_FF || BROWSER_NPAPI
-  // TODO_REMOVE_NSISUPPORTS: Remove this member once all modules are based on
-  // Dispatcher.  js_context_ is only really used to initialize JsParamFetcher,
-  // which isn't needed with Dispatcher.
+  // The JavaScript context in which this module was created.
   JsContextPtr js_context_;
 #elif BROWSER_IE
   // Pointer to the object that hosts this object. On Win32, this is the pointer

@@ -64,9 +64,7 @@ static Boolean FilterCallback(AEDesc* theItem, void* info,
                              filterMode);
 }
 
-FileDialogCarbon::FileDialogCarbon(const ModuleImplBaseClass* module,
-                                   WindowRef parent)
-    : FileDialog(module), parent_(parent), selected_filter_(0) {
+FileDialogCarbon::FileDialogCarbon() : selected_filter_(0) {
 }
 
 FileDialogCarbon::~FileDialogCarbon() {
@@ -135,9 +133,10 @@ void FileDialogCarbon::Event(NavEventCallbackMessage message,
   }
 }
 
-bool FileDialogCarbon::BeginSelection(const FileDialog::Options& options,
+bool FileDialogCarbon::BeginSelection(NativeWindowPtr parent,
+                                      const FileDialog::Options& options,
                                       std::string16* error) {
-  if (!InitDialog(options, error))
+  if (!InitDialog(parent, options, error))
     return false;
   if (!Display(error))
     return false;
@@ -148,7 +147,8 @@ void FileDialogCarbon::CancelSelection() {
   // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
 }
 
-bool FileDialogCarbon::InitDialog(const Options& options,
+bool FileDialogCarbon::InitDialog(NativeWindowPtr parent,
+                                  const Options& options,
                                   std::string16* error) {
   NavDialogCreationOptions dialog_options;
   OSStatus status = NavGetDefaultDialogCreationOptions(&dialog_options);
@@ -156,8 +156,8 @@ bool FileDialogCarbon::InitDialog(const Options& options,
     *error = STRING16(L"Failed to create dialog options.");
     return false;
   }
-  if (parent_) {
-    dialog_options.parentWindow = parent_;
+  if (parent) {
+    dialog_options.parentWindow = parent;
     dialog_options.modality = kWindowModalityWindowModal;
   } else {
     dialog_options.modality = kWindowModalityNone;

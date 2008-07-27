@@ -23,40 +23,28 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_UI_COMMON_WINDOW_UTILS_H__
+#define GEARS_UI_COMMON_WINDOW_UTILS_H__
 
-#ifndef GEARS_BASE_COMMON_COMMON_OSX_H__
-#define GEARS_BASE_COMMON_COMMON_OSX_H__
+#include "gears/base/common/common.h"
 
-#if defined(OS_MACOSX)
+#if defined(WIN32)
+typedef HWND NativeWindowPtr;
+#elif defined(OS_MACOSX)
+typedef WindowPtr NativeWindowPtr;
+#elif defined(LINUX)
+#include <gtk/gtkwindow.h>
+typedef GtkWindow* NativeWindowPtr;
+#else
+typedef void* NativeWindowPtr;
+#endif
 
-#import <string>
-#import <Carbon/Carbon.h>
+class ModuleImplBaseClass;
 
-// TODO: Move all generally applicable OS X code from common_sf.h here.
+// Obtains a native window handle for the browser.  For reasons detailed in the
+// implementation, on Mac Safari, this method has a side-effect of giving
+// keyboard focus to the browser window.
+bool GetBrowserWindow(const ModuleImplBaseClass* module,
+                      NativeWindowPtr* window);
 
-// Initialize an NSAutoReleasePool.
-void *InitAutoReleasePool();
-
-// Destroys an autorelease pool, passing in NULL is legal and is a no-op.
-void DestroyAutoReleasePool(void *pool);
-
-// Returns a resource directory of a currently loaded browser plugin (not
-// a browser app resource directory).
-// If called from out-of-browser executable, returns the resource directory
-// of that executable.
-std::string ModuleResourcesDirectory();
-
-// Returns path to the tempfile directory for the current user.
-std::string TempDirectoryForCurrentUser();
-
-// Get a Carbon window handle from a Cocoa one.
-WindowRef GetWindowPtrFromNSWindow(void* ns_window);
-
-// Get a window handle to the application main window.
-WindowRef GetMainWindow();
-
-// Get a window handle to the application window that has the keyboard focus.
-WindowRef GetKeyWindow();
-
-#endif  // OS_MACOSX
-#endif  // GEARS_BASE_COMMON_COMMON_OSX_H__
+#endif  // GEARS_UI_COMMON_WINDOW_UTILS_H__

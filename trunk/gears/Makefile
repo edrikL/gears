@@ -1630,6 +1630,7 @@ $(BROWSER)_CPPSRCS += \
 		html_dialog.cc \
 		permissions_dialog.cc \
 		settings_dialog.cc \
+		window_utils.cc \
 		$(NULL)
 
 $(BROWSER)_STABSRCS += \

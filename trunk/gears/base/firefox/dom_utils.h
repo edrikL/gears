@@ -26,22 +26,13 @@
 #ifndef GEARS_BASE_FIREFOX_DOM_UTILS_H__
 #define GEARS_BASE_FIREFOX_DOM_UTILS_H__
 
-#if defined(LINUX) && !defined(OS_MACOSX)
-#include <gtk/gtkwindow.h>  // for GtkWindow
-typedef GtkWindow* NativeWindowPtr;
-#elif defined(WIN32)
-#include <windows.h>  // for HWND
-typedef HWND NativeWindowPtr;  // HWND is a typedef of pointer type
-#else
-typedef void* NativeWindowPtr;
-#endif
-
 struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 
 #include "gears/base/common/common_ff.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
+#include "gears/ui/common/window_utils.h"  // for NativeWindowPtr
 
 class nsIDOMDocument;
 class nsIDOMEventTarget;
@@ -66,7 +57,7 @@ class DOMUtils {
                                        nsIDOMWindowInternal **window);
 
   // Returns the native window for the browser.
-  static nsresult GetNativeWindow(NativeWindowPtr* window);
+  static nsresult GetNativeWindow(JSContext *context, NativeWindowPtr* window);
 
   // Verifies the given unknown is a legitimate file input element and returns
   // its interface pointer.

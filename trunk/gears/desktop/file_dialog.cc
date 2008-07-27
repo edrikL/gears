@@ -33,32 +33,12 @@
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
 
-// TODO(bpm): Combine this with gears/base/firefox/dom_utils.h
 #if defined(WIN32)
 #include "gears/desktop/file_dialog_win32.h"
-typedef HWND WindowPtrNative;
-typedef FileDialogWin32 FileDialogNative;
 #elif defined(OS_MACOSX)
 #include "gears/desktop/file_dialog_osx.h"
-typedef WindowRef WindowPtrNative;
-typedef FileDialogCarbon FileDialogNative;
 #elif defined(LINUX)
 #include "gears/desktop/file_dialog_gtk.h"
-typedef GtkWindow* WindowPtrNative;
-typedef FileDialogGtk FileDialogNative;
-#elif defined(OS_ANDROID)
-// TODO(jripley): Not yet implemented on Android.
-typedef void* WindowPtrNative;
-typedef void* FileDialogNative;
-#endif
-
-#if BROWSER_FF
-#include "gears/base/firefox/dom_utils.h"
-#elif BROWSER_IE
-#include "gears/base/ie/activex_utils.h"
-#ifdef WINCE
-#include "gears/base/ie/bho.h"
-#endif
 #endif
 
 namespace {
@@ -104,56 +84,32 @@ inline bool IsCharValidInHttpToken(CharT c) {
 const char16 *kFilter = STRING16(L"filter");
 const char16 *kSingleFile = STRING16(L"singleFile");
 
-bool GetBrowserWindow(const ModuleImplBaseClass* module,
-                      WindowPtrNative* window) {
-#if BROWSER_FF
-  if (NS_OK != DOMUtils::GetNativeWindow(
-      reinterpret_cast<NativeWindowPtr*>(window)))
-    return false;
-  return true;
-#elif BROWSER_NPAPI
-  if (NPERR_NO_ERROR != NPN_GetValue(module->EnvPageJsContext(),
-                                     NPNVnetscapeWindow,
-                                     window))
-    return false;
-  return true;
-#elif BROWSER_IE
-#ifdef WINCE
-  // On WinCE, only the BHO has an IWebBrowser2 pointer to the browser.
-  *window = BrowserHelperObject::GetBrowserWindow();
-  return NULL != *window;
-#else  // !WINCE
-  IWebBrowser2* web_browser = NULL;
-  HRESULT hr = ActiveXUtils::GetWebBrowser2(module->EnvPageIUnknownSite(),
-                                            &web_browser);
-  if (FAILED(hr))
-    return false;
-  hr = web_browser->get_HWND(reinterpret_cast<long*>(window));
-  if (FAILED(hr)) {
-    web_browser->Release();
-    return false;
-  }
-  web_browser->Release();
-  return true;
-#endif  // !WINCE
-#endif  // BROWSER_IE
-  return false;
-}
-
 }  // anonymous namespace
 
 FileDialog* FileDialog::Create(const ModuleImplBaseClass* module) {
-  WindowPtrNative parent = NULL;
+  NativeWindowPtr parent = NULL;
   GetBrowserWindow(module, &parent);
-#ifdef OS_ANDROID
-  // TODO(jripley): Not yet implemented on Android.
-  return NULL;
+#if defined(WIN32)
+  FileDialog* dialog = new FileDialogWin32;
+#elif defined(OS_MACOSX)
+  FileDialog* dialog = new FileDialogCarbon;
+#elif defined(LINUX)
+  FileDialog* dialog = new FileDialogGtk;
 #else
-  return new FileDialogNative(module, parent);
+  FileDialog* dialog = NULL;
 #endif
+  if (dialog)
+    dialog->Init(module, parent);
+  return dialog;
 }
 
-FileDialog::FileDialog(const ModuleImplBaseClass* module) : module_(module) {
+FileDialog::FileDialog() {
+}
+
+void FileDialog::Init(const ModuleImplBaseClass* module,
+                      NativeWindowPtr parent) {
+  module_ = module;
+  parent_ = parent;
 }
 
 FileDialog::~FileDialog() {
@@ -165,7 +121,7 @@ bool FileDialog::Open(const FileDialog::Options& options,
   assert(callback);
   assert(error);
   callback_.reset(callback);
-  if (!BeginSelection(options, error)) {
+  if (!BeginSelection(parent_, options, error)) {
     assert(!error->empty());
     return false;
   }

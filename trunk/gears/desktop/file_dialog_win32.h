@@ -39,12 +39,13 @@ class JsRunnerInterface;
 class FileDialogWin32 : public FileDialog, public Thread,
                         public MessageObserverInterface {
  public:
-  FileDialogWin32(const ModuleImplBaseClass* module, HWND parent);
+  FileDialogWin32();
   virtual ~FileDialogWin32();
 
  protected:
   // FileDialog Interface
-  virtual bool BeginSelection(const FileDialog::Options& options,
+  virtual bool BeginSelection(NativeWindowPtr parent,
+                              const FileDialog::Options& options,
                               std::string16* error);
   virtual void CancelSelection();
 
@@ -60,7 +61,8 @@ class FileDialogWin32 : public FileDialog, public Thread,
   typedef std::map<std::string16, std::string16> MediaMap;
 
   // Initializes the dialog, based on options.
-  void InitDialog(const FileDialog::Options& options);
+  void InitDialog(NativeWindowPtr parent,
+                  const FileDialog::Options& options);
 
   // Installs the default filename filter.
   bool SetFilter(const StringList& filter, std::string16* error);
@@ -78,8 +80,6 @@ class FileDialogWin32 : public FileDialog, public Thread,
   // Extracts the selected files from the file dialog.
   bool ProcessSelection(StringList* selected_files, std::string16* error);
 
-  // The parent window of the dialog.
-  HWND parent_;
   // The OS specification for the dialog.
   OPENFILENAME ofn_;
   // Provides the backing memory for ofn_.lpstrFilter.

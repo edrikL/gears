@@ -37,7 +37,7 @@ class Filters;
 
 class FileDialogCarbon : public FileDialog {
  public:
-  FileDialogCarbon(const ModuleImplBaseClass* module, WindowRef parent);
+  FileDialogCarbon();
   virtual ~FileDialogCarbon();
 
   // Determines whether the selected file matches our active filter.
@@ -49,13 +49,15 @@ class FileDialogCarbon : public FileDialog {
 
  protected:
   // FileDialog Interface
-  virtual bool BeginSelection(const FileDialog::Options& options,
+  virtual bool BeginSelection(NativeWindowPtr parent,
+                              const FileDialog::Options& options,
                               std::string16* error);
   virtual void CancelSelection();
 
  private:
   // Initializes the dialog, based on options.
-  bool InitDialog(const Options& options, std::string16* error);
+  bool InitDialog(NativeWindowPtr parent,
+                  const Options& options, std::string16* error);
 
   // Converts the input filter list into the Mac-native filter type, UTIs.
   bool SetFilter(const StringList& filter,
@@ -68,7 +70,6 @@ class FileDialogCarbon : public FileDialog {
   // Extracts the selected files from the file dialog.
   bool ProcessSelection(StringList* selected_files, std::string16* error);
 
-  WindowRef parent_;
   scoped_NavDialogRef dialog_;
   scoped_cftype<CFMutableArrayRef> utis_;
   scoped_cftype<CFArrayRef> labels_;
