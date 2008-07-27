@@ -164,16 +164,6 @@ class scoped_AEDesc : public scoped_token<AEDesc*, AEDescTraits> {
 inline AEDesc* as_out_parameter(scoped_AEDesc& p) {
   assert(p.get() && (typeNull == p.get()->descriptorType));
   return p.get();
-}  
-
-#if defined(__OBJC__) && defined(__cplusplus)
-class ReleaseObjCRef {
- public:
-  void operator()(id x) const {
-    if (x != NULL)
-      [x release];
-  }
-};
-#endif
+}
 
 #endif  // GEARS_BASE_SAFARI_SCOPED_CF_H__

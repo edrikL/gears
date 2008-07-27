@@ -48,6 +48,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptSecurityManager.h>
 #include <gecko_internal/nsIWebNavigation.h>
+#include <gecko_internal/nsIWidget.h>
 #include <gecko_internal/nsIXPConnect.h>
 #include <gecko_internal/nsIXULWindow.h>
 #include "gears/base/common/browsing_context.h"
@@ -123,13 +124,8 @@ nsresult DOMUtils::GetDOMWindowInternal(JSContext *context,
   return CallQueryInterface(script_context->GetGlobalObject(), result);
 }
 
-nsresult DOMUtils::GetNativeWindow(NativeWindowPtr* window) {
-  // TODO(nigeltao): check if the JSContext* should be an explicit argument
-  // to this function, rather than an implicit call to GetJsContext.
-  JSContext *js_context;
-  if (!GetJsContext(&js_context)) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult DOMUtils::GetNativeWindow(JSContext *js_context,
+                                   NativeWindowPtr* window) {
   nsIDOMWindowInternal* internal_window = NULL;
   nsresult nr = GetDOMWindowInternal(js_context, &internal_window);
   if (NS_FAILED(nr))
@@ -174,24 +170,29 @@ nsresult DOMUtils::GetNativeWindow(NativeWindowPtr* window) {
   if (NS_FAILED(nr))
     return nr;
 
-  void* parentWindow = NULL;
-  nr = baseWindow->GetParentNativeWindow(&parentWindow);
-  if (!parentWindow || NS_FAILED(nr))
+  nsCOMPtr<nsIWidget> widget;
+  nr = baseWindow->GetParentWidget(getter_AddRefs(widget));
+  if (!widget || NS_FAILED(nr))
+    return nr;
+
+  void* parentWindow = widget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!parentWindow)
     return NS_ERROR_FAILURE;
 
-#if defined(LINUX) && !defined(OS_MACOSX)
+#if defined(OS_MACOSX)
+  // TODO(bpm): Fix this from crashing on FF2.
+  //*window = GetWindowPtrFromNSWindow(parentWindow);
+  return NS_ERROR_FAILURE;
+#elif defined(LINUX)
   GdkWindow* parentGdkWindow = reinterpret_cast<GdkWindow*>(parentWindow);
   gpointer user_data = NULL;
   gdk_window_get_user_data(gdk_window_get_toplevel(parentGdkWindow),
                            &user_data);
   if (!user_data)
     return NS_ERROR_FAILURE;
-
   *window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(user_data)));
-#elif defined(WIN32)
-  *window = reinterpret_cast<HWND>(parentWindow);
-#else
-  *window = parentWindow;
+#else  // !LINUX && !OS_MACOSX
+  *window = reinterpret_cast<NativeWindowPtr>(parentWindow);
 #endif
 
   return NS_OK;

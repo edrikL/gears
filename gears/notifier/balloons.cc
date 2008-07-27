@@ -53,10 +53,6 @@
 #include "third_party/glint/include/simple_text.h"
 #include "third_party/glint/include/size.h"
 
-using glint::Node;
-using glint::Point;
-using glint::Size;
-
 static const char *kTitleId = "title_text";
 static const char *kSubtitleId = "subtitle_text";
 static const char *kDescriptionId = "description_text";
@@ -101,8 +97,8 @@ class BalloonContainer : public glint::Node {
  protected:
   // Instructs base class to delegate children layout to this class.
   virtual bool LayoutChildren() { return false; }
-  virtual Size OnComputeRequiredSize(Size constraint);
-  virtual Size OnSetLayoutBounds(Size reserved);
+  virtual glint::Size OnComputeRequiredSize(glint::Size constraint);
+  virtual glint::Size OnSetLayoutBounds(glint::Size reserved);
 
  private:
   enum BalloonPlacementEnum {
@@ -118,9 +114,10 @@ class BalloonContainer : public glint::Node {
   const static int kBalloonMinHeight = 70;
   const static int kBalloonMaxHeight = 120;
 
-  static Point GetOrigin();
+  static glint::Point GetOrigin();
   // Compute the position for the next balloon. Modifies current origin.
-  static Point NextPosition(Size balloon_size, Point *origin);
+  static glint::Point NextPosition(glint::Size balloon_size,
+                                   glint::Point *origin);
 
   static BalloonPlacementEnum placement_;
   static glint::Rectangle work_area_;
@@ -167,8 +164,8 @@ void BalloonContainer::RefreshSystemMetrics() {
   font_scale_factor_ = System::GetSystemFontScaleFactor();
 }
 
-Point BalloonContainer::GetOrigin() {
-  Point origin;
+glint::Point BalloonContainer::GetOrigin() {
+  glint::Point origin;
 
   switch (placement_) {
     case HORIZONTALLY_FROM_BOTTOM_LEFT:
@@ -194,9 +191,10 @@ Point BalloonContainer::GetOrigin() {
   return origin;
 }
 
-Point BalloonContainer::NextPosition(Size balloon_size, Point *origin) {
+glint::Point BalloonContainer::NextPosition(glint::Size balloon_size,
+                                            glint::Point *origin) {
   assert(origin);
-  Point result;
+  glint::Point result;
 
   switch (placement_) {
     case HORIZONTALLY_FROM_BOTTOM_LEFT:
@@ -226,16 +224,17 @@ Point BalloonContainer::NextPosition(Size balloon_size, Point *origin) {
   return result;
 }
 
-Size BalloonContainer::OnComputeRequiredSize(Size constraint) {
+glint::Size BalloonContainer::OnComputeRequiredSize(glint::Size constraint) {
   glint::Rectangle screen_bounds;
   System::GetMainScreenBounds(&screen_bounds);
   if (screen_bounds.IsEmpty())
-    return Size();
+    return glint::Size();
 
-  Size container_size = screen_bounds.size();
+  glint::Size container_size = screen_bounds.size();
   // Let children compute their size
-  for (Node *child = first_child(); child; child = child->next_sibling()) {
-    Size child_size = child->ComputeRequiredSize(container_size);
+  for (glint::Node *child = first_child(); child;
+       child = child->next_sibling()) {
+    glint::Size child_size = child->ComputeRequiredSize(container_size);
   }
   return container_size;
 }
@@ -243,11 +242,12 @@ Size BalloonContainer::OnComputeRequiredSize(Size constraint) {
 // The parent container reserved a space for us - at least the amount returned
 // from OnComputeRequiredSize. Now we should iterate over the children and give
 // them new layout bounds.
-Size BalloonContainer::OnSetLayoutBounds(Size reserved) {
-  Point origin = GetOrigin();
+glint::Size BalloonContainer::OnSetLayoutBounds(glint::Size reserved) {
+  glint::Point origin = GetOrigin();
 
-  for (Node *child = first_child(); child; child = child->next_sibling()) {
-    Point position = NextPosition(child->required_size(), &origin);
+  for (glint::Node *child = first_child(); child;
+       child = child->next_sibling()) {
+    glint::Point position = NextPosition(child->required_size(), &origin);
     glint::Rectangle child_location(position.x,
                                     position.y,
                                     position.x + child->required_size().width,
@@ -534,7 +534,7 @@ bool Balloon::SetAlphaTransition(glint::Node *node,
   return true;
 }
 
-bool Balloon::SetMoveTransition(Node *node) {
+bool Balloon::SetMoveTransition(glint::Node *node) {
   if (!node)
     return false;
 

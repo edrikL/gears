@@ -40,7 +40,7 @@ typedef scoped_token<GtkWidget*, GtkWidgetTraits> scoped_GtkWidget;
 
 class FileDialogGtk : public FileDialog {
  public:
-  FileDialogGtk(const ModuleImplBaseClass* module, GtkWindow* parent);
+  FileDialogGtk();
   virtual ~FileDialogGtk();
 
   // Called when the user dismisses the dialog normally.
@@ -51,13 +51,15 @@ class FileDialogGtk : public FileDialog {
 
  protected:
   // FileDialog Interface
-  virtual bool BeginSelection(const FileDialog::Options& options,
+  virtual bool BeginSelection(NativeWindowPtr parent,
+                              const FileDialog::Options& options,
                               std::string16* error);
   virtual void CancelSelection();
 
  private:
   // Initializes the dialog, based on options.
-  bool InitDialog(GtkWindow* parent, const FileDialog::Options& options,
+  bool InitDialog(NativeWindowPtr parent,
+                  const FileDialog::Options& options,
                   std::string16* error);
 
   // Installs the default filename filter.
@@ -69,8 +71,8 @@ class FileDialogGtk : public FileDialog {
   // Extracts the selected files from the file dialog.
   bool ProcessSelection(StringList* selected_files, std::string16* error);
 
-  GtkWindow* parent_;
   scoped_GtkWidget dialog_;
+  gulong response_handler_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogGtk);
 };

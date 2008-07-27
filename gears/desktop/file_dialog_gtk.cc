@@ -54,36 +54,19 @@ void ResponseHandler(GtkWidget* dialog, gint response_id, gpointer data) {
   file_dialog->HandleResponse(response_id);
 }
 
-#if 0  // TODO(bpm): Determine if we'd ever need these.
-void UnmapHandler(GtkWidget* dialog, gpointer data) {
-  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
-  file_dialog->HandleClose();
-}
-
-gint DeleteHandler(GtkWidget* dialog, GdkEventAny* event, gpointer data) {
-  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
-  file_dialog->HandleClose();
-  return TRUE;  // Prevent destruction
-}
-
-void DestroyHandler(GtkWidget* dialog, gpointer data) {
-  // TODO: Determine if this is called in addition to unmap.
-  FileDialogGtk* file_dialog = static_cast<FileDialogGtk*>(data);
-  file_dialog->HandleClose();
-}
-#endif
-
 }  // anonymous namespace
 
-FileDialogGtk::FileDialogGtk(const ModuleImplBaseClass* module,
-                             GtkWindow* parent)
-    : FileDialog(module), parent_(parent) {
+FileDialogGtk::FileDialogGtk() : response_handler_(0) {
 }
 
 FileDialogGtk::~FileDialogGtk() {
 }
 
 void FileDialogGtk::HandleResponse(gint response_id) {
+  gtk_window_set_modal(GTK_WINDOW(dialog_.get()), FALSE);
+  g_signal_handler_disconnect(dialog_.get(), response_handler_);
+  gtk_widget_hide(dialog_.get());
+
   StringList selected_files;
   std::string16 error;
   if (GTK_RESPONSE_ACCEPT == response_id) {
@@ -94,14 +77,10 @@ void FileDialogGtk::HandleResponse(gint response_id) {
   CompleteSelection(selected_files);
 }
 
-void FileDialogGtk::HandleClose() {
-  StringList selected_files;
-  CompleteSelection(selected_files);
-}
-
-bool FileDialogGtk::BeginSelection(const FileDialog::Options& options,
+bool FileDialogGtk::BeginSelection(NativeWindowPtr parent,
+                                   const FileDialog::Options& options,
                                    std::string16* error) {
-  if (!InitDialog(parent_, options, error))
+  if (!InitDialog(parent, options, error))
     return false;
   if (!SetFilter(options.filter, error))
     return false;
@@ -114,7 +93,7 @@ void FileDialogGtk::CancelSelection() {
   // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
 }
 
-bool FileDialogGtk::InitDialog(GtkWindow* parent,
+bool FileDialogGtk::InitDialog(NativeWindowPtr parent,
                                const FileDialog::Options& options,
                                std::string16* error) {
   dialog_.reset(gtk_file_chooser_dialog_new(kDialogTitle, parent,
@@ -165,16 +144,9 @@ bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
 }
 
 bool FileDialogGtk::Display(std::string16* error) {
-  g_signal_connect(dialog_.get(), "response", G_CALLBACK(ResponseHandler),
-                   this);
-#if 0
-  // It appears these handlers are unnecessary.  I can't find a way to close
-  // the dialog that doesn't trigger "response".
-  g_signal_connect(dialog_.get(), "unmap", G_CALLBACK(UnmapHandler), this);
-  g_signal_connect(dialog_.get(), "delete-event", G_CALLBACK(DeleteHandler),
-                   this);
-  g_signal_connect(dialog_.get(), "destroy", G_CALLBACK(DestroyHandler), this);
-#endif
+  gtk_window_set_modal(GTK_WINDOW(dialog_.get()), TRUE);
+  response_handler_ = g_signal_connect(dialog_.get(), "response",
+                                       G_CALLBACK(ResponseHandler), this);
   gtk_widget_show_all(dialog_.get());
   return true;
 }

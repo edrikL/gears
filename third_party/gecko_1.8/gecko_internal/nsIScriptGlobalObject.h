@@ -40,11 +40,7 @@
 #define nsIScriptGlobalObject_h__
 
 #include "nsISupports.h"
-
-// XXX(darin): Avoid including nsEvent.h
-//#include "nsEvent.h"
-struct nsEvent;
-typedef int nsEventStatus;
+#include "nsEvent.h"
 
 class nsIScriptContext;
 class nsIDOMDocument;

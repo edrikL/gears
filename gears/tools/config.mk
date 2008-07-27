@@ -422,6 +422,12 @@ CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 CXXFLAGS += -include base/safari/prefix_header.h
 
+# When a function is deprecated in gcc, it stupidly warns about all functions
+# and member functions that have the same name, regardless of signature.
+# Example: Standard osx headers deprecate 'SetPort', which causes a warning for
+# url_canon::Replacements::SetPort().
+CXXFLAGS += -Wno-deprecated-declarations
+
 THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
 THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
 

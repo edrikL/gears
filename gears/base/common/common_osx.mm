@@ -56,3 +56,16 @@ std::string TempDirectoryForCurrentUser() {
   return std::string([NSTemporaryDirectory() fileSystemRepresentation]);
 }
 
+WindowRef GetWindowPtrFromNSWindow(void* ns_window) {
+  assert(ns_window);
+  return (WindowRef)[(NSWindow*)ns_window windowRef];
+}
+
+WindowRef GetMainWindow() {
+  return (WindowRef)[[NSApp mainWindow] windowRef];
+
+}
+
+WindowRef GetKeyWindow() {
+  return (WindowRef)[[NSApp keyWindow] windowRef];
+}
