@@ -216,10 +216,10 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.audiorecorder")) {
     CreateModule<GearsAudioRecorder>(module_environment_.get(),
                                      context, &object);
-#ifdef WIN32
+#if defined(WIN32) || defined(OS_MACOSX)
   } else if (module_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
-#endif  // WIN32
+#endif  // WIN32 || OS X
   } else if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.imageloader")) {

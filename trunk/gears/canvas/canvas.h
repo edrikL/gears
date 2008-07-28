@@ -26,7 +26,7 @@
 #ifndef GEARS_CANVAS_CANVAS_H__
 #define GEARS_CANVAS_CANVAS_H__
 
-#if !defined(OFFICIAL_BUILD) && defined(WIN32)
+#if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
@@ -157,5 +157,5 @@ class GearsCanvas : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
 
-#endif  // !defined(OFFICIAL_BUILD) && defined(WIN32)
+#endif  // !defined(OFFICIAL_BUILD) && ...
 #endif  // GEARS_CANVAS_CANVAS_H__

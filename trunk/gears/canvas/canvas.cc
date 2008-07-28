@@ -416,6 +416,7 @@ void GearsCanvas::set_text_align(std::string16 new_text_align) {
 void GearsCanvas::ResetCanvas(int width, int height) {
   // Since we're starting with a clean slate, let's reset the SkBitmap as well.
   // For some reason things don't work otherwise.
+  // TODO(kart): Figure out why.
   skia_bitmap_.reset(new SkBitmap);
   skia_bitmap_->setConfig(skia_config, width, height);
 

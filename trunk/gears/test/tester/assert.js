@@ -40,6 +40,7 @@ var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
  */
 var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
 var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
+var isOsx = google.gears.factory.getBuildInfo().indexOf('osx') > -1;
 
 /**
  * Whether the installed Gears extension is for a particular browser.
