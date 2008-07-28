@@ -379,7 +379,6 @@ class JsRunner : public JsRunnerBase {
 
   JsErrorHandlerInterface *error_handler_;
   JSObject *global_obj_;
-  std::vector<IGeneric *> globals_;
   JSRuntime *js_runtime_;
   JSScript *js_script_;
   scoped_ptr<JsRootedToken> js_script_root_;
@@ -437,11 +436,6 @@ JsRunner::~JsRunner() {
   // invalid context if we wait for the destructor.
   if (alloc_js_wrapper_)
     alloc_js_wrapper_->CleanupRoots();
-
-  std::vector<IGeneric *>::iterator global;
-  for (global = globals_.begin(); global != globals_.end(); ++global) {
-    NS_RELEASE(*global);
-  }
 
   // Reset the scoped_ptr to unroot the script.  This needs to be done before
   // we destroy the context and runtime, so we can't wait for the destructor.
