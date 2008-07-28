@@ -510,6 +510,8 @@ function testGeolocationGetCurrentPosition() {
           mobile_network_code: 15,
           mobile_country_code: 234,
           radio_signal_strength: -65 });
+    internalTests.configureGeolocationWifiDataProviderForTest(
+        { mac_address: "00-0b-86-ca-bb-c8" });
     // TODO(steveblock): Complete this test once the Geolocation API is
     // complete.
     //var geolocation = google.gears.factory.create('beta.geolocation');
