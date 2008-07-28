@@ -156,4 +156,7 @@ if (!isSafari) {
 }
 suites.push(workerPoolSuite);
 
-
+var geolocationSuite = new TestSuite('Geolocation');
+geolocationSuite.addFile('../testcases/geolocation_tests.js', 
+                         {useWorker: true, useIFrame: true});
+suites.push(geolocationSuite);
