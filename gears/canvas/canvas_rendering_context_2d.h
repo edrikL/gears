@@ -26,7 +26,7 @@
 #ifndef GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 #define GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 
-#if !defined(OFFICIAL_BUILD) && defined(WIN32)
+#if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
@@ -267,5 +267,5 @@ class GearsCanvasRenderingContext2D
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvasRenderingContext2D);
 };
 
-#endif  // !defined(OFFICIAL_BUILD) && defined(WIN32)
+#endif  // !defined(OFFICIAL_BUILD) && ...
 #endif  // GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__

@@ -384,9 +384,6 @@ void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
-  // TODO(kart): Generate a better error message if given a HTMLImageElement
-  // or a HTMLCanvasElement.
-  
   // TODO(kart): This function has a bug that doesn't make it work after calling
   // resize() on the target canvas. That is, if you resize() a canvas and then
   // draw another canvas on it, the drawImage() is a noop.
@@ -394,7 +391,12 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // globalCompositeOperation.
   // Return an error code to prevent clients from getting bitten by these bugs.
   context->SetException(STRING16(L"Unimplemented"));
-  return;
+  // Some of the functionality of this function can be achieved using
+  // crop(), resize() and clone().
+
+  // TODO(kart): Generate a better error message if given a HTMLImageElement
+  // or a HTMLCanvasElement.
+  
   /*
   ModuleImplBaseClass *other_module;
   int source_x, source_y, source_width, source_height;

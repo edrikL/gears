@@ -28,7 +28,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 template<class T, class S> T checked_cast(S in) {
-  typename T out = static_cast<T>(in);
+  T out = static_cast<T>(in);
   assert (out == in);
   return out;
 }

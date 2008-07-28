@@ -218,7 +218,8 @@ SKIA_LIB_DIR = ../third_party/skia
 ifeq ($(OFFICIAL_BUILD),1)
 # Not finalized for official builds.
 else
-ifeq ($(OS),win32)  # Skia binaries for other platforms not checked in yet.
+# Make-ish way of saying: if (OS == win32 || OS == osx)
+ifneq ($(findstring $(OS), win32|osx),)
 SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
 endif
 endif
@@ -283,10 +284,10 @@ CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -pthread
 
-MKLIB = ar rcs
+MKLIB = ar
 LIB_PREFIX = lib
 LIB_SUFFIX = .a
-LIBFLAGS = $@
+LIBFLAGS = rcs $@
 
 MKDLL = g++
 DLL_PREFIX = lib
@@ -451,10 +452,10 @@ STRIP_EXECUTABLE =
 endif
 endif
 
-MKLIB = ar rcs
+MKLIB = libtool
 LIB_PREFIX = lib
 LIB_SUFFIX = .a
-LIBFLAGS = $@
+LIBFLAGS = -static -o $@
 
 MKDLL = g++
 DLL_PREFIX = lib
