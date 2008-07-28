@@ -1411,6 +1411,9 @@ NOTIFIER_CORE	+= \
 		time_utils_win32.cc \
 		timed_call.cc \
 		timed_call_test.cc \
+		user_activity.cc \
+		user_activity_linux.cc \
+		user_activity_win32.cc \
 		$(NULL)
 
 
@@ -1435,6 +1438,7 @@ NOTIFIER_CPPSRCS += \
 		notifier_osx.mm \
 		notifier_process_osx.mm \
 		system_osx.mm \
+		user_activity_osx.mm \
 		$(NULL)
 
 COMMON_VPATH	+= \

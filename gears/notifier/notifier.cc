@@ -42,18 +42,6 @@
 #include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/work_item.h"
 
-// TODO(dimich): implement this.
-class UserActivityMonitor : public UserActivityInterface {
- public:
-  UserActivityMonitor() {
-  }
-  virtual UserMode CheckUserActivity() {
-    return USER_NORMAL_MODE;
-  }
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(UserActivityMonitor);
-};
-
 // Posted as workitem from IPC worker thread to main UI thread.
 class NotificationTask : public glint::WorkItem {
  public:
@@ -90,7 +78,7 @@ class NotificationTask : public glint::WorkItem {
 Notifier::Notifier()
   : running_(false),
     to_restart_(false),
-    notification_manager_(new NotificationManager(new UserActivityMonitor(),
+    notification_manager_(new NotificationManager(&user_activity_monitor_,
                                                   this)) {
 }
 
