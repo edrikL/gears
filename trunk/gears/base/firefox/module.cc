@@ -152,6 +152,34 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
                            kDomciExtensionContractId,
                            PR_TRUE, PR_TRUE, NULL);
 
+#ifdef PROVIDE_GEARS_AS_JAVASCRIPT_GLOBAL_OBJECT
+  // Providing a global "gears" object lets web pages call something like:
+  //   var ls = gears.create('beta.localserver')
+  // rather than the two step process of:
+  //   1. include the 'gears_init.js' bootstrap script
+  //   2. var ls = google.gears.factory.create('beta.localserver')
+  //
+  // Further points:
+  //   * The "gears" object is the same as "window.gears".
+  //   * The XPCOM object that backs "gears" is created lazily, and the
+  //     instance is cached so that repeated calls to "gears" will refer to
+  //     the same jsval and the same C++ object.
+  //   * If JavaScript code overwrites "gears" (or "window.gears"), e.g.:
+  //     var gears = true;
+  //     then the XPCOM object is no longer accessible (unless another
+  //     reference has been made, e.g.:
+  //     var originalGears = window.gears;
+  //     window.gears = true;
+  //
+  // As of 2008-07-25, PROVIDE_GEARS_AS_JAVASCRIPT_GLOBAL_OBJECT is not
+  // defined by default, since the feature is not implemented uniformly
+  // across all platforms.
+  catMgr->AddCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
+                           "gears",
+                           kGearsFactoryContractId,
+                           PR_TRUE, PR_TRUE, NULL);
+#endif
+
   return NS_OK;
 }
 
