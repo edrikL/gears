@@ -109,8 +109,8 @@ class BalloonContainer : public glint::Node {
   };
 
   // Minimum and maximum size of balloon
-  const static int kBalloonMinWidth = 270;
-  const static int kBalloonMaxWidth = 270;
+  const static int kBalloonMinWidth = 300;
+  const static int kBalloonMaxWidth = 300;
   const static int kBalloonMinHeight = 70;
   const static int kBalloonMaxHeight = 120;
 
@@ -391,33 +391,37 @@ glint::Node *Balloon::CreateTree() {
   root->set_max_width(BalloonContainer::max_balloon_width());
   root->set_max_height(BalloonContainer::max_balloon_height());
   root->set_alpha(glint::colors::kTransparentAlpha);
+  glint::Rectangle margin(0, 0, 5, 7);
+  root->set_margin(margin);
 
   glint::NineGrid *background = new glint::NineGrid();
   background->ReplaceImage(resource_path + "/background.png");
-  background->set_center_height(50);
-  background->set_center_width(250);
-  glint::Rectangle margin(-4, -4, -4, -4);
+  margin.Set(-5, -2, -5, -7);
   background->set_margin(margin);
   root->AddChild(background);
+
+  glint::Row *main_row = new glint::Row();
+  main_row->ReplaceDistribution("natural,*,23");  // 3 columns
+  root->AddChild(main_row);
 
   glint::ImageNode *image = new glint::ImageNode();
   image->set_id(kIconId);
   image->set_vertical_alignment(glint::Y_TOP);
   image->set_horizontal_alignment(glint::X_LEFT);
-  margin.Set(6, 4, 0, 10);
+  margin.Set(12, 10, 8, 0);
   image->set_margin(margin);
-  root->AddChild(image);
+  main_row->AddChild(image);
 
   glint::Column *column = new glint::Column();
-  root->AddChild(column);
+  margin.Set(0, 6, 4, 0);
+  column->set_margin(margin);
+  main_row->AddChild(column);
 
   glint::SimpleText *text = new glint::SimpleText();
   text->set_id(kTitleId);
   text->set_font_family("verdana");
   text->set_font_size(10);
   text->set_bold(true);
-  margin.Set(56, 8, 6, 0);
-  text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
@@ -425,7 +429,7 @@ glint::Node *Balloon::CreateTree() {
   text->set_id(kSubtitleId);
   text->set_font_family("verdana");
   text->set_font_size(9);
-  margin.Set(56, 3, 6, 0);
+  margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
@@ -433,7 +437,7 @@ glint::Node *Balloon::CreateTree() {
   text = new glint::SimpleText();
   text->set_id(kDescriptionId);
   text->set_font_family("verdana");
-  margin.Set(56, 4, 6, 0);
+  margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
@@ -441,20 +445,34 @@ glint::Node *Balloon::CreateTree() {
   glint::Row *actions = new glint::Row();
   actions->set_id(kActionsContainer);
   actions->set_horizontal_alignment(glint::X_RIGHT);
-  margin.Set(0, 0, 16, 10);
+  margin.Set(0, 0, 10, 10);
   actions->set_margin(margin);
   column->AddChild(actions);
 
+  glint::Node *button_container = new glint::Node();
+  main_row->AddChild(button_container);
+
   glint::Button *close_button = new glint::Button();
   close_button->ReplaceImage(resource_path + "/close_button_strip.png");
-  close_button->set_min_height(24);
-  close_button->set_min_width(24);
-  margin.Set(0, 4, 3, 0);
+  close_button->set_min_height(22);
+  close_button->set_min_width(22);
+  margin.Set(0, 3, 3, 0);
   close_button->set_margin(margin);
   close_button->set_horizontal_alignment(glint::X_RIGHT);
   close_button->set_vertical_alignment(glint::Y_TOP);
   close_button->SetClickHandler(Balloon::OnCloseButton, this);
-  root->AddChild(close_button);
+  button_container->AddChild(close_button);
+
+  glint::Button *menu_button = new glint::Button();
+  menu_button->ReplaceImage(resource_path + "/menu_button_strip.png");
+  menu_button->set_min_height(22);
+  menu_button->set_min_width(22);
+  margin.Set(0, 0, 3, 4);
+  menu_button->set_margin(margin);
+  menu_button->set_horizontal_alignment(glint::X_RIGHT);
+  menu_button->set_vertical_alignment(glint::Y_BOTTOM);
+  // TODO(dimich): Add Menu button handler.
+  button_container->AddChild(menu_button);
 
   root->AddHandler(new AnimationCompletedHandler(this));
   root->AddHandler(new MouseWithinDetector(this, root));

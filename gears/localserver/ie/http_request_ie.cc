@@ -408,7 +408,7 @@ STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
     // but rather reads the file and uses IBindStatusCallback to report
     // progress. So we need to initialize status and data buffer to be
     // ready for IBSC::OnDataAvailable().
-    response_payload_.data.reset(new std::vector<uint8>);
+    response_body_.reset(new ByteStore);
     response_payload_.status_code = HTTPResponse::RC_REQUEST_OK;
   }
   return S_OK;

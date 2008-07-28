@@ -1422,6 +1422,12 @@ NOTIFIER_CPPSRCS += \
 		notifier_win32.cc \
 		$(NULL)
 
+NOTIFIER_RESOURCES += \
+		notifier/resources/background.png \
+		notifier/resources/button_strip.png \
+		notifier/resources/menu_button_strip.png \
+		$(NULL)
+
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
 		common_osx.mm \
@@ -1431,12 +1437,6 @@ NOTIFIER_CPPSRCS += \
 		system_osx.mm \
 		$(NULL)
 
-NOTIFIER_RESOURCES += \
-		notifier/resources/background.png \
-		notifier/resources/button_strip.png \
-		notifier/resources/close_button_strip.png \
-		$(NULL)
-
 COMMON_VPATH	+= \
 		tools/osx \
 		$(NULL)
@@ -1444,7 +1444,15 @@ COMMON_VPATH	+= \
 COMMON_M4SRCS += \
 		Notifier-Info.plist.m4 \
 		$(NULL)
-endif
+
+NOTIFIER_RESOURCES += \
+		notifier/resources/close_button_strip_osx.png \
+		$(NULL)
+else
+NOTIFIER_RESOURCES += \
+		notifier/resources/close_button_strip.png \
+		$(NULL)
+endif  # osx
 
 NOTIFIER_CSRCS += \
 		ConvertUTF.c \
