@@ -121,14 +121,26 @@ void FileDialogCarbon::Event(NavEventCallbackMessage message,
         parameters->eventData.eventDataParms.param);
     selected_filter_ = menu->menuType;
     break;
-  case kNavCBUserAction: {
-    std::string16 error;
-    if (!ProcessSelection(&selected_files_, &error)) {
-      HandleError(error);
+  case kNavCBUserAction:
+    if (selected_files_.empty()) {  // Guard against re-entrancy.
+      std::string16 error;
+      if (!ProcessSelection(&selected_files_, &error)) {
+        HandleError(error);
+      }
     }
-    break; }
+    break;
   case kNavCBTerminate:
-    CompleteSelection(selected_files_);
+    if (dialog_.get()) {  // Guard against re-entrancy.
+      // CompleteSelection invokes a JavaScript callback, which may result in a
+      // modal window loop (ie, via 'alert()').  If we don't hide the dialog
+      // first, FileDialogCarbon::Event can reenter with kNavCBUserAction and
+      // kNavCBTerminate events.
+      if (WindowRef window = NavDialogGetWindow(dialog_.get())) {
+        HideWindow(window);
+      }
+      dialog_.reset(NULL);
+      CompleteSelection(selected_files_);
+    }
     break;
   }
 }
