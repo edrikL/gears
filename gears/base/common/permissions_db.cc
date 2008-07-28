@@ -249,7 +249,7 @@ bool PermissionsDB::GetPermissionsSorted(PermissionsList *permission_list_out) {
           L"               SELECT DISTINCT LocationAccess.Name, "
           L"                   LocationAccess.Value AS Location, "
           L"                   null AS Storage "
-          L"                   FROM LocationAccess, Access "
+          L"                   FROM LocationAccess "
           L"                   WHERE LocationAccess.Name NOT IN "
           L"                       (SELECT Access.Name FROM Access)) "
           L"         ORDER BY "
