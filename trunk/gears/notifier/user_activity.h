@@ -32,6 +32,8 @@
   // The notification API has not been finalized for official builds.
 #else
 
+#include "gears/base/common/basictypes.h"
+
 // Categorization of the user mode
 enum UserMode {
   // User is away
@@ -64,6 +66,46 @@ enum UserMode {
 class UserActivityInterface {
  public:
   virtual UserMode CheckUserActivity() = 0;
+};
+
+class UserActivityMonitor : public UserActivityInterface {
+ public:
+  UserActivityMonitor() {}
+  virtual UserMode CheckUserActivity();
+
+ private:
+  // Returns true if the user is idle.
+  static bool IsUserIdle();
+
+  // Returns true if the user is busy.
+  static bool IsUserBusy();
+
+  // Returns true if the user is away.
+  static bool IsUserAway();
+
+  //
+  // The following needs to be implemented for different platform.
+  //
+
+  // Gets the user mode by using platform-specific function if possible.
+  static UserMode PlatformDetectUserMode();
+
+  // Returns the number of seconds for the monitor power off.
+  static uint32 GetMonitorPowerOffTimeSec();
+
+  // Returns the number of milliseconds the system has had no user input.
+  static uint32 GetUserIdleTimeMs();
+
+  // Returns true if screen saver is running.
+  static bool IsScreensaverRunning();
+
+  // Returns true if workstation is locked.
+  static bool IsWorkstationLocked() ;
+
+  // Returns true if in full screen mode.
+  static bool IsFullScreenMode();
+
+  DISALLOW_EVIL_CONSTRUCTORS(UserActivityMonitor);
 };
 
 // Is user active?
