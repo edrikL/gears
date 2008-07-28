@@ -290,7 +290,7 @@ else
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
-	
+
 	$(MAKE) installers
 
   else
@@ -341,7 +341,7 @@ else
 	$(MAKE) prereqs    BROWSER=NPAPI
 	$(MAKE) genheaders BROWSER=NPAPI
 	$(MAKE) modules    BROWSER=NPAPI
-	$(MAKE) installers 
+	$(MAKE) installers
   endif
   endif
   endif
@@ -656,18 +656,18 @@ $(FF3_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
 
-$(COMMON_OUTDIR)/%.res: %.rc
+$(COMMON_OUTDIR)/%.res: %.rc $(NOTIFIER_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
-	
+
 $(SF_OUTDIR)/%.res: $(COMMON_RESOURCES) $(SF_M4FILES_I18N)
 # On Safari, the .res file is actually an object file. But we still use
 # the .res extension, which lets us run special build steps for resources.
 
 # Bundle ui files into the executable itself by first generating .webarchive files, and then
-# including those in the dylib by converting them into .h files with xxd. 
+# including those in the dylib by converting them into .h files with xxd.
 # TODO(playmobil): Handle localization correctly.
 	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/permissions_dialog.webarchive $(SF_OUTDIR)/genfiles/permissions_dialog.html $(COMMON_RESOURCES)
 	tools/osx/webarchiver/webarchiver $(SF_OUTDIR)/settings_dialog.webarchive $(SF_OUTDIR)/genfiles/settings_dialog.html $(COMMON_RESOURCES)
@@ -678,11 +678,11 @@ $(SF_OUTDIR)/%.res: $(COMMON_RESOURCES) $(SF_M4FILES_I18N)
 # Resources for native dialogs
 	xxd -i "ui/common/location_data.png" > "$($(BROWSER)_OUTDIR)/genfiles/location_data.h"
 	xxd -i "ui/common/local_data.png" > "$($(BROWSER)_OUTDIR)/genfiles/local_data.h"
-	
+
 	tools/osx/gen_resource_list.py "$($(BROWSER)_OUTDIR)/genfiles/resource_list.h" "$($(BROWSER)_OUTDIR)/genfiles/settings_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/permissions_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/shortcuts_dialog.h" "$($(BROWSER)_OUTDIR)/genfiles/location_data.h" "$($(BROWSER)_OUTDIR)/genfiles/local_data.h"
-	
+
 	$(CC) $(SF_CPPFLAGS) $(SF_CXXFLAGS) $(CPPFLAGS) -include base/safari/prefix_header.h -fshort-wchar -c base/safari/resource_archive.cc -o $@
-	
+
 
 # INSTALLER-RELATED INTERMEDIATE TARGETS
 
@@ -709,7 +709,7 @@ OUR_COMPONENT_GUID_IE_REGISTRY = \
 OUR_COMPONENT_GUID_SHARED_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_FILES-$(VERSION))
 OUR_COMPONENT_GUID_SHARED_VERSIONED_FILES = \
-  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_VERSIONED_FILES-$(VERSION))  
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_VERSIONED_FILES-$(VERSION))
 OUR_COMPONENT_GUID_SHARED_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_SHARED_REGISTRY-$(VERSION))
 
@@ -847,9 +847,9 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 	$(MKDLL) $(DLLFLAGS) $(STAGE1_DLLFLAGS) -g $(LIBS) -implib "$(OUTDIR)\$(SHORT_NAME).lib" -o "$(OUTDIR)\$(SHORT_NAME).dll" -l $($(BROWSER)_OUTDIR) -search $(subst $(NPAPI_OUTDIR)/,,$(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS))
 
 	@rm "$(OUTDIR)\$(SHORT_NAME).dll"
-	@$(MKDLL) -S -show only,names,unmangled,verbose -o "$(OUTDIR)\$(SHORT_NAME).inf" "$(OUTDIR)\$(SHORT_NAME).lib" 
+	@$(MKDLL) -S -show only,names,unmangled,verbose -o "$(OUTDIR)\$(SHORT_NAME).inf" "$(OUTDIR)\$(SHORT_NAME).lib"
 
-	@perl -S "makedef.pl"  -absent __E32Dll -Inffile "$(OUTDIR)\$(SHORT_NAME).inf" -1 ?ImplementationGroupProxy@@YAPBUTImplementationProxy@@AAH@Z "$(OUTDIR)\$(SHORT_NAME).def" 
+	@perl -S "makedef.pl"  -absent __E32Dll -Inffile "$(OUTDIR)\$(SHORT_NAME).inf" -1 ?ImplementationGroupProxy@@YAPBUTImplementationProxy@@AAH@Z "$(OUTDIR)\$(SHORT_NAME).def"
 	@rm "$(OUTDIR)\$(SHORT_NAME).inf"
 	@rm "$(OUTDIR)\$(SHORT_NAME).lib"
 
@@ -871,7 +871,7 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 	-1 _Z24ImplementationGroupProxyRi \
 	$(OUTDIR)/$(SYMBIAN_TMP_FILE).def
 
-	@perl -S efreeze.pl  "$(OUTDIR)\$(SHORT_NAME).def" "$(OUTDIR)\$(SYMBIAN_TMP_FILE).def" 
+	@perl -S efreeze.pl  "$(OUTDIR)\$(SHORT_NAME).def" "$(OUTDIR)\$(SYMBIAN_TMP_FILE).def"
 
 	@perl -S prepdef.pl "$(OUTDIR)\$(SHORT_NAME).def" "$(OUTDIR)\$(SHORT_NAME).prep.def"
 
@@ -902,7 +902,7 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 	--export=$(SYMBIAN_TMP_FILE) \
 	--deffile=$(OUTDIR)/$(SHORT_NAME).def \
 	--linkAs=$(SYMBIAN_TMP_FILE)[0xA0008EE4].dll \
-	--inter 
+	--inter
 
 	@$(MKDLL) $(DLLFLAGS) $(STAGE2_DLLFLAGS) \
 	$(OUTDIR)\$(SYMBIAN_TMP_FILE).exp \
@@ -977,13 +977,13 @@ $(IPC_TEST_EXE): $(IPC_TEST_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(IPC_TEST_OBJS) $(IPC_LIBS)
 else
 .PHONY: $(IPC_TEST_EXE)
-$(IPC_TEST_EXE): 
+$(IPC_TEST_EXE):
 endif
 
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
 	 $(STRIP_EXECUTABLE)
-	
+
 $(SF_INPUTMANAGER_EXE): $(SF_INPUTMANAGER_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework Foundation -framework AppKit -bundle $(SF_INPUTMANAGER_OBJS)
 	$(STRIP_EXECUTABLE)
@@ -1147,7 +1147,7 @@ $(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
 
 $(SYMBIAN_SIS_FILE) : $(NPAPI_MODULE_DLL) $(SYMBIAN_RSC_FILE) $(SYMBIAN_PKG_FILE)
 	@makesis $(SYMBIAN_PKG_FILE)
-  
+
 $(SYMBIAN_INSTALLER_SISX) : $(SYMBIAN_SIS_FILE) $(SYMBIAN_CER_FILE) $(SYMBIAN_KEY_FILE)
 	@signsis $(SYMBIAN_SIS_FILE) $@ $(SYMBIAN_CER_FILE) $(SYMBIAN_KEY_FILE)
 

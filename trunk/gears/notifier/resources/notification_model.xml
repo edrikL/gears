@@ -1,57 +1,69 @@
 <Node
   xmlns="http://www.google.com/glint"
-  min_width="270"
-  max_width="270"
+  min_width="300"
+  max_width="300"
   min_height="70"
   max_height="120" 
-transform="translate(1200 30)" background="#0000FF00"> 
+transform="translate(600 30)" > 
   <NineGrid 
-    margin="-4 -4 -4 -4"
-    source="background.png"
-    center_height="50"
-    center_width="250"/>
+    margin="-5 -2 -5 -7"
+    source="c:\temp\new_notifications\background.png"
+  />
 
+  <Row 
+  distribution="natural,*,23">
   <ImageNode
-source="../../test/manual/icon_48x48.png"
+source="c:\temp\new_notifications\test_icon.png"
     id="kIconId"  
     vertical_alignment="top"  
     horizontal_alignment="left"
-    margin="6 4 0 10"/>
+    margin="12 10 8 0"/>
 
-  <Column>
+  <Column 
+    margin="0 6 4 0">
     <SimpleText 
 text="Breakfast!"
       font_family="verdana"
       font_size="10"
       id="kTitleId"
 	bold="true"
-	margin="56 8 6 0"
  	horizontal_alignment="left"/>
     <SimpleText 
 text="At cafeteria..."
       font_family="verdana"
       font_size="9"
       id="kSubtitleId"
-	margin="56 3 6 0"
+	margin="0 4 0 0"
  	horizontal_alignment="left"/>
     <SimpleText 
 text="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed .."
       id="kDescriptionId"
       font_family="verdana"
       font_size="8"
-	margin="56 4 6 0"
+	margin="0 4 0 0"
  	horizontal_alignment="left"/>
     <Row 
        id="kActionsContainer"
-	 margin="0 0 16 10" 
+	 margin="0 4 10 10" 
        horizontal_alignment="right">
     </Row>
   </Column>
+  <Node background="#00FF0000">
   <Button    
-    source="close_button_strip.png" 
-    min_height="24"
-    min_width="24" 
-    margin="0 4 3 0" 
+    source="c:\temp\new_notifications\close.png" 
+    min_height="22"
+    min_width="22" 
+    margin="0 3 3 0" 
     horizontal_alignment="right"
     vertical_alignment="top"/>
+  <Button    
+    source="c:\temp\new_notifications\menu.png" 
+    min_height="22"
+    min_width="22" 
+    margin="0 0 3 4" 
+    horizontal_alignment="right"
+    vertical_alignment="bottom"/>
+</Node>
+</Row>
+
 </Node>

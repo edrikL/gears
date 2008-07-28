@@ -44,7 +44,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <input id="subtitle" value="test 1 2 3..."/></p>
       <p>Description:
         <input id="description"
-        value="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed .."/>
+        value="Lorem ipsum dolor sit amet, consectetur adipisicing elit."/>
       </p>
       <p>Delay (for displayAt):
         <input id="delay" value="0"/></p>
@@ -110,7 +110,7 @@ function updateNotification(id, title, subtitle, description, delay) {
   if (!sendNotification(id, title, subtitle, description, delay)) {
     return;
   }
-  addStatus('Updated: ' + title + '/' + subtitle + '/' + description + 
+  addStatus('Updated: ' + title + '/' + subtitle + '/' + description +
     '/' + delay);
 }
 
