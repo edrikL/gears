@@ -89,7 +89,13 @@ void LibUpdater::StopUpdateChecks() {
 
 LibUpdater::~LibUpdater() {
   version_check_task_->Abort();
+  version_check_task_->DeleteWhenDone();
+  version_check_task_.release();
+
   download_task_->Abort();
+  download_task_->DeleteWhenDone();
+  download_task_.release();
+
   timer_event_.Signal();
   AndroidMessageLoop::Stop(thread_id_);
   Join();
@@ -175,14 +181,9 @@ void LibUpdater::Run() {
   }
 
   // Wait for delay millis.
-  if (timer_event_.WaitWithTimeout(delay)) {
-    // event_ was signaled, destructor must have been called.
-    return;
-  }
-
-  // Start the version check task.
-  if (!StartVersionCheckTask()) {
-    return;
+  if (!timer_event_.WaitWithTimeout(delay)) {
+    // the wait timed out. Start the version task.
+    StartVersionCheckTask();
   }
 
   // Run the message loop.
