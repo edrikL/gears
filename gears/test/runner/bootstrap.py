@@ -87,7 +87,7 @@ from suites_report import SuitesReport
 import browser_launchers
 import installer
 import osutils
-
+from osutils import WindowsNetworkHelper
 
 def clean():
   """ Clean up existing output directory. """
@@ -98,15 +98,6 @@ def clean():
 def serverRootDir():
     return os.path.join(os.path.dirname(__file__), '../')
 
-                    
-def localIp():
-  """ Returns a string with the local ip address. """
-  ip = socket.gethostbyname(socket.gethostname())
-
-  # Expect that ip is a valid looking ipv4 address.
-  if len(ip.split('.')) != 4:
-    raise ValueError("Host IP appears invalid: %s" % ip)
-  return ip
 
 
 def main():
@@ -133,7 +124,7 @@ def main():
   # WinCE is a special case, because it is compiled 
   # and run on different platforms.
   if len(sys.argv) > 2 and sys.argv[2] == 'wince':
-    local_ip = localIp()
+    local_ip = WindowsNetworkHelper.GetLocalIp()
     launchers.append(browser_launchers.IExploreWinCeLauncher(local_ip))
     installers.append(installer.WinCeInstaller(local_ip))
     test_url = 'http://%s:8001/tester/gui.html' % local_ip
