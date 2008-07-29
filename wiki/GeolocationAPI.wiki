@@ -21,8 +21,8 @@ interface Geolocation {
   // Get the current position.
   // The success callback function is always called exactly once with a good position,
   // as soon as one is available, or the error callback is called exactly once with an
-  // error message, if none of the location providers find a good fix.
-  void getCurrentPosition(function successCallback, function errorCallback, optional PositionOptions options);
+  // error message, if none of the location providers find a good fix. The error callback is optional and null may be passed.
+  void getCurrentPosition(function successCallback, optional function errorCallback, optional PositionOptions options);
 
   // Watch the current position over time.
   // The success callback function will be called when ...
