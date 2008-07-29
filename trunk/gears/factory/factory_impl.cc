@@ -216,7 +216,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.audiorecorder")) {
     CreateModule<GearsAudioRecorder>(module_environment_.get(),
                                      context, &object);
-#if defined(WIN32) || defined(OS_MACOSX)
+#if defined(WIN32) || defined(OS_MACOSX) || defined(LINUX)
   } else if (module_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
 #endif  // WIN32 || OS X
