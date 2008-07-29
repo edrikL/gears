@@ -63,37 +63,6 @@ Mutex *LocationProviderBase::GetListenersMutex() {
   return &listeners_mutex_;
 }
 
-#ifdef USING_CCTESTS
-#include "gears/base/common/common.h"
-#include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
-#include "gears/geolocation/geolocation.h"  // For Position
-
-// Mock implementation of a location provider for testing.
-class MockLocationProvider : public LocationProviderBase {
- public:
-  MockLocationProvider() {}
-  virtual ~MockLocationProvider() {}
-  // LocationProviderBase implementation.
-  virtual void GetPosition(Position *position) {
-    assert(position);
-    position->latitude = 54.0;
-    position->longitude = 0.0;
-    position->altitude = 0;
-    position->horizontal_accuracy = 1000;
-    position->vertical_accuracy = 10;
-    position->timestamp = GetCurrentTimeMillis();
-  }
- private:
-  LocationProviderBase::ListenerInterface *listener_;
-  DISALLOW_EVIL_CONSTRUCTORS(MockLocationProvider);
-};
-
-LocationProviderBase *NewMockLocationProvider() {
-  return new MockLocationProvider();
-}
-
-#endif
-
 // Win32, Linux and OSX do not have a GPS location provider.
 #if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
 
