@@ -158,6 +158,15 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: nothing
   void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 
+  // Configures the Geolocation object to use a mock location provider and sets
+  // the position that the mock provider will provide. Fields are latitude,
+  // longitude, altitude, horizontalAccuracy, verticalAccuracy and error. Note
+  // that this a subset of the properties available on the Position object
+  // returned by the Geolocation module.
+  // IN: object position.
+  // OUT: nothing
+  void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
+
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
 #else

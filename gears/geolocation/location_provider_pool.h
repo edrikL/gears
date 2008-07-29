@@ -35,7 +35,7 @@
 
 class LocationProviderPool {
  public:
-  LocationProviderPool() {}
+  LocationProviderPool();
   ~LocationProviderPool();
 
   static LocationProviderPool *GetInstance();
@@ -56,6 +56,14 @@ class LocationProviderPool {
   bool Unregister(LocationProviderBase *provider,
                   LocationProviderBase::ListenerInterface *listener);
 
+  // Configures the pool to return a mock location provider for the type "MOCK".
+  // This method is used only by the Gears test object.
+  void UseMockLocationProvider();
+
+  LocationProviderBase *NewProvider(const std::string16 &type,
+                                    const std::string16 &host,
+                                    const std::string16 &language);
+
  private:
   static LocationProviderPool instance_;
 
@@ -63,6 +71,8 @@ class LocationProviderPool {
   typedef std::map<std::string16, ProviderPair> ProviderMap;
   ProviderMap providers_;
   Mutex providers_mutex_;
+
+  bool use_mock_location_provider_;
 
   DISALLOW_EVIL_CONSTRUCTORS(LocationProviderPool);
 };

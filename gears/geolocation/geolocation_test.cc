@@ -26,14 +26,17 @@
 #if USING_CCTESTS
 
 #include <assert.h>
+#include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/base/common/thread.h"
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/network_location_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -72,6 +75,11 @@ static void GetStringPropertyIfDefined(JsCallContext *context,
                                        const JsObject &javascript_object,
                                        const std::string16 &name,
                                        std::string16 *value);
+// As above but for a double property.
+static void GetDoublePropertyIfDefined(JsCallContext *context,
+                                       const JsObject& javascript_object,
+                                       const std::string16& name,
+                                       double *value);
 
 // A mock implementation of DeviceDataProviderImplBase for testing.
 template<typename DataType>
@@ -138,6 +146,84 @@ DataType MockDeviceDataProviderImpl<DataType>::new_data_;
 // static
 template<typename DataType>
 Mutex MockDeviceDataProviderImpl<DataType>::data_mutex_;
+
+// Mock implementation of a location provider for testing.
+class MockLocationProvider
+    : public LocationProviderBase,
+      public Thread {
+ public:
+  MockLocationProvider() : is_shutting_down_(false) {
+    Start();
+  }
+  virtual ~MockLocationProvider() {
+    is_shutting_down_ = true;
+    worker_event_.Signal();
+    Join();
+  }
+
+  void AddListener(ListenerInterface *listener,
+                                       bool request_address) {
+    MutexLock lock(&position_mutex_);
+    is_new_listener_waiting_ = true;
+    worker_event_.Signal();
+    LocationProviderBase::AddListener(listener, request_address);
+  }
+
+  static void SetPosition(const Position &position) {
+    MutexLock lock(&position_mutex_);
+    position_ = position;
+    is_new_position_available_ = true;
+    worker_event_.Signal();
+  }
+
+ private:
+  // LocationProviderBase implementation.
+  virtual void GetPosition(Position *position) {
+    assert(position);
+    MutexLock lock(&position_mutex_);
+    *position = position_;
+  }
+
+  // Thread implementation.
+  virtual void Run() {
+    while (!is_shutting_down_) {
+      worker_event_.Wait();
+      MutexLock lock(&position_mutex_);
+      if (is_new_position_available_ || is_new_listener_waiting_) {
+        UpdateListeners();
+        is_new_position_available_ = false;
+      }
+    }
+  }
+
+  static Position position_;
+  static Mutex position_mutex_;
+  static bool is_new_position_available_;
+  static Event worker_event_;
+
+  bool is_shutting_down_;
+  bool is_new_listener_waiting_;
+
+  LocationProviderBase::ListenerInterface *listener_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(MockLocationProvider);
+};
+
+// static
+Position MockLocationProvider::position_;
+
+// static
+Mutex MockLocationProvider::position_mutex_;
+
+// static
+bool MockLocationProvider::is_new_position_available_ = false;
+
+// static
+Event MockLocationProvider::worker_event_;
+
+LocationProviderBase *NewMockLocationProvider() {
+  return new MockLocationProvider();
+}
 
 void TestParseGeolocationOptions(JsCallContext *context,
                                  JsRunnerInterface *js_runner) {
@@ -376,6 +462,50 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
   WifiDataProvider::SetFactory(MockDeviceDataProviderImpl<WifiData>::Create);
 }
 
+void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
+  assert(context);
+
+  // Get the arguments provided from JavaScript. 
+  JsObject object;
+  JsArgument argv[] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &object }, };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  
+  Position position;
+  GetDoublePropertyIfDefined(context, object, STRING16(L"latitude"),
+                             &position.latitude);
+  GetDoublePropertyIfDefined(context, object, STRING16(L"longitude"),
+                             &position.longitude);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"altitude"),
+                              &position.altitude);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"horizontalAccuracy"),
+                              &position.horizontal_accuracy);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"verticalAccuracy"),
+                              &position.vertical_accuracy);
+  GetStringPropertyIfDefined(context, object, STRING16(L"error"),
+                             &position.error);
+
+  // The GetXXXPropertyIfDefined functions set an exception if the property has
+  // the wrong type.
+  if (context->is_exception_set()) {
+    return;
+  }
+
+  position.timestamp = GetCurrentTimeMillis();
+  if (!position.IsInitialized()) {
+    context->SetException(STRING16(L"Specified position is not valid.\n"));
+    return;
+  }
+
+  // Set the position used by the mock location provider.
+  MockLocationProvider::SetPosition(position);
+
+  // Configure the Geolocation object to use the mock location provider.
+  LocationProviderPool::GetInstance()->UseMockLocationProvider();
+}
+
 // Local functions
 static bool GetPropertyIfDefined(JsCallContext *context,
                                  const JsObject& javascript_object,
@@ -427,6 +557,24 @@ static void GetStringPropertyIfDefined(JsCallContext *context,
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be a string.");
+    context->SetException(error);
+  }
+}
+
+static void GetDoublePropertyIfDefined(JsCallContext *context,
+                                       const JsObject& javascript_object,
+                                       const std::string16& name,
+                                       double *value) {
+  assert(context);
+  assert(value);
+  JsScopedToken token;
+  if (!GetPropertyIfDefined(context, javascript_object, name, &token)) {
+    return;
+  }
+  if (!JsTokenToDouble_NoCoerce(token, context->js_context(), value)) {
+    std::string16 error = STRING16(L"property ");
+    error += name;
+    error += STRING16(L" should be a double.");
     context->SetException(error);
   }
 }

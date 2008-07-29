@@ -500,26 +500,44 @@ function testGeolocationGetLocationFromResponse() {
   }
 }
 
-// Tests GearsGeolocation::GetCurrentPosition, using mock radio and WiFi device
-// data providers.
 function testGeolocationGetCurrentPosition() {
   if (isUsingCCTests) {
+
+    // Use mock radio and WiFi device data providers.
     internalTests.configureGeolocationRadioDataProviderForTest(
-        { cell_id: 23874,
-          location_area_code: 98,
-          mobile_network_code: 15,
-          mobile_country_code: 234,
-          radio_signal_strength: -65 });
+      { cell_id: 23874,
+        location_area_code: 98,
+        mobile_network_code: 15,
+        mobile_country_code: 234,
+        radio_signal_strength: -65
+      });
     internalTests.configureGeolocationWifiDataProviderForTest(
-        { mac_address: "00-0b-86-ca-bb-c8" });
-    // TODO(steveblock): Complete this test once the Geolocation API is
-    // complete.
+      { mac_address: "00-0b-86-ca-bb-c8" });
+    // TODO(steveblock): Complete this test once we have a working, public
+    // network location provider.
     //var geolocation = google.gears.factory.create('beta.geolocation');
     //var locationAvailable = function(position) {
     //  completeAsync();
     //};
     //startAsync();
-    //geolocation.getCurrentPosition(locationAvailable);
+    //geolocation.getCurrentPosition(locationAvailable,
+    //                               { gearsLocationProviderUrls: ['TODO'] });
+
+    // Use mock location provider.
+    var mockPosition = {
+      latitude: 51.0,
+      longitude: -0.1,
+      horizontalAccuracy: 100
+    };
+    internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
+    var locationAvailable2 = function(position) {
+      assertObjectEqual(mockPosition, position);
+      completeAsync();
+    };
+    var geolocation2 = google.gears.factory.create('beta.geolocation');
+    startAsync();
+    geolocation2.getCurrentPosition(locationAvailable2,
+                                    { gearsLocationProviderUrls: [] });
   }
 }
 

@@ -84,9 +84,7 @@ class LocationProviderBase {
 
 // Factory functions for the various types of location provider to abstract over
 // the platform-dependent implementations.
-#ifdef USING_CCTESTS
 LocationProviderBase *NewMockLocationProvider();
-#endif
 LocationProviderBase *NewGpsLocationProvider();
 LocationProviderBase *NewNetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &host_name,
