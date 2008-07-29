@@ -259,7 +259,7 @@ class DeviceDataProvider {
   // inject mock implementations for testing.
   typedef DeviceDataProviderImplBase<DataType> *(*ImplFactoryFunction)(void);
   static void SetFactory(ImplFactoryFunction factory_function_in) {
-    factory_function = factory_function_in;
+    factory_function_ = factory_function_in;
   }
 
   // Adds a listener, which will be called back with DeviceDataUpdateAvailable
@@ -271,26 +271,26 @@ class DeviceDataProvider {
     // the JavaScript thread. Unregister is called when NetworkLocationProvider
     // objects are destructed, which happens asynchronously once the
     // NetworkLocationProvider HTTP request has completed.
-    MutexLock mutex(&instance_mutex);
-    if (!instance) {
-      instance = new DeviceDataProvider();
+    MutexLock mutex(&instance_mutex_);
+    if (!instance_) {
+      instance_ = new DeviceDataProvider();
     }
-    assert(instance);
-    instance->Ref();
-    instance->AddListener(listener);
-    return instance;
+    assert(instance_);
+    instance_->Ref();
+    instance_->AddListener(listener);
+    return instance_;
   }
 
   // Removes a listener. If this is the last listener, deletes the singleton
   // instance. Return value indicates success.
   static bool Unregister(ListenerInterface *listener) {
-    MutexLock mutex(&instance_mutex);
-    if (!instance->RemoveListener(listener)) {
+    MutexLock mutex(&instance_mutex_);
+    if (!instance_->RemoveListener(listener)) {
       return false;
     }
-    if (instance->Unref()) {
-      delete instance;
-      instance = NULL;
+    if (instance_->Unref()) {
+      delete instance_;
+      instance_ = NULL;
     }
     return true;
   }
@@ -306,8 +306,8 @@ class DeviceDataProvider {
   // Private constructor and destructor, callers access singleton through
   // Register and Unregister.
   DeviceDataProvider() {
-    assert(factory_function);
-    impl_.reset((*factory_function)());
+    assert(factory_function_);
+    impl_.reset((*factory_function_)());
     impl_->SetContainer(this);
   }
   virtual ~DeviceDataProvider() {}
@@ -331,11 +331,11 @@ class DeviceDataProvider {
   static DeviceDataProviderImplBase<DataType> *DefaultFactoryFunction();
 
   // The singleton instance of this class and its mutex.
-  static DeviceDataProvider *instance;
-  static Mutex instance_mutex;
+  static DeviceDataProvider *instance_;
+  static Mutex instance_mutex_;
 
   // The factory function used to create the singleton instance.
-  static ImplFactoryFunction factory_function;
+  static ImplFactoryFunction factory_function_;
 
   // The internal implementation.
   scoped_ptr<DeviceDataProviderImplBase<DataType> > impl_;
@@ -347,17 +347,17 @@ class DeviceDataProvider {
 
 // static
 template<typename DataType>
-Mutex DeviceDataProvider<DataType>::instance_mutex;
+Mutex DeviceDataProvider<DataType>::instance_mutex_;
 
 // static
 template<typename DataType>
-DeviceDataProvider<DataType> *DeviceDataProvider<DataType>::instance =
+DeviceDataProvider<DataType> *DeviceDataProvider<DataType>::instance_ =
     NULL;
 
 // static
 template<typename DataType>
 typename DeviceDataProvider<DataType>::ImplFactoryFunction
-    DeviceDataProvider<DataType>::factory_function = DefaultFactoryFunction;
+    DeviceDataProvider<DataType>::factory_function_ = DefaultFactoryFunction;
 
 typedef DeviceDataProvider<RadioData> RadioDataProvider;
 typedef DeviceDataProvider<WifiData> WifiDataProvider;

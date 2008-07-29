@@ -38,7 +38,7 @@ static LocationProviderBase *NewProvider(const std::string16 &type,
                                          const std::string16 &language);
 
 // static member variables
-LocationProviderPool LocationProviderPool::instance;
+LocationProviderPool LocationProviderPool::instance_;
 
 LocationProviderPool::~LocationProviderPool() {
   assert(providers_.empty());
@@ -46,7 +46,7 @@ LocationProviderPool::~LocationProviderPool() {
 
 // static
 LocationProviderPool *LocationProviderPool::GetInstance() {
-  return &instance;
+  return &instance_;
 }
 
 LocationProviderBase *LocationProviderPool::Register(
