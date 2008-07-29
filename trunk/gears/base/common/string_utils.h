@@ -95,6 +95,15 @@ inline void StripWhiteSpace(const CharT** str, int* len) {
   }
 }
 
+// StripWhiteSpace, but taking and returning a std::basic_string<T>.
+template<class T>
+inline std::basic_string<T> StripWhiteSpace(const std::basic_string<T> &str) {
+  const T *start = str.data();
+  int len = static_cast<int>(str.size());
+  StripWhiteSpace(&start, &len);
+  return std::basic_string<T>(start, len);
+}
+
 // ----------------------------------------------------------------------
 // memmatch and memstr functions
 //
