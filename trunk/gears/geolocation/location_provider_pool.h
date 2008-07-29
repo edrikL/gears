@@ -57,7 +57,7 @@ class LocationProviderPool {
                   LocationProviderBase::ListenerInterface *listener);
 
  private:
-  static LocationProviderPool instance;
+  static LocationProviderPool instance_;
 
   typedef std::pair<LocationProviderBase*, RefCount*> ProviderPair;
   typedef std::map<std::string16, ProviderPair> ProviderMap;
