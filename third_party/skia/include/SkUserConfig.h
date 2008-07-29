@@ -22,6 +22,8 @@
 #define SK_IGNORE_STDINT_DOT_H
 #define SK_RESTRICT
 
+#ifdef WIN32
+// TODO(kart): These may not be 64-bit safe.
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef short int16_t;
@@ -29,13 +31,23 @@ typedef unsigned short uint16_t;
 typedef int int32_t;
 typedef unsigned int uint32_t;
 
-#define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
+#include <string.h>
+
+inline void bzero(void *buffer, size_t count) {
+  memset(buffer, 0, count);
+}
+
+#else
+#include <stdint.h>
+#endif
+
 inline void SkDebugf(const char format[], ...) {
 }
 
 #undef SK_RELEASE
 #define SK_DEBUG
 #undef SK_SCALAR_IS_FIXED
+#define SK_SCALAR_IS_FLOAT
 // END Gears changes.
 
 #ifdef ANDROID

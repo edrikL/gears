@@ -1247,7 +1247,7 @@ endif
 ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
-ifneq ($(findstring $(OS), win32|osx),)
+ifneq ($(findstring $(OS), win32|osx|linux),)
 $(BROWSER)_VPATH += \
 		canvas \
 		$(NULL)
@@ -1258,7 +1258,7 @@ $(BROWSER)_CPPSRCS += \
 		canvas.cc \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
-endif  # win32 | osx
+endif  # win32 | osx | linux
 endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------

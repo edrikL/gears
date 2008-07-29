@@ -26,7 +26,8 @@
 #ifndef GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 #define GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 
-#if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
+#if !defined(OFFICIAL_BUILD) && \
+    (defined(WIN32) || defined(OS_MACOSX) || defined(LINUX))
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"

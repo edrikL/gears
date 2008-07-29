@@ -63,7 +63,7 @@ if (!isOfficial && !isSafari && !isWince) {
   suites.push(audioSuite);
 }
 
-if (!isOfficial && (isWin32 || isOsx)) {
+if (!isOfficial && (isWin32 || isOsx || isLinux)) {
   var canvasSuite = new TestSuite('Canvas');
   canvasSuite.addFile('../testcases/canvas_tests.js',
       {useWorker: true, useIFrame: true});

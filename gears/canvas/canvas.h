@@ -26,7 +26,8 @@
 #ifndef GEARS_CANVAS_CANVAS_H__
 #define GEARS_CANVAS_CANVAS_H__
 
-#if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
+#if !defined(OFFICIAL_BUILD) && \
+    (defined(WIN32) || defined(OS_MACOSX) || defined(LINUX))
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
