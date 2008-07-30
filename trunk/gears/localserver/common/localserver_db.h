@@ -185,8 +185,12 @@ class WebCacheDB : SQLTransactionListener {
     // Test that the status code is valid, and that the status line can
     // be parsed, and that the status code found there in string form agrees
     // with the status code data member, and that the headers end with a
-    // blank line and can be parsed without error
-    bool PassesValidationTests();
+    // blank line and can be parsed without error, and that the received
+    // content length matches the custome 'X-Gears-Decoded-Content-Length'
+    // header value if present.  'adjusted_headers' is an optional output
+    // param. If non-NULL, it will be set to an adjusted set of headers
+    // suitable for insertion into the LocalServer database.
+    bool PassesValidationTests(std::string16 *adjusted_headers);
   };
 
   // Returns a pointer to the underlying SQLDatabase

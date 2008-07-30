@@ -69,6 +69,8 @@ const char16 *HttpConstants::kXGearsReasonHeader =
                                  STRING16(L"X-Gears-Reason");
 const char16 *HttpConstants::kXGearsReason_ValidateManifest =
                                  STRING16(L"validate-manifest");
+const char   *HttpConstants::kXGearsDecodedContentLengthAscii =
+                                 "X-Gears-Decoded-Content-Length";
 // This header value should not be prefixed with "X-Google" as those values
 // are special cased and stripped by GFEs
 const char16 *HttpConstants::kXGoogleGearsHeader =

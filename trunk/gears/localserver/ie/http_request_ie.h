@@ -224,8 +224,12 @@ class IEHttpRequest
   // Our XmlHttpRequest like ready state, 0 thru 4
   ReadyState ready_state_;
 
-  // Whether this request was aborted
+  // Whether this request was aborted by the caller
   bool was_aborted_;
+
+  // Used to distinguish between actual binding errors and intentionally
+  // induced failures (see OnStopBinding).
+  bool ignore_stopbinding_error_;
 
   // Whether or not we have been redirected
   bool was_redirected_;

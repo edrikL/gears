@@ -1019,7 +1019,8 @@ bool WebCacheDB::InsertPayload(int64 server_id,
     return false;
   }
 
-  if (!payload->PassesValidationTests()) {
+  std::string16 adjusted_headers;
+  if (!payload->PassesValidationTests(&adjusted_headers)) {
     assert(false);
     return false;
   }
@@ -1045,7 +1046,7 @@ bool WebCacheDB::InsertPayload(int64 server_id,
   }
   int param = -1;
   rv |= stmt.bind_int64(++param, payload->creation_date);
-  rv |= stmt.bind_text16(++param, payload->headers.c_str());
+  rv |= stmt.bind_text16(++param, adjusted_headers.c_str());
   rv |= stmt.bind_text16(++param, payload->status_line.c_str());
   rv |= stmt.bind_int(++param, payload->status_code);
   if (rv != SQLITE_OK) {
@@ -2561,17 +2562,20 @@ WebCacheDB::PayloadInfo::SynthesizeHttpRedirect(const char16 *base_url,
   return true;
 }
 
-bool WebCacheDB::PayloadInfo::PassesValidationTests() {
+bool WebCacheDB::PayloadInfo::PassesValidationTests(
+                                  std::string16 *adjusted_headers) {
   int status_line_status_code;
   if (!IsValidResponseCode(status_code) ||
       !ParseHttpStatusLine(status_line, NULL, &status_line_status_code, NULL) ||
       (status_code != status_line_status_code)) {
+    ExceptionManager::ReportAndContinue();
     return false;
   }
   std::string headers_ascii;
   String16ToUTF8(headers.c_str(), headers.length(), &headers_ascii);
   const std::string kBlankLine("\r\n\r\n");
   if (!EndsWith(headers_ascii, kBlankLine)) {
+    ExceptionManager::ReportAndContinue();
     return false;
   }
   const char *body = headers_ascii.c_str();
@@ -2579,7 +2583,21 @@ bool WebCacheDB::PayloadInfo::PassesValidationTests() {
   HTTPHeaders parsed_headers;
   if (!HTTPUtils::ParseHTTPHeaders(&body, &body_len, &parsed_headers,
                                    true /* allow_const_cast */)) {
+    ExceptionManager::ReportAndContinue();
     return false;
+  }
+
+  int64 received_data_size = data.get() ? data->size() : 0;
+
+  // If there is a custom 'X-Gears-Decoded-Content-Length' header, we
+  // validate against that value.
+  const char *decoded_length_header = parsed_headers.GetHeader(
+                  HttpConstants::kXGearsDecodedContentLengthAscii);
+  if (decoded_length_header) {
+    if (received_data_size != static_cast<int64>(atoi(decoded_length_header))) {
+      ExceptionManager::ReportAndContinue();
+      return false;
+    }
   }
 
   // This is to defend against inserting degenerate responses that we
@@ -2588,12 +2606,42 @@ bool WebCacheDB::PayloadInfo::PassesValidationTests() {
   // header that we synthesized (rather than actually received). To be
   // consistent across platforms, we'll reject this form of response
   // in all cases, even if this is actually what the server sent us.
+  //
   // TODO(michaeln): If and when we get a handle on the source of that
-  // problem, revisit this part of the validity test.
+  // problem, revisit this part of the validity test. I think the addition
+  // of content length validation fixes this, leaving in until we get
+  // confirmation.
   if (status_code == HttpConstants::HTTP_OK && 
       parsed_headers.HeaderIs(HTTPHeaders::CONTENT_LENGTH, "0")) {
     parsed_headers.ClearHeader(HTTPHeaders::CONTENT_LENGTH);
     if (parsed_headers.IsEmpty()) {
+      ExceptionManager::ReportAndContinue();
+      return false;
+    }
+  }
+
+  // We fix up the "Content-Length" header and remove any "Content-Encoding"
+  // headers since the response body we have has already been decoded.
+  if (adjusted_headers) {
+    parsed_headers.SetHeader(HTTPHeaders::CONTENT_LENGTH,
+                             Integer64ToString(received_data_size).c_str(),
+                             HTTPHeaders::OVERWRITE);
+    parsed_headers.ClearHeader(HTTPHeaders::CONTENT_ENCODING);
+
+    std::string header_str;
+    for (HTTPHeaders::const_iterator hdr = parsed_headers.begin();
+         hdr != parsed_headers.end();
+         ++hdr) {
+      if (hdr->second != NULL) {  // NULL means do not output
+        header_str += hdr->first;
+        header_str += ": ";
+        header_str += hdr->second;
+        header_str += HttpConstants::kCrLfAscii;
+      }
+    }
+    header_str += HttpConstants::kCrLfAscii;  // blank line at the end
+    if (!UTF8ToString16(header_str.c_str(), header_str.length(),
+                        adjusted_headers)) {
       return false;
     }
   }

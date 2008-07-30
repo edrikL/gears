@@ -135,18 +135,17 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
     return false;  // TODO(michaeln): retry?
   }
 
-  if (!payload->PassesValidationTests()) {
-    ExceptionManager::ReportAndContinue();
-    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
-    return false;  // TODO(michaeln): retry?
-  }
-
   if (payload_data.get()) {
     payload->data.reset(new std::vector<uint8>(
                             static_cast<size_t>(payload_data->Length())));
     if (!BlobToVector(payload_data.get(), payload->data.get())) {
       LOG(("CaptureTask::HttpGetUrl - could not extract the payload\n"));
     }
+  }
+
+  if (!payload->PassesValidationTests(NULL)) {
+    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
+    return false;  // TODO(michaeln): retry?
   }
 
   return true;

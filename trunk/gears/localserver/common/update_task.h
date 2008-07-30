@@ -245,8 +245,12 @@ class UpdateTask : public AsyncTask {
                                   std::string16 *redirect_url,
                                   std::string16 *mod_date);
 
-  // Helper method used to set the http error messages during update
-  bool SetHttpError(const char16 *url, const int *http_status);
+  // Helper method used to set the http error messages during update.
+  // 'http_status' and 'optional_message' may be NULL. If non-NULL,
+  // the status code and/or optional message will be included as part
+  // of the error message.
+  bool SetHttpError(const char16 *url, const int *http_status,
+                    const char16 *optional_message);
 };
 
 #endif  // GEARS_LOCALSERVER_COMMON_UPDATE_TASK_H__

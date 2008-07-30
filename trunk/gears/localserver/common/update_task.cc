@@ -284,16 +284,7 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
                             &error_msg_)) {
       LOG(("UpdateTask::HttpGetUrl - failed to get url\n"));
       if (error_msg_.empty())
-        SetHttpError(full_url, NULL);
-      return false;  // TODO(michaeln): retry?
-    }
-
-    if (!payload->PassesValidationTests()) {
-      ExceptionManager::ReportAndContinue();
-      LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
-      // Explicitly overwrite error_msg_, not passing the validation tests is
-      // the reason for overall task failure.
-      SetHttpError(full_url, NULL);
+        SetHttpError(full_url, NULL, NULL);
       return false;  // TODO(michaeln): retry?
     }
 
@@ -304,6 +295,14 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
       if (!BlobToVector(payload_data.get(), payload->data.get())) {
         LOG(("UpdateTask::HttpGetUrl - could not extract the payload\n"));
       }
+    }
+
+    if (!payload->PassesValidationTests(NULL)) {
+      LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
+      // Explicitly overwrite error_msg_, not passing the validation tests is
+      // the reason for overall task failure.
+      SetHttpError(full_url, NULL, STRING16(L"validation test failed"));
+      return false;  // TODO(michaeln): retry?
     }
 
     if (payload->status_code != HttpConstants::HTTP_SERVICE_UNAVAILABLE) {
@@ -483,7 +482,8 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version,
     LOG(("UpdateTask::UpdateManifest - received bad response %d\n",
          manifest_payload.status_code));
 
-    SetHttpError(server.manifest_url.c_str(), &manifest_payload.status_code);
+    SetHttpError(server.manifest_url.c_str(), &manifest_payload.status_code,
+                 NULL);
     return false;
   }
   // unreachable
@@ -616,7 +616,7 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
   } else {
     LOG(("UpdateTask::ProcessUrl - received bad response %d\n",
           new_payload.status_code));
-    SetHttpError(url.c_str(), &new_payload.status_code);
+    SetHttpError(url.c_str(), &new_payload.status_code, NULL);
     return false;
   }
 
@@ -674,26 +674,22 @@ bool UpdateTask::FindPreviousVersionPayload(int64 server_id,
 // TODO(aa): It would nice to be able to also take the first 50 or so chars of
 // the response text as well.
 //------------------------------------------------------------------------------
-bool UpdateTask::SetHttpError(const char16 *url, const int *http_status) {
+bool UpdateTask::SetHttpError(const char16 *url, const int *http_status,
+                              const char16 *optional_message) {
   assert(url);
-
   error_msg_ = STRING16(L"Download of '");
   error_msg_ += url;
+  error_msg_ += STRING16(L"' failed");
 
-  if (!http_status) {
-    error_msg_ += STRING16(L"' failed");
-  } else {
-    // http status codes are always three digits.
-    if (*http_status >= pow(10.0, HttpConstants::kHttpStatusCodeMaxDigits)) {
-      LOG(("Unexpected status code '%d'", *http_status));
-      error_msg_ += STRING16(L"' failed");
-      return false;
-    }
-
-    error_msg_ += STRING16(L"' returned response code ");
+  if (http_status) {
+    error_msg_ += STRING16(L", status code ");
     error_msg_ += IntegerToString16(*http_status);
   }
-
+  if (optional_message && optional_message[0]) {
+    error_msg_ += STRING16(L", ");
+    error_msg_ += optional_message;
+  }
+  error_msg_ += STRING16(L".");
   return true;
 }
 
