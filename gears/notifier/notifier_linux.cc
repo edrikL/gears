@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 #include <unistd.h>
 #include "gears/notifier/notifier.h"
 #include "gears/notifier/notifier_process_posix.h"
+#include "third_party/glint/include/platform.h"
 
 class LinuxNotifier : public Notifier {
  public:
@@ -168,8 +169,7 @@ void LinuxNotifier::RequestQuit() {
 int LinuxNotifier::Run() {
   running_ = true;
   while (running_) {
-    // Block until a signal is received.
-    select(0, NULL, NULL, NULL, NULL);
+    glint::platform()->RunMessageLoop();
   }
   return 0;
 }
@@ -190,5 +190,3 @@ int main(int argc, char *argv[]) {
 
 #endif  // OFFICIAL_BUILD
 #endif  // defined(LINUX) && !defined(OS_MACOSX)
-
-

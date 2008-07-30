@@ -1,4 +1,4 @@
-// Copyright 2008, Google Inc.
+// Copyright 2008 Google Inc. All Rights Reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -22,48 +22,18 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Definitions for detecting user activity.
 
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#if defined(LINUX) && !defined(OS_MACOSX)
+#ifndef BASE_LOGGING_H__
+#define BASE_LOGGING_H__
 
-#include "gears/notifier/user_activity.h"
+// BEGIN Google Gears changes
+#define CHECK_LT(x, y) \
+  do {                 \
+    if ((x) >= (y)) {  \
+      assert(false);   \
+    }                  \
+  }  while (0)
 
-#include <assert.h>
+// END Google Gears changes
 
-UserMode UserActivityMonitor::PlatformDetectUserMode() {
-  // TODO(jianli): implement
-  return USER_MODE_UNKNOWN;
-}
-
-uint32 UserActivityMonitor::GetMonitorPowerOffTimeSec() {
-  // TODO(jianli): implement
-  return 0;
-}
-
-uint32 UserActivityMonitor::GetUserIdleTimeMs() {
-  // TODO(jianli): implement
-  return 0;
-}
-
-bool UserActivityMonitor::IsScreensaverRunning() {
-  // TODO(jianli): implement
-  return false;
-}
-
-bool UserActivityMonitor::IsWorkstationLocked() {
-  // TODO(jianli): implement
-  return false;
-}
-
-bool UserActivityMonitor::IsFullScreenMode() {
-  // TODO(jianli): implement
-  return false;
-}
-
-#endif  // defined(LINUX) && !defined(OS_MACOSX)
-
-#endif  // OFFICIAL_BUILD
+#endif  // BASE_LOGGING_H__

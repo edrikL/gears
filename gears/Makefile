@@ -1370,7 +1370,7 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 NOTIFIER_SHELL_CPPSRCS += \
-    const_notifier.cc \
+		const_notifier.cc \
 		notifier_shell_win32.cc \
 		notifier_utils_win32.cc \
 		$(NULL)
@@ -1415,7 +1415,6 @@ NOTIFIER_CORE	+= \
 		user_activity_linux.cc \
 		user_activity_win32.cc \
 		$(NULL)
-
 
 NOTIFIER_CPPSRCS += \
 		$(GLINT_CPPSRCS) \
@@ -1463,6 +1462,14 @@ NOTIFIER_CSRCS += \
 		$(NULL)
 
 ifeq ($(OS),linux)
+COMMON_VPATH	+= \
+		../third_party/google_perftools/src/base \
+		$(NULL)
+
+NOTIFIER_CORE	+= \
+		sysinfo.cc \
+		$(NULL)
+
 NOTIFIER_LIBS 	+= \
 		-lgtk-x11-2.0 \
 		-L../third_party/gtk/linux/lib \
