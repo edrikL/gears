@@ -26,6 +26,7 @@
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/ui/common/html_dialog.h"
 #ifdef WINCE
 #include "gears/ui/ie/html_dialog_host_iemobile.h"
 #else
@@ -45,6 +46,16 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
   }
 
   return SetResult(result_bstr.m_str);
+}
+
+bool HtmlDialog::DoModelessImpl(
+    const char16 *html_filename, int width, int height,
+    const char16 *arguments_string,
+    ModelessCompletionCallback callback,
+    void *closure) {
+  // Unused in IE.
+  assert(false);
+  return false;
 }
 
 bool HtmlDialog::GetLocale(std::string16 *locale) {

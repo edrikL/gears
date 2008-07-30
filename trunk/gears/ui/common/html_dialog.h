@@ -35,7 +35,7 @@
 enum HtmlDialogReturnValue {
   HTML_DIALOG_SUCCESS,
   HTML_DIALOG_FAILURE,
-  HTML_DIALOG_SUPRESSED
+  HTML_DIALOG_SUPPRESSED
 };
 
 // This class implements a cross-platform modal dialog using HTML for the
@@ -55,7 +55,12 @@ class HtmlDialog {
                                               void *closure);
  public:
   // Constructor.
-  HtmlDialog() : arguments(Json::objectValue), result(Json::nullValue) {}
+  HtmlDialog()
+      : arguments(Json::objectValue), result(Json::nullValue),
+        platform_data_(NULL) {}
+  HtmlDialog(void *platform_data)
+      : arguments(Json::objectValue), result(Json::nullValue),
+        platform_data_(platform_data) {}
 
   // Open the dialog.
   HtmlDialogReturnValue DoModal(const char16 *html_filename, int width,
@@ -88,6 +93,9 @@ class HtmlDialog {
 
   // GetLocale() is in the browser-specific HtmlDialog code.
   bool GetLocale(std::string16 *locale);
+
+  // Platform-specific data.
+  void *platform_data_;
 };
 
 #endif  // GEARS_UI_COMMON_HTML_DIALOG_H__

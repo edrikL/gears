@@ -61,7 +61,7 @@
   }
   
   if (!SettingsDialog::IsVisible()) {
-    SettingsDialog::Run();
+    SettingsDialog::Run(NULL);
   }
 }
 

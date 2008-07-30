@@ -34,6 +34,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
+#include "gears/ui/common/html_dialog.h"
 
 
 // Helper function used by DoModalImpl(). Finds the active nsIDOMWindow and
@@ -121,6 +122,16 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
 
   // Set up the result property
   return SetResult(output_nsstring.BeginReading());
+}
+
+bool HtmlDialog::DoModelessImpl(
+    const char16 *html_filename, int width, int height,
+    const char16 *arguments_string,
+    ModelessCompletionCallback callback,
+    void *closure) {
+  // Unused in FF.
+  assert(false);
+  return false;
 }
 
 bool HtmlDialog::GetLocale(std::string16 *locale) {

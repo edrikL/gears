@@ -1680,6 +1680,7 @@ FF3_IDLSRCS	+= \
 		$(NULL)
 
 FF3_CPPSRCS	+= \
+		html_dialog_ff.cc \
 		ui_utils.cc \
 		$(NULL)
 
@@ -1700,6 +1701,7 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
+		html_dialog_ie.cc \
 		tools_menu_item.cc \
 		$(NULL)
 

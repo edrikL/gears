@@ -86,7 +86,7 @@ PermissionState PermissionsDialog::Prompt(
 
   HtmlDialogReturnValue dialog_result =
       dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
-  if (dialog_result == HTML_DIALOG_SUPRESSED) {
+  if (dialog_result == HTML_DIALOG_SUPPRESSED) {
     return ALLOWED_TEMPORARILY;
   }
 
