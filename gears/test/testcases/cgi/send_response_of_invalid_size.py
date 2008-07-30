@@ -13,9 +13,9 @@ self.end_headers()
 # and others that want to interact with the httprequest object
 # during transfer.
 block_size = 1024 * 16
-num_blocks = size / block_size
+num_blocks = (size - 1) / block_size
 block_data = 'a' * block_size
-remainder = 'a' * (size % block_size)
+remainder = 'a' * ((size - 1) % block_size)
 
 for i in xrange(num_blocks):
   self.outgoing.append(block_data)

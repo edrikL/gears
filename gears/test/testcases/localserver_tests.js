@@ -179,7 +179,9 @@ function testCaptureMany() {
     "/testcases/nonexistent_file": -1,  // should fail
     "/testcases/test_file_1.txt": 1,
     "/testcases/cgi/server_redirect.py?location=/testcases/nonexistent_file": -1,
-    "/testcases/test_file_1024.txt": 1024
+    "/testcases/test_file_1024.txt": 1024,
+    "/testcases/cgi/send_response_of_size.py?size=10": 10,
+    "/testcases/cgi/send_response_of_invalid_size.py?size=10": -2
   };
 
   var resourceStore = getFreshStore();
@@ -195,7 +197,7 @@ function testCaptureMany() {
            'Callback called more than once for url "%s"'.subs(url));
     results[url] = 1;
 
-    if (urls[url] == -1) {
+    if (urls[url] < 0) {
       assert(!success, 'Capture of "%s" should have failed'.subs(url));
     } else {
       assert(success, 'Capture of "%s" should have succeeded'.subs(url));
@@ -221,7 +223,7 @@ function testCaptureMany() {
       if (urls[url] == -1) {
         assertNull(content,
                    'Should not have been able to fetch "%s"'.subs(url));
-      } else {
+      } else if (urls[url] >= 0) {
         assertNotNull(content, 'Should have been able to fetch "%s"'.subs(url));
         assertEqual('text/plain', resourceStore.getHeader(url, "Content-Type"),
                     'Wrong contentType for url "%s"'.subs(url));
@@ -393,8 +395,10 @@ function testBadManifest() {
     assertEqual(UPDATE_STATUS.failure, managedStore.updateStatus,
                 'updateStatus should be FAILED after bad manifest');
 
-    var re = /^Download of '.+?url2.txt' returned response code 404$/;
-    assert(re.test(managedStore.lastErrorMessage), 
+    var message = managedStore.lastErrorMessage;
+    assert(message.indexOf("Download of") != -1 &&
+               message.indexOf("failed") != -1 &&
+               message.indexOf("404") != -1, 
            'Incorrect lastErrorMessage after bad manifest');
 
     completeAsync();
@@ -435,7 +439,7 @@ function testIllegalRedirectManifest() {
 function testManagedResourceStoreCallbacks() {
   startAsync();
   var progress = 0;
-  var FILES_TOTAL = 1;
+  var FILES_TOTAL = 3;
   var managedStore = getFreshManagedStore();
   managedStore.manifestUrl = '/testcases/manifest-good.txt';
 
@@ -459,7 +463,7 @@ function testManagedResourceStoreCallbacks() {
 function testManagedResourceStoreThreads() {
   startAsync();
   var progress = 0;
-  var FILES_TOTAL = 1;
+  var FILES_TOTAL = 3;
   var managedStore = getFreshManagedStore();
   managedStore.manifestUrl = '/testcases/manifest-good.txt';
 
@@ -534,6 +538,19 @@ function testManagedResourceStoreErrorThreads() {
     var managedStore = localserver.openManagedStore(text);
     managedStore.checkForUpdate();
   }
+}
+
+function testManagedResourceStoreInvalidContentLength() {
+  startAsync();
+  var managedStore = getFreshManagedStore();
+  managedStore.manifestUrl = '/testcases/manifest-invalid-content-length.txt';
+
+  managedStore.onerror = function(e) {
+    assert(e.message.startsWith('Download of'), 'Error string was incorrect.');
+    completeAsync();
+  }
+
+  managedStore.checkForUpdate();
 }
 
 // SAFARI-TEMP - Disable tests that don't currently work on Safari.

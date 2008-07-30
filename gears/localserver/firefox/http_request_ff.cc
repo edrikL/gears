@@ -513,19 +513,6 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   nsresult rv = http_channel->VisitResponseHeaders(&visitor);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // We fix up the "Content-Length" header and remove any "Content-Encoding"
-  // headers since the response body we have has already been decoded.
-  // Otherwise when replaying a cached entry, the browser would try to
-  // decode an already decoded response body and fail.
-  // TODO(michaeln): don't do this for scriptable Gears.HttpRequests
-  if (IsComplete() && response_body_.get()) {
-    std::string data_len_str = Integer64ToString(response_body_->Length());
-    visitor.headers_.SetHeader(HTTPHeaders::CONTENT_LENGTH,
-                               data_len_str.c_str(),
-                               HTTPHeaders::OVERWRITE);
-    visitor.headers_.ClearHeader(HTTPHeaders::CONTENT_ENCODING);
-  }
-
   std::string header_str;
   for (HTTPHeaders::const_iterator hdr = visitor.headers_.begin();
        hdr != visitor.headers_.end();
@@ -691,10 +678,15 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
                                            nsISupports *context,
                                            nsresult status) {
+  LOG(("FFHttpRequest::OnStopRequest - %d\n", status));
   if (!was_aborted_) {
+    // The Abort() method resets channel_, so we only do this
+    // when we haven't explicitly called Abort().
     NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
     channel_->SetNotificationCallbacks(NULL);
   }
+  // nsHttpChannel errors are reflected as aborted requests
+  was_aborted_ |= NS_FAILED(status) ? true : false;
   SetReadyState(HttpRequest::COMPLETE);
   return NS_OK;
 }

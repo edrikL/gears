@@ -74,6 +74,7 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 IEHttpRequest::IEHttpRequest()
     : caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
       was_redirected_(false), was_aborted_(false),
+      ignore_stopbinding_error_(false),
       listener_(NULL), listener_data_available_enabled_(false),
       ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
       async_(false) {
@@ -450,6 +451,7 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
     response_payload_.SynthesizeHttpRedirect(NULL, redirect_url);
     response_body_.reset(new ByteStore);
     has_synthesized_response_payload_ = true;
+    ignore_stopbinding_error_ = true;
     return E_ABORT;
   } else {
     was_redirected_ = true;
@@ -464,10 +466,14 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
 // This is called once per bind operation in both success and failure cases.
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
-  LOG16((L"IEHttpRequest::OnStopBinding\n"));
+  LOG16((L"IEHttpRequest::OnStopBinding - %d, %s\n",
+             hresult, error_text ? error_text : L"null"));
   binding_.Release();
   bind_ctx_.Release();
   url_moniker_.Release();
+  if (!ignore_stopbinding_error_) {
+    was_aborted_ |= FAILED(hresult);
+  }
   SetReadyState(HttpRequest::COMPLETE);
   return S_OK;
 }
@@ -737,5 +743,10 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   // Additionally, on some systems returning S_OK for 304 responses results
   // in an undesireable 60 second delay prior to OnStopBinding happening,
   // so we return E_ABORT to avoid that delay.
-  return (status_code == HttpConstants::HTTP_OK) ? S_OK  : E_ABORT;
+  if (status_code == HttpConstants::HTTP_OK) {
+    return S_OK;
+  } else {
+    ignore_stopbinding_error_ = true;
+    return E_ABORT;
+  }
 }

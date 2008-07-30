@@ -80,6 +80,7 @@ class HttpConstants {
   static const char16 *kXGearsSafariCapturedMimeType;
   static const char16 *kXGearsReasonHeader;
   static const char16 *kXGearsReason_ValidateManifest;
+  static const char   *kXGearsDecodedContentLengthAscii;
   static const char16 *kXGoogleGearsHeader;
 };
 
