@@ -92,9 +92,8 @@ static std::string16 ToLongFileName(const std::string16 &path) {
 #endif  // WINCE
 }
 
-// Prepend long path prefix onto pathname so we can handle long filenames.
-// This function does nothing if the prefix already exists.
-static std::string16 ToLongPath(const std::string16 &path) {
+
+std::string16 File::ToLongPath(const std::string16 &path) {
   if (StartsWith(path, kLongPathPrefix) || 
       StartsWith(path, kLongPathPrefixUNC)) {
     return path;
