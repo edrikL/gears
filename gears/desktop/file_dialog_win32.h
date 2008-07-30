@@ -29,7 +29,6 @@
 #ifdef WIN32
 
 #include <windows.h>
-#include <map>
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/thread.h"
 #include "gears/desktop/file_dialog.h"
@@ -58,17 +57,12 @@ class FileDialogWin32 : public FileDialog, public Thread,
                         const NotificationData *data);
 
  private:
-  typedef std::map<std::string16, std::string16> MediaMap;
-
   // Initializes the dialog, based on options.
   void InitDialog(NativeWindowPtr parent,
                   const FileDialog::Options& options);
 
   // Installs the default filename filter.
   bool SetFilter(const StringList& filter, std::string16* error);
-
-  // Creates a mapping from media types to filename extensions.
-  bool GetMediaTypeMap(MediaMap* map);
 
   // Creates and displays the file dialog.
   bool Display(StringList* selected_files, std::string16* error);
