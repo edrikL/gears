@@ -197,11 +197,9 @@ class RequestHandler(asynchat.async_chat,
     # Static response
     else:
       f = self.send_head()
+      self.log_request(self.code)
       if f:
-        self.log_request(self.code, os.fstat(f.fileno())[6])
         self.outgoing.append(f)
-      else:
-        self.log_request(self.code)
     
     # Signal end of response
     self.outgoing.append(None)
