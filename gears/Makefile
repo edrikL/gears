@@ -953,7 +953,6 @@ FF3_CPPSRCS	+= \
 
 ifeq ($(OS),osx)
 FF3_CPPSRCS	+= \
-		ipc_message_queue_osx.mm \
 		ipc_message_queue_test_osx.mm \
 		$(NULL)
 endif
@@ -1097,7 +1096,7 @@ SF_CPPSRCS	+= \
 		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
-		ipc_message_queue_osx.mm \
+		ipc_message_queue_linux.cc \
 		ipc_message_queue_test.cc \
 		ipc_message_queue_test_osx.mm \
 		js_runner_np.cc \
@@ -1408,6 +1407,9 @@ NOTIFIER_CORE	+= \
 		string_utils_osx.cc \
 		system_linux.cc \
 		system_win32.cc \
+		thread.cc \
+		thread_posix.cc \
+		thread_win32.cc \
 		time_utils_win32.cc \
 		timed_call.cc \
 		timed_call_test.cc \
@@ -1433,7 +1435,6 @@ NOTIFIER_RESOURCES += \
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
 		common_osx.mm \
-		ipc_message_queue_osx.mm \
 		notifier_osx.mm \
 		notifier_process_osx.mm \
 		system_osx.mm \
@@ -1525,6 +1526,7 @@ NOTIFIER_TEST_CSRCS += \
 # ipc_test
 
 IPC_TEST_CPPSRCS += \
+		event.cc \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
 		ipc_message_queue_test.cc \
@@ -1541,12 +1543,14 @@ IPC_TEST_CPPSRCS += \
 		string16.cc \
 		string_utils.cc \
 		string_utils_osx.cc \
+		thread.cc \
+		thread_posix.cc \
+		thread_win32.cc \
 		time_utils_win32.cc \
 		$(NULL)
 
 ifeq ($(OS),osx)
 IPC_TEST_CPPSRCS += \
-		ipc_message_queue_osx.mm \
 		ipc_message_queue_test_osx.mm \
 		$(NULL)
 endif

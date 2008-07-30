@@ -27,8 +27,17 @@
 #define GEARS_BASE_COMMON_THREAD_H__
 
 #include "gears/base/common/event.h"
-#include "gears/base/common/message_queue.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
+
+// TODO(michaeln): Perhaps always use an 'int' to avoid native thread types from
+// leaking thru in this common interface.
+#if BROWSER_FF
+typedef int ThreadId;
+#elif BROWSER_WEBKIT || defined(LINUX) || defined(ANDROID)
+typedef pthread_t ThreadId;
+#elif BROWSER_IE || defined(WIN32) || defined(WINCE)
+typedef DWORD ThreadId;
+#endif
 
 // This class abstracts creating a new thread. Derived classes implement the Run
 // method, which is run in a new thread when Start is called.
