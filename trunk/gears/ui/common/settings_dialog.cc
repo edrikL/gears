@@ -45,7 +45,7 @@ static void AddPermissionState(const PermissionsDB::OriginPermissions &map,
 bool SettingsDialog::visible_ = false;
 
 #ifdef BROWSER_WEBKIT
-static void ProcessResultsCallback(Json::Value *result, void *closure) {
+void ProcessResultsCallback(Json::Value *result, void *closure) {
   scoped_ptr<HtmlDialog> dialog(static_cast<HtmlDialog *>(closure));
   if (result) {
     SettingsDialog::ProcessResult(result);
