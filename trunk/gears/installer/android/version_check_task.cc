@@ -48,7 +48,7 @@ static const char16* kUpgradeUrl = STRING16 (
 #endif
 
 static const char* kVersionExtractorClass =
-    "com/google/android/gears/VersionExtractor";
+   GEARS_JAVA_PACKAGE  "/VersionExtractor";
 
 // Java methods used by the version check task class.
 static JavaClass::Method version_extractor_methods[] = {
