@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <list>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -100,11 +101,13 @@ static const int kManySlavesCount = 10;
 #endif  // IPC_STRESS
 
 // we want this larger than the capacity of the packet
-// (~8K for WIN32, ~2K for Linux)
+// (~8K for WIN32, ~2K for Linux, 450 for Mac)
 #ifdef WIN32
 static const int kBigPingLength = 18000;
-#elif defined(LINUX) || defined(OS_MACOSX)
+#elif defined(LINUX) && !defined(OS_MACOSX)
 static const int kBigPingLength = 5000;
+#elif defined(OS_MACOSX)
+static const int kBigPingLength = 1000;
 #endif  // WIN32
 
 static const char16 *kHello = STRING16(L"hello");
@@ -152,12 +155,42 @@ static bool VerifyTestData(uint8 *data, int length) {
   return true;
 }
 
+static bool VerifySequenceNumber(IpcProcessId source_process_id,
+                                 int sequence_number) {
+  static std::map<IpcProcessId, int> last_sequence_number_map;
+
+  bool ok = false;
+  if (sequence_number == -1) {
+    // Sequence number is not provided. Skip the verification.
+    return true;
+  } else if (sequence_number == 0) {
+    // If the sequence number is 0, it indicates the first message from the
+    // source process. We do not check if there is any other message arrived
+    // before this one since if this happens, the next message will have out-of-
+    // ordered sequence number. This helps us to work around the problem that
+    // the process ID could be reused.
+    ok = true;
+  } else {
+    std::map<IpcProcessId, int>::const_iterator iter =
+        last_sequence_number_map.find(source_process_id);
+    if (iter != last_sequence_number_map.end() &&
+        iter->second + 1 == sequence_number) {
+      ok = true;
+    }
+  }
+
+  last_sequence_number_map[source_process_id] = sequence_number;
+  return ok;
+}
+
 IpcTestMessage::IpcTestMessage(const char16 *str, int bytes_length)
     : string_(str), bytes_length_(bytes_length),
       bytes_(MallocTestData(bytes_length)) {
 }
 
 bool IpcTestMessage::Serialize(Serializer *out) const {
+  out->WriteInt(sequence_number_);
+
   out->WriteString(string_.c_str());
 
   IpcMessageQueueCounters counters;
@@ -172,7 +205,8 @@ bool IpcTestMessage::Serialize(Serializer *out) const {
 }
 
 bool IpcTestMessage::Deserialize(Deserializer *in) {
-  if (!in->ReadString(&string_) ||
+  if (!in->ReadInt(&sequence_number_) ||
+      !in->ReadString(&string_) ||
       !in->ReadBytes(&counters_, sizeof(counters_)) ||
       !in->ReadInt(&bytes_length_)) {
     return false;
@@ -208,6 +242,12 @@ void MasterMessageHandler::HandleIpcMessage(
     source_ids_.push_back(source_process_id);
     message_strings_.push_back(test_message->string());
     last_received_counters_ = test_message->counters();
+
+    if (!VerifySequenceNumber(source_process_id,
+                              test_message->sequence_number())) {
+      ++num_invalid_sequence_number_counts_;
+      LOG(("invalid sequence number\n"));
+    }
 
     if (test_message->string() == kBigPing &&
         !VerifyTestData(test_message->bytes(),
@@ -425,6 +465,7 @@ bool TestIpcSystemQueue(std::string16 *error) {
   TEST_ASSERT(process_d.WaitForExit(kIpcTestWaitTimeoutMs));
 
   TEST_ASSERT(g_master_handler.CountSavedMessages(0, kError) == 0);
+  TEST_ASSERT(g_master_handler.num_invalid_sequence_number_counts() == 0);
 
   LOG(("TestIpcSystemQueue - passed\n"));
   g_master_handler.SetSaveMessages(false);
@@ -665,6 +706,7 @@ bool TestIpcPeerQueue(std::string16 *error) {
                                           process_ids1));
 
   TEST_ASSERT(g_master_handler.CountSavedMessages(0, kError) == 0);
+  TEST_ASSERT(g_master_handler.num_invalid_sequence_number_counts() == 0);
 
   LOG(("TestIpcPeerQueue - passed\n"));
   g_master_handler.SetSaveMessages(false);
@@ -699,6 +741,25 @@ void SlaveProcess::ClearAll() {
   slave_processes_.clear();
 }
 
+void SlaveMessageHandler::SendIpcMessage(IpcMessageQueue *ipc_message_queue,
+                                         IpcProcessId source_process_id,
+                                         IpcTestMessage *message) {
+  assert(ipc_message_queue);
+  assert(message);
+
+  int sequence_number = 0;
+  static std::map<IpcProcessId, int> last_sequence_number_map;
+  std::map<IpcProcessId, int>::const_iterator iter =
+      last_sequence_number_map.find(source_process_id);
+  if (iter != last_sequence_number_map.end()) {
+    sequence_number = iter->second + 1;
+  }
+  last_sequence_number_map[source_process_id] = sequence_number;
+
+  message->set_sequence_number(sequence_number);
+  ipc_message_queue->Send(source_process_id, kIpcQueue_TestMessage, message);
+}
+
 void SlaveMessageHandler::HandleIpcMessage(
                               IpcProcessId source_process_id,
                               int message_type,
@@ -714,9 +775,9 @@ void SlaveMessageHandler::HandleIpcMessage(
   IpcMessageQueue *ipc_message_queue = GetIpcMessageQueue();
 
   if (test_message->string() == kPing) {
-    ipc_message_queue->Send(source_process_id,
-                            kIpcQueue_TestMessage,
-                            new IpcTestMessage(kPing));
+    SendIpcMessage(ipc_message_queue,
+                   source_process_id,
+                   new IpcTestMessage(kPing));
 
   } else if (test_message->string() == kQuit) {
     TerminateSlave();
@@ -739,30 +800,28 @@ void SlaveMessageHandler::HandleIpcMessage(
     if (test_message->bytes_length() == kBigPingLength &&
         VerifyTestData(test_message->bytes(),
                        test_message->bytes_length())) {
-      ipc_message_queue->Send(source_process_id,
-                              kIpcQueue_TestMessage,
-                              new IpcTestMessage(kBigPing,
-                                                 kBigPingLength));
+      SendIpcMessage(ipc_message_queue,
+                     source_process_id, 
+                     new IpcTestMessage(kBigPing, kBigPingLength));
     } else {
-      ipc_message_queue->Send(source_process_id,
-                              kIpcQueue_TestMessage,
-                              new IpcTestMessage(kError));
+      SendIpcMessage(ipc_message_queue,
+                     source_process_id,
+                     new IpcTestMessage(kError));
     }
 
 
   } else if (test_message->string() == kSendManyPings) {
     for (int i = 0; i < kManyPings; ++i) {
-      ipc_message_queue->Send(source_process_id,
-                              kIpcQueue_TestMessage,
-                              new IpcTestMessage(kPing));
+      SendIpcMessage(ipc_message_queue,
+                     source_process_id,
+                     new IpcTestMessage(kPing));
     }
 
   } else if (test_message->string() == kSendManyBigPings) {
     for (int i = 0; i < kManyBigPings; ++i) {
-      ipc_message_queue->Send(source_process_id,
-                              kIpcQueue_TestMessage,
-                              new IpcTestMessage(kBigPing,
-                                                 kBigPingLength));
+      SendIpcMessage(ipc_message_queue,
+                     source_process_id,
+                     new IpcTestMessage(kBigPing, kBigPingLength));
     }
   }
 

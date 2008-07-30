@@ -51,10 +51,13 @@ bool WaitForRegisteredProcesses(int n, int timeout);
 bool ValidateRegisteredProcesses(int n, const IpcProcessId *process_ids);
 
 // The message class we send to/from slave processes.
+// The sequence number is only embedded for verifcation in the message sent 
+// from slave process to master process.
 class IpcTestMessage : public Serializable {
  public:
-  IpcTestMessage() : bytes_length_(0) {}
-  IpcTestMessage(const char16 *str) : string_(str), bytes_length_(0) {}
+  IpcTestMessage() : sequence_number_(0), bytes_length_(0) {}
+  IpcTestMessage(const char16 *str)
+      : sequence_number_(-1), string_(str), bytes_length_(0) {}
   IpcTestMessage(const char16 *str, int bytes_length);
 
   // Serializable methods
@@ -65,6 +68,10 @@ class IpcTestMessage : public Serializable {
   virtual bool Deserialize(Deserializer *in);
 
   // Accessors
+  int sequence_number() const { return sequence_number_; }
+  void set_sequence_number(int sequence_number) {
+    sequence_number_ = sequence_number;
+  }
   const std::string16 &string() const { return string_; }
   int bytes_length() const { return bytes_length_; }
   uint8 *bytes() const { return bytes_.get(); }
@@ -79,6 +86,7 @@ class IpcTestMessage : public Serializable {
   }
 
  private:
+  int sequence_number_;
   std::string16 string_;
   int bytes_length_;
   scoped_ptr_malloc<uint8> bytes_;
@@ -96,6 +104,7 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
     : save_messages_(false),
       num_received_messages_(0),
       num_invalid_big_pings_(0),
+      num_invalid_sequence_number_counts_(0),
       wait_for_messages_start_time_(0),
       num_messages_waiting_to_receive_(0) {
   }
@@ -117,12 +126,16 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
 
   // Accessors
   int num_invalid_big_pings() const { return num_invalid_big_pings_; }
+  int num_invalid_sequence_number_counts() const {
+    return num_invalid_sequence_number_counts_;
+  }
 
  private:
   Mutex lock_;
   bool save_messages_;
   int num_received_messages_;
   int num_invalid_big_pings_;
+  int num_invalid_sequence_number_counts_;
   std::vector<IpcProcessId> source_ids_;
   std::vector<std::string16> message_strings_;
   IpcMessageQueueCounters last_received_counters_;
@@ -163,7 +176,11 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
   // Static methods
   static void TerminateSlave();
 
- private:  
+ private:
+  static void SendIpcMessage(IpcMessageQueue *ipc_message_queue,
+                             IpcProcessId source_process_id,
+                             IpcTestMessage *message);
+
   bool done_;
   int chits_received_;
   int chats_received_;
