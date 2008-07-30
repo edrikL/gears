@@ -181,8 +181,10 @@ bool FileDialogCarbon::InitDialog(NativeWindowPtr parent,
   }
   if (!SetFilter(options.filter, &dialog_options, error))
     return false;
+  NavObjectFilterUPP filter_callback =
+      dialog_options.popupExtension ? &FilterCallback : NULL;
   if (noErr != NavCreateGetFileDialog(&dialog_options, NULL, &EventCallBack,
-                                      NULL, &FilterCallback, this,
+                                      NULL, filter_callback, this,
                                       as_out_parameter(dialog_))) {
     *error = STRING16(L"Failed to create dialog.");
     return false;
@@ -222,6 +224,9 @@ bool FileDialogCarbon::SetFilter(const StringList& filter,
         tagClass, tag.get(), NULL));
     CFArrayAppendValue(utis_.get(), uti.get());
   }
+
+  if (0 == CFArrayGetCount(utis_.get()))
+    return true;
 
   // Add entries to the filter drop-down.  The first entry displays any file
   // that conforms to a UTI in utis_.  The second entry displays all files.

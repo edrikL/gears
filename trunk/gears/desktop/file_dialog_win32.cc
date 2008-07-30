@@ -25,6 +25,7 @@
 
 #if defined(WIN32)
 
+#include <set>
 #include "gears/desktop/file_dialog_win32.h"
 #include "gears/base/common/string_utils.h"
 
@@ -161,92 +162,80 @@ void FileDialogWin32::InitDialog(NativeWindowPtr parent,
 
 bool FileDialogWin32::SetFilter(const StringList& filter,
                                 std::string16* error) {
-  MediaMap media_map;
-  GetMediaTypeMap(&media_map);
-
   std::string16 default_filter;
+  std::set<std::string16> filter_types;
   for (StringList::const_iterator it = filter.begin(); it != filter.end();
        ++it) {
     // Handle extensions of the form ".foo".
     if (L'.' == (*it)[0]) {
-      if (!default_filter.empty()) {
-        default_filter.push_back(L';');
-      }
-      default_filter.push_back(L'*');
+      default_filter.append(L";*");
       default_filter.append(*it);
       continue;
     }
 
     // Handle media types of the form "application/foo".
-    MediaMap::const_iterator entry = media_map.find(*it);
-    if (entry != media_map.end()) {
-      if (!default_filter.empty()) {
-        default_filter.push_back(L';');
-      }
-      default_filter.append(entry->second);
-    }
-
+    // Store them in a set for efficient lookup while enumerating the registry.
     // TODO(bpm): Handle wildcard media types.
-  }
-  if (!default_filter.empty()) {
-    filter_.append(kDefaultFilterLabel);
-    filter_.push_back('\0');
-    filter_.append(default_filter);
-    filter_.push_back('\0');
+    filter_types.insert(*it);
   }
 
-  // An unrestricted filter is always available.  On Win32, *.* matches
-  // everything, even files with no extension.
+  if (!filter_types.empty()) {
+    for (DWORD index = 0; true; ++index) {
+      TCHAR name[32];  // Ignore any extensions larger than 30 chars.
+      DWORD len = ARRAYSIZE(name);
+      LONG result = RegEnumKeyEx(HKEY_CLASSES_ROOT, index, name, &len, NULL,
+                                 NULL, NULL, NULL);
+      if (ERROR_NO_MORE_ITEMS == result)
+        break;
+      if (ERROR_SUCCESS != result)
+        continue;
+      if (name[0] != L'.')
+        continue;
+      HKEY key;
+      result = RegOpenKeyEx(HKEY_CLASSES_ROOT, name, 0, KEY_QUERY_VALUE, &key);
+      if (ERROR_SUCCESS != result)
+        continue;
+      DWORD regtype;
+      TCHAR content_type[128];  // Ignore content types larger than 127 chars.
+      // Note: content_type length is expressed in bytes, not char16s, and may
+      // not be null-terminated.
+      len = sizeof(content_type) - 2;
+      result = RegQueryValueEx(key, L"Content Type", NULL, &regtype,
+                               reinterpret_cast<BYTE*>(content_type), &len);
+      if ((ERROR_SUCCESS == result) && (REG_SZ == regtype)) {
+        // Ensure null-termination. (len in bytes)
+        content_type[len / 2] = L'\0';
+        if (filter_types.find(content_type) != filter_types.end()) {
+          default_filter.append(L";*");
+          default_filter.append(name);
+        }
+      }
+      RegCloseKey(key);
+    }
+  }
+
+  if (default_filter.empty())
+    return true;
+
+  filter_.append(kDefaultFilterLabel);
+  filter_.push_back('\0');
+  // Append everything but the first character, which is always ';'.
+  filter_.insert(filter_.end(), default_filter.begin() + 1, 
+                 default_filter.end());
+  filter_.push_back('\0');
+  
+  // Always include an unrestricted filter that the user may select.
+  // On Win32, *.* matches everything, even files with no extension.
   filter_.append(kAllDocumentsLabel);
   filter_.push_back('\0');
   filter_.append(STRING16(L"*.*"));
   filter_.push_back('\0');
-
+  
   // Terminate the filter with an extra null.
   filter_.push_back('\0');
 
   ofn_.lpstrFilter = filter_.c_str();
   ofn_.nFilterIndex = 1;
-  return true;
-}
-
-bool FileDialogWin32::GetMediaTypeMap(MediaMap* map) {
-  map->clear();
-
-  for (DWORD index = 0; true; ++index) {
-    TCHAR name[32];  // Ignore any extensions larger than 30 chars.
-    DWORD len = ARRAYSIZE(name);
-    LONG result = RegEnumKeyEx(HKEY_CLASSES_ROOT, index, name, &len, NULL, NULL,
-                               NULL, NULL);
-    if (ERROR_NO_MORE_ITEMS == result)
-      break;
-    if (ERROR_SUCCESS != result)
-      continue;
-    if (name[0] != L'.')
-      continue;
-    HKEY key;
-    result = RegOpenKeyEx(HKEY_CLASSES_ROOT, name, 0, KEY_QUERY_VALUE, &key);
-    if (ERROR_SUCCESS != result)
-      continue;
-    DWORD regtype;
-    TCHAR content_type[128];  // Ignore content types larger than 127 chars.
-    // Note: content_type length is expressed in bytes, not char16s, and may not
-    // be null-terminated.
-    len = sizeof(content_type) - 2;
-    result = RegQueryValueEx(key, L"Content Type", NULL, &regtype,
-                             reinterpret_cast<BYTE*>(content_type), &len);
-    if ((ERROR_SUCCESS == result) && (REG_SZ == regtype)) {
-      content_type[len / 2] = L'\0';  // Ensure null-termination. (len in bytes)
-      std::string16& extensions = (*map)[content_type];
-      if (!extensions.empty()) {
-        extensions.push_back(L';');
-      }
-      extensions.push_back(L'*');
-      extensions.append(name);
-    }
-    RegCloseKey(key);
-  }
-
   return true;
 }
 

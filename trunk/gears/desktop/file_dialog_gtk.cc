@@ -117,25 +117,30 @@ bool FileDialogGtk::InitDialog(NativeWindowPtr parent,
 }
 
 bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
-  if (!filter.empty()) {
-    GtkFileFilter* gtk_filter = gtk_file_filter_new();
-    gtk_file_filter_set_name(gtk_filter, kDefaultFilterLabel);
-    for (size_t i = 0; i < filter.size(); ++i) {
-      std::string filter_item;
-      if (!String16ToUTF8(filter[i].c_str(), &filter_item))
-        continue;
-      if ('.' == filter_item[0]) {
-        std::string pattern("*");
-        pattern.append(filter_item);
-        gtk_file_filter_add_pattern(gtk_filter, pattern.c_str());
-      } else {
-        gtk_file_filter_add_mime_type(gtk_filter, filter_item.c_str());
-      }
+  GtkFileFilter* gtk_filter = NULL;
+  for (size_t i = 0; i < filter.size(); ++i) {
+    std::string filter_item;
+    if (!String16ToUTF8(filter[i].c_str(), &filter_item))
+      continue;
+    if (!gtk_filter) {
+      gtk_filter = gtk_file_filter_new();
+      gtk_file_filter_set_name(gtk_filter, kDefaultFilterLabel);
     }
-    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);
-  }
+    if ('.' == filter_item[0]) {
+      std::string pattern("*");
+      pattern.append(filter_item);
+      gtk_file_filter_add_pattern(gtk_filter, pattern.c_str());
+    } else {
+      gtk_file_filter_add_mime_type(gtk_filter, filter_item.c_str());
+    }
+  }  
+  if (!gtk_filter)
+    return true;
 
-  GtkFileFilter* gtk_filter = gtk_file_filter_new();
+  gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);
+
+  // Always include an unrestricted filter that the user may select.
+  gtk_filter = gtk_file_filter_new();
   gtk_file_filter_set_name(gtk_filter, kAllDocumentsLabel);
   gtk_file_filter_add_custom(gtk_filter, static_cast<GtkFileFilterFlags>(0),
                              &AnyFileFilter, NULL, &AnyFileFilterDestroy);
