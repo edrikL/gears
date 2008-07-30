@@ -31,6 +31,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/timed_call.h"
 #include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager.h"
@@ -77,9 +78,10 @@ class NotificationTask : public glint::WorkItem {
 
 Notifier::Notifier()
   : running_(false),
-    to_restart_(false),
-    notification_manager_(new NotificationManager(&user_activity_monitor_,
-                                                  this)) {
+    to_restart_(false) {
+  user_activity_monitor_.reset(new UserActivityMonitor());
+  notification_manager_.reset(
+      new NotificationManager(user_activity_monitor_.get(), this));
 }
 
 Notifier::~Notifier() {

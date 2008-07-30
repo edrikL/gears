@@ -31,7 +31,6 @@
 #include "gears/base/common/string16.h"
 #include "gears/notifier/balloons.h"
 #include "gears/notifier/notification.h"
-#include "gears/notifier/user_activity.h"
 #include "third_party/gtest/include/gtest/gtest.h"
 
 class BalloonCollectionObserverMock : public BalloonCollectionObserver {
@@ -63,7 +62,7 @@ TEST(BalloonCollectionTest, BasicFunctionality) {
   security_origin.InitFromUrl(STRING16(L"http://gears.google.com/MyService"));
   notification1.set_security_origin(security_origin);
   notification1.set_id(STRING16(L"1"));
-  balloons.Show(notification1);
+  balloons.Add(notification1);
 
   bool found = balloons.Update(notification1);
   EXPECT_TRUE(found) << "Update didn't find the original notification";
@@ -72,7 +71,7 @@ TEST(BalloonCollectionTest, BasicFunctionality) {
   found = balloons.Update(notification1);
   EXPECT_FALSE(found) << "Update found wrong notification";
 
-  balloons.Show(notification1);
+  balloons.Add(notification1);
 
   bool deleted = balloons.Delete(notification1.security_origin(),
                                  notification1.id());

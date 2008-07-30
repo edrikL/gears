@@ -38,10 +38,12 @@ class BalloonCollectionMock : public BalloonCollectionInterface {
   BalloonCollectionMock();
   virtual ~BalloonCollectionMock();
 
-  virtual void Show(const GearsNotification &notification);
+  virtual void Add(const GearsNotification &notification);
   virtual bool Update(const GearsNotification &notification);
   virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &bare_id);
+  virtual void ShowAll();
+  virtual void HideAll();
 
   virtual bool has_space() const;
   virtual int count() const;

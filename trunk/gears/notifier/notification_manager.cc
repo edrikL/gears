@@ -136,8 +136,10 @@ NotificationManager::NotificationManager(
       UserActivityInterface *activity, DelayedRestartInterface *delayed_restart)
     : intiailized_(false),
       activity_(activity),
-      delayed_restart_(delayed_restart) {
+      delayed_restart_(delayed_restart),
+      in_presentation_(false) {
   assert(activity);
+  activity->AddObserver(this);
   balloon_collection_.reset(new BalloonCollection(this));
   intiailized_ = true;
 }
@@ -281,7 +283,7 @@ void NotificationManager::AddToShowQueue(
   assert(queued_notification->notification().display_at_time_ms() <=
          GetCurrentTimeMillis());
   show_queue_.push_back(queued_notification);
-  ShowNotifications();
+  CheckAndShowNotifications();
 }
 
 void NotificationManager::MoveFromDelayedToShowQueue(
@@ -330,15 +332,26 @@ bool NotificationManager::Delete(const SecurityOrigin &security_origin,
   return false;
 }
 
-void NotificationManager::ShowNotifications() {
+void NotificationManager::CheckAndShowNotifications() {
   // Is it ok to show the notification now?
-  if (!IsActiveUserMode(activity_->CheckUserActivity())) {
+  activity_->CheckNow();
+  if (!IsActiveUserMode(activity_->user_mode())) {
     return;
   }
+
+  // Can we perform the delayed restart now?
+  if (CheckDelayedRestart()) {
+    return;
+  }
+
+  ShowNotifications();
+}
+
+void NotificationManager::ShowNotifications() {
   while (!show_queue_.empty() && balloon_collection_->has_space()) {
     QueuedNotification* queued_notification = show_queue_.front();
     show_queue_.pop_front();
-    balloon_collection_->Show(queued_notification->notification());
+    balloon_collection_->Add(queued_notification->notification());
     delete queued_notification;
   }
 }
@@ -347,32 +360,32 @@ void NotificationManager::OnDisplaySettingsChanged() {
   // TODO(levin): implement
 }
 
-void NotificationManager::OnUserPresentationModeChange(
-    bool /* in_presentation */) {
-  // TODO(levin): implement
-}
-
 void NotificationManager::OnUserActivityChange() {
-  if (CheckDelayedRestart()) {
-    return;
+  bool previous_in_presentation = in_presentation_;
+  UserMode user_mode = activity_->user_mode();
+  in_presentation_ = user_mode == USER_PRESENTATION_MODE;
+  if (previous_in_presentation != in_presentation_) {
+    if (in_presentation_) {
+      balloon_collection_->HideAll();
+    } else {
+      balloon_collection_->ShowAll();
+    }
   }
 
-  ShowNotifications();
+  if (IsActiveUserMode(user_mode)) {
+    ShowNotifications();
+  }
 }
 
 void NotificationManager::OnBalloonSpaceChanged() {
-  if (CheckDelayedRestart()) {
-    return;
-  }
-
-  ShowNotifications();
+  CheckAndShowNotifications();
 }
 
 bool NotificationManager::CheckDelayedRestart() {
   if (intiailized_ && delayed_restart_) {
     // Only perform the restart if the user is away or idle.
-    UserMode user_mode = activity_->CheckUserActivity();
-    if (user_mode != USER_AWAY_MODE && user_mode != USER_IDLE_MODE) {
+    if (activity_->user_mode() != USER_AWAY_MODE &&
+        activity_->user_mode() != USER_IDLE_MODE) {
       // Only perform the restart if no notification is showing.
       if (!showing_notifications()) {
         // Perform the restart if needed.
