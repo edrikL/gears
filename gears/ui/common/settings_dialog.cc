@@ -42,12 +42,10 @@ static void AddPermissionState(const PermissionsDB::OriginPermissions &map,
                                PermissionsDB::PermissionType type,
                                Json::Value *entry_out);
 
-#ifdef BROWSER_WEBKIT
 bool SettingsDialog::visible_ = false;
-#endif
 
 #ifdef BROWSER_WEBKIT
-void ProcessResultsCallback(Json::Value *result, void *closure) {
+static void ProcessResultsCallback(Json::Value *result, void *closure) {
   scoped_ptr<HtmlDialog> dialog(static_cast<HtmlDialog *>(closure));
   if (result) {
     SettingsDialog::ProcessResult(result);
@@ -56,8 +54,8 @@ void ProcessResultsCallback(Json::Value *result, void *closure) {
 }
 #endif
 
-void SettingsDialog::Run() {
-  scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog());
+void SettingsDialog::Run(void *platform_data) {
+  scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog(platform_data));
 
   // Populate the arguments property.
   settings_dialog->arguments[kPermissionsString] =
@@ -70,6 +68,7 @@ void SettingsDialog::Run() {
   const int kSettingsDialogWidth = 400;
   const int kSettingsDialogHeight = 350;
   HtmlDialogReturnValue dialog_result;
+
 #ifdef BROWSER_WEBKIT
   visible_ = true;
   dialog_result = settings_dialog->DoModeless(STRING16(kSettingsDialogString),

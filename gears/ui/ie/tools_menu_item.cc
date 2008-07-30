@@ -76,7 +76,7 @@ STDMETHODIMP ToolsMenuItem::InvokeCommand(LPCMINVOKECOMMANDINFO command_info) {
     return S_OK;
   }
 
-  SettingsDialog::Run();
+  SettingsDialog::Run(NULL);
 
   return S_OK;
 }
@@ -102,7 +102,7 @@ STDAPI ToolsMenuItem::Exec(const GUID *command_group_id, DWORD command_id,
     NotifyUserOfVersionCollision();
     return S_OK;
   }
-  SettingsDialog::Run();
+  SettingsDialog::Run(NULL);
   return S_OK;
 }
 

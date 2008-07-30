@@ -35,7 +35,7 @@ HtmlDialogReturnValue HtmlDialog::DoModal(const char16 *html_filename,
   PermissionsDB *permissions_db = PermissionsDB::GetDB();
   if (!permissions_db) return HTML_DIALOG_FAILURE;
   if (permissions_db->ShouldSupressDialogs())
-    return HTML_DIALOG_SUPRESSED;
+    return HTML_DIALOG_SUPPRESSED;
 
   std::string16 locale;
   if (GetLocale(&locale)) {
@@ -60,11 +60,10 @@ HtmlDialogReturnValue HtmlDialog::DoModal(const char16 *html_filename,
 
 HtmlDialogReturnValue HtmlDialog::DoModeless(const char16 *html_filename,
     int width, int height, ModelessCompletionCallback callback, void *closure) {
-#ifdef BROWSER_WEBKIT
   PermissionsDB *permissions_db = PermissionsDB::GetDB();
   if (!permissions_db) return HTML_DIALOG_FAILURE;
   if (permissions_db->ShouldSupressDialogs())
-    return HTML_DIALOG_SUPRESSED;
+    return HTML_DIALOG_SUPPRESSED;
 
   // The Json library deals only in UTF-8, so we need to convert :(.
   std::string16 input_string;
@@ -78,13 +77,7 @@ HtmlDialogReturnValue HtmlDialog::DoModeless(const char16 *html_filename,
   } else {
     return HTML_DIALOG_FAILURE;
   }
-#else
-  assert(false);
-  return HTML_DIALOG_FAILURE;
-#endif
 }
-
-
 
 bool HtmlDialog::SetResult(const char16 *value) {
   // NULL and empty are OK. They just means that the dialog did not set a
@@ -108,32 +101,3 @@ bool HtmlDialog::SetResult(const char16 *value) {
 
   return true;
 }
-
-
-// HtmlDialogImpl() is platform-specific
-// TODO(aa): Change the platform-specific implementation to follow the pattern
-// of base/common/file*.cc.
-#ifdef BROWSER_FF
-#include "gears/ui/firefox/html_dialog_ff.cc"
-#elif BROWSER_IE
-#include "gears/ui/ie/html_dialog_ie.cc"
-#elif BROWSER_WEBKIT
-// In the case of WebKit, DoModalImpl is declared in 
-// gears/ui/safari/html_dialog.mm so do nothing here...
-#elif OS_ANDROID
-// For Android, DoModalImpl is declared in ui/android/html_dialog_android.cc
-#elif BROWSER_NPAPI
-bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
-                             const char16 *arguments_string) {
-  // TODO(mpcomplete): implement me.
-  SetResult(STRING16(L"{\"allow\": true, \"permanently\": true}"));
-  return true;
-}
-#else
-bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
-                             const char16 *arguments_string) {
-  // TODO: implement for other browsers.
-  assert(false);
-  return false;
-}
-#endif

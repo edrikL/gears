@@ -42,6 +42,6 @@ const nsCID kGearsUiUtilsClassId = {0x79e432c2, 0xe802, 0x4670, {0x90, 0x77,
                                    // {79E432C2-E802-4670-9077-424664119BB9}
 
 NS_IMETHODIMP GearsUiUtils::ShowSettingsDialog() {
-  SettingsDialog::Run();
+  SettingsDialog::Run(NULL);
   return NS_OK;
 }
