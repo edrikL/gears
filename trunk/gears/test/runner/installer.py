@@ -323,9 +323,12 @@ class WinCeInstaller(BaseInstaller):
     modify_cmd = ['sqlite3', perm_path]
     p = subprocess.Popen(modify_cmd, stdin=subprocess.PIPE)
 
-    # Sql command to add gears permissions to the address of the host server.
-    sql_cmd = 'INSERT INTO "Access" VALUES(\'http://%s:8001\',1);' % self.host
-    p.stdin.write(sql_cmd)
+    # Sql commands to add gears permissions to the address of the host server.
+    sql_cmd1 = 'INSERT INTO "Access" VALUES(\'http://%s:8001\',1);' % self.host
+    sql_cmd2 = ('INSERT INTO "LocationAccess" '
+                'VALUES(\'http://%s:8001\',1);' % self.host)
+    p.stdin.write(sql_cmd1)
+    p.stdin.write(sql_cmd2)
     p.stdin.close()
     p.wait()
 
