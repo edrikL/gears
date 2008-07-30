@@ -73,11 +73,21 @@ void Thread::Join() {
 
 // Called by ThreadInternal on successful thread creation.
 void Thread::ThreadMain() {
+#ifdef BROWSER_NONE
+  // TODO: remove the following when ThreadMessageQueue is implemented
+  // per-platform, instead of per-browser.
+#if defined(WIN32) || defined(WINCE)
+  thread_id_ = ::GetCurrentThreadId();
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
+  thread_id_ = pthread_self();
+#endif  // defined(WIN32) || defined(WINCE)
+#else
   // Initialize the message queue.
   ThreadMessageQueue* queue = ThreadMessageQueue::GetInstance();
   queue->InitThreadMessageQueue();
   // Get this thread's id.
   thread_id_ = queue->GetCurrentThreadId();
+#endif  // !BROWSER_NONE
   // Set running state.
   is_running_ = true;
   // Let our creator know that we started ok.

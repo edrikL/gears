@@ -60,32 +60,11 @@ bool ValidateRegisteredProcesses(int n, const IpcProcessId *process_ids) {
 
 bool MasterMessageHandler::WaitForMessages(int n) {
   assert(save_messages_);
-
-  // Note: 
-  // 1) The IPC implementation for MacOSX is based on
-  //    NSDistributedNotificationCenter which delivers notifications to the
-  //    main thread. We have to allow the message loop to deal with the
-  //    incoming events so that the notifications can be processed.
-  // 2) The IPC testing code might run from main thread or different worker
-  //    thread. So we should use the fine-grained lock here to avoid deadlock.
-  {
-    MutexLock locker(&lock_);
-    num_messages_waiting_to_receive_ = n;
-    wait_for_messages_start_time_ = GetCurrentTimeMillis();
-  }
-  while (true) {
-    {
-      MutexLock locker(&lock_);
-      if (HasMessagesOrTimedout()) {
-        if (num_received_messages_ == num_messages_waiting_to_receive_) {
-          return true;
-        }
-        break;
-      }
-    }
-    CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, false);
-  }
-  return false;
+  MutexLock locker(&lock_);
+  num_messages_waiting_to_receive_ = n;
+  wait_for_messages_start_time_ = GetCurrentTimeMillis();
+  lock_.Await(Condition(this, &MasterMessageHandler::HasMessagesOrTimedout));
+  return num_received_messages_ == num_messages_waiting_to_receive_;
 }
 
 std::string GetSlaveInfoPath(int process_id) {

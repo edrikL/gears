@@ -31,19 +31,8 @@
 #include <vector>
 #include "gears/base/common/deletable.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/thread.h"
 #include "third_party/linked_ptr/linked_ptr.h"
-
-// TODO(michaeln): Perhaps these should be defined by a threading abstraction
-// layer, and perhaps always use an 'int' to avoid native thread types from
-// leaking thru in this common interface.
-#if BROWSER_FF
-typedef int ThreadId;
-#elif BROWSER_WEBKIT || defined(ANDROID)
-typedef pthread_t ThreadId;
-#elif BROWSER_IE || defined(WIN32) || defined(WINCE)
-typedef DWORD ThreadId;
-#endif
-
 
 // Base class for data that can be sent using ThreadMessageQueue.
 // Contains only a virtual dtor, to invoke the destructor of derived classes.

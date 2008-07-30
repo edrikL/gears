@@ -23,14 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(LINUX) && !defined(OS_MACOSX)
+#if defined(LINUX) || defined(OS_MACOSX)
 
 #include <deque>
 #include <list>
 #include <vector>
 #include <errno.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -43,11 +42,21 @@
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/thread.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-// constants
+// Constants.
+
+// Bump the version when anything in the header is changed.
 static const int kIpcMessageHeaderVersion = 1;
+
+// The size of header plus the data should be less than PIPE_BUF.
+#ifdef OS_MACOSX
+static const int kPacketCapacity = 450;
+#else
 static const int kPacketCapacity = 2000;
+#endif  // OS_MACOSX
+
 static const int kMaxInboundListCleanupCounter = 20;
 static const int kInboundMessageInactiveTimeoutMs = 60 * 1000;  // 1m
 static const int kOutboundMessageInactiveTimeoutMs = 60 * 1000; // 1m
@@ -67,7 +76,9 @@ static const SignalHandlingInfo kTerminateSignalsToCatch[] = {
   { SIGVTALRM, true  },
   { SIGPROF,   true  },
   { SIGIO,     true  },
+#ifndef OS_MACOSX
   { SIGPWR,    false }
+#endif  // !OS_MACOSX
 };
 
 // Message header to read/write in FIFO.
@@ -195,12 +206,15 @@ class InboundIpcMessage : public RefCounted {
   std::vector<uint8> serialized_message_data_;
 };
 
+class LinuxIpcWorkerThread;
+
 class LinuxIpcMessageQueue : public IpcMessageQueue {
  public:
   LinuxIpcMessageQueue();
   ~LinuxIpcMessageQueue();
   bool Init();
   void Terminate();
+  void Run();
   static void OnSignalTerminate(int sig_num);
 
   // IpcMessageQueue overrides
@@ -218,12 +232,7 @@ class LinuxIpcMessageQueue : public IpcMessageQueue {
                          OutboundIpcMessage *outbound_message);
 
  private:
-  bool StartWorkerThread();
-
   // Our worker thread's entry point and running routines
-  static void *StaticThreadProc(void *param);
-  void InstanceThreadProc(struct ThreadStartData *start_data);
-  void Run();
   void ProcessOutboundMessages(bool *still_pending_to_send);
   void ProcessInboundMessages();
   bool SendOneMessage(IpcProcessId dest_process_id,
@@ -244,7 +253,7 @@ class LinuxIpcMessageQueue : public IpcMessageQueue {
   int outbound_signaling_fds_[2];
   std::string inbound_fifo_path_;
   int inbound_fifo_fd_;
-  pthread_t worker_thread_id_;
+  scoped_ptr<LinuxIpcWorkerThread> thread_;
   Mutex thread_sync_mutex_;
   int inbound_list_cleanup_counter_;
 
@@ -260,13 +269,31 @@ class LinuxIpcMessageQueue : public IpcMessageQueue {
   static LinuxIpcMessageQueue *self_;
 };
 
+class LinuxIpcWorkerThread : public Thread {
+ public:
+  LinuxIpcWorkerThread(LinuxIpcMessageQueue *ipc_message_queue)
+      : ipc_message_queue_(ipc_message_queue) {
+    assert(ipc_message_queue);
+  }
+
+  virtual ~LinuxIpcWorkerThread() {
+  }
+
+ private:
+  virtual void Run() {
+    ipc_message_queue_->Run();
+  }
+
+  LinuxIpcMessageQueue *ipc_message_queue_;
+  DISALLOW_EVIL_CONSTRUCTORS(LinuxIpcWorkerThread);
+};
+
 LinuxIpcMessageQueue *LinuxIpcMessageQueue::self_ = NULL;
 
 LinuxIpcMessageQueue::LinuxIpcMessageQueue()
   : die_(true),
     current_process_id_(0),
     inbound_fifo_fd_(-1),
-    worker_thread_id_(0),
     inbound_list_cleanup_counter_(0) {
   current_process_id_ = getpid();
   outbound_signaling_fds_[0] = outbound_signaling_fds_[1] = -1;
@@ -287,20 +314,9 @@ std::string LinuxIpcMessageQueue::BuildFifoPath(IpcProcessId process_id) {
   return fifo_path;
 }
 
-struct ThreadStartData {
-  ThreadStartData(LinuxIpcMessageQueue *self) 
-    : started_signal_(false),
-      started_successfully_(false),
-      self(self) {}
-  Mutex started_mutex_;
-  bool started_signal_;
-  bool started_successfully_;
-  LinuxIpcMessageQueue *self;
-};
-
 bool LinuxIpcMessageQueue::Init() {
-  LOG(("Initializing LinuxIpcMessageQueue 0x%x for process %d\n",
-       this, getpid()));
+  LOG(("Initializing LinuxIpcMessageQueue for process %d\n", getpid()));
+
   // Create a pipe used for the signal for the main thread to tell the worker
   // thread that the outbound data is to be processed.
   int rv = pipe(outbound_signaling_fds_);
@@ -380,66 +396,13 @@ bool LinuxIpcMessageQueue::Init() {
   }
   self_ = this;
 
-  return StartWorkerThread();
-}
-
-bool LinuxIpcMessageQueue::StartWorkerThread() {
-  ThreadStartData start_data(this);
-
-  pthread_attr_t worker_thread_attr;
-  int rv = pthread_attr_init(&worker_thread_attr);
-  if (rv) {
-    LOG(("pthread_attr_init failed with errno=%d\n", rv));
+  // Start a worker thread.
+  thread_.reset(new LinuxIpcWorkerThread(this));
+  if (!thread_->Start()) {
     return false;
   }
 
-  rv = pthread_attr_setdetachstate(&worker_thread_attr,
-                                   PTHREAD_CREATE_JOINABLE);
-  if (rv) {
-    LOG(("pthread_attr_setdetachstate failed with errno=%d\n", rv));
-    return false;
-  }
-
-  rv = pthread_create(&worker_thread_id_,
-                      &worker_thread_attr,
-                      StaticThreadProc,
-                      &start_data);
-  if (rv) {
-    LOG(("pthread_create failed with errno=%d\n", rv));
-    return false;
-  }
-
-  rv = pthread_attr_destroy(&worker_thread_attr);
-  if (rv) {
-    LOG(("pthread_attr_destroy failed with errno=%d\n", rv));
-    return false;
-  }
-
-  MutexLock locker(&start_data.started_mutex_);
-  start_data.started_mutex_.Await(Condition(&start_data.started_signal_));
-  return start_data.started_successfully_;
-}
-
-void *LinuxIpcMessageQueue::StaticThreadProc(void *param) {
-  ThreadStartData *start_data = reinterpret_cast<ThreadStartData*>(param);
-  LinuxIpcMessageQueue *self = start_data->self;
-  self->InstanceThreadProc(start_data);
-  return NULL;
-}
-
-void LinuxIpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
-  LOG(("Worker thread of process %u started\n", current_process_id_));
-
-  {
-    MutexLock locker(&start_data->started_mutex_);
-
-    start_data->started_successfully_ = true;
-    start_data->started_signal_ = true;
-  }
-
-  Run();
-
-  LOG(("Worker thread of process %u terminated\n", current_process_id_));
+  return true;
 }
 
 void LinuxIpcMessageQueue::OnSignalTerminate(int sig_num) {
@@ -470,17 +433,14 @@ void LinuxIpcMessageQueue::Terminate() {
 
   // Signal and wait for the worker thread to finish.
   die_ = true;
-  if (worker_thread_id_) {
+  if (thread_.get() && thread_->IsRunning()) {
     char ch = 'q';
     if (write(outbound_signaling_fds_[1], &ch, 1) < 1) {
       LOG(("Writing to the signaling pipe failed with errno=%d\n", errno));
     }
     LOG(("Waiting for worker thread of process %u to join\n",
          current_process_id_));
-    int rv = pthread_join(worker_thread_id_, NULL);
-    if (rv) {
-      LOG(("pthread_join failed with errno=%d\n", rv));
-    }
+    thread_->Join();
   }
 
   // Clean up.
@@ -995,22 +955,20 @@ void LinuxIpcMessageQueue::AddToOutboundList(
 
 namespace {
 Mutex g_system_queue_instance_lock;
-LinuxIpcMessageQueue * volatile g_system_queue_instance = NULL;
+scoped_ptr<LinuxIpcMessageQueue> g_system_queue_instance;
 }
 
 // static
 IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  if (!g_system_queue_instance) {
-    MutexLock locker(&g_system_queue_instance_lock);
-    if (!g_system_queue_instance) {
-      LinuxIpcMessageQueue *instance = new LinuxIpcMessageQueue();
-      if (!instance->Init()) {
-        LOG(("IpcMessageQueue initialization failed.\n"));
-      }
-      g_system_queue_instance = instance;
+  MutexLock locker(&g_system_queue_instance_lock);
+  if (!g_system_queue_instance.get()) {
+    LinuxIpcMessageQueue *instance = new LinuxIpcMessageQueue();
+    if (!instance->Init()) {
+      LOG(("IpcMessageQueue initialization failed.\n"));
     }
+    g_system_queue_instance.reset(instance);
   }
-  return g_system_queue_instance;
+  return g_system_queue_instance.get();
 }
 
 // static
@@ -1028,4 +986,4 @@ void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
 }
 #endif  // USING_CCTESTS
 
-#endif  // defined(LINUX) && !defined(OS_MACOSX)
+#endif  // defined(LINUX) || defined(OS_MACOSX)
