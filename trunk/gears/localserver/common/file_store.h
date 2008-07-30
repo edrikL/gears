@@ -56,7 +56,9 @@ class WebCacheFileStore : public WebCacheBlobStore {
                           const char16 *url,
                           WebCacheDB::PayloadInfo *payload);
 
-  // Reads a body from the store
+  // Reads a body from the store. If 'info_only' is true, the cached_filepath
+  // member of the payload will be set, however the data vector will not be
+  // populated.
   virtual bool ReadBody(WebCacheDB::PayloadInfo *payload, bool info_only);
 
   // Deletes a body from the store
@@ -69,7 +71,7 @@ class WebCacheFileStore : public WebCacheBlobStore {
   void BeginTransaction();
 
   // Commits a transaction. Files and server directories that were scheduled
-  //  for deletion during the transaction are deleted at this time.
+  // for deletion during the transaction are deleted at this time.
   void CommitTransaction();
 
   // Rollsback a transaction. Files and server directories that were created

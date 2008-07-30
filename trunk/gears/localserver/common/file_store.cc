@@ -120,23 +120,24 @@ bool WebCacheFileStore::ReadBody(WebCacheDB::PayloadInfo *payload,
   ASSERT_SINGLE_THREAD();
   assert(db_);
 
-  // For info only queries or bodyless responses, we don't hit the DB at all
-  if (info_only || (payload->status_code != HttpConstants::HTTP_OK)) {
+  // For bodyless responses, we don't hit the DB at all
+  if (payload->status_code != HttpConstants::HTTP_OK) {
     payload->cached_filepath.clear();
     payload->data.reset(NULL);
     return true;
   }
 
-  // Read the filepath from the ResponseBodies table
+  // Read the relative filepath from the ResponseBodies table
   if (!GetFilePath(payload->id, &payload->cached_filepath)) {
     return false;
   }
 
-  // Now read the file from disk
-  if (!ReadFile(payload)) {
-    // TODO(michaeln): handle this error condition, the file associated
-    // with the payload has been deleted
-    return false;
+  if (!info_only) {
+    if (!ReadFile(payload)) {
+      // TODO(michaeln): handle this error condition, the file associated
+      // with the payload has been deleted
+      return false;
+    }
   }
 
   // We return the full filepath to the caller

@@ -149,6 +149,13 @@ class File {
   static File *Open(const char16 *full_filepath, OpenAccessMode access_mode,
                     OpenExistsMode exists_mode);
 
+#ifdef WIN32
+  // Prepend long path prefix, "\\?\", onto 'path' so we can handle filepaths
+  // longer than 256 characters. This function does nothing if the prefix
+  // already exists on 'path'.
+  static std::string16 File::ToLongPath(const std::string16 &path);
+#endif
+
   // Reads at most max_bytes of file data at the current seek position into
   // destination.
   // Returns the number of bytes read, or -1 on failure or if the file is not
