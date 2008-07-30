@@ -38,9 +38,8 @@
 #include "gears/geolocation/geolocation_db.h"
 #include "third_party/googleurl/src/gurl.h"
 
-// TODO(steveblock): Update default URL when finalized.
 static const char16 *kDefaultLocationProviderUrl =
-    STRING16(L"http://www.google.com/");
+    STRING16(L"http://www.google.com/loc/json");
 
 // API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
