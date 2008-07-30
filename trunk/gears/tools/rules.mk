@@ -1058,13 +1058,23 @@ else
 	cp -r $(NOTIFIER_BUNDLE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 endif
 else # not OSX
+ifeq ($(OS),linux)
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+	cp $(NOTIFIER_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/
+	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/notifier_resources
+	cp -r $(NOTIFIER_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/notifier_resources
+endif
+else # not LINUX (and not OSX)
 ifeq ($(MODE),dbg)
 ifdef IS_WIN32_OR_WINCE
 	cp $(FF3_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE).pdb
 	cp $(FF2_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE)_ff2.pdb
 endif
 endif
-endif #end not OSX
+endif # not LINUX
+endif # not OSX
 ifeq ($(USING_CCTESTS),1)
 	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif

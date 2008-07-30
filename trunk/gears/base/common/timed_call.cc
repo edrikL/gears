@@ -30,6 +30,10 @@
 #if defined(OS_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+#if defined(BROWSER_NONE) && defined(LINUX) && !defined(OS_MACOSX)
+#include <gtk/gtk.h>
+#endif
+
 
 #include <set>
 
@@ -217,7 +221,45 @@ class PlatformTimer {
   UINT_PTR timer_id_;
   DISALLOW_EVIL_CONSTRUCTORS(PlatformTimer);
 };
-#else  // TODO(chimene): Linux, wince, etc.
+#elif defined(BROWSER_NONE) && defined(LINUX) && !defined(OS_MACOSX)
+class PlatformTimer {
+ public:
+  PlatformTimer()
+      : timer_id_(0) {
+  }
+
+  ~PlatformTimer() {
+    Cancel();
+  }
+
+  void Cancel() {
+    if (timer_id_) {
+      g_source_remove(timer_id_);
+      timer_id_ = 0;
+    }
+  }
+
+  void SetNextFire(int64 timeout) {
+    Cancel();
+
+    // Bound timeout to reasonable values.
+    if (timeout > 0x7FFFFFFF)
+      timeout = 0x7FFFFFFF;
+    if (timeout < 0x0000000A)
+      timeout = 0x0000000A;
+    g_timeout_add(timeout, &PlatformTimer::OnTimer, NULL);
+  }
+
+ private:
+  static gboolean OnTimer(gpointer) {
+    TimerSingleton::StaticCallback();
+    return false;
+  }
+
+  guint timer_id_;
+  DISALLOW_EVIL_CONSTRUCTORS(PlatformTimer);
+};
+#else  // TODO(chimene): Linux FF, wince, etc.
 class PlatformTimer {
  public:
   PlatformTimer() {
