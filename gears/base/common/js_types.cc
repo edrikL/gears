@@ -756,6 +756,10 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   }
 
   for (unsigned int i = 0; i < count; ++i) {
+    if (!NPN_IdentifierIsString(identifiers[i])) {
+      out->push_back(IntegerToString16(NPN_IntFromIdentifier(identifiers[i])));
+      continue;
+    }
     NPUTF8 *utf8_name = NPN_UTF8FromIdentifier(identifiers[i]);
     std::string16 name;
 

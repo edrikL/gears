@@ -150,10 +150,8 @@ workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
 workerPoolSuite.addFile(
                         '../testcases/workerpool_createworkerfromurl_tests.js',
                         {useWorker: false, useIFrame: true});
-if (!isSafari) {
-  workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
-                          {useWorker: true, useIFrame: true});
-}
+workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
+                        {useWorker: true, useIFrame: true});
 suites.push(workerPoolSuite);
 
 var geolocationSuite = new TestSuite('Geolocation');
