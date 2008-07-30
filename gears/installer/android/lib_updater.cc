@@ -63,7 +63,7 @@ static const int kFirstUpdateDelayMs = (1000 * 60 * 2);  // 2 minutes
 static const int kUpdatePeriodMs = (1000 * 60 * 60 * 25);  // 25 hours
 
 static const char* kZipInflaterClass =
-    "com/google/android/gears/ZipInflater";
+    GEARS_JAVA_PACKAGE "/ZipInflater";
 
 static const char* kZipInflateMethodName = "inflate";
 
