@@ -152,7 +152,9 @@ class MockLocationProvider
     : public LocationProviderBase,
       public Thread {
  public:
-  MockLocationProvider() : is_shutting_down_(false) {
+  MockLocationProvider()
+      : is_shutting_down_(false),
+        is_new_listener_waiting_(false) {
     Start();
   }
   virtual ~MockLocationProvider() {
@@ -192,6 +194,7 @@ class MockLocationProvider
       if (is_new_position_available_ || is_new_listener_waiting_) {
         UpdateListeners();
         is_new_position_available_ = false;
+        is_new_listener_waiting_ = false;
       }
     }
   }
