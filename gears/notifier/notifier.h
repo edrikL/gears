@@ -61,12 +61,12 @@
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification_manager.h"
-#include "gears/notifier/user_activity.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsNotification;
 class NotificationManager;
 class SecurityOrigin;
+class UserActivityMonitor;
 
 // Interface to provide delayed restart support.
 class DelayedRestartInterface {
@@ -116,7 +116,7 @@ class Notifier : public IpcMessageQueue::HandlerInterface,
   bool to_restart_;
 
  private:
-  UserActivityMonitor user_activity_monitor_;
+  scoped_ptr<UserActivityMonitor> user_activity_monitor_;
   scoped_ptr<NotificationManager> notification_manager_;
   DISALLOW_EVIL_CONSTRUCTORS(Notifier);
 };

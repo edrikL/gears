@@ -32,7 +32,11 @@
   // The notification API has not been finalized for official builds.
 #else
 
+#include <vector>
 #include "gears/base/common/basictypes.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+
+class TimedCall;
 
 // Categorization of the user mode
 enum UserMode {
@@ -63,17 +67,40 @@ enum UserMode {
   USER_MODE_UNKNOWN,
 };
 
+class UserActivityObserver {
+ public:
+  // Called when there is any change to user activity.
+  virtual void OnUserActivityChange() = 0;
+};
+
 class UserActivityInterface {
  public:
-  virtual UserMode CheckUserActivity() = 0;
+  // Add the observer to be notified when a user mode has been changed.
+  virtual void AddObserver(UserActivityObserver *observer) = 0;
+
+  // Check the user activity immediately.
+  virtual void CheckNow() = 0;
+
+  // Get the user activity value. Note that this is the latest cached value.
+  virtual UserMode user_mode() const = 0; 
 };
 
 class UserActivityMonitor : public UserActivityInterface {
  public:
-  UserActivityMonitor() {}
-  virtual UserMode CheckUserActivity();
+  UserActivityMonitor();
+
+  // UserActivityInterface implementations.
+  virtual void AddObserver(UserActivityObserver *observer);
+  virtual void CheckNow();
+  virtual UserMode user_mode() const { return user_mode_; }
 
  private:
+  // Callback for the timer to check the user activity peridocially.
+  static void OnTimer(void *arg);
+
+  // Get the current user activity mode.
+  static UserMode GetUserActivity();
+
   // Returns true if the user is idle.
   static bool IsUserIdle();
 
@@ -105,6 +132,9 @@ class UserActivityMonitor : public UserActivityInterface {
   // Returns true if in full screen mode.
   static bool IsFullScreenMode();
 
+  scoped_ptr<TimedCall> timer_;
+  std::vector<UserActivityObserver*> observers_;
+  UserMode user_mode_;
   DISALLOW_EVIL_CONSTRUCTORS(UserActivityMonitor);
 };
 

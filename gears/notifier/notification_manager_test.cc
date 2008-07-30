@@ -63,7 +63,7 @@ BalloonCollectionMock::~BalloonCollectionMock() {
   EXPECT_EQ(0, delete_call_count_) << "Not enough delete calls done.";
 }
 
-void BalloonCollectionMock::Show(const GearsNotification &notification) {
+void BalloonCollectionMock::Add(const GearsNotification &notification) {
   NotificationId id(notification.security_origin().url(), notification.id());
   EXPECT_TRUE(displayed_.find(id) == displayed_.end())
       << "Already showing notification.";
@@ -95,6 +95,12 @@ bool BalloonCollectionMock::Delete(const SecurityOrigin &security_origin,
   displayed_.erase(id);
   count_--;
   return true;
+}
+
+void BalloonCollectionMock::ShowAll() {
+}
+
+void BalloonCollectionMock::HideAll() {
 }
 
 bool BalloonCollectionMock::has_space() const {
@@ -129,19 +135,33 @@ void BalloonCollectionMock::set_delete_call_count(int delete_call_count) {
 
 class UserActivityMock : public UserActivityInterface {
  public:
-  UserActivityMock() : user_mode_(USER_NORMAL_MODE) {
+  UserActivityMock() : user_mode_(USER_NORMAL_MODE), observer_(NULL) {
   }
 
-  virtual UserMode CheckUserActivity() {
+  virtual void AddObserver(UserActivityObserver *observer) {
+    observer_ = observer;
+  }
+
+  virtual void CheckNow() {
+  }
+
+  virtual UserMode user_mode() const {
     return user_mode_;
   }
 
   void set_user_mode(UserMode user_mode) {
+    UserMode previous_user_mode = user_mode_;
     user_mode_ = user_mode;
+    if (previous_user_mode != user_mode_) {
+      if (observer_) {
+        observer_->OnUserActivityChange();
+      }
+    }
   }
 
  private:
   UserMode user_mode_;
+  UserActivityObserver *observer_;
   DISALLOW_EVIL_CONSTRUCTORS(UserActivityMock);
 };
 
@@ -185,21 +205,16 @@ TEST(NotificationManagerTest, BasicFunctionality) {
   // Go through all of the modes and ensure that the
   // notification doesn't get displayed.
   activity.set_user_mode(USER_IDLE_MODE);
-  manager.OnUserActivityChange();
 
   activity.set_user_mode(USER_INTERRUPTED_MODE);
-  manager.OnUserActivityChange();
 
   activity.set_user_mode(USER_MODE_UNKNOWN);
-  manager.OnUserActivityChange();
 
   activity.set_user_mode(USER_PRESENTATION_MODE);
-  manager.OnUserActivityChange();
 
   // Transitioning to normal mode should cause the notification to appear.
-  activity.set_user_mode(USER_NORMAL_MODE);
   balloon_collection->set_show_call_count(1);
-  manager.OnUserActivityChange();
+  activity.set_user_mode(USER_NORMAL_MODE);
 }
 
 void RunMessageLoop(int max_time_ms) {

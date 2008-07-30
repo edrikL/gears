@@ -708,7 +708,7 @@ Balloon *BalloonCollection::FindBalloon(
   return NULL;
 }
 
-void BalloonCollection::Show(const GearsNotification &notification) {
+void BalloonCollection::Add(const GearsNotification &notification) {
   Balloon *balloon = FindBalloon(notification.security_origin(),
                                  notification.id(),
                                  false);  // no remove
@@ -746,6 +746,16 @@ bool BalloonCollection::Delete(const SecurityOrigin &security_origin,
 
   observer_->OnBalloonSpaceChanged();
   return true;
+}
+
+void BalloonCollection::ShowAll() {
+  if (root_ui_)
+    root_ui_->Show();
+}
+
+void BalloonCollection::HideAll() {
+  if (root_ui_)
+    root_ui_->Hide();
 }
 
 void BalloonCollection::EnsureRoot() {

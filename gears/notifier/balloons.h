@@ -36,8 +36,10 @@
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
 
-class GearsNotification;
 class BalloonCollection;
+class GearsNotification;
+class UserActivityInterface;
+
 // Glint classes
 namespace glint {
 class Node;
@@ -58,7 +60,7 @@ class BalloonCollectionInterface {
   // already showing notifications with the same security_origin and id.
   // Asserts if there is already a notification with the same
   // security_origin/id.
-  virtual void Show(const GearsNotification &notification) = 0;
+  virtual void Add(const GearsNotification &notification) = 0;
   // Updates the existing balloon with notification that matches
   // security_origin and id of the specified one. In case there is no
   // balloon showing the matching notification, returns 'false'.
@@ -68,6 +70,12 @@ class BalloonCollectionInterface {
   // notification.
   virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &id) = 0;
+
+  // Show all balloons.
+  virtual void ShowAll() = 0;
+
+  // Hide all balloons.
+  virtual void HideAll() = 0;
 
   // Is there room to add another notification?
   virtual bool has_space() const = 0;
@@ -142,10 +150,12 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual ~BalloonCollection();
 
   // BalloonCollectionInterface overrides
-  virtual void Show(const GearsNotification &notification);
+  virtual void Add(const GearsNotification &notification);
   virtual bool Update(const GearsNotification &notification);
   virtual bool Delete(const SecurityOrigin &security_origin,
                       const std::string16 &id);
+  virtual void ShowAll();
+  virtual void HideAll();
   virtual bool has_space() const { return has_space_; }
   virtual int count() const { return static_cast<int>(balloons_.size()); }
   virtual const GearsNotification *notification_at(int i) const {

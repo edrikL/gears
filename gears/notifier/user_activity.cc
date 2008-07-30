@@ -31,11 +31,41 @@
 
 #include "gears/notifier/user_activity.h"
 
+#include "gears/base/common/timed_call.h"
+
 // Constants.
 static const size_t kDefaultUserIdleThresholdSec = 5 * 60;    // 5m
 static const size_t kDefaultUserBusyThresholdSec = 30;        // 30s
 
-// Is the user idle?
+// In Windows platform, the balloon will reappear shortly after the use
+// enters full-screen mode. To work around this, we use a much shorter 
+// interval.
+#ifdef WIN32
+static const int64 kUserActivityCheckIntervalMs = 500;    // 0.5s
+#else
+static const int64 kUserActivityCheckIntervalMs = 1000;   // 1s
+#endif  // WIN32
+
+UserActivityMonitor::UserActivityMonitor()
+  : user_mode_(USER_MODE_UNKNOWN) {
+  timer_.reset(new TimedCall(kUserActivityCheckIntervalMs,
+                             true,
+                             UserActivityMonitor::OnTimer,
+                             this));
+}
+
+void UserActivityMonitor::AddObserver(UserActivityObserver *observer) {
+  assert(observer);
+  observers_.push_back(observer);
+}
+
+void UserActivityMonitor::OnTimer(void *arg) {
+  assert(arg);
+
+  UserActivityMonitor *this_ptr = reinterpret_cast<UserActivityMonitor*>(arg);
+  this_ptr->CheckNow();
+}
+
 bool UserActivityMonitor::IsUserIdle() {
   uint32 idle_threshold_sec = kDefaultUserIdleThresholdSec;
   uint32 power_off_sec = GetMonitorPowerOffTimeSec();
@@ -46,17 +76,25 @@ bool UserActivityMonitor::IsUserIdle() {
   return GetUserIdleTimeMs() > idle_threshold_sec * 1000;
 }
 
-// Is the user busy?
 bool UserActivityMonitor::IsUserBusy() {
   return GetUserIdleTimeMs() < kDefaultUserBusyThresholdSec * 1000;
 }
 
-// Is the user away?
 bool UserActivityMonitor::IsUserAway() {
   return IsScreensaverRunning() || IsWorkstationLocked();
 }
 
-UserMode UserActivityMonitor::CheckUserActivity() {
+void UserActivityMonitor::CheckNow() {
+  UserMode previous_user_mode = user_mode_;
+  user_mode_ = GetUserActivity();
+  if (previous_user_mode != user_mode_) {
+    for (size_t i = 0; i < observers_.size(); ++i) {
+      observers_[i]->OnUserActivityChange();
+    }
+  }
+}
+
+UserMode UserActivityMonitor::GetUserActivity() {
   // Use platform specific way of detecting user mode.
   UserMode user_mode = PlatformDetectUserMode();
   if (user_mode != USER_MODE_UNKNOWN) {

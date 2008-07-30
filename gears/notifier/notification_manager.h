@@ -37,6 +37,7 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/balloons.h"
+#include "gears/notifier/user_activity.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if USING_CCTESTS
@@ -46,12 +47,12 @@ class DelayedRestartInterface;
 class File;
 class GearsNotification;
 class QueuedNotification;
-class UserActivityInterface;
 
 // Handles all aspects of the notifications to be displayed.
 // Note: do not forget to increase kNotificationManagerVersion if you make any 
 // change to this class which could affect saving notifications.
-class NotificationManager : public BalloonCollectionObserver {
+class NotificationManager : public BalloonCollectionObserver,
+                            public UserActivityObserver {
  public:
   NotificationManager(UserActivityInterface *activity,
                       DelayedRestartInterface *delayed_restart);
@@ -79,9 +80,6 @@ class NotificationManager : public BalloonCollectionObserver {
   // Hides/unhides notifications depending on the user's mode.
   void OnUserPresentationModeChange(bool in_presentation);
 
-  // Called when the user becomes active/inactive.
-  void OnUserActivityChange();
-
   // Should only be used by QueuedNotification to move itself
   // from being delayed to being ready to show (as a result of
   // "showAtTime" arriving or a snooze period being over).
@@ -90,6 +88,9 @@ class NotificationManager : public BalloonCollectionObserver {
 
   // BalloonCollectionObserver implementation.
   virtual void OnBalloonSpaceChanged();
+
+  // UserActivityObserver implementation.
+  void OnUserActivityChange();
 
   // Saves notifications so that they can be reloaded when notifier is
   // restarted.
@@ -107,6 +108,10 @@ class NotificationManager : public BalloonCollectionObserver {
 
  private:
   static const int kNotificationManagerVersion;
+
+  // Attempts to cdisplay notifications from the show_queue if the user
+  // is active.
+  void CheckAndShowNotifications();
 
   // Attempts to display notifications from the show_queue.
   void ShowNotifications();
@@ -167,6 +172,7 @@ class NotificationManager : public BalloonCollectionObserver {
   scoped_ptr<BalloonCollectionInterface> balloon_collection_;
   std::deque<QueuedNotification*> show_queue_;
   std::deque<QueuedNotification*> delayed_queue_;
+  bool in_presentation_;
   DISALLOW_EVIL_CONSTRUCTORS(NotificationManager);
 };
 
