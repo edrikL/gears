@@ -61,6 +61,7 @@ AnimationTimeline::AnimationTimeline()
   : owner_(NULL),
     user_data_(NULL),
     state_(IDLE),
+    animated_alpha_(-1),
     send_message_(false) {
 }
 
@@ -128,8 +129,9 @@ bool AnimationTimeline::Advance(real64 current_time) {
 
   int alpha = 255;
   bool alpha_active = alpha_segments_.Advance(current_time, &alpha);
-  if (alpha_active) {
-    owner_->set_animated_alpha(alpha);
+  if (alpha_active && (animated_alpha_ != alpha)) {
+    animated_alpha_ = alpha;
+    owner_->Invalidate();
   }
 
   Vector translation;
@@ -139,7 +141,10 @@ bool AnimationTimeline::Advance(real64 current_time) {
     Point local_offset = owner_->local_offset();
     Point animated_offset(Round(translation.x) - local_offset.x,
                           Round(translation.y) - local_offset.y);
-    owner_->set_animated_offset(animated_offset);
+    if (animated_offset_ != animated_offset) {
+      animated_offset_ = animated_offset;
+      owner_->Invalidate();
+    }
   }
 
   if (!alpha_active && !translation_active) {
@@ -168,8 +173,12 @@ void AnimationTimeline::Cancel(bool completed) {
       platform()->PostWorkItem(root_ui, item);
     }
   }
-  owner_->set_animated_alpha(-1);
-  owner_->set_animated_offset(Point());
+  animated_alpha_ = -1;
+  animated_offset_ = Point();
+  // Invalidate, since the finish values of animation might not be the same
+  // as current values on the node.
+  owner_->Invalidate();
+
 }
 
 }  // namespace glint

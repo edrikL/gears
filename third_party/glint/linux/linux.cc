@@ -460,8 +460,6 @@ class LinuxWindow {
     if (ui_) {
       all_windows_.erase(ui_);
       ui_ = NULL;
-      if (all_windows_.size() == 0)
-        gtk_main_quit();
     }
     if (idle_timer_id_) {
       g_source_remove(idle_timer_id_);

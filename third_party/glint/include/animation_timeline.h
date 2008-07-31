@@ -203,6 +203,8 @@ class AnimationTimeline : public BaseObject {
   Node* owner() const { return owner_; }
   State state() const { return state_; }
   void* user_data() const { return user_data_; }
+  Point animated_offset() { return animated_offset_; }
+  int animated_alpha() { return animated_alpha_; }
 
  private:
   // Takes snapshot of "before trigger" values. 'owner_' is already set.
@@ -218,6 +220,8 @@ class AnimationTimeline : public BaseObject {
   Node* owner_;        // the node which is playing this timeline now
   void* user_data_;
   State state_;
+  Point animated_offset_;
+  int animated_alpha_;
   bool send_message_;
 };
 
