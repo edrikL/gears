@@ -431,38 +431,13 @@ class Node : public BaseObject {
   // layout-computed offset relative to the parent node
   Point local_offset() { return local_offset_; }
 
-  // Support for animations - animated offset. It is
-  // combined with local_offset during drawing. Does not affect layout.
-  Point animated_offset() { return animated_offset_; }
-  void set_animated_offset(Point animated_offset) {
-    if (animated_offset_ != animated_offset) {
-      animated_offset_ = animated_offset;
-      Invalidate();
-    }
-  }
-
   // Effective offset is used in actual rendering/hittesting. Combines
   // layout-computed and animated offsets relative to parent.
-  Point effective_offset() {
-    return Point(animated_offset_.x + local_offset_.x,
-                 animated_offset_.y + local_offset_.y);
-  }
-
-  // Support for animations - animated alpha. It is
-  // combined with regular alpha during drawing.
-  int animated_alpha() { return animated_alpha_; }
-  void set_animated_alpha(int animated_alpha) {
-    if (animated_alpha_ != animated_alpha) {
-      animated_alpha_ = animated_alpha;
-      Invalidate();
-    }
-  }
+  Point effective_offset() const;
 
   // Effective alpha is used in actual rendering/hittesting. Combines
   // user-set and animated alpha values.
-  int effective_alpha() {
-    return animated_alpha_ >= 0 ? animated_alpha_ : alpha_;
-  }
+  int effective_alpha() const;
 
   // The limited use of 'protected'. These methods are never intended for
   // calling by anybody outside the node itself, they are essentially
@@ -569,10 +544,6 @@ class Node : public BaseObject {
   Rectangle computed_drawing_bounds_;
   // Area to draw after changes, in local coordinates.
   Rectangle draw_area_;
-
-  // Support for transitional animations
-  Point animated_offset_;
-  int animated_alpha_;
 
   VerticalAlignment vertical_alignment_;
   HorizontalAlignment horizontal_alignment_;

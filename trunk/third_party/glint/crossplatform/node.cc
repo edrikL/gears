@@ -46,8 +46,6 @@ Node::Node()
       parent_ui_(NULL),
       alpha_(colors::kOpaqueAlpha),
       background_(colors::kTransparent),
-      animated_offset_(Point()),
-      animated_alpha_(-1),
       vertical_alignment_(Y_FILL),
       horizontal_alignment_(X_FILL),
       clip_at_bounds_(false),
@@ -231,8 +229,9 @@ void Node::Invalidate() {
 void Node::GetTransformToLocal(Transform* transform) const {
   ASSERT(transform);
   transform->Reset();
-  int dx = -local_offset_.x - animated_offset_.x;
-  int dy = -local_offset_.y - animated_offset_.y;
+  Point effective_offset = this->effective_offset();
+  int dx = -effective_offset.x;
+  int dy = -effective_offset.y;
   transform->AddOffset(Vector(dx, dy));
   Transform inverted;
   inverted.Set(transform_);
@@ -244,8 +243,9 @@ void Node::GetTransformToParent(Transform* transform) const {
   ASSERT(transform);
   transform->Reset();
   transform->AddPostTransform(transform_);
-  int dx = local_offset_.x + animated_offset_.x;
-  int dy = local_offset_.y + animated_offset_.y;
+  Point effective_offset = this->effective_offset();
+  int dx = effective_offset.x;
+  int dy = effective_offset.y;
   transform->AddOffset(Vector(dx, dy));
 }
 
@@ -706,7 +706,7 @@ bool Node::HitTestDeep(DrawStack* stack,
 
   Transform to_parent;
   GetTransformToParent(&to_parent);
-  if (!stack->Push(to_parent, clip, ignore_clip(), alpha()))
+  if (!stack->Push(to_parent, clip, ignore_clip(), effective_alpha()))
     return false;
   DrawContext* context = stack->Top();
 
@@ -1083,6 +1083,44 @@ void Node::InvalidateDrawing(const Rectangle& rectangle) {
   if (!root_ui)
     return;
   root_ui->Invalidate();
+}
+
+Point Node::effective_offset() const {
+  Point animated_offset = local_offset_;
+  for (int i = 0; i < LAST_TRANSITION; ++i) {
+    AnimationTimeline* animation = transitions_[i];
+    // If animation is IDLE or INITIALIZED and waiting in pending list
+    // on RootUI - skip it
+    if (animation &&
+        animation->state() == AnimationTimeline::PLAYING) {
+      Point offset = animation->animated_offset();
+      animated_offset.x += offset.x;
+      animated_offset.y += offset.y;
+    }
+  }
+
+  return animated_offset;
+}
+
+int Node::effective_alpha() const {
+  int animated_alpha = 255;
+  bool alpha_is_animated = false;
+
+  for (int i = 0; i < LAST_TRANSITION; ++i) {
+    AnimationTimeline* animation = transitions_[i];
+    // If animation is IDLE or INITIALIZED and waiting in pending list
+    // on RootUI - skip it
+    if (animation &&
+        animation->state() == AnimationTimeline::PLAYING) {
+      int alpha = animation->animated_alpha();
+      if (alpha >= 0 && alpha <= 255) {
+        alpha_is_animated = true;
+        animated_alpha = (animated_alpha * (alpha + 1)) >> 8;
+      }
+    }
+  }
+
+  return alpha_is_animated ? animated_alpha : alpha_;
 }
 
 }  // namespace glint

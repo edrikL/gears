@@ -177,11 +177,6 @@ bool DarwinPlatform::UpdateInvisibleWindow(PlatformWindow* window,
   view_frame.size = content_frame.size;
   [view setFrame:view_frame];
 
-  // Now set the window's frame as well.
-  NSRect window_frame = [glint_window frameRectForContentRect:content_frame];
-  [glint_window setFrame:window_frame
-                 display:YES];
-
   // The bitmap goes at 0,0 in the window unless an offset was passed in
   NSPoint offset = NSMakePoint(0, 0);
   if (bitmap_window_offset) {
@@ -199,10 +194,15 @@ bool DarwinPlatform::UpdateInvisibleWindow(PlatformWindow* window,
                       bitmap_area->size().width, bitmap_area->size().height);
   }
 
-  // Tell the view about this new bitmap
+  // Tell the view about this new bitmap. This will also send setNeedsDisplay.
   [glint_view updateViewWithBitmap:ns_bitmap
                             offset:offset
                               area:area];
+
+  // Now set the window's frame as well. This causes immediate redraw.
+  NSRect window_frame = [glint_window frameRectForContentRect:content_frame];
+  [glint_window setFrame:window_frame
+                 display:YES];
 
   return true;
 }
