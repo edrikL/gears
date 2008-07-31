@@ -101,6 +101,147 @@ void WindowsPlatformTimer::CancelGearsTimer(int timer_id) {
 }
 #endif
 
+#if defined(OS_ANDROID)
+// Functor used to marshal a timeout to the thread which initiated it.
+class AndroidTimeoutFunctor : public AsyncFunctor {
+ public:
+  AndroidTimeoutFunctor(AndroidPlatformTimer *platform_timer,
+                        TimedCallback *caller,
+                        int timer_id)
+      : platform_timer_(platform_timer),
+        caller_(caller),
+        timer_id_(timer_id) { }
+  virtual void Run() { platform_timer_->OnMessage(caller_, timer_id_); }
+
+ private:
+  AndroidPlatformTimer *platform_timer_;
+  TimedCallback *caller_;
+  int timer_id_;
+};
+
+AndroidPlatformTimer::AndroidPlatformTimer(GearsTimer *gears_timer)
+    : gears_timer_(gears_timer),
+      owner_id_(ThreadMessageQueue::GetInstance()->GetCurrentThreadId()),
+      mutex_(),
+      timer_map_() {
+  LOG(("%p AndroidPlatformTimer constructed\n", this));
+}
+
+AndroidPlatformTimer::~AndroidPlatformTimer() {
+  LOG(("%p AndroidPlatformTimer deleted\n", this));
+  MutexLock lock(&mutex_);
+  assert(timer_map_.empty());
+}
+
+void AndroidPlatformTimer::AddTimer(int timer_id) {
+  LOG(("%p Starting platform timer %d\n", this, timer_id));
+  ASSERT_SINGLE_THREAD();
+  std::map<int, GearsTimer::TimerInfo>::iterator it =
+      gears_timer_->timers_.find(timer_id);
+  assert(it != gears_timer_->timers_.end());
+  GearsTimer::TimerInfo *timer_info = &it->second;
+  assert(timer_map_.find(timer_id) == timer_map_.end());
+  int timeout = timer_info->timeout;
+  if (timeout <= 0) {
+    // Minimum TimedCallback timeout is 1 millisecond.
+    timeout = 1;
+  }
+  // Increment refcount while the timer is running.
+  gears_timer_->Ref();
+  {
+    MutexLock lock(&mutex_);
+    TimedCallback *callback = new TimedCallback(
+        this,
+        timeout,
+        reinterpret_cast<void *>(timer_id));
+    timer_map_.insert(std::make_pair(timer_id, callback));
+  }
+}
+
+void AndroidPlatformTimer::RemoveTimer(int timer_id) {
+  LOG(("%p Deleting platform timer %d\n", this, timer_id));
+  ASSERT_SINGLE_THREAD();
+  // Remove the timer from the list.
+  TimedCallback *removed;
+  {
+    MutexLock lock(&mutex_);
+    TimerMap::iterator it = timer_map_.find(timer_id);
+    if (it == timer_map_.end()) {
+      LOG(("%p Already removed %d\n", this, timer_id));
+      removed = NULL;
+      // Timer may now be in the message queue.
+    } else {
+      // Remove the timer from the map, but don't delete with the
+      // mutex held.
+      removed = it->second;
+      timer_map_.erase(it);
+      // We know the timer will NOT fire now.
+    }
+  }
+  if (removed) {
+    // Must delete the thread without holding the mutex or we'll
+    // deadlock.
+    delete removed;
+    // Drop the refcount now that this timer is gone.
+    gears_timer_->Unref();
+  }
+}
+
+void AndroidPlatformTimer::OnTimeout(TimedCallback *caller, void *user_data) {
+  assert(caller != NULL);
+  int timer_id = reinterpret_cast<int>(user_data);
+  // Remove ourselvse from the map.
+  {
+    MutexLock lock(&mutex_);
+    TimerMap::iterator it = timer_map_.find(timer_id);
+    if (it == timer_map_.end()) {
+      // We fired in the short space of time between removing from the
+      // map and deletion. Don't post a message.
+      LOG(("%p Removed timer %d just in time!\n", this, timer_id));
+      return;
+    }
+    LOG(("%p OnTimeout removed %d\n", this, timer_id));
+    timer_map_.erase(it);
+  }
+  AndroidTimeoutFunctor *functor =
+      new AndroidTimeoutFunctor(this, caller, timer_id);
+  AsyncRouter::GetInstance()->CallAsync(owner_id_, functor);
+}
+
+void AndroidPlatformTimer::OnMessage(TimedCallback *caller, int timer_id) {
+  LOG(("%p OnMessage %d\n", this, timer_id));
+  ASSERT_SINGLE_THREAD();
+  // Delete the thread - it's done now.
+  delete caller;
+  // Still holding a refcount on gears_timer_.
+  std::map<int, GearsTimer::TimerInfo>::iterator it =
+      gears_timer_->timers_.find(timer_id);
+  if (it == gears_timer_->timers_.end()) {
+    LOG(("%p Stale message %d\n", this, timer_id));
+    gears_timer_->Unref();
+    return;
+  }
+  GearsTimer::TimerInfo *timer_info = &it->second;
+  // Pass the message along.
+  bool repeat = timer_info->repeat;
+  gears_timer_->HandleTimer(timer_info);
+  if (repeat) {
+    // It's on repeat, spawn another timer.
+    if (gears_timer_->timers_.find(timer_id) ==
+        gears_timer_->timers_.end()) {
+      LOG(("%p Repeating timer %d was deleted in callback\n", this, timer_id));
+      gears_timer_->Unref();
+    } else {
+      LOG(("%p Repeating timer %d\n", this, timer_id));
+      AddTimer(timer_id);
+    }
+  } else {
+    LOG(("%p Single-shot\n", this));
+    gears_timer_->Unref();
+  }
+}
+#endif // defined(OS_ANDROID)
+
 // Disables the timer when the TimerInfo is deleted.
 GearsTimer::TimerInfo::~TimerInfo() {
 #if BROWSER_FF
@@ -111,6 +252,8 @@ GearsTimer::TimerInfo::~TimerInfo() {
   if (owner) {
 #if BROWSER_IE
     owner->platform_timer_->CancelGearsTimer(timer_id);
+#elif defined(OS_ANDROID)
+    owner->platform_timer_->RemoveTimer(timer_id);
 #endif
   }
 }
@@ -230,6 +373,7 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
   timers_[timer_id] = timer_info;
   TimerInfo *timer = &timers_[timer_id];
   timer->timer_id = timer_id;
+  timer->timeout = timeout;
   timer->SetOwner(this);
 
   // Create the actual timer.
@@ -292,6 +436,8 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
     timers_.erase(timer_id);
     return 0;
   }
+#elif defined(OS_ANDROID)
+  platform_timer_->AddTimer(timer_id);
 #endif
 
   return timer_id;
