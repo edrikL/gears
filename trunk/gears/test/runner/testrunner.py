@@ -18,7 +18,7 @@ class TestRunner:
     if not browser_launchers or len(browser_launchers) < 1:
       raise ValueError("Please provide browser launchers")
     self.__verifyBrowserLauncherTypesUnique(browser_launchers)
-    self.browser_lauchers = browser_launchers
+    self.browser_launchers = browser_launchers
     self.web_servers = web_servers
     self.test_url = test_url
 
@@ -37,7 +37,7 @@ class TestRunner:
     test_server.startServing()
 
     try:
-      for browser_launcher in self.browser_lauchers:
+      for browser_launcher in self.browser_launchers:
         test_server.startTest(TestRunner.TIMEOUT)
         try:
           browser_launcher.launch(self.test_url)
@@ -52,10 +52,15 @@ class TestRunner:
                                              test_results, automated)
     finally:
       # Shutdown each instance of TestWebserver after testing is complete
-      # to unbind sockets.
+      # to unbind sockets.  
+      # Also kill all browsers one last time to make sure no instances
+      # of browser windows or crash report processes are left behind.
       print 'Ending browser tests, shutting down server.'
       for server in self.web_servers:
         server.shutdown()
+      print 'Shutting down any remaining browser or crash report instances.'
+      for browser_launcher in self.browser_launchers:
+        browser_launcher.killAllInstances()
       return test_results
 
 

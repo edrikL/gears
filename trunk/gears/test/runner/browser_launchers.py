@@ -83,6 +83,7 @@ class BaseFirefoxWin32Launcher(BaseWin32Launcher):
   
   def killAllInstances(self):
     self._killInstancesByName('firefox.exe')
+    self._killInstancesByName('crashreporter.exe')
   
 
 class Firefox2Win32Launcher(BaseFirefoxWin32Launcher):
@@ -194,7 +195,7 @@ class BaseFirefoxMacLauncher(BasePosixLauncher):
 
   def __init__(self, profile, automated, firefox_bin):
     """ Set firefox vars. """
-    self._killInstancesByName('firefox-bin')
+    self.killAllInstances()
     self.browser_command = [firefox_bin]
     if automated:
       self.browser_command.extend(['-P', profile])

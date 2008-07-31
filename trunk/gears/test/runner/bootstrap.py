@@ -117,10 +117,6 @@ def main():
   else:
     build_type = ''
 
-  # Adding second webserver for cross domain tests.
-  test_servers.append(TestWebserver(serverRootDir(), port=8001))
-  test_servers.append(TestWebserver(serverRootDir(), port=8002))
-  
   # WinCE is a special case, because it is compiled 
   # and run on different platforms.
   if len(sys.argv) > 2 and sys.argv[2] == 'wince':
@@ -150,6 +146,10 @@ def main():
       installers.append(installer.Firefox2LinuxInstaller('gears-ff2'))
       installers.append(installer.Firefox3LinuxInstaller('gears-ff3'))
       
+  # Adding second webserver for cross domain tests.
+  test_servers.append(TestWebserver(serverRootDir(), port=8001))
+  test_servers.append(TestWebserver(serverRootDir(), port=8002))
+  
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)
   bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
