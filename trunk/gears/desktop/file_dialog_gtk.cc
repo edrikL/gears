@@ -28,17 +28,9 @@
 #include "gears/desktop/file_dialog_gtk.h"
 
 #include "gears/base/common/string_utils.h"
-#include "gears/desktop/file_dialog.h"
+#include "gears/ui/common/i18n_strings.h"
 
 namespace {
-
-// TODO(bpm): Localize
-const char* kDialogTitle = "Open File";
-
-// TODO(bpm): Localize and unify with other copies of these strings for other
-// platforms.
-const char* kDefaultFilterLabel = "All Readable Documents";
-const char* kAllDocumentsLabel = "All Documents";
 
 // Degenerate filter callbacks which allow any file to be selected.
 gboolean AnyFileFilter(const GtkFileFilterInfo* /*filter_info*/,
@@ -96,13 +88,12 @@ void FileDialogGtk::CancelSelection() {
 bool FileDialogGtk::InitDialog(NativeWindowPtr parent,
                                const FileDialog::Options& options,
                                std::string16* error) {
-  dialog_.reset(gtk_file_chooser_dialog_new(kDialogTitle, parent,
-                                            GTK_FILE_CHOOSER_ACTION_OPEN,
-                                            GTK_STOCK_CANCEL,
-                                            GTK_RESPONSE_CANCEL,
-                                            GTK_STOCK_OPEN,
-                                            GTK_RESPONSE_ACCEPT,
-                                            NULL));
+  dialog_.reset(gtk_file_chooser_dialog_new(
+      String16ToUTF8(GetLocalString(SK_OpenFile)).c_str(), parent,
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+      NULL));
   if (!dialog_.get()) {
     *error = STRING16(L"Failed to create dialog.");
     return false;
@@ -124,7 +115,8 @@ bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
       continue;
     if (!gtk_filter) {
       gtk_filter = gtk_file_filter_new();
-      gtk_file_filter_set_name(gtk_filter, kDefaultFilterLabel);
+      gtk_file_filter_set_name(gtk_filter, 
+          String16ToUTF8(GetLocalString(SK_AllReadableDocuments)).c_str());
     }
     if ('.' == filter_item[0]) {
       std::string pattern("*");
@@ -141,7 +133,8 @@ bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
 
   // Always include an unrestricted filter that the user may select.
   gtk_filter = gtk_file_filter_new();
-  gtk_file_filter_set_name(gtk_filter, kAllDocumentsLabel);
+  gtk_file_filter_set_name(gtk_filter,
+      String16ToUTF8(GetLocalString(SK_AllDocuments)).c_str());
   gtk_file_filter_add_custom(gtk_filter, static_cast<GtkFileFilterFlags>(0),
                              &AnyFileFilter, NULL, &AnyFileFilterDestroy);
   gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);

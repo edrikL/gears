@@ -28,15 +28,11 @@
 #include <set>
 #include "gears/desktop/file_dialog_win32.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/ui/common/i18n_strings.h"
 
 namespace {
 
-// TODO(bpm): Localize and unify with other copies of these strings for other
-// platforms.
-const char16* kDefaultFilterLabel = STRING16(L"All Readable Documents");
-const char16* kAllDocumentsLabel = STRING16(L"All Documents");
-
-const char16 *kSelectionCompleteTopic = STRING16(L"selection complete");
+const char16 kSelectionCompleteTopic[] = L"selection complete";
 
 // Maximum number of characters for the selected path and all filenames,
 // combined.
@@ -217,7 +213,7 @@ bool FileDialogWin32::SetFilter(const StringList& filter,
   if (default_filter.empty())
     return true;
 
-  filter_.append(kDefaultFilterLabel);
+  filter_.append(GetLocalString(SK_AllReadableDocuments));
   filter_.push_back('\0');
   // Append everything but the first character, which is always ';'.
   filter_.insert(filter_.end(), default_filter.begin() + 1, 
@@ -226,7 +222,7 @@ bool FileDialogWin32::SetFilter(const StringList& filter,
   
   // Always include an unrestricted filter that the user may select.
   // On Win32, *.* matches everything, even files with no extension.
-  filter_.append(kAllDocumentsLabel);
+  filter_.append(GetLocalString(SK_AllDocuments));
   filter_.push_back('\0');
   filter_.append(STRING16(L"*.*"));
   filter_.push_back('\0');

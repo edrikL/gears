@@ -31,6 +31,8 @@
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/string_utils_osx.h"
+#include "gears/ui/common/i18n_strings.h"
 
 // In MacOS 10.4 and better, the preferred way to classify filesystem objects
 // is via Uniform Type Identifiers (aka, UTIs).  Each UTI has one or more
@@ -38,11 +40,6 @@
 // In addition, UTIs participate in a hierarchy.  For example, a file with
 // .jpeg extension has UTI type "public.jpeg", which is a subtype of
 // "public.image", which is a subtype of "public.data", etc.
-
-// TODO(bpm): Localize and unify with other copies of these strings for other
-// platforms.
-CFStringRef kDefaultFilterLabel = CFSTR("All Readable Documents");
-CFStringRef kAllDocumentsLabel = CFSTR("All Documents");
 
 // This callback wraps the FileDialogCarbon::Event member, and is called during
 // NavDialogRun at various points during the lifetime of the dialog.
@@ -230,9 +227,13 @@ bool FileDialogCarbon::SetFilter(const StringList& filter,
 
   // Add entries to the filter drop-down.  The first entry displays any file
   // that conforms to a UTI in utis_.  The second entry displays all files.
+  scoped_CFString default_label(CFStringCreateWithString16(
+      GetLocalString(SK_AllReadableDocuments).c_str()));
+  scoped_CFString all_label(CFStringCreateWithString16(
+      GetLocalString(SK_AllDocuments).c_str()));
   const void* kFilterNames[] = {
-    kDefaultFilterLabel,
-    kAllDocumentsLabel
+    default_label.get(),
+    all_label.get()
   };
   labels_.reset(CFArrayCreate(NULL, kFilterNames, ARRAYSIZE(kFilterNames),
                               &kCFTypeArrayCallBacks));
