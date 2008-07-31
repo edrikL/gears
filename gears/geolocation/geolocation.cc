@@ -43,8 +43,8 @@ static const char16 *kDefaultLocationProviderUrl =
 
 // API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
-static const char16 *kRequestAddress = STRING16(L"requestAddress");
-static const char16 *kAddressLanguage = STRING16(L"addressLanguage");
+static const char16 *kGearsRequestAddress = STRING16(L"gearsRequestAddress");
+static const char16 *kGearsAddressLanguage = STRING16(L"gearsAddressLanguage");
 static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 
@@ -56,10 +56,10 @@ static const int64 kMaximumPositionFixAge = 60 * 1000;  // 1 minute.
 static const char16 *kLastPositionName = STRING16(L"LastPosition");
 
 // MessageService constants.
-static const char16 *kLocationAvailableObserverTopic
-    = STRING16(L"location available");
-static const char16 *kCallbackRequiredObserverTopic
-    = STRING16(L"callback required");
+static const char16 *kLocationAvailableObserverTopic =
+    STRING16(L"location available");
+static const char16 *kCallbackRequiredObserverTopic =
+    STRING16(L"callback required");
 
 // Data classes for use with MessageService.
 class NotificationDataGeoBase : public NotificationData {
@@ -161,6 +161,12 @@ static bool IsNewPositionMoreAccurate(const Position &old_position,
 static bool IsNewPositionMoreTimely(const Position &old_position,
                                     const Position &new_position);
 
+// Helper function for CreateJavaScriptPositionObject. Creates a JavaScript
+// address object, adding properties if they are specified. Returns true on
+// success, even if no properties are added.
+bool CreateJavaScriptAddressObject(const Address &address,
+                                   JsObject *address_object);
+
 DECLARE_GEARS_WRAPPER(GearsGeolocation);
 
 template<>
@@ -232,10 +238,10 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
   // Create the object for returning to JavaScript.
   scoped_ptr<JsObject> return_object(GetJsRunner()->NewObject());
   assert(return_object.get());
-  if (!ConvertPositionToJavaScriptObject(last_position_,
-                                         true,  // Use address if present.
-                                         GetJsRunner(),
-                                         return_object.get())) {
+  if (!CreateJavaScriptPositionObject(last_position_,
+                                      true,  // Use address if present.
+                                      GetJsRunner(),
+                                      return_object.get())) {
     LOG(("GearsGeolocation::GetLastPosition() : Failed to create position "
          "object.\n"));
     assert(false);
@@ -330,9 +336,9 @@ void GearsGeolocation::OnNotify(MessageService *service,
 
     // Delete this callback timer.
     FixRequestInfo *fix_info = callback_required_data->fix_info;
-    assert(fix_info->callback_timer.get());
-    fix_info->callback_timer.reset();
-    MakeCallback(fix_info, last_position_);
+    assert(fix_info->success_callback_timer.get());
+    fix_info->success_callback_timer.reset();
+    MakeSuccessCallback(fix_info, fix_info->pending_position);
   }
 }
 
@@ -445,24 +451,35 @@ bool GearsGeolocation::CancelWatch(const int &watch_id) {
   return true;
 }
 
-void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info) {
+void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info,
+                                                    const Position &position) {
   assert(fix_info->repeats);
-  // If there's already a timer active for the callback, there's nothing to do.
-  if (fix_info->callback_timer.get()) {
-    return;
+
+  // If this is an error, make a callback.
+  if (!position.IsGoodFix()) {
+    MakeErrorCallback(fix_info, position);
   }
-  // If the postion has changed significantly or the accuracy has improved, and
-  // the minimum time since our last callback to JavaScript has elapsed, we make
-  // a callback.
-  if (IsNewPositionMovement(fix_info->last_position, last_position_) ||
-      IsNewPositionMoreAccurate(fix_info->last_position, last_position_)) {
-    // The position has changed significantly. See if the minimum time interval
-    // since the last callback has expired.
+
+  // This is a position update.
+  if (IsNewPositionMovement(fix_info->last_position, position) ||
+      IsNewPositionMoreAccurate(fix_info->last_position, position)) {
+    // The position has changed significantly. See if there's currently a
+    // success callback pending. If so, simply update the position it will use,
+    // if applicable.
+    if (fix_info->success_callback_timer.get()) {
+      if (IsNewPositionMovement(fix_info->pending_position, position) ||
+          IsNewPositionMoreAccurate(fix_info->pending_position, position)) {
+        fix_info->pending_position = position;
+      }
+      return;
+    }
+
+    // See if the minimum time interval since the last callback has expired.
     int64 time_remaining =
         kMinimumCallbackInterval -
-        (GetCurrentTimeMillis() - fix_info->last_callback_time);
+        (GetCurrentTimeMillis() - fix_info->last_success_callback_time);
     if (time_remaining <= 0) {
-      if (!MakeCallback(fix_info, last_position_)) {
+      if (!MakeSuccessCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleRepeatingRequestUpdate() : JavaScript "
              "callback failed.\n"));
         assert(false);
@@ -470,7 +487,9 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info) {
     } else {
       // Start an asynchronous timer which will post a message back to this
       // thread once the minimum time period has elapsed.
-      MakeFutureCallback(static_cast<int>(time_remaining), fix_info);
+      MakeFutureSuccessCallback(static_cast<int>(time_remaining),
+                                fix_info,
+                                position);
     }
   }
 }
@@ -480,7 +499,7 @@ void GearsGeolocation::HandleSingleRequestUpdate(
     FixRequestInfo *fix_info,
     const Position &position) {
   assert(!fix_info->repeats);
-  assert(fix_info->last_callback_time == 0);
+  assert(fix_info->last_success_callback_time == 0);
   // Remove this provider from the this fix so that future callbacks to this
   // Geolocation object don't trigger handling for this fix.
   RemoveProvider(provider, fix_info);
@@ -489,10 +508,18 @@ void GearsGeolocation::HandleSingleRequestUpdate(
   // - The fix has no remaining providers, so we'll never get a valid position
   // We then cancel any pending requests and delete the fix request.
   if (position.IsGoodFix() || fix_info->providers.empty()) {
-    if (!MakeCallback(fix_info, position)) {
-      LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
-           "callback failed.\n"));
-      assert(false);
+    if (position.IsGoodFix()) {
+      if (!MakeSuccessCallback(fix_info, position)) {
+        LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
+             "success callback failed.\n"));
+        assert(false);
+      }
+    } else {
+      if (!MakeErrorCallback(fix_info, position)) {
+        LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript error "
+             "callback failed.\n"));
+        assert(false);
+      }
     }
     RemoveFixRequest(fix_info);
   }
@@ -500,10 +527,11 @@ void GearsGeolocation::HandleSingleRequestUpdate(
 
 void GearsGeolocation::LocationUpdateAvailableImpl(
     LocationProviderBase *provider) {
-  // Update the last known position, which is the best position estimate we
-  // currently have. This is shared between all repeating fix requests.
   Position position;
   provider->GetPosition(&position);
+
+  // Update the last known position, which is the best position estimate we
+  // currently have.
   last_position_mutex_.Lock();
   if (IsNewPositionMovement(last_position_, position) ||
       IsNewPositionMoreAccurate(last_position_, position) ||
@@ -541,29 +569,60 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
        iter != watches_.end();
        iter++) {
     FixRequestInfo *fix_info = const_cast<FixRequestInfo*>(iter->second);
-    HandleRepeatingRequestUpdate(fix_info);
+    HandleRepeatingRequestUpdate(fix_info, position);
   }
 }
 
-bool GearsGeolocation::MakeCallback(FixRequestInfo *fix_info,
-                                    const Position &position) {
-  scoped_ptr<JsObject> callback_param(GetJsRunner()->NewObject());
-  assert(callback_param.get());
-  if (!ConvertPositionToJavaScriptObject(position,
-                                         fix_info->request_address,
-                                         GetJsRunner(),
-                                         callback_param.get())) {
-    LOG(("GearsGeolocation::MakeCallback() : Failed to create "
-         "position object.\n"));
+bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
+                                           const Position &position) {
+  assert(fix_info);
+  assert(position.IsGoodFix());
+
+  scoped_ptr<JsObject> position_object(GetJsRunner()->NewObject());
+  assert(position_object.get());
+
+  if (!CreateJavaScriptPositionObject(position,
+                                      fix_info->request_address,
+                                      GetJsRunner(),
+                                      position_object.get())) {
+    LOG(("GearsGeolocation::MakeSuccessCallback() : Failed to create position "
+         "object.\n"));
     assert(false);
     return false;
   }
-  JsParamToSend argv[] = { JSPARAM_OBJECT, callback_param.get() };
+  JsParamToSend argv[] = { JSPARAM_OBJECT, position_object.get() };
   // InvokeCallback returns false if the callback enounters an error.
-  GetJsRunner()->InvokeCallback(fix_info->callback.get(),
+  GetJsRunner()->InvokeCallback(fix_info->success_callback.get(),
                                 ARRAYSIZE(argv), argv, NULL);
   fix_info->last_position = position;
-  fix_info->last_callback_time = GetCurrentTimeMillis();
+  fix_info->last_success_callback_time = GetCurrentTimeMillis();
+  return true;
+}
+
+bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
+                                         const Position &position) {
+  assert(fix_info);
+  assert(!position.IsGoodFix());
+
+  // The error callback is optional.
+  if (!fix_info->error_callback.get()) {
+    return true;
+  }
+
+  scoped_ptr<JsObject> position_error_object(GetJsRunner()->NewObject());
+  assert(position_error_object.get());
+
+  if (!CreateJavaScriptPositionErrorObject(position,
+                                           position_error_object.get())) {
+    LOG(("GearsGeolocation::MakeErrorCallback() : Failed to create position "
+         "error object.\n"));
+    assert(false);
+    return false;
+  }
+  JsParamToSend argv[] = { JSPARAM_OBJECT, position_error_object.get() };
+  // InvokeCallback returns false if the callback enounters an error.
+  GetJsRunner()->InvokeCallback(fix_info->error_callback.get(),
+                                ARRAYSIZE(argv), argv, NULL);
   return true;
 }
 
@@ -574,21 +633,36 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   assert(context);
   assert(urls);
   assert(info);
+
   info->repeats = repeats;
+  // Arguments are: function successCallback, optional function errorCallback,
+  // optional object options. errorCallback can be null.
+  //
   // Note that GetArguments allocates a new JsRootedCallback.
-  JsRootedCallback *function = NULL;
+  // 
+  // TODO(steveblock): Need to update GetArguments to correctly handle null for
+  // an optional parameter.
+  JsRootedCallback *success_callback = NULL;
+  JsRootedCallback *error_callback = NULL;
   JsObject options;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &success_callback },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback },
     { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options },
   };
   int num_arguments = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
-    delete function;
+    delete success_callback;
+    delete error_callback;
     return false;
   }
-  assert(function);
-  info->callback.reset(function);
+
+  // Set the success callback
+  assert(success_callback);
+  info->success_callback.reset(success_callback);
+
+  // Set the error callback, using NULL if it was not specified.
+  info->error_callback.reset(error_callback);
 
   // Set default values for options.
   info->enable_high_accuracy = false;
@@ -596,7 +670,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   urls->clear();
   // We have to check that options is present because it's not valid to use an
   // uninitialised JsObject.
-  if (num_arguments > 1) {
+  if (num_arguments == 3) {
     if (!ParseOptions(context, options, urls, info)) {
       assert(context->is_exception_set());
       return false;
@@ -626,21 +700,21 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
       return false;
     }
   }
-  if (GetPropertyIfSpecified(context, options, kRequestAddress, &token)) {
+  if (GetPropertyIfSpecified(context, options, kGearsRequestAddress, &token)) {
     if (!JsTokenToBool_NoCoerce(token, context->js_context(),
                                 &(info->request_address))) {
       std::string16 error = STRING16(L"options.");
-      error += kRequestAddress;
+      error += kGearsRequestAddress;
       error += STRING16(L" should be a boolean.");
       context->SetException(error);
       return false;
     }
   }
-  if (GetPropertyIfSpecified(context, options, kAddressLanguage, &token)) {
+  if (GetPropertyIfSpecified(context, options, kGearsAddressLanguage, &token)) {
     if (!JsTokenToString_NoCoerce(token, context->js_context(),
                                   &(info->address_language))) {
       std::string16 error = STRING16(L"options.");
-      error += kAddressLanguage;
+      error += kGearsAddressLanguage;
       error += STRING16(L" should be a string.");
       context->SetException(error);
       return false;
@@ -706,87 +780,73 @@ bool GearsGeolocation::ParseLocationProviderUrls(
   return true;
 }
 
-bool GearsGeolocation::ConvertPositionToJavaScriptObject(
+bool GearsGeolocation::CreateJavaScriptPositionObject(
     const Position &position,
     bool use_address,
     JsRunnerInterface *js_runner,
-    JsObject *js_object) {
-  assert(js_object);
-  assert(position.IsInitialized());
+    JsObject *position_object) {
+  assert(js_runner);
+  assert(position_object);
+  assert(position.IsGoodFix());
+
   bool result = true;
-
-  if (!position.IsGoodFix()) {
-    // Position is not a good fix, copy only the error message.
-    assert(!position.error.empty());
-    result &= js_object->SetPropertyString(STRING16(L"errorMessage"),
-                                           position.error);
-    return result;
-  }
-
-  // latitude, longitude, horizontal accuracy and timestamp should always be
-  // valid.
-  result &= js_object->SetPropertyDouble(STRING16(L"latitude"),
-                                         position.latitude);
-  result &= js_object->SetPropertyDouble(STRING16(L"longitude"),
-                                         position.longitude);
-  result &= js_object->SetPropertyInt(STRING16(L"horizontalAccuracy"),
-                                      position.horizontal_accuracy);
+  // latitude, longitude, accuracy and timestamp should always be valid.
+  result &= position_object->SetPropertyDouble(STRING16(L"latitude"),
+                                               position.latitude);
+  result &= position_object->SetPropertyDouble(STRING16(L"longitude"),
+                                               position.longitude);
+  result &= position_object->SetPropertyInt(STRING16(L"accuracy"),
+                                            position.accuracy);
   scoped_ptr<JsObject> date_object(js_runner->NewDate(position.timestamp));
   result &= NULL != date_object.get();
   if (date_object.get()) {
-    result &= js_object->SetPropertyObject(STRING16(L"timestamp"),
-                                           date_object.get());
+    result &= position_object->SetPropertyObject(STRING16(L"timestamp"),
+                                                 date_object.get());
   }
 
   // Other properties may not be valid.
   result &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
                                         position.altitude,
-                                        js_object);
-  result &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
-                                        position.vertical_accuracy,
-                                        js_object);
+                                        position_object);
+  result &= SetObjectPropertyIfValidInt(STRING16(L"altitudeAccuracy"),
+                                        position.altitude_accuracy,
+                                        position_object);
+
   // Address
   if (use_address) {
     scoped_ptr<JsObject> address_object(js_runner->NewObject());
-    result &= NULL != address_object.get();
     if (address_object.get()) {
-      result &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
-                                               position.address.street_number,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"street"),
-                                               position.address.street,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"premises"),
-                                               position.address.premises,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"city"),
-                                               position.address.city,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"county"),
-                                               position.address.county,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"region"),
-                                               position.address.region,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"country"),
-                                               position.address.country,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
-                                               position.address.country_code,
-                                               address_object.get());
-      result &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
-                                               position.address.postal_code,
-                                               address_object.get());
-
+      result &= CreateJavaScriptAddressObject(position.address,
+                                              address_object.get());
       // Only add the address object if it has some properties.
       std::vector<std::string16> properties;
       if (address_object.get()->GetPropertyNames(&properties) &&
           !properties.empty()) {
-        result &= js_object->SetPropertyObject(STRING16(L"address"),
-                                               address_object.get());
+        result &= position_object->SetPropertyObject(STRING16(L"address"),
+                                                     address_object.get());
       }
+    } else {
+      result = false;
     }
   }
+
+  return result;
+}
+
+bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
+    const Position &position,
+    JsObject *error_object) {
+  assert(error_object);
+  assert(!position.IsGoodFix());
+
+  bool result = true;
+  // error_code should always be valid.
+  result &= error_object->SetPropertyInt(STRING16(L"code"),
+                                         position.error_code);
+  // Other properties may not be valid.
+  result &= SetObjectPropertyIfValidString(STRING16(L"message"),
+                                           position.error_message,
+                                           error_object);
   return result;
 }
 
@@ -870,11 +930,13 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
   }
 }
 
-void GearsGeolocation::MakeFutureCallback(int timeout_milliseconds,
-                                          FixRequestInfo *fix_info) {
+void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
+                                                 FixRequestInfo *fix_info,
+                                                 const Position &position) {
   // Check that there isn't already a timer running for this request.
-  assert(!fix_info->callback_timer.get());
-  fix_info->callback_timer.reset(
+  assert(!fix_info->success_callback_timer.get());
+  fix_info->pending_position = position;
+  fix_info->success_callback_timer.reset(
       new TimedCallback(this, timeout_milliseconds, fix_info));
 }
 
@@ -956,8 +1018,7 @@ static bool IsNewPositionMovement(const Position &old_position,
   delta *= 60 * 1852;
   // The threshold is when the distance between the two positions exceeds the
   // worse (larger value) of the two accuracies.
-  double max_accuracy = std::max(old_position.horizontal_accuracy,
-                                 new_position.horizontal_accuracy);
+  double max_accuracy = std::max(old_position.accuracy, new_position.accuracy);
   return delta > max_accuracy;
 }
 
@@ -967,7 +1028,7 @@ static bool IsNewPositionMoreAccurate(const Position &old_position,
   if (CheckForBadPosition(old_position, new_position, &result)) {
     return result;
   }
-  return new_position.horizontal_accuracy < old_position.horizontal_accuracy;
+  return new_position.accuracy < old_position.accuracy;
 }
 
 static bool IsNewPositionMoreTimely(const Position &old_position,
@@ -991,4 +1052,39 @@ static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
     return false;
   }
   return true;
+}
+
+bool CreateJavaScriptAddressObject(const Address &address,
+                                   JsObject *address_object) {
+  assert(address_object);
+
+  bool result = true;
+  result &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
+                                           address.street_number,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"street"),
+                                           address.street,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"premises"),
+                                           address.premises,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"city"),
+                                           address.city,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"county"),
+                                           address.county,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"region"),
+                                           address.region,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"country"),
+                                           address.country,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
+                                           address.country_code,
+                                           address_object);
+  result &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
+                                           address.postal_code,
+                                           address_object);
+  return result;
 }

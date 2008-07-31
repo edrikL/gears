@@ -242,95 +242,135 @@ function testBrowserCache() {
 // Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
 // Geolocation.WatchPosition.
 function testParseGeolocationOptions() {
+  // TODO(steveblock): Some of these tests do not require the test object so
+  // should be moved to geolocation_tests.js.
   if (isUsingCCTests) {
     var dummyFunction = function() {};
+
     // All good.
     internalTests.testParseGeolocationOptions(dummyFunction);
+    internalTests.testParseGeolocationOptions(dummyFunction, dummyFunction);
+    // TODO(steveblock): Enable these tests once we can handle null values for
+    // the error callback.
+    //internalTests.testParseGeolocationOptions(dummyFunction, null);
+    //internalTests.testParseGeolocationOptions(dummyFunction, null, {});
+    internalTests.testParseGeolocationOptions(dummyFunction, dummyFunction, {});
+
     // Test correct types.
-    // Missing callback function.
+    // Missing success callback.
     assertError(function() { internalTests.testParseGeolocationOptions() });
-    // Wrong type for callback function.
+    // Wrong type for success callback.
     assertError(function() { internalTests.testParseGeolocationOptions(42) });
+    // Wrong type for error callback.
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(dummyFunction, 42) });
     // Wrong type for options.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, 42) });
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(dummyFunction,
+                                                dummyFunction,
+                                                42) });
     // Wrong type for enableHighAccuracy.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { enableHighAccuracy: 42 }) },
-        'options.enableHighAccuracy should be a boolean.');
-    // Wrong type for requestAddress.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { requestAddress: 42 }) },
-        'options.requestAddress should be a boolean.');
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(dummyFunction,
+                                                dummyFunction,
+                                                { enableHighAccuracy: 42 }) },
+      'options.enableHighAccuracy should be a boolean.');
+    // Wrong type for gearsRequestAddress.
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(dummyFunction,
+                                                dummyFunction,
+                                                { gearsRequestAddress: 42 }) },
+      'options.gearsRequestAddress should be a boolean.');
+    // Wrong type for gearsAddressLanguage.
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(dummyFunction,
+                                                dummyFunction,
+                                                { gearsAddressLanguage: 42 }) },
+      'options.gearsAddressLanguage should be a string.');
     // Wrong type for gearsLocationProviderUrls.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { gearsLocationProviderUrls: 42 }) },
-        'options.gearsLocationProviderUrls should be null or an array of ' +
-        'strings');
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { gearsLocationProviderUrls: [42] }) },
-        'options.gearsLocationProviderUrls should be null or an array of ' +
-        'strings');
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        dummyFunction,
+        { gearsLocationProviderUrls: 42 }) },
+      'options.gearsLocationProviderUrls should be null or an array of ' +
+      'strings');
+    assertError(function() {
+      internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        dummyFunction,
+        { gearsLocationProviderUrls: [42] }) },
+      'options.gearsLocationProviderUrls should be null or an array of ' +
+      'strings');
+
     // Test correct parsing.
     var defaultUrlArray = ['http://www.google.com/loc/json'];
     var urls = ['url1', 'url2'];
-    var parsed_options;
+    var parsedOptions;
     // No options.
-    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction);
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(defaultUrlArray,
-                     parsed_options.gearsLocationProviderUrls);
+    parsedOptions = internalTests.testParseGeolocationOptions(dummyFunction);
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(false, parsedOptions.enableHighAccuracy);
+    assertEqual(false, parsedOptions.gearsRequestAddress);
+    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
     // Empty options.
-    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction,
-                                                               {});
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(defaultUrlArray,
-                     parsed_options.gearsLocationProviderUrls);
+    parsedOptions = internalTests.testParseGeolocationOptions(dummyFunction,
+                                                              dummyFunction,
+                                                              {});
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(false, parsedOptions.enableHighAccuracy);
+    assertEqual(false, parsedOptions.gearsRequestAddress);
+    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
     // Empty provider URLs.
-    parsed_options = internalTests.testParseGeolocationOptions(
+    parsedOptions = internalTests.testParseGeolocationOptions(
+        dummyFunction,
         dummyFunction,
         { gearsLocationProviderUrls: [] });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(false, parsedOptions.enableHighAccuracy);
+    assertEqual(false, parsedOptions.gearsRequestAddress);
+    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
     // Null provider URLs.
-    parsed_options = internalTests.testParseGeolocationOptions(
+    parsedOptions = internalTests.testParseGeolocationOptions(
+        dummyFunction,
         dummyFunction,
         { gearsLocationProviderUrls: null });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(false, parsedOptions.enableHighAccuracy);
+    assertEqual(false, parsedOptions.gearsRequestAddress);
+    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
     // All properties false, provider URLs set.
-    parsed_options = internalTests.testParseGeolocationOptions(
+    parsedOptions = internalTests.testParseGeolocationOptions(
+        dummyFunction,
         dummyFunction,
         { enableHighAccuracy: false,
-          requestAddress: false,
-          gearsLocationProviderUrls: urls });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
+          gearsRequestAddress: false,
+          gearsAddressLanguage: "",
+          gearsLocationProviderUrls: urls
+        });
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(false, parsedOptions.enableHighAccuracy);
+    assertEqual(false, parsedOptions.gearsRequestAddress);
+    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
     // All properties true, provider URLs set.
-    parsed_options = internalTests.testParseGeolocationOptions(
-        dummyFunction,
-        { enableHighAccuracy: true,
-          requestAddress: true,
-          gearsLocationProviderUrls: urls });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(true, parsed_options.enableHighAccuracy);
-    assertEqual(true, parsed_options.requestAddress);
-    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
+    parsedOptions = internalTests.testParseGeolocationOptions(
+      dummyFunction,
+      dummyFunction,
+      { enableHighAccuracy: true,
+        gearsRequestAddress: true,
+        gearsAddressLanguage: "test",
+        gearsLocationProviderUrls: urls
+      });
+    assertEqual(false, parsedOptions.repeats);
+    assertEqual(true, parsedOptions.enableHighAccuracy);
+    assertEqual(true, parsedOptions.gearsRequestAddress);
+    assertEqual("test", parsedOptions.gearsAddressLanguage);
+    assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
   }
 }
 
@@ -377,6 +417,9 @@ function testGeolocationGetLocationFromResponse() {
     var position;
     var correctPosition;
 
+    var locationAcquisitionErrorCode = 2;
+    var locationNotFoundErrorCode = 3;
+
     // Test good response with valid position.
     var responseBody = '{ ' +
                        '"location" : { ' +
@@ -407,8 +450,8 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.latitude = 53.1;
     correctPosition.longitude = -0.1;
     correctPosition.altitude = 30;
-    correctPosition.horizontalAccuracy = 1200;
-    correctPosition.verticalAccuracy = 10;
+    correctPosition.accuracy = 1200;
+    correctPosition.altitudeAccuracy = 10;
     correctPosition.address = new Object();
     correctPosition.address.streetNumber = '100';
     correctPosition.address.street = 'Amphibian Walkway';
@@ -429,8 +472,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage =
-        'No response from network provider at ' + dummy_server + '.';
+    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.message = 'No response from network provider at ' +
+                              dummy_server +
+                              '.';
     assertObjectEqual(correctPosition, position);
 
     // Test bad response.
@@ -441,9 +486,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage = 'Network provider at ' +
-                                   dummy_server +
-                                   ' returned error code 400.';
+    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.message = 'Network provider at ' +
+                              dummy_server +
+                              ' returned error code 400.';
     assertObjectEqual(correctPosition, position);
 
     // Test good response with malformed body.
@@ -454,9 +500,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage = 'Response from network provider at ' +
-                                   dummy_server +
-                                   ' was malformed.';
+    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.message = 'Response from network provider at ' +
+                              dummy_server +
+                              ' was malformed.';
     assertObjectEqual(correctPosition, position);
 
     // Test good response with empty body.
@@ -467,9 +514,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage = 'Response from network provider at ' +
-                                   dummy_server +
-                                   ' was malformed.';
+    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.message = 'Response from network provider at ' +
+                              dummy_server +
+                              ' was malformed.';
     assertObjectEqual(correctPosition, position);
 
     // Test good response with unknown position.
@@ -480,9 +528,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage = 'Network provider at ' +
-                                   dummy_server +
-                                   ' did not provide a good position fix.'
+    correctPosition.code = locationNotFoundErrorCode;
+    correctPosition.message = 'Network provider at ' +
+                              dummy_server +
+                              ' did not provide a good position fix.'
     assertObjectEqual(correctPosition, position);
 
     // Test good response with explicit unknown position.
@@ -493,9 +542,10 @@ function testGeolocationGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.errorMessage = 'Network provider at ' +
-                                   dummy_server +
-                                   ' did not provide a good position fix.'
+    correctPosition.code = locationNotFoundErrorCode;
+    correctPosition.message = 'Network provider at ' +
+                              dummy_server +
+                              ' did not provide a good position fix.'
     assertObjectEqual(correctPosition, position);
   }
 }
@@ -521,13 +571,14 @@ function testGeolocationGetCurrentPosition() {
     //};
     //startAsync();
     //geolocation.getCurrentPosition(locationAvailable,
+    //                               function() {},
     //                               { gearsLocationProviderUrls: ['TODO'] });
 
     // Use mock location provider.
     var mockPosition = {
       latitude: 51.0,
       longitude: -0.1,
-      horizontalAccuracy: 100
+      accuracy: 100
     };
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     var locationAvailable2 = function(position) {
@@ -538,6 +589,7 @@ function testGeolocationGetCurrentPosition() {
     var geolocation2 = google.gears.factory.create('beta.geolocation');
     startAsync();
     geolocation2.getCurrentPosition(locationAvailable2,
+                                    function() {},
                                     { gearsLocationProviderUrls: [] });
   }
 }

@@ -64,9 +64,9 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 
 // Configures the location provider pool to use a mock location provider. Sets
 // the position that the mock provider will provide. Properties are latitude,
-// longitude, altitude, horizontalAccuracy, verticalAccuracy and error. Note
-// that this a subset of the properties available on the Position object
-// returned by the Geolocation module.
+// longitude, altitude, accuracy, altitudeAccuracy, errorCode and errorMessage.
+// Note that this a combination of some of the properties available on the
+// Position and PositionError objects returned by the Geolocation module.
 // IN: object position.
 // OUT: nothing
 void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);

@@ -119,7 +119,8 @@ void WinceGpsLocationProvider::Run() {
          "device.\n"));
     // Set an error message and call back.
     position_mutex_.Lock();
-    position_.error = kFailedToConnectErrorMessage;
+    position_.error_code = kGeolocationLocationAcquisitionErrorCode;
+    position_.error_message = kFailedToConnectErrorMessage;
     position_mutex_.Unlock();
     UpdateListeners();
     return;
@@ -181,10 +182,12 @@ void WinceGpsLocationProvider::Run() {
         position_mutex_.Lock();
         switch (state_) {
           case STATE_CONNECTING:
-            position_.error = kFailedToConnectErrorMessage;
+            position_.error_code = kGeolocationLocationAcquisitionErrorCode;
+            position_.error_message = kFailedToConnectErrorMessage;
             break;
           case STATE_ACQUIRING_FIX:
-            position_.error = kFailedToAcquireErrorMessage;
+            position_.error_code = kGeolocationLocationAcquisitionErrorCode;
+            position_.error_message = kFailedToAcquireErrorMessage;
             break;
           default:
             assert(false);
@@ -229,7 +232,7 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
       }
     }
     // TODO(steveblock): Work out how to get accuracy.
-    position_.horizontal_accuracy = 100;
+    position_.accuracy = 100;
   }
 
   GPS_DEVICE device_state = {0};

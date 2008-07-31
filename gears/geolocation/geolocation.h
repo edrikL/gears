@@ -46,6 +46,10 @@
 
 static const int kBadLatLng = 200;
 
+// Error codes for returning to JavaScript.
+const int kGeolocationLocationAcquisitionErrorCode = 2;
+const int kGeolocationLocationNotFoundErrorCode = 3;
+
 // The internal representation of an address.
 struct Address {
   std::string16 street_number; // street number
@@ -68,29 +72,33 @@ struct Position {
       : latitude(kBadLatLng),
         longitude(kBadLatLng),
         altitude(kint32min),
-        horizontal_accuracy(kint32min),
-        vertical_accuracy(kint32min),
-        timestamp(-1) {}
+        accuracy(kint32min),
+        altitude_accuracy(kint32min),
+        timestamp(-1),
+        error_code(kint32min) {}
   bool IsGoodFix() const {
-    // A good fix has a valid latitude, longitude, horizontal accuracy and
-    // timestamp.
+    // A good fix has a valid latitude, longitude, accuracy and timestamp.
     return latitude >= -90.0 && latitude <= 90.0 &&
            longitude >= -180.0 && longitude <= 180.0 &&
-           horizontal_accuracy != kint32min &&
+           accuracy != kint32min &&
            timestamp != -1;
   }
   bool IsInitialized() const {
-    return IsGoodFix() || !error.empty();
+    return IsGoodFix() || error_code != kint32min;
   }
 
+  // These properties are returned to JavaScript as a Position object.
   double latitude;          // In degrees
   double longitude;         // In degrees
   int altitude;             // In metres
-  int horizontal_accuracy;  // In metres
-  int vertical_accuracy;    // In metres
+  int accuracy;             // In metres
+  int altitude_accuracy;    // In metres
   int64 timestamp;          // Milliseconds since 1st Jan 1970
-  std::string16 error;      // Human-readable error message
   Address address;
+
+  // These properties are returned to JavaScript as a PositionError object.
+  int error_code;
+  std::string16 error_message;  // Human-readable error message
 };
 
 // The principal class of the Geolocation API.
@@ -104,7 +112,8 @@ class GearsGeolocation
   // Uses ParseArguments for testing.
   friend void TestParseGeolocationOptions(JsCallContext *context,
                                           JsRunnerInterface *js_runner);
-  // Uses ConvertPositionToJavaScriptObject for testing.
+  // Uses CreateJavaScriptPositionObject and CreateJavaScriptPositionErrorObject
+  // for testing.
   friend void TestGeolocationGetLocationFromResponse(
       JsCallContext *context,
       JsRunnerInterface *js_runner);
@@ -126,46 +135,52 @@ class GearsGeolocation
   // Instructs Gears to get a new position fix. The supplied callback function
   // is called with a valid position as soon as it is available, or with NULL on
   // failure.
-  // IN: function callback_function, object position_options
+  // IN: function successCallback, optional function errorCallback,
+  //     optional object options
   // OUT: nothing
   void GetCurrentPosition(JsCallContext *context);
 
   // Instructs Gears to get a new position fix. The supplied callback function
   // is called repeatedly with position updates as they become available. The
   // return value is a unique ID for this watch which can be used to cancel it.
-  // IN: function callback_function, object position_options
+  // IN: function successCallback, optional function errorCallback,
+  //     optional object options
   // OUT: int watch_id
   void WatchPosition(JsCallContext *context);
 
   // Cancels the position watch specified by the supplied ID.
-  // IN: int watch_id
+  // IN: int watchId
   // OUT: nothing
   void ClearWatch(JsCallContext *context);
 
   // Triggers the geolocation-specific permissions dialog.
-  // IN:  string site_name, string image_url, string extra_message
+  // IN:  string siteName, string imageUrl, string extraMessage
   // OUT: boolean permission
   void GetPermission(JsCallContext *context);
 
   // Maintains all the data for a position fix.
   typedef std::vector<LocationProviderBase*> ProviderVector;
   struct FixRequestInfo {
-    FixRequestInfo() : last_callback_time(0) {}
+    FixRequestInfo() : last_success_callback_time(0) {}
     ProviderVector providers;
     bool enable_high_accuracy;
     bool request_address;
     std::string16 address_language;
     bool repeats;
     // Linked_ptr so we can use FixRequestInfo in STL containers.
-    linked_ptr<JsRootedCallback> callback;
+    linked_ptr<JsRootedCallback> success_callback;
+    linked_ptr<JsRootedCallback> error_callback;
     // The last position sent back to JavaScript. Used by repeating requests
     // only.
     Position last_position;
-    // The time at which we last called back to JavaScript, in ms since the
-    // epoch.
-    int64 last_callback_time;
-    // The timer used for pending future callbacks in a watch.
-    linked_ptr<TimedCallback> callback_timer;
+    // The time at which we last made a success callback to JavaScript, in ms
+    // since the epoch.
+    int64 last_success_callback_time;
+    // The timer used for a pending future success callback in a watch.
+    linked_ptr<TimedCallback> success_callback_timer;
+    // The position that will be used used for a pending future success callback
+    // in a watch.
+    Position pending_position;
   };
 
  private:
@@ -192,7 +207,8 @@ class GearsGeolocation
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // repeating fix request. 
-  void HandleRepeatingRequestUpdate(FixRequestInfo *fix_info);
+  void HandleRepeatingRequestUpdate(FixRequestInfo *fix_info,
+                                    const Position &position);
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // non-repeating fix request.
@@ -202,7 +218,8 @@ class GearsGeolocation
 
   // Internal method to make the callback to JavaScript once we have a postion
   // fix.
-  bool MakeCallback(FixRequestInfo *fix_info, const Position &position);
+  bool MakeSuccessCallback(FixRequestInfo *fix_info, const Position &position);
+  bool MakeErrorCallback(FixRequestInfo *fix_info, const Position &position);
 
   // Parses the JavaScript arguments passed to the GetCurrentPosition and
   // WatchPosition methods.
@@ -222,11 +239,14 @@ class GearsGeolocation
                                         const JsScopedToken &token,
                                         std::vector<std::string16> *urls);
 
-  // Converts a Gears position object to a JavaScript object.
-  static bool ConvertPositionToJavaScriptObject(const Position &position,
-                                                bool use_address,
-                                                JsRunnerInterface *js_runner,
-                                                JsObject *js_object);
+  // Converts a Gears position object to a JavaScript object. static for use in
+  // unit tests.
+  static bool CreateJavaScriptPositionObject(const Position &position,
+                                             bool use_address,
+                                             JsRunnerInterface *js_runner,
+                                             JsObject *js_object);
+  static bool CreateJavaScriptPositionErrorObject(const Position &position,
+                                                  JsObject *js_object);
 
   // Takes a pointer to a new fix request and records it in our map.
   void RecordNewFixRequest(FixRequestInfo *fix_request);
@@ -241,7 +261,9 @@ class GearsGeolocation
 
   // Causes a callback to JavaScript to be made at the specified number of
   // milliseconds in the future.
-  void MakeFutureCallback(int timeout_milliseconds, FixRequestInfo *fix_info);
+  void MakeFutureSuccessCallback(int timeout_milliseconds,
+                                 FixRequestInfo *fix_info,
+                                 const Position &position);
 
   // A map of listners to fix requests. This is used when processing position
   // updates from providers. It is also used to unregister from a listener

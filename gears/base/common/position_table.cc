@@ -36,10 +36,9 @@ static const char *kCreateTableVersion1Statement =
     " Latitude DOUBLE NOT NULL, "
     " Longitude DOUBLE NOT NULL, "
     " Altitude INTEGER NOT NULL, "
-    " HorizontalAccuracy INTEGER NOT NULL, "
-    " VerticalAccuracy INTEGER NOT NULL, "
+    " Accuracy INTEGER NOT NULL, "
+    " AltitudeAccuracy INTEGER NOT NULL, "
     " Timestamp INT64 NOT NULL, "
-    " Error TEXT NOT NULL, "
     " StreetNumber TEXT NOT NULL, "
     " Street TEXT NOT NULL, "
     " Premises TEXT NOT NULL, "
@@ -48,7 +47,9 @@ static const char *kCreateTableVersion1Statement =
     " Region TEXT NOT NULL, "
     " Country TEXT NOT NULL, "
     " CountryCode TEXT NOT NULL, "
-    " PostalCode TEXT NOT NULL "
+    " PostalCode TEXT NOT NULL, "
+    " ErrorCode INTEGER NOT NULL, "
+    " ErrorMessage TEXT NOT NULL "
     ")";
 
 PositionTable::PositionTable(SQLDatabase *db) : db_(db) {
@@ -72,7 +73,7 @@ bool PositionTable::SetPosition(const std::string16 &name,
 
   const char16 *sql = STRING16(L"REPLACE INTO " POSITION L" "
                                L"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                               L"?, ?, ?, ?, ?)");
+                               L"?, ?, ?, ?, ?, ?)");
 
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
@@ -97,11 +98,11 @@ bool PositionTable::SetPosition(const std::string16 &name,
     LOG_BIND_ERROR("altitude");
     return false;
   }
-  if (SQLITE_OK != statement.bind_int(4, position.horizontal_accuracy)) {
+  if (SQLITE_OK != statement.bind_int(4, position.accuracy)) {
     LOG_BIND_ERROR("horizontal accuracy");
     return false;
   }
-  if (SQLITE_OK != statement.bind_int(5, position.vertical_accuracy)) {
+  if (SQLITE_OK != statement.bind_int(5, position.altitude_accuracy)) {
     LOG_BIND_ERROR("vertical accuracy");
     return false;
   }
@@ -109,54 +110,56 @@ bool PositionTable::SetPosition(const std::string16 &name,
     LOG_BIND_ERROR("timestamp");
     return false;
   }
-  if (SQLITE_OK != statement.bind_text16(7, position.error.c_str())) {
-    LOG_BIND_ERROR("error");
-    return false;
-  }
   if (SQLITE_OK !=
-      statement.bind_text16(8, position.address.street_number.c_str())) {
+      statement.bind_text16(7, position.address.street_number.c_str())) {
     LOG_BIND_ERROR("street number");
     return false;
   }
-  if (SQLITE_OK !=
-      statement.bind_text16(9, position.address.street.c_str())) {
+  if (SQLITE_OK != statement.bind_text16(8, position.address.street.c_str())) {
     LOG_BIND_ERROR("street");
     return false;
   }
   if (SQLITE_OK !=
-      statement.bind_text16(10, position.address.premises.c_str())) {
+      statement.bind_text16(9, position.address.premises.c_str())) {
     LOG_BIND_ERROR("premises");
     return false;
   }
-  if (SQLITE_OK != statement.bind_text16(11, position.address.city.c_str())) {
+  if (SQLITE_OK != statement.bind_text16(10, position.address.city.c_str())) {
     LOG_BIND_ERROR("city");
     return false;
   }
-  if (SQLITE_OK !=
-      statement.bind_text16(12, position.address.county.c_str())) {
+  if (SQLITE_OK != statement.bind_text16(11, position.address.county.c_str())) {
     LOG_BIND_ERROR("county");
     return false;
   }
-  if (SQLITE_OK !=
-      statement.bind_text16(13, position.address.region.c_str())) {
+  if (SQLITE_OK != statement.bind_text16(12, position.address.region.c_str())) {
     LOG_BIND_ERROR("region");
     return false;
   }
   if (SQLITE_OK !=
-      statement.bind_text16(14, position.address.country.c_str())) {
+      statement.bind_text16(13, position.address.country.c_str())) {
     LOG_BIND_ERROR("country");
     return false;
   }
   if (SQLITE_OK !=
-      statement.bind_text16(15, position.address.country_code.c_str())) {
+      statement.bind_text16(14, position.address.country_code.c_str())) {
     LOG_BIND_ERROR("country code");
     return false;
   }
   if (SQLITE_OK !=
-      statement.bind_text16(16, position.address.postal_code.c_str())) {
+      statement.bind_text16(15, position.address.postal_code.c_str())) {
     LOG_BIND_ERROR("postal code");
     return false;
   }
+  if (SQLITE_OK != statement.bind_int(16, position.error_code)) {
+    LOG_BIND_ERROR("error code");
+    return false;
+  }
+  if (SQLITE_OK != statement.bind_text16(17, position.error_message.c_str())) {
+    LOG_BIND_ERROR("error message");
+    return false;
+  }
+
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("PositionTable::SetPosition unable to step: %d.\n",
@@ -201,19 +204,20 @@ bool PositionTable::GetPosition(const std::string16 &name,
   position->latitude              = statement.column_double(1);
   position->longitude             = statement.column_double(2);
   position->altitude              = statement.column_int(3);
-  position->horizontal_accuracy   = statement.column_int(4);
-  position->vertical_accuracy     = statement.column_int(5);
+  position->accuracy              = statement.column_int(4);
+  position->altitude_accuracy     = statement.column_int(5);
   position->timestamp             = statement.column_int64(6);
-  position->error                 = statement.column_text16_safe(7);
-  position->address.street_number = statement.column_text16_safe(8);
-  position->address.street        = statement.column_text16_safe(9);
-  position->address.premises      = statement.column_text16_safe(10);
-  position->address.city          = statement.column_text16_safe(11);
-  position->address.county        = statement.column_text16_safe(12);
-  position->address.region        = statement.column_text16_safe(13);
-  position->address.country       = statement.column_text16_safe(14);
-  position->address.country_code  = statement.column_text16_safe(15);
-  position->address.postal_code   = statement.column_text16_safe(16);
+  position->address.street_number = statement.column_text16_safe(7);
+  position->address.street        = statement.column_text16_safe(8);
+  position->address.premises      = statement.column_text16_safe(9);
+  position->address.city          = statement.column_text16_safe(10);
+  position->address.county        = statement.column_text16_safe(11);
+  position->address.region        = statement.column_text16_safe(12);
+  position->address.country       = statement.column_text16_safe(13);
+  position->address.country_code  = statement.column_text16_safe(14);
+  position->address.postal_code   = statement.column_text16_safe(15);
+  position->error_code            = statement.column_int(16);
+  position->error_message         = statement.column_text16_safe(17);
 
   return true;
 }
