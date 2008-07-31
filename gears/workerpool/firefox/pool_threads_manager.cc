@@ -97,7 +97,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
-#include "gears/factory/firefox/factory.h"
+#include "gears/factory/factory_impl.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"

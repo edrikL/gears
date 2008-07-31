@@ -37,7 +37,7 @@
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/atl_headers.h"
 #if !BROWSER_NONE
-#include "gears/factory/common/factory_utils.h"  // for AppendBuildInfo
+#include "gears/factory/factory_utils.h"  // for AppendBuildInfo
 #endif
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"

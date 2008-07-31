@@ -60,7 +60,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
-#include "gears/factory/ie/factory.h"
+#include "gears/factory/factory_impl.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 #include "gears/workerpool/workerpool.h"

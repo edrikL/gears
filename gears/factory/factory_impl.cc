@@ -34,7 +34,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/database/database.h"
 #include "gears/desktop/desktop.h"
-#include "gears/factory/common/factory_utils.h"
+#include "gears/factory/factory_utils.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/localserver_module.h"

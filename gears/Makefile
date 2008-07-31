@@ -2004,12 +2004,10 @@ endif # not OFFICIAL_BUILD
 
 FF3_VPATH	+= \
 		factory \
-		factory/common \
-		factory/firefox \
 		$(NULL)
 
 FF3_CPPSRCS	+= \
-		factory.cc \
+		factory_ff.cc \
 		factory_impl.cc \
 		factory_utils.cc \
 		$(NULL)
@@ -2019,16 +2017,14 @@ FF3_CPPSRCS	+= \
 
 IE_VPATH	+= \
 		factory \
-		factory/common \
-		factory/ie \
 		$(NULL)
 
 IE_M4SRCS	+= \
-		factory.rgs.m4 \
+		factory_ie.rgs.m4 \
 		$(NULL)
 
 IE_CPPSRCS	+= \
-		factory.cc \
+		factory_ie.cc \
 		factory_impl.cc \
 		factory_utils.cc \
 		$(NULL)
@@ -2039,8 +2035,6 @@ IE_CPPSRCS	+= \
 ifeq ($(USING_NPAPI),1)
 $(BROWSER)_VPATH	+= \
 		factory \
-		factory/common \
-		factory/npapi \
 		$(NULL)
 
 $(BROWSER)_IDLSRCS	+= \
@@ -2048,7 +2042,7 @@ $(BROWSER)_IDLSRCS	+= \
 
 $(BROWSER)_CPPSRCS	+= \
 		factory_impl.cc \
-		factory_wrapper.cc \
+		factory_np.cc \
 		factory_utils.cc \
 		$(NULL)
 endif
