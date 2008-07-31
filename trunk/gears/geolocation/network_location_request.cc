@@ -34,6 +34,25 @@
 
 static const char *kGearsNetworkLocationProtocolVersion = "1.0";
 
+static const char *kLatitudeString = "latitude";
+static const char *kLongitudeString = "longitude";
+static const char *kAltitudeString = "altitude";
+static const char *kAddressString = "address";
+static const char *kStreetNumberString = "street_number";
+static const char *kStreetString = "street";
+static const char *kPremisesString = "premises";
+static const char *kCityString = "city";
+static const char *kCountyString = "county";
+static const char *kRegionString = "region";
+static const char *kCountryString = "country";
+static const char *kCountryCodeString = "country_code";
+static const char *kPostalCodeString = "postal_code";
+// TODO(steveblock): Consider updating JSON protocol field names to match those
+// used in W3C spec.
+static const char *kAccuracyString = "horizontal_accuracy";
+static const char *kAltitudeAccuracyString = "vertical_accuracy";
+
+
 // Local functions
 static const char16* RadioTypeToString(RadioType type);
 // Adds a string if it's valid to the JSON object.
@@ -240,9 +259,11 @@ void NetworkLocationRequest::GetLocationFromResponse(
   if (!http_post_result) {
     LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost request "
          "failed.\n"));
-    position->error = STRING16(L"No response from network provider at ");
-    position->error += server_url.c_str();
-    position->error += STRING16(L".");
+    position->error_code = kGeolocationLocationAcquisitionErrorCode;
+    position->error_message = STRING16(L"No response from network provider "
+                                       L"at ");
+    position->error_message += server_url.c_str();
+    position->error_message += STRING16(L".");
   } else if (status_code == HttpConstants::HTTP_OK) {
     // We use the timestamp from the device data that was used to generate
     // this position fix.
@@ -250,27 +271,31 @@ void NetworkLocationRequest::GetLocationFromResponse(
       // The response was successfully parsed, but it may not be a valid
       // position fix.
       if (!position->IsGoodFix()) {
-        position->error = STRING16(L"Network provider at ");
-        position->error += server_url.c_str();
-        position->error += STRING16(L" did not provide a good position fix.");
+        position->error_code = kGeolocationLocationNotFoundErrorCode;
+        position->error_message = STRING16(L"Network provider at ");
+        position->error_message += server_url.c_str();
+        position->error_message += STRING16(L" did not provide a good position "
+                                            L"fix.");
       }
     } else {
       // We failed to parse the repsonse.
       LOG(("NetworkLocationRequest::GetLocationFromResponse() : Response "
            "malformed.\n"));
-      position->error = STRING16(L"Response from network provider at ");
-      position->error += server_url.c_str();
-      position->error += STRING16(L" was malformed.");
+      position->error_code = kGeolocationLocationAcquisitionErrorCode;
+      position->error_message = STRING16(L"Response from network provider at ");
+      position->error_message += server_url.c_str();
+      position->error_message += STRING16(L" was malformed.");
     }
   } else {
     // The response was bad.
     LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost "
          "response was bad.\n"));
-    position->error = STRING16(L"Network provider at ");
-    position->error += server_url.c_str();
-    position->error += STRING16(L" returned error code ");
-    position->error += IntegerToString16(status_code);
-    position->error += STRING16(L".");
+    position->error_code = kGeolocationLocationAcquisitionErrorCode;
+    position->error_message = STRING16(L"Network provider at ");
+    position->error_message += server_url.c_str();
+    position->error_message += STRING16(L" returned error code ");
+    position->error_message += IntegerToString16(status_code);
+    position->error_message += STRING16(L".");
   }
 }
 
@@ -392,31 +417,35 @@ static bool ParseServerResponse(const std::string &response_body,
     return true;
   }
 
-  // If response is not null, it must be an object.
+  // If location is not null, it must be an object.
   if (!location.isObject()) {
     return false;
   }
-  // latitude and longitude fields are required.
-  if (!location["latitude"].isDouble() || !location["longitude"].isDouble()) {
+
+  // latitude, longitude and accuracy fields are required.
+  if (!location[kLatitudeString].isDouble() ||
+      !location[kLongitudeString].isDouble() ||
+      !location[kAccuracyString].isInt()) {
     return false;
   }
-  position->latitude = location["latitude"].asDouble();
-  position->longitude = location["longitude"].asDouble();
+  position->latitude = location[kLatitudeString].asDouble();
+  position->longitude = location[kLongitudeString].asDouble();
+  position->accuracy = location[kAccuracyString].asInt();
+
   // Other fields are optional.
-  GetAsInt(location, "altitude", &position->altitude);
-  GetAsInt(location, "horizontal_accuracy", &position->horizontal_accuracy);
-  GetAsInt(location, "vertical_accuracy", &position->vertical_accuracy);
-  Json::Value address = location["address"];
+  GetAsInt(location, kAltitudeString, &position->altitude);
+  GetAsInt(location, kAltitudeAccuracyString, &position->altitude_accuracy);
+  Json::Value address = location[kAddressString];
   if (address.isObject()) {
-    GetAsString(address, "street_number", &position->address.street_number);
-    GetAsString(address, "street", &position->address.street);
-    GetAsString(address, "premises", &position->address.premises);
-    GetAsString(address, "city", &position->address.city);
-    GetAsString(address, "county", &position->address.county);
-    GetAsString(address, "region", &position->address.region);
-    GetAsString(address, "country", &position->address.country);
-    GetAsString(address, "country_code", &position->address.country_code);
-    GetAsString(address, "postal_code", &position->address.postal_code);
+    GetAsString(address, kStreetNumberString, &position->address.street_number);
+    GetAsString(address, kStreetString, &position->address.street);
+    GetAsString(address, kPremisesString, &position->address.premises);
+    GetAsString(address, kCityString, &position->address.city);
+    GetAsString(address, kCountyString, &position->address.county);
+    GetAsString(address, kRegionString, &position->address.region);
+    GetAsString(address, kCountryString, &position->address.country);
+    GetAsString(address, kCountryCodeString, &position->address.country_code);
+    GetAsString(address, kPostalCodeString, &position->address.postal_code);
   }
 
   position->timestamp = timestamp;

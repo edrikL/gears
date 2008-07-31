@@ -32,6 +32,7 @@ function testGeolocationNoProviders() {
     function() {
       geolocation.getCurrentPosition(
         function() {},
+        function() {},
         { gearsLocationProviderUrls: [], enableHighAccuracy: false } ); },
     'Fix request has no location providers.',
     'Calling getCurrentPosition() should fail if no location providers are ' +

@@ -48,10 +48,9 @@ bool TestGeolocationDB(std::string16 *error) {
   position.latitude              = 1.0;
   position.longitude             = 2.0;
   position.altitude              = 3;
-  position.horizontal_accuracy   = 4;
-  position.vertical_accuracy     = 5;
+  position.accuracy              = 4;
+  position.altitude_accuracy     = 5;
   position.timestamp             = 6;
-  position.error                 = STRING16(L"error");
   position.address.street_number = STRING16(L"street number");
   position.address.street        = STRING16(L"street");
   position.address.premises      = STRING16(L"premises");
@@ -61,15 +60,16 @@ bool TestGeolocationDB(std::string16 *error) {
   position.address.country       = STRING16(L"country");
   position.address.country_code  = STRING16(L"country code");
   position.address.postal_code   = STRING16(L"postal code");
+  position.error_code            = 7;
+  position.error_message         = STRING16(L"error");
 
   Position updated_position;
   updated_position.latitude              = 11.0;
   updated_position.longitude             = 12.0;
   updated_position.altitude              = 13;
-  updated_position.horizontal_accuracy   = 14;
-  updated_position.vertical_accuracy     = 15;
+  updated_position.accuracy              = 14;
+  updated_position.altitude_accuracy     = 15;
   updated_position.timestamp             = 16;
-  updated_position.error                 = STRING16(L"updated error");
   updated_position.address.street_number = STRING16(L"updated street number");
   updated_position.address.street        = STRING16(L"updated street");
   updated_position.address.premises      = STRING16(L"updated premises");
@@ -79,6 +79,8 @@ bool TestGeolocationDB(std::string16 *error) {
   updated_position.address.country       = STRING16(L"updated country");
   updated_position.address.country_code  = STRING16(L"updated country code");
   updated_position.address.postal_code   = STRING16(L"updated postal code");
+  updated_position.error_code            = 17;
+  updated_position.error_message         = STRING16(L"updated error");
 
   Position retrieved_position;
 
@@ -134,14 +136,15 @@ static bool AreAddressesEqual(const Address &left, const Address &right) {
 }
 
 static bool ArePositionsEqual(const Position &left, const Position &right) {
-  return left.latitude            == right.latitude &&
-         left.longitude           == right.longitude &&
-         left.altitude            == right.altitude &&
-         left.horizontal_accuracy == right.horizontal_accuracy &&
-         left.vertical_accuracy   == right.vertical_accuracy &&
-         left.timestamp           == right.timestamp &&
-         left.error               == right.error &&
-         AreAddressesEqual(left.address, right.address);
+  return left.latitude          == right.latitude &&
+         left.longitude         == right.longitude &&
+         left.altitude          == right.altitude &&
+         left.accuracy          == right.accuracy &&
+         left.altitude_accuracy == right.altitude_accuracy &&
+         left.timestamp         == right.timestamp &&
+         AreAddressesEqual(left.address, right.address) &&
+         left.error_code        == right.error_code &&
+         left.error_message     == right.error_message;
 }
 
 #endif  // USING_CCTESTS

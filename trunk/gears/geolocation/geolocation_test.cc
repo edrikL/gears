@@ -40,6 +40,10 @@
 #include "gears/geolocation/network_location_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+// TODO(steveblock): Many of the string constants for network request and
+// JavaScript object properties could be merged with those in
+// network_location_request.cc and geolocation.cc. Consider a header file for
+// Geolocation string constants.
 static const char16 *kAgeString = STRING16(L"age");
 static const char16 *kCellIdString = STRING16(L"cell_id");
 static const char16 *kLocationAreaCodeString =
@@ -253,9 +257,9 @@ void TestParseGeolocationOptions(JsCallContext *context,
   if (!return_object->SetPropertyBool(STRING16(L"repeats"), info.repeats) ||
       !return_object->SetPropertyBool(STRING16(L"enableHighAccuracy"),
                                       info.enable_high_accuracy) ||
-      !return_object->SetPropertyBool(STRING16(L"requestAddress"),
+      !return_object->SetPropertyBool(STRING16(L"gearsRequestAddress"),
                                       info.request_address) ||
-      !return_object->SetPropertyString(STRING16(L"addressLanguage"),
+      !return_object->SetPropertyString(STRING16(L"gearsAddressLanguage"),
                                         info.address_language) ||
       !return_object->SetPropertyArray(STRING16(L"gearsLocationProviderUrls"),
                                        url_array.get())) {
@@ -360,17 +364,29 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                                   server_url,
                                                   &position);
 
-  scoped_ptr<JsObject> position_object(js_runner->NewObject());
-  if (!GearsGeolocation::ConvertPositionToJavaScriptObject(
-      position,
-      true, // Use address if present
-      js_runner,
-      position_object.get())) {
-    context->SetException(STRING16(L"Failed to convert position to JavaScript"
-                                   L"object."));
-    return;
+  scoped_ptr<JsObject> return_object(js_runner->NewObject());
+  assert(return_object.get());
+  if (position.IsGoodFix()) {
+    if (!GearsGeolocation::CreateJavaScriptPositionObject(
+        position,
+        true,  // Use address if present
+        js_runner,
+        return_object.get())) {
+      context->SetException(STRING16(L"Failed to create JavaScript Position "
+                                     L"object."));
+      return;
+    }
+  } else {
+    if (!GearsGeolocation::CreateJavaScriptPositionErrorObject(
+        position,
+        return_object.get())) {
+      context->SetException(STRING16(L"Failed to create JavaScript "
+                                     L"PositionError object."));
+      return;
+    }
   }
-  context->SetReturnValue(JSPARAM_OBJECT, position_object.get());
+
+  context->SetReturnValue(JSPARAM_OBJECT, return_object.get());
 }
 
 void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
@@ -483,12 +499,14 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
                              &position.longitude);
   GetIntegerPropertyIfDefined(context, object, STRING16(L"altitude"),
                               &position.altitude);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"horizontalAccuracy"),
-                              &position.horizontal_accuracy);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"verticalAccuracy"),
-                              &position.vertical_accuracy);
-  GetStringPropertyIfDefined(context, object, STRING16(L"error"),
-                             &position.error);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"accuracy"),
+                              &position.accuracy);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"altitudeAccuracy"),
+                              &position.altitude_accuracy);
+  GetIntegerPropertyIfDefined(context, object, STRING16(L"errorCode"),
+                             &position.error_code);
+  GetStringPropertyIfDefined(context, object, STRING16(L"errorMessage"),
+                             &position.error_message);
 
   // The GetXXXPropertyIfDefined functions set an exception if the property has
   // the wrong type.
