@@ -277,7 +277,7 @@ function testParseGeolocationOptions() {
         'options.gearsLocationProviderUrls should be null or an array of ' +
         'strings');
     // Test correct parsing.
-    var defaultUrlArray = ['http://www.google.com/'];
+    var defaultUrlArray = ['http://www.google.com/loc/json'];
     var urls = ['url1', 'url2'];
     var parsed_options;
     // No options.
@@ -532,6 +532,7 @@ function testGeolocationGetCurrentPosition() {
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     var locationAvailable2 = function(position) {
       assertObjectEqual(mockPosition, position);
+      internalTests.removeGeolocationMockLocationProvider();
       completeAsync();
     };
     var geolocation2 = google.gears.factory.create('beta.geolocation');

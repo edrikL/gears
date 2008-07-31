@@ -58,7 +58,7 @@ class LocationProviderPool {
 
   // Configures the pool to return a mock location provider for the type "MOCK".
   // This method is used only by the Gears test object.
-  void UseMockLocationProvider();
+  void UseMockLocationProvider(bool use_mock_location_provider);
 
   LocationProviderBase *NewProvider(const std::string16 &type,
                                     const std::string16 &host,

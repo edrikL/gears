@@ -107,8 +107,9 @@ bool LocationProviderPool::Unregister(
   return false;
 }
 
-void LocationProviderPool::UseMockLocationProvider() {
-  use_mock_location_provider_ = true;
+void LocationProviderPool::UseMockLocationProvider(
+    bool use_mock_location_provider) {
+  use_mock_location_provider_ = use_mock_location_provider;
 }
 
 LocationProviderBase *LocationProviderPool::NewProvider(

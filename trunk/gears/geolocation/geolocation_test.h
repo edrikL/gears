@@ -62,7 +62,7 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
 // OUT: nothing
 void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 
-// Configures the Geolocation object to use a mock location provider and sets
+// Configures the location provider pool to use a mock location provider. Sets
 // the position that the mock provider will provide. Properties are latitude,
 // longitude, altitude, horizontalAccuracy, verticalAccuracy and error. Note
 // that this a subset of the properties available on the Position object
@@ -70,5 +70,8 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 // IN: object position.
 // OUT: nothing
 void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
+
+// Configures the location provider pool to not use the mock location provider.
+void RemoveGeolocationMockLocationProvider();
 
 #endif  // GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
