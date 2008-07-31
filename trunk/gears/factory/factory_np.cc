@@ -23,33 +23,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_FACTORY_UTILS_H__
-#define GEARS_BASE_COMMON_FACTORY_UTILS_H__
+#include "gears/factory/factory_np.h"
 
-#include "gears/base/common/permissions_db.h"
-#include "gears/base/common/string16.h"
+#include "gears/base/common/module_wrapper.h"
+#include "gears/factory/factory_impl.h"
 
-class SecurityOrigin;
+NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
+  scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
+        NPN_CreateObject(context, ModuleWrapper::GetNPClass())));
+  if (factory_wrapper.get()) {
+    scoped_refptr<ModuleEnvironment> module_environment(
+        ModuleEnvironment::CreateFromDOM(context));
+    if (!module_environment) {
+      return NULL;
+    }
+    GearsFactoryImpl *factory_impl = new GearsFactoryImpl;
+    factory_impl->InitModuleEnvironment(module_environment.get());
+    factory_wrapper->Init(factory_impl,
+                          new Dispatcher<GearsFactoryImpl>(factory_impl));
+  }
 
-
-// The 'classVersion' parameter to factory.create() is reserved / deprecated.
-// Currently only '1.0' is allowed.
-extern const char16 *kAllowedClassVersion;
-
-// The message string for the exception that is thrown when a module
-// cannot be created because the appropriate permissions could not be
-// acquired.
-extern const char16 *kPermissionExceptionString;
-
-// Appends information about the Gears build to the string provided.
-void AppendBuildInfo(std::string16 *s);
-
-// Sets a usage-tracking bit once per instantiation of Gears module. On
-// machines that have the Google Update Service available, this bit is
-// periodically reported and then reset. Currently Windows-only.
-void SetActiveUserFlag();
-
-// Checks if the module requires PERMISSION_LOCAL_DATA to be created.
-bool RequiresLocalDataPermissionType(const std::string16 &module_name);
-
-#endif // GEARS_BASE_COMMON_FACTORY_UTILS_H__
+  return factory_wrapper.release();
+}

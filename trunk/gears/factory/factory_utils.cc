@@ -29,6 +29,9 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
+
+#include "gears/factory/factory_utils.h"
+
 #include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
@@ -36,18 +39,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/factory/common/factory_utils.h"
 #include "gears/ui/common/permissions_dialog.h"
-
-#if BROWSER_IE
-#include "gears/factory/ie/factory.h"
-#elif BROWSER_FF
-#include "gears/factory/firefox/factory.h"
-#elif BROWSER_NPAPI
-#include "gears/factory/factory_impl.h"
-#elif BROWSER_SAFARI
-#include "gears/factory/safari/factory_utils.h"
-#endif
 
 #if BROWSER_FF3
 #include <gecko_sdk/include/nsCOMPtr.h>

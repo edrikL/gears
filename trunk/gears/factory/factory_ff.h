@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2006, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,25 +23,50 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/npapi/factory_wrapper.h"
+#ifndef GEARS_FACTORY_FACTORY_FF_H__
+#define GEARS_FACTORY_FACTORY_FF_H__
 
-#include "gears/base/common/module_wrapper.h"
+#include "genfiles/base_interface_ff.h"
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
 #include "gears/factory/factory_impl.h"
 
-NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
-  scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
-        NPN_CreateObject(context, ModuleWrapper::GetNPClass())));
-  if (factory_wrapper.get()) {
-    scoped_refptr<ModuleEnvironment> module_environment(
-        ModuleEnvironment::CreateFromDOM(context));
-    if (!module_environment) {
-      return NULL;
-    }
-    GearsFactoryImpl *factory_impl = new GearsFactoryImpl;
-    factory_impl->InitModuleEnvironment(module_environment.get());
-    factory_wrapper->Init(factory_impl,
-                          new Dispatcher<GearsFactoryImpl>(factory_impl));
-  }
 
-  return factory_wrapper.release();
-}
+// XPConnect names, which hook up XPCOM things with the JavaScript engine.
+// These names are used by gears/base/firefox/module.cc.
+extern const char *kGearsFactoryContractId;
+extern const char *kGearsFactoryClassName;
+extern const nsCID kGearsFactoryClassId;
+
+
+// This is just a thin XPCOM wrapper around a Dispatcher-backed
+// GearsFactoryImpl instance.
+class GearsFactory : public GearsFactoryInterface,
+                     public JsEventHandlerInterface {
+ public:
+  NS_DECL_ISUPPORTS
+
+  GearsFactory() {}
+
+  NS_IMETHOD InitFactoryFromDOM();
+
+  NS_IMETHOD Create(nsISupports **retval);
+  NS_IMETHOD GetBuildInfo(nsAString &retval);
+  NS_IMETHOD GetHasPermission(PRBool *retval);
+  NS_IMETHOD GetPermission(PRBool *retval);
+  NS_IMETHOD GetVersion(nsAString &retval);
+
+ private:
+  // This is the callback used to handle the 'JSEVENT_UNLOAD' event.
+  virtual void HandleEvent(JsEventType event_type);
+
+  scoped_refptr<GearsFactoryImpl> factory_impl_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
+  NS_IMETHOD DelegateToFactoryImpl(const char *name, bool is_property);
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
+};
+
+
+#endif // GEARS_FACTORY_FACTORY_FF_H__

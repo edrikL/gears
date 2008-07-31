@@ -26,7 +26,7 @@
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
 
-#include "gears/factory/firefox/factory.h"
+#include "gears/factory/factory_ff.h"
 
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/module_wrapper.h"

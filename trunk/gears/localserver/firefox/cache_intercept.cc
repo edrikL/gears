@@ -51,7 +51,7 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
-#include "gears/factory/common/factory_utils.h"
+#include "gears/factory/factory_utils.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/http_request_ff.h"

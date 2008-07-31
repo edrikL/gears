@@ -42,7 +42,7 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
-#include "gears/factory/firefox/factory.h"
+#include "gears/factory/factory_ff.h"
 
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/ui/firefox/ui_utils.h"

@@ -38,7 +38,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"
 
-#include "gears/factory/common/factory_utils.h"
+#include "gears/factory/factory_utils.h"
 
 class ATL_NO_VTABLE PIEDialogBridge
     : public CComObjectRootEx<CComMultiThreadModel>,

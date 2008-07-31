@@ -75,7 +75,7 @@ END
 // Registry (.rgs) files
 IDR_GEARSIE                     REGISTRY  "genfiles/module.rgs"
 IDR_BROWSERHELPEROBJECT         REGISTRY  "genfiles/bho.rgs"
-IDR_GEARSFACTORY                REGISTRY  "genfiles/factory.rgs"
+IDR_GEARSFACTORY                REGISTRY  "genfiles/factory_ie.rgs"
 IDR_TOOLSMENUITEM               REGISTRY  "genfiles/tools_menu_item.rgs"
 #ifdef WINCE
 IDR_PIEDIALOGBRIDGE             REGISTRY  "genfiles/html_dialog_bridge_iemobile.rgs"

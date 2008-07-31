@@ -43,7 +43,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/module.h"
 #include "gears/base/npapi/plugin.h"
-#include "gears/factory/npapi/factory_wrapper.h"
+#include "gears/factory/factory_np.h"
 #include "genfiles/product_constants.h"
 
 std::string16 g_user_agent;  // Access externally via BrowserUtils class.

@@ -23,10 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/ie/factory.h"
+#include "gears/factory/factory_ie.h"
 
 #include "gears/base/ie/dispatcher_to_idispatch.h"
-#include "gears/factory/common/factory_utils.h"
+#include "gears/factory/factory_utils.h"
 
 #ifdef WINCE
 // On regular Windows, the factory_impl_ is created in SetSite. On WinCE,

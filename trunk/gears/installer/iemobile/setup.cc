@@ -53,7 +53,7 @@ BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
 // 1. The Bho key comes from base\ie\bho.rgs.
 static const char16* kBhoKey =
     STRING16(L"CLSID\\{E0FEFE40-FBF9-42AE-BA58-794CA7E3FB53}\\InprocServer32");
-// 2. The Factory ActiveX key comes from factory\ie\factory.rgs.
+// 2. The Factory ActiveX key comes from factory\factory_ie.rgs.
 static const char16* kFactoryActiveXKey =
     STRING16(L"CLSID\\{C93A7319-17B3-4504-87CD-03EFC6103E6E}\\InprocServer32");
 // 3. The Html dialog key comes from ui\ie\html_dialog_bridge_iemobile.rgs.

@@ -23,13 +23,33 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__
-#define GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__
+#ifndef GEARS_FACTORY_FACTORY_UTILS_H__
+#define GEARS_FACTORY_FACTORY_UTILS_H__
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/npapi/plugin.h"
+#include "gears/base/common/permissions_db.h"
+#include "gears/base/common/string16.h"
 
-// Creates a new NPObject representing a GearsFactoryImpl instance.
-NPObject* CreateGearsFactoryWrapper(JsContextPtr context);
+class SecurityOrigin;
 
-#endif // GEARS_FACTORY_NPAPI_FACTORY_WRAPPER_H__
+
+// The 'classVersion' parameter to factory.create() is reserved / deprecated.
+// Currently only '1.0' is allowed.
+extern const char16 *kAllowedClassVersion;
+
+// The message string for the exception that is thrown when a module
+// cannot be created because the appropriate permissions could not be
+// acquired.
+extern const char16 *kPermissionExceptionString;
+
+// Appends information about the Gears build to the string provided.
+void AppendBuildInfo(std::string16 *s);
+
+// Sets a usage-tracking bit once per instantiation of Gears module. On
+// machines that have the Google Update Service available, this bit is
+// periodically reported and then reset. Currently Windows-only.
+void SetActiveUserFlag();
+
+// Checks if the module requires PERMISSION_LOCAL_DATA to be created.
+bool RequiresLocalDataPermissionType(const std::string16 &module_name);
+
+#endif // GEARS_FACTORY_FACTORY_UTILS_H__

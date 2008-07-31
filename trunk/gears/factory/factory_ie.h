@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_FACTORY_IE_FACTORY_H__
-#define GEARS_FACTORY_IE_FACTORY_H__
+#ifndef GEARS_FACTORY_FACTORY_IE_H__
+#define GEARS_FACTORY_FACTORY_IE_H__
 
 #include <objsafe.h>
 #include "gears/base/common/base_class.h"
@@ -87,4 +87,4 @@ class ATL_NO_VTABLE GearsFactory
 
 OBJECT_ENTRY_AUTO(__uuidof(GearsFactory), GearsFactory)
 
-#endif  // GEARS_FACTORY_IE_FACTORY_H__
+#endif  // GEARS_FACTORY_FACTORY_IE_H__
