@@ -1651,6 +1651,7 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		html_dialog.cc \
+		i18n_strings.cc \
 		permissions_dialog.cc \
 		settings_dialog.cc \
 		window_utils.cc \
