@@ -2126,6 +2126,7 @@ $(BROWSER)_CPPSRCS	+= \
 		empty_device_data_provider.cc \
 		geolocation.cc \
 		geolocation_db.cc \
+		geolocation_db_test.cc \
 		geolocation_test.cc \
 		gps_location_provider_wince.cc \
 		location_provider.cc \
