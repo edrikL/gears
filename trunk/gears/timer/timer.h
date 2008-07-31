@@ -82,6 +82,37 @@ class WindowsPlatformTimer
 };
 #endif
 
+#if defined(OS_ANDROID)
+#include "gears/base/common/async_router.h"
+#include "gears/geolocation/timed_callback.h"
+
+class GearsTimer;
+
+// Android timer implementation. Uses TimedCallback to post delayed
+// messages to the module's thread.
+class AndroidPlatformTimer : public TimedCallback::ListenerInterface {
+ public:
+  AndroidPlatformTimer(GearsTimer *gears_timer);
+  virtual ~AndroidPlatformTimer();
+
+  void AddTimer(int timer_id);
+  void RemoveTimer(int timer_id);
+
+  // Called on timeout, on the TimedCallback thread.
+  virtual void OnTimeout(TimedCallback *caller, void *user_data);
+  // Called on timeout, on the owning thread, from AndroidTimerFunctor.
+  void OnMessage(TimedCallback *caller, int timer_id);
+
+ private:
+  typedef std::map<int, TimedCallback *> TimerMap;
+
+  GearsTimer *gears_timer_;
+  ThreadId owner_id_;
+  Mutex mutex_;
+  TimerMap timer_map_;
+  DECL_SINGLE_THREAD;
+};
+#endif // defined(OS_ANDROID)
 
 class GearsTimer
     : public ModuleImplBaseClass
@@ -91,6 +122,8 @@ class GearsTimer
       : ModuleImplBaseClass("GearsTimer"),
 #if BROWSER_IE
         platform_timer_(new WindowsPlatformTimer(this)),
+#elif defined(OS_ANDROID)
+        platform_timer_(new AndroidPlatformTimer(this)),
 #endif
         next_timer_id_(1) {}
   ~GearsTimer() {
@@ -137,6 +170,7 @@ class GearsTimer
     linked_ptr<JsRootedCallback> callback;
     std::string16 script;
     bool repeat;
+    int timeout;
     int timer_id;
     scoped_refptr<GearsTimer> owner;
 #if BROWSER_WEBKIT
@@ -162,6 +196,9 @@ class GearsTimer
 #if BROWSER_IE
   WindowsPlatformTimer *platform_timer_;
   friend class WindowsPlatformTimer;
+#elif defined(OS_ANDROID)
+  scoped_ptr<AndroidPlatformTimer> platform_timer_;
+  friend class AndroidPlatformTimer;
 #endif
 
   // SetTimeout and SetInterval are very similar - the only difference being
