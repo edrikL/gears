@@ -117,11 +117,17 @@ LocationProviderBase *LocationProviderPool::NewProvider(
     const std::string16 &host,
     const std::string16 &language) {
   if (type == kMockString) {
+    // use_mock_location_provider_ can only be set to true in a build that uses
+    // USING_CCTESTS.
+#if USING_CCTESTS
     if (use_mock_location_provider_) {
       return NewMockLocationProvider();
     } else {
       return NULL;
     }
+#else
+    return NULL;
+#endif  // USING_CCTESTS
   } else if (type == kGpsString) {
     return NewGpsLocationProvider();
   } else {
