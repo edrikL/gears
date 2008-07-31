@@ -73,7 +73,7 @@ void ZipDownloadTask::Run() {
     // payload_data can be empty in case of a 30x response.
     // The update server does not redirect, so we treat this as an error.
     if (!was_redirected &&
-        payload.PassesValidationTests() &&
+        payload.PassesValidationTests(NULL) &&
         payload_data->Length() &&
         SaveToTempDirectory(payload_data.get())) {
       success = true;
