@@ -256,11 +256,13 @@ NPUTF8 *NPN_UTF8FromIdentifier(NPIdentifier identifier)
 
 int32_t NPN_IntFromIdentifier(NPIdentifier identifier)
 {
+#if BROWSER_WEBKIT
   // On WebKit under OSX, the intfromidentifier field of the structure isn't
   // filled in (see WebNetscapePluginPackage.m#526 in WebKit source tree).
-  //return GetNPNFuncs().intfromidentifier(identifier);
-  // TODO(nigeltao): Check if this is also the case on non-Safari NPAPI.
   return reinterpret_cast<int>(identifier) >> 1;
+#else
+  return GetNPNFuncs().intfromidentifier(identifier);
+#endif
 }
 
 NPObject *NPN_CreateObject(NPP npp, NPClass *aClass)
