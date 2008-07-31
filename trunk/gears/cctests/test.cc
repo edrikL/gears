@@ -131,6 +131,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/database/database_utils_test.h"
+#include "gears/geolocation/geolocation_db_test.h"
 #include "gears/geolocation/geolocation_test.h"
 #ifdef OFFICIAL_BUILD
 // The Audio API has not been finalized for official builds.
@@ -350,6 +351,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestJsonEscaping(&error);
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
+  ok &= TestGeolocationDB(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
