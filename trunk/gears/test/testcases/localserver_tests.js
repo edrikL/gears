@@ -342,7 +342,7 @@ function testGoodManifest() {
   // First, fetch url1's contents for later comparison
   httpGet("/testcases/manifest-url1.txt", function(content) {
     var expectedUrl1Content = content;
-
+    
     // Then, capture a manifest containing many references to that URL
     updateManagedStore("/testcases/manifest-good.txt", function(managedStore) {
       assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
@@ -366,24 +366,22 @@ function testGoodManifest() {
       for (var i = 0; i < testUrls.length; i++) {
         assert(localServer.canServeLocally(testUrls[i]),
                'Should be able to serve "%s" locally'.subs(testUrls[i]));
-      }
-
-      fetchNextTestUrl();
-
-      function fetchNextTestUrl() {
-        var nextUrl = testUrls.shift();
-        if (!nextUrl) {
-          // we're done!
-          completeAsync();
-          return;
-        }
-
+      }   
+      
+      var httpGetCount = 0;
+      
+      for (var i = 0; i < testUrls.length; i++) {
+        var nextUrl = testUrls[i];
         httpGet(nextUrl, function(content) {
+          httpGetCount++;
           assertEqual(expectedUrl1Content, content, 
                       'Incorrect content for url "%s"'.subs(nextUrl));
-          fetchNextTestUrl();
+          if (httpGetCount == testUrls.length) {
+            completeAsync();
+          }
         });
       }
+      
     });
   });
 }
