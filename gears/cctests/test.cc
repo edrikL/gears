@@ -86,6 +86,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
   RegisterMethod("configureGeolocationMockLocationProviderForTest",
                  &GearsTest::ConfigureGeolocationMockLocationProviderForTest);
+  RegisterMethod("removeGeolocationMockLocationProvider",
+                 &GearsTest::RemoveGeolocationMockLocationProvider);
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
 #else
@@ -2135,6 +2137,11 @@ void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
 void GearsTest::ConfigureGeolocationMockLocationProviderForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationMockLocationProviderForTest(context);
+}
+
+void GearsTest::RemoveGeolocationMockLocationProvider(
+    JsCallContext * /* context */) {
+  ::RemoveGeolocationMockLocationProvider();
 }
 
 #ifdef OFFICIAL_BUILD

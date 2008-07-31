@@ -505,8 +505,12 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
   // Set the position used by the mock location provider.
   MockLocationProvider::SetPosition(position);
 
-  // Configure the Geolocation object to use the mock location provider.
-  LocationProviderPool::GetInstance()->UseMockLocationProvider();
+  // Configure the location provider pool to use the mock location provider.
+  LocationProviderPool::GetInstance()->UseMockLocationProvider(true);
+}
+
+void RemoveGeolocationMockLocationProvider() {
+  LocationProviderPool::GetInstance()->UseMockLocationProvider(false);
 }
 
 // Local functions
