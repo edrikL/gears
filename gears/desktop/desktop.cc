@@ -395,6 +395,12 @@ bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
 }
 
 void GearsDesktop::OpenFiles(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+                 STRING16(L"openFiles is not supported in workers."));
+    return;
+  }
+
   scoped_ptr<JsRootedCallback> callback;
   JsObject options_map;
   JsArgument argv[] = {
