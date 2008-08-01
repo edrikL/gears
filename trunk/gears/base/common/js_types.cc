@@ -1948,7 +1948,30 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 void JsCallContext::SetException(const std::string16 &message) {
   assert(!message.empty());
   is_exception_set_ = true;
-  JsSetException(js_context_, js_runner_, message.c_str(), false);
+
+  // First set the exception to any value, in case we fail to create the full
+  // exception object below.  Setting any jsval will satisfy the JS engine,
+  // we just won't get e.message.  We use INT_TO_JSVAL(1) here for simplicity.
+  JS_BeginRequest(js_context_);
+  JS_SetPendingException(js_context_, INT_TO_JSVAL(1));
+  JS_EndRequest(js_context_);
+
+  // Create a JS Error object with a '.message' property. The other fields
+  // like "lineNumber" and "fileName" are filled in automatically by Firefox
+  // based on the top frame of the JS stack. It's important to use an actual
+  // Error object so that some tools work correctly. See:
+  // http://code.google.com/p/google-gears/issues/detail?id=5
+  //
+  // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
+  // don't quite do what we need.
+
+  scoped_ptr<JsObject> error_object(js_runner_->NewError(message.c_str()));
+  if (!error_object.get()) { return; }
+
+  // Note: need JS_SetPendingException to bubble 'catch' in workers.
+  JS_BeginRequest(js_context_);
+  JS_SetPendingException(js_context_, error_object->token());
+  JS_EndRequest(js_context_);
 }
 
 #elif BROWSER_IE
@@ -2257,66 +2280,6 @@ JsParamType JsCallContext::GetArgumentType(int i) {
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
-
-JsNativeMethodRetval JsSetException(JsContextPtr cx,
-                                    JsRunnerInterface *js_runner,
-                                    const char16 *message,
-                                    bool notify_native_call_context) {
-  JsNativeMethodRetval retval = NS_ERROR_FAILURE;
-
-  // When Gears is running under XPConnect, we need to tell it that we threw an
-  // exception.
-  // TODO_REMOVE_NSISUPPORTS: Remove notify_native_call_context and this branch.
-  if (notify_native_call_context) {
-    nsresult nr;
-    nsCOMPtr<nsIXPConnect> xpc;
-    xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
-    if (!xpc || NS_FAILED(nr)) { return retval; }
-
-#if BROWSER_FF3
-    nsAXPCNativeCallContext *ncc = NULL;
-    nr = xpc->GetCurrentNativeCallContext(&ncc);
-#else
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
-    nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-#endif
-    if (!ncc || NS_FAILED(nr)) { return retval; }
-
-    // To make XPConnect display a user-defined exception message, we must
-    // call SetExceptionWasThrown AND ALSO return a _success_ error code
-    // from our native object.  Otherwise XPConnect will look for an
-    // exception object it created, rather than using the one we set below.
-    ncc->SetExceptionWasThrown(PR_TRUE);
-    retval = NS_OK;
-  }
-
-  // First set the exception to any value, in case we fail to create the full
-  // exception object below.  Setting any jsval will satisfy the JS engine,
-  // we just won't get e.message.  We use INT_TO_JSVAL(1) here for simplicity.
-  JS_BeginRequest(cx);
-  JS_SetPendingException(cx, INT_TO_JSVAL(1));
-  JS_EndRequest(cx);
-
-  // Create a JS Error object with a '.message' property. The other fields
-  // like "lineNumber" and "fileName" are filled in automatically by Firefox
-  // based on the top frame of the JS stack. It's important to use an actual
-  // Error object so that some tools work correctly. See:
-  // http://code.google.com/p/google-gears/issues/detail?id=5
-  //
-  // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
-  // don't quite do what we need.
-
-  scoped_ptr<JsObject> error_object(js_runner->NewError(message));
-  if (!error_object.get()) { return retval; }
-
-  // Note: need JS_SetPendingException to bubble 'catch' in workers.
-  JS_BeginRequest(cx);
-  JS_SetPendingException(cx, error_object->token());
-  JS_EndRequest(cx);
-
-  return retval;
-}
-
 
 bool RootJsToken(JsContextPtr cx, JsToken t) {
   // In SpiderMonkey, the garbage collector won't delete items reachable
