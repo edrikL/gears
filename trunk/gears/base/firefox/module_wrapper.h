@@ -30,7 +30,6 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_runner_ff_marshaling.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
@@ -52,7 +51,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
     dispatcher_.reset(dispatcher);
   }
 
-  void SetJsObject(JsToken token, JsContextPtr js_context) {
+  void InitModuleWrapper(JsToken token, JsContextPtr js_context) {
     assert(token_ == 0);
     assert(token);
     assert(!js_context_);
@@ -131,16 +130,15 @@ bool CreateModule(ModuleEnvironment *module_environment,
   impl->SetJsWrapper(module_wrapper.get());
 
   JsRunnerInterface *js_runner = module_environment->js_runner_;
-  JsToken js_object;
-  if (!js_runner->GetContextWrapper()->CreateModuleJsObject(impl,
-                                                            &js_object)) {
+  JsToken js_token;
+  if (!js_runner->CreateJsTokenForModule(impl, &js_token)) {
     if (context) {
       context->SetException(STRING16(L"Module creation failed."));
     }
     return false;
   }
 
-  module_wrapper->SetJsObject(js_object, js_runner->GetContext());
+  module_wrapper->InitModuleWrapper(js_token, js_runner->GetContext());
   module_wrapper.release();
   module->reset(impl);
   return true;
