@@ -55,6 +55,7 @@
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
@@ -339,6 +340,7 @@ class JsRunner : public JsRunnerBase {
  public:
   JsRunner(JSRuntime *js_runtime) : error_handler_(NULL), global_obj_(NULL),
                js_runtime_(js_runtime), js_script_(NULL) {
+    LEAK_COUNTER_INCREMENT(JsRunner);
     // TODO(aa): Consider moving initialization of JsRunners out since there is
     // no way to detect errors in ctors.
     if (!InitJavaScriptEngine())
@@ -432,6 +434,7 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
 }
 
 JsRunner::~JsRunner() {
+  LEAK_COUNTER_DECREMENT(JsRunner);
   // Alert modules that the engine is unloading.
   SendEvent(JSEVENT_UNLOAD);
 
@@ -644,12 +647,14 @@ bool JsRunner::InvokeCallbackSpecialized(
 class DocumentJsRunner : public JsRunnerBase {
  public:
   DocumentJsRunner(IGeneric *base, JsContextPtr context) {
+    LEAK_COUNTER_INCREMENT(DocumentJsRunner);
     js_engine_context_ = context;
     alloc_js_wrapper_ = new JsContextWrapper(context,
                                              JS_GetGlobalObject(context));
   }
 
   ~DocumentJsRunner() {
+    LEAK_COUNTER_DECREMENT(DocumentJsRunner);
     if (alloc_js_wrapper_)
       delete alloc_js_wrapper_;
   }

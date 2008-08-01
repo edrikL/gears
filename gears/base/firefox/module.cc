@@ -39,6 +39,7 @@
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 #include <gecko_internal/nsIXULAppInfo.h>
 
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
@@ -203,6 +204,7 @@ nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
     return NS_ERROR_FAILURE;
   }
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
+  LEAK_COUNTER_INITIALIZE();
   return NS_OK;
 }
 
@@ -217,6 +219,7 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 #if BROWSER_FF2
   DestroyThreadRecycler();
 #endif
+  LEAK_COUNTER_DUMP_COUNTS();
 }
 
 

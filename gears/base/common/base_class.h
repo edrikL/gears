@@ -144,10 +144,8 @@ class MarshaledModule {
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
  public:
-  explicit ModuleImplBaseClass(const std::string &name)
-      : module_name_(name) {}
-
-  virtual ~ModuleImplBaseClass() {}
+  explicit ModuleImplBaseClass(const std::string &name);
+  virtual ~ModuleImplBaseClass();
 
   const std::string &get_module_name() const {
     return module_name_;

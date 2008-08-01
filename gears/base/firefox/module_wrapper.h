@@ -30,6 +30,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/leak_counter.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
@@ -47,8 +48,13 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   ModuleWrapper(ModuleImplBaseClass *impl,
                 DispatcherInterface *dispatcher)
       : token_(0), js_context_(NULL) {
+    LEAK_COUNTER_INCREMENT(ModuleWrapper);
     impl_.reset(impl);
     dispatcher_.reset(dispatcher);
+  }
+
+  virtual ~ModuleWrapper() {
+    LEAK_COUNTER_DECREMENT(ModuleWrapper);
   }
 
   void InitModuleWrapper(JsToken token, JsContextPtr js_context) {

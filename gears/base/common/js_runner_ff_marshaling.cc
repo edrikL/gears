@@ -53,6 +53,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/firefox/module_wrapper.h"
 
 
@@ -97,6 +98,12 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
 
 JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
     : cx_(cx), global_obj_(global_obj) {
+  LEAK_COUNTER_INCREMENT(JsContextWrapper);
+}
+
+
+JsContextWrapper::~JsContextWrapper() {
+  LEAK_COUNTER_DECREMENT(JsContextWrapper);
 }
 
 

@@ -46,6 +46,7 @@
 
 #include "gears/localserver/firefox/http_request_ff.h"
 
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
@@ -99,9 +100,11 @@ FFHttpRequest::FFHttpRequest()
     caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
     was_sent_(false), was_aborted_(false), was_redirected_(false),
     listener_(NULL), listener_data_available_enabled_(false) {
+  LEAK_COUNTER_INCREMENT(FFHttpRequest);
 }
 
 FFHttpRequest::~FFHttpRequest() {
+  LEAK_COUNTER_DECREMENT(FFHttpRequest);
 }
 
 void FFHttpRequest::Ref() {

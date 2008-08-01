@@ -27,6 +27,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/string_utils.h"
@@ -100,6 +101,17 @@ ModuleEnvironment *ModuleEnvironment::CreateFromDOM(JsContextPtr instance) {
       security_origin, is_worker,
       NewDocumentJsRunner(NULL, instance), browsing_context.get());
 #endif
+}
+
+
+ModuleImplBaseClass::ModuleImplBaseClass(const std::string &name)
+    : module_name_(name) {
+  LEAK_COUNTER_INCREMENT(ModuleImplBaseClass);
+}
+
+
+ModuleImplBaseClass::~ModuleImplBaseClass() {
+  LEAK_COUNTER_DECREMENT(ModuleImplBaseClass);
 }
 
 
