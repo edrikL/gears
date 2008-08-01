@@ -25,6 +25,8 @@
 
 #include "gears/localserver/common/safe_http_request.h"
 
+#include "gears/base/common/leak_counter.h"
+
 //------------------------------------------------------------------------------
 // Constructor, destructor.
 //------------------------------------------------------------------------------
@@ -34,12 +36,14 @@ SafeHttpRequest::SafeHttpRequest(ThreadId safe_thread_id)
       was_response_accessed_(false), was_data_available_called_(false),
       listener_(NULL), listener_data_available_enabled_(false), 
       safe_thread_id_(safe_thread_id), apartment_thread_id_(0) {
+  LEAK_COUNTER_INCREMENT(SafeHttpRequest);
   ThreadMessageQueue *msg_q = ThreadMessageQueue::GetInstance();
   msg_q->InitThreadMessageQueue();
   apartment_thread_id_ = msg_q->GetCurrentThreadId();
 }
 
 SafeHttpRequest::~SafeHttpRequest() {
+  LEAK_COUNTER_DECREMENT(SafeHttpRequest);
   assert(!native_http_request_.get());
 }
  

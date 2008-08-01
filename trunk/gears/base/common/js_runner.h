@@ -30,6 +30,7 @@
 #define GEARS_BASE_COMMON_JS_RUNNER_H__
 
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 
@@ -168,13 +169,16 @@ class JsEventMonitor {
   JsEventMonitor(JsRunnerInterface *js_runner,
                  JsEventType event_type,
                  JsEventHandlerInterface *handler)
-    : js_runner_(js_runner), event_type_(event_type), handler_(handler) {
+      : js_runner_(js_runner), event_type_(event_type), handler_(handler) {
+    LEAK_COUNTER_INCREMENT(JsEventMonitor);
     js_runner_->AddEventHandler(event_type_, handler_);
   }
 
   ~JsEventMonitor() {
+    LEAK_COUNTER_DECREMENT(JsEventMonitor);
     js_runner_->RemoveEventHandler(event_type_, handler_);
   }
+
  private:
   JsRunnerInterface *js_runner_;
   JsEventType event_type_;

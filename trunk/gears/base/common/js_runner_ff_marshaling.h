@@ -36,6 +36,7 @@
 
 #include <gecko_internal/jsapi.h>
 #include "gears/base/common/dispatcher.h"
+#include "gears/base/common/leak_counter.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -77,7 +78,12 @@ struct JsWrapperDataForProto : public JsWrapperData {
   scoped_ptr<JSClass>        alloc_jsclass;
   scoped_ptr<std::string>    alloc_name;
 
-  JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {}
+  JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForProto);
+  }
+  ~JsWrapperDataForProto() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForProto);
+  }
 };
 
 struct JsWrapperDataForInstance : public JsWrapperData {
@@ -85,7 +91,12 @@ struct JsWrapperDataForInstance : public JsWrapperData {
   JsContextWrapper    *js_wrapper;
   ModuleImplBaseClass *module;
 
-  JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {}
+  JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForInstance);
+  }
+  ~JsWrapperDataForInstance() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForInstance);
+  }
 };
 
 struct JsWrapperDataForFunction : public JsWrapperData {
@@ -93,12 +104,18 @@ struct JsWrapperDataForFunction : public JsWrapperData {
   DispatchId                 dispatch_id;
   int                        flags;
 
-  JsWrapperDataForFunction() : JsWrapperData(FUNCTION_JSOBJECT) {}
+  JsWrapperDataForFunction() : JsWrapperData(FUNCTION_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForFunction);
+  }
+  ~JsWrapperDataForFunction() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForFunction);
+  }
 };
 
 class JsContextWrapper {
  public:
   JsContextWrapper(JSContext *cx, JSObject *global_obj);
+  ~JsContextWrapper();
   void CleanupRoots();
 
   // Creates a new JavaScript object to represent a Gears module in the JS

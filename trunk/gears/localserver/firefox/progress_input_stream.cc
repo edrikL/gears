@@ -26,6 +26,7 @@
 #include "gears/localserver/firefox/progress_input_stream.h"
 
 #include "gears/base/common/async_router.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/localserver/common/progress_event.h"
 #include "gears/localserver/firefox/http_request_ff.h"
 #include "gears/localserver/firefox/ui_thread.h"
@@ -42,9 +43,11 @@ ProgressInputStream::ProgressInputStream(
       input_stream_(input_stream),
       position_(0),
       total_(total) {
+  LEAK_COUNTER_INCREMENT(ProgressInputStream);
 }
 
 ProgressInputStream::~ProgressInputStream() {
+  LEAK_COUNTER_DECREMENT(ProgressInputStream);
 }
 
 //------------------------------------------------------------------------------
