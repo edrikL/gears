@@ -46,7 +46,6 @@ class JsRunnerInterface;
 typedef jsval JsToken;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
-typedef nsresult JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
 typedef nsISupports IScriptable;
@@ -65,7 +64,6 @@ struct JsTokenEqualTo : public std::equal_to<JsToken> {
 typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr;  // unused in IE
-typedef HRESULT JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
 typedef IDispatch IScriptable;
@@ -169,7 +167,6 @@ class ScopedNPVariant : public NPVariant {
 typedef NPVariant JsToken;
 typedef ScopedNPVariant JsScopedToken;
 typedef NPP JsContextPtr;
-typedef NPError JsNativeMethodRetval;
 
 // Not used in NPAPI or WEBKIT at the moment
 typedef void* IScriptable;
@@ -409,7 +406,6 @@ class JsRootedToken {
 typedef void  JsToken;
 typedef void  JsScopedToken;
 typedef void* JsContextPtr;
-typedef void  JsNativeMethodRetval;
 
 #endif // BROWSER_xyz
 
@@ -626,14 +622,6 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token);
 
 #if BROWSER_FF
-// Sets JavaScript exceptions, in a way that hides differences
-// between main-thread and worker-thread environments.
-// Returns the value the caller should return to the JavaScript host engine.
-JsNativeMethodRetval JsSetException(JsContextPtr cx,
-                                    JsRunnerInterface *js_runner,
-                                    const char16 *message,
-                                    bool notify_native_call_context);
-
 // Garbage collection helper functions
 bool RootJsToken(JsContextPtr cx, JsToken t);
 #endif

@@ -291,7 +291,7 @@ function testNullArguments() {
 }
 
 // This caught a crashing bug where JsContext wasn't set in a worker
-// thread, when object1 called object2 which called JsSetException.
+// thread, when object1 called object2 which threw a JavaScript exception.
 // In this case, object1 is a Database and object2 is a ResultSet, and
 // the exception is thrown due to an error in the first call to
 // sqlite3_step(), as opposed to sqlite3_prepare_v2().
