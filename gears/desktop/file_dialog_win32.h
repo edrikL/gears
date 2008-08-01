@@ -47,6 +47,7 @@ class FileDialogWin32 : public FileDialog, public Thread,
                               const FileDialog::Options& options,
                               std::string16* error);
   virtual void CancelSelection();
+  virtual void DoUIAction(UIAction action);
 
   // Thread Interface
   virtual void Run();

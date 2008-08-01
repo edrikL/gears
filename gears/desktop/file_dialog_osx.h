@@ -53,6 +53,7 @@ class FileDialogCarbon : public FileDialog {
                               const FileDialog::Options& options,
                               std::string16* error);
   virtual void CancelSelection();
+  virtual void DoUIAction(UIAction action);
 
  private:
   // Initializes the dialog, based on options.

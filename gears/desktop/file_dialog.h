@@ -26,10 +26,12 @@
 #ifndef GEARS_DESKTOP_FILE_DIALOG_H__
 #define GEARS_DESKTOP_FILE_DIALOG_H__
 
+#include <map>
 #include <vector>
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/mutex.h"
 #include "gears/ui/common/window_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -66,6 +68,15 @@ class FileDialog {
   bool Open(const FileDialog::Options& options, JsRootedCallback* callback,
             std::string16* error);
 
+  // Makes the dialog visible if it's hidden.
+  void Show();
+
+  // Makes the dialog invisible if it's shown.
+  void Hide();
+
+  // Moves the dialog to the front of the window z-order.
+  void BringToFront();
+
   // Prematurely terminates the dialog selection.
   void Cancel();
 
@@ -82,6 +93,8 @@ class FileDialog {
                                    std::string16* error);
 
  protected:
+  enum UIAction { UIA_SHOW, UIA_HIDE, UIA_BRING_TO_FRONT };
+
   FileDialog();
 
   void Init(const ModuleImplBaseClass* module, NativeWindowPtr parent);
@@ -96,6 +109,9 @@ class FileDialog {
   // Implemented per platform to cancel the asynchronous dialog.
   virtual void CancelSelection() = 0;
 
+  // Implemented per platform to perform UI actions on the dialog window.
+  virtual void DoUIAction(UIAction action) = 0;
+
   // Called by platform implementations when the user has dismissed the dialog.
   // selected_files will be empty if the user cancelled the selection.
   void CompleteSelection(const StringList& selected_files);
@@ -107,9 +123,16 @@ class FileDialog {
   static bool IsLegalFilter(const std::string16& filter);
 
  private:
+  typedef std::map<ModuleEnvironment*, FileDialog*> ActiveMap;
+
   const ModuleImplBaseClass* module_;
   NativeWindowPtr parent_;
   scoped_ptr<JsRootedCallback> callback_;
+
+  // Provides thread safety for active_.
+  static Mutex active_mutex_;
+  // Maps all active dialogs, by ModuleEnvironment.
+  static ActiveMap active_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialog);
 };

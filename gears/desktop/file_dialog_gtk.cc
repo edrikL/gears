@@ -57,7 +57,7 @@ FileDialogGtk::~FileDialogGtk() {
 void FileDialogGtk::HandleResponse(gint response_id) {
   gtk_window_set_modal(GTK_WINDOW(dialog_.get()), FALSE);
   g_signal_handler_disconnect(dialog_.get(), response_handler_);
-  gtk_widget_hide(dialog_.get());
+  DoUIAction(UIA_HIDE);
 
   StringList selected_files;
   std::string16 error;
@@ -83,6 +83,20 @@ bool FileDialogGtk::BeginSelection(NativeWindowPtr parent,
 
 void FileDialogGtk::CancelSelection() {
   // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
+}
+
+void FileDialogGtk::DoUIAction(UIAction action) {
+  switch (action) {
+  case UIA_SHOW:
+    gtk_widget_show(dialog_.get());
+    break;
+  case UIA_HIDE:
+    gtk_widget_hide(dialog_.get());
+    break;
+  case UIA_BRING_TO_FRONT:
+    gtk_window_present(GTK_WINDOW(dialog_.get()));
+    break;
+  }
 }
 
 bool FileDialogGtk::InitDialog(NativeWindowPtr parent,

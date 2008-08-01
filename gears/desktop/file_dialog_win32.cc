@@ -114,6 +114,28 @@ void FileDialogWin32::CancelSelection() {
   }
 }
 
+void FileDialogWin32::DoUIAction(UIAction action) {
+  MutexLock lock(&mutex_);
+  if (wnd_ && !should_exit_) {
+    UINT flags = SWP_NOMOVE | SWP_NOSIZE;
+    switch (action) {
+    case UIA_SHOW:
+      flags |= SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW;
+      break;
+    case UIA_HIDE:
+      flags |= SWP_NOACTIVATE | SWP_NOZORDER | SWP_HIDEWINDOW;
+      break;
+    case UIA_BRING_TO_FRONT:
+      flags |= SWP_SHOWWINDOW;
+      break;
+    default:
+      assert(false);
+      return;
+    }
+    SetWindowPos(wnd_, HWND_TOP, 0, 0, 0, 0, flags);
+  }
+}
+
 void FileDialogWin32::Run() {
   scoped_ptr<FileDialogData> data(new FileDialogData);
   std::string16 error;
