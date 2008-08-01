@@ -621,10 +621,4 @@ class JsCallContext {
 bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, JsScopedToken *token);
 
-#if BROWSER_FF
-// Garbage collection helper functions
-bool RootJsToken(JsContextPtr cx, JsToken t);
-#endif
-
-
 #endif  // GEARS_BASE_COMMON_JS_TYPES_H__
