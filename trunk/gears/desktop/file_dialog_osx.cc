@@ -132,9 +132,7 @@ void FileDialogCarbon::Event(NavEventCallbackMessage message,
       // modal window loop (ie, via 'alert()').  If we don't hide the dialog
       // first, FileDialogCarbon::Event can reenter with kNavCBUserAction and
       // kNavCBTerminate events.
-      if (WindowRef window = NavDialogGetWindow(dialog_.get())) {
-        HideWindow(window);
-      }
+      DoUIAction(UIA_HIDE);
       dialog_.reset(NULL);
       CompleteSelection(selected_files_);
     }
@@ -154,6 +152,23 @@ bool FileDialogCarbon::BeginSelection(NativeWindowPtr parent,
 
 void FileDialogCarbon::CancelSelection() {
   // TODO(bpm): Nothing calls CancelSelection yet, but it might someday.
+}
+
+void FileDialogCarbon::DoUIAction(UIAction action) { 
+  if (WindowRef window = NavDialogGetWindow(dialog_.get())) {
+    switch (action) {
+    case UIA_SHOW:
+      ShowWindow(window);
+      break;
+    case UIA_HIDE:
+      HideWindow(window);
+      break;
+    case UIA_BRING_TO_FRONT:
+      ShowWindow(window);
+      SelectWindow(window);
+      break;
+    }
+  }
 }
 
 bool FileDialogCarbon::InitDialog(NativeWindowPtr parent,
