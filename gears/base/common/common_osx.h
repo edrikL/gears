@@ -31,6 +31,7 @@
 
 #import <string>
 #import <Carbon/Carbon.h>
+#include "gears/base/common/string16.h"
 
 // TODO: Move all generally applicable OS X code from common_sf.h here.
 
@@ -57,6 +58,26 @@ WindowRef GetMainWindow();
 
 // Get a window handle to the application window that has the keyboard focus.
 WindowRef GetKeyWindow();
+
+// Wrap NSLog so it can be called from C++ with C strings.
+void SystemLog(const char *fn, ...);
+void SystemLog16(const char16 *msg_utf16, ...);
+
+#ifndef LOG
+#ifdef DEBUG
+#define LOG(a) do { SystemLog a; } while (0)
+#else
+#define LOG(a) do { } while (0)
+#endif
+#endif
+
+#ifndef LOG16
+#ifdef DEBUG
+#define LOG16(a) do { SystemLog16 a; } while (0)
+#else
+#define LOG16(a) do { } while (0)
+#endif
+#endif
 
 #endif  // OS_MACOSX
 #endif  // GEARS_BASE_COMMON_COMMON_OSX_H__

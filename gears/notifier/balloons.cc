@@ -59,6 +59,19 @@ static const char *kDescriptionId = "description_text";
 static const char *kBalloonContainer = "balloon_container";
 static const char *kActionsContainer = "actions_container";
 static const char *kIconId = "icon";
+static const char *kCloseButton = "close_button";
+
+#ifdef OS_MACOSX
+static const char *kFontName = "Helvetica";
+static const int kTitleFontSize = 12;
+static const int kSubtitleFontSize = 10;
+static const int kDescriptionFontSize = 10;
+#else
+static const char *kFontName = "Verdana";
+static const int kTitleFontSize = 10;
+static const int kSubtitleFontSize = 9;
+static const int kDescriptionFontSize = 9;
+#endif
 
 const double kAlphaTransitionDuration = 1.0;
 const double kAlphaTransitionDurationShort = 0.3;
@@ -419,16 +432,16 @@ glint::Node *Balloon::CreateTree() {
 
   glint::SimpleText *text = new glint::SimpleText();
   text->set_id(kTitleId);
-  text->set_font_family("verdana");
-  text->set_font_size(10);
+  text->set_font_family(kFontName);
+  text->set_font_size(kTitleFontSize);
   text->set_bold(true);
   text->set_horizontal_alignment(glint::X_LEFT);
   column->AddChild(text);
 
   text = new glint::SimpleText();
   text->set_id(kSubtitleId);
-  text->set_font_family("verdana");
-  text->set_font_size(9);
+  text->set_font_family(kFontName);
+  text->set_font_size(kSubtitleFontSize);
   margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
@@ -436,7 +449,8 @@ glint::Node *Balloon::CreateTree() {
 
   text = new glint::SimpleText();
   text->set_id(kDescriptionId);
-  text->set_font_family("verdana");
+  text->set_font_family(kFontName);
+  text->set_font_size(kDescriptionFontSize);
   margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
@@ -453,6 +467,19 @@ glint::Node *Balloon::CreateTree() {
   main_row->AddChild(button_container);
 
   glint::Button *close_button = new glint::Button();
+#ifdef OS_MACOSX
+  close_button->ReplaceImage(resource_path + "/close_button_strip_osx.png");
+  close_button->set_min_height(30);
+  close_button->set_min_width(30);
+  margin.Set(-4, -4, 0, 0);  // slightly out of the frame
+  close_button->set_margin(margin);
+  close_button->set_horizontal_alignment(glint::X_LEFT);
+  close_button->set_vertical_alignment(glint::Y_TOP);
+  close_button->set_alpha(glint::colors::kTransparentAlpha);
+  close_button->set_id(kCloseButton);
+  SetAlphaTransition(close_button, 0.25);
+  root->AddChild(close_button);
+#else
   close_button->ReplaceImage(resource_path + "/close_button_strip.png");
   close_button->set_min_height(22);
   close_button->set_min_width(22);
@@ -460,8 +487,9 @@ glint::Node *Balloon::CreateTree() {
   close_button->set_margin(margin);
   close_button->set_horizontal_alignment(glint::X_RIGHT);
   close_button->set_vertical_alignment(glint::Y_TOP);
-  close_button->SetClickHandler(Balloon::OnCloseButton, this);
   button_container->AddChild(close_button);
+#endif  // OS_MACOSX
+  close_button->SetClickHandler(Balloon::OnCloseButton, this);
 
   glint::Button *menu_button = new glint::Button();
   menu_button->ReplaceImage(resource_path + "/menu_button_strip.png");
@@ -629,10 +657,18 @@ void Balloon::OnMouseIn() {
     state_ = RESTORING_BALLOON;
   }
   collection_->SuspendExpirationTimer();
+  glint::Node *close_button = root_->FindNodeById(kCloseButton);
+  if (close_button) {
+    close_button->set_alpha(glint::colors::kOpaqueAlpha);
+  }
 }
 
 void Balloon::OnMouseOut() {
   collection_->RestoreExpirationTimer();
+  glint::Node *close_button = root_->FindNodeById(kCloseButton);
+  if (close_button) {
+    close_button->set_alpha(glint::colors::kTransparentAlpha);
+  }
 }
 
 bool Balloon::InitializeUI(glint::Node *container) {
