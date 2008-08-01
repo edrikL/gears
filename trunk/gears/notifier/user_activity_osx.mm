@@ -31,34 +31,41 @@
 #ifdef OS_MACOSX
 
 #import "gears/notifier/user_activity.h"
+#import "gears/base/common/common_osx.h"
 
 UserMode UserActivityMonitor::PlatformDetectUserMode() {
-  // No platform specific detection on OSX.
+  // No platform specific detection on OSX - returning USER_MODE_UNKNOWN
+  // will make UserActivityMonitor to call "specific" detection methods below.
   return USER_MODE_UNKNOWN;
 }
 
 uint32 UserActivityMonitor::GetMonitorPowerOffTimeSec() {
-  assert(false);
+  // TODO(dimich): Implement this.
+  LOG(("UserActivityMonitor::GetMonitorPowerOffTimeSec: Not Implemented\n"));
   return 0;
 }
 
 uint32 UserActivityMonitor::GetUserIdleTimeMs() {
-  assert(false);
+  // TODO(dimich): Implement this.
+  LOG(("UserActivityMonitor::GetUserIdleTimeMs: Not Implemented\n"));
   return 0;
 }
 
 bool UserActivityMonitor::IsScreensaverRunning() {
-  assert(false);
+  // TODO(dimich): Implement this.
+  LOG(("UserActivityMonitor::IsScreensaverRunning: Not Implemented\n"));
   return false;
 }
 
 bool UserActivityMonitor::IsWorkstationLocked() {
-  assert(false);
+  // TODO(dimich): Implement this.
+  LOG(("UserActivityMonitor::IsWorkstationLocked: Not Implemented\n"));
   return false;
 }
 
 bool UserActivityMonitor::IsFullScreenMode() {
-  assert(false);
+  // TODO(dimich): Implement this.
+  LOG(("UserActivityMonitor::IsFullScreenMode: Not Implemented\n"));
   return false;
 }
 

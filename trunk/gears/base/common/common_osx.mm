@@ -69,3 +69,38 @@ WindowRef GetMainWindow() {
 WindowRef GetKeyWindow() {
   return (WindowRef)[[NSApp keyWindow] windowRef];
 }
+
+void SystemLog(const char *msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  NSLogv([NSString stringWithCString:msg], args);
+  va_end(args);
+}
+
+void SystemLog16(const char16 *msg_utf16, ...) {
+  va_list args;
+  va_start(args, msg_utf16);
+
+  CFStringRef format =
+      CFStringCreateWithCharacters(NULL,
+                                   msg_utf16,
+                                   std::char_traits<char16>::length(msg_utf16));
+
+  CFIndex length = CFStringGetLength(format);
+
+  CFMutableStringRef format_mutable =
+      CFStringCreateMutableCopy(NULL, length, format);
+
+  CFStringFindAndReplace(format_mutable,
+                         CFSTR("%s"),
+                         CFSTR("%S"),
+                         CFRangeMake(0, length),
+                         0);
+
+  NSLogv((NSString *)format_mutable, args);
+  va_end(args);
+
+  CFRelease(format);
+  CFRelease(format_mutable);
+}
+

@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Common definitions and functions for Gears Safari.
@@ -43,9 +43,7 @@ struct NPObject;
 #if defined(__cplusplus)
 extern "C" {
 #endif
-void SafariGearsLog(const char *fn, ...);
-void SafariGearsLog16(const char16 *msg_utf16, ...);
-  
+
 #ifdef __OBJC__
 
 // NSInteger is a new type defined in Leopard, add these typedefs so code
@@ -64,14 +62,6 @@ void ThrowExceptionKey(NSString *key, ...);
 
 #if defined(__cplusplus)
 }
-#endif
-
-#ifdef DEBUG
-#define LOG(a) SafariGearsLog a
-#define LOG16(a) SafariGearsLog16 a
-#else
-#define LOG(a) 0
-#define LOG16(a) 0
 #endif
 
 // Wrappers for throwing localized vararg exceptions
@@ -93,7 +83,7 @@ void ThrowExceptionKey(NSString *key, ...);
     ThrowExceptionKey(key, ##__VA_ARGS__); \
     return NO; \
   } while(0)
-  
+
 #endif  // __OBJC__
 
 // Throw exception via WebKit's WebScriptObject interface.
@@ -134,6 +124,6 @@ assert(pthread_main_np() != 0)
 #define ASSERT_SINGLE_THREAD()
 #define ASSERT_IS_RUNNING_ON_MAIN_THREAD()
 #endif  // DEBUG
-#endif  // C++       
+#endif  // C++
 
 #endif  // GEARS_BASE_COMMON_COMMON_SF_H__
