@@ -157,16 +157,11 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
   return true;
 }
 
-bool JsTokenToModule(JsContextWrapperPtr context_wrapper,
+bool JsTokenToModule(JsRunnerInterface *js_runner,
                      JsContextPtr context,
                      const JsToken in,
                      ModuleImplBaseClass **out) {
-  ModuleImplBaseClass *module = context_wrapper->GetModuleFromJsToken(in);
-  if (module) {
-    *out = module;
-    return true;
-  }
-  return false;
+  return js_runner->GetModuleFromJsToken(in, out);
 }
 
 #elif BROWSER_IE
@@ -179,7 +174,7 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
   return false;
 }
 
-bool JsTokenToModule(JsContextWrapperPtr context_wrapper,
+bool JsTokenToModule(JsRunnerInterface *js_runner,
                      JsContextPtr context,
                      const JsToken in,
                      ModuleImplBaseClass **out) {
@@ -208,7 +203,7 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
   return false;
 }
 
-bool JsTokenToModule(JsContextWrapperPtr context_wrapper,
+bool JsTokenToModule(JsRunnerInterface *js_runner,
                      JsContextPtr context,
                      const JsToken in,
                      ModuleImplBaseClass **out) {
@@ -976,7 +971,7 @@ static bool ConvertTokenToArgument(JsCallContext *context,
           static_cast<ModuleImplBaseClass **>(param->value_ptr);
       if (!JsTokenToModule(
 #if BROWSER_FF
-          context->js_runner()->GetContextWrapper(),
+          context->js_runner(),
 #else
           NULL,
 #endif

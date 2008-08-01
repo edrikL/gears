@@ -42,13 +42,10 @@ class JsRunnerInterface;
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIXPConnect.h> // for JsParamFetcher
 
-class JsContextWrapper;
-
 // Abstracted types for values used with JavaScript engines.
 typedef jsval JsToken;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
-typedef JsContextWrapper* JsContextWrapperPtr;
 typedef nsresult JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
@@ -68,7 +65,6 @@ struct JsTokenEqualTo : public std::equal_to<JsToken> {
 typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr;  // unused in IE
-typedef void* JsContextWrapperPtr;  // unused in IE
 typedef HRESULT JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
@@ -173,7 +169,6 @@ class ScopedNPVariant : public NPVariant {
 typedef NPVariant JsToken;
 typedef ScopedNPVariant JsScopedToken;
 typedef NPP JsContextPtr;
-typedef void* JsContextWrapperPtr; // unused in NPAPI
 typedef NPError JsNativeMethodRetval;
 
 // Not used in NPAPI or WEBKIT at the moment
@@ -289,7 +284,7 @@ bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out);
-bool JsTokenToModule(JsContextWrapperPtr context_wrapper,
+bool JsTokenToModule(JsRunnerInterface *js_runner,
                      JsContextPtr context,
                      const JsToken in,
                      ModuleImplBaseClass **out);

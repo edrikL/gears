@@ -116,8 +116,8 @@ void JsContextWrapper::CleanupRoots() {
 }
 
 
-bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
-                                            JsToken *object_out) {
+bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
+                                              JsToken *token_out) {
   // We require the name property to be set since we use it as the key for
   // caching created prototype objects.
   const std::string &module_name = module->get_module_name();
@@ -165,7 +165,7 @@ bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
   if (!SetupInstanceObject(instance_obj, module))
     return false;
 
-  *object_out = OBJECT_TO_JSVAL(instance_obj);
+  *token_out = OBJECT_TO_JSVAL(instance_obj);
   return true;
 }
 

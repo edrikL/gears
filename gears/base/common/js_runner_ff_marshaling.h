@@ -27,8 +27,8 @@
 // of this as the equivalent of XPConnect, except that Gears C++ modules are
 // not XPCOM objects, but instead have a DispatcherInterface instance.
 
-#ifndef GEARS_WORKERPOOL_FIREFOX_JS_WRAPPER_H__
-#define GEARS_WORKERPOOL_FIREFOX_JS_WRAPPER_H__
+#ifndef GEARS_BASE_COMMON_JS_RUNNER_FF_MARSHALING_H__
+#define GEARS_BASE_COMMON_JS_RUNNER_FF_MARSHALING_H__
 
 #include <map>
 #include <set>
@@ -42,20 +42,6 @@
 typedef std::map<const std::string, JSObject*> NameToProtoMap;
 
 class JsContextWrapper;
-
-// Wraps a set of calls to JS_BeginRequest and JS_EndRequest.
-class JsRequest {
- public:
-  JsRequest(JSContext *cx) : cx_(cx) {
-    JS_BeginRequest(cx_);
-  }
-  ~JsRequest() {
-    JS_EndRequest(cx_);
-  }
-
- private:
-  JSContext *cx_;
-};
 
 //
 // Structs that record different custom data for the different JSObject types.
@@ -117,7 +103,7 @@ class JsContextWrapper {
 
   // Creates a new JavaScript object to represent a Gears module in the JS
   // engine.
-  bool CreateModuleJsObject(ModuleImplBaseClass *module, JsToken *object_out);
+  bool CreateJsTokenForModule(ModuleImplBaseClass *module, JsToken *token_out);
 
   ModuleImplBaseClass *GetModuleFromJsToken(const JsToken token);
 
@@ -162,4 +148,4 @@ class JsContextWrapper {
 };
 
 
-#endif // GEARS_WORKERPOOL_FIREFOX_JS_WRAPPER_H__
+#endif // GEARS_BASE_COMMON_JS_RUNNER_FF_MARSHALING_H__

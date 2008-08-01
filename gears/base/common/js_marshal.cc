@@ -159,9 +159,7 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
     case JSPARAM_OBJECT: {
       // Check to see if our JavaScript object is acutally a Gears module.
       ModuleImplBaseClass *object_as_module = NULL;
-      if (JsTokenToModule(
-              js_runner->GetContextWrapper(),
-              js_context, token, &object_as_module)) {
+      if (JsTokenToModule(js_runner, js_context, token, &object_as_module)) {
         MarshaledModule *marshaled_module =
             static_cast<ModuleImplBaseClass*>(object_as_module)->
             AsMarshaledModule();

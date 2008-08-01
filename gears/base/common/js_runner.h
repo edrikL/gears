@@ -58,6 +58,23 @@ class ModuleImplBaseClass;
 #endif
 
 
+#if BROWSER_FF
+// Wraps a set of calls to JS_BeginRequest and JS_EndRequest.
+class JsRequest {
+ public:
+  JsRequest(JSContext *cx) : cx_(cx) {
+    JS_BeginRequest(cx_);
+  }
+  ~JsRequest() {
+    JS_EndRequest(cx_);
+  }
+
+ private:
+  JSContext *cx_;
+};
+#endif
+
+
 // Represents an error that occured inside a JsRunner.
 struct JsErrorInfo {
   int line;
@@ -95,11 +112,6 @@ class JsRunnerInterface {
   virtual bool Start(const std::string16 &full_script) = 0;
   virtual bool Stop() = 0;
   virtual JsContextPtr GetContext() = 0;
-  // Only used by Firefox. Gets the JsContextWrapper instance associated with
-  // the current JsContext.
-  // TODO(aa): Once we no longer need the XPCOM support in JsContextWrapper,
-  // maybe roll back into JsRunner so that this isn't needed?
-  virtual JsContextWrapperPtr GetContextWrapper() { return NULL; }
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
 
@@ -121,6 +133,13 @@ class JsRunnerInterface {
   // Convert a JsObject to our date type.
   virtual bool ConvertJsObjectToDate(JsObject *obj,
                                      int64 *milliseconds_since_epoch) = 0;
+
+#if BROWSER_FF
+  virtual bool CreateJsTokenForModule(ModuleImplBaseClass *module,
+                                      JsToken *token_out) = 0;
+  virtual bool GetModuleFromJsToken(JsToken token,
+                                    ModuleImplBaseClass **module_out) = 0;
+#endif
 
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.

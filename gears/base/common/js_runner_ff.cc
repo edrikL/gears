@@ -77,11 +77,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_engine_context_;
   }
 
-  JsContextWrapperPtr GetContextWrapper() {
-    assert(alloc_js_wrapper_);
-    return alloc_js_wrapper_;
-  }
-
   virtual bool Eval(const std::string16 &full_script, jsval *return_value) = 0;
 
   bool Eval(const std::string16 &full_script) {
@@ -165,6 +160,20 @@ class JsRunnerBase : public JsRunnerInterface {
     LL_D2L(*((int64*)milliseconds_since_epoch), td);
 
     return true;
+  }
+
+  bool CreateJsTokenForModule(ModuleImplBaseClass *module, JsToken *token_out) {
+    return alloc_js_wrapper_->CreateJsTokenForModule(module, token_out);
+  }
+
+  bool GetModuleFromJsToken(JsToken token, ModuleImplBaseClass **module_out) {
+    ModuleImplBaseClass *module =
+        alloc_js_wrapper_->GetModuleFromJsToken(token);
+    if (module) {
+      *module_out = module;
+      return true;
+    }
+    return false;
   }
 
   virtual bool InvokeCallbackSpecialized(
