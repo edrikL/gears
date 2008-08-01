@@ -2276,27 +2276,3 @@ JsParamType JsCallContext::GetArgumentType(int i) {
   if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
   return JsTokenGetType(GetArgument(i), js_context());
 }
-
-
-//-----------------------------------------------------------------------------
-#if BROWSER_FF  // the rest of this file only applies to Firefox, for now
-
-bool RootJsToken(JsContextPtr cx, JsToken t) {
-  // In SpiderMonkey, the garbage collector won't delete items reachable
-  // from any "root".  A root is a _pointer_ to a jsval (or to certain other
-  // data types).
-  //
-  // Our code treats jsval like a handle, not an allocated object.  So taking
-  // the address of a jsval usually gives a transient value.  To fix this,
-  // RootJsToken allocates a jsval copy and uses _that_ pointer for the root.
-  assert(JSVAL_IS_GCTHING(t));
-  jsval *root_container = new jsval(t);
-  JS_BeginRequest(cx);
-  JSBool js_ok = JS_AddRoot(cx, root_container);
-  JS_EndRequest(cx);
-  return js_ok ? true : false;
-}
-
-
-#endif // BROWSER_FF
-//-----------------------------------------------------------------------------
