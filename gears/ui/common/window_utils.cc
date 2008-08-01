@@ -47,6 +47,8 @@ bool GetBrowserWindow(const ModuleImplBaseClass* module,
   return true;
 
 #elif BROWSER_WEBKIT
+  // TODO(bpm): this causes Safari to hang
+  return false;
 
   // Webkit doesn't support NPNVnetscapeWindow on MacOSX, so we have to do
   // something more hackish.  In this case, give the JS page the keyboard focus,
