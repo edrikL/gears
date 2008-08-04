@@ -29,8 +29,8 @@
 
 // static
 AsyncRouter *AsyncRouter::GetInstance() {
-  static AsyncRouter instance;
-  return &instance;
+  static AsyncRouter *instance = new AsyncRouter();
+  return instance;
 }
 
 AsyncRouter::AsyncRouter() {
