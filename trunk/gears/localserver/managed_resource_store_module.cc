@@ -170,7 +170,8 @@ void GearsManagedResourceStore::GetUpdateStatus(JsCallContext *context) {
   WebCacheDB::UpdateStatus status = WebCacheDB::UPDATE_OK;
   int64 time64 = 0;
   if (store_.GetUpdateInfo(&status, &time64, NULL, NULL)) {
-    context->SetReturnValue(JSPARAM_INT, &status);
+    int return_status = static_cast<int>(status);
+    context->SetReturnValue(JSPARAM_INT, &return_status);
   } else {
     context->SetException(STRING16(L"Failed to get update info."));
     return;
