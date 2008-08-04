@@ -87,8 +87,11 @@ SFHttpRequest::SFHttpRequest()
     ready_state_(UNINITIALIZED), 
     caching_behavior_(USE_ALL_CACHES), 
     redirect_behavior_(FOLLOW_ALL),
-    was_sent_(false), was_aborted_(false),
-    was_redirected_(false), async_(false) {
+    cookie_behavior_(SEND_BROWSER_COOKIES),
+    was_sent_(false),
+    was_aborted_(false),
+    was_redirected_(false),
+    async_(false) {
 
   delegate_holder_ = new HttpRequestData;
 }
@@ -321,10 +324,12 @@ bool SFHttpRequest::Send(BlobInterface *blob) {
                    STRING16(L"1")));
   }
 
+  bool send_browser_cookies = cookie_behavior_ == SEND_BROWSER_COOKIES;
   if (![delegate_holder_->delegate send:post_data_stream
                               userAgent:user_agent
                                 headers:headers_to_send_
-                     bypassBrowserCache:ShouldBypassBrowserCache()]) {
+                     bypassBrowserCache:ShouldBypassBrowserCache()
+                     sendBrowserCookies:send_browser_cookies]) {
      Reset();
      return false;
   }
@@ -508,6 +513,7 @@ void SFHttpRequest::Reset() {
   url_.clear();
   caching_behavior_ = USE_ALL_CACHES;
   redirect_behavior_ = FOLLOW_ALL;
+  cookie_behavior_ = SEND_BROWSER_COOKIES;
   was_sent_ = false;
   was_aborted_ = false;
   was_redirected_ = false;

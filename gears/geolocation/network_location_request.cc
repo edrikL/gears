@@ -120,6 +120,7 @@ void NetworkLocationRequest::Run() {
                          NULL,             // reason_header_value
                          NULL,             // mod_since_date
                          NULL,             // required_cookie
+                         true,             // disable_browser_cookies
                          post_body_.get(),
                          &payload,
                          &payload_data,

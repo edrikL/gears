@@ -94,6 +94,8 @@ class SafeHttpRequest
   virtual bool SetCachingBehavior(CachingBehavior behavior);
   virtual RedirectBehavior GetRedirectBehavior();
   virtual bool SetRedirectBehavior(RedirectBehavior behavior);
+  virtual bool SetCookieBehavior(CookieBehavior behavior);
+
   virtual bool SetListener(HttpRequest::HttpListener *listener,
                            bool enable_data_available);
  private:
@@ -123,6 +125,7 @@ class SafeHttpRequest
     ReadyState upcoming_ready_state;
     CachingBehavior caching_behavior;
     RedirectBehavior redirect_behavior;
+    CookieBehavior cookie_behavior;
     std::string16 method;
     std::string16 full_url;
     std::vector< std::pair<std::string16, std::string16> > headers;
@@ -137,7 +140,8 @@ class SafeHttpRequest
         : ready_state(UNINITIALIZED),
           upcoming_ready_state(UNINITIALIZED),
           caching_behavior(USE_ALL_CACHES),
-          redirect_behavior(FOLLOW_WITHIN_ORIGIN) {}
+          redirect_behavior(FOLLOW_WITHIN_ORIGIN),
+          cookie_behavior(SEND_BROWSER_COOKIES) {}
   };
 
   friend bool TestHttpRequest();

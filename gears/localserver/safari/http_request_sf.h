@@ -73,6 +73,14 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
     return true;
   }
 
+  // Set whether browser cookies are sent with the request. The default is
+  // SEND_BROWSER_COOKIES. May only be set prior to calling Send.
+  virtual bool SetCookieBehavior(CookieBehavior behavior) {
+    if (was_sent_) return false;
+    cookie_behavior_ = behavior;
+    return true;
+  }
+
   // properties
   virtual bool GetReadyState(ReadyState *state);
   virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
@@ -147,6 +155,7 @@ class SFHttpRequest : public HttpRequest, public ProgressEvent::Listener {
   SecurityOrigin origin_;
   CachingBehavior caching_behavior_;
   RedirectBehavior redirect_behavior_;
+  CookieBehavior cookie_behavior_;
   bool was_sent_;
   bool was_aborted_;
   bool was_redirected_;

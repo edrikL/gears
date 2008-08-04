@@ -223,6 +223,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                          reason_header_value,
                          if_mod_since_date,
                          required_cookie,
+                         false,
                          NULL,
                          payload,
                          payload_data,
@@ -239,6 +240,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          const char16 *reason_header_value,
                          const char16 *if_mod_since_date,
                          const char16 *required_cookie,
+                         bool disable_browser_cookies,
                          BlobInterface *post_body,
                          WebCacheDB::PayloadInfo *payload,
                          scoped_refptr<BlobInterface> *payload_data,
@@ -251,6 +253,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          reason_header_value,
                          if_mod_since_date,
                          required_cookie,
+                         disable_browser_cookies,
                          post_body,
                          payload,
                          payload_data,
@@ -268,6 +271,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 const char16 *reason_header_value,
                                 const char16 *if_mod_since_date,
                                 const char16 *required_cookie,
+                                bool disable_browser_cookies,
                                 BlobInterface *post_body,
                                 WebCacheDB::PayloadInfo *payload,
                                 scoped_refptr<BlobInterface> *payload_data,
@@ -339,6 +343,13 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   if (if_mod_since_date && if_mod_since_date[0]) {
     if (!http_request->SetRequestHeader(HttpConstants::kIfModifiedSinceHeader,
                                         if_mod_since_date)) {
+      return false;
+    }
+  }
+
+  if (disable_browser_cookies) {
+    if (!http_request->SetCookieBehavior(
+        HttpRequest::DO_NOT_SEND_BROWSER_COOKIES)) {
       return false;
     }
   }

@@ -261,6 +261,15 @@ bool SafeHttpRequest::SetRedirectBehavior(
   return true;
 }
 
+bool SafeHttpRequest::SetCookieBehavior(CookieBehavior behavior) {
+  assert(IsApartmentThread());
+  MutexLock locker(&request_info_lock_);
+  if (GetState() != OPEN)
+    return false;
+  request_info_.cookie_behavior = behavior;
+  return true;
+}
+
 bool SafeHttpRequest::SetListener(HttpRequest::HttpListener *listener,
                                   bool enable_data_available) {
   assert(IsApartmentThread());
@@ -328,6 +337,7 @@ void SafeHttpRequest::OnSendCall() {
   CreateNativeRequest();
   native_http_request_->SetCachingBehavior(request_info_.caching_behavior);
   native_http_request_->SetRedirectBehavior(request_info_.redirect_behavior);
+  native_http_request_->SetCookieBehavior(request_info_.cookie_behavior);
   bool ok = native_http_request_->Open(request_info_.method.c_str(),
                                        request_info_.full_url.c_str(),
                                        true,  // async
