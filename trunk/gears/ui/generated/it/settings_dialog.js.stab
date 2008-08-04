@@ -1,0 +1,14 @@
+<string id="string-cancel">Annulla</string>
+<string id="string-cancel-accesskey">A</string>
+<string id="string-apply">Applica</string>
+<string id="string-apply-accesskey">A</string>
+<string id="string-nosites">Nessun sito.</string>
+<string id="string-allowed">Consentito</string>
+<string id="string-denied">Non consentito</string>
+<string id="string-local-storage">Archiviazione locale</string>
+<string id="string-location-data">Posizione</string>
+<string id="string-gears-settings">Impostazioni di Google Gears</string>
+<string id="string-permissions-description">La tabella riportata di seguito mostra le autorizzazioni concesse ai siti che hanno tentato di utilizzare Google Gears.</string>
+<string id="string-version">Versione di Google Gears PRODUCT_VERSION</string>
+<string id="string-html-title">Impostazioni di Google Gears</string>
+<string id="string-remove">Rimuovi</string>
