@@ -61,7 +61,6 @@
 		B531A1660E2BBCBF00147648 /* ipc_message_queue_test_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1650E2BBCBF00147648 /* ipc_message_queue_test_osx.mm */; };
 		B531A1690E2BBCD300147648 /* common_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1670E2BBCD300147648 /* common_osx.mm */; };
 		B531A16E0E2BBD3A00147648 /* ipc_message_queue_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */; };
-		B531A1730E2BBD7300147648 /* ipc_message_queue_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */; };
 		B531A1760E2BBDA600147648 /* base_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A1740E2BBDA600147648 /* base_audio_recorder.cc */; };
 		B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A17B0E2BBDE100147648 /* audio_recorder_test.cc */; };
 		B532BAB20E2536EA00912490 /* capture_task.cc in Sources */ = {isa = PBXBuildFile; fileRef = B532BAB10E2536EA00912490 /* capture_task.cc */; };
@@ -172,8 +171,6 @@
 		B544D9BC0D2EE5D000D30561 /* sqlite_wrapper.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D98E0D2EE5D000D30561 /* sqlite_wrapper.cc */; };
 		B544D9BD0D2EE5D000D30561 /* thread_locals.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9900D2EE5D000D30561 /* thread_locals.cc */; };
 		B544D9BE0D2EE5D000D30561 /* js_types.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9910D2EE5D000D30561 /* js_types.cc */; };
-		B544D9BF0D2EE5D000D30561 /* factory_wrapper.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9970D2EE5D000D30561 /* factory_wrapper.cc */; };
-		B544D9C10D2EE5D000D30561 /* factory_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D99C0D2EE5D000D30561 /* factory_utils.cc */; };
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B54770350E2FE249004BE177 /* native_dialogs_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = B54770330E2FE249004BE177 /* native_dialogs_osx.mm */; };
@@ -535,6 +532,16 @@
 		B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */; };
 		B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3380DB9320800C257AA /* nsstring_utils.mm */; };
 		B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */; };
+		B5E143660E47736A00A09974 /* factory_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143650E47736A00A09974 /* factory_np.cc */; };
+		B5E143690E47737900A09974 /* factory_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143680E47737900A09974 /* factory_utils.cc */; };
+		B5E1436C0E4773DE00A09974 /* ipc_message_queue_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1436B0E4773DE00A09974 /* ipc_message_queue_linux.cc */; };
+		B5E143800E47745F00A09974 /* canvas_rendering_context_2d.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */; };
+		B5E143810E47745F00A09974 /* canvas.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437B0E47745F00A09974 /* canvas.cc */; };
+		B5E143820E47745F00A09974 /* blob_backed_skia_input_stream.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */; };
+		B5E143830E47745F00A09974 /* blob_backed_skia_output_stream.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */; };
+		B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143890E47748700A09974 /* geolocation_db_test.cc */; };
+		B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1438D0E47752B00A09974 /* window_utils.cc */; };
+		B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143910E47755E00A09974 /* i18n_strings.cc */; };
 		B5E9135F0E0AF9EA0061880E /* blob_input_stream_sf_test.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */; };
 		B5F019B60E117809002EB414 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B54AE0640E1161E700884C56 /* IOKit.framework */; };
 		B5F019B70E117809002EB414 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B54AE0620E1161D900884C56 /* Foundation.framework */; };
@@ -752,7 +759,6 @@
 		B531A1680E2BBCD300147648 /* common_osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common_osx.h; path = ../../base/common/common_osx.h; sourceTree = SOURCE_ROOT; };
 		B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ipc_message_queue_test.cc; path = ../../base/common/ipc_message_queue_test.cc; sourceTree = SOURCE_ROOT; };
 		B531A16D0E2BBD3A00147648 /* ipc_message_queue_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ipc_message_queue_test.h; path = ../../base/common/ipc_message_queue_test.h; sourceTree = SOURCE_ROOT; };
-		B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ipc_message_queue_osx.mm; path = ../../base/common/ipc_message_queue_osx.mm; sourceTree = SOURCE_ROOT; };
 		B531A1740E2BBDA600147648 /* base_audio_recorder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = base_audio_recorder.cc; path = ../../media/base_audio_recorder.cc; sourceTree = SOURCE_ROOT; };
 		B531A1750E2BBDA600147648 /* base_audio_recorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base_audio_recorder.h; path = ../../media/base_audio_recorder.h; sourceTree = SOURCE_ROOT; };
 		B531A17A0E2BBDE100147648 /* audio_recorder_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_recorder_test.h; path = ../../media/audio_recorder_test.h; sourceTree = SOURCE_ROOT; };
@@ -891,10 +897,6 @@
 		B544D9920D2EE5D000D30561 /* string16.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = string16.h; path = ../../base/common/string16.h; sourceTree = SOURCE_ROOT; };
 		B544D9930D2EE5D000D30561 /* js_runner.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = js_runner.h; path = ../../base/common/js_runner.h; sourceTree = SOURCE_ROOT; };
 		B544D9940D2EE5D000D30561 /* js_types.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = js_types.h; path = ../../base/common/js_types.h; sourceTree = SOURCE_ROOT; };
-		B544D9970D2EE5D000D30561 /* factory_wrapper.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = factory_wrapper.cc; path = ../../factory/npapi/factory_wrapper.cc; sourceTree = SOURCE_ROOT; };
-		B544D9980D2EE5D000D30561 /* factory_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = factory_wrapper.h; path = ../../factory/npapi/factory_wrapper.h; sourceTree = SOURCE_ROOT; };
-		B544D99C0D2EE5D000D30561 /* factory_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = factory_utils.cc; path = ../../factory/common/factory_utils.cc; sourceTree = SOURCE_ROOT; };
-		B544D99D0D2EE5D000D30561 /* factory_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = factory_utils.h; path = ../../factory/common/factory_utils.h; sourceTree = SOURCE_ROOT; };
 		B544D9D40D2EE6B600D30561 /* libsqlite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libsqlite.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B544DB710D2EE93800D30561 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		B544DCC40D3578B000D30561 /* http_request_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_request_sf.h; path = ../../localserver/safari/http_request_sf.h; sourceTree = SOURCE_ROOT; };
@@ -1371,6 +1373,25 @@
 		B5D8D3380DB9320800C257AA /* nsstring_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = nsstring_utils.mm; path = ../../base/safari/nsstring_utils.mm; sourceTree = SOURCE_ROOT; };
 		B5D8D3390DB9320800C257AA /* browser_utils_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = browser_utils_sf.h; path = ../../base/safari/browser_utils_sf.h; sourceTree = SOURCE_ROOT; };
 		B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_dialog_sf.mm; path = ../../ui/safari/html_dialog_sf.mm; sourceTree = SOURCE_ROOT; };
+		B5E143640E47736A00A09974 /* factory_np.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = factory_np.h; path = ../../factory/factory_np.h; sourceTree = SOURCE_ROOT; };
+		B5E143650E47736A00A09974 /* factory_np.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = factory_np.cc; path = ../../factory/factory_np.cc; sourceTree = SOURCE_ROOT; };
+		B5E143670E47737900A09974 /* factory_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = factory_utils.h; path = ../../factory/factory_utils.h; sourceTree = SOURCE_ROOT; };
+		B5E143680E47737900A09974 /* factory_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = factory_utils.cc; path = ../../factory/factory_utils.cc; sourceTree = SOURCE_ROOT; };
+		B5E1436B0E4773DE00A09974 /* ipc_message_queue_linux.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ipc_message_queue_linux.cc; path = ../../base/common/ipc_message_queue_linux.cc; sourceTree = SOURCE_ROOT; };
+		B5E143780E47745F00A09974 /* blob_backed_skia_input_stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_backed_skia_input_stream.h; path = ../../canvas/blob_backed_skia_input_stream.h; sourceTree = SOURCE_ROOT; };
+		B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas_rendering_context_2d.cc; path = ../../canvas/canvas_rendering_context_2d.cc; sourceTree = SOURCE_ROOT; };
+		B5E1437A0E47745F00A09974 /* canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas.h; path = ../../canvas/canvas.h; sourceTree = SOURCE_ROOT; };
+		B5E1437B0E47745F00A09974 /* canvas.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas.cc; path = ../../canvas/canvas.cc; sourceTree = SOURCE_ROOT; };
+		B5E1437C0E47745F00A09974 /* blob_backed_skia_output_stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_backed_skia_output_stream.h; path = ../../canvas/blob_backed_skia_output_stream.h; sourceTree = SOURCE_ROOT; };
+		B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_backed_skia_input_stream.cc; path = ../../canvas/blob_backed_skia_input_stream.cc; sourceTree = SOURCE_ROOT; };
+		B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_backed_skia_output_stream.cc; path = ../../canvas/blob_backed_skia_output_stream.cc; sourceTree = SOURCE_ROOT; };
+		B5E1437F0E47745F00A09974 /* canvas_rendering_context_2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas_rendering_context_2d.h; path = ../../canvas/canvas_rendering_context_2d.h; sourceTree = SOURCE_ROOT; };
+		B5E143880E47748700A09974 /* geolocation_db_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = geolocation_db_test.h; path = ../../geolocation/geolocation_db_test.h; sourceTree = SOURCE_ROOT; };
+		B5E143890E47748700A09974 /* geolocation_db_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_db_test.cc; path = ../../geolocation/geolocation_db_test.cc; sourceTree = SOURCE_ROOT; };
+		B5E1438D0E47752B00A09974 /* window_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = window_utils.cc; path = ../../ui/common/window_utils.cc; sourceTree = SOURCE_ROOT; };
+		B5E1438E0E47752B00A09974 /* window_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = window_utils.h; path = ../../ui/common/window_utils.h; sourceTree = SOURCE_ROOT; };
+		B5E143900E47755E00A09974 /* i18n_strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i18n_strings.h; path = ../../ui/common/i18n_strings.h; sourceTree = SOURCE_ROOT; };
+		B5E143910E47755E00A09974 /* i18n_strings.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i18n_strings.cc; path = ../../ui/common/i18n_strings.cc; sourceTree = SOURCE_ROOT; };
 		B5E9135E0E0AF9EA0061880E /* blob_input_stream_sf_test.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = blob_input_stream_sf_test.mm; path = ../../blob/blob_input_stream_sf_test.mm; sourceTree = SOURCE_ROOT; };
 		B5F019E60E117BC7002EB414 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		B5F01A4A0E11B5E2002EB414 /* crash_inspector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = crash_inspector; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1627,6 +1648,8 @@
 				79272FDE0DC2141800CDF577 /* geolocation.h */,
 				B5F310640E2558B20065151C /* geolocation_db.h */,
 				B5F310650E2558B20065151C /* geolocation_db.cc */,
+				B5E143880E47748700A09974 /* geolocation_db_test.h */,
+				B5E143890E47748700A09974 /* geolocation_db_test.cc */,
 				B5A9BD440E06C16400DCA259 /* geolocation_test.h */,
 				B5A9BD450E06C16400DCA259 /* geolocation_test.cc */,
 				79272FDF0DC2141800CDF577 /* location_provider.cc */,
@@ -1864,6 +1887,7 @@
 			children = (
 				B544D9670D2EE5D000D30561 /* base */,
 				79C3E9380DB8D89D00346806 /* blob */,
+				B5E1436E0E47742700A09974 /* canvas */,
 				B58727AB0DD4EDC0001E4E0B /* cctests */,
 				B57F3AC80DA1019D0088FE52 /* console */,
 				B54ADF8E0E115D7900884C56 /* crash_sender */,
@@ -2052,7 +2076,7 @@
 				B544D9870D2EE5D000D30561 /* file.cc */,
 				B57F3BDC0DA11D860088FE52 /* file_test.cc */,
 				B58E00680D5BB32B00B0A65D /* ipc_message_queue.h */,
-				B531A1720E2BBD7300147648 /* ipc_message_queue_osx.mm */,
+				B5E1436B0E4773DE00A09974 /* ipc_message_queue_linux.cc */,
 				B58E00690D5BB32B00B0A65D /* ipc_message_queue_null.cc */,
 				B531A16D0E2BBD3A00147648 /* ipc_message_queue_test.h */,
 				B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */,
@@ -2142,28 +2166,12 @@
 			children = (
 				B59AC9C70E267B5E00961DD4 /* factory_impl.cc */,
 				B59AC9C80E267B5E00961DD4 /* factory_impl.h */,
-				B544D99B0D2EE5D000D30561 /* common */,
-				B544D9960D2EE5D000D30561 /* npapi */,
+				B5E143640E47736A00A09974 /* factory_np.h */,
+				B5E143650E47736A00A09974 /* factory_np.cc */,
+				B5E143670E47737900A09974 /* factory_utils.h */,
+				B5E143680E47737900A09974 /* factory_utils.cc */,
 			);
 			name = factory;
-			sourceTree = "<group>";
-		};
-		B544D9960D2EE5D000D30561 /* npapi */ = {
-			isa = PBXGroup;
-			children = (
-				B544D9970D2EE5D000D30561 /* factory_wrapper.cc */,
-				B544D9980D2EE5D000D30561 /* factory_wrapper.h */,
-			);
-			name = npapi;
-			sourceTree = "<group>";
-		};
-		B544D99B0D2EE5D000D30561 /* common */ = {
-			isa = PBXGroup;
-			children = (
-				B544D99C0D2EE5D000D30561 /* factory_utils.cc */,
-				B544D99D0D2EE5D000D30561 /* factory_utils.h */,
-			);
-			name = common;
 			sourceTree = "<group>";
 		};
 		B544D9DE0D2EE6FD00D30561 /* third-party */ = {
@@ -2806,6 +2814,8 @@
 				B5B307610DB578D900A206B8 /* html_dialog.h */,
 				B5AFB32B0DAD233D0058E178 /* html_dialog.cc */,
 				B5B307600DB578D900A206B8 /* html_dialog.css */,
+				B5E143900E47755E00A09974 /* i18n_strings.h */,
+				B5E143910E47755E00A09974 /* i18n_strings.cc */,
 				B5AFB32A0DAD233D0058E178 /* permissions_dialog.h */,
 				B5AFB3270DAD233D0058E178 /* settings_dialog.h */,
 				B5AFB3290DAD233D0058E178 /* settings_dialog.cc */,
@@ -2815,6 +2825,8 @@
 				B5B307640DB578D900A206B8 /* icon_32x32.png */,
 				B5B307650DB578D900A206B8 /* icon_48x48.png */,
 				B5B307660DB578D900A206B8 /* icon_merged.ico */,
+				B5E1438D0E47752B00A09974 /* window_utils.cc */,
+				B5E1438E0E47752B00A09974 /* window_utils.h */,
 			);
 			name = common;
 			sourceTree = "<group>";
@@ -2843,6 +2855,21 @@
 				B5D5FBF90DEF39930033ABE2 /* pool_threads_manager.h */,
 			);
 			name = npapi;
+			sourceTree = "<group>";
+		};
+		B5E1436E0E47742700A09974 /* canvas */ = {
+			isa = PBXGroup;
+			children = (
+				B5E143780E47745F00A09974 /* blob_backed_skia_input_stream.h */,
+				B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */,
+				B5E1437A0E47745F00A09974 /* canvas.h */,
+				B5E1437B0E47745F00A09974 /* canvas.cc */,
+				B5E1437C0E47745F00A09974 /* blob_backed_skia_output_stream.h */,
+				B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */,
+				B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */,
+				B5E1437F0E47745F00A09974 /* canvas_rendering_context_2d.h */,
+			);
+			name = canvas;
 			sourceTree = "<group>";
 		};
 		B5F09C810E1569BE00C7ACB7 /* notifier */ = {
@@ -3564,8 +3591,6 @@
 				B544D9BC0D2EE5D000D30561 /* sqlite_wrapper.cc in Sources */,
 				B544D9BD0D2EE5D000D30561 /* thread_locals.cc in Sources */,
 				B544D9BE0D2EE5D000D30561 /* js_types.cc in Sources */,
-				B544D9BF0D2EE5D000D30561 /* factory_wrapper.cc in Sources */,
-				B544D9C10D2EE5D000D30561 /* factory_utils.cc in Sources */,
 				B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */,
 				B58EFD9F0D5292C100B0A65D /* localserver_db_proxy.mm in Sources */,
 				B58EFE620D529ACB00B0A65D /* manifest.cc in Sources */,
@@ -3823,7 +3848,6 @@
 				B531A1660E2BBCBF00147648 /* ipc_message_queue_test_osx.mm in Sources */,
 				B531A1690E2BBCD300147648 /* common_osx.mm in Sources */,
 				B531A16E0E2BBD3A00147648 /* ipc_message_queue_test.cc in Sources */,
-				B531A1730E2BBD7300147648 /* ipc_message_queue_osx.mm in Sources */,
 				B531A1760E2BBDA600147648 /* base_audio_recorder.cc in Sources */,
 				B531A17C0E2BBDE100147648 /* audio_recorder_test.cc in Sources */,
 				B5A2DB950E2FBEA500C69CE7 /* memory_buffer_test.cc in Sources */,
@@ -3834,6 +3858,16 @@
 				B5774B8E0E379DAE0033F0B8 /* safe_http_request.cc in Sources */,
 				B5774CE10E38F3570033F0B8 /* notifier_process_osx.mm in Sources */,
 				B5774CE20E38F3570033F0B8 /* notifier_process_posix.cc in Sources */,
+				B5E143660E47736A00A09974 /* factory_np.cc in Sources */,
+				B5E143690E47737900A09974 /* factory_utils.cc in Sources */,
+				B5E1436C0E4773DE00A09974 /* ipc_message_queue_linux.cc in Sources */,
+				B5E143800E47745F00A09974 /* canvas_rendering_context_2d.cc in Sources */,
+				B5E143810E47745F00A09974 /* canvas.cc in Sources */,
+				B5E143820E47745F00A09974 /* blob_backed_skia_input_stream.cc in Sources */,
+				B5E143830E47745F00A09974 /* blob_backed_skia_output_stream.cc in Sources */,
+				B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */,
+				B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */,
+				B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4262,6 +4296,8 @@
 					"-L$(PROJECT_DIR)",
 					"-lleopard_support",
 					"-lcrypto",
+					"-lskia-dbg-osx-i386+ppc",
+					"-L$(PROJECT_DIR)/../../../third_party/skia/",
 				);
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
@@ -4329,6 +4365,8 @@
 					"-Wno-non-virtual-dtor",
 				);
 				OTHER_LDFLAGS = (
+					"-lskia-opt-osx-i386+ppc",
+					"-L$(PROJECT_DIR)/../../../third_party/skia/",
 					"-lcurl",
 					"-L$(PROJECT_DIR)",
 					"-lleopard_support",
