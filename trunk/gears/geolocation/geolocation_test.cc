@@ -60,7 +60,9 @@ static const char16 *kHomeMobileNetworkCodeString =
     STRING16(L"home_mobile_network_code");
 static const char16 *kHomeMobileCountryCodeString =
     STRING16(L"home_mobile_country_code");
+static const char16 *kRadioTypeString = STRING16(L"radio_type");
 static const char16 *kCarrierString = STRING16(L"carrier");
+
 static const char16 *kMacAddressString = STRING16(L"mac_address");
 static const char16 *kChannelString = STRING16(L"channel");
 static const char16 *kSignalToNoiseString = STRING16(L"signal_to_noise");
@@ -426,6 +428,25 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
                               &radio_data.home_mobile_network_code);
   GetIntegerPropertyIfDefined(context, object, kHomeMobileCountryCodeString,
                               &radio_data.home_mobile_country_code);
+  int radio_type = RADIO_TYPE_UNKNOWN;
+  GetIntegerPropertyIfDefined(context, object, kRadioTypeString, &radio_type);
+  switch (radio_type) {
+    case RADIO_TYPE_UNKNOWN:
+      radio_data.radio_type = RADIO_TYPE_UNKNOWN;
+      break;
+    case RADIO_TYPE_GSM:
+      radio_data.radio_type = RADIO_TYPE_GSM;
+      break;
+    case RADIO_TYPE_CDMA:
+      radio_data.radio_type = RADIO_TYPE_CDMA;
+      break;
+    case RADIO_TYPE_WCDMA:
+      radio_data.radio_type = RADIO_TYPE_WCDMA;
+      break;
+    default:
+      LOG(("ConfigureGeolocationRadioDataProviderForTest() : Ignoring value %s "
+           "for radio_type.\n", radio_type));
+  }
   GetStringPropertyIfDefined(context, object, kCarrierString,
                              &radio_data.carrier);
 
