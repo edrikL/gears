@@ -169,12 +169,11 @@ class MockLocationProvider
     Join();
   }
 
-  void AddListener(ListenerInterface *listener,
-                                       bool request_address) {
+  void RegisterListener(ListenerInterface *listener, bool request_address) {
     MutexLock lock(&position_mutex_);
     is_new_listener_waiting_ = true;
     worker_event_.Signal();
-    LocationProviderBase::AddListener(listener, request_address);
+    LocationProviderBase::RegisterListener(listener, request_address);
   }
 
   static void SetPosition(const Position &position) {

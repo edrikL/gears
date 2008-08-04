@@ -42,8 +42,9 @@ class WinceGpsLocationProvider
   ~WinceGpsLocationProvider();
 
   // Override LocationProviderBase implementation.
-  virtual void AddListener(LocationProviderBase::ListenerInterface *listener,
-                           bool request_address);
+  virtual void RegisterListener(
+      LocationProviderBase::ListenerInterface *listener,
+      bool request_address);
 
   // LocationProviderBase implementation.
   virtual void GetPosition(Position *position);

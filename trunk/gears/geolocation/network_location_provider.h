@@ -47,9 +47,10 @@ class NetworkLocationProvider
   virtual ~NetworkLocationProvider();
 
   // Override LocationProviderBase implementation.
-  virtual void AddListener(LocationProviderBase::ListenerInterface *listener,
-                           bool request_address);
-  virtual void RemoveListener(
+  virtual void RegisterListener(
+      LocationProviderBase::ListenerInterface *listener,
+      bool request_address);
+  virtual void UnregisterListener(
     LocationProviderBase::ListenerInterface *listener);
 
   // LocationProviderBase implementation

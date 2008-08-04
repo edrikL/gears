@@ -81,10 +81,10 @@ WinceGpsLocationProvider::~WinceGpsLocationProvider() {
   Join();
 }
 
-void WinceGpsLocationProvider::AddListener(
+void WinceGpsLocationProvider::RegisterListener(
     LocationProviderBase::ListenerInterface *listener,
     bool request_address) {
-  LocationProviderBase::AddListener(listener, request_address);
+  LocationProviderBase::RegisterListener(listener, request_address);
 
   // Signal to the worker thread that there is a new listener.
   new_listener_waiting_event_.Set();

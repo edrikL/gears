@@ -39,6 +39,7 @@
 #include "gears/base/common/string16.h"
 
 struct Position;
+class RefCount;
 
 // The base class used by all location providers.
 class LocationProviderBase {
@@ -51,14 +52,18 @@ class LocationProviderBase {
 
   virtual ~LocationProviderBase() {}
 
-  // Adds a listener, which will be called back on
+  // Registers a listener, which will be called back on
   // ListenerInterface::LocationUpdateAvailable as soon as a position is
-  // available and again whenever a new position is available.
-  virtual void AddListener(ListenerInterface *listener, bool request_address);
-  // Removes a listener. In particular, once this method returns, no further
-  // calls to ListenerInterface::LocationUpdateAvailable will be made for this
-  // listener. It may block if a callback is in progress.
-  virtual void RemoveListener(ListenerInterface *listener);
+  // available and again whenever a new position is available. Ref counts the
+  // listener to handle multiple calls to this method.
+  virtual void RegisterListener(ListenerInterface *listener,
+                                bool request_address);
+  // Unregisters a listener. Unrefs the listener to handle multiple calls to
+  // this method. Once the ref count reaches zero, the listener is removed and
+  // once this method returns, no further calls to
+  // ListenerInterface::LocationUpdateAvailable will be made for this listener.
+  // It may block if a callback is in progress.
+  virtual void UnregisterListener(ListenerInterface *listener);
 
   // Interface methods
   // Gets the current best position estimate.
@@ -68,7 +73,8 @@ class LocationProviderBase {
   virtual void UpdatePosition() {}
 
   // Accessor methods.
-  typedef std::map<ListenerInterface*, bool> ListenerMap;
+  typedef std::pair<bool, RefCount*> ListenerPair;
+  typedef std::map<ListenerInterface*, ListenerPair> ListenerMap;
   ListenerMap *GetListeners();
   Mutex *GetListenersMutex();
 
@@ -76,8 +82,8 @@ class LocationProviderBase {
   virtual void UpdateListeners();
 
  private:
-  // The listeners registered to this provider. We use a map to avoid
-  // duplicates and to record whether each listener requires an address.
+  // The listeners registered to this provider. For each listener, we store a
+  // ref count and whether it requires an address.
   ListenerMap listeners_;
   Mutex listeners_mutex_;
 };
