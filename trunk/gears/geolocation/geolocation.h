@@ -106,7 +106,8 @@ class GearsGeolocation
     : public ModuleImplBaseClass,
       public LocationProviderBase::ListenerInterface,
       public MessageObserverInterface,
-      public TimedCallback::ListenerInterface {
+      public TimedCallback::ListenerInterface,
+      public JsEventHandlerInterface {
  public:
 #ifdef USING_CCTESTS
   // Uses ParseArguments for testing.
@@ -195,6 +196,10 @@ class GearsGeolocation
   // TimedCallback::ListenerInterface implementation.
   virtual void OnTimeout(TimedCallback *caller, void *user_data);
 
+  // JsEventHandlerInterface implementation used to handle the 'JSEVENT_UNLOAD'
+  // event.
+  void HandleEvent(JsEventType event_type);
+
   // Internal method used by OnNotify.
   void LocationUpdateAvailableImpl(LocationProviderBase *provider);
 
@@ -205,15 +210,19 @@ class GearsGeolocation
   // Cancels an ongoing watch.
   bool CancelWatch(const int &watch_id);
 
+  // In the two following methods, we use an ID to identify the fix request,
+  // rather than a raw pointer. However, both methods require that the ID is
+  // valid. See the implementation of LocationUpdateAvailableImpl.
+
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // repeating fix request. 
-  void HandleRepeatingRequestUpdate(FixRequestInfo *fix_info,
+  void HandleRepeatingRequestUpdate(int id,
                                     const Position &position);
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // non-repeating fix request.
   void HandleSingleRequestUpdate(LocationProviderBase *provider,
-                                 FixRequestInfo *fix_info,
+                                 int id,
                                  const Position &position);
 
   // Internal method to make the callback to JavaScript once we have a postion
@@ -248,16 +257,24 @@ class GearsGeolocation
   static bool CreateJavaScriptPositionErrorObject(const Position &position,
                                                   JsObject *js_object);
 
-  // Takes a pointer to a new fix request and records it in our map.
-  void RecordNewFixRequest(FixRequestInfo *fix_request);
+  // Gets the fix request for a given ID. The supplied ID must be valid.
+  FixRequestInfo *GetFixRequest(int id);
+
+  // Takes a pointer to a new fix request and records it in our map. Returns
+  // false if the maximum number of fix requests has been reached. Otherwise
+  // return true.
+  bool RecordNewFixRequest(FixRequestInfo *fix_request);
 
   // Removes a fix request. Cancels any pending requests to the location
-  // providers it uses.
-  void RemoveFixRequest(FixRequestInfo *fix_request);
+  // providers it uses. Note that this does not delete the FixRequestInfo
+  // object.
+  void RemoveFixRequest(int id);
+
+  // Deletes a fix request and decrements our ref count.
+  void DeleteFixRequest(FixRequestInfo *fix_request);
 
   // Removes a location provider from a fix request.
-  void RemoveProvider(LocationProviderBase *provider,
-                      FixRequestInfo *fix_request);
+  void RemoveProvider(LocationProviderBase *provider, int id);
 
   // Causes a callback to JavaScript to be made at the specified number of
   // milliseconds in the future.
@@ -265,26 +282,34 @@ class GearsGeolocation
                                  FixRequestInfo *fix_info,
                                  const Position &position);
 
-  // A map of listners to fix requests. This is used when processing position
-  // updates from providers. It is also used to unregister from a listener
-  // when all requests that use that listener are complete.
-  typedef std::vector<FixRequestInfo*> FixVector;
-  typedef std::map<LocationProviderBase*, FixVector> ProviderMap;
-  ProviderMap providers_;
-  Mutex providers_mutex_;
+  // TODO(steveblock): Refactor the logic used to maintain the fix request maps
+  // into a separate class.
 
-  // Map from watch ID to repeating fix request.
-  typedef std::map<int, const FixRequestInfo*> FixRequestInfoMap;
-  FixRequestInfoMap watches_;
-  int next_watch_id_;
+  // A map from providers to fix request IDs. We use this map when looking up
+  // the single fix requests in which a provider is involved, and to track when
+  // a provider is no longer involved in any fix requests and we can unregister
+  // form it. See the comment in the implementation of
+  // LocationUpdateAvailableImpl for a discussion of how and why request IDs are
+  // used.
+  typedef std::vector<int> IdList;
+  typedef std::map<LocationProviderBase*, IdList> ProviderMap;
+  ProviderMap providers_;
+
+  // Map from watch ID to fix request.
+  typedef std::map<int, FixRequestInfo*> FixRequestInfoMap;
+  FixRequestInfoMap fix_requests_;
+  int next_single_request_id_;  // Always negative
+  int next_watch_id_;  // Always positive
 
   // The current best estimate for our position. This is the position returned
   // by GetLastPosition and is shared by all watches.
   Position last_position_;
-  Mutex last_position_mutex_;
 
   ThreadId java_script_thread_id_;
 
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
+  DECL_SINGLE_THREAD
   DISALLOW_EVIL_CONSTRUCTORS(GearsGeolocation);
 };
 
