@@ -25,6 +25,17 @@
 //
 // This file implements GearsGeolocation, the main class of the Gears
 // Geolocation API.
+//
+// Most of the methods of this class should only be called on the JavaScript
+// thread. The exceptions are LocationUpdateAvailable and OnTimeout, which
+// immediately marshall the call to the JavaScript thread using messages.
+//
+// This means that the class does not need to be thread safe. However, it does
+// need to be reentrant, because the JavaScript callback may call back into
+// Gears code. Furthermore, if a callback uses an alert() or similar, the
+// browser may continue to run a message loop and we will continue to receive
+// messages, triggered by callbacks from the location providers, on the
+// JavaScript thread before the callback returns.
 
 #include "gears/geolocation/geolocation.h"
 
@@ -60,6 +71,10 @@ static const char16 *kLocationAvailableObserverTopic =
     STRING16(L"location available");
 static const char16 *kCallbackRequiredObserverTopic =
     STRING16(L"callback required");
+
+// Fix request constants.
+static const int kLastRepeatingRequestId = kint32max;  // Repeating IDs positive
+static const int kLastSingleRequestId = kint32min;  // Single IDs negative
 
 // Data classes for use with MessageService.
 class NotificationDataGeoBase : public NotificationData {
@@ -180,7 +195,9 @@ void Dispatcher<GearsGeolocation>::Init() {
 
 GearsGeolocation::GearsGeolocation()
     : ModuleImplBaseClass("GearsGeolocation"),
-      next_watch_id_(1) {
+      next_single_request_id_(-1),
+      next_watch_id_(1),
+      unload_monitor_(NULL) {
   // Set up the thread message queue.
   if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {
     LOG(("Failed to set up thread message queue.\n"));
@@ -201,12 +218,16 @@ GearsGeolocation::GearsGeolocation()
 }
 
 GearsGeolocation::~GearsGeolocation() {
-  // Cancel all pending requests by unregistering from our location providers.
-  for (ProviderMap::iterator iter = providers_.begin();
-       iter != providers_.end();
-       ++iter) {
-    LocationProviderPool::GetInstance()->Unregister(iter->first, this);
-  }
+  ASSERT_SINGLE_THREAD();
+
+  // We should never be deleted until all pending requests have been cancelled.
+#ifdef WINCE
+  // The lack of unload monitoring on WinCE means that we may leak providers and
+  // fix requests.
+#else
+  assert(providers_.empty());
+  assert(fix_requests_.empty());
+#endif  // WINCE
 
   MessageService::GetInstance()->RemoveObserver(
       this,
@@ -227,6 +248,8 @@ GearsGeolocation::~GearsGeolocation() {
 // API Methods
 
 void GearsGeolocation::GetLastPosition(JsCallContext *context) {
+  ASSERT_SINGLE_THREAD();
+
   // Check permissions first.
   if (!AcquirePermissionForLocationData(this, context)) return;
 
@@ -252,6 +275,8 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
 }
 
 void GearsGeolocation::GetCurrentPosition(JsCallContext *context) {
+  ASSERT_SINGLE_THREAD();
+
   // Check permissions first.
   if (!AcquirePermissionForLocationData(this, context)) return;
 
@@ -259,6 +284,8 @@ void GearsGeolocation::GetCurrentPosition(JsCallContext *context) {
 }
 
 void GearsGeolocation::WatchPosition(JsCallContext *context) {
+  ASSERT_SINGLE_THREAD();
+
   // Check permissions first.
   if (!AcquirePermissionForLocationData(this, context)) return;
 
@@ -266,6 +293,8 @@ void GearsGeolocation::WatchPosition(JsCallContext *context) {
 }
 
 void GearsGeolocation::ClearWatch(JsCallContext *context) {
+  ASSERT_SINGLE_THREAD();
+
   // Check permissions first.
   if (!AcquirePermissionForLocationData(this, context)) return;
 
@@ -278,11 +307,15 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
     return;
   }
   if (!CancelWatch(id)) {
-    context->SetException(STRING16(L"Unknown watch ID."));
+    context->SetException(STRING16(L"Unknown watch ID ") +
+                          IntegerToString16(id) +
+                          STRING16(L"."));
   }
 }
 
 void GearsGeolocation::GetPermission(JsCallContext *context) {
+  ASSERT_SINGLE_THREAD();
+
   scoped_ptr<PermissionsDialog::CustomContent> custom_content(
       PermissionsDialog::CreateCustomContent(context));
  
@@ -311,6 +344,7 @@ bool GearsGeolocation::LocationUpdateAvailable(LocationProviderBase *provider) {
 void GearsGeolocation::OnNotify(MessageService *service,
                                 const char16 *topic,
                                 const NotificationData *data) {
+  ASSERT_SINGLE_THREAD();
   assert(data);
 
   // Only respond to notifications made by this object.
@@ -352,9 +386,30 @@ void GearsGeolocation::OnTimeout(TimedCallback *caller, void *user_data) {
       new CallbackRequiredNotificationData(this, fix_info));
 }
 
+// JsEventHandlerInterface implementation.
+void GearsGeolocation::HandleEvent(JsEventType event_type) {
+  ASSERT_SINGLE_THREAD();
+  assert(event_type == JSEVENT_UNLOAD);
+
+  // Remove all fix requests. This cancels all pending requests by unregistering
+  // from our location providers. Also delete the fix request objects and
+  // decrement our ref count.
+  //
+  // We can't iterate over fix_requests_, because RemoveFixRequest will remove
+  // entries from the map and invalidate our iterator.
+  while (!fix_requests_.empty()) {
+    FixRequestInfoMap::iterator iter = fix_requests_.begin();
+    RemoveFixRequest(iter->first);
+    DeleteFixRequest(iter->second);
+  }
+  assert(fix_requests_.empty());
+}
+
 // Non-API methods
 
 void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
+  ASSERT_SINGLE_THREAD();
+
   // Get the arguments.
   std::vector<std::string16> urls;
   scoped_ptr<FixRequestInfo> info(new FixRequestInfo());
@@ -428,36 +483,47 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Store and return the ID of this fix if it repeats.
   if (info->repeats) {
     context->SetReturnValue(JSPARAM_INT, &next_watch_id_);
-    watches_[next_watch_id_++] = info.get();
   }
 
   // Record this fix. This updates the map of providers and fix requests. The
   // map takes ownership of the info structure.
-  MutexLock lock(&providers_mutex_);
-  RecordNewFixRequest(info.release());
+  if (!RecordNewFixRequest(info.release())) {
+    context->SetException(STRING16(L"Exceeded maximum number of fix "
+                                   L"requests."));
+  }
 }
 
 bool GearsGeolocation::CancelWatch(const int &watch_id) {
-  FixRequestInfoMap::iterator watch_iter = watches_.find(watch_id);
-  if (watch_iter == watches_.end()) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfoMap::iterator watch_iter = fix_requests_.find(watch_id);
+  if (watch_iter == fix_requests_.end()) {
     return false;
   }
-  FixRequestInfo *info = const_cast<FixRequestInfo*>(watch_iter->second);
-  assert(info->repeats);
-  // Update our list of providers.
-  MutexLock providers_lock(&providers_mutex_);
-  RemoveFixRequest(info);
-  watches_.erase(watch_iter);
+  FixRequestInfo *info = watch_iter->second;
+  if (!info->repeats) {
+    return false;
+  }
+  assert(watch_id > 0);
+
+  // Update the map of providers that this fix request has been deleted.
+  RemoveFixRequest(watch_id);
+  DeleteFixRequest(info);
+
   return true;
 }
 
-void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info,
+void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
                                                     const Position &position) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_info = GetFixRequest(id);
   assert(fix_info->repeats);
 
   // If this is an error, make a callback.
   if (!position.IsGoodFix()) {
     MakeErrorCallback(fix_info, position);
+    return;
   }
 
   // This is a position update.
@@ -494,20 +560,27 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(FixRequestInfo *fix_info,
   }
 }
 
-void GearsGeolocation::HandleSingleRequestUpdate(
-    LocationProviderBase *provider,
-    FixRequestInfo *fix_info,
-    const Position &position) {
+void GearsGeolocation::HandleSingleRequestUpdate(LocationProviderBase *provider,
+                                                 int id,
+                                                 const Position &position) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_info = GetFixRequest(id);
   assert(!fix_info->repeats);
   assert(fix_info->last_success_callback_time == 0);
+
   // Remove this provider from the this fix so that future callbacks to this
   // Geolocation object don't trigger handling for this fix.
-  RemoveProvider(provider, fix_info);
+  RemoveProvider(provider, id);
   // We callback in two cases ...
   // - This response gives a good position and we haven't yet called back
   // - The fix has no remaining providers, so we'll never get a valid position
   // We then cancel any pending requests and delete the fix request.
   if (position.IsGoodFix() || fix_info->providers.empty()) {
+    // Remove the fix request from our map, so that position updates which occur
+    // while the callback to JavaScript is in process do not trigger handling
+    // for this fix request.
+    RemoveFixRequest(id);
     if (position.IsGoodFix()) {
       if (!MakeSuccessCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
@@ -521,60 +594,75 @@ void GearsGeolocation::HandleSingleRequestUpdate(
         assert(false);
       }
     }
-    RemoveFixRequest(fix_info);
+    DeleteFixRequest(fix_info);
   }
 }
 
 void GearsGeolocation::LocationUpdateAvailableImpl(
     LocationProviderBase *provider) {
+  ASSERT_SINGLE_THREAD();
+
   Position position;
   provider->GetPosition(&position);
 
   // Update the last known position, which is the best position estimate we
   // currently have.
-  last_position_mutex_.Lock();
   if (IsNewPositionMovement(last_position_, position) ||
       IsNewPositionMoreAccurate(last_position_, position) ||
       IsNewPositionMoreTimely(last_position_, position)) {
     last_position_ = position;
   }
-  last_position_mutex_.Unlock();
+
+  // The HandleXXXRequestUpdate methods called below may make a callback to
+  // JavaScript. A callback may ...
+  // - call back into Gears code and remove a repeating fix request.
+  // - call alert() or equivalent, which allows this method to be called
+  //   again in repsonse to updates from providers. This could result in fix
+  //   requests of either type being removed from the map.
+  // For these reasons, we can't iterate on a list of fix requests directly.
+  // Instead, we first take a copy of the fix request IDs. Then, at each
+  // iteration, we check to see if that ID is still valid.
 
   // Iterate over all non-repeating fix requests of which this provider is a
-  // part. We call back to Javascript if this is the first good position for
-  // that request.
-  MutexLock lock(&providers_mutex_);
+  // part.
   ProviderMap::iterator provider_iter = providers_.find(provider);
-  // We may not have an entry in the map for this provider. This situation can
-  // occur when a provider calls back to this object, but the request is then
-  // cancelled before the call is marshalled to the JavaScript thread.
   if (provider_iter != providers_.end()) {
-    // Take a copy of the vector of requests because the handlers below may
-    // remove items from the list, so ++iter will fail.
-    FixVector fix_requests = provider_iter->second;
-    for (FixVector::iterator request_iter = fix_requests.begin();
-         request_iter != fix_requests.end();
-         ++request_iter) {
-      FixRequestInfo *fix_info = *request_iter;
-      // TODO(steveblock): Consider storing only non-repeating fix requests in
-      // the map.
-      if (!fix_info->repeats) {
-        HandleSingleRequestUpdate(provider, fix_info, position);
+    IdList ids = provider_iter->second;
+    while (!ids.empty()) {
+      int id = ids.back();
+      ids.pop_back();
+      if (id < 0) {
+        FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
+        if (iter != fix_requests_.end()) {
+          HandleSingleRequestUpdate(provider, id, position);
+        }
       }
     }
   }
 
   // Iterate over all repeating fix requests.
-  for (FixRequestInfoMap::const_iterator iter = watches_.begin();
-       iter != watches_.end();
+  IdList watch_ids;
+  for (FixRequestInfoMap::const_iterator iter = fix_requests_.begin();
+       iter != fix_requests_.end();
        iter++) {
-    FixRequestInfo *fix_info = const_cast<FixRequestInfo*>(iter->second);
-    HandleRepeatingRequestUpdate(fix_info, position);
+    int id = iter->first;
+    if (id > 0) {
+      watch_ids.push_back(id);
+    }
+  }
+  while (!watch_ids.empty()) {
+    int watch_id = watch_ids.back();
+    watch_ids.pop_back();
+    FixRequestInfoMap::const_iterator iter = fix_requests_.find(watch_id);
+    if (iter != fix_requests_.end()) {
+      HandleRepeatingRequestUpdate(watch_id, position);
+    }
   }
 }
 
 bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
                                            const Position &position) {
+  ASSERT_SINGLE_THREAD();
   assert(fix_info);
   assert(position.IsGoodFix());
 
@@ -590,17 +678,21 @@ bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
     assert(false);
     return false;
   }
-  JsParamToSend argv[] = { JSPARAM_OBJECT, position_object.get() };
-  // InvokeCallback returns false if the callback enounters an error.
-  GetJsRunner()->InvokeCallback(fix_info->success_callback.get(),
-                                ARRAYSIZE(argv), argv, NULL);
   fix_info->last_position = position;
   fix_info->last_success_callback_time = GetCurrentTimeMillis();
+  JsParamToSend argv[] = { JSPARAM_OBJECT, position_object.get() };
+
+  // InvokeCallback returns false if the callback enounters an error. Once we've
+  // made the callback, we can't rely on any of the fix request data, because it
+  // could be removed by other calls to this object before the callback returns.
+  GetJsRunner()->InvokeCallback(fix_info->success_callback.get(),
+                                ARRAYSIZE(argv), argv, NULL);
   return true;
 }
 
 bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
                                          const Position &position) {
+  ASSERT_SINGLE_THREAD();
   assert(fix_info);
   assert(!position.IsGoodFix());
 
@@ -620,12 +712,16 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
     return false;
   }
   JsParamToSend argv[] = { JSPARAM_OBJECT, position_error_object.get() };
-  // InvokeCallback returns false if the callback enounters an error.
+
+  // InvokeCallback returns false if the callback enounters an error. Once we've
+  // made the callback, we can't rely on any of the fix request data, because it
+  // could be removed by other calls to this object before the callback returns.
   GetJsRunner()->InvokeCallback(fix_info->error_callback.get(),
                                 ARRAYSIZE(argv), argv, NULL);
   return true;
 }
 
+// static
 bool GearsGeolocation::ParseArguments(JsCallContext *context,
                                       bool repeats,
                                       std::vector<std::string16> *urls,
@@ -682,6 +778,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   return true;
 }
 
+// static
 bool GearsGeolocation::ParseOptions(JsCallContext *context,
                                     const JsObject &options,
                                     std::vector<std::string16> *urls,
@@ -736,6 +833,7 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
   return true;
 }
 
+// static
 bool GearsGeolocation::ParseLocationProviderUrls(
     JsCallContext *context,
     const JsScopedToken &token,
@@ -780,6 +878,7 @@ bool GearsGeolocation::ParseLocationProviderUrls(
   return true;
 }
 
+// static
 bool GearsGeolocation::CreateJavaScriptPositionObject(
     const Position &position,
     bool use_address,
@@ -833,6 +932,7 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
   return result;
 }
 
+// static
 bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
     const Position &position,
     JsObject *error_object) {
@@ -850,7 +950,29 @@ bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
   return result;
 }
 
-void GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
+GearsGeolocation::FixRequestInfo *GearsGeolocation::GetFixRequest(int id) {
+  FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
+  assert(iter != fix_requests_.end());
+  return iter->second;
+}
+
+bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
+  ASSERT_SINGLE_THREAD();
+
+  int id;
+  if (fix_request->repeats) {
+    if (next_watch_id_ == kLastRepeatingRequestId) {
+      return false;
+    }
+    id = next_watch_id_++;
+  } else {
+    if (next_watch_id_ == kLastSingleRequestId) {
+      return false;
+    }
+    id = next_single_request_id_--;
+  }
+  fix_requests_[id] = fix_request;
+
   // For each location provider used by this request, update the provider's
   // list of fix requests in the map.
   ProviderVector *member_providers = &fix_request->providers;
@@ -860,11 +982,29 @@ void GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
     LocationProviderBase *provider = *iter;
     // If providers_ does not yet have an entry for this provider, this will
     // create one.
-    providers_[provider].push_back(fix_request);
+    providers_[provider].push_back(id);
   }
+
+  // Increment our ref count to keep this object in scope until we make the
+  // callback or cancel the request.
+  Ref();
+
+  // Make sure we have an unload monitor in place to cancel pending request
+  // when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+
+  return true;
 }
 
-void GearsGeolocation::RemoveFixRequest(FixRequestInfo *fix_request) {
+void GearsGeolocation::RemoveFixRequest(int id) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_request = GetFixRequest(id);
+  fix_requests_.erase(id);
+
   // For each location provider used by this request, update the provider's
   // list of fix requests in the map.
   ProviderVector *member_providers = &fix_request->providers;
@@ -872,36 +1012,51 @@ void GearsGeolocation::RemoveFixRequest(FixRequestInfo *fix_request) {
        iter != member_providers->end();
        ++iter) {
     LocationProviderBase *provider = *iter;
-    // Check that we have an entry for this provider.
+
+    // Check that we have an entry in the map for this provider.
     ProviderMap::iterator provider_iter = providers_.find(provider);
     assert(provider_iter != providers_.end());
 
     // Find this fix request in the list of fix requests for this provider.
-    FixVector *fixes = &(provider_iter->second);
-    FixVector::iterator fix_iterator =
-        std::find(fixes->begin(), fixes->end(), fix_request);
+    IdList *ids = &(provider_iter->second);
+    IdList::iterator id_iterator = std::find(ids->begin(), ids->end(), id);
 
     // If we can't find this request the list, something has gone wrong.
-    assert(fix_iterator != fixes->end());
+    assert(id_iterator != ids->end());
 
     // Remove this fix request from the list of fix requests for this provider.
-    fixes->erase(fix_iterator);
+    ids->erase(id_iterator);
 
     // If this location provider is no longer used in any fixes, remove it from
-    // our map and unregister from the provider, via the pool. This will cancel
-    // any pending requests and may block if a callback is currently in
-    // progress.
-    if (fixes->empty()) {
+    // our map.
+    if (ids->empty()) {
       providers_.erase(provider_iter);
-      LocationProviderPool::GetInstance()->Unregister(provider, this);
     }
+
+    // Unregister from the provider, via the pool. If there are no more
+    // listeners for this provider, this will cancel any pending requests and
+    // may block if a callback is currently in progress. The pool takes care of
+    // ref counting for the multiple fix requests that use this provider, even
+    // for the same listener.
+    LocationProviderPool::GetInstance()->Unregister(provider, this);
   }
-  // Delete the request object itself.
-  delete fix_request;
 }
 
-void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
-                                      FixRequestInfo *fix_request) {
+void GearsGeolocation::DeleteFixRequest(FixRequestInfo *fix_request) {
+  ASSERT_SINGLE_THREAD();
+
+  delete fix_request;
+  // Decrement the ref count since we will no longer call back for this fix
+  // request.
+  Unref();
+}
+
+void GearsGeolocation::RemoveProvider(LocationProviderBase *provider, int id) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_request = GetFixRequest(id);
+  assert(!fix_request->repeats);
+
   ProviderVector *member_providers = &fix_request->providers;
   ProviderVector::iterator iter = std::find(member_providers->begin(),
                                             member_providers->end(),
@@ -915,26 +1070,32 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
   // Remove this fix request from the provider in the map of providers.
   ProviderMap::iterator provider_iter = providers_.find(provider);
   assert(provider_iter != providers_.end());
-  FixVector *fixes = &(provider_iter->second);
-  FixVector::iterator fix_iterator =
-      std::find(fixes->begin(), fixes->end(), fix_request);
-  assert(fix_iterator != fixes->end());
-  fixes->erase(fix_iterator);
+  IdList *ids = &(provider_iter->second);
+  IdList::iterator id_iterator = std::find(ids->begin(), ids->end(), id);
+  assert(id_iterator != ids->end());
+  ids->erase(id_iterator);
 
   // If this location provider is no longer used in any fixes, remove it from
-  // our map and unregister from the provider, via the pool. This will cancel
-  // any pending requests and may block if a callback is currently in progress.
-  if (fixes->empty()) {
+  // our map.
+  if (ids->empty()) {
     providers_.erase(provider_iter);
-    LocationProviderPool::GetInstance()->Unregister(provider, this);
   }
+
+  // Unregister from the provider, via the pool. If there are no more
+  // listeners for this provider, this will cancel any pending requests and
+  // may block if a callback is currently in progress. The pool takes care of
+  // ref counting for the multiple fix requests that use this provider, even
+  // for the same listener.
+  LocationProviderPool::GetInstance()->Unregister(provider, this);
 }
 
 void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
                                                  FixRequestInfo *fix_info,
                                                  const Position &position) {
+  ASSERT_SINGLE_THREAD();
   // Check that there isn't already a timer running for this request.
   assert(!fix_info->success_callback_timer.get());
+
   fix_info->pending_position = position;
   fix_info->success_callback_timer.reset(
       new TimedCallback(this, timeout_milliseconds, fix_info));
