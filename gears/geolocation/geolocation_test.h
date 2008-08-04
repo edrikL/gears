@@ -48,8 +48,8 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
 // provider and sets the data that the mock provider will provide. Note that
 // we only support data for one cell. Fields are cell_id, location_area_code,
 // mobile_network_code, mobile_country_code, age, radio_signal_strength,
-// timing_advance, device_id, home_mobile_network_code, home_mobile_country_code
-// and carrier.
+// timing_advance, device_id, home_mobile_network_code,
+// home_mobile_country_code, radio_type and carrier.
 // IN: object radio_data
 // OUT: nothing
 void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
