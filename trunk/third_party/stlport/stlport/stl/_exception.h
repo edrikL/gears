@@ -152,7 +152,7 @@ _STLP_BEGIN_NAMESPACE
 // section 18.6.1
 class _STLP_CLASS_DECLSPEC exception {
 public:
-#  ifndef _STLP_USE_NO_IOSTREAMS
+#  if !defined(_STLP_USE_NO_IOSTREAMS) && !defined(_STLP_INLINE_EXCEPTION_CLASS)
   exception() _STLP_NOTHROW;
   virtual ~exception() _STLP_NOTHROW;
   virtual const char* what() const _STLP_NOTHROW;
@@ -166,7 +166,7 @@ public:
 // section 18.6.2.1
 class _STLP_CLASS_DECLSPEC bad_exception : public exception {
 public:
-#  ifndef _STLP_USE_NO_IOSTREAMS
+#  if !defined(_STLP_USE_NO_IOSTREAMS) && !defined(_STLP_INLINE_EXCEPTION_CLASS)
   bad_exception() _STLP_NOTHROW;
   ~bad_exception() _STLP_NOTHROW;
   const char* what() const _STLP_NOTHROW;

@@ -223,7 +223,9 @@
 #elif defined(macintosh) || defined (_MAC)
 #  define _STLP_MAC  1
 #elif defined (_WIN32) || defined (__WIN32) || defined (WIN32) || defined (__WIN32__)
-#  define _STLP_WIN32 1
+#  ifndef __SYMBIAN32__
+#    define _STLP_WIN32 1
+#  endif
 #elif defined (__WIN16) || defined (WIN16) || defined (_WIN16)
 #  define _STLP_WIN16
 #endif /* __unix */

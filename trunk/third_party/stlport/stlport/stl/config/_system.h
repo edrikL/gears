@@ -36,7 +36,14 @@
 #ifndef __stl_config__system_h
 #define __stl_config__system_h
 
-#if defined (__sun)
+#if defined(__SYMBIAN32__)
+#  if defined(__GCCE__) || defined(__ARMCC__)
+#    include <stl/config/stl_gcce.h>
+#  elif defined(__WINSCW__)
+#    include <stl/config/stl_winscw.h>
+#  endif
+#  include <stl/config/stl_symbian.h>
+#elif defined (__sun)
 #  include <stl/config/_solaris.h>
 #  if defined (__GNUC__)
 #    include <stl/config/_gcc.h>
