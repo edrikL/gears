@@ -33,6 +33,7 @@
 #include <gecko_sdk/include/nsIInputStream.h>
 #include <gecko_sdk/include/nsIHttpHeaderVisitor.h>
 #include <gecko_sdk/include/nsIHttpChannel.h>
+#include <gecko_sdk/include/nsIObserverService.h>
 #include <gecko_internal/nsICachingChannel.h>
 #include <gecko_internal/nsIEncodedChannel.h>
 #if BROWSER_FF3
@@ -58,11 +59,18 @@
 #include "gears/blob/blob_input_stream_ff.h"
 #include "gears/blob/blob_interface.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(FFHttpRequest,
+// TODO(steveblock): Consider sharing these values with those in
+// cache_intercept.cc.
+static const char *kObserverServiceContractId =
+    "@mozilla.org/observer-service;1";
+static const char *kOnModifyRequestTopic = "http-on-modify-request";
+
+NS_IMPL_THREADSAFE_ISUPPORTS6(FFHttpRequest,
                               nsIRequestObserver,
                               nsIStreamListener,
                               nsIChannelEventSink,
                               nsIInterfaceRequestor,
+                              nsIObserver,
                               SpecialHttpRequestInterface)
 #if BROWSER_FF3
 NS_IMPL_THREADSAFE_ISUPPORTS5(GearsLoadGroup,
@@ -96,15 +104,28 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 // Constructor / Destructor / Refcounting
 //------------------------------------------------------------------------------
 FFHttpRequest::FFHttpRequest()
-  : ready_state_(UNINITIALIZED), async_(false),
-    caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
-    was_sent_(false), was_aborted_(false), was_redirected_(false),
-    listener_(NULL), listener_data_available_enabled_(false) {
+  : ready_state_(UNINITIALIZED),
+    async_(false),
+    caching_behavior_(USE_ALL_CACHES),
+    redirect_behavior_(FOLLOW_ALL),
+    cookie_behavior_(SEND_BROWSER_COOKIES),
+    was_sent_(false),
+    was_aborted_(false),
+    was_redirected_(false),
+    listener_(NULL),
+    listener_data_available_enabled_(false) {
   LEAK_COUNTER_INCREMENT(FFHttpRequest);
 }
 
 FFHttpRequest::~FFHttpRequest() {
   LEAK_COUNTER_DECREMENT(FFHttpRequest);
+  // TODO(steveblock): It seems that the FFHttpRequest object is leaked by
+  // AsyncTask, so the observer is never removed. Investigate this further.
+  nsCOMPtr<nsIObserverService> observer_service(
+      do_GetService(kObserverServiceContractId));
+  if (observer_service) {
+    observer_service->RemoveObserver(this, kOnModifyRequestTopic);
+  }
 }
 
 void FFHttpRequest::Ref() {
@@ -354,6 +375,18 @@ bool FFHttpRequest::Send(BlobInterface *blob) {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
   nsresult rv = NS_OK;
   was_sent_ = true;
+
+  if (cookie_behavior_ == DO_NOT_SEND_BROWSER_COOKIES) {
+    // Register as an observer for the 'http-on-modify-request' topic. We then
+    // intercept the request just before it's sent to remove browser cookies.
+    nsCOMPtr<nsIObserverService> observer_service(
+        do_GetService(kObserverServiceContractId));
+    if (!observer_service) {
+      LOG(("FFHttpRequest::Send(): Could not get observer service.\n"));
+      return false;
+    }
+    observer_service->AddObserver(this, kOnModifyRequestTopic, false);
+  }
 
   if (!IsFileGet()) {
     nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
@@ -770,6 +803,29 @@ NS_IMETHODIMP FFHttpRequest::OnChannelRedirect(nsIChannel *old_channel,
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP FFHttpRequest::GetInterface(const nsIID &iid, void **result) {
   return QueryInterface(iid, result);
+}
+
+//-----------------------------------------------------------------------------
+// nsIObserver::Observe
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP FFHttpRequest::Observe(nsISupports * /* subject */,
+                                     const char *topic,
+                                     const PRUnichar * /* data */) {
+  // Check that this is for the right topic.
+  assert(strcmp(topic, kOnModifyRequestTopic) == 0);
+
+  assert(cookie_behavior_ == DO_NOT_SEND_BROWSER_COOKIES);
+
+  // Note that we will observe this event for all HTTP requests while the
+  // observer is registered. However, we only make changes to the header for
+  // this HTTP request.
+  nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
+  assert(http_channel);
+  nsresult rv = http_channel->SetRequestHeader(nsCString("Cookie"),
+                                               nsCString(""),
+                                               PR_FALSE);  // Replace header
+  NS_ENSURE_SUCCESS(rv, false);
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

@@ -76,6 +76,14 @@ class IEHttpRequest
     return true;
   }
 
+  // Set whether browser cookies are sent with the request. The default is
+  // SEND_BROWSER_COOKIES. May only be set prior to calling Send.
+  virtual bool SetCookieBehavior(CookieBehavior behavior) {
+    if (!(IsUninitialized() || IsOpen())) return false;
+    cookie_behavior_ = behavior;
+    return true;
+  }
+
   // properties
   virtual bool GetReadyState(ReadyState *state);
   virtual bool GetResponseBody(scoped_refptr<BlobInterface>* blob);
@@ -211,6 +219,9 @@ class IEHttpRequest
   // Whether to follow redirects
   RedirectBehavior redirect_behavior_;
 
+  // Whether to include browser cookies in the request.
+  CookieBehavior cookie_behavior_;
+
   // The request method
   std::string16 method_;
   int bind_verb_;
@@ -233,6 +244,9 @@ class IEHttpRequest
 
   // Whether or not we have been redirected
   bool was_redirected_;
+
+  // Whether or not we should disable sending browser cookies with the request.
+  bool disable_browser_cookies_;
 
   // If we've been redirected, the location of the redirect. If we experience
   // a chain of redirects, this will be the last in the chain upon completion.

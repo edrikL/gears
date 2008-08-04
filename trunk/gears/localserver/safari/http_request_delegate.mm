@@ -76,7 +76,8 @@
 - (bool)send:(NSInputStream *)post_data_stream
    userAgent:(const std::string16 &)user_agent
      headers:(const SFHttpRequest::HttpHeaderVector &)headers
-     bypassBrowserCache:(bool)bypass_browser_cache {
+     bypassBrowserCache:(bool)bypass_browser_cache
+     sendBrowserCookies:(bool)send_browser_cookies {
   assert(request_);
   assert(connection_ == nil);  // It's illegal to call send more than once.
   
@@ -86,6 +87,12 @@
     [request_ setCachePolicy:NSURLRequestUseProtocolCachePolicy];
   }
   
+  if (!send_browser_cookies) {
+    // Note that overriding the Cookies header doesn't work, despite the
+    // documentation.
+    [request_ setHTTPShouldHandleCookies:FALSE];
+  }
+
   // Set the user agent header.
   NSString *user_agent_header = [NSString 
                                      stringWithCString:HTTPHeaders::USER_AGENT

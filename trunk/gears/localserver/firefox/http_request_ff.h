@@ -30,6 +30,7 @@
 #include <vector>
 #include "gecko_sdk/include/nsIInterfaceRequestor.h"
 #include "gecko_sdk/include/nsILoadGroup.h"
+#include <gecko_sdk/include/nsIObserver.h>
 #include "gecko_sdk/include/nsIStreamListener.h"
 #include "gecko_internal/nsIChannelEventSink.h"
 #include "gecko_internal/nsIDocShellTreeItem.h"
@@ -74,6 +75,7 @@ class FFHttpRequest : public HttpRequest,
                       public nsIStreamListener,
                       public nsIChannelEventSink,
                       public nsIInterfaceRequestor,
+                      public nsIObserver,
                       public SpecialHttpRequestInterface,
                       public ProgressEvent::Listener {
  public:
@@ -82,6 +84,7 @@ class FFHttpRequest : public HttpRequest,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIOBSERVER
   NS_DECL_SPECIALHTTPREQUESTINTERFACE  // see localserver.idl.m4
 
   // Our C++ HttpRequest interface
@@ -111,6 +114,14 @@ class FFHttpRequest : public HttpRequest,
   virtual bool SetRedirectBehavior(RedirectBehavior behavior) {
     if (was_sent_) return false;
     redirect_behavior_ = behavior;
+    return true;
+  }
+
+  // Set whether browser cookies are sent with the request. The default is
+  // SEND_BROWSER_COOKIES. May only be set prior to calling Send.
+  virtual bool SetCookieBehavior(CookieBehavior behavior) {
+    if (was_sent_) return false;
+    cookie_behavior_ = behavior;
     return true;
   }
 
@@ -189,6 +200,7 @@ class FFHttpRequest : public HttpRequest,
   SecurityOrigin origin_;
   CachingBehavior caching_behavior_;
   RedirectBehavior redirect_behavior_;
+  CookieBehavior cookie_behavior_;
   bool was_sent_;
   bool was_aborted_;
   bool was_redirected_;

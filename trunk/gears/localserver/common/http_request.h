@@ -84,6 +84,14 @@ class HttpRequest {
   virtual RedirectBehavior GetRedirectBehavior() = 0;
   virtual bool SetRedirectBehavior(RedirectBehavior behavior) = 0;
 
+  // Set whether browser cookies are sent with the request. The default is
+  // SEND_BROWSER_COOKIES. May only be set prior to calling Send.
+  enum CookieBehavior {
+    SEND_BROWSER_COOKIES,
+    DO_NOT_SEND_BROWSER_COOKIES
+  };
+  virtual bool SetCookieBehavior(CookieBehavior behavior) = 0;
+
   enum ReadyState {
     UNINITIALIZED = 0,
     OPEN = 1,

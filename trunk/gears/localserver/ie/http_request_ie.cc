@@ -26,6 +26,7 @@
 #include <msxml2.h>
 #include <algorithm>
 #include <vector>
+#include <wininet.h>  // For INTERNET_FLAG_NO_COOKIES
 
 #include "gears/localserver/ie/http_request_ie.h"
 
@@ -72,11 +73,16 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 //------------------------------------------------------------------------------
 
 IEHttpRequest::IEHttpRequest()
-    : caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
-      was_redirected_(false), was_aborted_(false),
+    : caching_behavior_(USE_ALL_CACHES),
+      redirect_behavior_(FOLLOW_ALL),
+      cookie_behavior_(SEND_BROWSER_COOKIES),
+      was_redirected_(false),
+      was_aborted_(false),
       ignore_stopbinding_error_(false),
-      listener_(NULL), listener_data_available_enabled_(false),
-      ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
+      listener_(NULL),
+      listener_data_available_enabled_(false),
+      ready_state_(UNINITIALIZED),
+      has_synthesized_response_payload_(false),
       async_(false) {
 }
 
@@ -552,6 +558,25 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
     info->stgmedData.pstm = static_cast<IStream*>(stream);
     // stream has a 0 reference count at this point.  The caller of GetBindInfo
     // will immediately do an AddRef on stream.
+  }
+
+  if (cookie_behavior_ == DO_NOT_SEND_BROWSER_COOKIES) {
+    // Undocumented voodoo to pass options through to WinInet.
+    //
+    // The MSDN says that the dwOptions and dwOptionsFlags fields of the
+    // BINDINFO parameter are reserved and should be set to NULL (see 
+    // http://msdn.microsoft.com/en-us/library/ms774966(VS.85).aspx). However,
+    // it seems that these fields can be used to pass options to WinInet (see
+    // http://groups.google.com/group/csexwb/browse_thread/thread/d1f17a391dd323a6
+    // and
+    // http://groups.google.com/group/microsoft.public.inetsdk.programming.urlmonikers/browse_thread/thread/c9f21e1fc92f8e4d).
+    //
+    // See http://msdn.microsoft.com/en-us/library/ms775132(VS.85).aspx for the
+    // possible values of the dwOptions field and
+    // http://msdn.microsoft.com/en-us/library/aa384233(VS.85).aspx for the
+    // flags that can be pased to WinInet in the dwOptionsFlags field.
+    info->dwOptions |= BINDINFO_OPTIONS_WININETFLAG;
+    info->dwOptionsFlags |= INTERNET_FLAG_NO_COOKIES; 
   }
 
   return S_OK;

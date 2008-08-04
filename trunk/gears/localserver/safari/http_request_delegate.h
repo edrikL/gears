@@ -85,7 +85,8 @@
 - (bool)send:(NSInputStream *)post_data_stream
    userAgent:(const std::string16 &)user_agent
      headers:(const SFHttpRequest::HttpHeaderVector &)headers
-     bypassBrowserCache:(bool)bypass_browser_cache;
+     bypassBrowserCache:(bool)bypass_browser_cache
+     sendBrowserCookies:(bool)send_browser_cookies;
 
 // Abort a request.
 // Behavior is undefined if called multiple times.
