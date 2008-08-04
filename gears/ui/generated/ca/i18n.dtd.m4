@@ -28,6 +28,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 context, which will be used for localization. -->
 
 <!-- Text of the menu item used to access the Gears settings Dialog -->
-<!ENTITY PRODUCT_SHORT_NAME_UQ.browser.settings "PRODUCT_FRIENDLY_NAME_UQ Configuració">
+<!ENTITY PRODUCT_SHORT_NAME_UQ.browser.settings "Configuració de Gears">
 <!-- Menu access key for Gears in Firefox -->
 <!ENTITY PRODUCT_SHORT_NAME_UQ.browser.settings.accesskey "G">
