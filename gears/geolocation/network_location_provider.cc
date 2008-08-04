@@ -142,7 +142,7 @@ NetworkLocationProvider::~NetworkLocationProvider() {
   wifi_data_provider_->Unregister(this);
 }
 
-void NetworkLocationProvider::AddListener(
+void NetworkLocationProvider::RegisterListener(
     LocationProviderBase::ListenerInterface *listener,
     bool request_address) {
   // Determine whether this listener requires an address when the last request
@@ -161,7 +161,7 @@ void NetworkLocationProvider::AddListener(
     MutexLock lock(&new_listeners_requiring_address_mutex_);
     new_listeners_requiring_address_.insert(listener);
   } else {
-    LocationProviderBase::AddListener(listener, request_address);
+    LocationProviderBase::RegisterListener(listener, request_address);
   }
 
   // Signal to the worker thread that there is a new listener.
@@ -169,7 +169,7 @@ void NetworkLocationProvider::AddListener(
   thread_notification_event_.Signal();
 }
 
-void NetworkLocationProvider::RemoveListener(
+void NetworkLocationProvider::UnregisterListener(
     LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
 
@@ -180,7 +180,7 @@ void NetworkLocationProvider::RemoveListener(
   if (iter != new_listeners_requiring_address_.end()) {
     new_listeners_requiring_address_.erase(iter);
   } else {
-    LocationProviderBase::RemoveListener(listener);
+    LocationProviderBase::UnregisterListener(listener);
   }
 
   // Update whether or not we need to request an address.
@@ -193,7 +193,7 @@ void NetworkLocationProvider::RemoveListener(
     for (ListenerMap::const_iterator iter = listeners->begin();
          iter != listeners->end();
          iter++) {
-      if (iter->second == true) {
+      if (iter->second.first == true) {
         return;
       }
     }
@@ -391,7 +391,7 @@ bool NetworkLocationProvider::MakeRequest() {
        new_listeners_requiring_address_.begin();
        iter != new_listeners_requiring_address_.end();
        iter++) {
-    LocationProviderBase::AddListener(*iter, true);
+    LocationProviderBase::RegisterListener(*iter, true);
   }
   new_listeners_requiring_address_.clear();
 

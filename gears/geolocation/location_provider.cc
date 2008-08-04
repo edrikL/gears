@@ -29,20 +29,37 @@
 #include "gears/geolocation/location_provider.h"
 
 #include <assert.h>
+#include "gears/base/common/scoped_refptr.h"  // For RefCount
 
-void LocationProviderBase::AddListener(ListenerInterface *listener,
-                                       bool request_address) {
+void LocationProviderBase::RegisterListener(ListenerInterface *listener,
+                                            bool request_address) {
   assert(listener);
   MutexLock lock(&listeners_mutex_);
-  listeners_[listener] = request_address;
+  ListenerMap::iterator iter = listeners_.find(listener);
+  if (iter == listeners_.end()) {
+    std::pair<ListenerMap::iterator, bool> result =
+        listeners_.insert(
+        std::make_pair(listener,
+        std::make_pair(request_address, new RefCount())));
+    assert(result.second);
+    iter = result.first;
+  }
+  RefCount *count = iter->second.second;
+  assert(count);
+  count->Ref();
 }
 
-void LocationProviderBase::RemoveListener(ListenerInterface *listener) {
+void LocationProviderBase::UnregisterListener(ListenerInterface *listener) {
   assert(listener);
   MutexLock lock(&listeners_mutex_);
   ListenerMap::iterator iter = listeners_.find(listener);
   if (iter != listeners_.end()) {
-    listeners_.erase(iter);
+    RefCount *count = iter->second.second;
+    assert(count);
+    if (count->Unref()) {
+      delete count;
+      listeners_.erase(iter);
+    }
   }
 }
 

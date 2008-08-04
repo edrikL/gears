@@ -75,7 +75,7 @@ LocationProviderBase *LocationProviderPool::Register(
   }
   LocationProviderBase *provider = iter->second.first;
   assert(provider);
-  provider->AddListener(listener, request_address);
+  provider->RegisterListener(listener, request_address);
   RefCount *count = iter->second.second;
   assert(count);
   count->Ref();
@@ -93,7 +93,7 @@ bool LocationProviderPool::Unregister(
        ++iter) {
     LocationProviderBase *current_provider = iter->second.first;
     if (current_provider == provider) {
-      current_provider->RemoveListener(listener);
+      current_provider->UnregisterListener(listener);
       RefCount *count = iter->second.second;
       assert(count);
       if (count->Unref()) {
