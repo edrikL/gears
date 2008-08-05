@@ -13,7 +13,7 @@
 			buildPhases = (
 			);
 			dependencies = (
-				B54E78EC0DA3863200F439C3 /* PBXTargetDependency */,
+				B510D6110E48F6CB001BFCCA /* PBXTargetDependency */,
 			);
 			name = Gears;
 			productName = All;
@@ -55,6 +55,11 @@
 		B507A4060DEC70FD00DC9D6A /* database2_common.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FC0DEC70FD00DC9D6A /* database2_common.cc */; };
 		B507A4070DEC70FD00DC9D6A /* transaction.cc in Sources */ = {isa = PBXBuildFile; fileRef = B507A3FE0DEC70FD00DC9D6A /* transaction.cc */; };
 		B50DBAAD0E0879F800F23D31 /* safari_workarounds.m in Sources */ = {isa = PBXBuildFile; fileRef = B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */; };
+		B510D3060E48F339001BFCCA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
+		B510D43E0E48F339001BFCCA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
+		B510D44C0E48F385001BFCCA /* Gears.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8D01CCD20486CAD60068D4B7 /* Gears.bundle */; };
+		B510D4610E48F3A3001BFCCA /* plugin_proxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */; };
+		B510D5E90E48F64B001BFCCA /* async_task_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B510D5E70E48F64B001BFCCA /* async_task_test.cc */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
 		B531A15C0E2BBC5600147648 /* media_data.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15A0E2BBC5600147648 /* media_data.cc */; };
 		B531A1610E2BBC7B00147648 /* mock_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */; };
@@ -585,19 +590,26 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B510D4470E48F374001BFCCA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D01CCC60486CAD60068D4B7 /* Gears.plugin */;
+			remoteInfo = Gears.plugin;
+		};
+		B510D6100E48F6CB001BFCCA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B510D2E60E48F339001BFCCA /* Gears.plugin */;
+			remoteInfo = Gears.plugin;
+		};
 		B544DC420D34370000D30561 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B544D9D30D2EE6B600D30561;
 			remoteInfo = sqlite;
-		};
-		B54E78EB0DA3863200F439C3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8D01CCC60486CAD60068D4B7;
-			remoteInfo = Gears.plugin;
 		};
 		B55F24350DB3DB9F00AF44E2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -717,7 +729,7 @@
 		79C3E9400DB8D8E800346806 /* slice_blob.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = slice_blob.cc; path = ../../blob/slice_blob.cc; sourceTree = SOURCE_ROOT; };
 		79C3E9410DB8D8E800346806 /* slice_blob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = slice_blob.h; path = ../../blob/slice_blob.h; sourceTree = SOURCE_ROOT; };
 		8D01CCD10486CAD60068D4B7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		8D01CCD20486CAD60068D4B7 /* Gears.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D01CCD20486CAD60068D4B7 /* Gears.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		B507A3D90DEC70AF00DC9D6A /* audio_recorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audio_recorder.h; path = ../../media/audio_recorder.h; sourceTree = SOURCE_ROOT; };
 		B507A3DA0DEC70AF00DC9D6A /* audio_recorder.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = audio_recorder.cc; path = ../../media/audio_recorder.cc; sourceTree = SOURCE_ROOT; };
 		B507A3DB0DEC70AF00DC9D6A /* media.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media.cc; path = ../../media/media.cc; sourceTree = SOURCE_ROOT; };
@@ -748,6 +760,10 @@
 		B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = safari_workarounds.h; path = ../../base/safari/safari_workarounds.h; sourceTree = SOURCE_ROOT; };
 		B50DBAAC0E0879F800F23D31 /* safari_workarounds.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workarounds.m; path = ../../base/safari/safari_workarounds.m; sourceTree = SOURCE_ROOT; };
 		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
+		B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = plugin_proxy.mm; path = ../../base/safari/plugin_proxy.mm; sourceTree = SOURCE_ROOT; };
+		B510D4450E48F339001BFCCA /* Gears.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		B510D5E70E48F64B001BFCCA /* async_task_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_task_test.cc; path = ../../localserver/common/async_task_test.cc; sourceTree = SOURCE_ROOT; };
+		B510D5E80E48F64B001BFCCA /* async_task_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_test.h; path = ../../localserver/common/async_task_test.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
 		B531A15A0E2BBC5600147648 /* media_data.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_data.cc; path = ../../media/media_data.cc; sourceTree = SOURCE_ROOT; };
@@ -1478,6 +1494,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B510D4350E48F339001BFCCA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B510D43E0E48F339001BFCCA /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B544D9D20D2EE6B600D30561 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1621,7 +1645,7 @@
 		19C28FB4FE9D528D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D01CCD20486CAD60068D4B7 /* Gears.plugin */,
+				8D01CCD20486CAD60068D4B7 /* Gears.bundle */,
 				B544D9D40D2EE6B600D30561 /* libsqlite.a */,
 				B58E000B0D53F47B00B0A65D /* libjsoncpp.a */,
 				B57A582B0DA927C3001B0CC6 /* GearsEnabler.bundle */,
@@ -1634,6 +1658,7 @@
 				B54ADC590E0F119100884C56 /* libbreakpad.a */,
 				B54AE0710E11769E00884C56 /* crash_sender */,
 				B5F01A4A0E11B5E2002EB414 /* crash_inspector */,
+				B510D4450E48F339001BFCCA /* Gears.plugin */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1945,6 +1970,8 @@
 		B544D9640D2EE5D000D30561 /* common */ = {
 			isa = PBXGroup;
 			children = (
+				B510D5E80E48F64B001BFCCA /* async_task_test.h */,
+				B510D5E70E48F64B001BFCCA /* async_task_test.cc */,
 				B58EFE590D529ACB00B0A65D /* blob_store.h */,
 				B58EFE4F0D529ACB00B0A65D /* blob_store.cc */,
 				B58EFE570D529ACB00B0A65D /* capture_task.h */,
@@ -2007,6 +2034,7 @@
 				B54ADEDD0E10604000884C56 /* messagebox.mm */,
 				B54ADEDE0E10604000884C56 /* messagebox.h */,
 				B50E5DB00E09F72D00435FF9 /* npapi_patches.h */,
+				B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */,
 				B5F09C8A0E156A4200C7ACB7 /* resource_archive.h */,
 				B5F09C8B0E156A4200C7ACB7 /* resource_archive.cc */,
 				B50DBAAB0E0879F800F23D31 /* safari_workarounds.h */,
@@ -3220,14 +3248,13 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		8D01CCC60486CAD60068D4B7 /* Gears.plugin */ = {
+		8D01CCC60486CAD60068D4B7 /* Gears.bndl */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.plugin" */;
+			buildConfigurationList = 4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.bndl" */;
 			buildPhases = (
 				8D01CCC90486CAD60068D4B7 /* Resources */,
 				8D01CCCB0486CAD60068D4B7 /* Sources */,
 				8D01CCCD0486CAD60068D4B7 /* Frameworks */,
-				B544D9CC0D2EE68200D30561 /* Install Symlink */,
 			);
 			buildRules = (
 			);
@@ -3245,10 +3272,30 @@
 				B589B3C40E12EFED00037BE2 /* PBXTargetDependency */,
 				B589393C0DB66FCC00BD56A0 /* PBXTargetDependency */,
 			);
+			name = Gears.bndl;
+			productInstallPath = "$(HOME)/Library/Bundles";
+			productName = gears;
+			productReference = 8D01CCD20486CAD60068D4B7 /* Gears.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+		B510D2E60E48F339001BFCCA /* Gears.plugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B510D4420E48F339001BFCCA /* Build configuration list for PBXNativeTarget "Gears.plugin" */;
+			buildPhases = (
+				B510D2FF0E48F339001BFCCA /* Resources */,
+				B510D3070E48F339001BFCCA /* Sources */,
+				B510D4350E48F339001BFCCA /* Frameworks */,
+				B510D4410E48F339001BFCCA /* Install Symlink */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B510D4480E48F374001BFCCA /* PBXTargetDependency */,
+			);
 			name = Gears.plugin;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = gears;
-			productReference = 8D01CCD20486CAD60068D4B7 /* Gears.plugin */;
+			productReference = B510D4450E48F339001BFCCA /* Gears.plugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 		B544D9D30D2EE6B600D30561 /* sqlite */ = {
@@ -3471,7 +3518,8 @@
 				B54E78E80DA3862B00F439C3 /* Gears */,
 				B55F24320DB3DB6700AF44E2 /* Generate Headers */,
 				B54AE0700E11769E00884C56 /* crash_sender */,
-				8D01CCC60486CAD60068D4B7 /* Gears.plugin */,
+				8D01CCC60486CAD60068D4B7 /* Gears.bndl */,
+				B510D2E60E48F339001BFCCA /* Gears.plugin */,
 				B57A582A0DA927C3001B0CC6 /* InputManager */,
 				B5F01A3D0E11B5E2002EB414 /* crash_inspector */,
 				B58939310DB66F4D00BD56A0 /* launch_url_with_browser */,
@@ -3502,6 +3550,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B510D2FF0E48F339001BFCCA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B510D44C0E48F385001BFCCA /* Gears.bundle in Resources */,
+				B510D3060E48F339001BFCCA /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B57A58270DA927C3001B0CC6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -3513,7 +3570,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		B544D9CC0D2EE68200D30561 /* Install Symlink */ = {
+		B510D4410E48F339001BFCCA /* Install Symlink */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -3868,6 +3925,15 @@
 				B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */,
 				B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */,
 				B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */,
+				B510D5E90E48F64B001BFCCA /* async_task_test.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B510D3070E48F339001BFCCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B510D4610E48F3A3001BFCCA /* plugin_proxy.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4142,15 +4208,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B510D4480E48F374001BFCCA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D01CCC60486CAD60068D4B7 /* Gears.bndl */;
+			targetProxy = B510D4470E48F374001BFCCA /* PBXContainerItemProxy */;
+		};
+		B510D6110E48F6CB001BFCCA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B510D2E60E48F339001BFCCA /* Gears.plugin */;
+			targetProxy = B510D6100E48F6CB001BFCCA /* PBXContainerItemProxy */;
+		};
 		B544DC430D34370000D30561 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B544D9D30D2EE6B600D30561 /* sqlite */;
 			targetProxy = B544DC420D34370000D30561 /* PBXContainerItemProxy */;
-		};
-		B54E78EC0DA3863200F439C3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8D01CCC60486CAD60068D4B7 /* Gears.plugin */;
-			targetProxy = B54E78EB0DA3863200F439C3 /* PBXContainerItemProxy */;
 		};
 		B55F24360DB3DB9F00AF44E2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4302,7 +4373,7 @@
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/libjpeg/ $(SRCROOT)/../../../third_party/libpng/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include $(SRCROOT)/../../../third_party/portaudio/include $(SRCROOT)/../../../third_party/portaudio/src/common";
-				WRAPPER_EXTENSION = plugin;
+				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = NO;
 			};
 			name = Debug;
@@ -4375,7 +4446,7 @@
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/libjpeg/ $(SRCROOT)/../../../third_party/libpng/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include $(SRCROOT)/../../../third_party/portaudio/include $(SRCROOT)/../../../third_party/portaudio/src/common";
-				WRAPPER_EXTENSION = plugin;
+				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;
 		};
@@ -4396,6 +4467,149 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = Release;
+		};
+		B510D4430E48F339001BFCCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)\"";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_DEBUGGING_SYMBOLS = full;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "$(SRCROOT)/../../base/safari/prefix_header.h";
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../../third_party/libgd/",
+					"$(SRCROOT)/../../../third_party/icu38/public/common",
+				);
+				INFOPLIST_FILE = "/Users/playmobil/Documents/dev/gears-safari/src/googleclient/gears/opensource/gears/tools/osx/build/genfiles/Info copy.plist";
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaScriptCore.framework\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaScriptCore.framework\"";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				OTHER_CFLAGS = (
+					"-DBROWSER_SAFARI=1",
+					"-DBROWSER_NPAPI=1",
+					"-DBROWSER_WEBKIT=1",
+					"-DOS_MACOSX=1",
+					"-DPNG_USER_CONFIG",
+					"-fshort-wchar",
+					"-DDEBUG=1",
+					"-DJS_THREADSAFE",
+					"-DUSING_CCTESTS=1",
+					"-DPA_USE_OSS",
+					"-DHAVE_SYS_SOUNDCARD_H=1",
+					"-DHAVE_CONFIG_H=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-non-virtual-dtor",
+				);
+				OTHER_LDFLAGS = (
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+					"-lcrypto",
+					"-lskia-dbg-osx-i386+ppc",
+					"-L$(PROJECT_DIR)/../../../third_party/skia/",
+				);
+				PRODUCT_NAME = Gears;
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/libjpeg/ $(SRCROOT)/../../../third_party/libpng/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include $(SRCROOT)/../../../third_party/portaudio/include $(SRCROOT)/../../../third_party/portaudio/src/common";
+				WRAPPER_EXTENSION = plugin;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		B510D4440E48F339001BFCCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)\"";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "$(SRCROOT)/../../base/safari/prefix_header.h";
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../../third_party/libgd/",
+					"$(SRCROOT)/../../../third_party/icu38/public/common",
+				);
+				INFOPLIST_FILE = "/Users/playmobil/Documents/dev/gears-safari/src/googleclient/gears/opensource/gears/tools/osx/build/genfiles/Info copy.plist";
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaScriptCore.framework\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaScriptCore.framework\"";
+				OTHER_CFLAGS = (
+					"-DBROWSER_SAFARI=1",
+					"-DBROWSER_NPAPI=1",
+					"-DBROWSER_WEBKIT=1",
+					"-DOS_MACOSX=1",
+					"-DPNG_USER_CONFIG",
+					"-DNDEBUG=1",
+					"-DOFFICIAL_BUILD=1",
+					"-fshort-wchar",
+					"-DJS_THREADSAFE",
+					"-DPA_USE_OSS",
+					"-DHAVE_SYS_SOUNDCARD_H=1",
+					"-DHAVE_CONFIG_H=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-non-virtual-dtor",
+				);
+				OTHER_LDFLAGS = (
+					"-lskia-opt-osx-i386+ppc",
+					"-L$(PROJECT_DIR)/../../../third_party/skia/",
+					"-lcurl",
+					"-L$(PROJECT_DIR)",
+					"-lleopard_support",
+					"-lcrypto",
+				);
+				PRODUCT_NAME = Gears;
+				STRIP_STYLE = debugging;
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(BUILD_DIR) $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/libjpeg/ $(SRCROOT)/../../../third_party/libpng/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include $(SRCROOT)/../../../third_party/portaudio/include $(SRCROOT)/../../../third_party/portaudio/src/common";
+				WRAPPER_EXTENSION = plugin;
 			};
 			name = Release;
 		};
@@ -5270,7 +5484,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.plugin" */ = {
+		4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.bndl" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4FADC23408B4156C00ABE55E /* Debug */,
@@ -5284,6 +5498,15 @@
 			buildConfigurations = (
 				4FADC23808B4156C00ABE55E /* Debug */,
 				4FADC23908B4156C00ABE55E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B510D4420E48F339001BFCCA /* Build configuration list for PBXNativeTarget "Gears.plugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B510D4430E48F339001BFCCA /* Debug */,
+				B510D4440E48F339001BFCCA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
