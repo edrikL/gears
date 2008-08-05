@@ -96,6 +96,7 @@ NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOT
 OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
+SF_PROXY_DLL_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_PROXY_DLL_CPPSRCS))
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
 MOZJS_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(MOZJS_OUTDIR), $(MOZJS_CSRCS))
 SQLITE_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(SQLITE_OUTDIR), $(SQLITE_CSRCS))
@@ -222,6 +223,7 @@ NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFI
 # Note: crash_inspector name needs to stay in sync with name used in
 # exception_handler_osx/google_breakpad.mm.
 OSX_CRASH_INSPECTOR_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_inspector$(EXE_SUFFIX)
+SF_PROXY_DLL            = $(COMMON_OUTDIR)/$(DLL_PREFIX)gears_proxy$(DLL_SUFFIX)
 OSX_LAUNCHURL_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
 PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 
@@ -234,7 +236,8 @@ VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
 NOTIFIER_BUNDLE         = $(INSTALLERS_OUTDIR)/Safari/Notifier.app
 
-SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
+SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/Gears.bundle
+SF_PLUGIN_PROXY_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
 SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 
 SF_INSTALLER_PKG       = $(INSTALLERS_OUTDIR)/Safari/Gears.pkg
@@ -389,7 +392,7 @@ ifeq ($(USING_MOZJS),1)
 prereqs:: $(MOZJS_OUTDIR)
 endif
 ifeq ($(BROWSER),SF)
-modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE) $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
+modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE) $(SF_PLUGIN_PROXY_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 endif
 
 # OS-specific targets.
@@ -941,6 +944,10 @@ $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PO
 	$(STRIP_EXECUTABLE)
 	rm $(OUTDIR)/obj_list.temp
 
+$(SF_PROXY_DLL) : $(SF_PROXY_DLL_OBJS)
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(SF_PROXY_DLL_OBJS)
+	$(STRIP_EXECUTABLE)
+	
 # Crash inspector is launched by the crashed process from it's exception handler
 # and is what actually communicates with the crashed process to extract the
 # minidump.  It then launches crash_sender in order to actually send the
@@ -1085,9 +1092,22 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
+	rm -rf $@
+	mkdir -p $@/Contents/Resources/
+	mkdir -p $@/Contents/MacOS
+# Copy Info.plist
+	cp $($(BROWSER)_OUTDIR)/genfiles/Info.plist $@/Contents/
+# Copy proxy DLL
+	cp $(SF_PROXY_DLL) $@/Contents/MacOS/Gears
+# Copy Gears.bundle
+	cp -R $(SF_PLUGIN_BUNDLE) $@/Contents/Resources/
+	
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
+# --- Gears.bundle ---
+# Create fresh copies of the Gears.bundle directories.
 	rm -rf $@
 	mkdir -p $@/Contents/Resources/English.lproj
 	mkdir -p $@/Contents/MacOS
