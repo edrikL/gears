@@ -49,7 +49,7 @@ class GearsNotification;
 class QueuedNotification;
 
 // Handles all aspects of the notifications to be displayed.
-// Note: do not forget to increase kNotificationManagerVersion if you make any 
+// Note: do not forget to increase kNotificationManagerVersion if you make any
 // change to this class which could affect saving notifications.
 class NotificationManager : public BalloonCollectionObserver,
                             public UserActivityObserver {
@@ -73,12 +73,6 @@ class NotificationManager : public BalloonCollectionObserver,
   //   False if no match was found.
   bool Delete(const SecurityOrigin &security_origin,
               const std::string16 &id);
-
-  // Handles adjusting notifications when any of display settings is changed.
-  void OnDisplaySettingsChanged();
-
-  // Hides/unhides notifications depending on the user's mode.
-  void OnUserPresentationModeChange(bool in_presentation);
 
   // Should only be used by QueuedNotification to move itself
   // from being delayed to being ready to show (as a result of
