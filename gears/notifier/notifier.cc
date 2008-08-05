@@ -102,7 +102,7 @@ bool Notifier::Initialize() {
 
   // Load saved notifications if needed.
   if (!notification_manager_->LoadNotifications()) {
-    LOG(("Failed to load saved notifications\n"));
+    LOG(("Saved notifications not loaded (most likely they didn't exist).\n"));
   }
 
   running_ = true;

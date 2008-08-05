@@ -32,25 +32,62 @@ using namespace glint_darwin;
 
 @implementation GlintWorkItemDispatcher
 
-- (id)initForWorkItem:(WorkItem*)item withUI:(RootUI*)ui {
+- (id)initForWorkItem:(WorkItem*)item
+               withUI:(RootUI*)ui
+            container:(NSMutableSet*)dispatchers {
   if ((self = [super init])) {
+    dispatchers_ = dispatchers;
     ui_ = ui;
     workItem_ = item;
+    isCanceled_ = NO;
   }
 
   return self;
 }
 
+- (void)dealloc {
+  delete workItem_;
+  [super dealloc];
+}
+
 + (GlintWorkItemDispatcher*)dispatcherForWorkItem:(WorkItem*)item
-                                           withUI:(RootUI*)ui {
-  return [[[GlintWorkItemDispatcher alloc] initForWorkItem:item withUI:ui]
-           autorelease];
+                                           withUI:(RootUI*)ui
+                                        container:(NSMutableSet*)dispatchers {
+  GlintWorkItemDispatcher* dispatcher =
+      [[GlintWorkItemDispatcher alloc] initForWorkItem:item
+                                                withUI:ui
+                                             container:dispatchers];
+  return [dispatcher autorelease];
 }
 
 - (void)dispatch {
-  DarwinPlatform* darwin_platform = static_cast<DarwinPlatform*>(platform());
+  if (isCanceled_ == YES)
+    return;
 
-  darwin_platform->RunWorkItem(ui_, workItem_, self);
+  if (ui_ != NULL) {
+    Message message;
+    message.code = GL_MSG_WORK_ITEM;
+    message.ui = ui_;
+    message.work_item = workItem_;
+    ui_->HandleMessage(message);
+    // HandleMessage deletes WorkItem, so nullify it here to avoid dual delete.
+    workItem_ = NULL;
+  } else {  // ui-less workitem; we'll just run it ourselves
+    if (workItem_ != NULL) {
+      workItem_->Run();
+    }
+  }
+
+  // Cancel itself after dispatching.
+  [self cancel];
+}
+
+- (void)cancel {
+  isCanceled_ = YES;
+  // Remove itself from list of all work items.
+  [dispatchers_ removeObject:self];
+  // Don't need this weak ref anymore.
+  dispatchers_ = nil;
 }
 
 @end

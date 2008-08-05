@@ -114,10 +114,6 @@ class DarwinPlatform : public glint_posix::PosixPlatform {
   // thread's run loop.
   virtual bool PostWorkItem(RootUI* ui, WorkItem* work_item);
 
-  // This will actually run the work item scheduled above
-  void RunWorkItem(RootUI* ui, WorkItem* work_item,
-                   GlintWorkItemDispatcher* dispatcher);
-
   virtual bool StartMouseCapture(RootUI* ui);
 
   virtual void EndMouseCapture();

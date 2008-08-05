@@ -92,71 +92,48 @@ void DarwinPlatform::RunMessageLoop() {
   [NSApp run];
 }
 
-// This will schedule the work item on the same thread, to be run on the
-// thread's run loop.
+// This will schedule the work item on the main thread, to be run on the
+// main thread's run loop asynchronously. Create a NSAutoreleasePool
+// since this methods is often called from worker threads.
 bool DarwinPlatform::PostWorkItem(RootUI *ui, WorkItem *work_item) {
-  GlintWorkItemDispatcher* dispatcher =
-      [GlintWorkItemDispatcher dispatcherForWorkItem:work_item withUI:ui];
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
+  GlintWindow* glint_window = nil;
   if (ui != NULL) {
     // This work item is associated with a window. We keep a record of it,
     // so we can cancel it if the window goes away before the item is run
-    GlintWindow* glint_window = ValidateWindow(
+    glint_window = ValidateWindow(
         reinterpret_cast<PlatformWindow*>(ui->GetPlatformWindow()));
-
     assert(glint_window);
-
-    NSMutableSet* work_items =
-        [work_items_for_window_ objectForKey:glint_window];
-    if (!work_items) {
-      work_items = [[[NSMutableSet alloc] init] autorelease];
-      [work_items_for_window_ setObject:work_items forKey:glint_window];
-    }
-
-    assert(work_items && ![work_items containsObject:dispatcher]);
-    [work_items addObject:dispatcher];
   }
 
-  // Schedule the work item
-  NSRunLoop *run_loop = [NSRunLoop currentRunLoop];
-  [run_loop performSelector:@selector(dispatch)
-                     target:dispatcher
-                   argument:nil
-                      order:0
-                      modes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
+  NSMutableSet* dispatchers = nil;
 
+  // Note: glint_window == nil is used for non-UI work items.
+  // In this case, don't create a list of 'window work items'.
+  if (glint_window != nil) {
+    // Retrieve a head of double-linked list of work item dispatchers.
+    dispatchers = [work_items_for_window_ objectForKey:glint_window];
+
+    if (dispatchers == nil) {
+      dispatchers = [[[NSMutableSet alloc] init] autorelease];
+      [work_items_for_window_ setObject:dispatchers forKey:glint_window];
+    }
+  }
+
+  // Creates a dispatcher and adds it as a head to the list.
+  GlintWorkItemDispatcher* dispatcher =
+      [GlintWorkItemDispatcher dispatcherForWorkItem:work_item
+                                              withUI:ui
+                                           container:dispatchers];
+
+  // Schedule the work item on the main thread. Retains dispatcher.
+  [dispatcher performSelectorOnMainThread:@selector(dispatch)
+                               withObject:nil
+                            waitUntilDone:NO];
+
+  [pool release];
   return true;
-}
-
-// This will actually run the work item scheduled above
-void DarwinPlatform::RunWorkItem(RootUI* ui,
-                                 WorkItem* work_item,
-                                 GlintWorkItemDispatcher* dispatcher) {
-  if (ui != NULL) {
-    // Remove this work item from the list we maintain
-    GlintWindow* glint_window = ValidateWindow(
-        reinterpret_cast<PlatformWindow*>(ui->GetPlatformWindow()));
-    NSMutableSet* work_items =
-        [work_items_for_window_ objectForKey:glint_window];
-
-    assert(work_items && [work_items containsObject:dispatcher]);
-    [work_items removeObject:dispatcher];
-
-    // Tell Glint about this workitem
-    Message message;
-
-    message.code = GL_MSG_WORK_ITEM;
-    message.ui = ui;
-    message.work_item = work_item;
-
-    ui->HandleMessage(message);
-  } else {
-    if (work_item != NULL) {
-      // ui-less workitem; we'll just run it ourselves
-      work_item->Run();
-      delete work_item;
-    }
-  }
 }
 
 bool DarwinPlatform::StartMouseCapture(RootUI *ui) {

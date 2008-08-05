@@ -71,13 +71,18 @@ WindowRef GetKeyWindow() {
 }
 
 void SystemLog(const char *msg, ...) {
+  // Logging is called from C++ worker threads, so need to have autorelease pool.
+  NSAutoreleasePool *autoreleasePool = [[NSAutoreleasePool alloc] init];
   va_list args;
   va_start(args, msg);
   NSLogv([NSString stringWithCString:msg], args);
   va_end(args);
+  [autoreleasePool release];
 }
 
 void SystemLog16(const char16 *msg_utf16, ...) {
+  // Logging is called from C++ worker threads, so need to have autorelease pool.
+  NSAutoreleasePool *autoreleasePool = [[NSAutoreleasePool alloc] init];
   va_list args;
   va_start(args, msg_utf16);
 
@@ -102,5 +107,6 @@ void SystemLog16(const char16 *msg_utf16, ...) {
 
   CFRelease(format);
   CFRelease(format_mutable);
+  [autoreleasePool release];
 }
 

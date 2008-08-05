@@ -266,22 +266,18 @@ void DarwinPlatform::DeleteInvisibleWindow(PlatformWindow *window) {
 
   // Cancel all work items associated with this window
   NSMutableSet* work_items = [work_items_for_window_ objectForKey:glint_window];
-  if (work_items) {
-    NSEnumerator *enumerator = [work_items objectEnumerator];
-    id object;
+  // We have a callback scheduled on every dispatcher object. It is not
+  // possible to cancel the callback, so instead we mark the dispatcher as
+  // 'canceled' so when callback is eventually dispatched, it does nothing
+  // but releases the dispatcher.
+  [work_items makeObjectsPerformSelector:@selector(cancel)];
 
-    while ((object = [enumerator nextObject]) != nil) {
-      GlintWorkItemDispatcher* dispatcher =
-          static_cast<GlintWorkItemDispatcher*>(object);
-
-      [[NSRunLoop currentRunLoop] cancelPerformSelectorsWithTarget:dispatcher];
-    }
-
-    // The following removes the work_items set from the dictionary, and causes
-    // a release on it, which then removes all items in the set and causes them
-    // to be released as well.
-    [work_items_for_window_ removeObjectForKey:glint_window];
-  }
+  // The following removes the work_items set from the dictionary, and causes
+  // a release on it, which then removes all items in the set and causes them
+  // to be released as well. The items are likely retained by NSApplication
+  // (via performSelectorOnmainThread) and will be finally released 
+  // after dispatching.
+  [work_items_for_window_ removeObjectForKey:glint_window];
 
   [all_windows_ removeObject:glint_window];
 
