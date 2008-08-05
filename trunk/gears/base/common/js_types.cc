@@ -25,11 +25,11 @@
 
 #include <math.h>
 
+#include "gears/base/common/js_types.h"
+
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for isnan
-#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_types.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
@@ -64,7 +64,12 @@ static inline bool DoubleIsInt32(double val) {
   return val >= kint32min && val <= kint32max && floor(val) == val;
 }
 
+//------------------------------------------------------------------------------
+// JsToken and friends
+//------------------------------------------------------------------------------
+
 #if BROWSER_NPAPI
+
 JsTokenEqualTo::JsTokenEqualTo(JsRunnerInterface *js_runner)
   : js_runner_(js_runner), compare_func_(NULL) {
   // NPAPI doesn't guarantee that a Javascript object will have only one
@@ -157,14 +162,8 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
   return true;
 }
 
-bool JsTokenToModule(JsRunnerInterface *js_runner,
-                     JsContextPtr context,
-                     const JsToken in,
-                     ModuleImplBaseClass **out) {
-  return js_runner->GetModuleFromJsToken(in, out);
-}
-
 #elif BROWSER_IE
+
 static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
                                  IScriptable** out) {
   if (in.vt == VT_DISPATCH) {
@@ -174,52 +173,20 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
   return false;
 }
 
-bool JsTokenToModule(JsRunnerInterface *js_runner,
-                     JsContextPtr context,
-                     const JsToken in,
-                     ModuleImplBaseClass **out) {
-  if (in.vt == VT_DISPATCH) {
-    CComQIPtr<GearsModuleProviderInterface> module_provider(in.pdispVal);
-    if (!module_provider) {
-      return false;
-    }
-    VARIANT var;
-    HRESULT hr = module_provider->get_moduleWrapper(&var);
-    if (FAILED(hr)) {
-      return false;
-    }
-    ModuleWrapper *module_wrapper =
-        reinterpret_cast<ModuleWrapper*>(var.byref);
-    *out = module_wrapper->GetModuleImplBaseClass();
-    return true;
-  }
-  return false;
-}
-
 #elif BROWSER_NPAPI
+
 static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
                                  IScriptable** out) {
   // TODO(nigeltao): implement.
   return false;
 }
 
-bool JsTokenToModule(JsRunnerInterface *js_runner,
-                     JsContextPtr context,
-                     const JsToken in,
-                     ModuleImplBaseClass **out) {
-  if (!NPVARIANT_IS_OBJECT(in)) {
-    return false;
-  }
-  NPObject *object = NPVARIANT_TO_OBJECT(in);
-  if (object->_class != ModuleWrapper::GetNPClass()) {
-    return false;
-  }
-  *out = static_cast<ModuleWrapper*>(object)->GetModuleImplBaseClass();
-  return true;
-}
 #endif
 
-// Browser specific JsArray functions.
+//------------------------------------------------------------------------------
+// JsArray
+//------------------------------------------------------------------------------
+
 #if BROWSER_FF
 
 JsArray::JsArray() : js_context_(NULL), array_(0) {
@@ -253,7 +220,6 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   JsRequest request(js_context_);
@@ -267,7 +233,6 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   // JS_GetElement sets the token to JS_VOID if we request a non-existent index.
@@ -278,7 +243,6 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 }
 
 bool JsArray::SetElement(int index, const JsToken &value) {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   JsRequest request(js_context_);
@@ -332,7 +296,6 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   CComVariant out;
@@ -349,7 +312,6 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name = IntegerToString16(index);
@@ -368,7 +330,6 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 }
 
 bool JsArray::SetElement(int index, const JsScopedToken &in) {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name(IntegerToString16(index));
@@ -411,7 +372,6 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -425,7 +385,6 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -438,7 +397,6 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 }
 
 bool JsArray::SetElement(int index, const JsScopedToken &in) {
-  // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -463,8 +421,6 @@ bool JsArray::SetElementString(int index, const std::string16 &value) {
 }
 
 #endif
-
-// Common JsArray functions
 
 bool JsArray::GetElementAsBool(int index, bool *out) const {
   JsScopedToken token;
@@ -538,7 +494,10 @@ bool JsArray::SetElementModule(int index, ModuleImplBaseClass *value) {
   return SetElement(index, value->GetWrapperToken());
 }
 
-// Browser specific JsObject functions.
+//------------------------------------------------------------------------------
+// JsObject
+//------------------------------------------------------------------------------
+
 #if BROWSER_FF
 
 JsObject::JsObject() : js_context_(NULL), js_object_(0) {
@@ -568,7 +527,6 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   JsRequest request(js_context_);
@@ -591,7 +549,6 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   JsRequest request(js_context_);
@@ -601,7 +558,6 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
@@ -668,7 +624,6 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   return SUCCEEDED(
@@ -677,7 +632,6 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   // If the property name is unknown, GetDispatchProperty will return
@@ -694,7 +648,6 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
@@ -739,7 +692,6 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   NPIdentifier *identifiers;
@@ -772,7 +724,6 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
@@ -785,7 +736,6 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  // Check that we're initialized.
   assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
@@ -814,8 +764,6 @@ bool JsObject::SetPropertyDouble(const std::string16 &name, double value) {
 }
 
 #endif
-
-// Common JsObject functions
 
 bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) const {
   JsScopedToken token;
@@ -896,6 +844,9 @@ bool JsObject::SetPropertyModule(const std::string16 &name,
   return SetProperty(name, value->GetWrapperToken());
 }
 
+//------------------------------------------------------------------------------
+// JsTokenToXxx, XxxToJsToken
+//------------------------------------------------------------------------------
 
 // Given a JsToken, extract it into a JsArgument.  Object pointers are weak
 // references (ref count is not increased).
@@ -1003,7 +954,6 @@ static bool ConvertTokenToArgument(JsCallContext *context,
   return true;
 }
 
-
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out) {
   if (!JsTokenIsCallback(t, cx)) { return false; }
@@ -1107,6 +1057,12 @@ bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
   return true;
 }
 
+bool JsTokenToModule(JsRunnerInterface *js_runner,
+                     JsContextPtr context,
+                     const JsToken in,
+                     ModuleImplBaseClass **out) {
+  return js_runner->GetModuleFromJsToken(in, out);
+}
 
 JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
   if (JSVAL_IS_BOOLEAN(t)) {
@@ -1159,7 +1115,7 @@ bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   return true;
 }
 
-// TODO(nigeltao): We creating an unrooted jsval here (and saving it as
+// TODO(nigeltao): We are creating an unrooted jsval here (and saving it as
 // *out), which is vulnerable to garbage collection.  Strictly speaking,
 // callers should immediately root the token to avoid holding a dangling
 // pointer.  The TODO is to fix up the API so that the callee does the
@@ -1197,6 +1153,7 @@ bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
   *out = JSVAL_VOID;
   return true;
 }
+
 #elif BROWSER_IE
 
 bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out) {
@@ -1234,7 +1191,6 @@ bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out) {
 
   return false;
 }
-
 
 bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out) {
   // JsToken is a bool
@@ -1353,6 +1309,28 @@ bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
     VariantClear(&variant);
   }
   return true;
+}
+
+bool JsTokenToModule(JsRunnerInterface *js_runner,
+                     JsContextPtr context,
+                     const JsToken in,
+                     ModuleImplBaseClass **out) {
+  if (in.vt == VT_DISPATCH) {
+    CComQIPtr<GearsModuleProviderInterface> module_provider(in.pdispVal);
+    if (!module_provider) {
+      return false;
+    }
+    VARIANT var;
+    HRESULT hr = module_provider->get_moduleWrapper(&var);
+    if (FAILED(hr)) {
+      return false;
+    }
+    ModuleWrapper *module_wrapper =
+        reinterpret_cast<ModuleWrapper*>(var.byref);
+    *out = module_wrapper->GetModuleImplBaseClass();
+    return true;
+  }
+  return false;
 }
 
 JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
@@ -1501,7 +1479,6 @@ bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out) {
   return UTF8ToString16(GetNPStringUTF8Characters(str),
                         GetNPStringUTF8Length(str), out);
 }
-
 
 // TODO: Implement coercion for NPAPI. Since NPAPI does not have built-in
 // coercion this will have to be done manually in terms of C++ types. It might
@@ -1674,6 +1651,20 @@ bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
   return converted_succesfully;
 }
 
+bool JsTokenToModule(JsRunnerInterface *js_runner,
+                     JsContextPtr context,
+                     const JsToken in,
+                     ModuleImplBaseClass **out) {
+  if (!NPVARIANT_IS_OBJECT(in)) {
+    return false;
+  }
+  NPObject *object = NPVARIANT_TO_OBJECT(in);
+  if (object->_class != ModuleWrapper::GetNPClass()) {
+    return false;
+  }
+  *out = static_cast<ModuleWrapper*>(object)->GetModuleImplBaseClass();
+  return true;
+}
 
 JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
   if (NPVARIANT_IS_BOOLEAN(t)) {
@@ -1811,7 +1802,8 @@ void ScopedNPVariant::Reset(const char *value) {
 
 void ScopedNPVariant::Reset(const char16 *value) {
   Reset();
-  NPString npstr = NPN_StringDup(value, std::char_traits<char16>::length(value));
+  NPString npstr = NPN_StringDup(value,
+                                 std::char_traits<char16>::length(value));
   NPSTRING_TO_NPVARIANT(npstr, *this);
 }
 
@@ -1840,7 +1832,10 @@ void ScopedNPVariant::Release() {
 
 #endif
 
-// Browser-specific JsCallContext functions.
+//------------------------------------------------------------------------------
+// ConvertJsParamToToken, JsCallContext
+//------------------------------------------------------------------------------
+
 #if BROWSER_FF
 
 bool ConvertJsParamToToken(const JsParamToSend &param,
@@ -2201,7 +2196,7 @@ void JsCallContext::SetException(const std::string16 &message) {
   NPN_SetException(window, message_utf8.c_str());
 }
 
-#endif  // BROWSER_NPAPI
+#endif
 
 #if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
 
