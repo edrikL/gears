@@ -120,6 +120,7 @@ class ByteStore : public RefCounted {
   mutable MemoryBuffer read_buffer_;
   mutable MemoryBuffer write_buffer_;
   int64 async_add_length_;
+  int64 length_;
   DISALLOW_EVIL_CONSTRUCTORS(ByteStore);
 };
 

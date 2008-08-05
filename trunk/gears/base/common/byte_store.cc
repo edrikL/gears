@@ -108,7 +108,7 @@ class ByteStore::Blob : public BlobInterface {
 
 ByteStore::ByteStore()
     : file_op_(File::WRITE), is_finalized_(false), preserve_data_(false),
-      async_add_length_(0) {
+      async_add_length_(0), length_(0) {
 }
 
 ByteStore::~ByteStore() {
@@ -126,6 +126,7 @@ bool ByteStore::AddData(const void *data, int64 length) {
 
   if (IsUsingData() && (length + data_.Size() <= kMaxBufferSize)) {
     data_.Append(static_cast<const uint8*>(data), length);
+    length_ += length;
     return true;
   }
   return AddDataToFile(data, length);
@@ -153,6 +154,7 @@ int64 ByteStore::AddDataDirect(Writer *writer, int64 max_length) {
       total_bytes_added += bytes_added;
       offset += bytes_added;
       max_length -= bytes_added;
+      length_ += bytes_added;
     }
     data_.Resize(offset);
     return total_bytes_added;
@@ -170,7 +172,7 @@ int64 ByteStore::AddDataDirect(Writer *writer, int64 max_length) {
                                               buffer_size);
     if (bytes_added == Writer::ASYNC) {
       // Create the file if it doesn't yet exist.
-      AddDataToFile(write_buffer_.Data(0), 0);
+      AddDataToFile(NULL, 0);
       async_add_length_ = buffer_size;
       return total_bytes_added;
     }
@@ -195,6 +197,7 @@ void ByteStore::AddDataDirectFinishAsync(int64 length) {
 
   if (IsUsingData()) {
     data_.Resize(data_.Size() - (async_add_length_ - length));
+    length_ += length;
   } else {
     AddDataToFile(write_buffer_.Data(0), length);
   }
@@ -225,16 +228,19 @@ bool ByteStore::AddDataToFile(const void *data, int64 length) {
       // via GetDataElement remain valid for the life of the BlobStore.
     }
   }
-  if (file_op_ == File::READ) {
-    file_->Seek(0, File::SEEK_FROM_END);
-    file_op_ = File::WRITE;
-  }
-  int64 pos = file_->Tell();
-  int64 result = file_->Write(static_cast<const uint8*>(data), length);
-  if (result != length) {
-    file_->Truncate(pos);
-    file_->Seek(0, File::SEEK_FROM_END);
-    return false;
+  if (length > 0) {
+    if (file_op_ == File::READ) {
+      file_->Seek(0, File::SEEK_FROM_END);
+      file_op_ = File::WRITE;
+    }
+    int64 pos = file_->Tell();
+    int64 result = file_->Write(static_cast<const uint8*>(data), length);
+    if (result != length) {
+      file_->Truncate(pos);
+      file_->Seek(0, File::SEEK_FROM_END);
+      return false;
+    }
+    length_ += length;
   }
   return true;
 }
@@ -261,7 +267,6 @@ void ByteStore::Finalize() {
 
 void ByteStore::GetDataElement(DataElement *element) {
   assert(element);
-
   MutexLock lock(&mutex_);
   if (!is_finalized_ && IsUsingData() && !preserve_data_) {
     // We reserve space so the vector won't get reallocated as
@@ -282,17 +287,7 @@ void ByteStore::GetDataElement(DataElement *element) {
 
 int64 ByteStore::Length() const {
   MutexLock lock(&mutex_);
-
-  if (IsUsingData()) {
-    return data_.Size() - async_add_length_;
-  }
-  // Stored in a file.
-  assert(data_.Empty() || preserve_data_);
-  if (file_op_ == File::WRITE) {
-    file_->Flush();
-    file_op_ = File::READ;
-  }
-  return file_->Size();
+  return length_;
 }
 
 int64 ByteStore::Read(uint8 *destination,
@@ -388,8 +383,8 @@ void ByteStore::Reserve(int64 length) {
     return;
   }
   if (length > kMaxBufferSize) {
-    uint8 data;
-    AddDataToFile(&data, 0);
+    // Create the file if it doesn't yet exist.
+    AddDataToFile(NULL, 0);
   } else {
     data_.Reserve(length);
   }
