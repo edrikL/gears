@@ -594,7 +594,7 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   void *autorelease_pool = InitAutoReleasePool();
 #endif
 #ifdef OS_ANDROID
-  JniAttachCurrentThread();
+  ScopedJniAttachCurrentThread scoped_jni_attach_current_thread;
 #endif
   
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
@@ -673,9 +673,6 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->threads_manager->ReleaseWorkerRef();
   wi->module_environment.reset(NULL);
 
-#ifdef OS_ANDROID
-  JniDetachCurrentThread();
-#endif
 #ifdef OS_MACOSX
   DestroyAutoReleasePool(autorelease_pool);
 #endif
