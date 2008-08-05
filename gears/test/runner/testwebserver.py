@@ -348,10 +348,10 @@ class RequestHandler(asynchat.async_chat,
                      (self.protocol_version, code, message))
     self.send_header('Server', self.version_string())
     self.send_header('Date', self.date_time_string())
-    // This webserver shuts down the connection after every request.
-    // This behavior can tickle bug 568 under Safari in some circumstances.
-    // Be explicit that this is our behavior with the following header.
-    // This also works around bug 568.
+    # This webserver shuts down the connection after every request.
+    # This behavior can tickle bug 568 under Safari in some circumstances.
+    # Be explicit that this is our behavior with the following header.
+    # This also works around bug 568.
     self.send_header('Connection', 'close')
     if self.path.endswith('set_cookie.txt'):
       self.send_header('Set-Cookie', 'Gears_testwebserver=true')
