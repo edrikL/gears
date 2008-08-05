@@ -128,9 +128,28 @@ class RequestHandler(asynchat.async_chat,
     self.rfile = cStringIO.StringIO(''.join(popall(self.incoming)))
     self.rfile.seek(0)
     self.do_POST()
-     
-      
+
+
+  def can_serve(self):
+    # The AyncTask unit tests rely on conditionally serving files based on the
+    # presence of cookies in the request. Here we check whether we can serve
+    # these files.
+    if self.path.endswith('serve_if_cookies_absent.txt'):
+      if self.headers.getheader('Cookie') != '':
+        return False
+    elif self.path.endswith('serve_if_cookies_present.txt'):
+      if self.headers.getheader('Cookie') == '':
+        return False
+    return True
+
+
   def do_POST(self):
+    can_serve = True
+    if self.can_serve() == False:
+      self.send_error(404)
+      self.outgoing.append(None)
+      return
+
     qspos = self.path.find('?')
     if qspos >= 0:
       # Added query to allow test server to run redirects at POST, and the 
@@ -329,7 +348,9 @@ class RequestHandler(asynchat.async_chat,
                      (self.protocol_version, code, message))
     self.send_header('Server', self.version_string())
     self.send_header('Date', self.date_time_string())
-  
+    if self.path.endswith('set_cookie.txt'):
+      self.send_header('Set-Cookie', 'Gears_testwebserver=true')
+
 
   def log_message(self, format, *args):
     sys.stderr.write('%s - - [%s] %s "%s" "%s"\n' %
