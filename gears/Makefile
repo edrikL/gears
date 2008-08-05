@@ -1895,6 +1895,7 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
+		async_task_test.cc \
 		blob_store.cc \
 		capture_task.cc \
 		file_store.cc \
