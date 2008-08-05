@@ -1652,10 +1652,10 @@ I18N_LANGS	+= \
 $(BROWSER)_VPATH += \
 		$(NULL)
 
-$(BROWSER)_M4SRCS += \
-		permissions_dialog.html.m4 \
-		settings_dialog.html.m4 \
-		shortcuts_dialog.html.m4 \
+$(BROWSER)_HTML_M4SRCS += \
+		permissions_dialog.html_m4 \
+		settings_dialog.html_m4 \
+		shortcuts_dialog.html_m4 \
 		$(NULL)
 
 FF3_VPATH	+= \

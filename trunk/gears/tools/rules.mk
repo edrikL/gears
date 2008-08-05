@@ -168,6 +168,9 @@ $(BROWSER)_BASE64FILES = \
 	$(patsubst %.base64,$($(BROWSER)_OUTDIR)/genfiles/%.base64,$($(BROWSER)_BASE64SRCS))
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
+# .html m4 files are separate because they have different build rules.
+$(BROWSER)_HTML_M4FILES = \
+	$(patsubst %_m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_HTML_M4SRCS))
 $(BROWSER)_STABFILES = \
 	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_STABSRCS))
 COMMON_M4FILES = \
@@ -352,7 +355,7 @@ endif
 
 
 # Cross-browser targets.
-prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N) $($(BROWSER)_STABFILES)
+prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_HTML_M4FILES) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N) $($(BROWSER)_STABFILES)
 prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
 prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(PORTAUDIO_OUTDIR) $(LIBSPEEX_OUTDIR) $(LIBTREMOR_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
@@ -510,7 +513,7 @@ $($(BROWSER)_OUTDIR)/genfiles/%.png.base64: ui/common/%.png
 # M4 (GENERIC PREPROCESSOR) TARGETS
 
 # HTML files depend on their string table.
-$($(BROWSER)_OUTDIR)/genfiles/%.html: %.html.m4 $($(BROWSER)_OUTDIR)/genfiles/%.js $($(BROWSER)_BASE64FILES)
+$($(BROWSER)_OUTDIR)/genfiles/%.html: %.html_m4 $($(BROWSER)_OUTDIR)/genfiles/%.js $($(BROWSER)_BASE64FILES)
 	m4 $(M4FLAGS) $< > $@
 
 $($(BROWSER)_OUTDIR)/genfiles/%: %.m4 $($(BROWSER)_BASE64FILES)
