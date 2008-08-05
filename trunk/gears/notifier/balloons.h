@@ -159,7 +159,7 @@ class BalloonCollection : public BalloonCollectionInterface {
   virtual bool has_space() const { return has_space_; }
   virtual int count() const { return static_cast<int>(balloons_.size()); }
   virtual const GearsNotification *notification_at(int i) const {
-    return (i < static_cast<int>(balloons_.size())) 
+    return (i < static_cast<int>(balloons_.size()))
            ? &balloons_[i]->notification() : NULL;
   }
 

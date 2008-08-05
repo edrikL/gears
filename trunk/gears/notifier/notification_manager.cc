@@ -333,14 +333,17 @@ bool NotificationManager::Delete(const SecurityOrigin &security_origin,
 }
 
 void NotificationManager::CheckAndShowNotifications() {
-  // Is it ok to show the notification now?
-  activity_->CheckNow();
-  if (!IsActiveUserMode(activity_->user_mode())) {
+  // Can we perform the delayed restart now?
+  //
+  // Do this before "IsActiveUserMode" because this
+  // check wants the user to be idle.
+  if (CheckDelayedRestart()) {
     return;
   }
 
-  // Can we perform the delayed restart now?
-  if (CheckDelayedRestart()) {
+  // Is it ok to show the notification now?
+  activity_->CheckNow();
+  if (!IsActiveUserMode(activity_->user_mode())) {
     return;
   }
 
@@ -354,10 +357,6 @@ void NotificationManager::ShowNotifications() {
     balloon_collection_->Add(queued_notification->notification());
     delete queued_notification;
   }
-}
-
-void NotificationManager::OnDisplaySettingsChanged() {
-  // TODO(levin): implement
 }
 
 void NotificationManager::OnUserActivityChange() {
@@ -478,7 +477,7 @@ bool NotificationManager::SaveNotifications() {
   }
 
   // Write version.
-  if (file->Write(reinterpret_cast<const uint8*>(&kNotificationManagerVersion), 
+  if (file->Write(reinterpret_cast<const uint8*>(&kNotificationManagerVersion),
                   sizeof(kNotificationManagerVersion)) !=
       sizeof(kNotificationManagerVersion)) {
     return false;
