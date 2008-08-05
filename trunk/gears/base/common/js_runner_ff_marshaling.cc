@@ -66,6 +66,88 @@ static const int kArgvFunctionIndex = -2; // negative indices [sic]
 static const int kArgvInstanceIndex = -1;
 
 
+//
+// Structs that record different custom data for the different JSObject types.
+// The structs have a common header so we can differentiate generic JSObjects.
+//
+// These structures are saved as the private data on JSObjects.
+// By sharing a common base class, we can cast the raw pointer
+// stored on the JSObject to a JsWrapperDataHeader to determine the
+// JsWrapperData type.
+
+enum JsWrapperDataType {
+  PROTO_JSOBJECT,
+  INSTANCE_JSOBJECT,
+  FUNCTION_JSOBJECT,
+  UNKNOWN_JSOBJECT // do not use
+};
+
+struct JsWrapperDataHeader {
+  JsWrapperDataType type;
+
+  explicit JsWrapperDataHeader(JsWrapperDataType t) : type(t) {}
+};
+
+struct JsWrapperData {
+  const JsWrapperDataHeader  header;
+  JsWrapperData(JsWrapperDataType t) : header(t) {};
+};
+
+struct JsWrapperDataForProto : public JsWrapperData {
+  JSObject                   *jsobject;
+  JsContextWrapper           *js_wrapper;
+  scoped_ptr<JsRootedToken>  proto_root;
+  scoped_ptr<JSClass>        alloc_jsclass;
+  scoped_ptr<std::string>    alloc_name;
+
+  JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForProto);
+  }
+  ~JsWrapperDataForProto() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForProto);
+  }
+  inline void Cleanup() {
+    // Cleanup only resets the scoped_ptr<JsRootedToken> proto_root, and does
+    // not explicitly delete this, unlike JsWrapperDataForFunction::Cleanup.
+    // Resetting the JsRootedToken will eventually trigger a FinalizeNative
+    // call on that JSObject, which will delete this JsWrapperDataForProto.
+    proto_root.reset();
+  }
+};
+
+struct JsWrapperDataForInstance : public JsWrapperData {
+  JSObject            *jsobject;
+  JsContextWrapper    *js_wrapper;
+  ModuleImplBaseClass *module;
+
+  JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForInstance);
+  }
+  ~JsWrapperDataForInstance() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForInstance);
+    if (module) {
+      static_cast<ModuleWrapper *>(module->GetWrapper())->Destroy();
+    }
+  }
+};
+
+struct JsWrapperDataForFunction : public JsWrapperData {
+  scoped_ptr<JsRootedToken>  function_root;
+  DispatchId                 dispatch_id;
+  int                        flags;
+
+  JsWrapperDataForFunction() : JsWrapperData(FUNCTION_JSOBJECT) {
+    LEAK_COUNTER_INCREMENT(JsWrapperDataForFunction);
+  }
+  ~JsWrapperDataForFunction() {
+    LEAK_COUNTER_DECREMENT(JsWrapperDataForFunction);
+  }
+  inline void Cleanup() {
+    delete this;
+  }
+};
+
+
 // Called when a JS object based on native code is cleaned up.  We need to
 // remove any reference counters it held here.
 void FinalizeNative(JSContext *cx, JSObject *obj) {
@@ -74,20 +156,10 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
     return;
   switch(p->header.type) {
     case PROTO_JSOBJECT:
+      delete static_cast<JsWrapperDataForProto *>(p);
       break;
     case INSTANCE_JSOBJECT:
-      {
-        JsWrapperDataForInstance *instance =
-            static_cast<JsWrapperDataForInstance *>(p);
-            
-        if (instance->module) {
-          ModuleWrapper *module_wrapper =
-              static_cast<ModuleWrapper *>(instance->module->GetWrapper());
-          module_wrapper->Destroy();
-        }
-
-        instance->js_wrapper->instance_wrappers_.erase(instance);
-      }
+      delete static_cast<JsWrapperDataForInstance *>(p);
       break;
     default:
       assert(false);  // Should never reach this line.
@@ -108,17 +180,16 @@ JsContextWrapper::~JsContextWrapper() {
 
 
 void JsContextWrapper::CleanupRoots() {
-  // Remove the roots associated with the protos we've created.  We need to
-  // keep the rest of the structure around until the JS engine has been shut
-  // down.
-  std::vector<linked_ptr<JsWrapperDataForProto> >::iterator proto;
-  for (proto = proto_wrappers_.begin();
-       proto != proto_wrappers_.end();
-       ++proto) {
-    (*proto)->proto_root.reset();
+  std::vector<JsWrapperDataForProto *>::iterator p;
+  for (p = proto_wrappers_.begin(); p != proto_wrappers_.end(); ++p) {
+    (*p)->Cleanup();
   }
+  proto_wrappers_.clear();
 
-  // Clean up the rest of the roots.
+  std::vector<JsWrapperDataForFunction *>::iterator f;
+  for (f = function_wrappers_.begin(); f != function_wrappers_.end(); ++f) {
+    (*f)->Cleanup();
+  }
   function_wrappers_.clear();
 }
 
@@ -131,37 +202,31 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
 
   JSObject *proto = NULL;
   JSClass *js_class = NULL;
-  JsWrapperDataForProto *proto_data = NULL;
 
   // Get the JSClass for this type of Module, or else create one if we've
   // never seen this class before.
   NameToProtoMap::iterator iter = name_to_proto_map_.find(module_name);
   if (iter != name_to_proto_map_.end()) {
     proto = iter->second;
-    proto_data = static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto));
-    js_class = proto_data->alloc_jsclass.get();
+    js_class = static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto))->
+        alloc_jsclass.get();
   } else {
-    scoped_ptr<JsWrapperDataForProto> proto_data_alloc(
-        new JsWrapperDataForProto);
+    scoped_ptr<JsWrapperDataForProto> proto_data(new JsWrapperDataForProto);
 
-    if (!InitClass(module_name.c_str(), proto_data_alloc.get(), &proto))
-      return false;
-
-    proto_data = proto_data_alloc.release();
-    js_class = proto_data->alloc_jsclass.get();
-
-    if (!AddAllFunctionsToPrototype(proto,
+    if (!InitClass(module_name.c_str(), proto_data.get(), &proto) ||
+        !AddAllFunctionsToPrototype(proto,
                                     module->GetWrapper()->GetDispatcher())) {
       return false;
     }
 
     // save values
     name_to_proto_map_[module_name] = proto;
-    proto_wrappers_.push_back(linked_ptr<JsWrapperDataForProto>(proto_data));
+    proto_wrappers_.push_back(proto_data.get());
+    js_class = proto_data->alloc_jsclass.get();
     dispatcher_classes_.insert(js_class);
 
     // succeeded; save the pointer
-    JS_SetPrivate(cx_, proto, proto_data);
+    JS_SetPrivate(cx_, proto, proto_data.release());
   }
 
   JS_BeginRequest(cx_);
@@ -330,9 +395,8 @@ bool JsContextWrapper::AddFunctionToPrototype(
   // We must use PRIVATE_TO_JSVAL (only works on pointers!) to prevent the
   // garbage collector from touching any private data stored in JS 'slots'.
   assert(0 == (0x01 & reinterpret_cast<int>(function_data.get())));
-  function_wrappers_.push_back(
-      linked_ptr<JsWrapperDataForFunction>(function_data.get()));
-  jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.release());
+  jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.get());
+  function_wrappers_.push_back(function_data.release());
   assert(!JSVAL_IS_GCTHING(pointer_jsval));
   JS_BeginRequest(cx_);
   JS_SetReservedSlot(cx_, function_obj, kFunctionDataReservedSlotIndex,
@@ -354,9 +418,6 @@ bool JsContextWrapper::SetupInstanceObject(JSObject *instance_obj,
   instance_data->js_wrapper = this;
   instance_data->jsobject = instance_obj;
   instance_data->module = module;
-
-  instance_wrappers_[instance_data.get()] =
-      linked_ptr<JsWrapperDataForInstance>(instance_data.get());
 
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
   JS_SetPrivate(cx_, instance_obj, instance_data.release());

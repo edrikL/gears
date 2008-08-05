@@ -30,87 +30,20 @@
 #ifndef GEARS_BASE_COMMON_JS_RUNNER_FF_MARSHALING_H__
 #define GEARS_BASE_COMMON_JS_RUNNER_FF_MARSHALING_H__
 
-#include <map>
 #include <set>
 #include <vector>
 
 #include <gecko_internal/jsapi.h>
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/leak_counter.h"
-#include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 typedef std::map<const std::string, JSObject*> NameToProtoMap;
 
 class JsContextWrapper;
 
-//
-// Structs that record different custom data for the different JSObject types.
-// The structs have a common header so we can differentiate generic JSObjects.
-//
-
-enum JsWrapperDataType {
-  PROTO_JSOBJECT,
-  INSTANCE_JSOBJECT,
-  FUNCTION_JSOBJECT,
-  UNKNOWN_JSOBJECT // do not use
-};
-
-// These structures are saved as the private data on JSObjects.
-// By sharing a common base class, we can cast the raw pointer
-// stored on the JSObject to a JsWrapperDataHeader to determine the
-// JsWrapperData type.
-struct JsWrapperDataHeader {
-  JsWrapperDataType type;
-
-  explicit JsWrapperDataHeader(JsWrapperDataType t) : type(t) {}
-};
-
-struct JsWrapperData {
-  const JsWrapperDataHeader  header;
-  JsWrapperData(JsWrapperDataType t) : header(t) {};
-};
-
-struct JsWrapperDataForProto : public JsWrapperData {
-  JSObject                   *jsobject;
-  JsContextWrapper           *js_wrapper;
-  scoped_ptr<JsRootedToken>  proto_root;
-  scoped_ptr<JSClass>        alloc_jsclass;
-  scoped_ptr<std::string>    alloc_name;
-
-  JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {
-    LEAK_COUNTER_INCREMENT(JsWrapperDataForProto);
-  }
-  ~JsWrapperDataForProto() {
-    LEAK_COUNTER_DECREMENT(JsWrapperDataForProto);
-  }
-};
-
-struct JsWrapperDataForInstance : public JsWrapperData {
-  JSObject            *jsobject;
-  JsContextWrapper    *js_wrapper;
-  ModuleImplBaseClass *module;
-
-  JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {
-    LEAK_COUNTER_INCREMENT(JsWrapperDataForInstance);
-  }
-  ~JsWrapperDataForInstance() {
-    LEAK_COUNTER_DECREMENT(JsWrapperDataForInstance);
-  }
-};
-
-struct JsWrapperDataForFunction : public JsWrapperData {
-  scoped_ptr<JsRootedToken>  function_root;
-  DispatchId                 dispatch_id;
-  int                        flags;
-
-  JsWrapperDataForFunction() : JsWrapperData(FUNCTION_JSOBJECT) {
-    LEAK_COUNTER_INCREMENT(JsWrapperDataForFunction);
-  }
-  ~JsWrapperDataForFunction() {
-    LEAK_COUNTER_DECREMENT(JsWrapperDataForFunction);
-  }
-};
+struct JsWrapperDataForProto;
+struct JsWrapperDataForFunction;
 
 class JsContextWrapper {
  public:
@@ -156,12 +89,11 @@ class JsContextWrapper {
   // seen in CreateModuleJsObject.
   std::set<JSClass*> dispatcher_classes_;
 
-  // This is stored as a map because we need to be able to selectively
-  // remove elements when the associated JS object is finalized.
-  std::map<JsWrapperDataForInstance *, linked_ptr<JsWrapperDataForInstance> >
-      instance_wrappers_;
-  std::vector<linked_ptr<JsWrapperDataForProto> > proto_wrappers_;
-  std::vector<linked_ptr<JsWrapperDataForFunction> > function_wrappers_;
+  // The elements in these two vectors are "owned", meaning that the
+  // JsContextWrapper is responsible for calling Cleanup() on them at an
+  // appropriate time.
+  std::vector<JsWrapperDataForProto *> proto_wrappers_;
+  std::vector<JsWrapperDataForFunction *> function_wrappers_;
 };
 
 
