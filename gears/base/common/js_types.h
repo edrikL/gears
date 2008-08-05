@@ -33,8 +33,18 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"  // for string16
 
+class JsObject;
+class JsRootedToken;
 class JsRunnerInterface;
+class MarshaledJsToken;
+class ModuleImplBaseClass;
+typedef JsRootedToken JsRootedCallback;
+
 // TODO(michaeln): Split into multiple browser specific files.
+
+//------------------------------------------------------------------------------
+// JsToken and friends
+//------------------------------------------------------------------------------
 
 #if BROWSER_FF
 
@@ -225,11 +235,6 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
 
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 
-class MarshaledJsToken;
-class ModuleImplBaseClass;
-class JsRootedToken;
-typedef JsRootedToken JsRootedCallback;
-
 // The JsParam* types define values for sending and receiving JS parameters.
 enum JsParamType {
   JSPARAM_BOOL,
@@ -260,16 +265,15 @@ struct JsParamToSend {
   const void *value_ptr;
 };
 
-struct JsParamToRecv {
-  JsParamType type;
-  void *value_ptr;
-};
-
 struct JsArgument {
   JsParamRequirement requirement;
   JsParamType type;
   void* value_ptr;
 };
+
+//------------------------------------------------------------------------------
+// JsTokenToXxx, XxxToJsToken
+//------------------------------------------------------------------------------
 
 // Utility functions to convert JsToken to various C++ types without coercion.
 // If the type of the underlying JavaScript variable does not exactly match the
@@ -399,15 +403,11 @@ class JsRootedToken {
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
 
-#elif BROWSER_SAFARI
+#endif
 
-// Just placeholder values for Safari since the created workers use a separate
-// process for JS execution.
-typedef void  JsToken;
-typedef void  JsScopedToken;
-typedef void* JsContextPtr;
-
-#endif // BROWSER_xyz
+//------------------------------------------------------------------------------
+// JsArray
+//------------------------------------------------------------------------------
 
 // JsArray and JsObject make use of a JsScopedToken, which is a token that
 // releases any references it has when it goes out of scope.  This is necessary
@@ -415,10 +415,6 @@ typedef void* JsContextPtr;
 // increases the reference count, and we need a way to release that reference
 // *after* we're done using the object.  In Firefox, JsToken == JsScopedToken
 // because Firefox only gives us a weak pointer to the value.
-
-class JsObject;
-struct JsParamToSend;
-class ModuleImplBaseClass;
 
 class JsArray {
  public:
@@ -459,10 +455,15 @@ class JsArray {
   bool SetElementFunction(int index, JsRootedCallback *value);
   bool SetElementModule(int index, ModuleImplBaseClass *value);
 
-private:
+ private:
   JsContextPtr js_context_;
   JsScopedToken array_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsArray);
 };
+
+//------------------------------------------------------------------------------
+// JsObject
+//------------------------------------------------------------------------------
 
 class JsObject {
  public:
@@ -518,7 +519,22 @@ class JsObject {
  private:
   JsContextPtr js_context_;
   JsScopedToken js_object_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsObject);
 };
+
+//------------------------------------------------------------------------------
+// ConvertJsParamToToken, JsCallContext
+//------------------------------------------------------------------------------
+
+// Given a JsParamToSend, extract it into a JsScopedToken.  Resulting token
+// increases the reference count for objects.
+// Returns true if successful. On failure, token is not modified.
+// Failure could happen if the caller tried to return a numerical value that
+// is outside the range of numbers representable by the particular JavaScript
+// engine. For example, if that engine internally only uses int32s or doubles,
+// then some int64 values are not representable.
+bool ConvertJsParamToToken(const JsParamToSend &param,
+                           JsContextPtr context, JsScopedToken *token);
 
 // This class provides an interface for a property or method access on a native
 // object from JavaScript.  It allows consumers to retrieve what arguments were
@@ -542,8 +558,6 @@ class JsCallContext {
 #elif BROWSER_FF
   JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                 int argc, JsToken *argv, JsToken *retval);
-#else
- // TODO: browser_xyz
 #endif
 
   // Get the arguments a JavaScript caller has passed into a scriptable method
@@ -605,20 +619,9 @@ class JsCallContext {
   JsToken *argv_;
   JsToken *retval_;
   JsRunnerInterface *js_runner_;
-#else
-  // TODO: browser_xyz
 #endif
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsCallContext);
 };
-
-
-// Given a JsParamToSend, extract it into a JsScopedToken.  Resulting token
-// increases the reference count for objects.
-// Returns true if successful. On failure, token is not modified.
-// Failure could happen if the caller tried to return a numerical value that
-// is outside the range of numbers representable by the particular JavaScript
-// engine. For example, if that engine internally only uses int32s or doubles,
-// then some int64 values are not representable.
-bool ConvertJsParamToToken(const JsParamToSend &param,
-                           JsContextPtr context, JsScopedToken *token);
 
 #endif  // GEARS_BASE_COMMON_JS_TYPES_H__
