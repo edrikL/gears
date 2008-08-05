@@ -37,6 +37,7 @@ HtmlDialogReturnValue HtmlDialog::DoModal(const char16 *html_filename,
   if (permissions_db->ShouldSupressDialogs())
     return HTML_DIALOG_SUPPRESSED;
 
+  // The Json library deals only in UTF-8, so we need to convert :(.
   std::string16 locale;
   if (GetLocale(&locale)) {
     std::string locale8;
@@ -45,7 +46,6 @@ HtmlDialogReturnValue HtmlDialog::DoModal(const char16 *html_filename,
     }
   }
 
-  // The Json library deals only in UTF-8, so we need to convert :(.
   std::string16 input_string;
   if (!UTF8ToString16(arguments.toStyledString().c_str(), &input_string)) {
     return HTML_DIALOG_FAILURE;
@@ -66,6 +66,14 @@ HtmlDialogReturnValue HtmlDialog::DoModeless(const char16 *html_filename,
     return HTML_DIALOG_SUPPRESSED;
 
   // The Json library deals only in UTF-8, so we need to convert :(.
+  std::string16 locale;
+  if (GetLocale(&locale)) {
+    std::string locale8;
+    if (String16ToUTF8(locale.c_str(), &locale8)) {
+      arguments["locale"] = Json::Value(locale8);
+    }
+  }
+
   std::string16 input_string;
   if (!UTF8ToString16(arguments.toStyledString().c_str(), &input_string)) {
     return HTML_DIALOG_FAILURE;
