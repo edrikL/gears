@@ -295,7 +295,9 @@ BEGIN
 """ % (lang_id, sublang_id, locale)
 
     for id, string in strings.items():
-      string = string.replace('"', r'\"')
+      string = string.replace('"', r'""')
+      string = string.replace('\\n', r'\012')
+      string = string.replace('\n', r'\012')
       output += u'  %s "%s"\n' % (unicode(id, 'utf_8'),
                                   unicode(string, 'utf_8'))
 

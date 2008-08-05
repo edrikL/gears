@@ -1593,6 +1593,58 @@ $(BROWSER)_CPPSRCS += \
 
 I18N_LANGS	+= \
 		en-US \
+		ar \
+		bg \
+		ca \
+		cs \
+		da \
+		de \
+		el \
+		en-GB \
+		es \
+		et \
+		fa \
+		fi \
+		fil \
+		fr \
+		he \
+		hi \
+		hr \
+		hu \
+		id \
+		is \
+		it \
+		ja \
+		ko \
+		lt \
+		lv \
+		ms \
+		nl \
+		no \
+		pl \
+		pt-BR \
+		pt-PT \
+		ro \
+		ru \
+		sk \
+		sl \
+		sr \
+		sv \
+		th \
+		tr \
+		uk \
+		ur \
+		vi \
+		zh-CN \
+		zh-TW \
+		ml \
+		te \
+		gu \
+		kn \
+		or \
+		bn \
+		ta \
+		mr \
 		$(NULL)
 
 # ui/generated is not specified here, because it's included in the generated
