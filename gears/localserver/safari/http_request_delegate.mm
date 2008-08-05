@@ -110,31 +110,10 @@
   }
   
   if (post_data_stream) {
-#if 1
-    // SAFARI-TEMP - Start
-    // Temporary workaround for issue 568.  The root problem is that we are
-    // seeing instances where posting back to the server fails if we use
-    // an InputStream, using an in-memory buffer however, works fine.
-    // This is not a solution we can ship with however, since we won't be
-    // able to post objects that won't fit in main mem, not to mention upload
-    // progress.
-    {
-      NSMutableData *tmp_postdata = [[NSMutableData alloc] init];
-      
-      int read_bytes = 0;
-      UInt8 tmp_buf[1024];
-      [post_data_stream open];
-      while ((read_bytes = [post_data_stream read:tmp_buf maxLength:1024])) {
-        [tmp_postdata appendBytes:tmp_buf length:read_bytes];
-      }
-      [post_data_stream close];
-      [request_ setHTTPBody:tmp_postdata];
-      [tmp_postdata release];
-    }
-    // SAFARI-TEMP - End
-#else
+    // NOTE:  There is a bug in NSURLConnection that causes it to silently
+    // fail in some circumstances.  See base/safari/safari_workarounds.m
+    // for details, rdar://problem/6116708
     [request_ setHTTPBodyStream:post_data_stream];
-#endif
   }
 
   [connection_ release];  // Defensive coding: stop potential memory leak in the

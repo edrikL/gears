@@ -29,6 +29,13 @@
 // OS X Bugs affecting Gears:
 
 // -----------------------------------------------------------------------------
+// rdar://problem/6116708 - NSURLConnection will sometimes abort with no
+//                          delegate callback in OS X 10.5 & 10.4.
+// The conditions under which this bug is tickled are unlikely to be
+// seen in the wild.  Our testwebserver.py script has been fixed so that
+// it no longer causes us to run into this problem.
+// Also see gears issue 568.
+// -----------------------------------------------------------------------------
 // rdar://problem/5830581 - NSURLProtocol not called on redirect.
 //  Our NSURLProtocol handler isn't called if a URL redirects to another URL
 // in the Gears Cache.
