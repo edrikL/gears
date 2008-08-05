@@ -36,6 +36,7 @@
 #import <unistd.h>
 
 #import "gears/base/common/common.h"
+#import "gears/base/common/file.h"
 #import "gears/base/common/paths.h"
 #import "gears/base/common/stopwatch.h"
 #import "gears/base/common/string_utils.h"
@@ -100,6 +101,9 @@ bool SlaveProcess::Start(bool as_peer) {
   if (!GetSlavePath(&slave_path)) {
     return false;
   }
+  if (!File::Exists(slave_path.c_str())) {
+    return false;
+  }
 
   std::string narrow_slave_path;
   if (!String16ToUTF8(slave_path.c_str(), &narrow_slave_path)) {
@@ -109,7 +113,13 @@ bool SlaveProcess::Start(bool as_peer) {
   NSString *ns_slave_path =
       [[NSString alloc] initWithCString:narrow_slave_path.c_str()
                                encoding:NSUTF8StringEncoding];
-  NSArray* args = [NSArray array];                                             
+  NSArray* args = [NSArray array];
+
+  // In FF, we have observed that launchedTaskWithLaunchPath:arguments: appears
+  // to throw an exception rather than returning an error. This is confusing
+  // since we compile Gears with obj-c exceptions turned off, and therefore
+  // can't wrap this in a @try/@catch block. If this turns out to be a problem
+  // it may warrant closer examination
   NSTask *task = [NSTask launchedTaskWithLaunchPath:ns_slave_path
                                           arguments:args];
   if (!task) {
