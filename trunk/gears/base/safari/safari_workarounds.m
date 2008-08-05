@@ -102,6 +102,7 @@
 #import <dlfcn.h>
 #import <Cocoa/Cocoa.h>
 #import <mach-o/nlist.h>
+#include <WebKit/npfunctions.h>
 
 // Workaround for Webkit bug 18941. 
 // Returns address of WebCore::TimerBase::fireTimersInNestedEventLoop() static
@@ -154,3 +155,29 @@ void EnableWebkitTimersForNestedRunloop() {
     fireTimersInNestedEventLoop();
   }
 }
+
+// Stub functions for NPAPI entry points, see plugin_proxy.mm for details.
+NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
+NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
+void NP_Shutdown(void);
+
+@interface NPAPIStub : NSObject
++ (NPError)NP_Initialize:(NPNetscapeFuncs *)browserFuncs;
++ (NPError)NP_GetEntryPoints:(NPPluginFuncs *)pluginFuncs;
++ (void)NP_Shutdown;
+@end
+
+@implementation NPAPIStub
++ (NPError)NP_Initialize:(NPNetscapeFuncs *)browserFuncs {
+  return NP_Initialize(browserFuncs);
+}
+
++ (NPError)NP_GetEntryPoints:(NPPluginFuncs *)pluginFuncs {
+  return NP_GetEntryPoints(pluginFuncs);
+}
+
++ (void)NP_Shutdown {
+  NP_Shutdown();
+}
+@end
+

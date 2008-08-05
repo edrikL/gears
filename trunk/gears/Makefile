@@ -1184,6 +1184,12 @@ SF_INPUTMANAGER_CPPSRCS += \
 		loader.mm \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
+# Safari Proxy DLL
+
+SF_PROXY_DLL_CPPSRCS += \
+		plugin_proxy.mm \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # tools/perf
