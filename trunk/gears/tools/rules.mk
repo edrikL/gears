@@ -532,20 +532,17 @@ $($(BROWSER)_OUTDIR)/genfiles/%: %.stab
 
 # IDL TARGETS
 
-# Need /base/common in the include path to derive from GearsBaseClassInterface
-# (xpidl doesn't like slashes in #include "base_interface_ff.idl")
-#
 # TODO(cprince): see whether we can remove the extra include paths after
 # the 1.9 inclusion is complete.
 $(FF2_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF2_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF2_OUTDIR)/genfiles/$* $<
 $(FF2_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF2_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF2_OUTDIR)/genfiles/$* $<
 
 $(FF3_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF3_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF3_OUTDIR)/genfiles/$* $<
 $(FF3_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF3_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF3_OUTDIR)/genfiles/$* $<
 
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	midl $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c" $<

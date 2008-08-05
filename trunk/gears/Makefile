@@ -928,7 +928,7 @@ FF3_M4SRCS	+= \
 		$(NULL)
 
 FF3_IDLSRCS	+= \
-		base_interface_ff.idl \
+		interfaces.idl \
 		$(NULL)
 
 FF3_CPPSRCS	+= \
