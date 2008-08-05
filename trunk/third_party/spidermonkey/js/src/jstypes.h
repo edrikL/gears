@@ -245,6 +245,12 @@
 
 #if (defined(XP_WIN) && !defined(CROSS_COMPILE)) || defined (WINCE)
 # include "jscpucfg.h"      /* Use standard Mac or Windows configuration */
+#elif defined(OS_ANDROID)
+# if defined(__ARM_EABI__) && __ARM_EABI__ >= 1
+#  include "jsarmeabicfg.h"   /* ARM EABI gcc configuration */
+# else
+#  error "Please add this platform configuration"
+# endif
 #elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
 # include "jsautocfg.h"     /* Use auto-detected configuration */
 #else
