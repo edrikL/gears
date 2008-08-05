@@ -46,7 +46,7 @@
 #if BROWSER_FF3
 #include <gecko_internal/nsThreadUtils.h>
 #endif
-#include "genfiles/base_interface_ff.h"
+#include "genfiles/interfaces.h"
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/string_utils.h"

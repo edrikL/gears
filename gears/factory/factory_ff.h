@@ -26,7 +26,7 @@
 #ifndef GEARS_FACTORY_FACTORY_FF_H__
 #define GEARS_FACTORY_FACTORY_FF_H__
 
-#include "genfiles/base_interface_ff.h"
+#include "genfiles/interfaces.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/factory/factory_impl.h"
