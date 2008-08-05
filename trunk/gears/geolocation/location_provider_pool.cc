@@ -43,7 +43,11 @@ LocationProviderPool::LocationProviderPool()
 }
 
 LocationProviderPool::~LocationProviderPool() {
+#ifdef WINCE
+  // The lack of unload monitoring on WinCE means that we may leak providers.
+#else
   assert(providers_.empty());
+#endif  // WINCE
 }
 
 // static
