@@ -628,6 +628,9 @@ SHARED_LINKFLAGS += \
 	/MACHINE:X86 \
 	/NODEFAULTLIB:msvcrt \
 	$(SHARED_LINKFLAGS_$(MODE))
+# Flags for security hardening (only available for win32, not wince).
+SHARED_LINKFLAGS += \
+	/DYNAMICBASE /SAFESEH
 else
 SHARED_LINKFLAGS += \
 	/MACHINE:THUMB \
