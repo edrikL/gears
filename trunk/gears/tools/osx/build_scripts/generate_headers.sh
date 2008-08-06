@@ -38,9 +38,9 @@ RESOURCES_DIR="$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/"
 # TODO(playmobil):Add support for localizations.
 mkdir -p "$RESOURCES_DIR/en-US"
 mkdir -p "$GEN_UI_DIR/en-US"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/settings_dialog.html.m4 > "$GEN_UI_DIR/en-US/settings_dialog.html"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/permissions_dialog.html.m4 > "$GEN_UI_DIR/en-US/permissions_dialog.html"
-/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/shortcuts_dialog.html.m4 > "$GEN_UI_DIR/en-US/shortcuts_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/settings_dialog.html_m4 > "$GEN_UI_DIR/en-US/settings_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/permissions_dialog.html_m4 > "$GEN_UI_DIR/en-US/permissions_dialog.html"
+/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ="$FRIENDLY_NAME" -DPRODUCT_SHORT_NAME_UQ="$SHORT_NAME" -DPRODUCT_VERSION=$VERSION "-I$BUILD_DIR" ui/common/shortcuts_dialog.html_m4 > "$GEN_UI_DIR/en-US/shortcuts_dialog.html"
 
 tools/osx/webarchiver/webarchiver "$RESOURCES_DIR/en-US/settings_dialog.webarchive" "$GEN_UI_DIR/en-US/settings_dialog.html" $COMMON_RESOURCES
 tools/osx/webarchiver/webarchiver "$RESOURCES_DIR/en-US/permissions_dialog.webarchive" "$GEN_UI_DIR/en-US/permissions_dialog.html" $COMMON_RESOURCES
