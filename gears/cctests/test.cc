@@ -1854,11 +1854,11 @@ void CreateObjectBool(JsCallContext* context,
                       JsObject* out) {
   TEST_ASSERT(out->SetPropertyBool(STRING16(L"bool_true"), true));
   TEST_ASSERT(out->SetPropertyBool(STRING16(L"bool_false"), false));
-  JsArray* bool_array = js_runner->NewArray();
-  TEST_ASSERT(bool_array);
+  scoped_ptr<JsArray> bool_array(js_runner->NewArray());
+  TEST_ASSERT(bool_array.get());
   TEST_ASSERT(bool_array->SetElementBool(0, true));
   TEST_ASSERT(bool_array->SetElementBool(1, false));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"bool_array"), bool_array));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"bool_array"), bool_array.get()));
 }
 
 void CreateObjectInt(JsCallContext* context,
@@ -1870,14 +1870,14 @@ void CreateObjectInt(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_negative_1"), -1));
   TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_negative_large"),
                                   -int_large));
-  JsArray* int_array = js_runner->NewArray();
-  TEST_ASSERT(int_array);
+  scoped_ptr<JsArray> int_array(js_runner->NewArray());
+  TEST_ASSERT(int_array.get());
   TEST_ASSERT(int_array->SetElementInt(0, 0));
   TEST_ASSERT(int_array->SetElementInt(1, 1));
   TEST_ASSERT(int_array->SetElementInt(2, int_large));
   TEST_ASSERT(int_array->SetElementInt(3, -1));
   TEST_ASSERT(int_array->SetElementInt(4, -int_large));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"int_array"), int_array));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"int_array"), int_array.get()));
 }
 
 void CreateObjectDouble(JsCallContext* context,
@@ -1890,15 +1890,16 @@ void CreateObjectDouble(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_negative_1"), -1.01));
   TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_negative_large"),
                                      JS_NUMBER_MIN_VALUE));
-  JsArray* double_array = js_runner->NewArray();
-  TEST_ASSERT(double_array);
+  scoped_ptr<JsArray> double_array(js_runner->NewArray());
+  TEST_ASSERT(double_array.get());
   TEST_ASSERT(double_array->SetElementDouble(0, 0.01));
   TEST_ASSERT(double_array->SetElementDouble(1, 1.01));
   TEST_ASSERT(double_array->SetElementDouble(2,
       std::numeric_limits<double>::max()));
   TEST_ASSERT(double_array->SetElementDouble(3, -1.01));
   TEST_ASSERT(double_array->SetElementDouble(4, JS_NUMBER_MIN_VALUE));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"double_array"), double_array));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"double_array"),
+                                    double_array.get()));
 }
 
 void CreateObjectString(JsCallContext* context,
@@ -1911,12 +1912,13 @@ void CreateObjectString(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyString(STRING16(L"string_0"), string_0));
   TEST_ASSERT(out->SetPropertyString(STRING16(L"string_1"), string_1));
   TEST_ASSERT(out->SetPropertyString(STRING16(L"string_many"), string_many));
-  JsArray* string_array = js_runner->NewArray();
-  TEST_ASSERT(string_array);
+  scoped_ptr<JsArray> string_array(js_runner->NewArray());
+  TEST_ASSERT(string_array.get());
   TEST_ASSERT(string_array->SetElementString(0, string_0));
   TEST_ASSERT(string_array->SetElementString(1, string_1));
   TEST_ASSERT(string_array->SetElementString(2, string_many));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"string_array"), string_array));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"string_array"),
+                                    string_array.get()));
 }
 
 static bool FillTestArray(const int n, JsArray* arr) {
@@ -1929,39 +1931,40 @@ void CreateObjectArray(JsCallContext* context,
                        JsRunnerInterface* js_runner,
                        JsRootedCallback* func,
                        JsObject* out) {
-  JsArray* array_0 = js_runner->NewArray();
-  TEST_ASSERT(array_0);
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_0"), array_0));
+  scoped_ptr<JsArray> array_0(js_runner->NewArray());
+  TEST_ASSERT(array_0.get());
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_0"), array_0.get()));
 
-  JsArray* array_1 = js_runner->NewArray();
-  TEST_ASSERT(array_1);
-  TEST_ASSERT(FillTestArray(1, array_1));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_1"), array_1));
+  scoped_ptr<JsArray> array_1(js_runner->NewArray());
+  TEST_ASSERT(array_1.get());
+  TEST_ASSERT(FillTestArray(1, array_1.get()));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_1"), array_1.get()));
 
-  JsArray* array_8 = js_runner->NewArray();
-  TEST_ASSERT(array_8);
-  TEST_ASSERT(FillTestArray(8, array_8));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_8"), array_8));
+  scoped_ptr<JsArray> array_8(js_runner->NewArray());
+  TEST_ASSERT(array_8.get());
+  TEST_ASSERT(FillTestArray(8, array_8.get()));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_8"), array_8.get()));
 
-  JsArray* array_10000 = js_runner->NewArray();
-  TEST_ASSERT(array_10000);
-  TEST_ASSERT(FillTestArray(10000, array_10000));
-  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_10000"), array_10000));
+  scoped_ptr<JsArray> array_10000(js_runner->NewArray());
+  TEST_ASSERT(array_10000.get());
+  TEST_ASSERT(FillTestArray(10000, array_10000.get()));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_10000"),
+                                    array_10000.get()));
 
-  JsArray* array_many_types = js_runner->NewArray();
-  TEST_ASSERT(array_many_types);
+  scoped_ptr<JsArray> array_many_types(js_runner->NewArray());
+  TEST_ASSERT(array_many_types.get());
   TEST_ASSERT(array_many_types->SetElementBool(0, false));
   TEST_ASSERT(array_many_types->SetElementBool(1, true));
   TEST_ASSERT(array_many_types->SetElementInt(2, 2));
   TEST_ASSERT(array_many_types->SetElementString(3, STRING16(L"3")));
   TEST_ASSERT(array_many_types->SetElementDouble(4, 4.01));
-  JsArray* array_5 = js_runner->NewArray();
-  TEST_ASSERT(array_5);
-  TEST_ASSERT(FillTestArray(5, array_5));
-  TEST_ASSERT(array_many_types->SetElementArray(5, array_5));
+  scoped_ptr<JsArray> array_5(js_runner->NewArray());
+  TEST_ASSERT(array_5.get());
+  TEST_ASSERT(FillTestArray(5, array_5.get()));
+  TEST_ASSERT(array_many_types->SetElementArray(5, array_5.get()));
   TEST_ASSERT(array_many_types->SetElementFunction(6, func));
   TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_many_types"),
-                                    array_many_types));
+                                    array_many_types.get()));
 }
 
 void CreateObjectObject(JsCallContext* context,
@@ -1983,11 +1986,9 @@ void CreateObjectDate(JsCallContext* context,
                       JsRunnerInterface* js_runner,
                       JsObject* out) {
   assert(out);
-  JsObject* obj = js_runner->NewDate(10);
-  TEST_ASSERT(obj);
-  if (obj) {
-    TEST_ASSERT(out->SetPropertyObject(STRING16(L"date_object"), obj));
-  }
+  scoped_ptr<JsObject> obj(js_runner->NewDate(10));
+  TEST_ASSERT(obj.get());
+  TEST_ASSERT(out->SetPropertyObject(STRING16(L"date_object"), obj.get()));
 }
 
 void CreateObjectFunction(JsCallContext* context,

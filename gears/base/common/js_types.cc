@@ -190,9 +190,11 @@ static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
 #if BROWSER_FF
 
 JsArray::JsArray() : js_context_(NULL), array_(0) {
+  LEAK_COUNTER_INCREMENT(JsArray);
 }
 
 JsArray::~JsArray() {
+  LEAK_COUNTER_DECREMENT(JsArray);
   if (array_ && JSVAL_IS_GCTHING(array_)) {
     JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &array_);
@@ -501,9 +503,11 @@ bool JsArray::SetElementModule(int index, ModuleImplBaseClass *value) {
 #if BROWSER_FF
 
 JsObject::JsObject() : js_context_(NULL), js_object_(0) {
+  LEAK_COUNTER_INCREMENT(JsObject);
 }
 
 JsObject::~JsObject() {
+  LEAK_COUNTER_DECREMENT(JsObject);
   if (js_object_ && JSVAL_IS_GCTHING(js_object_)) {
     JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &js_object_);
@@ -1925,7 +1929,14 @@ JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                              int argc, JsToken *argv, JsToken *retval)
     : js_context_(cx), is_exception_set_(false), is_return_value_set_(false),
       argc_(argc), argv_(argv), retval_(retval),
-      js_runner_(js_runner) {}
+      js_runner_(js_runner) {
+  LEAK_COUNTER_INCREMENT(JsCallContext);
+}
+
+
+JsCallContext::~JsCallContext() {
+  LEAK_COUNTER_DECREMENT(JsCallContext);
+}
 
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {

@@ -38,8 +38,11 @@ static AtomicWord leak_counter_counters[MAX_LEAK_COUNTER_TYPE];
 static const char *leak_counter_names[] = {
   "DocumentJsRunner",
   "FFHttpRequest",
+  "JsArray",
+  "JsCallContext",
   "JsContextWrapper",
   "JsEventMonitor",
+  "JsObject",
   "JsRunner",
   "JsWrapperDataForFunction",
   "JsWrapperDataForInstance",
