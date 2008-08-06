@@ -438,7 +438,7 @@ else
 ifeq ($(OS),osx)
 prereqs:: $(OSX_LAUNCHURL_OUTDIR)
 modules:: $(OSX_LAUNCHURL_EXE)
-installers:: $(SF_INSTALLER) $(FFMERGED_INSTALLER_XPI)
+installers:: $(SF_INSTALLER_PKG) $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
@@ -1021,7 +1021,8 @@ ifeq ($(HAVE_ICEBERG),1)
 $(SF_INSTALLER_PKG):
 	$(ICEBERG) -v $(SF_OUTDIR)/genfiles/installer.packproj
 else
-$(warning To create a Safari installer for Gears, you must install Iceberg \
+$(SF_INSTALLER_PKG):
+	$(warning To create a Safari installer for Gears, you must install Iceberg \
   from http://s.sudre.free.fr/Software/Iceberg.html.  You can install the \
   Safari version manually by running tools/osx/install_gears.sh script)
 endif
