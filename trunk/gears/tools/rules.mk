@@ -1104,6 +1104,9 @@ $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 	cp $(SF_PROXY_DLL) $@/Contents/MacOS/Gears
 # Copy Gears.bundle
 	cp -R $(SF_PLUGIN_BUNDLE) $@/Contents/Resources/
+# Copy uninstaller
+	cp "tools/osx/uninstall.command" "$@/Contents/Resources/"
+	/usr/bin/touch -c $@
 	
 $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.bundle ---
