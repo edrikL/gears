@@ -80,7 +80,7 @@ interface PositionOptions {
   // best possible results. This may result in slower response times or
   // increased battery consumption. The user may also deny this capability,
   // or the device may not be able to provide more accurate results than if
-  // the flag wasn't specified.
+  // the flag wasn't specified. Defaults to false.
   bool enableHighAccuracy;
 
   // Optional. Gears extension. Requests reverse geocoded address information as part of
