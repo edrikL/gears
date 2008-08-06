@@ -35,23 +35,7 @@
     
     // Setup things if we're running in Safari
     if ([bundleID isEqualToString:@"com.apple.Safari"]) {
-      BOOL result = NO;
-
-      // Check if Gears can be loaded into this version of Safari
-      if ([GearsLoader canLoadGears]) {
-        if ([GearsLoader loadGearsBundle]) {
-          Class gearsBrowserLoadHook = 
-                     NSClassFromString(@"GearsBrowserLoadHook"); 
-          result = [gearsBrowserLoadHook installHook];
-          if (!result) {
-            NSLog(@"gearsBrowserLoadHook installHook failed");
-          }
-        }
-      } else {
-        NSLog(@"canLoadGears Returned False");
-      }
-      
-      if (!result) {
+      if (![[self class] loadGears]) {
         [self release];
         self = nil;
       }
@@ -59,6 +43,26 @@
   }
   
   return self;
+}
+
++ (BOOL)loadGears {
+  BOOL result = NO;
+
+  // Check if Gears can be loaded into this version of WebKit.
+  if ([GearsLoader canLoadGears]) {
+    if ([GearsLoader loadGearsBundle]) {
+      Class gearsBrowserLoadHook = 
+                 NSClassFromString(@"GearsBrowserLoadHook"); 
+      result = [gearsBrowserLoadHook installHook];
+      if (!result) {
+        NSLog(@"gearsBrowserLoadHook installHook failed");
+      }
+    }
+  } else {
+    NSLog(@"canLoadGears Returned False");
+  }
+  
+  return result;
 }
 
 @end
