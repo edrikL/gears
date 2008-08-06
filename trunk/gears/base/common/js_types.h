@@ -560,6 +560,8 @@ class JsCallContext {
                 int argc, JsToken *argv, JsToken *retval);
 #endif
 
+  ~JsCallContext();
+
   // Get the arguments a JavaScript caller has passed into a scriptable method
   // of a native object.  Returns the number of arguments successfully read
   // (will bail at the first invalid argument).
