@@ -402,6 +402,7 @@ class BackgroundMessageHandler
 class MainMessageHandler
     : public ThreadMessageQueue::HandlerInterface {
  public:
+  MainMessageHandler() : done_(false) { }
   // ThreadMessageQueue::HandlerInterface override
   virtual void HandleThreadMessage(int message_type,
                                    MessageData *message_data) {
@@ -410,7 +411,12 @@ class MainMessageHandler
     // The worker must have received all data. Let's stop it.
     LOG(("Got %d from worker thread", message->Data()));
     AndroidMessageLoop::Stop(message->Sender());
+    done_ = true;
   }
+  bool IsDone() const { return done_; }
+
+ private:
+  bool done_;
 };
 
 class TestThread : public Thread {
@@ -463,7 +469,9 @@ bool TestThreadMessageQueue(std::string16* error) {
   message = new TestMessage(main_thread_id, 300);
   queue->Send(worker_thread_id, kMessageType2, message);
 
-  AndroidMessageLoop::RunOnce();
+  while (!global_handler.IsDone()) {
+    AndroidMessageLoop::RunOnce();
+  }
   LOG(("Message from worker received."));
   thread->Join();
   LOG(("Test thread joined successfuly, test completed."));
