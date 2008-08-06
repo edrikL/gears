@@ -138,7 +138,6 @@ void Dispatcher<GearsTest>::Init() {
 #else
 #include "gears/media/audio_recorder_test.h"
 #endif
-#include "gears/localserver/common/async_task_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -353,7 +352,6 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
   ok &= TestGeolocationDB(&error);
-  ok &= TestAsyncTaskPostCookies(EnvPageLocationUrl(), &error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
