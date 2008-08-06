@@ -86,12 +86,10 @@ const double kExpirationTimeSlice = 0.25;
 // nodes that are assumed to be individual baloons.
 class BalloonContainer : public glint::Node {
  public:
-  BalloonContainer() {
-    if (!initialized_) {
-      initialized_ = true;
-      RefreshSystemMetrics();
-    }
-  }
+  BalloonContainer();
+
+  // Refresh the work area and balloon placement.
+  void OnDisplaySettingsChanged();
 
   static int min_balloon_width();
   static int max_balloon_width();
@@ -105,7 +103,9 @@ class BalloonContainer : public glint::Node {
   // factor when 'large ). This is done automatically first time and the
   // application should call this method to re-acquire metrics after
   // resolution and settings change.
-  static void RefreshSystemMetrics();
+  //
+  // Return true if and only if a metric changed.
+  static bool RefreshSystemMetrics();
 
  protected:
   // Instructs base class to delegate children layout to this class.
@@ -151,6 +151,39 @@ glint::Rectangle BalloonContainer::work_area_;
 double BalloonContainer::font_scale_factor_ = 1.0;
 bool BalloonContainer::initialized_ = false;
 
+class DisplayChangedHandler : public glint::MessageHandler {
+ public:
+  DisplayChangedHandler(BalloonContainer *balloon_container)
+      : balloon_container_(balloon_container) {
+    assert(balloon_container);
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    switch (message.code) {
+      case glint::GL_MSG_DISPLAY_SETTINGS_CHANGED:
+      case glint::GL_MSG_WORK_AREA_CHANGED:
+        balloon_container_->OnDisplaySettingsChanged();
+        break;
+      default:
+        // We don't care about other messages.
+        break;
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+
+ private:
+  BalloonContainer *balloon_container_;
+  DISALLOW_EVIL_CONSTRUCTORS(DisplayChangedHandler);
+};
+
+BalloonContainer::BalloonContainer() {
+  if (!initialized_) {
+    initialized_ = true;
+    RefreshSystemMetrics();
+  }
+  AddHandler(new DisplayChangedHandler(this));
+}
+
 // Scale the size to count in the system font factor
 int BalloonContainer::ScaleSize(int size) {
   return static_cast<int>(size * font_scale_factor_);
@@ -172,9 +205,24 @@ int BalloonContainer::max_balloon_height() {
   return ScaleSize(kBalloonMaxHeight);
 }
 
-void BalloonContainer::RefreshSystemMetrics() {
-  System::GetMainScreenBounds(&work_area_);
-  font_scale_factor_ = System::GetSystemFontScaleFactor();
+bool BalloonContainer::RefreshSystemMetrics() {
+  bool changed = false;
+
+  glint::Rectangle new_work_area;
+  new_work_area.Set(work_area_);
+  System::GetMainScreenBounds(&new_work_area);
+  if (!work_area_.IsEqual(new_work_area)) {
+    work_area_.Set(new_work_area);
+    changed = true;
+  }
+
+  double new_font_scale_factor = font_scale_factor_;
+  new_font_scale_factor = System::GetSystemFontScaleFactor();
+  if (font_scale_factor_ != new_font_scale_factor) {
+    font_scale_factor_ = new_font_scale_factor;
+    changed = true;
+  }
+  return changed;
 }
 
 glint::Point BalloonContainer::GetOrigin() {
@@ -271,6 +319,12 @@ glint::Size BalloonContainer::OnSetLayoutBounds(glint::Size reserved) {
   return reserved;
 }
 
+void BalloonContainer::OnDisplaySettingsChanged() {
+  if (RefreshSystemMetrics()) {
+    Invalidate();
+  }
+}
+
 class TimerHandler : public glint::MessageHandler {
  public:
   TimerHandler(BalloonCollection *collection)
@@ -334,9 +388,10 @@ class RemoveWorkItem : public glint::WorkItem {
 class MouseWithinDetector : public glint::MessageHandler {
  public:
   MouseWithinDetector(Balloon *balloon, glint::Node *owner)
-    : owner_(owner),
-      balloon_(balloon),
-      mouse_within_(false) {
+      : owner_(owner),
+        balloon_(balloon),
+        mouse_within_(false) {
+    assert(owner && balloon);
   }
 
   ~MouseWithinDetector() {
