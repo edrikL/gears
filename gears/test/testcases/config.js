@@ -107,6 +107,11 @@ factorySuite.addFile('../testcases/factory_siting_tests.js',
                      {useWorker: false, useIFrame: true});
 suites.push(factorySuite);
 
+var geolocationSuite = new TestSuite('Geolocation');
+geolocationSuite.addFile('../testcases/geolocation_tests.js', 
+                         {useWorker: true, useIFrame: true});
+suites.push(geolocationSuite);
+
 var httpRequestSuite = new TestSuite('HttpRequest');
 httpRequestSuite.addFile('../testcases/httprequest_tests.js',
                          {useWorker: true, useIFrame: true});
@@ -153,8 +158,3 @@ workerPoolSuite.addFile(
 workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
                         {useWorker: true, useIFrame: true});
 suites.push(workerPoolSuite);
-
-var geolocationSuite = new TestSuite('Geolocation');
-geolocationSuite.addFile('../testcases/geolocation_tests.js', 
-                         {useWorker: true, useIFrame: true});
-suites.push(geolocationSuite);
