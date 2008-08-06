@@ -32,7 +32,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
+#if defined(OS_MACOSX)
 #include <sys/syslimits.h>
+#endif
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
