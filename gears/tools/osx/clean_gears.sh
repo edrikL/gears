@@ -6,9 +6,9 @@ rm -rf '~/Library/Internet Plugins/Gears.plugin'
 sudo rm -rf "/Library/Internet Plug-Ins/Gears.plugin/"
 
 # Make sure script is run as root.
-if [ $USER != 'root' ]; then
-  sudo $0 $*
-  exit 0
+if [ ${EUID:-1} -ne 0 ]; then
+  sudo "$0" $*
+  exit $?
 fi
 
 rm -rf "/Library/InputManagers/GearsEnabler"
