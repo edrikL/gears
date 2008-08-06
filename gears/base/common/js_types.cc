@@ -1933,12 +1933,6 @@ JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
   LEAK_COUNTER_INCREMENT(JsCallContext);
 }
 
-
-JsCallContext::~JsCallContext() {
-  LEAK_COUNTER_DECREMENT(JsCallContext);
-}
-
-
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the JS caller is expecting a return value.
   if (retval_) {
@@ -2281,4 +2275,8 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 JsParamType JsCallContext::GetArgumentType(int i) {
   if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
   return JsTokenGetType(GetArgument(i), js_context());
+}
+
+JsCallContext::~JsCallContext() {
+  LEAK_COUNTER_DECREMENT(JsCallContext);
 }
