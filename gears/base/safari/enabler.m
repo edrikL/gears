@@ -33,8 +33,9 @@
   if ((self = [super init])) {
     NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
     
-    // Setup things if we're running in Safari
-    if ([bundleID isEqualToString:@"com.apple.Safari"]) {
+    // Setup things if we're running in Safari or a WebKit nightly.
+    if ([bundleID isEqualToString:@"com.apple.Safari"] ||
+        [bundleID isEqualToString:@"org.webkit.nightly.WebKit"]) {
       if (![[self class] loadGears]) {
         [self release];
         self = nil;
