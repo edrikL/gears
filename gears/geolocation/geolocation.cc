@@ -921,7 +921,7 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
       std::vector<std::string16> properties;
       if (address_object.get()->GetPropertyNames(&properties) &&
           !properties.empty()) {
-        result &= position_object->SetPropertyObject(STRING16(L"address"),
+        result &= position_object->SetPropertyObject(STRING16(L"gearsAddress"),
                                                      address_object.get());
       }
     } else {

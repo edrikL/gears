@@ -94,6 +94,7 @@ struct Position {
   int accuracy;             // In metres
   int altitude_accuracy;    // In metres
   int64 timestamp;          // Milliseconds since 1st Jan 1970
+  // Note that the corresponding JavaScript Position property is 'gearsAddress'.
   Address address;
 
   // These properties are returned to JavaScript as a PositionError object.
