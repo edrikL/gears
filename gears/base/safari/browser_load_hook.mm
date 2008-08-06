@@ -26,6 +26,7 @@
 #import "gears/base/common/common.h"
 #import "gears/base/common/detect_version_collision.h"
 #import "gears/base/common/exception_handler.h"
+#import "gears/base/common/message_queue.h"
 #import "gears/base/safari/browser_load_hook.h"
 #import "gears/base/safari/safari_workarounds.h"
 #import "gears/localserver/safari/http_handler.h"
@@ -44,6 +45,9 @@ static ExceptionManager exception_manager(true);
   LOG(("Gears: Breakpad started"));
 #endif
   SetUiThread();
+  if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {
+    LOG(("Gears: MessageQueue Init failed"));
+  }
 
   // If there is a version collision, don't register HTTP interception hoooks.  
   if (DetectedVersionCollision()) {
