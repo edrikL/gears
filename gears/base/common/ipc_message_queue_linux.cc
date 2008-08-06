@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/syslimits.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
