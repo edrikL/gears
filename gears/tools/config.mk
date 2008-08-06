@@ -446,7 +446,7 @@ endif
 # Breakpad working for the FF OSX release.
 ifeq ($(BROWSER),SF)
 ifeq ($(MODE),opt)
-STRIP_EXECUTABLE = /usr/bin/strip -Sx $@
+STRIP_EXECUTABLE = /usr/bin/strip -S $@
 else
 STRIP_EXECUTABLE =
 endif
