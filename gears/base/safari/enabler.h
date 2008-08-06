@@ -31,8 +31,15 @@
 
 #import <Cocoa/Cocoa.h>
 
+// Do not change the name of this class or the signature of the loadGears method
+// as they may be called by 3rd party applications and changing them will cause
+// these apps to no longer be able to load Gears.
 @interface GearsEnabler : NSObject
 - (id)init;
+
+// Can be called by 3rd party applications who want to explicitly load Gears
+// themselves.
++ (BOOL)loadGears;
 
 @end
 #endif  // GEARS_BASE_SAFARI_ENABLER_H__
