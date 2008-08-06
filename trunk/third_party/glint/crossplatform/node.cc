@@ -278,7 +278,7 @@ Size Node::ComputeRequiredSize(Size constraint) {
     return required_size_;
   }
   previous_constraint_ = constraint;
-  // Cause SetLayoutBounds to run even if the parent is settign the same bounds
+  // Cause SetLayoutBounds to run even if the parent is setting the same bounds
   // and we are not directly invalidated - this ensures both phases of layout
   // (measurememnt and positioning) to be executed if measurement went through.
   // Some nodes (HtmlNode) rely on both phases to finalize layout.

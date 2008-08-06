@@ -107,6 +107,8 @@ static const MessageMap win32_mappings[] = {
   { WM_KILLFOCUS, GL_MSG_KILLFOCUS },
   { WM_WINDOWPOSCHANGED, GL_MSG_WINDOW_POSITION_CHANGED },
   { WM_DISPLAYCHANGE, GL_MSG_DISPLAY_SETTINGS_CHANGED },
+  // The real message is filled in based on the wparam.
+  { WM_SETTINGCHANGE, GL_MSG_IDLE },
   { WM_QUIT,  GL_MSG_QUIT },
   { WM_CLOSE_DOCUMENT, GL_MSG_CLOSE_DOCUMENT },
 };
@@ -1378,6 +1380,16 @@ class Win32Platform : public Platform {
         message->window_position = Point(rect.left, rect.top);
         break;
       }
+
+      case WM_SETTINGCHANGE:
+        if (wparam == SPI_SETWORKAREA){
+          message->code = GL_MSG_WORK_AREA_CHANGED;
+        } else if (wparam == SPI_SETICONTITLELOGFONT) {
+          message->code = GL_MSG_DEFAULT_FONT_SIZE_CHANGED;
+        } else {
+          return false;
+        }
+        break;
 
       case WM_WINDOWPOSCHANGED: {
         WINDOWPOS* window_position = reinterpret_cast<WINDOWPOS*>(lparam);
