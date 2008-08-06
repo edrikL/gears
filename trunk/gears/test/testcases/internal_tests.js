@@ -452,15 +452,15 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.altitude = 30;
     correctPosition.accuracy = 1200;
     correctPosition.altitudeAccuracy = 10;
-    correctPosition.address = new Object();
-    correctPosition.address.streetNumber = '100';
-    correctPosition.address.street = 'Amphibian Walkway';
-    correctPosition.address.city = 'Mountain View';
-    correctPosition.address.county = 'Mountain View County';
-    correctPosition.address.region = 'California';
-    correctPosition.address.country = 'United States of America';
-    correctPosition.address.countryCode = 'US';
-    correctPosition.address.postalCode = '94043';
+    correctPosition.gearsAddress = new Object();
+    correctPosition.gearsAddress.streetNumber = '100';
+    correctPosition.gearsAddress.street = 'Amphibian Walkway';
+    correctPosition.gearsAddress.city = 'Mountain View';
+    correctPosition.gearsAddress.county = 'Mountain View County';
+    correctPosition.gearsAddress.region = 'California';
+    correctPosition.gearsAddress.country = 'United States of America';
+    correctPosition.gearsAddress.countryCode = 'US';
+    correctPosition.gearsAddress.postalCode = '94043';
     correctPosition.timestamp = new Date(42);
     assertObjectEqual(correctPosition, position);
 

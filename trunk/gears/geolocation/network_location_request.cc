@@ -37,6 +37,7 @@ static const char *kGearsNetworkLocationProtocolVersion = "1.0";
 static const char *kLatitudeString = "latitude";
 static const char *kLongitudeString = "longitude";
 static const char *kAltitudeString = "altitude";
+// Note that the corresponding JavaScript Position property is 'gearsAddress'.
 static const char *kAddressString = "address";
 static const char *kStreetNumberString = "street_number";
 static const char *kStreetString = "street";
