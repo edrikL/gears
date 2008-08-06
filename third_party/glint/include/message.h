@@ -73,6 +73,8 @@ enum GlintMessages {
   GL_MSG_PASTE,
   GL_MSG_SELECT_ALL,
   GL_MSG_CLOSE_DOCUMENT, // Like Ctrl+F4 on windows
+  GL_MSG_WORK_AREA_CHANGED,
+  GL_MSG_DEFAULT_FONT_SIZE_CHANGED,
 };
 
 // Result codes, returned from functions that return "MessageResultCode"

@@ -70,6 +70,3 @@ using glint::RootUI;
 - (void)cancel;
 
 @end
-
-
-
