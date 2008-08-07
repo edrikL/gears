@@ -56,16 +56,21 @@ const char16 *kPermissionExceptionString =
 
 const char16 *kGoogleUpdateClientsRegKey =
                   STRING16(L"Software\\Google\\Update\\ClientState");
+
+#if BROWSER_FF || BROWSER_IE
 #ifdef WIN32
 const char16 *kGoogleUpdateGearsClientGuid =
                   STRING16(L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}");
 #endif
-#ifdef BROWSER_WEBKIT
+#elif BROWSER_WEBKIT
 const char16 *kGoogleUpdateGearsClientGuid =
                   STRING16(L"{0006FF50-C0C0-4B9B-973C-4CF98BF4EA9D}");
+#elif BROWSER_NPAPI
+const char16 *kGoogleUpdateGearsClientGuid =
+                  STRING16(L"{00058422-BABE-4310-9B8B-B8DEB5D0B68A}");
 #endif
-const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 
+const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 
 void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(PRODUCT_VERSION_STRING));
