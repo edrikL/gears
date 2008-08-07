@@ -66,7 +66,6 @@ static const int kArgvFunctionIndex = -2; // negative indices [sic]
 static const int kArgvInstanceIndex = -1;
 
 
-//
 // Structs that record different custom data for the different JSObject types.
 // The structs have a common header so we can differentiate generic JSObjects.
 //
@@ -74,6 +73,41 @@ static const int kArgvInstanceIndex = -1;
 // By sharing a common base class, we can cast the raw pointer
 // stored on the JSObject to a JsWrapperDataHeader to determine the
 // JsWrapperData type.
+//
+// There are three JsWrapperDataForXxx subclasses:
+// * PROTO represents, for example, the GearsWorkerPool prototype.
+// * INSTANCE represents, for example, an instance of a GearsWorkerPool.
+// * FUNCTION represents, for example, the GearsWorkerPool.createWorker method.
+//
+// Cleaning up (i.e. resource de-allocation) is slightly different for each of
+// these three types.
+//
+// A JsWrapperDataForInstance lives and dies with a particular instance in the
+// JS engine. When a JS object that represents a Gears module is garbage
+// collected, its finalizer is called, which is the FinalizeNative function
+// below. In that function, we delete that JsWrapperDataForInstance.
+//
+// The other two subclasses (PROTO and FUNCTION) do not have a particular JS
+// instance to base their lifecycle on, but have to live for at least as long
+// as it is possible to create new JS objects for Gears modules. Thus, we
+// create a JsRootedToken to represent the entire lifecycle of PROTOs and
+// FUNCTIONs, and end that lifecycle during JsContextWrapper::CleanupRoots.
+// Specifically, JsContextWrapper::CleanupRoots will unroot the js_rooted_token
+// on all JsWrapperDataForProto and JsWrapperDataForFunction objects.
+//
+// Destroying the JsRootedToken for a PROTO object will call FinalizeNative on
+// that PROTO, where we can delete the JsWrapperDataForProto. Spidermonkey does
+// not provide a finalizer for FUNCTIONS, though, and instead we delete
+// JsWrapperDataForFunction instances in the JsContextWrapper destructor.
+//
+// One last thing that we have to manage is the heap-allocated JSClass'es.
+// Amongst other things, this is the structure that associates PROTOs and
+// INSTANCEs with our custom finalizer: FinalizeNative. Accordingly, the
+// JSClass has to live for longer than its PROTOs and INSTANCEs, and hence,
+// for example, the PROTO does not have a scoped_ptr<JSClass>, since otherwise
+// the JSClass might be destroyed before all its INSTANCEs are. We choose to
+// hold the JSClass objects in the js_classes_ set, and clean them up during
+// JsContextWrapper's destructor.
 
 enum JsWrapperDataType {
   PROTO_JSOBJECT,
@@ -94,10 +128,9 @@ struct JsWrapperData {
 };
 
 struct JsWrapperDataForProto : public JsWrapperData {
-  JSObject                   *jsobject;
-  JsContextWrapper           *js_wrapper;
-  scoped_ptr<JsRootedToken>  proto_root;
-  scoped_ptr<JSClass>        alloc_jsclass;
+  JsContextWrapper           *js_context_wrapper;
+  JSClass                    *js_class;
+  scoped_ptr<JsRootedToken>  js_rooted_token;
   scoped_ptr<std::string>    alloc_name;
 
   JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {
@@ -106,18 +139,10 @@ struct JsWrapperDataForProto : public JsWrapperData {
   ~JsWrapperDataForProto() {
     LEAK_COUNTER_DECREMENT(JsWrapperDataForProto);
   }
-  inline void Cleanup() {
-    // Cleanup only resets the scoped_ptr<JsRootedToken> proto_root, and does
-    // not explicitly delete this, unlike JsWrapperDataForFunction::Cleanup.
-    // Resetting the JsRootedToken will eventually trigger a FinalizeNative
-    // call on that JSObject, which will delete this JsWrapperDataForProto.
-    proto_root.reset();
-  }
 };
 
 struct JsWrapperDataForInstance : public JsWrapperData {
-  JSObject            *jsobject;
-  JsContextWrapper    *js_wrapper;
+  JsContextWrapper    *js_context_wrapper;
   ModuleImplBaseClass *module;
 
   JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {
@@ -132,7 +157,7 @@ struct JsWrapperDataForInstance : public JsWrapperData {
 };
 
 struct JsWrapperDataForFunction : public JsWrapperData {
-  scoped_ptr<JsRootedToken>  function_root;
+  scoped_ptr<JsRootedToken>  js_rooted_token;
   DispatchId                 dispatch_id;
   int                        flags;
 
@@ -142,14 +167,11 @@ struct JsWrapperDataForFunction : public JsWrapperData {
   ~JsWrapperDataForFunction() {
     LEAK_COUNTER_DECREMENT(JsWrapperDataForFunction);
   }
-  inline void Cleanup() {
-    delete this;
-  }
 };
 
 
-// Called when a JS object based on native code is cleaned up.  We need to
-// remove any reference counters it held here.
+// Called when a JS object representing a Gears module prototype or a Gears
+// module instance is cleaned up.
 void FinalizeNative(JSContext *cx, JSObject *obj) {
   JsWrapperData *p = reinterpret_cast<JsWrapperData *>(JS_GetPrivate(cx, obj));
   if (!p)
@@ -169,28 +191,40 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
 
 
 JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
-    : cx_(cx), global_obj_(global_obj) {
+    : cx_(cx), global_obj_(global_obj), cleanup_roots_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(JsContextWrapper);
 }
 
 
 JsContextWrapper::~JsContextWrapper() {
   LEAK_COUNTER_DECREMENT(JsContextWrapper);
+  assert(cleanup_roots_has_been_called_);
+
+  std::set<JSClass*>::iterator c;
+  for (c = js_classes_.begin(); c != js_classes_.end(); ++c) {
+    delete *c;
+  }
+
+  std::vector<JsWrapperDataForFunction *>::iterator f;
+  for (f = function_wrappers_.begin(); f != function_wrappers_.end(); ++f) {
+    delete *f;
+  }
 }
 
 
 void JsContextWrapper::CleanupRoots() {
+  assert(!cleanup_roots_has_been_called_);
+  cleanup_roots_has_been_called_ = true;
+
   std::vector<JsWrapperDataForProto *>::iterator p;
   for (p = proto_wrappers_.begin(); p != proto_wrappers_.end(); ++p) {
-    (*p)->Cleanup();
+    (*p)->js_rooted_token.reset();
   }
-  proto_wrappers_.clear();
 
   std::vector<JsWrapperDataForFunction *>::iterator f;
   for (f = function_wrappers_.begin(); f != function_wrappers_.end(); ++f) {
-    (*f)->Cleanup();
+    (*f)->js_rooted_token.reset();
   }
-  function_wrappers_.clear();
 }
 
 
@@ -209,23 +243,26 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
   if (iter != name_to_proto_map_.end()) {
     proto = iter->second;
     js_class = static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto))->
-        alloc_jsclass.get();
+        js_class;
+
   } else {
     scoped_ptr<JsWrapperDataForProto> proto_data(new JsWrapperDataForProto);
+    scoped_ptr<JSClass> alloc_js_class(new JSClass);
 
-    if (!InitClass(module_name.c_str(), proto_data.get(), &proto) ||
+    proto = InitClass(module_name.c_str(), proto_data.get(),
+                      alloc_js_class.get());
+    js_class = alloc_js_class.get();
+
+    if (!proto ||
         !AddAllFunctionsToPrototype(proto,
                                     module->GetWrapper()->GetDispatcher())) {
       return false;
     }
 
-    // save values
+    // Save values, and transfer ownership.
     name_to_proto_map_[module_name] = proto;
     proto_wrappers_.push_back(proto_data.get());
-    js_class = proto_data->alloc_jsclass.get();
-    dispatcher_classes_.insert(js_class);
-
-    // succeeded; save the pointer
+    js_classes_.insert(alloc_js_class.release());
     JS_SetPrivate(cx_, proto, proto_data.release());
   }
 
@@ -234,54 +271,65 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
   JS_EndRequest(cx_);
   if (!instance_obj) return false;
 
-  if (!SetupInstanceObject(instance_obj, module))
-    return false;
+  scoped_ptr<JsWrapperDataForInstance> instance_data(
+      new JsWrapperDataForInstance);
+  instance_data->js_context_wrapper = this;
+  instance_data->module = module;
+  JS_SetPrivate(cx_, instance_obj, instance_data.release());
 
   *token_out = OBJECT_TO_JSVAL(instance_obj);
   return true;
 }
 
 
-bool JsContextWrapper::InitClass(const char *class_name,
-                                 JsWrapperDataForProto *proto_data,
-                                 JSObject **proto_obj) {
+JSObject *JsContextWrapper::InitClass(const char *class_name,
+                                      JsWrapperDataForProto *proto_data,
+                                      JSClass *js_class) {
   assert(class_name);
   // TODO(nigeltao): Do we really need class_name_copy (and hence alloc_name)?
   scoped_ptr<std::string> class_name_copy(new std::string(class_name));
 
-  // always use the same JSClass, except for the name field
-  JSClass js_wrapper_class = {
-    class_name_copy->c_str(), JSCLASS_NEW_RESOLVE | // TODO(cprince): need flag?
-                              JSCLASS_HAS_PRIVATE, // name, flags
-    JS_PropertyStub, JS_PropertyStub,  // defineProperty, deleteProperty
-    JS_PropertyStub, JS_PropertyStub, // getProperty, setProperty
-    JS_EnumerateStub, JS_ResolveStub, // enum, resolve
-    JS_ConvertStub, FinalizeNative, // convert, finalize
-    JSCLASS_NO_OPTIONAL_MEMBERS
-  };
-  scoped_ptr<JSClass> alloc_jsclass(new JSClass(js_wrapper_class));
+  // Initialize js_class. The interesting fields are: name, flags and finalize.
+  // TODO(cprince): do we need the JSCLASS_NEW_RESOLVE flag?
+  js_class->name         = class_name_copy->c_str();
+  js_class->flags        = JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE;
+  js_class->addProperty  = JS_PropertyStub;
+  js_class->delProperty  = JS_PropertyStub;
+  js_class->getProperty  = JS_PropertyStub;
+  js_class->setProperty  = JS_PropertyStub;
+  js_class->enumerate    = JS_EnumerateStub;
+  js_class->resolve      = JS_ResolveStub;
+  js_class->convert      = JS_ConvertStub;
+  js_class->finalize     = FinalizeNative;
+  js_class->getObjectOps = 0;
+  js_class->checkAccess  = 0;
+  js_class->call         = 0;
+  js_class->construct    = 0;
+  js_class->xdrObject    = 0;
+  js_class->hasInstance  = 0;
+  js_class->mark         = 0;
+  js_class->reserveSlots = 0;
 
   // add the class to the JSContext
   JS_BeginRequest(cx_);
-  *proto_obj = JS_InitClass(cx_, global_obj_,
-                            NULL, // parent_proto
-                            alloc_jsclass.get(), // JSClass *
-                            NULL, // constructor
-                            0, // ctor_num_args
-                            NULL, NULL,  //   prototype   props/funcs
-                            NULL, NULL); // "constructor" props/funcs
+  JSObject *result = JS_InitClass(cx_, global_obj_,
+                                  NULL, // parent_proto
+                                  js_class, // JSClass *
+                                  NULL, // constructor
+                                  0, // ctor_num_args
+                                  NULL, NULL,  //   prototype   props/funcs
+                                  NULL, NULL); // "constructor" props/funcs
   JS_EndRequest(cx_);
-  if (!*proto_obj) { return false; }
+  if (!result) { return NULL; }
 
   // setup the JsWrapperDataForProto struct
-  proto_data->jsobject = *proto_obj;
-  proto_data->js_wrapper = this;
+  proto_data->js_context_wrapper = this;
+  proto_data->js_class = js_class;
   proto_data->alloc_name.swap(class_name_copy); // take ownership
-  proto_data->alloc_jsclass.swap(alloc_jsclass); // take ownership
-  proto_data->proto_root.reset(new JsRootedToken(cx_,
-                                                 OBJECT_TO_JSVAL(*proto_obj)));
+  proto_data->js_rooted_token.reset(
+      new JsRootedToken(cx_, OBJECT_TO_JSVAL(result)));
 
-  return true;
+  return result;
 }
 
 
@@ -352,9 +400,8 @@ bool JsContextWrapper::AddFunctionToPrototype(
                                            new JsWrapperDataForFunction);
   function_data->dispatch_id = dispatch_id;
   function_data->flags = newfunction_flags;
-  function_data->function_root.reset(new JsRootedToken(
-                                             cx_,
-                                             OBJECT_TO_JSVAL(function_obj)));
+  function_data->js_rooted_token.reset(
+      new JsRootedToken(cx_, OBJECT_TO_JSVAL(function_obj)));
 
   // Assume function is a method, and revise if it's a getter or setter.
   // FYI: xptinfo reports getters/setters separately (but with same name).
@@ -407,24 +454,6 @@ bool JsContextWrapper::AddFunctionToPrototype(
 }
 
 
-bool JsContextWrapper::SetupInstanceObject(JSObject *instance_obj,
-                                           ModuleImplBaseClass *module) {
-  // setup the JsWrapperDataForInstance struct
-  scoped_ptr<JsWrapperDataForInstance> instance_data(
-      new JsWrapperDataForInstance);
-
-  // Keep a pointer to the context wrapper so that we can access it in the
-  // static finalize function.
-  instance_data->js_wrapper = this;
-  instance_data->jsobject = instance_obj;
-  instance_data->module = module;
-
-  // succeeded; prevent scoped cleanup of allocations, and save the pointer
-  JS_SetPrivate(cx_, instance_obj, instance_data.release());
-  return true;
-}
-
-
 ModuleImplBaseClass *JsContextWrapper::GetModuleFromJsToken(
     const JsToken token) {
   // First, check that the JsToken represents a (JavaScript) object, and not
@@ -439,7 +468,7 @@ ModuleImplBaseClass *JsContextWrapper::GetModuleFromJsToken(
   // that against those JSClasses we have previously seen (in this
   // JsContextWrapper) for Dispatcher-based modules.
   JSClass *js_class = JS_GET_CLASS(cx_, obj);
-  if (dispatcher_classes_.find(js_class) == dispatcher_classes_.end()) {
+  if (js_classes_.find(js_class) == js_classes_.end()) {
     return NULL;
   }
 
