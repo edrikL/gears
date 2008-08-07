@@ -218,8 +218,8 @@ SKIA_LIB_DIR = ../third_party/skia
 ifeq ($(OFFICIAL_BUILD),1)
 # Not finalized for official builds.
 else
-# Make-ish way of saying: if (OS == win32 || OS == osx || OS ==linux)
-ifneq ($(findstring $(OS), win32|osx|linux),)
+# Make-ish way of saying: if (OS == win32 || OS == osx)
+ifneq ($(findstring $(OS), win32|osx),)
 SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
 endif
 endif
