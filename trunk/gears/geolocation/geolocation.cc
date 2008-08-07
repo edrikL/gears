@@ -399,8 +399,11 @@ void GearsGeolocation::HandleEvent(JsEventType event_type) {
   // entries from the map and invalidate our iterator.
   while (!fix_requests_.empty()) {
     FixRequestInfoMap::iterator iter = fix_requests_.begin();
+    // Cache the pointer to the fix request because RemoveFixRequest will
+    // invalidate the iterator.
+    FixRequestInfo *fix_request = iter->second;
     RemoveFixRequest(iter->first);
-    DeleteFixRequest(iter->second);
+    DeleteFixRequest(fix_request);
   }
   assert(fix_requests_.empty());
 }
