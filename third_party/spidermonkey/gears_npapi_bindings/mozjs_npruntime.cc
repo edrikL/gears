@@ -112,9 +112,9 @@ NPUTF8 *NPN_UTF8FromIdentifier(NPIdentifier identifier) {
 }
 
 int32_t NPN_IntFromIdentifier(NPIdentifier identifier) {
-  // Unused in Gears codebase.
-  assert(false);
-  return 0;
+  jsval v = reinterpret_cast<jsval>(identifier);
+  assert(JSVAL_IS_INT(v));
+  return JSVAL_TO_INT(v);
 }
 
 NPIdentifier NPN_GetIntIdentifier(int32_t intid) {
