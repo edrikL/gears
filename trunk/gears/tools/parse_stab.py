@@ -90,10 +90,10 @@ function loadI18nStrings(locale) {
     if (name == 'string-html-title') {
       if (!browser.ie_mobile) {
         // IE Mobile dialogs don't have a title bar.
-        // Furthermore, window.title is undefined in IE Mobile on WinMo 5.
+        // Furthermore, document.title is undefined in IE Mobile on WinMo 5.
         // It's also impossible to add properties to the window object.
         // (see http://code.google.com/apis/gears/mobile.html)
-        window.title = strings[name];
+        document.title = strings[name];
       }
     } else {
       var element = dom.getElementById(name);

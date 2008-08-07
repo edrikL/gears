@@ -322,7 +322,7 @@ m4_include(genfiles/shortcuts_dialog.js)
   }
 
   function initSimpleStyle() {
-    window.title =
+    document.title =
         dom.getTextContent(dom.getElementById("string-title-simple"));
     dom.getElementById("icon").parentNode.style.display = "none";
     dom.getElementById("header").style.display = "none";
@@ -372,7 +372,8 @@ m4_include(genfiles/shortcuts_dialog.js)
   }
 
   function initDefaultStyle() {
-    window.title = dom.getTextContent(dom.getElementById("string-title-default"));
+    document.title =
+      dom.getTextContent(dom.getElementById("string-title-default"));
     setElementContents("string-header-desktop", "header");
     setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
     setButtonLabel("string-no", "deny-button", "string-no-accesskey");
