@@ -444,7 +444,8 @@ bool PermissionsDB::CreateDatabase() {
       !local_data_access_table_.MaybeCreateTable() ||
       !location_access_table_.MaybeCreateTable() ||
       !shortcut_table_.MaybeCreateTableLatestVersion() ||
-      !database_name_table_.MaybeCreateTableLatestVersion()) {
+      !database_name_table_.MaybeCreateTableLatestVersion() ||
+      !database2_metadata_.MaybeCreateTableLatestVersion()) {
     return false;
   }
 
