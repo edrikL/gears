@@ -224,6 +224,7 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
         update_available = true;
       }
     }
+
     if (gps_position.dwValidFields & GPS_VALID_ALTITUDE_WRT_ELLIPSOID) {
       int altitude = static_cast<int>(gps_position.flAltitudeWRTEllipsoid);
       if (position_.altitude != altitude) {
@@ -231,8 +232,30 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
         update_available = true;
       }
     }
-    // TODO(steveblock): Work out how to get accuracy.
-    position_.accuracy = 100;
+
+    // The GPS Intermediate Driver API does not provide a numerical value for
+    // the postition accuracy. However, we can estimate the accuracy from the
+    // Position Dilution of Precision (PDOP), which describes how well the
+    // geometric configuration of the satellites currently in view lends itself
+    // to getting a high accuracy fix (see
+    // http://en.wikipedia.org/wiki/Dilution_of_precision_(GPS) and
+    // http://www.cgrer.uiowa.edu/cgrer_lab/gps/gpsdefs.html).
+    if (gps_position.dwValidFields & GPS_VALID_POSITION_DILUTION_OF_PRECISION) {
+      int accuracy;
+      if (gps_position.flPositionDilutionOfPrecision <= 3) {
+        accuracy = 1;
+      } else if (gps_position.flPositionDilutionOfPrecision <= 6) {
+        accuracy = 10;
+      } else if (gps_position.flPositionDilutionOfPrecision <= 8) {
+        accuracy = 20;
+      } else {
+        accuracy = 50;
+      }
+      if (position_.accuracy != accuracy) {
+        position_.accuracy = accuracy;
+        update_available = true;
+      }
+    }
   }
 
   GPS_DEVICE device_state = {0};
