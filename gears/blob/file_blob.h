@@ -54,6 +54,12 @@ class FileBlob : public BlobInterface {
  private:
   mutable Mutex file_lock_;
   scoped_ptr<File> file_;
+  mutable int64 size_;
+  mutable int64 last_modified_time_;
+
+  // Only call this private function when the caller is holding the
+  // file_lock_ Mutex.
+  bool FileHasChanged() const;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileBlob);
 };

@@ -37,6 +37,15 @@ class File {
   // Hard Limit on path component length, used for sanity checking.
   static const size_t kMaxPathComponentChars;
 
+  // Return value if GetLastModifiedTime fails. Its value is negative.
+  static const int64 kInvalidLastModifiedTime;
+
+  // Return value if GetFileSize fails. Its value is negative.
+  static const int64 kInvalidSize;
+
+  // Return value if Read or Write fails. Its value is negative.
+  static const int64 kReadWriteFailure;
+
   // Creates a new file. If the file already exists, returns false.
   // Returns true if a new file has been created.
   static bool CreateNewFile(const char16 *full_filepath);
@@ -86,11 +95,14 @@ class File {
   static bool DirectoryExists(const char16 *full_dirpath);
 
   // Returns the size of the file. If the file does not exist, or is otherwise
-  // unreadable, returns -1.
+  // unreadable, returns kInvalidSize.
   static int64 GetFileSize(const char16 *full_filepath);
 
+  // Returns the mtime of the file (or kInvalidLastModifiedTime on failure).
+  static int64 LastModifiedTime(const char16 *full_filepath);
+
   // Reads part of the contents of the file into memory. Returns the number of
-  // bytes read (or -1 on failure).
+  // bytes read (or kReadWriteFailure on failure).
   static int64 ReadFileSegmentToBuffer(const char16 *full_filepath,
                                        uint8* destination,
                                        int64 position,
@@ -158,13 +170,13 @@ class File {
 
   // Reads at most max_bytes of file data at the current seek position into
   // destination.
-  // Returns the number of bytes read, or -1 on failure or if the file is not
-  // opened for read.
+  // Returns the number of bytes read, or kReadWriteFailure on failure or if
+  // the file is not opened for read.
   int64 Read(uint8 *destination, int64 max_bytes) const;
 
   // Writes length bytes of source to the file.
-  // Returns the number of bytes written, or -1 on failure or if the file is
-  // not opened for write.
+  // Returns the number of bytes written, or kReadWriteFailure on failure or if
+  // the file is not opened for write.
   int64 Write(const uint8 *source, int64 length);
 
   // Forces a write of all buffered data to the file on disk.

@@ -136,10 +136,10 @@ int64 File::Read(uint8* destination, int64 max_bytes) const {
   if (mode_ == WRITE) {
     // NOTE: we may have opened the file with read-write access to avoid
     // truncating it, but we still want to refuse reads
-    return -1;
+    return kReadWriteFailure;
   }
   if (!destination || max_bytes < 0) {
-    return -1;
+    return kReadWriteFailure;
   }
 
   // Read its contents into memory.
@@ -149,7 +149,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) const {
   size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
                             handle_);
   if (ferror(handle_) && !feof(handle_)) {
-    return -1;
+    return kReadWriteFailure;
   }
   return bytes_read;
 }
@@ -190,7 +190,7 @@ bool File::Seek(int64 offset, SeekMethod seek_method) const {
 int64 File::Size() const {
   struct stat stat_data;
   if (fstat(fileno(handle_), &stat_data) != 0) {
-    return -1;
+    return kInvalidSize;
   }
   return static_cast<int64>(stat_data.st_size);
 }
@@ -209,17 +209,17 @@ bool File::Truncate(int64 length) {
 int64 File::Write(const uint8 *source, int64 length) {
   if (mode_ == READ) {
     // NOTE: fwrite doesn't fail after opening in READ mode
-    return -1;
+    return kReadWriteFailure;
   }
   if (!source || length < 0) {
-    return -1;
+    return kReadWriteFailure;
   }
   // can't write more data than fwrite can handle
   assert(length <= std::numeric_limits<size_t>::max());
 
   size_t bytes_written = fwrite(source, 1, length, handle_);
   if (ferror(handle_)) {
-    return -1;
+    return kReadWriteFailure;
   }
   return bytes_written;
 }
@@ -335,6 +335,15 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
 
   return S_ISDIR(stat_data.st_mode);
 }
+
+int64 File::LastModifiedTime(const char16 *full_filepath) {
+  struct stat stat_data;
+  if (!StatFile(full_filepath, &stat_data)) {
+    return kInvalidLastModifiedTime;
+  }
+  return stat_data.st_mtime;
+}
+
 bool File::Delete(const char16 *full_filepath) {
   std::string path_utf8;
   if (!String16ToUTF8(full_filepath, &path_utf8)) {
