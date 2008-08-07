@@ -219,8 +219,14 @@ void JSStandaloneEngine::GetNPNEntryPoints(NPNetscapeFuncs *browser_funcs) {
       SpiderMonkeyNPAPIBindings::NPN_IdentifierIsString;
   browser_funcs->utf8fromidentifier = 
       SpiderMonkeyNPAPIBindings::NPN_UTF8FromIdentifier;
-  browser_funcs->intfromidentifier = 
+#ifdef BROWSER_WEBKIT
+  browser_funcs->intfromidentifier =
+      reinterpret_cast<void * (*)(void *)>(
+          SpiderMonkeyNPAPIBindings::NPN_IntFromIdentifier);
+#else
+  browser_funcs->intfromidentifier =
       SpiderMonkeyNPAPIBindings::NPN_IntFromIdentifier;
+#endif
   browser_funcs->createobject = SpiderMonkeyNPAPIBindings::NPN_CreateObject;
   browser_funcs->retainobject = SpiderMonkeyNPAPIBindings::NPN_RetainObject;
   browser_funcs->releaseobject = SpiderMonkeyNPAPIBindings::NPN_ReleaseObject;
