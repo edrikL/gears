@@ -72,7 +72,7 @@ THIRD_PARTY_OUTDIR         = $(COMMON_OUTDIR)/third_party
 # will keep their relative sub-directory.
 I18N_INPUTS_BASEDIR = ui/generated
 
-# Macro to substitute .o for sourcefile suffix.
+# Macro to substitute OBJ_SUFFIX for sourcefile suffix.
 # Usage: $(call SUBSTITUTE_OBJ_SUFFIX, out_dir, source_file_list)
 # Example: $(call SUBSTITUTE_OBJ_SUFFIX, out_dir, a.cc foo.m) yields
 #  out_dir/a.o out_dir/foo.o
@@ -605,16 +605,16 @@ $(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.mm
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
+$(OSX_LAUNCHURL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+
 $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(THIRD_PARTY_CPPFLAGS) $(THIRD_PARTY_CFLAGS) $<
 $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(THIRD_PARTY_CPPFLAGS) $(THIRD_PARTY_CXXFLAGS) $<
-
-$(OSX_LAUNCHURL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
-	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
 $(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
@@ -761,7 +761,7 @@ endif
 # LINK TARGETS
 
 # Split the list of OBJS to avoid "input line is too long" errors.
-$(BROWSER)_OBJS1 = $(wordlist 1, 100, $($(BROWSER)_OBJS))
+$(BROWSER)_OBJS1 = $(wordlist   1, 100, $($(BROWSER)_OBJS))
 $(BROWSER)_OBJS2 = $(wordlist 101, 999, $($(BROWSER)_OBJS))
 
 # WARNING: Must keep the following two rules (FF2|FF3_MODULE_DLL) in sync!
@@ -830,7 +830,7 @@ ifneq ($(OS),symbian)
 # Split the list of OBJS to avoid "input line is too long" errors.
 NPAPI_OBJS1 = $(wordlist 1, 100, $(NPAPI_OBJS))
 NPAPI_OBJS2 = $(wordlist 101, 999, $(NPAPI_OBJS))
-$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(SKIA_LIB) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
+$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	$(ECHO) $(NPAPI_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(ECHO) $(NPAPI_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
@@ -928,7 +928,8 @@ endif
 endif
 
 $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
-	$(ECHO) $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(ECHO) $(MOZJS_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
@@ -947,7 +948,7 @@ $(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PO
 $(SF_PROXY_DLL) : $(SF_PROXY_DLL_OBJS)
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(SF_PROXY_DLL_OBJS)
 	$(STRIP_EXECUTABLE)
-	
+
 # Crash inspector is launched by the crashed process from it's exception handler
 # and is what actually communicates with the crashed process to extract the
 # minidump.  It then launches crash_sender in order to actually send the
@@ -1108,7 +1109,7 @@ $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 # Copy uninstaller
 	cp "tools/osx/uninstall.command" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
-	
+
 $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.bundle ---
 # Create fresh copies of the Gears.bundle directories.

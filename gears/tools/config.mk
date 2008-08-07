@@ -31,9 +31,10 @@ ifeq ($(wildcard $(PWD)/Makefile),)
 PWD = $(shell pwd)
 endif
 
-#-----------------------------------------------------------------------------
-# use the libraries if not indicated otherwise.
-
+# Enable these libraries unless indicated otherwise.
+ifeq ($(USING_ICU),)
+  USING_ICU = 1
+endif
 ifeq ($(USING_LIBGD),)
   USING_LIBGD = 1
 endif
@@ -42,18 +43,6 @@ ifeq ($(USING_LIBJPEG),)
 endif
 ifeq ($(USING_LIBPNG),)
   USING_LIBPNG = 1
-endif
-ifeq ($(USING_PORTAUDIO),)
-  USING_PORTAUDIO = 1
-endif
-ifeq ($(USING_SQLITE),)
-  USING_SQLITE = 1
-endif
-ifeq ($(USING_ZLIB),)
-  USING_ZLIB = 1
-endif
-ifeq ($(USING_PORTAUDIO),)
-  USING_PORTAUDIO = 1
 endif
 ifeq ($(USING_LIBSPEEX),)
   USING_LIBSPEEX = 1
@@ -66,15 +55,19 @@ ifeq ($(USING_MOZJS),)
     USING_MOZJS = 1
   endif
 endif
+ifeq ($(USING_PORTAUDIO),)
+  USING_PORTAUDIO = 1
+endif
+ifeq ($(USING_SQLITE),)
+  USING_SQLITE = 1
+endif
+ifeq ($(USING_ZLIB),)
+  USING_ZLIB = 1
+endif
 
 # Make-ish way of saying: if (browser == SF || browser == NPAPI)
 ifneq ($(findstring $(BROWSER), SF|NPAPI),)
   USING_NPAPI = 1
-endif
-
-# Build third_party ICU unless specifically disabled.
-ifeq ($(USING_ICU),)
-  USING_ICU = 1
 endif
 
 # Store value of unmodified command line parameters.
@@ -137,29 +130,34 @@ else
 PCT=%
 endif
 
-MAKEFLAGS = --no-print-directory
+MAKEFLAGS += --no-print-directory
 
 CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
-#Additional include paths for gurl.
+# Additional include paths for gurl.
+# TODO(cprince): change this to GURL_CFLAGS if we ever define USING_GURL.
 CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl
 
-ifeq ($(USING_ICU),1)
-CPPFLAGS += -I../third_party/icu38/public/common
-endif
+ICU_CFLAGS += -I../third_party/icu38/public/common
 
 LIBPNG_CFLAGS = -DPNG_USER_CONFIG -I../third_party/zlib
+
 ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)
 ZLIB_CFLAGS += -DNO_ERRNO_H
 endif
-ifeq ($(USING_ZLIB),1)
-CFLAGS += $(ZLIB_CFLAGS)
-CPPFLAGS += $(ZLIB_CFLAGS)
+
+ifeq ($(USING_ICU),1)
+CFLAGS += $(ICU_CFLAGS)
+CPPFLAGS += $(ICU_CFLAGS)
 endif
 ifeq ($(USING_LIBPNG),1)
 CFLAGS += $(LIBPNG_CFLAGS)
 CPPFLAGS += $(LIBPNG_CFLAGS)
+endif
+ifeq ($(USING_ZLIB),1)
+CFLAGS += $(ZLIB_CFLAGS)
+CPPFLAGS += $(ZLIB_CFLAGS)
 endif
 
 ifdef IS_WIN32_OR_WINCE
