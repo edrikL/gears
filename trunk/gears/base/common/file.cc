@@ -38,6 +38,10 @@
 // be creating internally.
 const size_t File::kMaxPathComponentChars = 128;
 
+const int64 File::kInvalidLastModifiedTime = -1;
+const int64 File::kInvalidSize = -1;
+const int64 File::kReadWriteFailure = -1;
+
 const char16 *File::GetFileExtension(const char16 *filename) {
   assert(filename);
   size_t len = std::char_traits<char16>::length(filename);

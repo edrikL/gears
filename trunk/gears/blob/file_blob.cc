@@ -29,18 +29,26 @@
 
 FileBlob::FileBlob(const std::string16& filename)
     : file_(File::Open(filename.c_str(), File::READ,
-                       File::FAIL_IF_NOT_EXISTS)) {
+                       File::FAIL_IF_NOT_EXISTS)),
+      size_(File::kInvalidSize),
+      last_modified_time_(File::kInvalidLastModifiedTime) {
 }
 
 
-FileBlob::FileBlob(File *file) : file_(file) {
+FileBlob::FileBlob(File *file)
+    : file_(file),
+      size_(File::kInvalidSize),
+      last_modified_time_(File::kInvalidLastModifiedTime) {
 }
 
 
 int64 FileBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   MutexLock locker(&file_lock_);
   if (file_.get() && file_->Seek(offset, File::SEEK_FROM_START)) {
-    return file_->Read(destination, max_bytes);
+    int64 result = file_->Read(destination, max_bytes);
+    if (!FileHasChanged()) {
+      return result;
+    }
   }
   return -1;
 }
@@ -48,11 +56,20 @@ int64 FileBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
 
 int64 FileBlob::Length() const {
   MutexLock locker(&file_lock_);
-  if (file_.get()) {
-    return file_->Size();
+  if (size_ != File::kInvalidSize) {
+    if (!FileHasChanged()) {
+      return size_;
+    }
+  } else if (file_.get()) {
+    int64 result = file_->Size();
+    if (!FileHasChanged()) {
+      size_ = result;
+      return size_;
+    }
   }
   return -1;
 }
+
 
 bool FileBlob::GetDataElements(std::vector<DataElement> *elements) const {
   assert(elements && elements->empty());
@@ -68,10 +85,23 @@ bool FileBlob::GetDataElements(std::vector<DataElement> *elements) const {
   return true;
 }
 
+
 const std::string16 &FileBlob::GetFilePath() const {
   if (!file_.get()) {
     static std::string16 kEmpty;
     return kEmpty;
   }
   return file_->GetFilePath();
+}
+
+
+bool FileBlob::FileHasChanged() const {
+  // To check whether a file has changed, we simply look at the mtime, since a
+  // file should not be able to change its size without also modifying that.
+  int64 mtime = File::LastModifiedTime(file_->GetFilePath().c_str());
+  if (last_modified_time_ == File::kInvalidLastModifiedTime) {
+    last_modified_time_ = mtime;
+    return false;
+  }
+  return last_modified_time_ != mtime;
 }

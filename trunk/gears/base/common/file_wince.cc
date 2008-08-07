@@ -117,7 +117,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
 
 int64 File::Read(uint8* destination, int64 max_bytes) const {
   if (!destination || max_bytes < 0) {
-    return -1;
+    return kReadWriteFailure;
   }
 
   // Read its contents into memory.
@@ -127,7 +127,7 @@ int64 File::Read(uint8* destination, int64 max_bytes) const {
   DWORD bytes_read;
   if (!::ReadFile(handle_, destination,
                   static_cast<DWORD>(max_bytes), &bytes_read, NULL)) {
-    return -1;
+    return kReadWriteFailure;
   }
 
   return bytes_read;
@@ -162,7 +162,7 @@ int64 File::Size() const {
   size.LowPart = ::GetFileSize(handle_,
                                reinterpret_cast<LPDWORD>(&size.HighPart));
   if (size.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
-    return -1;
+    return kInvalidSize;
   }
   return size.QuadPart;
 }
@@ -175,7 +175,7 @@ int64 File::Tell() const {
                                FILE_CURRENT);
 
   if (pos.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
-    return -1;
+    return kInvalidSize;
   }
   return pos.QuadPart;
 }
@@ -200,17 +200,17 @@ bool File::Truncate(int64 length) {
 int64 File::Write(const uint8 *source, int64 length) {
   if (mode_ == READ) {
     // NOTE: WriteFile doesn't fail after opening in READ mode
-    return -1;
+    return kReadWriteFailure;
   }
   if (!source || length < 0) {
-    return -1;
+    return kReadWriteFailure;
   }
   // NOTE: disallow DWORD overflows since they won't fit in memory anyway
   assert(length < std::numeric_limits<DWORD>::max());
   DWORD data_size = static_cast<DWORD>(length);
   DWORD bytes_written;
   return ::WriteFile(handle_, source, data_size, &bytes_written, NULL)
-      ? bytes_written : -1;
+      ? bytes_written : kReadWriteFailure;
 }
 
 
@@ -246,6 +246,23 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
   DWORD attrs = GetFileAttributesW(full_dirpath);
   return (attrs != INVALID_FILE_ATTRIBUTES) &&
          ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
+}
+
+
+int64 File::LastModifiedTime(const char16 *full_filepath) {
+  SAFE_HANDLE file_handle(CreateFileW(full_filepath, GENERIC_READ,
+                                      FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                      0, NULL));
+  if (file_handle.get() == INVALID_HANDLE_VALUE) {
+    return kInvalidLastModifiedTime;
+  }
+
+  FILETIME filetime;
+  if (!GetFileTime(file_handle.get(), NULL, NULL, &filetime)) {
+    return kInvalidLastModifiedTime;
+  }
+  return (static_cast<int64>(filetime.dwHighDateTime) << 32) |
+      (static_cast<int64>(filetime.dwLowDateTime) & 0xFFFFFFFF);
 }
 
 
