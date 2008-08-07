@@ -34,6 +34,10 @@ class PermissionsDB;
 // Stores metadata about the database2 instances in use in Gears.
 class Database2Metadata {
  public:
+
+  // Create the table holding the metadata
+  bool MaybeCreateTableLatestVersion();
+
   // Version numbers correspond to the version number of the entire permissions
   // database.
   bool CreateTableVersion8();

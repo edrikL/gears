@@ -32,6 +32,18 @@ Database2Metadata::Database2Metadata(SQLDatabase *db)
     : db_(db) {
 }
 
+bool Database2Metadata::MaybeCreateTableLatestVersion() {
+  SQLTransaction transaction(db_,
+      "Database2Metadata::MaybeCreateTableLatestVersion");
+  if (!transaction.Begin()) {
+    return false;
+  }
+  if (!CreateTableVersion8()) {
+    return false;
+  }
+  return transaction.Commit();
+}
+
 bool Database2Metadata::CreateTableVersion8() {
   const char *sql[] = {
     "CREATE TABLE Database2Metadata ("
@@ -54,7 +66,7 @@ bool Database2Metadata::CreateTableVersion8() {
   for (size_t i = 0; i < ARRAYSIZE(sql); ++i) {
     int sqlite_result = db_->Execute(sql[i]);
     if (SQLITE_OK != sqlite_result) {
-      std::string error("Database2Metadata::MaybeCreateTableVersion8. ");
+      std::string error("Database2Metadata::CreateTableVersion8. ");
       error += "Failure on statement ";
       error += IntegerToString(i);
       error += ": ";
