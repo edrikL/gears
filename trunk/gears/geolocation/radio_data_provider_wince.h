@@ -52,10 +52,10 @@ class WinceRadioDataProvider
                  DWORD dwParam);
 
  private:
-  // AsyncThread implementation.
+  // Thread implementation
   virtual void Run();
-  bool Init();
 
+  bool Init();
   bool IsAllDataAvailable();
   void NotifyListenersIfUpdateAvailable();
   void FireRilCommands();

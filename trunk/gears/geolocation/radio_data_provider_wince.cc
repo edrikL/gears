@@ -166,6 +166,8 @@ void WinceRadioDataProvider::Run() {
   FreeLibrary(ril_library);
 }
 
+// Other methods
+
 bool WinceRadioDataProvider::Init() {
   if (!result_event_.Create(NULL, FALSE, FALSE, NULL)) {
     return false;
@@ -176,7 +178,6 @@ bool WinceRadioDataProvider::Init() {
   return true;
 }
 
-// Private methods.
 bool WinceRadioDataProvider::IsAllDataAvailable() {
   return radio_data_.cell_data.size() == 1 &&
       -1 != radio_data_.cell_data[0].cell_id &&
@@ -263,6 +264,7 @@ void WinceRadioDataProvider::RILResult(DWORD dwCode,
     const RILCELLTOWERINFO* cell_tower_info =
         static_cast<const RILCELLTOWERINFO*>(lpData);
     if (cell_tower_info->dwParams & RIL_PARAM_CTI_CELLID) {
+      assert(radio_data_.cell_data.size() == 1);
       radio_data_.cell_data[0].cell_id =
           FromDeviceDataFormat(cell_tower_info->dwCellID);
       radio_data_.cell_data[0].location_area_code =
@@ -276,6 +278,7 @@ void WinceRadioDataProvider::RILResult(DWORD dwCode,
     ril_get_signal_quality_command_id_ = 0;
     const RILSIGNALQUALITY* ril_signal_quality =
         static_cast<const RILSIGNALQUALITY*>(lpData);
+    assert(radio_data_.cell_data.size() == 1);
     radio_data_.cell_data[0].radio_signal_strength =
         FromDeviceDataFormat(ril_signal_quality->nSignalStrength);
   } else if (hrCmdID == ril_get_current_system_type_command_id_) {
@@ -301,6 +304,15 @@ void WinceRadioDataProvider::RILResult(DWORD dwCode,
     std::string carrier = ril_operator_names->szLongName;
     UTF8ToString16(carrier.c_str(), carrier.size(), &radio_data_.carrier);
   }
+
+  // It's possible that the cell data entry is uninitialized, in which case we
+  // should remove it from the radio data object to keep the network request
+  // clean.
+  CellData empty_cell_data;
+  if (radio_data_.cell_data[0].Matches(empty_cell_data)) {
+    radio_data_.cell_data.clear();
+  }
+    
   data_mutex_.Unlock();
   SetEvent(result_event_);
   NotifyListenersIfUpdateAvailable();
