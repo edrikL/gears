@@ -39,16 +39,16 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 typedef std::map<const std::string, JSObject*> NameToProtoMap;
-
-class JsContextWrapper;
-
 struct JsWrapperDataForProto;
 struct JsWrapperDataForFunction;
 
+// TODO(nigeltao): pick a better name than JsContextWrapper.
 class JsContextWrapper {
  public:
   JsContextWrapper(JSContext *cx, JSObject *global_obj);
   ~JsContextWrapper();
+
+  // CleanupRoots should be called before destroying this JsContextWrapper.
   void CleanupRoots();
 
   // Creates a new JavaScript object to represent a Gears module in the JS
@@ -58,9 +58,14 @@ class JsContextWrapper {
   ModuleImplBaseClass *GetModuleFromJsToken(const JsToken token);
 
  private:
-  // Initializes a new class with the given name.
-  bool InitClass(const char *class_name, JsWrapperDataForProto *proto_data,
-                 JSObject **proto_obj);
+  // Initializes a new class with the given name. If successful, returns a
+  // JSObject (i.e. a GC'able thing) that represents the glue between a
+  // C++ object and a JS object. The returned value is placed inside a
+  // JsRootedToken by the callee, so the caller does not need to manage its
+  // lifetime. On failure, returns NULL.
+  JSObject *InitClass(const char *class_name,
+                      JsWrapperDataForProto *proto_data,
+                      JSClass *js_class);
 
   // Populate a JS prototype based on all the methods in a C++ class.
   bool AddAllFunctionsToPrototype(JSObject *proto_obj,
@@ -68,10 +73,6 @@ class JsContextWrapper {
   bool AddFunctionToPrototype(JSObject *proto_obj, const char *name,
                               bool is_getter, bool is_setter,
                               DispatchId dispatch_id);
-
-  // Initializes the custom wrapper data for an instance.
-  bool SetupInstanceObject(JSObject *instance_obj, ModuleImplBaseClass *module);
-
 
   static JSBool JsWrapperCaller(JSContext *cx, JSObject *obj,
                                 uintN argc, jsval *argv, jsval *retval);
@@ -85,15 +86,16 @@ class JsContextWrapper {
   // prototype for each module type.
   NameToProtoMap name_to_proto_map_;
 
-  // The set of JSClass objects associated with each Dispatcher-based module
-  // seen in CreateModuleJsObject.
-  std::set<JSClass*> dispatcher_classes_;
+  // The set of JSClass objects associated with each prototype.
+  std::set<JSClass*> js_classes_;
 
   // The elements in these two vectors are "owned", meaning that the
-  // JsContextWrapper is responsible for calling Cleanup() on them at an
-  // appropriate time.
+  // JsContextWrapper is responsible for resetting their js_rooted_token
+  // during CleanupRoots().
   std::vector<JsWrapperDataForProto *> proto_wrappers_;
   std::vector<JsWrapperDataForFunction *> function_wrappers_;
+
+  bool cleanup_roots_has_been_called_;
 };
 
 
