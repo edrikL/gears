@@ -5,6 +5,39 @@
     <script type="text/javascript" src="gears_init.js"></script>
     <script type="text/javascript" language="javascript">
 
+function onSelect(files) {
+  if (files.length == 0) {
+    return;
+  }
+  var file = files[0];
+
+  var request = google.gears.factory.create('beta.httprequest');
+  function handleUploadReadyState() {
+    document.getElementById("fileReady").innerHTML = request.readyState;
+    document.getElementById("fileStatus").innerHTML = request.status;
+  }
+  function handleUploadProgress(event) {
+    document.getElementById("fileProgress").innerHTML = event.loaded;
+    document.getElementById("fileTotal").innerHTML = event.total;
+  }
+
+
+  document.getElementById("fileProgress").innerHTML = "<br/>";
+  document.getElementById("fileTotal").innerHTML = "<br/>";
+  document.getElementById("fileReady").innerHTML = "<br/>";
+  document.getElementById("fileStatus").innerHTML = "<br/>";
+
+  request.onreadystatechange = handleUploadReadyState;
+  request.upload.onprogress = handleUploadProgress;
+  request.open('POST', 'testcases/cgi/send_response_of_size.py?size=5');
+  request.send(file.blob);
+}
+
+function testFileUpload() {
+  var desktop = google.gears.factory.create('beta.desktop');
+  desktop.openFiles(onSelect, {singleFile: true});
+}
+
 function testUploadProgress() {
   var request = google.gears.factory.create('beta.httprequest');
   function handleUploadReadyState() {
@@ -91,6 +124,18 @@ function testDownloadProgress() {
         <td><div id="uploadTotal"><br/></div></td>
         <td><div id="uploadReady"><br/></div></td>
         <td><div id="uploadStatus"><br/></div></td>
+      </tr>
+      <tr>
+        <td>
+          <form action="">
+            <input type="button" value="TestFileUpload"
+            onclick="testFileUpload()">
+          </form>
+        </td>
+        <td><div id="fileProgress"><br/></div></td>
+        <td><div id="fileTotal"><br/></div></td>
+        <td><div id="fileReady"><br/></div></td>
+        <td><div id="fileStatus"><br/></div></td>
       </tr>
     </table>
 
