@@ -35,12 +35,16 @@ class RootUI;
 @interface GlintBitmapView : NSView {
   NSMutableArray* bitmapInfos_;
   glint::RootUI* ui_;
+  NSTrackingRectTag trackingRectTag_;
+  NSTimer* mousePollTimer_;
+  BOOL topmost_;
 }
 
 // Create a new view with the given rect. The glint ui handles mouse/keyboard
 // events, either itself, or by passing them on to WebKit.
 - (id)initWithFrame:(NSRect)frameRect
-            glintUI:(glint::RootUI*)ui;
+            glintUI:(glint::RootUI*)ui
+            topmost:(BOOL)topmost;
 
 // The given bitmap is to be drawn at the given offset in the view's
 // coordinates. |area|, in the bitmap's coordinates, is the part of the bitmap
@@ -48,5 +52,19 @@ class RootUI;
 - (void)updateViewWithBitmap:(NSBitmapImageRep*)bitmap
                       offset:(NSPoint)offset
                         area:(NSRect)area;
+
+// "topmost" Glint windows get mouse messages and control cursor even if they
+//  are inactive. Since they are topmost, the cursor is on top of them.
+// Ensures that there is a "mouse tracking rect" set on the view.
+// This makes Cocoa send enterMouse and exitMouse messages. Should be called
+// every time the view's frame rect changes.
+- (void)updateMouseTrackingRect;
+
+- (void)mouseEntered:(NSEvent*)theEvent;
+- (void)mouseExited:(NSEvent*)theEvent;
+
+- (void)enableMousePoll;
+- (void)disableMousePoll;
+- (void)mousePollTimerFired:(NSTimer*)theTimer;
 
 @end

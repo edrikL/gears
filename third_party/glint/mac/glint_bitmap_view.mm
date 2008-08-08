@@ -29,8 +29,10 @@
 
 #import "glint/mac/glint_bitmap_view.h"
 #import "glint/include/message.h"
+#import "glint/include/platform.h"
 #import "glint/include/point.h"
 #import "glint/include/root_ui.h"
+#import "glint/mac/darwin_platform.h"
 
 using glint::GlintMessages;
 using glint::Message;
@@ -90,11 +92,13 @@ void GetDisplayHeightFromPoint(int x, int y, int* height);
 @implementation GlintBitmapView
 
 - (id)initWithFrame:(NSRect)frameRect
-            glintUI:(RootUI*)ui {
+            glintUI:(RootUI*)ui
+            topmost:(BOOL)topmost {
   self = [super initWithFrame:frameRect];
 
   if (self) {
     ui_ = ui;
+    topmost_ = topmost;
     bitmapInfos_ = [[NSMutableArray alloc] init];
   }
 
@@ -103,6 +107,7 @@ void GetDisplayHeightFromPoint(int x, int y, int* height);
 
 - (void)dealloc {
   [bitmapInfos_ release];
+  [self disableMousePoll];
   [super dealloc];
 }
 
@@ -272,6 +277,12 @@ void GetDisplayHeightFromPoint(int x, int y, int* height);
   return YES;
 }
 
+// Makes the first mouse click to be receied as mouse event rather then just
+// setting a window as a key window only. Enable only for 'topmost' windows.
+- (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
+  return topmost_;
+}
+
 // Handle keyboard events
 - (void)keyDown:(NSEvent*)event {
   [self handleKeyEvent:event
@@ -281,6 +292,68 @@ void GetDisplayHeightFromPoint(int x, int y, int* height);
 - (void)keyUp:(NSEvent*)event {
   [self handleKeyEvent:event
            ofGlintType:(glint::GL_MSG_KEYUP)];
+}
+
+- (void)setFrame:(NSRect)frameRect {
+  [super setFrame:frameRect];
+  if (topmost_) {
+    [self updateMouseTrackingRect];
+  }
+}
+
+- (void)updateMouseTrackingRect {
+  assert(topmost_);
+  NSRect frameRect = [self frame];
+
+  if (trackingRectTag_) {
+    [self removeTrackingRect:trackingRectTag_];
+  }
+
+  trackingRectTag_ = [self addTrackingRect:frameRect
+                                       owner:self
+                                    userData:NULL
+                                assumeInside:NO];
+}
+
+- (void)mouseEntered:(NSEvent*)theEvent {
+  [self enableMousePoll];
+  [self handleMouseEvent:nil ofGlintType:glint::GL_MSG_MOUSEMOVE];
+}
+
+- (void)mouseExited:(NSEvent*)theEvent {
+  [self disableMousePoll];
+  [self handleMouseEvent:nil ofGlintType:glint::GL_MSG_MOUSELEAVE];
+}
+
+- (void)enableMousePoll {
+  // if 'mouseExited' wasn't sent and we are in between mouse timer callbacks,
+  // the mouse poll timer may still be alive - remove it in this case
+  [self disableMousePoll];
+  mousePollTimer_ =
+      [[NSTimer scheduledTimerWithTimeInterval:0.1
+                                        target:self
+                                      selector:@selector(mousePollTimerFired:)
+                                      userInfo:nil
+                                       repeats:YES] retain];
+}
+
+- (void)disableMousePoll {
+  [mousePollTimer_ invalidate];
+  [mousePollTimer_ release];
+  mousePollTimer_ = nil;
+}
+
+- (void)mousePollTimerFired:(NSTimer*)theTimer {
+  NSPoint mouse_location = [NSEvent mouseLocation];
+  BOOL isMouseInWindow = NSPointInRect(mouse_location, [[self window] frame]);
+  if (isMouseInWindow) {
+    [self handleMouseEvent:nil ofGlintType:glint::GL_MSG_MOUSEMOVE];
+  } else {
+    // mouseExited: is unreliable - it sometimes is not send if the mouse
+    // quickly moves over screen surface. Check the mouse location and simulate
+    // mouseExited: if necessary.
+    [self mouseExited:nil];
+  }
 }
 
 @end

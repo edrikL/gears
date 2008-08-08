@@ -36,6 +36,70 @@ using namespace glint;
 
 namespace glint_darwin {
 
+static NSCursor* GetCocoaCursorForGlintCursorType(Cursors cursor_type) {
+  switch (cursor_type) {
+    case CURSOR_NONE:
+      return nil;
+
+    case CURSOR_POINTER:
+    case CURSOR_VERTICAL_TEXT:
+    case CURSOR_CELL:
+    case CURSOR_CONTEXT_MENU:
+    case CURSOR_NO_DROP:
+    case CURSOR_NOT_ALLOWED:
+    case CURSOR_PROGRESS:
+    case CURSOR_ALIAS:
+    case CURSOR_ZOOMIN:
+    case CURSOR_ZOOMOUT:
+    case CURSOR_COPY:
+    case CURSOR_MOVE:
+    case CURSOR_NORTH_EAST_RESIZE:
+    case CURSOR_NORTH_WEST_RESIZE:
+    case CURSOR_SOUTH_EAST_RESIZE:
+    case CURSOR_SOUTH_WEST_RESIZE:
+    case CURSOR_NORTH_EAST_SOUTH_WEST_RESIZE:
+    case CURSOR_NORTH_WEST_SOUTH_EAST_RESIZE:
+    case CURSOR_WAIT:
+    case CURSOR_HELP:
+      // This is the cursor we use for all cases that don't have a
+      // system cursor on OSX.
+      return [NSCursor arrowCursor];
+
+    case CURSOR_CROSS:
+      return [NSCursor crosshairCursor];
+
+    case CURSOR_HAND:
+      return [NSCursor openHandCursor];
+
+    case CURSOR_IBEAM:
+      return [NSCursor IBeamCursor];
+
+    case CURSOR_EAST_RESIZE:
+      return [NSCursor resizeLeftCursor];
+
+    case CURSOR_WEST_RESIZE:
+      return [NSCursor resizeRightCursor];
+
+    case CURSOR_EAST_WEST_RESIZE:
+    case CURSOR_COLUMN_RESIZE:
+      return [NSCursor resizeLeftRightCursor];
+
+    case CURSOR_NORTH_RESIZE:
+      return [NSCursor resizeUpCursor];
+
+    case CURSOR_SOUTH_RESIZE:
+      return [NSCursor resizeDownCursor];
+
+    case CURSOR_NORTH_SOUTH_RESIZE:
+    case CURSOR_ROW_RESIZE:
+      return [NSCursor resizeUpDownCursor];
+
+    default:
+      return nil;
+  }
+}
+
+
 DarwinPlatform::DarwinPlatform() {
   // In case there's no autorelease pool above us on the stack, alloc one here
   // This can happen during unittests
@@ -55,6 +119,8 @@ DarwinPlatform::DarwinPlatform() {
   NSFontManager* sharedManager = [NSFontManager sharedFontManager];
   normal_weight_ = [sharedManager weightOfFont:system_font];
   bold_weight_ = [sharedManager weightOfFont:bold_system_font];
+
+  current_cursor_ = [GetCocoaCursorForGlintCursorType(CURSOR_POINTER) retain];
 
   [pool release];
 }
@@ -147,77 +213,20 @@ void DarwinPlatform::EndMouseCapture() {
   // Nothing to do
 }
 
+// Store the new cursor in current_cursor_. Send 'set' immediately (this will
+// set the cursor if the app window is active).
 bool DarwinPlatform::SetCursor(Cursors cursor_type) {
+  [current_cursor_ autorelease];
+  current_cursor_ = [GetCocoaCursorForGlintCursorType(cursor_type) retain];
+
+  if (!current_cursor_) {
+    [NSCursor hide];
+    return true;
+  }
+
+  [current_cursor_ set];
   // Unhide the cursor because we might've previously hidden it
   [NSCursor unhide];
-
-  switch (cursor_type) {
-    case CURSOR_NONE:
-      [NSCursor hide];
-
-    case CURSOR_POINTER:
-    case CURSOR_VERTICAL_TEXT:
-    case CURSOR_CELL:
-    case CURSOR_CONTEXT_MENU:
-    case CURSOR_NO_DROP:
-    case CURSOR_NOT_ALLOWED:
-    case CURSOR_PROGRESS:
-    case CURSOR_ALIAS:
-    case CURSOR_ZOOMIN:
-    case CURSOR_ZOOMOUT:
-    case CURSOR_COPY:
-    case CURSOR_MOVE:
-    case CURSOR_NORTH_EAST_RESIZE:
-    case CURSOR_NORTH_WEST_RESIZE:
-    case CURSOR_SOUTH_EAST_RESIZE:
-    case CURSOR_SOUTH_WEST_RESIZE:
-    case CURSOR_NORTH_EAST_SOUTH_WEST_RESIZE:
-    case CURSOR_NORTH_WEST_SOUTH_EAST_RESIZE:
-    case CURSOR_WAIT:
-    case CURSOR_HELP:
-      // This is our default cursor for all cases that don't have a
-      // system cursor on OSX.
-      [[NSCursor arrowCursor] set];
-      break;
-
-    case CURSOR_CROSS:
-      [[NSCursor crosshairCursor] set];
-      break;
-
-    case CURSOR_HAND:
-      [[NSCursor openHandCursor] set];
-      break;
-
-    case CURSOR_IBEAM:
-      [[NSCursor IBeamCursor] set];
-      break;
-
-    case CURSOR_EAST_RESIZE:
-      [[NSCursor resizeLeftCursor] set];
-      break;
-
-    case CURSOR_WEST_RESIZE:
-      [[NSCursor resizeRightCursor] set];
-      break;
-
-    case CURSOR_EAST_WEST_RESIZE:
-    case CURSOR_COLUMN_RESIZE:
-      [[NSCursor resizeLeftRightCursor] set];
-      break;
-
-    case CURSOR_NORTH_RESIZE:
-      [[NSCursor resizeUpCursor] set];
-      break;
-
-    case CURSOR_SOUTH_RESIZE:
-      [[NSCursor resizeDownCursor] set];
-      break;
-
-    case CURSOR_NORTH_SOUTH_RESIZE:
-    case CURSOR_ROW_RESIZE:
-      [[NSCursor resizeUpDownCursor] set];
-      break;
-  }
   return true;
 }
 
