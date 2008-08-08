@@ -57,7 +57,7 @@ static const int kMaximumAcquistionTimeMilliseconds = 5 * 60 *1000;
 
 static const char16 *kFailedToConnectErrorMessage =
     STRING16(L"Failed to connect to GPS.");
-static const char16 *kFailedToAcquireErrorMessage =
+static const char16 *kFailedToGetFixErrorMessage =
     STRING16(L"GPS failed to get a position fix.");
 
 
@@ -154,6 +154,13 @@ void WinceGpsLocationProvider::Run() {
         assert(false);
     }
  
+    // It's possible that we were woken up just before the timer expired, in
+    // which case the wait time may now be negative. In this case, set the
+    // timeout to zero so that we wake up immediately and continue as normal.
+    if (wait_milliseconds != INFINITE && wait_milliseconds < 0) {
+      wait_milliseconds = 0;
+    }
+
     DWORD event_index = WaitForMultipleObjects(ARRAYSIZE(events),
                                                events,
                                                false,
@@ -186,8 +193,8 @@ void WinceGpsLocationProvider::Run() {
             position_.error_message = kFailedToConnectErrorMessage;
             break;
           case STATE_ACQUIRING_FIX:
-            position_.error_code = kGeolocationLocationAcquisitionErrorCode;
-            position_.error_message = kFailedToAcquireErrorMessage;
+            position_.error_code = kGeolocationLocationNotFoundErrorCode;
+            position_.error_message = kFailedToGetFixErrorMessage;
             break;
           default:
             assert(false);
