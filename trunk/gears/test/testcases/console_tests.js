@@ -284,6 +284,3 @@ function handleEvent(log_event) {
     }
   }
 }
-
-// SAFARI-TEMP - Disable tests that don't currently work on Safari.
-testArgsInterpolationArray._disable_in_safari = true;
