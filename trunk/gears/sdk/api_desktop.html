@@ -3,10 +3,10 @@
 <!--
 Copyright 2007, Google Inc.
 
-Redistribution and use in source and binary forms, with or without 
+Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
- 1. Redistributions of source code must retain the above copyright notice, 
+ 1. Redistributions of source code must retain the above copyright notice,
     this list of conditions and the following disclaimer.
  2. Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
@@ -16,14 +16,14 @@ modification, are permitted provided that the following conditions are met:
     specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
@@ -60,10 +60,25 @@ desktop.createShortcut("Test Application",
 &lt;/script&gt;</code></pre>
 
 
-<h2 id="classes">Classes</h2>
+<h2 id="interfaces">Interfaces</h2>
 
 <pre><code><a href="#Desktop">Desktop class</a>
     void <b>createShortcut</b>(name, url, icons, [description])
+    void <b>openFiles</b>(callback, [options])
+</code></pre>
+
+<pre><code><a href="#OpenFilesCallback">OpenFilesCallback</a>(<a
+    href="#File">File</a>[] files)
+</code></pre>
+
+<pre><code><a href="#File">File class</a>
+    readonly attribute string <b>name</b>
+    readonly attribute Blob <b>blob</b>
+</code></pre>
+
+<pre><code><a href="#OpenFileOptions">OpenFileOptions class</a>
+    attribute bool <b>singleFile</b>
+    attribute string[] <b>filter</b>
 </code></pre>
 <br>
 
@@ -130,7 +145,132 @@ desktop.createShortcut("Test Application",
     </td>
   </tr>
 </table>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>openFiles(callback, [options])</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Provides user-driven access to files on the client machine.
+      Presents the user with a file selector dialog for selecting files
+      to make available to the application.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>callback</code> - After the user has selected files, this function
+      is invoked with an array of the files that were selected.
+      This function must conform to the
+      <a href="#OpenFilesCallback">OpenFilesCallback interface</a>.
+      <br><br>
+      <code>options</code> - An optional parameter of type
+      <a href="#OpenFileOptions">OpenFileOptions</a>.
+      Allows control over file selector options.
+      <br>
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Details:</td>
+    <td class="odd">
+      The <code>openFiles</code> call will immediately return after presenting
+      a file selector dialog to the user.  It does not wait for the user to
+      select files, nor does it wait for the dialog to be closed.
+      <br><br>
+      Once the user has selected files, the callback is invoked with an array
+      of the files which were selected.
+      <br><br>
+      If the user cancels the dialog without selecting any files, then the
+      callback is invoked with an empty array.
+    </td>
+  </tr>
+</table>
 
+<br>
+<a name="OpenFilesCallback"></a>
+<h2>OpenFilesCallback interface</h2>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void OpenFilesCallback(<a
+                          href="#File">File</a>[] files)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      A method matching this signature should be passed as the first argument
+      to openFiles.  It will be invoked with an array of the files which were
+      selected.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>files</code> -
+      An array containing the files that have been selected.
+      If the user dismisses the file selector without selecting files, then
+      this array will be empty.
+      <br>
+    </td>
+  </tr>
+</table>
+
+<br>
+<a name="File"></a>
+<h2>File class</h2>
+
+<h3>Attributes</h3>
+<table>
+  <tr class="odd">
+    <th width="158">Attribute</th>
+    <th >Type</th>
+    <th >Description</th>
+  </tr>
+  <tr class="odd">
+    <td width="158"><strong>name</strong></td>
+    <td width="109">readonly string</td>
+    <td width="432">The name of the file, excluding the path.</td>
+  </tr>
+  <tr class="odd">
+    <td width="158"><strong>blob</strong></td>
+    <td width="109">readonly Blob</td>
+    <td width="432">The contents of the file.</td>
+  </tr>
+</table>
+
+
+<br>
+<a name="OpenFileOptions"></a>
+<h2>OpenFileOptions class</h2>
+
+<h3>Attributes</h3>
+<table>
+  <tr class="odd">
+    <th width="158">Attribute</th>
+    <th >Type</th>
+    <th >Description</th>
+  </tr>
+  <tr class="odd">
+    <td width="158"><strong>singleFile</strong></td>
+    <td width="109">bool</td>
+    <td width="432">
+      By default, the user may select multiple files.  If true, the user
+      is limited to selecting only one file.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td width="158"><strong>filter</strong></td>
+    <td width="109">string[]</td>
+    <td width="432">
+      By default, all files on the local disk are selectable.
+      If a filter is provided, only files matching the filter are selectable.
+      The user can turn the filter off, so be aware that selected files
+      may not match the filter.  The filter is an array of Internet
+      content types and/or file extensions.
+      Example: <code>['text/html', '.txt', 'image/jpeg']</code>
+    </td>
+  </tr>
+</table>
 
 </div>
 </body>
