@@ -98,7 +98,11 @@ static ExceptionManager exception_manager(true);
                name:NSApplicationWillTerminateNotification
              object:app];
     LOG(("Gears: added willterminate notification hook"));
-             
+
+    LOG(("Gears: Loading Nibs"));
+    PreloadNibFiles();
+    LOG(("Gears: Nibs Loaded"));
+
     notification_hook_installed = true;
   } else {
     LOG(("Gears: notification hook already installed"));
@@ -111,12 +115,13 @@ static ExceptionManager exception_manager(true);
 
 // Called at the end of the application's launch, when NIBs are loaded and
 // the menu bar is ready.
+// IMPORTANT: Note that if a 3rd party application manually loads Gears, they
+// may do so after this notification has fired. Therefore this handler should
+// NOT run any code that will cripple Gears' normal operation.
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
   LOG(("Gears: finishlaunching hook called"));
   // Install Settings Menu.
   [GearsSettingsMenuEnabler installSettingsMenu];
-  LOG(("Gears: Loading Nibs"));
-  PreloadNibFiles();
   LOG(("Gears: finishlaunching hook exited"));
 }
 
