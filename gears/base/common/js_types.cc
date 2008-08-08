@@ -1634,6 +1634,7 @@ bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
       }
       break;
     }
+    case JSPARAM_ARRAY:
     case JSPARAM_OBJECT: {
       // Call object.toString().
       NPObject *object = NPVARIANT_TO_OBJECT(t);

@@ -71,7 +71,7 @@ if (!isOfficial && !isSafari && !isWince) {
 //   suites.push(canvasSuite);
 // }
 
-if (!isWince && !isOfficial && !isNPAPI) {
+if (!isWince && !isOfficial) {
   var consoleSuite = new TestSuite('Console');
   consoleSuite.addFile('../testcases/console_tests.js',
                         {useWorker: true, useIFrame: true});
