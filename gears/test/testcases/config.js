@@ -63,12 +63,13 @@ if (!isOfficial && !isSafari && !isWince) {
   suites.push(audioSuite);
 }
 
-if (!isOfficial && (isWin32 || isOsx)) {
-  var canvasSuite = new TestSuite('Canvas');
-  canvasSuite.addFile('../testcases/canvas_tests.js',
-      {useWorker: true, useIFrame: true});
-  suites.push(canvasSuite);
-}
+// Canvas tests are disabled pending resolution of issue 652.
+// if (!isOfficial && (isWin32 || isOsx)) {
+//   var canvasSuite = new TestSuite('Canvas');
+//   canvasSuite.addFile('../testcases/canvas_tests.js',
+//       {useWorker: true, useIFrame: true});
+//   suites.push(canvasSuite);
+// }
 
 if (!isWince && !isOfficial && !isNPAPI) {
   var consoleSuite = new TestSuite('Console');
