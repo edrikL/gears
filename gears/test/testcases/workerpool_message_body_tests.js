@@ -186,7 +186,6 @@ function testComplexMessage() {
 }
 
 function testFunctionMessageFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'Function message should not be sendable');
@@ -199,11 +198,9 @@ function testFunctionMessageFails() {
     wp.sendMessage(f, childId);
   }, 'Cannot marshal a JavaScript function.',
      'Function message should not be sendable');
-  completeAsync();
 }
 
 function testFunctionElementMessageFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'Function element should not be sendable');
@@ -217,11 +214,9 @@ function testFunctionElementMessageFails() {
     wp.sendMessage(a, childId);
   }, 'Cannot marshal a JavaScript function.',
      'Function element should not be sendable');
-  completeAsync();
 }
 
 function testFunctionPropertyMessageFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'Function property should not be sendable');
@@ -238,11 +233,9 @@ function testFunctionPropertyMessageFails() {
     wp.sendMessage(o, childId);
   }, 'Cannot marshal a JavaScript function.',
      'Function property should not be sendable');
-  completeAsync();
 }
 
 function testNullAndUndefinedMessageFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'Null / undefined message should not be sendable');
@@ -260,8 +253,6 @@ function testNullAndUndefinedMessageFails() {
     wp.sendMessage(u, childId);
   }, 'The message parameter has an invalid type.',
      'Undefined message should not be sendable');
-
-  completeAsync();
 }
 
 function testNullElementMessageSucceeds() {
@@ -329,7 +320,6 @@ function testBlobMessageSucceeds() {
 }
 
 function testArbitraryGearsModuleMessageFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'An arbitrary Gears module should not be sendable');
@@ -339,7 +329,6 @@ function testArbitraryGearsModuleMessageFails() {
   assertError(function() {
     wp.sendMessage(google.gears.factory.create('beta.timer'), childId);
   }, null, 'An arbitrary Gears module should not be sendable');
-  completeAsync();
 }
 
 function testWorkerAdditionIsPolymorphic() {
@@ -367,7 +356,6 @@ function testWorkerAdditionIsPolymorphic() {
 }
 
 function testSendingCyclicObjectFails() {
-  startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, message) {
     assert(false, 'Cyclic objects should not be sendable');
@@ -381,7 +369,6 @@ function testSendingCyclicObjectFails() {
     wp.sendMessage(aa, childId);
   }, 'Cannot marshal an object that contains a cycle.',
      'Cyclic objects should not be sendable');
-  completeAsync();
 }
 
 // We don't really care if sending window.document succeeds or fails - the

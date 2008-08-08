@@ -122,7 +122,7 @@ internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
 internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
                           {useWorker: true, useIFrame: true});
-if (!isOfficial && isUsingCCTests) {
+if (!isOfficial && isUsingCCTests && !isWince) {
   internalTestSuite.addFile('../testcases/internal_audio_recorder_tests.js',
                             {useWorker: true, useIFrame: true});
 }
