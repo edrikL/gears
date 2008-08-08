@@ -1,7 +1,73 @@
-/* The author disclaims copyright to this source code.
- *
- * This is an SQLite module implementing full-text search.
- */
+/* fts2 has a design flaw which can lead to database corruption (see
+** below).  It is recommended not to use it any longer, instead use
+** fts3 (or higher).  If you believe that your use of fts2 is safe,
+** add -DSQLITE_ENABLE_BROKEN_FTS2=1 to your CFLAGS.
+*/
+#if (!defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS2)) \
+        && !defined(SQLITE_ENABLE_BROKEN_FTS2)
+#error fts2 has a design flaw and has been deprecated.
+#endif
+/* The flaw is that fts2 uses the content table's unaliased rowid as
+** the unique docid.  fts2 embeds the rowid in the index it builds,
+** and expects the rowid to not change.  The SQLite VACUUM operation
+** will renumber such rowids, thereby breaking fts2.  If you are using
+** fts2 in a system which has disabled VACUUM, then you can continue
+** to use it safely.  Note that PRAGMA auto_vacuum does NOT disable
+** VACUUM, though systems using auto_vacuum are unlikely to invoke
+** VACUUM.
+**
+** Unlike fts1, which is safe across VACUUM if you never delete
+** documents, fts2 has a second exposure to this flaw, in the segments
+** table.  So fts2 should be considered unsafe across VACUUM in all
+** cases.
+*/
+
+/*
+** 2006 Oct 10
+**
+** The author disclaims copyright to this source code.  In place of
+** a legal notice, here is a blessing:
+**
+**    May you do good and not evil.
+**    May you find forgiveness for yourself and forgive others.
+**    May you share freely, never taking more than you give.
+**
+******************************************************************************
+**
+** This is an SQLite module implementing full-text search.
+*/
+
+/* TODO(shess): I am importing fts2 to capture a bunch of fixes, but
+** there were a couple pieces which came along for the ride which rely
+** on later SQLite core code.  After long and rigorous debate, I've
+** decided to list the set of things affected here, and handle them
+** with an #ifdef.  When SQLite core is imported, these should be
+** backed out.  My goal is to have the code from sqlite_vendor and
+** sqlite_google be cleanly diffable.
+**
+** SQLite core's version of fts3/2 use a hashtable to store a mapping
+** from tokenizer names to implementations.  This hashtable is scoped
+** to the module, which requires a new API function
+** sqlite3_create_module_v2() in order to handle deleting the
+** hashtable when it goes out of scope.
+**
+** SQLite core adds the custom function fts2_tokenizer() to be used
+** for defining new tokenizers.  The second parameter is a vtable
+** pointer encoded as a blob.  Obviously this cannot be exposed to
+** Gears callers.  It could be suppressed in the authorizer, but for
+** now I think it's more reasonable to disable it entirely.
+**
+** The above two paragraphs lead to reverting to tokenizer-selection
+** code which is similar to how it was done before this capability was
+** added to the core.
+**
+** Additionally, the core adds sqlite3_context_db_handle().  The code
+** in optimizeFunc() actually already has a handle on the database, so
+** this can be worked around for now.
+**
+** SQLite core added a capability to rename virtual tables.
+*/
+#define GEARS_FTS2_CHANGES 1
 
 /*
 ** The code in this file is only compiled if:
@@ -240,7 +306,7 @@
 ** even with many segments.
 **
 ** TODO(shess) That said, it would be nice to have a better query-side
-** argument for MERGE_COUNT of 16.  Also, it's possible/likely that
+** argument for MERGE_COUNT of 16.  Also, it is possible/likely that
 ** optimizations to things like doclist merging will swing the sweet
 ** spot around.
 **
@@ -269,9 +335,6 @@
 #endif
 
 #include <assert.h>
-#if !defined(__APPLE__)
-#include <malloc.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -440,13 +503,13 @@ static void dataBufferInit(DataBuffer *pBuffer, int nCapacity){
   assert( nCapacity>=0 );
   pBuffer->nData = 0;
   pBuffer->nCapacity = nCapacity;
-  pBuffer->pData = nCapacity==0 ? NULL : malloc(nCapacity);
+  pBuffer->pData = nCapacity==0 ? NULL : sqlite3_malloc(nCapacity);
 }
 static void dataBufferReset(DataBuffer *pBuffer){
   pBuffer->nData = 0;
 }
 static void dataBufferDestroy(DataBuffer *pBuffer){
-  if( pBuffer->pData!=NULL ) free(pBuffer->pData);
+  if( pBuffer->pData!=NULL ) sqlite3_free(pBuffer->pData);
   SCRAMBLE(pBuffer);
 }
 static void dataBufferSwap(DataBuffer *pBuffer1, DataBuffer *pBuffer2){
@@ -462,7 +525,7 @@ static void dataBufferExpand(DataBuffer *pBuffer, int nAddCapacity){
   */
   if( pBuffer->nData+nAddCapacity>pBuffer->nCapacity ){
     pBuffer->nCapacity = pBuffer->nData+nAddCapacity;
-    pBuffer->pData = realloc(pBuffer->pData, pBuffer->nCapacity);
+    pBuffer->pData = sqlite3_realloc(pBuffer->pData, pBuffer->nCapacity);
   }
 }
 static void dataBufferAppend(DataBuffer *pBuffer,
@@ -669,7 +732,7 @@ static void dlrDestroy(DLReader *pReader){
 
 #ifndef NDEBUG
 /* Verify that the doclist can be validly decoded.  Also returns the
-** last docid found because it's convenient in other assertions for
+** last docid found because it is convenient in other assertions for
 ** DLWriter.
 */
 static void docListValidate(DocListType iType, const char *pData, int nData,
@@ -1032,7 +1095,7 @@ typedef struct DLCollector {
 /* TODO(shess) This could also be done by calling plwTerminate() and
 ** dataBufferAppend().  I tried that, expecting nominal performance
 ** differences, but it seemed to pretty reliably be worth 1% to code
-** it this way.  I suspect it's the incremental malloc overhead (some
+** it this way.  I suspect it is the incremental malloc overhead (some
 ** percentage of the plwTerminate() calls will cause a realloc), so
 ** this might be worth revisiting if the DataBuffer implementation
 ** changes.
@@ -1057,7 +1120,7 @@ static void dlcAddPos(DLCollector *pCollector, int iColumn, int iPos,
 }
 
 static DLCollector *dlcNew(sqlite_int64 iDocid, DocListType iType){
-  DLCollector *pCollector = malloc(sizeof(DLCollector));
+  DLCollector *pCollector = sqlite3_malloc(sizeof(DLCollector));
   dataBufferInit(&pCollector->b, 0);
   dlwInit(&pCollector->dlw, iType, &pCollector->b);
   plwInit(&pCollector->plw, &pCollector->dlw, iDocid);
@@ -1068,7 +1131,7 @@ static void dlcDelete(DLCollector *pCollector){
   dlwDestroy(&pCollector->dlw);
   dataBufferDestroy(&pCollector->b);
   SCRAMBLE(pCollector);
-  free(pCollector);
+  sqlite3_free(pCollector);
 }
 
 
@@ -1583,14 +1646,14 @@ static void docListExceptMerge(
 }
 
 static char *string_dup_n(const char *s, int n){
-  char *str = malloc(n + 1);
+  char *str = sqlite3_malloc(n + 1);
   memcpy(str, s, n);
   str[n] = '\0';
   return str;
 }
 
 /* Duplicate a string; the caller must free() the returned string.
- * (We don't use strdup() since it's not part of the standard C library and
+ * (We don't use strdup() since it is not part of the standard C library and
  * may not be available everywhere.) */
 static char *string_dup(const char *s){
   return string_dup_n(s, strlen(s));
@@ -1616,7 +1679,7 @@ static char *string_format(const char *zFormat,
   }
   len += 1;  /* for null terminator */
 
-  r = result = malloc(len);
+  r = result = sqlite3_malloc(len);
   for(p = zFormat; *p; ++p){
     if( *p=='%' ){
       memcpy(r, zDb, nDb);
@@ -1639,7 +1702,7 @@ static int sql_exec(sqlite3 *db, const char *zDb, const char *zName,
   int rc;
   TRACE(("FTS2 sql: %s\n", zCommand));
   rc = sqlite3_exec(db, zCommand, NULL, 0, NULL);
-  free(zCommand);
+  sqlite3_free(zCommand);
   return rc;
 }
 
@@ -1648,8 +1711,8 @@ static int sql_prepare(sqlite3 *db, const char *zDb, const char *zName,
   char *zCommand = string_format(zFormat, zDb, zName);
   int rc;
   TRACE(("FTS2 prepare: %s\n", zCommand));
-  rc = sqlite3_prepare(db, zCommand, -1, ppStmt, NULL);
-  free(zCommand);
+  rc = sqlite3_prepare_v2(db, zCommand, -1, ppStmt, NULL);
+  sqlite3_free(zCommand);
   return rc;
 }
 
@@ -1743,17 +1806,22 @@ typedef enum fulltext_statement {
   CONTENT_SELECT_STMT,
   CONTENT_UPDATE_STMT,
   CONTENT_DELETE_STMT,
+  CONTENT_EXISTS_STMT,
 
   BLOCK_INSERT_STMT,
   BLOCK_SELECT_STMT,
   BLOCK_DELETE_STMT,
+  BLOCK_DELETE_ALL_STMT,
 
   SEGDIR_MAX_INDEX_STMT,
   SEGDIR_SET_STMT,
-  SEGDIR_SELECT_STMT,
+  SEGDIR_SELECT_LEVEL_STMT,
   SEGDIR_SPAN_STMT,
   SEGDIR_DELETE_STMT,
+  SEGDIR_SELECT_SEGMENT_STMT,
   SEGDIR_SELECT_ALL_STMT,
+  SEGDIR_DELETE_ALL_STMT,
+  SEGDIR_COUNT_STMT,
 
   MAX_STMT                     /* Always at end! */
 } fulltext_statement;
@@ -1768,22 +1836,34 @@ static const char *const fulltext_zStatement[MAX_STMT] = {
   /* CONTENT_SELECT */ "select * from %_content where rowid = ?",
   /* CONTENT_UPDATE */ NULL,  /* generated in contentUpdateStatement() */
   /* CONTENT_DELETE */ "delete from %_content where rowid = ?",
+  /* CONTENT_EXISTS */ "select rowid from %_content limit 1",
 
   /* BLOCK_INSERT */ "insert into %_segments values (?)",
   /* BLOCK_SELECT */ "select block from %_segments where rowid = ?",
   /* BLOCK_DELETE */ "delete from %_segments where rowid between ? and ?",
+  /* BLOCK_DELETE_ALL */ "delete from %_segments",
 
   /* SEGDIR_MAX_INDEX */ "select max(idx) from %_segdir where level = ?",
   /* SEGDIR_SET */ "insert into %_segdir values (?, ?, ?, ?, ?, ?)",
-  /* SEGDIR_SELECT */
+  /* SEGDIR_SELECT_LEVEL */
   "select start_block, leaves_end_block, root from %_segdir "
   " where level = ? order by idx",
   /* SEGDIR_SPAN */
   "select min(start_block), max(end_block) from %_segdir "
   " where level = ? and start_block <> 0",
   /* SEGDIR_DELETE */ "delete from %_segdir where level = ?",
+
+  /* NOTE(shess): The first three results of the following two
+  ** statements must match.
+  */
+  /* SEGDIR_SELECT_SEGMENT */
+  "select start_block, leaves_end_block, root from %_segdir "
+  " where level = ? and idx = ?",
   /* SEGDIR_SELECT_ALL */
-  "select root, leaves_end_block from %_segdir order by level desc, idx",
+  "select start_block, leaves_end_block, root from %_segdir "
+  " order by level desc, idx asc",
+  /* SEGDIR_DELETE_ALL */ "delete from %_segdir",
+  /* SEGDIR_COUNT */ "select count(*), ifnull(max(level),0) from %_segdir",
 };
 
 /*
@@ -1853,7 +1933,7 @@ static struct fulltext_vtab *cursor_vtab(fulltext_cursor *c){
   return (fulltext_vtab *) c->base.pVtab;
 }
 
-static const sqlite3_module fulltextModule;   /* forward declaration */
+static const sqlite3_module fts2Module;   /* forward declaration */
 
 /* Return a dynamically generated statement of the form
  *   insert into %_content (rowid, ...) values (?, ...)
@@ -1913,7 +1993,7 @@ static int sql_get_statement(fulltext_vtab *v, fulltext_statement iStmt,
     }
     rc = sql_prepare(v->db, v->zDb, v->zName, &v->pFulltextStatements[iStmt],
                          zStmt);
-    if( zStmt != fulltext_zStatement[iStmt]) free((void *) zStmt);
+    if( zStmt != fulltext_zStatement[iStmt]) sqlite3_free((void *) zStmt);
     if( rc!=SQLITE_OK ) return rc;
   } else {
     int rc = sqlite3_reset(v->pFulltextStatements[iStmt]);
@@ -1924,56 +2004,28 @@ static int sql_get_statement(fulltext_vtab *v, fulltext_statement iStmt,
   return SQLITE_OK;
 }
 
-/* Step the indicated statement, handling errors SQLITE_BUSY (by
-** retrying) and SQLITE_SCHEMA (by re-preparing and transferring
-** bindings to the new statement).
-** TODO(adam): We should extend this function so that it can work with
-** statements declared locally, not only globally cached statements.
+/* Like sqlite3_step(), but convert SQLITE_DONE to SQLITE_OK and
+** SQLITE_ROW to SQLITE_ERROR.  Useful for statements like UPDATE,
+** where we expect no results.
 */
-static int sql_step_statement(fulltext_vtab *v, fulltext_statement iStmt,
-                              sqlite3_stmt **ppStmt){
-  int rc;
-  sqlite3_stmt *s = *ppStmt;
-  assert( iStmt<MAX_STMT );
-  assert( s==v->pFulltextStatements[iStmt] );
-
-  while( (rc=sqlite3_step(s))!=SQLITE_DONE && rc!=SQLITE_ROW ){
-    if( rc==SQLITE_BUSY ) continue;
-    if( rc!=SQLITE_ERROR ) return rc;
-
-    /* If an SQLITE_SCHEMA error has occured, then finalizing this
-     * statement is going to delete the fulltext_vtab structure. If
-     * the statement just executed is in the pFulltextStatements[]
-     * array, it will be finalized twice. So remove it before
-     * calling sqlite3_finalize().
-     */
-    v->pFulltextStatements[iStmt] = NULL;
-    rc = sqlite3_finalize(s);
-    break;
-  }
-  return rc;
-}
-
-/* Like sql_step_statement(), but convert SQLITE_DONE to SQLITE_OK.
-** Useful for statements like UPDATE, where we expect no results.
-*/
-static int sql_single_step_statement(fulltext_vtab *v,
-                                     fulltext_statement iStmt,
-                                     sqlite3_stmt **ppStmt){
-  int rc = sql_step_statement(v, iStmt, ppStmt);
+static int sql_single_step(sqlite3_stmt *s){
+  int rc = sqlite3_step(s);
   return (rc==SQLITE_DONE) ? SQLITE_OK : rc;
 }
 
 /* Like sql_get_statement(), but for special replicated LEAF_SELECT
-** statements.
+** statements.  idx -1 is a special case for an uncached version of
+** the statement (used in the optimize implementation).
 */
 /* TODO(shess) Write version for generic statements and then share
 ** that between the cached-statement functions.
 */
 static int sql_get_leaf_statement(fulltext_vtab *v, int idx,
                                   sqlite3_stmt **ppStmt){
-  assert( idx>=0 && idx<MERGE_COUNT );
-  if( v->pLeafSelectStmts[idx]==NULL ){
+  assert( idx>=-1 && idx<MERGE_COUNT );
+  if( idx==-1 ){
+    return sql_prepare(v->db, v->zDb, v->zName, ppStmt, LEAF_SELECT);
+  }else if( v->pLeafSelectStmts[idx]==NULL ){
     int rc = sql_prepare(v->db, v->zDb, v->zName, &v->pLeafSelectStmts[idx],
                          LEAF_SELECT);
     if( rc!=SQLITE_OK ) return rc;
@@ -1984,35 +2036,6 @@ static int sql_get_leaf_statement(fulltext_vtab *v, int idx,
 
   *ppStmt = v->pLeafSelectStmts[idx];
   return SQLITE_OK;
-}
-
-/* Like sql_step_statement(), but for special replicated LEAF_SELECT
-** statements.
-*/
-/* TODO(shess) Write version for generic statements and then share
-** that between the cached-statement functions.
-*/
-static int sql_step_leaf_statement(fulltext_vtab *v, int idx,
-                                   sqlite3_stmt **ppStmt){
-  int rc;
-  sqlite3_stmt *s = *ppStmt;
-
-  while( (rc=sqlite3_step(s))!=SQLITE_DONE && rc!=SQLITE_ROW ){
-    if( rc==SQLITE_BUSY ) continue;
-    if( rc!=SQLITE_ERROR ) return rc;
-
-    /* If an SQLITE_SCHEMA error has occured, then finalizing this
-     * statement is going to delete the fulltext_vtab structure. If
-     * the statement just executed is in the pLeafSelectStmts[]
-     * array, it will be finalized twice. So remove it before
-     * calling sqlite3_finalize().
-     */
-    v->pLeafSelectStmts[idx] = NULL;
-    rc = sqlite3_finalize(s);
-    break;
-  }
-
-  return rc;
 }
 
 /* insert into %_content (rowid, ...) values ([rowid], [pValues]) */
@@ -2031,7 +2054,7 @@ static int content_insert(fulltext_vtab *v, sqlite3_value *rowid,
     if( rc!=SQLITE_OK ) return rc;
   }
 
-  return sql_single_step_statement(v, CONTENT_INSERT_STMT, &s);
+  return sql_single_step(s);
 }
 
 /* update %_content set col0 = pValues[0], col1 = pValues[1], ...
@@ -2051,16 +2074,16 @@ static int content_update(fulltext_vtab *v, sqlite3_value **pValues,
   rc = sqlite3_bind_int64(s, 1+v->nColumn, iRowid);
   if( rc!=SQLITE_OK ) return rc;
 
-  return sql_single_step_statement(v, CONTENT_UPDATE_STMT, &s);
+  return sql_single_step(s);
 }
 
 static void freeStringArray(int nString, const char **pString){
   int i;
 
   for (i=0 ; i < nString ; ++i) {
-    if( pString[i]!=NULL ) free((void *) pString[i]);
+    if( pString[i]!=NULL ) sqlite3_free((void *) pString[i]);
   }
-  free((void *) pString);
+  sqlite3_free((void *) pString);
 }
 
 /* select * from %_content where rowid = [iRow]
@@ -2084,10 +2107,10 @@ static int content_select(fulltext_vtab *v, sqlite_int64 iRow,
   rc = sqlite3_bind_int64(s, 1, iRow);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = sql_step_statement(v, CONTENT_SELECT_STMT, &s);
+  rc = sqlite3_step(s);
   if( rc!=SQLITE_ROW ) return rc;
 
-  values = (const char **) malloc(v->nColumn * sizeof(const char *));
+  values = (const char **) sqlite3_malloc(v->nColumn * sizeof(const char *));
   for(i=0; i<v->nColumn; ++i){
     if( sqlite3_column_type(s, i)==SQLITE_NULL ){
       values[i] = NULL;
@@ -2117,7 +2140,26 @@ static int content_delete(fulltext_vtab *v, sqlite_int64 iRow){
   rc = sqlite3_bind_int64(s, 1, iRow);
   if( rc!=SQLITE_OK ) return rc;
 
-  return sql_single_step_statement(v, CONTENT_DELETE_STMT, &s);
+  return sql_single_step(s);
+}
+
+/* Returns SQLITE_ROW if any rows exist in %_content, SQLITE_DONE if
+** no rows exist, and any error in case of failure.
+*/
+static int content_exists(fulltext_vtab *v){
+  sqlite3_stmt *s;
+  int rc = sql_get_statement(v, CONTENT_EXISTS_STMT, &s);
+  if( rc!=SQLITE_OK ) return rc;
+
+  rc = sqlite3_step(s);
+  if( rc!=SQLITE_ROW ) return rc;
+
+  /* We expect only one row.  We must execute another sqlite3_step()
+   * to complete the iteration; otherwise the table will remain locked. */
+  rc = sqlite3_step(s);
+  if( rc==SQLITE_DONE ) return SQLITE_ROW;
+  if( rc==SQLITE_ROW ) return SQLITE_ERROR;
+  return rc;
 }
 
 /* insert into %_segments values ([pData])
@@ -2132,7 +2174,7 @@ static int block_insert(fulltext_vtab *v, const char *pData, int nData,
   rc = sqlite3_bind_blob(s, 1, pData, nData, SQLITE_STATIC);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = sql_step_statement(v, BLOCK_INSERT_STMT, &s);
+  rc = sqlite3_step(s);
   if( rc==SQLITE_ROW ) return SQLITE_ERROR;
   if( rc!=SQLITE_DONE ) return rc;
 
@@ -2158,7 +2200,7 @@ static int block_delete(fulltext_vtab *v,
   rc = sqlite3_bind_int64(s, 2, iEndBlockid);
   if( rc!=SQLITE_OK ) return rc;
 
-  return sql_single_step_statement(v, BLOCK_DELETE_STMT, &s);
+  return sql_single_step(s);
 }
 
 /* Returns SQLITE_ROW with *pidx set to the maximum segment idx found
@@ -2173,7 +2215,7 @@ static int segdir_max_index(fulltext_vtab *v, int iLevel, int *pidx){
   rc = sqlite3_bind_int(s, 1, iLevel);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = sql_step_statement(v, SEGDIR_MAX_INDEX_STMT, &s);
+  rc = sqlite3_step(s);
   /* Should always get at least one row due to how max() works. */
   if( rc==SQLITE_DONE ) return SQLITE_DONE;
   if( rc!=SQLITE_ROW ) return rc;
@@ -2228,7 +2270,7 @@ static int segdir_set(fulltext_vtab *v, int iLevel, int idx,
   rc = sqlite3_bind_blob(s, 6, pRootData, nRootData, SQLITE_STATIC);
   if( rc!=SQLITE_OK ) return rc;
 
-  return sql_single_step_statement(v, SEGDIR_SET_STMT, &s);
+  return sql_single_step(s);
 }
 
 /* Queries %_segdir for the block span of the segments in level
@@ -2245,7 +2287,7 @@ static int segdir_span(fulltext_vtab *v, int iLevel,
   rc = sqlite3_bind_int(s, 1, iLevel);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = sql_step_statement(v, SEGDIR_SPAN_STMT, &s);
+  rc = sqlite3_step(s);
   if( rc==SQLITE_DONE ) return SQLITE_DONE;  /* Should never happen */
   if( rc!=SQLITE_ROW ) return rc;
 
@@ -2290,7 +2332,55 @@ static int segdir_delete(fulltext_vtab *v, int iLevel){
   rc = sqlite3_bind_int64(s, 1, iLevel);
   if( rc!=SQLITE_OK ) return rc;
 
-  return sql_single_step_statement(v, SEGDIR_DELETE_STMT, &s);
+  return sql_single_step(s);
+}
+
+/* Delete entire fts index, SQLITE_OK on success, relevant error on
+** failure.
+*/
+static int segdir_delete_all(fulltext_vtab *v){
+  sqlite3_stmt *s;
+  int rc = sql_get_statement(v, SEGDIR_DELETE_ALL_STMT, &s);
+  if( rc!=SQLITE_OK ) return rc;
+
+  rc = sql_single_step(s);
+  if( rc!=SQLITE_OK ) return rc;
+
+  rc = sql_get_statement(v, BLOCK_DELETE_ALL_STMT, &s);
+  if( rc!=SQLITE_OK ) return rc;
+
+  return sql_single_step(s);
+}
+
+/* Returns SQLITE_OK with *pnSegments set to the number of entries in
+** %_segdir and *piMaxLevel set to the highest level which has a
+** segment.  Otherwise returns the SQLite error which caused failure.
+*/
+static int segdir_count(fulltext_vtab *v, int *pnSegments, int *piMaxLevel){
+  sqlite3_stmt *s;
+  int rc = sql_get_statement(v, SEGDIR_COUNT_STMT, &s);
+  if( rc!=SQLITE_OK ) return rc;
+
+  rc = sqlite3_step(s);
+  /* TODO(shess): This case should not be possible?  Should stronger
+  ** measures be taken if it happens?
+  */
+  if( rc==SQLITE_DONE ){
+    *pnSegments = 0;
+    *piMaxLevel = 0;
+    return SQLITE_OK;
+  }
+  if( rc!=SQLITE_ROW ) return rc;
+
+  *pnSegments = sqlite3_column_int(s, 0);
+  *piMaxLevel = sqlite3_column_int(s, 1);
+
+  /* We expect only one row.  We must execute another sqlite3_step()
+   * to complete the iteration; otherwise the table will remain locked. */
+  rc = sqlite3_step(s);
+  if( rc==SQLITE_DONE ) return SQLITE_OK;
+  if( rc==SQLITE_ROW ) return SQLITE_ERROR;
+  return rc;
 }
 
 /* TODO(shess) clearPendingTerms() is far down the file because
@@ -2329,12 +2419,12 @@ static void fulltext_vtab_destroy(fulltext_vtab *v){
 
   clearPendingTerms(v);
 
-  free(v->azColumn);
+  sqlite3_free(v->azColumn);
   for(i = 0; i < v->nColumn; ++i) {
     sqlite3_free(v->azContentColumn[i]);
   }
-  free(v->azContentColumn);
-  free(v);
+  sqlite3_free(v->azContentColumn);
+  sqlite3_free(v);
 }
 
 /*
@@ -2387,6 +2477,7 @@ static int getToken(const char *z, int *tokenType){
       *tokenType = TOKEN_SPACE;
       return i;
     }
+    case '`':
     case '\'':
     case '"': {
       int delim = z[0];
@@ -2444,7 +2535,7 @@ typedef struct Token {
 */
 static char **tokenizeString(const char *z, int *pnToken){
   int nToken = 0;
-  Token *aToken = malloc( strlen(z) * sizeof(aToken[0]) );
+  Token *aToken = sqlite3_malloc( strlen(z) * sizeof(aToken[0]) );
   int n = 1;
   int e, i;
   int totalSize = 0;
@@ -2460,7 +2551,7 @@ static char **tokenizeString(const char *z, int *pnToken){
     }
     z += n;
   }
-  azToken = (char**)malloc( nToken*sizeof(char*) + totalSize );
+  azToken = (char**)sqlite3_malloc( nToken*sizeof(char*) + totalSize );
   zCopy = (char*)&azToken[nToken];
   nToken--;
   for(i=0; i<nToken; i++){
@@ -2471,7 +2562,7 @@ static char **tokenizeString(const char *z, int *pnToken){
     zCopy += n+1;
   }
   azToken[nToken] = 0;
-  free(aToken);
+  sqlite3_free(aToken);
   *pnToken = nToken;
   return azToken;
 }
@@ -2609,9 +2700,9 @@ typedef struct TableSpec {
 ** Reclaim all of the memory used by a TableSpec
 */
 static void clearTableSpec(TableSpec *p) {
-  free(p->azColumn);
-  free(p->azContentColumn);
-  free(p->azTokenizer);
+  sqlite3_free(p->azColumn);
+  sqlite3_free(p->azContentColumn);
+  sqlite3_free(p->azTokenizer);
 }
 
 /* Parse a CREATE VIRTUAL TABLE statement, which looks like this:
@@ -2646,7 +2737,7 @@ static int parseSpec(TableSpec *pSpec, int argc, const char *const*argv,
   for(i=n=0; i<argc; i++){
     n += strlen(argv[i]) + 1;
   }
-  azArg = malloc( sizeof(char*)*argc + n );
+  azArg = sqlite3_malloc( sizeof(char*)*argc + n );
   if( azArg==0 ){
     return SQLITE_NOMEM;
   }
@@ -2691,7 +2782,7 @@ static int parseSpec(TableSpec *pSpec, int argc, const char *const*argv,
   ** for the convenience of people who might examine the generated
   ** %_content table and wonder what the columns are used for.
   */
-  pSpec->azContentColumn = malloc( pSpec->nColumn * sizeof(char *) );
+  pSpec->azContentColumn = sqlite3_malloc( pSpec->nColumn * sizeof(char *) );
   if( pSpec->azContentColumn==0 ){
     clearTableSpec(pSpec);
     return SQLITE_NOMEM;
@@ -2740,12 +2831,29 @@ static char *fulltextSchema(
   return zNext;
 }
 
+#if GEARS_FTS2_CHANGES
+/*
+** The fts2 built-in tokenizers - "simple" and "porter" - are implemented
+** in files fts2_tokenizer1.c and fts2_porter.c respectively. The following
+** two forward declarations are for functions declared in these files
+** used to retrieve the respective implementations.
+**
+** Calling sqlite3Fts2SimpleTokenizerModule() sets the value pointed
+** to by the argument to point a the "simple" tokenizer implementation.
+** Function ...PorterTokenizerModule() sets *pModule to point to the
+** porter tokenizer/stemmer implementation.
+*/
+void sqlite3Fts2SimpleTokenizerModule(sqlite3_tokenizer_module const**ppModule);
+void sqlite3Fts2PorterTokenizerModule(sqlite3_tokenizer_module const**ppModule);
+#endif
+
 /*
 ** Build a new sqlite3_vtab structure that will describe the
 ** fulltext index defined by spec.
 */
 static int constructVtab(
   sqlite3 *db,              /* The SQLite database connection */
+  fts2Hash *pHash,          /* Hash table containing tokenizers */
   TableSpec *spec,          /* Parsed spec information from parseSpec() */
   sqlite3_vtab **ppVTab,    /* Write the resulting vtab structure here */
   char **pzErr              /* Write any error message here */
@@ -2756,7 +2864,10 @@ static int constructVtab(
   const sqlite3_tokenizer_module *m = NULL;
   char *schema;
 
-  v = (fulltext_vtab *) malloc(sizeof(fulltext_vtab));
+  char const *zTok;         /* Name of tokenizer to use for this fts table */
+  int nTok;                 /* Length of zTok, including nul terminator */
+
+  v = (fulltext_vtab *) sqlite3_malloc(sizeof(fulltext_vtab));
   if( v==0 ) return SQLITE_NOMEM;
   CLEAR(v);
   /* sqlite will initialize v->base */
@@ -2772,16 +2883,32 @@ static int constructVtab(
   if( spec->azTokenizer==0 ){
     return SQLITE_NOMEM;
   }
-  /* TODO(shess) For now, add new tokenizers as else if clauses. */
-  if( spec->azTokenizer[0]==0 || startsWith(spec->azTokenizer[0], "simple") ){
+
+  zTok = spec->azTokenizer[0]; 
+  if( !zTok ){
+    zTok = "simple";
+  }
+  nTok = strlen(zTok)+1;
+
+#if GEARS_FTS2_CHANGES
+  if( 0==strcmp(zTok, "simple") ){
     sqlite3Fts2SimpleTokenizerModule(&m);
-  }else if( startsWith(spec->azTokenizer[0], "porter") ){
+  }else if( 0==strcmp(zTok, "porter") ){
     sqlite3Fts2PorterTokenizerModule(&m);
   }else{
     *pzErr = sqlite3_mprintf("unknown tokenizer: %s", spec->azTokenizer[0]);
     rc = SQLITE_ERROR;
     goto err;
   }
+#else
+  m = (sqlite3_tokenizer_module *)sqlite3Fts2HashFind(pHash, zTok, nTok);
+  if( !m ){
+    *pzErr = sqlite3_mprintf("unknown tokenizer: %s", spec->azTokenizer[0]);
+    rc = SQLITE_ERROR;
+    goto err;
+  }
+#endif
+
   for(n=0; spec->azTokenizer[n]; n++){}
   if( n ){
     rc = m->xCreate(n-1, (const char*const*)&spec->azTokenizer[1],
@@ -2826,7 +2953,7 @@ static int fulltextConnect(
   int rc = parseSpec(&spec, argc, argv, pzErr);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = constructVtab(db, &spec, ppVTab, pzErr);
+  rc = constructVtab(db, (fts2Hash *)pAux, &spec, ppVTab, pzErr);
   clearTableSpec(&spec);
   return rc;
 }
@@ -2872,7 +2999,7 @@ static int fulltextCreate(sqlite3 *db, void *pAux,
                 ");");
   if( rc!=SQLITE_OK ) goto out;
 
-  rc = constructVtab(db, &spec, ppVTab, pzErr);
+  rc = constructVtab(db, (fts2Hash *)pAux, &spec, ppVTab, pzErr);
 
 out:
   clearTableSpec(&spec);
@@ -2939,12 +3066,16 @@ static int fulltextDestroy(sqlite3_vtab *pVTab){
 static int fulltextOpen(sqlite3_vtab *pVTab, sqlite3_vtab_cursor **ppCursor){
   fulltext_cursor *c;
 
-  c = (fulltext_cursor *) calloc(sizeof(fulltext_cursor), 1);
-  /* sqlite will initialize c->base */
-  *ppCursor = &c->base;
-  TRACE(("FTS2 Open %p: %p\n", pVTab, c));
-
-  return SQLITE_OK;
+  c = (fulltext_cursor *) sqlite3_malloc(sizeof(fulltext_cursor));
+  if( c ){
+    memset(c, 0, sizeof(fulltext_cursor));
+    /* sqlite will initialize c->base */
+    *ppCursor = &c->base;
+    TRACE(("FTS2 Open %p: %p\n", pVTab, c));
+    return SQLITE_OK;
+  }else{
+    return SQLITE_NOMEM;
+  }
 }
 
 
@@ -2953,9 +3084,9 @@ static int fulltextOpen(sqlite3_vtab *pVTab, sqlite3_vtab_cursor **ppCursor){
 static void queryClear(Query *q){
   int i;
   for(i = 0; i < q->nTerms; ++i){
-    free(q->pTerms[i].pTerm);
+    sqlite3_free(q->pTerms[i].pTerm);
   }
-  free(q->pTerms);
+  sqlite3_free(q->pTerms);
   CLEAR(q);
 }
 
@@ -2963,9 +3094,9 @@ static void queryClear(Query *q){
 ** Snippet
 */
 static void snippetClear(Snippet *p){
-  free(p->aMatch);
-  free(p->zOffset);
-  free(p->zSnippet);
+  sqlite3_free(p->aMatch);
+  sqlite3_free(p->zOffset);
+  sqlite3_free(p->zSnippet);
   CLEAR(p);
 }
 /*
@@ -2980,7 +3111,7 @@ static void snippetAppendMatch(
   struct snippetMatch *pMatch;
   if( p->nMatch+1>=p->nAlloc ){
     p->nAlloc = p->nAlloc*2 + 10;
-    p->aMatch = realloc(p->aMatch, p->nAlloc*sizeof(p->aMatch[0]) );
+    p->aMatch = sqlite3_realloc(p->aMatch, p->nAlloc*sizeof(p->aMatch[0]) );
     if( p->aMatch==0 ){
       p->nMatch = 0;
       p->nAlloc = 0;
@@ -3121,8 +3252,8 @@ static void snippetOffsetText(Snippet *p){
   for(i=0; i<p->nMatch; i++){
     struct snippetMatch *pMatch = &p->aMatch[i];
     zBuf[0] = ' ';
-    sprintf(&zBuf[cnt>0], "%d %d %d %d", pMatch->iCol,
-        pMatch->iTerm, pMatch->iStart, pMatch->nByte);
+    sqlite3_snprintf(sizeof(zBuf)-1, &zBuf[cnt>0], "%d %d %d %d",
+        pMatch->iCol, pMatch->iTerm, pMatch->iStart, pMatch->nByte);
     append(&sb, zBuf);
     cnt++;
   }
@@ -3207,7 +3338,7 @@ static void snippetText(
   int iMatch;
   
 
-  free(pCursor->snippet.zSnippet);
+  sqlite3_free(pCursor->snippet.zSnippet);
   pCursor->snippet.zSnippet = 0;
   aMatch = pCursor->snippet.aMatch;
   nMatch = pCursor->snippet.nMatch;
@@ -3309,7 +3440,7 @@ static int fulltextClose(sqlite3_vtab_cursor *pCursor){
   snippetClear(&c->snippet);
   if( c->result.nData!=0 ) dlrDestroy(&c->reader);
   dataBufferDestroy(&c->result);
-  free(c);
+  sqlite3_free(c);
   return SQLITE_OK;
 }
 
@@ -3414,14 +3545,14 @@ static int docListOfTerm(
 static void queryAdd(Query *q, const char *pTerm, int nTerm){
   QueryTerm *t;
   ++q->nTerms;
-  q->pTerms = realloc(q->pTerms, q->nTerms * sizeof(q->pTerms[0]));
+  q->pTerms = sqlite3_realloc(q->pTerms, q->nTerms * sizeof(q->pTerms[0]));
   if( q->pTerms==0 ){
     q->nTerms = 0;
     return;
   }
   t = &q->pTerms[q->nTerms - 1];
   CLEAR(t);
-  t->pTerm = malloc(nTerm+1);
+  t->pTerm = sqlite3_malloc(nTerm+1);
   memcpy(t->pTerm, pTerm, nTerm);
   t->pTerm[nTerm] = 0;
   t->nTerm = nTerm;
@@ -3706,18 +3837,38 @@ static int fulltextFilter(
   fulltext_cursor *c = (fulltext_cursor *) pCursor;
   fulltext_vtab *v = cursor_vtab(c);
   int rc;
-  char *zSql;
 
   TRACE(("FTS2 Filter %p\n",pCursor));
 
-  zSql = sqlite3_mprintf("select rowid, * from %%_content %s",
-                          idxNum==QUERY_GENERIC ? "" : "where rowid=?");
-  sqlite3_finalize(c->pStmt);
-  rc = sql_prepare(v->db, v->zDb, v->zName, &c->pStmt, zSql);
-  sqlite3_free(zSql);
-  if( rc!=SQLITE_OK ) return rc;
+  /* If the cursor has a statement that was not prepared according to
+  ** idxNum, clear it.  I believe all calls to fulltextFilter with a
+  ** given cursor will have the same idxNum , but in this case it's
+  ** easy to be safe.
+  */
+  if( c->pStmt && c->iCursorType!=idxNum ){
+    sqlite3_finalize(c->pStmt);
+    c->pStmt = NULL;
+  }
 
-  c->iCursorType = idxNum;
+  /* Get a fresh statement appropriate to idxNum. */
+  /* TODO(shess): Add a prepared-statement cache in the vt structure.
+  ** The cache must handle multiple open cursors.  Easier to cache the
+  ** statement variants at the vt to reduce malloc/realloc/free here.
+  ** Or we could have a StringBuffer variant which allowed stack
+  ** construction for small values.
+  */
+  if( !c->pStmt ){
+    char *zSql = sqlite3_mprintf("select rowid, * from %%_content %s",
+                                 idxNum==QUERY_GENERIC ? "" : "where rowid=?");
+    rc = sql_prepare(v->db, v->zDb, v->zName, &c->pStmt, zSql);
+    sqlite3_free(zSql);
+    if( rc!=SQLITE_OK ) return rc;
+    c->iCursorType = idxNum;
+  }else{
+    sqlite3_reset(c->pStmt);
+    assert( c->iCursorType==idxNum );
+  }
+
   switch( idxNum ){
     case QUERY_GENERIC:
       break;
@@ -3812,17 +3963,18 @@ static int buildTerms(fulltext_vtab *v, sqlite_int64 iDocid,
   if( rc!=SQLITE_OK ) return rc;
 
   pCursor->pTokenizer = pTokenizer;
-  while( SQLITE_OK==pTokenizer->pModule->xNext(pCursor,
-                                               &pToken, &nTokenBytes,
-                                               &iStartOffset, &iEndOffset,
-                                               &iPosition) ){
+  while( SQLITE_OK==(rc=pTokenizer->pModule->xNext(pCursor,
+                                                   &pToken, &nTokenBytes,
+                                                   &iStartOffset, &iEndOffset,
+                                                   &iPosition)) ){
     DLCollector *p;
     int nData;                   /* Size of doclist before our update. */
 
-    /* Positions can't be negative; we use -1 as a terminator internally. */
-    if( iPosition<0 ){
-      pTokenizer->pModule->xClose(pCursor);
-      return SQLITE_ERROR;
+    /* Positions can't be negative; we use -1 as a terminator
+     * internally.  Token can't be NULL or empty. */
+    if( iPosition<0 || pToken == NULL || nTokenBytes == 0 ){
+      rc = SQLITE_ERROR;
+      break;
     }
 
     p = fts2HashFind(&v->pendingTerms, pToken, nTokenBytes);
@@ -3851,6 +4003,7 @@ static int buildTerms(fulltext_vtab *v, sqlite_int64 iDocid,
   ** not durable.  *ponder*
   */
   pTokenizer->pModule->xClose(pCursor);
+  if( SQLITE_DONE == rc ) return SQLITE_OK;
   return rc;
 }
 
@@ -3985,18 +4138,20 @@ typedef struct InteriorBlock {
 
 static InteriorBlock *interiorBlockNew(int iHeight, sqlite_int64 iChildBlock,
                                        const char *pTerm, int nTerm){
-  InteriorBlock *block = calloc(1, sizeof(InteriorBlock));
+  InteriorBlock *block = sqlite3_malloc(sizeof(InteriorBlock));
   char c[VARINT_MAX+VARINT_MAX];
   int n;
 
-  dataBufferInit(&block->term, 0);
-  dataBufferReplace(&block->term, pTerm, nTerm);
+  if( block ){
+    memset(block, 0, sizeof(*block));
+    dataBufferInit(&block->term, 0);
+    dataBufferReplace(&block->term, pTerm, nTerm);
 
-  n = putVarint(c, iHeight);
-  n += putVarint(c+n, iChildBlock);
-  dataBufferInit(&block->data, INTERIOR_MAX);
-  dataBufferReplace(&block->data, c, n);
-
+    n = putVarint(c, iHeight);
+    n += putVarint(c+n, iChildBlock);
+    dataBufferInit(&block->data, INTERIOR_MAX);
+    dataBufferReplace(&block->data, c, n);
+  }
   return block;
 }
 
@@ -4161,11 +4316,11 @@ static int interiorWriterDestroy(InteriorWriter *pWriter){
     block = block->next;
     dataBufferDestroy(&b->term);
     dataBufferDestroy(&b->data);
-    free(b);
+    sqlite3_free(b);
   }
   if( pWriter->parentWriter!=NULL ){
     interiorWriterDestroy(pWriter->parentWriter);
-    free(pWriter->parentWriter);
+    sqlite3_free(pWriter->parentWriter);
   }
   dataBufferDestroy(&pWriter->term);
   SCRAMBLE(pWriter);
@@ -4199,7 +4354,7 @@ static int interiorWriterRootInfo(fulltext_vtab *v, InteriorWriter *pWriter,
   if( rc!=SQLITE_OK ) return rc;
   *piEndBlockid = iBlockid;
 
-  pWriter->parentWriter = malloc(sizeof(*pWriter->parentWriter));
+  pWriter->parentWriter = sqlite3_malloc(sizeof(*pWriter->parentWriter));
   interiorWriterInit(pWriter->iHeight+1,
                      block->term.pData, block->term.nData,
                      iBlockid, pWriter->parentWriter);
@@ -4236,6 +4391,7 @@ typedef struct InteriorReader {
 } InteriorReader;
 
 static void interiorReaderDestroy(InteriorReader *pReader){
+  dataBufferDestroy(&pReader->term);
   SCRAMBLE(pReader);
 }
 
@@ -4966,6 +5122,12 @@ static int leavesReaderReset(LeavesReader *pReader){
 }
 
 static void leavesReaderDestroy(LeavesReader *pReader){
+  /* If idx is -1, that means we're using a non-cached statement
+  ** handle in the optimize() case, so we need to release it.
+  */
+  if( pReader->pStmt!=NULL && pReader->idx==-1 ){
+    sqlite3_finalize(pReader->pStmt);
+  }
   leafReaderDestroy(&pReader->leafReader);
   dataBufferDestroy(&pReader->rootData);
   SCRAMBLE(pReader);
@@ -5001,7 +5163,7 @@ static int leavesReaderInit(fulltext_vtab *v,
     rc = sqlite3_bind_int64(s, 2, iEndBlockid);
     if( rc!=SQLITE_OK ) return rc;
 
-    rc = sql_step_leaf_statement(v, idx, &s);
+    rc = sqlite3_step(s);
     if( rc==SQLITE_DONE ){
       pReader->eof = 1;
       return SQLITE_OK;
@@ -5029,7 +5191,7 @@ static int leavesReaderStep(fulltext_vtab *v, LeavesReader *pReader){
       pReader->eof = 1;
       return SQLITE_OK;
     }
-    rc = sql_step_leaf_statement(v, pReader->idx, &pReader->pStmt);
+    rc = sqlite3_step(pReader->pStmt);
     if( rc!=SQLITE_ROW ){
       pReader->eof = 1;
       return rc==SQLITE_DONE ? SQLITE_OK : rc;
@@ -5086,14 +5248,14 @@ static void leavesReaderReorder(LeavesReader *pLr, int nLr){
 static int leavesReadersInit(fulltext_vtab *v, int iLevel,
                              LeavesReader *pReaders, int *piReaders){
   sqlite3_stmt *s;
-  int i, rc = sql_get_statement(v, SEGDIR_SELECT_STMT, &s);
+  int i, rc = sql_get_statement(v, SEGDIR_SELECT_LEVEL_STMT, &s);
   if( rc!=SQLITE_OK ) return rc;
 
   rc = sqlite3_bind_int(s, 1, iLevel);
   if( rc!=SQLITE_OK ) return rc;
 
   i = 0;
-  while( (rc = sql_step_statement(v, SEGDIR_SELECT_STMT, &s))==SQLITE_ROW ){
+  while( (rc = sqlite3_step(s))==SQLITE_ROW ){
     sqlite_int64 iStart = sqlite3_column_int64(s, 0);
     sqlite_int64 iEnd = sqlite3_column_int64(s, 1);
     const char *pRootData = sqlite3_column_blob(s, 2);
@@ -5425,7 +5587,7 @@ static int loadSegmentLeaves(fulltext_vtab *v,
 /* TODO(shess) The calling code may already know that the end child is
 ** not worth calculating, because the end may be in a later sibling
 ** node.  Consider whether breaking symmetry is worthwhile.  I suspect
-** it's not worthwhile.
+** it is not worthwhile.
 */
 static void getChildrenContaining(const char *pData, int nData,
                                   const char *pTerm, int nTerm, int isPrefix,
@@ -5485,7 +5647,7 @@ static int loadAndGetChildrenContaining(
   rc = sqlite3_bind_int64(s, 1, iBlockid);
   if( rc!=SQLITE_OK ) return rc;
 
-  rc = sql_step_statement(v, BLOCK_SELECT_STMT, &s);
+  rc = sqlite3_step(s);
   if( rc==SQLITE_DONE ) return SQLITE_ERROR;
   if( rc!=SQLITE_ROW ) return rc;
 
@@ -5623,9 +5785,9 @@ static int termSelect(fulltext_vtab *v, int iColumn,
   /* Traverse the segments from oldest to newest so that newer doclist
   ** elements for given docids overwrite older elements.
   */
-  while( (rc=sql_step_statement(v, SEGDIR_SELECT_ALL_STMT, &s))==SQLITE_ROW ){
-    const char *pData = sqlite3_column_blob(s, 0);
-    const int nData = sqlite3_column_bytes(s, 0);
+  while( (rc = sqlite3_step(s))==SQLITE_ROW ){
+    const char *pData = sqlite3_column_blob(s, 2);
+    const int nData = sqlite3_column_bytes(s, 2);
     const sqlite_int64 iLeavesEnd = sqlite3_column_int64(s, 1);
     rc = loadSegment(v, pData, nData, iLeavesEnd, pTerm, nTerm, isPrefix,
                      &doclist);
@@ -5685,7 +5847,7 @@ static int writeZeroSegment(fulltext_vtab *v, fts2Hash *pTerms){
   if( rc!=SQLITE_OK ) return rc;
 
   n = fts2HashCount(pTerms);
-  pData = malloc(n*sizeof(TermData));
+  pData = sqlite3_malloc(n*sizeof(TermData));
 
   for(i = 0, e = fts2HashFirst(pTerms); e; i++, e = fts2HashNext(e)){
     assert( i<n );
@@ -5716,7 +5878,7 @@ static int writeZeroSegment(fulltext_vtab *v, fts2Hash *pTerms){
 
  err:
   dataBufferDestroy(&dl);
-  free(pData);
+  sqlite3_free(pData);
   leafWriterDestroy(&writer);
   return rc;
 }
@@ -5740,7 +5902,7 @@ static int clearPendingTerms(fulltext_vtab *v){
 static int flushPendingTerms(fulltext_vtab *v){
   if( v->nPendingData>=0 ){
     int rc = writeZeroSegment(v, &v->pendingTerms);
-    clearPendingTerms(v);
+    if( rc==SQLITE_OK ) clearPendingTerms(v);
     return rc;
   }
   return SQLITE_OK;
@@ -5768,7 +5930,7 @@ static int initPendingTerms(fulltext_vtab *v, sqlite_int64 iDocid){
   return SQLITE_OK;
 }
 
-/* This function implements the xUpdate callback; it's the top-level entry
+/* This function implements the xUpdate callback; it is the top-level entry
  * point for inserting, deleting or updating a row in a full-text table. */
 static int fulltextUpdate(sqlite3_vtab *pVtab, int nArg, sqlite3_value **ppArg,
                    sqlite_int64 *pRowid){
@@ -5779,6 +5941,23 @@ static int fulltextUpdate(sqlite3_vtab *pVtab, int nArg, sqlite3_value **ppArg,
 
   if( nArg<2 ){
     rc = index_delete(v, sqlite3_value_int64(ppArg[0]));
+    if( rc==SQLITE_OK ){
+      /* If we just deleted the last row in the table, clear out the
+      ** index data.
+      */
+      rc = content_exists(v);
+      if( rc==SQLITE_ROW ){
+        rc = SQLITE_OK;
+      }else if( rc==SQLITE_DONE ){
+        /* Clear the pending terms so we don't flush a useless level-0
+        ** segment when the transaction closes.
+        */
+        rc = clearPendingTerms(v);
+        if( rc==SQLITE_OK ){
+          rc = segdir_delete_all(v);
+        }
+      }
+    }
   } else if( sqlite3_value_type(ppArg[0]) != SQLITE_NULL ){
     /* An update:
      * ppArg[0] = old rowid
@@ -5894,6 +6073,670 @@ static void snippetOffsetsFunc(
   }
 }
 
+/* OptLeavesReader is nearly identical to LeavesReader, except that
+** where LeavesReader is geared towards the merging of complete
+** segment levels (with exactly MERGE_COUNT segments), OptLeavesReader
+** is geared towards implementation of the optimize() function, and
+** can merge all segments simultaneously.  This version may be
+** somewhat less efficient than LeavesReader because it merges into an
+** accumulator rather than doing an N-way merge, but since segment
+** size grows exponentially (so segment count logrithmically) this is
+** probably not an immediate problem.
+*/
+/* TODO(shess): Prove that assertion, or extend the merge code to
+** merge tree fashion (like the prefix-searching code does).
+*/
+/* TODO(shess): OptLeavesReader and LeavesReader could probably be
+** merged with little or no loss of performance for LeavesReader.  The
+** merged code would need to handle >MERGE_COUNT segments, and would
+** also need to be able to optionally optimize away deletes.
+*/
+typedef struct OptLeavesReader {
+  /* Segment number, to order readers by age. */
+  int segment;
+  LeavesReader reader;
+} OptLeavesReader;
+
+static int optLeavesReaderAtEnd(OptLeavesReader *pReader){
+  return leavesReaderAtEnd(&pReader->reader);
+}
+static int optLeavesReaderTermBytes(OptLeavesReader *pReader){
+  return leavesReaderTermBytes(&pReader->reader);
+}
+static const char *optLeavesReaderData(OptLeavesReader *pReader){
+  return leavesReaderData(&pReader->reader);
+}
+static int optLeavesReaderDataBytes(OptLeavesReader *pReader){
+  return leavesReaderDataBytes(&pReader->reader);
+}
+static const char *optLeavesReaderTerm(OptLeavesReader *pReader){
+  return leavesReaderTerm(&pReader->reader);
+}
+static int optLeavesReaderStep(fulltext_vtab *v, OptLeavesReader *pReader){
+  return leavesReaderStep(v, &pReader->reader);
+}
+static int optLeavesReaderTermCmp(OptLeavesReader *lr1, OptLeavesReader *lr2){
+  return leavesReaderTermCmp(&lr1->reader, &lr2->reader);
+}
+/* Order by term ascending, segment ascending (oldest to newest), with
+** exhausted readers to the end.
+*/
+static int optLeavesReaderCmp(OptLeavesReader *lr1, OptLeavesReader *lr2){
+  int c = optLeavesReaderTermCmp(lr1, lr2);
+  if( c!=0 ) return c;
+  return lr1->segment-lr2->segment;
+}
+/* Bubble pLr[0] to appropriate place in pLr[1..nLr-1].  Assumes that
+** pLr[1..nLr-1] is already sorted.
+*/
+static void optLeavesReaderReorder(OptLeavesReader *pLr, int nLr){
+  while( nLr>1 && optLeavesReaderCmp(pLr, pLr+1)>0 ){
+    OptLeavesReader tmp = pLr[0];
+    pLr[0] = pLr[1];
+    pLr[1] = tmp;
+    nLr--;
+    pLr++;
+  }
+}
+
+/* optimize() helper function.  Put the readers in order and iterate
+** through them, merging doclists for matching terms into pWriter.
+** Returns SQLITE_OK on success, or the SQLite error code which
+** prevented success.
+*/
+static int optimizeInternal(fulltext_vtab *v,
+                            OptLeavesReader *readers, int nReaders,
+                            LeafWriter *pWriter){
+  int i, rc = SQLITE_OK;
+  DataBuffer doclist, merged, tmp;
+
+  /* Order the readers. */
+  i = nReaders;
+  while( i-- > 0 ){
+    optLeavesReaderReorder(&readers[i], nReaders-i);
+  }
+
+  dataBufferInit(&doclist, LEAF_MAX);
+  dataBufferInit(&merged, LEAF_MAX);
+
+  /* Exhausted readers bubble to the end, so when the first reader is
+  ** at eof, all are at eof.
+  */
+  while( !optLeavesReaderAtEnd(&readers[0]) ){
+
+    /* Figure out how many readers share the next term. */
+    for(i=1; i<nReaders && !optLeavesReaderAtEnd(&readers[i]); i++){
+      if( 0!=optLeavesReaderTermCmp(&readers[0], &readers[i]) ) break;
+    }
+
+    /* Special-case for no merge. */
+    if( i==1 ){
+      /* Trim deletions from the doclist. */
+      dataBufferReset(&merged);
+      docListTrim(DL_DEFAULT,
+                  optLeavesReaderData(&readers[0]),
+                  optLeavesReaderDataBytes(&readers[0]),
+                  -1, DL_DEFAULT, &merged);
+    }else{
+      DLReader dlReaders[MERGE_COUNT];
+      int iReader, nReaders;
+
+      /* Prime the pipeline with the first reader's doclist.  After
+      ** one pass index 0 will reference the accumulated doclist.
+      */
+      dlrInit(&dlReaders[0], DL_DEFAULT,
+              optLeavesReaderData(&readers[0]),
+              optLeavesReaderDataBytes(&readers[0]));
+      iReader = 1;
+
+      assert( iReader<i );  /* Must execute the loop at least once. */
+      while( iReader<i ){
+        /* Merge 16 inputs per pass. */
+        for( nReaders=1; iReader<i && nReaders<MERGE_COUNT;
+             iReader++, nReaders++ ){
+          dlrInit(&dlReaders[nReaders], DL_DEFAULT,
+                  optLeavesReaderData(&readers[iReader]),
+                  optLeavesReaderDataBytes(&readers[iReader]));
+        }
+
+        /* Merge doclists and swap result into accumulator. */
+        dataBufferReset(&merged);
+        docListMerge(&merged, dlReaders, nReaders);
+        tmp = merged;
+        merged = doclist;
+        doclist = tmp;
+
+        while( nReaders-- > 0 ){
+          dlrDestroy(&dlReaders[nReaders]);
+        }
+
+        /* Accumulated doclist to reader 0 for next pass. */
+        dlrInit(&dlReaders[0], DL_DEFAULT, doclist.pData, doclist.nData);
+      }
+
+      /* Destroy reader that was left in the pipeline. */
+      dlrDestroy(&dlReaders[0]);
+
+      /* Trim deletions from the doclist. */
+      dataBufferReset(&merged);
+      docListTrim(DL_DEFAULT, doclist.pData, doclist.nData,
+                  -1, DL_DEFAULT, &merged);
+    }
+
+    /* Only pass doclists with hits (skip if all hits deleted). */
+    if( merged.nData>0 ){
+      rc = leafWriterStep(v, pWriter,
+                          optLeavesReaderTerm(&readers[0]),
+                          optLeavesReaderTermBytes(&readers[0]),
+                          merged.pData, merged.nData);
+      if( rc!=SQLITE_OK ) goto err;
+    }
+
+    /* Step merged readers to next term and reorder. */
+    while( i-- > 0 ){
+      rc = optLeavesReaderStep(v, &readers[i]);
+      if( rc!=SQLITE_OK ) goto err;
+
+      optLeavesReaderReorder(&readers[i], nReaders-i);
+    }
+  }
+
+ err:
+  dataBufferDestroy(&doclist);
+  dataBufferDestroy(&merged);
+  return rc;
+}
+
+/* Implement optimize() function for FTS3.  optimize(t) merges all
+** segments in the fts index into a single segment.  't' is the magic
+** table-named column.
+*/
+static void optimizeFunc(sqlite3_context *pContext,
+                         int argc, sqlite3_value **argv){
+  fulltext_cursor *pCursor;
+  if( argc>1 ){
+    sqlite3_result_error(pContext, "excess arguments to optimize()",-1);
+  }else if( sqlite3_value_type(argv[0])!=SQLITE_BLOB ||
+            sqlite3_value_bytes(argv[0])!=sizeof(pCursor) ){
+    sqlite3_result_error(pContext, "illegal first argument to optimize",-1);
+  }else{
+    fulltext_vtab *v;
+    int i, rc, iMaxLevel;
+    OptLeavesReader *readers;
+    int nReaders;
+    LeafWriter writer;
+    sqlite3_stmt *s;
+
+    memcpy(&pCursor, sqlite3_value_blob(argv[0]), sizeof(pCursor));
+    v = cursor_vtab(pCursor);
+
+    /* Flush any buffered updates before optimizing. */
+    rc = flushPendingTerms(v);
+    if( rc!=SQLITE_OK ) goto err;
+
+    rc = segdir_count(v, &nReaders, &iMaxLevel);
+    if( rc!=SQLITE_OK ) goto err;
+    if( nReaders==0 || nReaders==1 ){
+      sqlite3_result_text(pContext, "Index already optimal", -1,
+                          SQLITE_STATIC);
+      return;
+    }
+
+    rc = sql_get_statement(v, SEGDIR_SELECT_ALL_STMT, &s);
+    if( rc!=SQLITE_OK ) goto err;
+
+    readers = sqlite3_malloc(nReaders*sizeof(readers[0]));
+    if( readers==NULL ) goto err;
+
+    /* Note that there will already be a segment at this position
+    ** until we call segdir_delete() on iMaxLevel.
+    */
+    leafWriterInit(iMaxLevel, 0, &writer);
+
+    i = 0;
+    while( (rc = sqlite3_step(s))==SQLITE_ROW ){
+      sqlite_int64 iStart = sqlite3_column_int64(s, 0);
+      sqlite_int64 iEnd = sqlite3_column_int64(s, 1);
+      const char *pRootData = sqlite3_column_blob(s, 2);
+      int nRootData = sqlite3_column_bytes(s, 2);
+
+      assert( i<nReaders );
+      rc = leavesReaderInit(v, -1, iStart, iEnd, pRootData, nRootData,
+                            &readers[i].reader);
+      if( rc!=SQLITE_OK ) break;
+
+      readers[i].segment = i;
+      i++;
+    }
+
+    /* If we managed to succesfully read them all, optimize them. */
+    if( rc==SQLITE_DONE ){
+      assert( i==nReaders );
+      rc = optimizeInternal(v, readers, nReaders, &writer);
+    }
+
+    while( i-- > 0 ){
+      leavesReaderDestroy(&readers[i].reader);
+    }
+    sqlite3_free(readers);
+
+    /* If we've successfully gotten to here, delete the old segments
+    ** and flush the interior structure of the new segment.
+    */
+    if( rc==SQLITE_OK ){
+      for( i=0; i<=iMaxLevel; i++ ){
+        rc = segdir_delete(v, i);
+        if( rc!=SQLITE_OK ) break;
+      }
+
+      if( rc==SQLITE_OK ) rc = leafWriterFinalize(v, &writer);
+    }
+
+    leafWriterDestroy(&writer);
+
+    if( rc!=SQLITE_OK ) goto err;
+
+    sqlite3_result_text(pContext, "Index optimized", -1, SQLITE_STATIC);
+    return;
+
+    /* TODO(shess): Error-handling needs to be improved along the
+    ** lines of the dump_ functions.
+    */
+ err:
+    {
+      char buf[512];
+#if GEARS_FTS2_CHANGES
+      sqlite3_snprintf(sizeof(buf), buf, "Error in optimize: %s",
+                       sqlite3_errmsg(v->db));
+#else
+      sqlite3_snprintf(sizeof(buf), buf, "Error in optimize: %s",
+                       sqlite3_errmsg(sqlite3_context_db_handle(pContext)));
+#endif
+      sqlite3_result_error(pContext, buf, -1);
+    }
+  }
+}
+
+#ifdef SQLITE_TEST
+/* Generate an error of the form "<prefix>: <msg>".  If msg is NULL,
+** pull the error from the context's db handle.
+*/
+static void generateError(sqlite3_context *pContext,
+                          const char *prefix, const char *msg){
+  char buf[512];
+  if( msg==NULL ) msg = sqlite3_errmsg(sqlite3_context_db_handle(pContext));
+  sqlite3_snprintf(sizeof(buf), buf, "%s: %s", prefix, msg);
+  sqlite3_result_error(pContext, buf, -1);
+}
+
+/* Helper function to collect the set of terms in the segment into
+** pTerms.  The segment is defined by the leaf nodes between
+** iStartBlockid and iEndBlockid, inclusive, or by the contents of
+** pRootData if iStartBlockid is 0 (in which case the entire segment
+** fit in a leaf).
+*/
+static int collectSegmentTerms(fulltext_vtab *v, sqlite3_stmt *s,
+                               fts2Hash *pTerms){
+  const sqlite_int64 iStartBlockid = sqlite3_column_int64(s, 0);
+  const sqlite_int64 iEndBlockid = sqlite3_column_int64(s, 1);
+  const char *pRootData = sqlite3_column_blob(s, 2);
+  const int nRootData = sqlite3_column_bytes(s, 2);
+  LeavesReader reader;
+  int rc = leavesReaderInit(v, 0, iStartBlockid, iEndBlockid,
+                            pRootData, nRootData, &reader);
+  if( rc!=SQLITE_OK ) return rc;
+
+  while( rc==SQLITE_OK && !leavesReaderAtEnd(&reader) ){
+    const char *pTerm = leavesReaderTerm(&reader);
+    const int nTerm = leavesReaderTermBytes(&reader);
+    void *oldValue = sqlite3Fts2HashFind(pTerms, pTerm, nTerm);
+    void *newValue = (void *)((char *)oldValue+1);
+
+    /* From the comment before sqlite3Fts2HashInsert in fts2_hash.c,
+    ** the data value passed is returned in case of malloc failure.
+    */
+    if( newValue==sqlite3Fts2HashInsert(pTerms, pTerm, nTerm, newValue) ){
+      rc = SQLITE_NOMEM;
+    }else{
+      rc = leavesReaderStep(v, &reader);
+    }
+  }
+
+  leavesReaderDestroy(&reader);
+  return rc;
+}
+
+/* Helper function to build the result string for dump_terms(). */
+static int generateTermsResult(sqlite3_context *pContext, fts2Hash *pTerms){
+  int iTerm, nTerms, nResultBytes, iByte;
+  char *result;
+  TermData *pData;
+  fts2HashElem *e;
+
+  /* Iterate pTerms to generate an array of terms in pData for
+  ** sorting.
+  */
+  nTerms = fts2HashCount(pTerms);
+  assert( nTerms>0 );
+  pData = sqlite3_malloc(nTerms*sizeof(TermData));
+  if( pData==NULL ) return SQLITE_NOMEM;
+
+  nResultBytes = 0;
+  for(iTerm = 0, e = fts2HashFirst(pTerms); e; iTerm++, e = fts2HashNext(e)){
+    nResultBytes += fts2HashKeysize(e)+1;   /* Term plus trailing space */
+    assert( iTerm<nTerms );
+    pData[iTerm].pTerm = fts2HashKey(e);
+    pData[iTerm].nTerm = fts2HashKeysize(e);
+    pData[iTerm].pCollector = fts2HashData(e);  /* unused */
+  }
+  assert( iTerm==nTerms );
+
+  assert( nResultBytes>0 );   /* nTerms>0, nResultsBytes must be, too. */
+  result = sqlite3_malloc(nResultBytes);
+  if( result==NULL ){
+    sqlite3_free(pData);
+    return SQLITE_NOMEM;
+  }
+
+  if( nTerms>1 ) qsort(pData, nTerms, sizeof(*pData), termDataCmp);
+
+  /* Read the terms in order to build the result. */
+  iByte = 0;
+  for(iTerm=0; iTerm<nTerms; ++iTerm){
+    memcpy(result+iByte, pData[iTerm].pTerm, pData[iTerm].nTerm);
+    iByte += pData[iTerm].nTerm;
+    result[iByte++] = ' ';
+  }
+  assert( iByte==nResultBytes );
+  assert( result[nResultBytes-1]==' ' );
+  result[nResultBytes-1] = '\0';
+
+  /* Passes away ownership of result. */
+  sqlite3_result_text(pContext, result, nResultBytes-1, sqlite3_free);
+  sqlite3_free(pData);
+  return SQLITE_OK;
+}
+
+/* Implements dump_terms() for use in inspecting the fts2 index from
+** tests.  TEXT result containing the ordered list of terms joined by
+** spaces.  dump_terms(t, level, idx) dumps the terms for the segment
+** specified by level, idx (in %_segdir), while dump_terms(t) dumps
+** all terms in the index.  In both cases t is the fts table's magic
+** table-named column.
+*/
+static void dumpTermsFunc(
+  sqlite3_context *pContext,
+  int argc, sqlite3_value **argv
+){
+  fulltext_cursor *pCursor;
+  if( argc!=3 && argc!=1 ){
+    generateError(pContext, "dump_terms", "incorrect arguments");
+  }else if( sqlite3_value_type(argv[0])!=SQLITE_BLOB ||
+            sqlite3_value_bytes(argv[0])!=sizeof(pCursor) ){
+    generateError(pContext, "dump_terms", "illegal first argument");
+  }else{
+    fulltext_vtab *v;
+    fts2Hash terms;
+    sqlite3_stmt *s = NULL;
+    int rc;
+
+    memcpy(&pCursor, sqlite3_value_blob(argv[0]), sizeof(pCursor));
+    v = cursor_vtab(pCursor);
+
+    /* If passed only the cursor column, get all segments.  Otherwise
+    ** get the segment described by the following two arguments.
+    */
+    if( argc==1 ){
+      rc = sql_get_statement(v, SEGDIR_SELECT_ALL_STMT, &s);
+    }else{
+      rc = sql_get_statement(v, SEGDIR_SELECT_SEGMENT_STMT, &s);
+      if( rc==SQLITE_OK ){
+        rc = sqlite3_bind_int(s, 1, sqlite3_value_int(argv[1]));
+        if( rc==SQLITE_OK ){
+          rc = sqlite3_bind_int(s, 2, sqlite3_value_int(argv[2]));
+        }
+      }
+    }
+
+    if( rc!=SQLITE_OK ){
+      generateError(pContext, "dump_terms", NULL);
+      return;
+    }
+
+    /* Collect the terms for each segment. */
+    sqlite3Fts2HashInit(&terms, FTS2_HASH_STRING, 1);
+    while( (rc = sqlite3_step(s))==SQLITE_ROW ){
+      rc = collectSegmentTerms(v, s, &terms);
+      if( rc!=SQLITE_OK ) break;
+    }
+
+    if( rc!=SQLITE_DONE ){
+      sqlite3_reset(s);
+      generateError(pContext, "dump_terms", NULL);
+    }else{
+      const int nTerms = fts2HashCount(&terms);
+      if( nTerms>0 ){
+        rc = generateTermsResult(pContext, &terms);
+        if( rc==SQLITE_NOMEM ){
+          generateError(pContext, "dump_terms", "out of memory");
+        }else{
+          assert( rc==SQLITE_OK );
+        }
+      }else if( argc==3 ){
+        /* The specific segment asked for could not be found. */
+        generateError(pContext, "dump_terms", "segment not found");
+      }else{
+        /* No segments found. */
+        /* TODO(shess): It should be impossible to reach this.  This
+        ** case can only happen for an empty table, in which case
+        ** SQLite has no rows to call this function on.
+        */
+        sqlite3_result_null(pContext);
+      }
+    }
+    sqlite3Fts2HashClear(&terms);
+  }
+}
+
+/* Expand the DL_DEFAULT doclist in pData into a text result in
+** pContext.
+*/
+static void createDoclistResult(sqlite3_context *pContext,
+                                const char *pData, int nData){
+  DataBuffer dump;
+  DLReader dlReader;
+
+  assert( pData!=NULL && nData>0 );
+
+  dataBufferInit(&dump, 0);
+  dlrInit(&dlReader, DL_DEFAULT, pData, nData);
+  for( ; !dlrAtEnd(&dlReader); dlrStep(&dlReader) ){
+    char buf[256];
+    PLReader plReader;
+
+    plrInit(&plReader, &dlReader);
+    if( DL_DEFAULT==DL_DOCIDS || plrAtEnd(&plReader) ){
+      sqlite3_snprintf(sizeof(buf), buf, "[%lld] ", dlrDocid(&dlReader));
+      dataBufferAppend(&dump, buf, strlen(buf));
+    }else{
+      int iColumn = plrColumn(&plReader);
+
+      sqlite3_snprintf(sizeof(buf), buf, "[%lld %d[",
+                       dlrDocid(&dlReader), iColumn);
+      dataBufferAppend(&dump, buf, strlen(buf));
+
+      for( ; !plrAtEnd(&plReader); plrStep(&plReader) ){
+        if( plrColumn(&plReader)!=iColumn ){
+          iColumn = plrColumn(&plReader);
+          sqlite3_snprintf(sizeof(buf), buf, "] %d[", iColumn);
+          assert( dump.nData>0 );
+          dump.nData--;                     /* Overwrite trailing space. */
+          assert( dump.pData[dump.nData]==' ');
+          dataBufferAppend(&dump, buf, strlen(buf));
+        }
+        if( DL_DEFAULT==DL_POSITIONS_OFFSETS ){
+          sqlite3_snprintf(sizeof(buf), buf, "%d,%d,%d ",
+                           plrPosition(&plReader),
+                           plrStartOffset(&plReader), plrEndOffset(&plReader));
+        }else if( DL_DEFAULT==DL_POSITIONS ){
+          sqlite3_snprintf(sizeof(buf), buf, "%d ", plrPosition(&plReader));
+        }else{
+          assert( NULL=="Unhandled DL_DEFAULT value");
+        }
+        dataBufferAppend(&dump, buf, strlen(buf));
+      }
+      plrDestroy(&plReader);
+
+      assert( dump.nData>0 );
+      dump.nData--;                     /* Overwrite trailing space. */
+      assert( dump.pData[dump.nData]==' ');
+      dataBufferAppend(&dump, "]] ", 3);
+    }
+  }
+  dlrDestroy(&dlReader);
+
+  assert( dump.nData>0 );
+  dump.nData--;                     /* Overwrite trailing space. */
+  assert( dump.pData[dump.nData]==' ');
+  dump.pData[dump.nData] = '\0';
+  assert( dump.nData>0 );
+
+  /* Passes ownership of dump's buffer to pContext. */
+  sqlite3_result_text(pContext, dump.pData, dump.nData, sqlite3_free);
+  dump.pData = NULL;
+  dump.nData = dump.nCapacity = 0;
+}
+
+/* Implements dump_doclist() for use in inspecting the fts2 index from
+** tests.  TEXT result containing a string representation of the
+** doclist for the indicated term.  dump_doclist(t, term, level, idx)
+** dumps the doclist for term from the segment specified by level, idx
+** (in %_segdir), while dump_doclist(t, term) dumps the logical
+** doclist for the term across all segments.  The per-segment doclist
+** can contain deletions, while the full-index doclist will not
+** (deletions are omitted).
+**
+** Result formats differ with the setting of DL_DEFAULTS.  Examples:
+**
+** DL_DOCIDS: [1] [3] [7]
+** DL_POSITIONS: [1 0[0 4] 1[17]] [3 1[5]]
+** DL_POSITIONS_OFFSETS: [1 0[0,0,3 4,23,26] 1[17,102,105]] [3 1[5,20,23]]
+**
+** In each case the number after the outer '[' is the docid.  In the
+** latter two cases, the number before the inner '[' is the column
+** associated with the values within.  For DL_POSITIONS the numbers
+** within are the positions, for DL_POSITIONS_OFFSETS they are the
+** position, the start offset, and the end offset.
+*/
+static void dumpDoclistFunc(
+  sqlite3_context *pContext,
+  int argc, sqlite3_value **argv
+){
+  fulltext_cursor *pCursor;
+  if( argc!=2 && argc!=4 ){
+    generateError(pContext, "dump_doclist", "incorrect arguments");
+  }else if( sqlite3_value_type(argv[0])!=SQLITE_BLOB ||
+            sqlite3_value_bytes(argv[0])!=sizeof(pCursor) ){
+    generateError(pContext, "dump_doclist", "illegal first argument");
+  }else if( sqlite3_value_text(argv[1])==NULL ||
+            sqlite3_value_text(argv[1])[0]=='\0' ){
+    generateError(pContext, "dump_doclist", "empty second argument");
+  }else{
+    const char *pTerm = (const char *)sqlite3_value_text(argv[1]);
+    const int nTerm = strlen(pTerm);
+    fulltext_vtab *v;
+    int rc;
+    DataBuffer doclist;
+
+    memcpy(&pCursor, sqlite3_value_blob(argv[0]), sizeof(pCursor));
+    v = cursor_vtab(pCursor);
+
+    dataBufferInit(&doclist, 0);
+
+    /* termSelect() yields the same logical doclist that queries are
+    ** run against.
+    */
+    if( argc==2 ){
+      rc = termSelect(v, v->nColumn, pTerm, nTerm, 0, DL_DEFAULT, &doclist);
+    }else{
+      sqlite3_stmt *s = NULL;
+
+      /* Get our specific segment's information. */
+      rc = sql_get_statement(v, SEGDIR_SELECT_SEGMENT_STMT, &s);
+      if( rc==SQLITE_OK ){
+        rc = sqlite3_bind_int(s, 1, sqlite3_value_int(argv[2]));
+        if( rc==SQLITE_OK ){
+          rc = sqlite3_bind_int(s, 2, sqlite3_value_int(argv[3]));
+        }
+      }
+
+      if( rc==SQLITE_OK ){
+        rc = sqlite3_step(s);
+
+        if( rc==SQLITE_DONE ){
+          dataBufferDestroy(&doclist);
+          generateError(pContext, "dump_doclist", "segment not found");
+          return;
+        }
+
+        /* Found a segment, load it into doclist. */
+        if( rc==SQLITE_ROW ){
+          const sqlite_int64 iLeavesEnd = sqlite3_column_int64(s, 1);
+          const char *pData = sqlite3_column_blob(s, 2);
+          const int nData = sqlite3_column_bytes(s, 2);
+
+          /* loadSegment() is used by termSelect() to load each
+          ** segment's data.
+          */
+          rc = loadSegment(v, pData, nData, iLeavesEnd, pTerm, nTerm, 0,
+                           &doclist);
+          if( rc==SQLITE_OK ){
+            rc = sqlite3_step(s);
+
+            /* Should not have more than one matching segment. */
+            if( rc!=SQLITE_DONE ){
+              sqlite3_reset(s);
+              dataBufferDestroy(&doclist);
+              generateError(pContext, "dump_doclist", "invalid segdir");
+              return;
+            }
+            rc = SQLITE_OK;
+          }
+        }
+      }
+
+      sqlite3_reset(s);
+    }
+
+    if( rc==SQLITE_OK ){
+      if( doclist.nData>0 ){
+        createDoclistResult(pContext, doclist.pData, doclist.nData);
+      }else{
+        /* TODO(shess): This can happen if the term is not present, or
+        ** if all instances of the term have been deleted and this is
+        ** an all-index dump.  It may be interesting to distinguish
+        ** these cases.
+        */
+        sqlite3_result_text(pContext, "", 0, SQLITE_STATIC);
+      }
+    }else if( rc==SQLITE_NOMEM ){
+      /* Handle out-of-memory cases specially because if they are
+      ** generated in fts2 code they may not be reflected in the db
+      ** handle.
+      */
+      /* TODO(shess): Handle this more comprehensively.
+      ** sqlite3ErrStr() has what I need, but is internal.
+      */
+      generateError(pContext, "dump_doclist", "out of memory");
+    }else{
+      generateError(pContext, "dump_doclist", NULL);
+    }
+
+    dataBufferDestroy(&doclist);
+  }
+}
+#endif
+
 /*
 ** This routine implements the xFindFunction method for the FTS2
 ** virtual table.
@@ -5911,11 +6754,56 @@ static int fulltextFindFunction(
   }else if( strcmp(zName,"offsets")==0 ){
     *pxFunc = snippetOffsetsFunc;
     return 1;
+  }else if( strcmp(zName,"optimize")==0 ){
+    *pxFunc = optimizeFunc;
+    return 1;
+#ifdef SQLITE_TEST
+    /* NOTE(shess): These functions are present only for testing
+    ** purposes.  No particular effort is made to optimize their
+    ** execution or how they build their results.
+    */
+  }else if( strcmp(zName,"dump_terms")==0 ){
+    /* fprintf(stderr, "Found dump_terms\n"); */
+    *pxFunc = dumpTermsFunc;
+    return 1;
+  }else if( strcmp(zName,"dump_doclist")==0 ){
+    /* fprintf(stderr, "Found dump_doclist\n"); */
+    *pxFunc = dumpDoclistFunc;
+    return 1;
+#endif
   }
   return 0;
 }
 
-static const sqlite3_module fulltextModule = {
+#if GEARS_FTS2_CHANGES
+  /* xRename not supported here, yet. */
+#else
+/*
+** Rename an fts2 table.
+*/
+static int fulltextRename(
+  sqlite3_vtab *pVtab,
+  const char *zName
+){
+  fulltext_vtab *p = (fulltext_vtab *)pVtab;
+  int rc = SQLITE_NOMEM;
+  char *zSql = sqlite3_mprintf(
+    "ALTER TABLE %Q.'%q_content'  RENAME TO '%q_content';"
+    "ALTER TABLE %Q.'%q_segments' RENAME TO '%q_segments';"
+    "ALTER TABLE %Q.'%q_segdir'   RENAME TO '%q_segdir';"
+    , p->zDb, p->zName, zName 
+    , p->zDb, p->zName, zName 
+    , p->zDb, p->zName, zName
+  );
+  if( zSql ){
+    rc = sqlite3_exec(p->db, zSql, 0, 0, 0);
+    sqlite3_free(zSql);
+  }
+  return rc;
+}
+#endif
+
+static const sqlite3_module fts2Module = {
   /* iVersion      */ 0,
   /* xCreate       */ fulltextCreate,
   /* xConnect      */ fulltextConnect,
@@ -5935,17 +6823,123 @@ static const sqlite3_module fulltextModule = {
   /* xCommit       */ fulltextCommit,
   /* xRollback     */ fulltextRollback,
   /* xFindFunction */ fulltextFindFunction,
+#if GEARS_FTS2_CHANGES
+  /* xRename not supported here, yet. */
+#else
+  /* xRename */       fulltextRename,
+#endif
 };
 
+#if GEARS_FTS2_CHANGES
+/* hashDestroy() not needed until we can call
+** sqlite3_create_module_v2().
+*/
+#else
+static void hashDestroy(void *p){
+  fts2Hash *pHash = (fts2Hash *)p;
+  sqlite3Fts2HashClear(pHash);
+  sqlite3_free(pHash);
+}
+#endif
+
+/*
+** The fts2 built-in tokenizers - "simple" and "porter" - are implemented
+** in files fts2_tokenizer1.c and fts2_porter.c respectively. The following
+** two forward declarations are for functions declared in these files
+** used to retrieve the respective implementations.
+**
+** Calling sqlite3Fts2SimpleTokenizerModule() sets the value pointed
+** to by the argument to point a the "simple" tokenizer implementation.
+** Function ...PorterTokenizerModule() sets *pModule to point to the
+** porter tokenizer/stemmer implementation.
+*/
+void sqlite3Fts2SimpleTokenizerModule(sqlite3_tokenizer_module const**ppModule);
+void sqlite3Fts2PorterTokenizerModule(sqlite3_tokenizer_module const**ppModule);
+void sqlite3Fts2IcuTokenizerModule(sqlite3_tokenizer_module const**ppModule);
+
+int sqlite3Fts2InitHashTable(sqlite3 *, fts2Hash *, const char *);
+
+/*
+** Initialise the fts2 extension. If this extension is built as part
+** of the sqlite library, then this function is called directly by
+** SQLite. If fts2 is built as a dynamically loadable extension, this
+** function is called by the sqlite3_extension_init() entry point.
+*/
 int sqlite3Fts2Init(sqlite3 *db){
-  sqlite3_overload_function(db, "snippet", -1);
-  sqlite3_overload_function(db, "offsets", -1);
-  return sqlite3_create_module(db, "fts2", &fulltextModule, 0);
+  int rc = SQLITE_OK;
+#if GEARS_FTS2_CHANGES
+  fts2Hash *pHash = 0;
+  const sqlite3_tokenizer_module *pSimple = 0;
+  const sqlite3_tokenizer_module *pPorter = 0;
+  const sqlite3_tokenizer_module *pIcu = 0;
+
+  sqlite3Fts2SimpleTokenizerModule(&pSimple);
+  sqlite3Fts2PorterTokenizerModule(&pPorter);
+#ifdef SQLITE_ENABLE_ICU
+  sqlite3Fts2IcuTokenizerModule(&pIcu);
+#endif
+
+  /* Allocate and initialise the hash-table used to store tokenizers. */
+  pHash = sqlite3_malloc(sizeof(fts2Hash));
+  if( !pHash ){
+    rc = SQLITE_NOMEM;
+  }else{
+    sqlite3Fts2HashInit(pHash, FTS2_HASH_STRING, 1);
+  }
+
+  /* Load the built-in tokenizers into the hash table */
+  if( rc==SQLITE_OK ){
+    if( sqlite3Fts2HashInsert(pHash, "simple", 7, (void *)pSimple)
+     || sqlite3Fts2HashInsert(pHash, "porter", 7, (void *)pPorter) 
+     || (pIcu && sqlite3Fts2HashInsert(pHash, "icu", 4, (void *)pIcu))
+    ){
+      rc = SQLITE_NOMEM;
+    }
+  }
+#endif
+
+  /* Create the virtual table wrapper around the hash-table and overload 
+  ** the two scalar functions. If this is successful, register the
+  ** module with sqlite.
+  */
+  if( SQLITE_OK==rc 
+#if GEARS_FTS2_CHANGES
+      /* Not for Gears. */
+#else
+   && SQLITE_OK==(rc = sqlite3Fts2InitHashTable(db, pHash, "fts2_tokenizer"))
+#endif
+   && SQLITE_OK==(rc = sqlite3_overload_function(db, "snippet", -1))
+   && SQLITE_OK==(rc = sqlite3_overload_function(db, "offsets", -1))
+   && SQLITE_OK==(rc = sqlite3_overload_function(db, "optimize", -1))
+#ifdef SQLITE_TEST
+   && SQLITE_OK==(rc = sqlite3_overload_function(db, "dump_terms", -1))
+   && SQLITE_OK==(rc = sqlite3_overload_function(db, "dump_doclist", -1))
+#endif
+  ){
+#if GEARS_FTS2_CHANGES
+    return sqlite3_create_module(db, "fts2", &fts2Module, NULL);
+#else
+    return sqlite3_create_module_v2(
+        db, "fts2", &fts2Module, (void *)pHash, hashDestroy
+    );
+#endif
+  }
+
+  /* An error has occured. Delete the hash table and return the error code. */
+  assert( rc!=SQLITE_OK );
+  if( pHash ){
+    sqlite3Fts2HashClear(pHash);
+    sqlite3_free(pHash);
+  }
+  return rc;
 }
 
 #if !SQLITE_CORE
-int sqlite3_extension_init(sqlite3 *db, char **pzErrMsg,
-                           const sqlite3_api_routines *pApi){
+int sqlite3_extension_init(
+  sqlite3 *db, 
+  char **pzErrMsg,
+  const sqlite3_api_routines *pApi
+){
   SQLITE_EXTENSION_INIT2(pApi)
   return sqlite3Fts2Init(db);
 }
