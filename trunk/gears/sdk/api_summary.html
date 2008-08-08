@@ -46,6 +46,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>This is the complete Gears API. Click the class names to see
   the details.</p>
 
+
 <h3>Factory</h3>
 <p>Instantiates all other Gears objects. </p>
 <pre><code><a href="api_factory.html">Factory class</a>
@@ -54,6 +55,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])
    readonly attribute boolean <b>hasPermission</b>
    readonly attribute string <b>version</b></code></pre>
+
 
 <h3>Database module</h3>
 <p>Provides a SQL database for storing data on the local machine.</p>
@@ -73,10 +75,52 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    variant <b>fieldByName</b>(fieldName)
    void    <b>close</b>()</code></pre>
 
+
 <h3>Desktop module</h3>
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
    void     <b>createShortcut</b>(name, url, icons, [description])</code></pre>
+
+
+<h3>Geolocation module</h3>
+<p>Provides a way to obtain a user's geographical position.</p>
+<pre><code><a href="api_geolocation.html#geolocation">Geolocation class</a> 
+  void getCurrentPosition(function successCallback, [function errorCallback], [PositionOptions options]);
+  int watchPosition(function successCallback, [function errorCallback], [PositionOptions options]);
+  void clearWatch(int watchId);
+  boolean getPermission([siteName], [imageUrl], [extraMessage])
+  readonly attribute Position lastPosition;</code></pre>
+  
+<pre><code><a href="api_geolocation.html#position">Position class</a>
+  readonly attribute double latitude;
+  readonly attribute double longitude;
+  readonly attribute int accuracy;
+  readonly attribute int altitude;
+  readonly attribute int altitudeAccuracy;
+  readonly attribute Date timestamp;
+  readonly attribute Address gearsAddress;</code></pre>
+
+<pre><code><a href="api_geolocation.html#address">Address class</a>
+  readonly attribute string streetNumber;
+  readonly attribute string street;
+  readonly attribute string premises;
+  readonly attribute string city;
+  readonly attribute string county;
+  readonly attribute string region;
+  readonly attribute string country;
+  readonly attribute string countryCode;
+  readonly attribute string postalCode;</code></pre>
+  
+<pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
+  readwrite attribute bool enableHighAccuracy;
+  readwrite attribute bool gearsRequestAddress;
+  readwrite attribute string gearsAddressLanguage;
+  readwrite attribute string[] gearsLocationProviderUrls;</code></pre>
+
+<pre><code><a href="api_geolocation.html#positionerror">PositionError class</a>
+  readonly attribute int code;
+  readonly attribute string message;</code></pre>
+
 
 <h3>HttpRequest module</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>
@@ -91,7 +135,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute int <b>readyState</b>
    readonly attribute string <b>responseText</b>
    readonly attribute int    <b>status</b>
-   readonly attribute string <b>statusText</b> </code></pre>
+   readonly attribute string <b>statusText</b></code></pre>
+
 
 <h3>LocalServer module</h3>
 <p>Caches and serves your application's resources locally, making it possible to start a web application without a network connection. </p>
@@ -158,51 +203,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    void <b>sendMessage</b>(messageText, destWorkerId)
    void <b>allowCrossOrigin</b>()</code></pre>
 
-   
-   
-<h3>Geolocation module</h3>
-<p>Provides a web application with the ability to obtain a user's geographical
-position.</p>
 
-<pre><a href="api_geolocation.html#geolocation">Geolocation class</a> 
-  void getCurrentPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  int watchPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  void clearWatch(int watchId);
-  boolean getPermission([siteName], [imageUrl], [extraMessage])
-  readonly attribute Position lastPosition;</pre>
-  
-<pre><a href="api_geolocation.html#position">Position class</a>
-  readonly attribute double latitude;
-  readonly attribute double longitude;
-  readonly attribute int altitude;
-  readonly attribute int accuracy;
-  readonly attribute int altitudeAccuracy;
-  readonly attribute Date timestamp;
-  readonly attribute Address gearsAddress;
-</pre>
-
-<pre><a href="api_geolocation.html#address">Address class</a>
-  readonly attribute string streetNumber;
-  readonly attribute string street;
-  readonly attribute string premises;
-  readonly attribute string city;
-  readonly attribute string county;
-  readonly attribute string region;
-  readonly attribute string country;
-  readonly attribute string countryCode;
-  readonly attribute string postalCode;</pre>
-  
-<pre><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
-  readwrite attribute bool enableHighAccuracy;
-  readwrite attribute bool gearsRequestAddress;
-  readwrite attribute string gearsAddressLanguage;
-  readwrite attribute string[] gearsLocationProviderUrls;
-</pre>
-
-<pre><a href="api_geolocation.html#positionerror">PositionError class</a>
-  readonly attribute int code;
-  readonly attribute string message;
-</pre>
 </div>
 </body>
 </html>
