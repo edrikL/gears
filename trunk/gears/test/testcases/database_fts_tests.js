@@ -248,3 +248,21 @@ function testFulltextIndexingSchemaChange() {
     assert(!rs.isValidRow(), 'Unexpected second result');
   });
 }
+
+// From http://code.google.com/p/gears/issues/detail?id=530
+// "Deleting an inserted fts table row inside transaction after
+//  creating new fts table causes db exception".
+function testFulltextInsertCreateTableDelete() {
+  db.execute("drop table if exists t1");
+  db.execute("create virtual table t1 using fts2(n)");
+  db.execute("insert into t1 (n,rowid) values (?,?)", ['G',1]);
+
+  db.execute("drop table if exists t2");
+  db.execute("create virtual table t2 using fts2(n)");
+  db.execute("drop table t2");
+
+  // transaction causes the bug to surface
+  db.execute("begin");
+  db.execute("delete from t1 where rowid = ?",[1]);
+  db.execute("commit"); // fails here.
+}
