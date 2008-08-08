@@ -392,8 +392,7 @@ See <code><a href="#address">Address</a></code>.</td>
 <tr class="odd">
 <td><strong>region</strong></td>
 <td class="odd">readonly string</td>
-<td class="odd">Region, e.g. a state in the US. (TODO: Steve: what's the
-equivalent for this in UK?)</td>
+<td class="odd">Region, e.g. a state in the US.</td>
 
 </tr>
 <tr class="odd">
@@ -453,7 +452,9 @@ language of the location provider used to perform the reverse geocoding.</td>
 <td><strong><a name="providerURLs" id="providerURLs"></a>gearsLocationProviderUrls</strong></td>
 <td class="odd">readwrite string[] </td>
 <td class="odd">Optional, specifies one
-or more URLs to contact to convert geolocation signals into positions.
+or more URLs to contact to convert geolocation signals into positions. Note that
+these must be complete URLs which include the scheme, e.g.
+http://gears.mylocationprovider.com.
 If unset, defaults to a single Google-implemented service. The array can
 also be cleared, or set to null, so that no location providers are used.</td>
 </tr>
