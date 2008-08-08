@@ -188,6 +188,7 @@ class DarwinPlatform : public glint_posix::PosixPlatform {
 
   int normal_weight_;
   int bold_weight_;
+  NSCursor* current_cursor_;
 
   Array<WorkItem> windowless_tasks_;
 

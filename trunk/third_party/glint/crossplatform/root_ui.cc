@@ -96,7 +96,8 @@ bool RootUI::ClosePlatformWindow() {
 }
 
 // 'bubble' means the message processing is going from children to parents
-// messages are processed in both directions - first up, then down.
+// messages are processed in both directions - first from root down (notify
+// phase) then from the bottom up (bubble phase).
 bool RootUI::FireMouseEvent(const Message &message,
                             const HitTestResult &hit_test_result,
                             bool bubble) {
@@ -129,7 +130,8 @@ void RootUI::HandleMouseMessage(const Message &message) {
   if (chain.length() == 0)
     return;
 
-  // first phase - notify from parents down
+  // first phase - notify from parents down. To distinguish this phase, we use
+  // XXX_NOTIFY message codes.
   Message notify_message = message;
   switch (message.code) {
     case GL_MSG_LBUTTONDOWN:
@@ -159,7 +161,8 @@ void RootUI::HandleMouseMessage(const Message &message) {
 
   notify_message.user_data = chain[chain.length() - 1]->node;
   for (int i = 0; i < chain.length(); ++i) {
-    if (FireMouseEvent(notify_message, *chain[i], false))  // notifications
+    // 'false' means 'notify' phase.
+    if (FireMouseEvent(notify_message, *chain[i], false))
       return;
   }
 
@@ -167,7 +170,8 @@ void RootUI::HandleMouseMessage(const Message &message) {
   Message bubble_message = message;
   bubble_message.user_data = chain[chain.length() - 1]->node;
   for (int i = chain.length() - 1; i >= 0; --i) {
-    if (FireMouseEvent(bubble_message, *chain[i], true))  // bubbling
+    // 'true' means 'bubble' phase.
+    if (FireMouseEvent(bubble_message, *chain[i], true))
       return;
   }
 

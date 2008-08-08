@@ -91,15 +91,17 @@ PlatformWindow* DarwinPlatform::CreateInvisibleWindow(RootUI *ui,
   // Glint will later on call UpdateInvisibleWindow to give us more information.
   NSRect frame = NSMakeRect(0, 0, 1, 1);
   GlintWindow* window =
-      [[GlintWindow alloc] initWithContentRect:frame
-                                       glintUI:ui];
+      [[[GlintWindow alloc] initWithContentRect:frame
+                                        glintUI:ui] autorelease];
 
   if (!window)
     return NULL;
 
   // give the new window a content view
   GlintBitmapView* bitmap_view =
-      [[GlintBitmapView alloc] initWithFrame:frame glintUI:ui];
+      [[[GlintBitmapView alloc] initWithFrame:frame
+                                      glintUI:ui
+                                      topmost:topmost] autorelease];
   [window setContentView:bitmap_view];
   [window setInitialFirstResponder:bitmap_view];
 
@@ -275,7 +277,7 @@ void DarwinPlatform::DeleteInvisibleWindow(PlatformWindow *window) {
   // The following removes the work_items set from the dictionary, and causes
   // a release on it, which then removes all items in the set and causes them
   // to be released as well. The items are likely retained by NSApplication
-  // (via performSelectorOnmainThread) and will be finally released 
+  // (via performSelectorOnMainThread) and will be finally released
   // after dispatching.
   [work_items_for_window_ removeObjectForKey:glint_window];
 
