@@ -133,6 +133,12 @@ localServerSuite.addFile('../testcases/localserver_tests.js',
                          {useWorker: true, useIFrame: true});
 localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
+// ResourceStore's captureFile functionality is currently only supported 
+// in IE and FireFox and may be deprected in the near future.
+if (isIE || isFirefox) {
+  localServerSuite.addFile('../testcases/localserver_capturefile_tests.js',
+                           {useWorker: false, useIFrame: true});
+}
 suites.push(localServerSuite);
 
 if (!isOfficial && !isSafari & !isWince) {
