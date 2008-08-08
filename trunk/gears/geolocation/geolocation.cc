@@ -86,16 +86,23 @@ class NotificationDataGeoBase : public NotificationData {
   friend class GearsGeolocation;
 
  private:
-  // NotificationData implementation. These methods are not required.
+  // NotificationData implementation.
+  //
+  // We do not wish our messages to be delivered across process boundaries. To
+  // achieve this, we use an unregistered class ID. On receipt of an IPC
+  // message, InboundQueue::ReadOneMessage will attempt to deserialize the
+  // message data using CreateAndReadObject. This will fail silently because no
+  // factory function is registered for our class ID and Deserialize will not be
+  // called.
   virtual SerializableClassId GetSerializableClassId() const {
-    assert(false);
-    return SERIALIZABLE_NULL;
+    return SERIALIZABLE_GEOLOCATION;
   }
-  virtual bool Serialize(Serializer *out) const {
-    assert(false);
-    return false;
+  virtual bool Serialize(Serializer * /* out */) const {
+    // The serialized message is not used.
+    return true;
   }
-  virtual bool Deserialize(Deserializer *in) {
+  virtual bool Deserialize(Deserializer * /* in */) {
+    // This method should never be called.
     assert(false);
     return false;
   }
