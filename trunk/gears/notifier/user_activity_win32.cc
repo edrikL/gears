@@ -38,7 +38,30 @@
 #include <assert.h>
 #include <windows.h>
 
-UserMode UserActivityMonitor::PlatformDetectUserMode() {
+class Win32UserActivityMonitor : public UserActivityMonitor {
+ public:
+  Win32UserActivityMonitor();
+  virtual ~Win32UserActivityMonitor();
+
+ protected:
+  virtual UserMode PlatformDetectUserMode();
+  virtual uint32 GetMonitorPowerOffTimeSec();
+  virtual uint32 GetUserIdleTimeMs();
+  virtual bool IsScreensaverRunning();
+  virtual bool IsWorkstationLocked() ;
+  virtual bool IsFullScreenMode();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(Win32UserActivityMonitor);
+};
+
+Win32UserActivityMonitor::Win32UserActivityMonitor() {
+}
+
+Win32UserActivityMonitor::~Win32UserActivityMonitor() {
+}
+
+UserMode Win32UserActivityMonitor::PlatformDetectUserMode() {
 #if WINVER >= 0x0600
   // Try to get the user mode by calling Vista helper function.
   QUERY_USER_NOTIFICATION_STATE state = QUNS_NOT_PRESENT;
@@ -58,7 +81,7 @@ UserMode UserActivityMonitor::PlatformDetectUserMode() {
   return USER_MODE_UNKNOWN;
 }
 
-uint32 UserActivityMonitor::GetMonitorPowerOffTimeSec() {
+uint32 Win32UserActivityMonitor::GetMonitorPowerOffTimeSec() {
   BOOL power_off_enabled = FALSE;
   if (::SystemParametersInfo(SPI_GETPOWEROFFACTIVE, 0, &power_off_enabled, 0) &&
       power_off_enabled) {
@@ -70,7 +93,7 @@ uint32 UserActivityMonitor::GetMonitorPowerOffTimeSec() {
   return ULONG_MAX;
 }
 
-uint32 UserActivityMonitor::GetUserIdleTimeMs() {
+uint32 Win32UserActivityMonitor::GetUserIdleTimeMs() {
   LASTINPUTINFO last_input_info = {0};
   last_input_info.cbSize = sizeof(LASTINPUTINFO);
   if (::GetLastInputInfo(&last_input_info)) {
@@ -79,7 +102,7 @@ uint32 UserActivityMonitor::GetUserIdleTimeMs() {
   return 0;
 }
 
-bool UserActivityMonitor::IsScreensaverRunning() {
+bool Win32UserActivityMonitor::IsScreensaverRunning() {
   DWORD result = 0;
   if (::SystemParametersInfo(SPI_GETSCREENSAVERRUNNING, 0, &result, 0)) {
     return result != FALSE;
@@ -87,7 +110,7 @@ bool UserActivityMonitor::IsScreensaverRunning() {
   return false;
 }
 
-bool UserActivityMonitor::IsWorkstationLocked() {
+bool Win32UserActivityMonitor::IsWorkstationLocked() {
   bool is_locked = true;
   HDESK input_desk = ::OpenInputDesktop(0, 0, GENERIC_READ);
   if (input_desk)  {
@@ -105,7 +128,7 @@ bool UserActivityMonitor::IsWorkstationLocked() {
   return is_locked;
 }
 
-bool UserActivityMonitor::IsFullScreenMode() {
+bool Win32UserActivityMonitor::IsFullScreenMode() {
   // Check if in full screen window mode.
   // 1) Get the window from any point lies at the main screen where we show
   //    show the notifications.
@@ -160,6 +183,10 @@ bool UserActivityMonitor::IsFullScreenMode() {
   }
 
   return false;
+}
+
+UserActivityMonitor *UserActivityMonitor::Create() {
+  return new Win32UserActivityMonitor();
 }
 
 #endif  // WIN32
