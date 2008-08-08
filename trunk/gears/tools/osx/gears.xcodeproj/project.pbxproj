@@ -59,7 +59,6 @@
 		B510D43E0E48F339001BFCCA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B510D44C0E48F385001BFCCA /* Gears.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8D01CCD20486CAD60068D4B7 /* Gears.bundle */; };
 		B510D4610E48F3A3001BFCCA /* plugin_proxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */; };
-		B510D5E90E48F64B001BFCCA /* async_task_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B510D5E70E48F64B001BFCCA /* async_task_test.cc */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
 		B531A15C0E2BBC5600147648 /* media_data.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15A0E2BBC5600147648 /* media_data.cc */; };
 		B531A1610E2BBC7B00147648 /* mock_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */; };
@@ -762,8 +761,6 @@
 		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
 		B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = plugin_proxy.mm; path = ../../base/safari/plugin_proxy.mm; sourceTree = SOURCE_ROOT; };
 		B510D4450E48F339001BFCCA /* Gears.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
-		B510D5E70E48F64B001BFCCA /* async_task_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_task_test.cc; path = ../../localserver/common/async_task_test.cc; sourceTree = SOURCE_ROOT; };
-		B510D5E80E48F64B001BFCCA /* async_task_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_test.h; path = ../../localserver/common/async_task_test.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
 		B531A15A0E2BBC5600147648 /* media_data.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_data.cc; path = ../../media/media_data.cc; sourceTree = SOURCE_ROOT; };
@@ -1970,8 +1967,6 @@
 		B544D9640D2EE5D000D30561 /* common */ = {
 			isa = PBXGroup;
 			children = (
-				B510D5E80E48F64B001BFCCA /* async_task_test.h */,
-				B510D5E70E48F64B001BFCCA /* async_task_test.cc */,
 				B58EFE590D529ACB00B0A65D /* blob_store.h */,
 				B58EFE4F0D529ACB00B0A65D /* blob_store.cc */,
 				B58EFE570D529ACB00B0A65D /* capture_task.h */,
@@ -3923,7 +3918,6 @@
 				B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */,
 				B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */,
 				B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */,
-				B510D5E90E48F64B001BFCCA /* async_task_test.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4629,7 +4623,9 @@
 				OTHER_CFLAGS = (
 					"-DSQLITE_CORE",
 					"-DSQLITE_ENABLE_FTS1",
+					"-DSQLITE_ENABLE_BROKEN_FTS1",
 					"-DSQLITE_ENABLE_FTS2",
+					"-DSQLITE_ENABLE_BROKEN_FTS2",
 					"-DTHREADSAFE=1",
 					"-DSQLITE_DEFAULT_FILE_PERMISSIONS=0600",
 					"-DSQLITE_OMIT_ATTACH=1",
