@@ -1479,6 +1479,7 @@ NOTIFIER_CORE	+= \
 		$(NULL)
 
 NOTIFIER_LIBS 	+= \
+		-lX11 \
 		-lgtk-x11-2.0 \
 		-L../third_party/gtk/linux/lib \
 		$(NULL)

@@ -33,40 +33,67 @@
 #import "gears/notifier/user_activity.h"
 #import "gears/base/common/common_osx.h"
 
-UserMode UserActivityMonitor::PlatformDetectUserMode() {
+class MacUserActivityMonitor : public UserActivityMonitor {
+ public:
+  MacUserActivityMonitor();
+  virtual ~MacUserActivityMonitor();
+
+ protected:
+  virtual UserMode PlatformDetectUserMode();
+  virtual uint32 GetMonitorPowerOffTimeSec();
+  virtual uint32 GetUserIdleTimeMs();
+  virtual bool IsScreensaverRunning();
+  virtual bool IsWorkstationLocked() ;
+  virtual bool IsFullScreenMode();
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(MacUserActivityMonitor);
+};
+
+MacUserActivityMonitor::MacUserActivityMonitor() {
+}
+
+MacUserActivityMonitor::~MacUserActivityMonitor() {
+}
+
+UserMode MacUserActivityMonitor::PlatformDetectUserMode() {
   // No platform specific detection on OSX - returning USER_MODE_UNKNOWN
   // will make UserActivityMonitor to call "specific" detection methods below.
   return USER_MODE_UNKNOWN;
 }
 
-uint32 UserActivityMonitor::GetMonitorPowerOffTimeSec() {
+uint32 MacUserActivityMonitor::GetMonitorPowerOffTimeSec() {
   // TODO(dimich): Implement this.
   LOG(("UserActivityMonitor::GetMonitorPowerOffTimeSec: Not Implemented\n"));
   return 0;
 }
 
-uint32 UserActivityMonitor::GetUserIdleTimeMs() {
+uint32 MacUserActivityMonitor::GetUserIdleTimeMs() {
   // TODO(dimich): Implement this.
   LOG(("UserActivityMonitor::GetUserIdleTimeMs: Not Implemented\n"));
   return 0;
 }
 
-bool UserActivityMonitor::IsScreensaverRunning() {
+bool MacUserActivityMonitor::IsScreensaverRunning() {
   // TODO(dimich): Implement this.
   LOG(("UserActivityMonitor::IsScreensaverRunning: Not Implemented\n"));
   return false;
 }
 
-bool UserActivityMonitor::IsWorkstationLocked() {
+bool MacUserActivityMonitor::IsWorkstationLocked() {
   // TODO(dimich): Implement this.
   LOG(("UserActivityMonitor::IsWorkstationLocked: Not Implemented\n"));
   return false;
 }
 
-bool UserActivityMonitor::IsFullScreenMode() {
+bool MacUserActivityMonitor::IsFullScreenMode() {
   // TODO(dimich): Implement this.
   LOG(("UserActivityMonitor::IsFullScreenMode: Not Implemented\n"));
   return false;
+}
+
+UserActivityMonitor *UserActivityMonitor::Create() {
+  return new MacUserActivityMonitor();
 }
 
 #endif  // OS_MACOSX

@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
 class LinuxNotifier : public Notifier {
  public:
-  LinuxNotifier();
+  LinuxNotifier(bool debug);
   virtual bool Initialize();
   virtual int Run();
   virtual void Terminate();
@@ -53,10 +53,13 @@ class LinuxNotifier : public Notifier {
   bool StartAsDaemon();
   virtual bool RegisterProcess();
   virtual bool UnregisterProcess();
+
+  bool debug_;
+
   DISALLOW_EVIL_CONSTRUCTORS(LinuxNotifier);
 };
 
-LinuxNotifier::LinuxNotifier() {
+LinuxNotifier::LinuxNotifier(bool debug) : debug_(debug) {
 }
 
 bool LinuxNotifier::RegisterProcess() {
@@ -144,8 +147,11 @@ bool LinuxNotifier::Initialize() {
     return false;
   }
 
-  if (!StartAsDaemon()) {
-    return false;
+  // Start as a daemon process. Do this only if debug option is not present.
+  if (!debug_) {
+    if (!StartAsDaemon()) {
+      return false;
+    }
   }
 
   // Single instance check - *nix way, with a lock file.
@@ -176,7 +182,15 @@ int LinuxNotifier::Run() {
 
 int main(int argc, char *argv[]) {
   LOG(("Gears Notifier started.\n"));
-  LinuxNotifier notifier;
+
+  bool debug = false;
+#ifdef DEBUG
+  if (argc > 1 && strcmp(argv[1], "-debug") == 0) {
+    debug = true;
+  }
+#endif  // DEBUG
+
+  LinuxNotifier notifier(debug);
 
   int retval = -1;
   if (notifier.Initialize()) {

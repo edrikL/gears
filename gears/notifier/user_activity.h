@@ -87,50 +87,51 @@ class UserActivityInterface {
 
 class UserActivityMonitor : public UserActivityInterface {
  public:
+  // Creator.
+  static UserActivityMonitor *Create();
+
   UserActivityMonitor();
+  virtual ~UserActivityMonitor();
 
   // UserActivityInterface implementations.
   virtual void AddObserver(UserActivityObserver *observer);
   virtual void CheckNow();
   virtual UserMode user_mode() const { return user_mode_; }
 
- private:
-  // Callback for the timer to check the user activity peridocially.
-  static void OnTimer(void *arg);
-
-  // Get the current user activity mode.
-  static UserMode GetUserActivity();
-
-  // Returns true if the user is idle.
-  static bool IsUserIdle();
-
-  // Returns true if the user is busy.
-  static bool IsUserBusy();
-
-  // Returns true if the user is away.
-  static bool IsUserAway();
-
-  //
-  // The following needs to be implemented for different platform.
-  //
-
+ protected:
   // Gets the user mode by using platform-specific function if possible.
-  static UserMode PlatformDetectUserMode();
+  virtual UserMode PlatformDetectUserMode() = 0;
 
   // Returns the number of seconds for the monitor power off.
-  static uint32 GetMonitorPowerOffTimeSec();
+  virtual uint32 GetMonitorPowerOffTimeSec() = 0;
 
   // Returns the number of milliseconds the system has had no user input.
-  static uint32 GetUserIdleTimeMs();
+  virtual uint32 GetUserIdleTimeMs() = 0;
 
   // Returns true if screen saver is running.
-  static bool IsScreensaverRunning();
+  virtual bool IsScreensaverRunning() = 0;
 
   // Returns true if workstation is locked.
-  static bool IsWorkstationLocked() ;
+  virtual bool IsWorkstationLocked() = 0;
 
   // Returns true if in full screen mode.
-  static bool IsFullScreenMode();
+  virtual bool IsFullScreenMode() = 0;
+
+ private:
+  // Get the current user activity mode.
+  UserMode GetUserActivity();
+
+  // Returns true if the user is idle.
+  bool IsUserIdle();
+
+  // Returns true if the user is busy.
+  bool IsUserBusy();
+
+  // Returns true if the user is away.
+  bool IsUserAway();
+
+  // Callback for the timer to check the user activity peridocially.
+  static void OnTimer(void *arg);
 
   scoped_ptr<TimedCall> timer_;
   std::vector<UserActivityObserver*> observers_;

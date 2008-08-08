@@ -79,15 +79,16 @@ class NotificationTask : public glint::WorkItem {
 Notifier::Notifier()
   : running_(false),
     to_restart_(false) {
-  user_activity_monitor_.reset(new UserActivityMonitor());
-  notification_manager_.reset(
-      new NotificationManager(user_activity_monitor_.get(), this));
 }
 
 Notifier::~Notifier() {
 }
 
 bool Notifier::Initialize() {
+  user_activity_monitor_.reset(UserActivityMonitor::Create());
+  notification_manager_.reset(
+      new NotificationManager(user_activity_monitor_.get(), this));
+
   GearsNotification::RegisterAsSerializable();
   IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
   if (!ipc_message_queue) {

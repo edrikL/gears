@@ -54,6 +54,9 @@ UserActivityMonitor::UserActivityMonitor()
                              this));
 }
 
+UserActivityMonitor::~UserActivityMonitor() {
+}
+
 void UserActivityMonitor::AddObserver(UserActivityObserver *observer) {
   assert(observer);
   observers_.push_back(observer);
@@ -101,14 +104,16 @@ UserMode UserActivityMonitor::GetUserActivity() {
     return user_mode;
   }
 
-  // Try to detect the user mode by ourselves.
-  if (IsFullScreenMode()) {
-    return USER_PRESENTATION_MODE;
-  }
-
   // Check if the user is away.
+  // Note that this check should be done before fullscreen check because
+  // when screensaver is running, it could be in fullscreen window.
   if (IsUserAway()) {
     return USER_AWAY_MODE;
+  }
+
+  // Check if the user is in fullscreen mode.
+  if (IsFullScreenMode()) {
+    return USER_PRESENTATION_MODE;
   }
 
   // Check if the user is idling.
