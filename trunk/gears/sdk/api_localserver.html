@@ -875,7 +875,9 @@ that this class provides.</p>
         <code>fileInputElement</code> into the store and associates
         that content with the given URL. The <code>fileInputElement</code>
         argument must be a reference to an<code> &lt;input type=file&gt;</code>
-        HTML element.</td>
+        HTML element. <br />
+        <b>Note:</b> This is currently only implemented in IE & Firefox 2.  
+        We recommend using of the BLOB API where feasible.</td>
     </tr>
   </table>
   <table>
@@ -899,7 +901,8 @@ that this class provides.</p>
       <td>Description</td>
       <td class="odd">Returns the leaf file name associated with <code>url</code> that was previously captured by
       calling <code>captureFile</code>. Note that if <code>url</code> was captured by a method other than calling
-      <code>captureFile</code> then an empty string will be returned and no exception will be thrown.</td>
+      <code>captureFile</code> then an empty string will be returned and no exception will be thrown.<br />
+      <b>Note:</b> This is currently only implemented in IE & Firefox 2.  We recommend using of the BLOB API where feasible.</td>
     </tr>
   </table>
   <table>
@@ -968,6 +971,8 @@ that this class provides.</p>
 <!------------------------------------------------------------->
 <a name="FileSubmitter"></a>
 <h2>FileSubmitter class </h2>
+<p><code>FileSubmitter</code> is currently only implemented in IE & Firefox 2.  
+  We recommend using of the BLOB API where feasible.</p>
 <p>The <code>FileSubmitter</code> object facilitates the submission of local files, that
   were previously captured using <code>ResourceStore.captureFile</code>, in
   multipart/form-data encoded form submissions. </p>
@@ -1009,7 +1014,10 @@ that this class provides.</p>
           element. </li>
         <li> Internet Explorer: The <code>htmlElement</code> must NOT be a reference to an &lt;input&gt;
           of any type. </li>
-      </ul></td>
+      </ul>
+      <b>Note:</b> This is currently only implemented in IE & Firefox 2.  
+      We recommend using of the BLOB API where feasible.
+      </td>
     </tr>
   </table>
 
