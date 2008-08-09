@@ -32,8 +32,6 @@
 
 #if defined(OS_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
-// extern from timed_call.cc
-extern CFStringRef kGearsCustomMode;
 #endif
 
 #include "gears/base/common/common.h"
@@ -169,7 +167,7 @@ static bool TestCallbackSanity() {
   int rval;
   while (!callback_test_toggle &&
          StopwatchGetElapsed(callback_watch) < wait_time_ms) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode,
+    rval = CFRunLoopRunInMode(kCFRunLoopDefaultMode,
                               static_cast<float>(wait_time_ms) / 1000.0,
                               false);
     LOG(("TestCallbackSanity - RunInMode rval: %d\n", rval));
@@ -232,7 +230,7 @@ static bool TestCallbackSorting() {
   int rval;
   while (callback_sorting_counter != 3 &&
          StopwatchGetElapsed(callback_watch) < wait_time_ms) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode,
+    rval = CFRunLoopRunInMode(kCFRunLoopDefaultMode,
                               static_cast<float>(wait_time_ms) / 1000.0,
                               false);
     LOG(("TestCallbackSorting - RunInMode rval: %d\n", rval));
@@ -293,7 +291,7 @@ static bool TestCallbackRepeat() {
   int rval;
   while (callback_repeat_counter <= repeats &&
          StopwatchGetElapsed(callback_watch) < wait_time_ms) {
-    rval = CFRunLoopRunInMode(kGearsCustomMode,
+    rval = CFRunLoopRunInMode(kCFRunLoopDefaultMode,
                               static_cast<float>(wait_time_ms) / 1000.0,
                               false);
     LOG(("TestCallbackRepeat - RunInMode rval: %d\n", rval));
