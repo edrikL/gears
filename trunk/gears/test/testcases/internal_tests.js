@@ -552,7 +552,7 @@ function testGeolocationGetLocationFromResponse() {
 
 function testGeolocationGetCurrentPosition() {
   if (isUsingCCTests) {
-
+ 
     // Use mock radio and WiFi device data providers.
     internalTests.configureGeolocationRadioDataProviderForTest(
       { cell_id: 23874,
@@ -582,7 +582,9 @@ function testGeolocationGetCurrentPosition() {
     };
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     var locationAvailable2 = function(position) {
-      assertObjectEqual(mockPosition, position);
+      assertEqualAnyType(mockPosition.latitude, position.latitude);
+      assertEqualAnyType(mockPosition.longitude, position.longitude);
+      assertEqualAnyType(mockPosition.accuracy, position.accuracy);
       internalTests.removeGeolocationMockLocationProvider();
       completeAsync();
     };
