@@ -115,16 +115,9 @@ const ThreadLocals::Slot
 
 #if defined(OS_MACOSX)
 
-// kGearsCustomMode puts this timer in its own category in the run loop
-// so we can filter for it in the unit test. This is externed from there,
-// so make sure to change the name in both places.
-CFStringRef kGearsCustomMode = CFSTR("GearsCustomMode");
-
 class PlatformTimer {
  public:
   PlatformTimer() {
-    CFRunLoopAddCommonMode(CFRunLoopGetCurrent(), kGearsCustomMode);
-
     // We construct a timer that fires a long time from now
     // (3ish years in the future) and later change the fire date in SetNextFire.
     // See: developer.apple.com/documentation/CoreFoundation
@@ -137,7 +130,7 @@ class PlatformTimer {
                                   interval, 0, 0,
                                   TimerCallback, NULL);
     assert(CFRunLoopTimerIsValid(timer_));
-    CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer_, kGearsCustomMode);
+    CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer_, kCFRunLoopCommonModes);
   }
 
   ~PlatformTimer() {
