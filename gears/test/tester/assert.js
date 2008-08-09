@@ -216,6 +216,10 @@ function assertObjectEqual(expected, actual, optDescription) {
   for (property in expected) {
     assertEqualAnyType(expected[property], actual[property], optDescription);
   }
+
+  for (property in actual) {
+    assertEqualAnyType(expected[property], actual[property], optDescription);
+  }
 }
 
 /**
