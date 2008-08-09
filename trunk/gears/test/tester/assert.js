@@ -96,19 +96,43 @@ function formatErrorMessage(message, optDescription) {
 }
 
 /**
- * Assert that two values are equal. A strict equality test is used; 4 and "4"
- * are not equal.
+ * Assert that two values are equal, as defined by ===. A strict equality test
+ * is used; 4 and "4" are not equal. Also two different objects with the same
+ * properties compare as false.
  *
  * @param expected The expected value.
  * @param actual The actual value.
  * @param optDescription An optional description of what went wrong.
  */
 function assertEqual(expected, actual, optDescription) {
-  assert(expected === actual, function() {
+  // === seems to be buggy on Safari:
+  // https://bugs.webkit.org/show_bug.cgi?id=20305 . Work around this by
+  // comparing object addresses. Converting an NPObject to a string returns a
+  // string with the address embedded, so we compare these.
+
+  // toString() doesn't seem to be defined for Gears objects in Safari.
+  function asString(object) {
+    return '%s'.subs(object);
+  }
+
+  function isNPObject(object) {
+    if (object) {
+      var string = asString(object);
+      return string && string.indexOf('NPObject') == 0;
+    }
+  }
+
+  function generateMessage() {
     var message = 'Expected: %s (%s), actual: %s (%s)'.subs(
         expected, typeof expected, actual, typeof actual);
     return formatErrorMessage(message, optDescription);
-  });
+  }
+
+  if (isSafari && isNPObject(expected) && isNPObject(actual)) {
+    assert(asString(expected) == asString(actual), generateMessage);
+  } else {
+    assert(expected === actual, generateMessage);
+  }
 }
 
 
