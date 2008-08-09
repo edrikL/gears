@@ -202,7 +202,8 @@ function runLoadAndExportTest(blobs) {
     var pngBlob = canvas.toBlob('image/png');
 
     // The default format is png.
-    assertBlobProbablyEqual(canvas.toBlob(), pngBlob);
+    assertBlobProbablyEqual(canvas.toBlob(), pngBlob,
+        'The default export format is not png.');
 
     var jpegBlob = canvas.toBlob('image/jpeg');
     var jpegLowBlob = canvas.toBlob('image/jpeg', { quality: 0.02 });
@@ -210,11 +211,14 @@ function runLoadAndExportTest(blobs) {
     // Now compare the exported versions with golden files.
     // The golden files have been manually checked for format and size.
     assertBlobProbablyEqual(pngBlob,
-        blobs['sample-' + format + '-exported-as-png.png']);
+        blobs['sample-' + format + '-exported-as-png.png'],
+        "The PNG blob doesn't match the expected blob.");
     assertBlobProbablyEqual(jpegBlob,
-        blobs['sample-' + format + '-exported-as-jpeg.jpeg']);
+        blobs['sample-' + format + '-exported-as-jpeg.jpeg'],
+        "The JPEG blob doesn't match the expected blob.");
     assertBlobProbablyEqual(jpegLowBlob,
-        blobs['sample-' + format + '-exported-as-jpeg-with-quality-0.02.jpeg']);
+        blobs['sample-' + format + '-exported-as-jpeg-with-quality-0.02.jpeg'],
+        "The JPEG low-quality blob doesn't match the expected blob.");
   }
   completeAsync();
 }
