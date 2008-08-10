@@ -219,8 +219,7 @@ class File {
                         PathComponents *exploded_path);
 
   // Test friends :)
-  friend bool TestCollapsePathSeparators();
-  friend bool TestSplitPath();
+  friend bool TestSplitPath(std::string16 *error);
 
   // TODO(miket): someone fix common.h so that it doesn't require a browser
   // flag to be defined! Or better yet, someone shoot common.h in the head!

@@ -33,36 +33,44 @@
 #endif
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-
-//------------------------------------------------------------------------------
-// TestFileUtils
-//------------------------------------------------------------------------------
-bool TestCollapsePathSeparators();  // friend of file.h
-bool TestSplitPath(); //friend of file.h
-static bool TestGetBaseName();
-static bool TestGetParentDirectory();
-static bool TestLongPaths();
-static bool TestFileObject();
-static bool CheckDirectoryCreation(const char16 *dir);
-
-bool TestFileUtils(std::string16 *error) {
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOCATION __FILE__ ", line " TOSTRING(__LINE__)
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
+    LOG(("failed at " LOCATION)); \
     assert(error); \
-    *error += STRING16(L"TestFileUtils - failed. "); \
+    if (!error->empty()) *error += STRING16(L", "); \
+    *error += STRING16(L"failed at "); \
+    std::string16 location; \
+    UTF8ToString16(LOCATION, &location); \
+    *error += location; \
     return false; \
   } \
 }
 
+//------------------------------------------------------------------------------
+// TestFileUtils
+//------------------------------------------------------------------------------
+bool TestSplitPath(std::string16 *error); //friend of file.h
+static bool TestGetBaseName(std::string16 *error);
+static bool TestGetParentDirectory(std::string16 *error);
+static bool TestLongPaths(std::string16 *error);
+static bool TestFileObject(std::string16 *error);
+static bool CheckDirectoryCreation(const char16 *dir);
+static bool TestMultipleOpen(std::string16 *error);
+
+bool TestFileUtils(std::string16 *error) {
+
   //Run tests for individual functions
-  TEST_ASSERT(TestGetBaseName());
-  TEST_ASSERT(TestGetParentDirectory());
-  TEST_ASSERT(TestSplitPath());
-  TEST_ASSERT(TestLongPaths());
-  TEST_ASSERT(TestFileObject());
+  TEST_ASSERT(TestGetBaseName(error));
+  TEST_ASSERT(TestGetParentDirectory(error));
+  TEST_ASSERT(TestSplitPath(error));
+  TEST_ASSERT(TestLongPaths(error));
+  TEST_ASSERT(TestFileObject(error));
+  TEST_ASSERT(TestMultipleOpen(error));
 
   // Create a new empty directory work with
   std::string16 temp_dir;
@@ -176,16 +184,8 @@ bool TestFileUtils(std::string16 *error) {
   return true;
 }
 
-#undef TEST_ASSERT
-#define TEST_ASSERT(b) \
-{ \
-  if (!(b)) { \
-    LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
-    return false; \
-  } \
-}
-
-bool TestFileOpen(std::string16 filepath, File::OpenAccessMode access_mode,
+bool TestFileOpen(std::string16 *error, std::string16 filepath,
+                  File::OpenAccessMode access_mode,
                   File::OpenExistsMode exists_mode,
                   bool instantiated, bool existsAfter) {
   scoped_ptr<File> file(File::Open(filepath.c_str(), access_mode, exists_mode));
@@ -193,7 +193,8 @@ bool TestFileOpen(std::string16 filepath, File::OpenAccessMode access_mode,
   return ((file.get() != NULL) == instantiated);
 }
 
-bool TestFileObject() {
+
+bool TestFileObject(std::string16 *error) {
   // Create a new empty directory work with
   std::string16 temp_dir;
   TEST_ASSERT(File::CreateNewTempDirectory(&temp_dir));
@@ -207,57 +208,57 @@ bool TestFileObject() {
 
   // Read mode with nonexistent file; read should never create the file
   TEST_ASSERT(!File::Exists(filepath.c_str()));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_NOT_EXISTS,
-                           false, false));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_EXISTS,
-                           false, false));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
-                           false, false));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::FAIL_IF_NOT_EXISTS, false, false));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::FAIL_IF_EXISTS, false, false));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::NEVER_FAIL, false, false));
 
   // Write mode with nonexistent file
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
-                           false, false));
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::FAIL_IF_NOT_EXISTS, false, false));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::FAIL_IF_EXISTS, true, true));
   TEST_ASSERT(File::Delete(filepath.c_str()));
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::NEVER_FAIL,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::NEVER_FAIL, true, true));
   TEST_ASSERT(File::Delete(filepath.c_str()));
 
   // Read/Write mode with nonexistent file
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
-                           false, false));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::FAIL_IF_NOT_EXISTS, false, false));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::FAIL_IF_EXISTS, true, true));
   TEST_ASSERT(File::Delete(filepath.c_str()));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::NEVER_FAIL,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::NEVER_FAIL, true, true));
 
 
   // Read mode with existent file
   TEST_ASSERT(File::Exists(filepath.c_str()));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_EXISTS,
-                           false, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_NOT_EXISTS,
-                           true, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::FAIL_IF_EXISTS, false, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::FAIL_IF_NOT_EXISTS, true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ,
+                           File::NEVER_FAIL, true, true));
 
   // Write mode with existent file
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
-                           false, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
-                           true, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::NEVER_FAIL,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::FAIL_IF_EXISTS, false, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::FAIL_IF_NOT_EXISTS, true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::WRITE,
+                           File::NEVER_FAIL, true, true));
 
   // Read/Write mode with existent file
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
-                           false, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
-                           true, true));
-  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::NEVER_FAIL,
-                           true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::FAIL_IF_EXISTS, false, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::FAIL_IF_NOT_EXISTS, true, true));
+  TEST_ASSERT(TestFileOpen(error, filepath, File::READ_WRITE,
+                           File::NEVER_FAIL, true, true));
 
   const int size = 4096;
   uint8 data_write[size];
@@ -418,7 +419,7 @@ bool TestFileObject() {
   return true;
 }
 
-bool TestLongPaths() {
+bool TestLongPaths(std::string16 *error) {
 // Only Win32 has issues with long pathnames, ignore WinCE for now.
 #if defined(WIN32) && !defined(WINCE)
 
@@ -582,7 +583,7 @@ bool TestLongPaths() {
 }
 
 // friend of File class, so can't be static
-bool TestSplitPath() {
+bool TestSplitPath(std::string16 *error) {
   
   const std::string16 kSep(&kPathSeparator, 1);
   
@@ -614,7 +615,7 @@ bool TestSplitPath() {
 
 }
 
-static bool TestGetParentDirectory() {
+static bool TestGetParentDirectory(std::string16 *error) {
   const std::string16 kSep(&kPathSeparator, 1);
   const std::string16 kBackslash(STRING16(L"\\"));
   const std::string16 kA(STRING16(L"a"));
@@ -654,7 +655,7 @@ static bool TestGetParentDirectory() {
   return true;
 }
 
-static bool TestGetBaseName() {
+static bool TestGetBaseName(std::string16 *error) {
   // GetBaseName
   const std::string16 kSep(&kPathSeparator, 1);
   const std::string16 kDrvSep(STRING16(L"c:"));
@@ -738,4 +739,53 @@ static bool TestGetBaseName() {
 
 static bool CheckDirectoryCreation(const char16 *dir) {
   return File::RecursivelyCreateDir(dir) && File::DirectoryExists(dir);  
+}
+
+static bool TestMultipleOpen(std::string16 *error) {
+  // Create a new empty directory in which to work.
+  std::string16 temp_dir;
+  TEST_ASSERT(File::CreateNewTempDirectory(&temp_dir));
+  TEST_ASSERT(File::DirectoryExists(temp_dir.c_str()));
+  TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 0);
+
+  const char16 *kFileName = STRING16(L"File.ext");
+  std::string16 filepath(temp_dir);
+  filepath += kPathSeparator;
+  filepath += kFileName;
+
+  // Open file twice for write. This will also create the files,
+  // so that they can later be successfully opened for READ.
+  {
+    scoped_ptr<File> file1(File::Open(filepath.c_str(), File::WRITE,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file1.get());
+    scoped_ptr<File> file2(File::Open(filepath.c_str(), File::WRITE,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file2.get());
+  }
+
+  // Open file twice for read.
+  {
+    scoped_ptr<File> file1(File::Open(filepath.c_str(), File::READ,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file1.get());
+    scoped_ptr<File> file2(File::Open(filepath.c_str(), File::READ,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file2.get());
+  }
+
+  // Open file once for read, once for write.
+  {
+    scoped_ptr<File> file1(File::Open(filepath.c_str(), File::READ,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file1.get());
+    scoped_ptr<File> file2(File::Open(filepath.c_str(), File::WRITE,
+                                      File::NEVER_FAIL));
+    TEST_ASSERT(file2.get());
+  }
+
+  // Remove the entire tmp_dir.
+  TEST_ASSERT(File::DeleteRecursively(temp_dir.c_str()));
+  TEST_ASSERT(!File::DirectoryExists(temp_dir.c_str()));
+  return true;
 }
