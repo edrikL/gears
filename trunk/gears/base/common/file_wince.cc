@@ -45,6 +45,8 @@
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+static const DWORD FILE_SHARE_ALL(FILE_SHARE_READ | FILE_SHARE_WRITE |
+                                  FILE_SHARE_DELETE);
 
 File::~File() {
   Close();
@@ -103,7 +105,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
   file->mode_ = access_mode;
   file->handle_ = ::CreateFileW(full_filepath,
                                 desired_access,
-                                access_mode == READ ? FILE_SHARE_READ : 0,
+                                FILE_SHARE_ALL,
                                 NULL,
                                 creation_disposition,
                                 FILE_ATTRIBUTE_NORMAL,
@@ -218,7 +220,7 @@ bool File::CreateNewFile(const char16 *full_filepath) {
   // Create a new file, if a file already exists this will fail
   SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
                                              GENERIC_WRITE,
-                                             0,
+                                             FILE_SHARE_ALL,
                                              NULL,
                                              CREATE_NEW,
                                              FILE_ATTRIBUTE_NORMAL,
@@ -251,8 +253,8 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
 
 int64 File::LastModifiedTime(const char16 *full_filepath) {
   SAFE_HANDLE file_handle(CreateFileW(full_filepath, GENERIC_READ,
-                                      FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                      0, NULL));
+                                      FILE_SHARE_ALL,
+                                      NULL, OPEN_EXISTING, 0, NULL));
   if (file_handle.get() == INVALID_HANDLE_VALUE) {
     return kInvalidLastModifiedTime;
   }
