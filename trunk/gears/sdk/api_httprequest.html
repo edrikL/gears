@@ -3,10 +3,10 @@
 <!--
 Copyright 2007, Google Inc.
 
-Redistribution and use in source and binary forms, with or without 
+Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
- 1. Redistributions of source code must retain the above copyright notice, 
+ 1. Redistributions of source code must retain the above copyright notice,
     this list of conditions and the following disclaimer.
  2. Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
@@ -16,14 +16,14 @@ modification, are permitted provided that the following conditions are met:
     specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
@@ -48,7 +48,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
   <li><a href="#example">Example</a></li>
-  <li><a href="#HttpRequest">HttpRequest class</a></li>
+  <li><a href="#interfaces">Interfaces</a>
+    <ol>
+      <li><a href="#HttpRequest">HttpRequest</a></li>
+      <li><a href="#HttpRequestUpload">HttpRequestUpload</a></li>
+      <li><a href="#ProgressEvent">ProgressEvent</a></li>
+    </ol>
+  </li>
 </ol>
 
 <a name="overview"></a><h2>Overview</h2>
@@ -74,23 +80,37 @@ request.onreadystatechange = function() {
 request.send();
 &lt;/script&gt;</code></pre>
 
-<!-- ########## Class Reference ########## -->
+
+<h3 id="interfaces">Interfaces</h3>
+<pre><code><a href="#HttpRequest" class="section">HttpRequest class</a>
+    void <b>open</b>(method, url)
+    void <b>setRequestHeader</b>(name, value)
+    void <b>send</b>([postData])
+    void <b>abort</b>()
+    string <b>getResponseHeader</b>(name)
+    string <b>getAllResponseHeaders</b>()
+    callback <b>onprogress</b>(event)
+    callback <b>onreadystatechange</b>()
+    readonly attribute int <b>readyState</b>
+    readonly attribute Blob <b>responseBlob</b>
+    readonly attribute string <b>responseText</b>
+    readonly attribute int <b>status</b>
+    readonly attribute string <b>statusText</b>
+    readonly attribute HttpRequestUpload <b>upload</b>
+</code></pre>
+<pre><code><a href="#HttpRequestUpload" class="section">HttpRequestUpload class</a>
+    callback <b>onprogress</b>(event)
+</code></pre>
+<pre><code><a href="#ProgressEvent" class="section">ProgressEvent class</a>
+    readonly attribute int <b>total</b>
+    readonly attribute int <b>loaded</b>
+    readonly attribute bool <b>lengthComputable</b>
+</code></pre>
+
 
 <br>
 <a name="HttpRequest"></a>
 <h2>HttpRequest class</h2>
-
-<pre><code>void     <b>open</b>(method, url)
-void     <b>setRequestHeader</b>(name, value)
-void     <b>send</b>([postData])
-void     <b>abort</b>()
-string   <b>getResponseHeader</b>(name)
-string   <b>getAllResponseHeaders</b>()
-callback <b>onreadystatechange</b>
-readonly attribute int <b>readyState</b>
-readonly attribute string <b>responseText</b>
-readonly attribute int    <b>status</b>
-readonly attribute string <b>statusText</b> </code></pre>
 
 <!-- ########## Methods ########## -->
 <h3>Methods</h3>
@@ -180,7 +200,7 @@ readonly attribute string <b>statusText</b> </code></pre>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-        <code>postData</code> - an optional string to be sent as the body of a POST or PUT request.<br/>
+        <code>postData</code> - an optional string or Blob to be sent as the body of a POST or PUT request.<br/>
     </td>
   </tr>
   <tr class="odd">
@@ -214,7 +234,26 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 
 <!-- ########## Events ########## -->
-<h3>Event Handler</h3>
+<h3>Event Handlers</h3>
+<table>
+  <tr class="odd">
+    <th colspan="2">
+      <div align="left"><code>callback onprogress(event)</code></div>
+    </th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Parameters: </td>
+    <td width="489">
+      <code>event</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td width="113">Description: </td>
+    <td width="489">
+      An event handler that fires as response data is downloaded.
+    </td>
+  </tr>
+</table>
 <table>
   <tr class="odd">
     <th colspan="2"><div align="left"><code>callback onreadystatechange()</code></div></th>
@@ -261,6 +300,11 @@ readonly attribute string <b>statusText</b> </code></pre>
         </td>
     </tr>
     <tr class="odd">
+      <td><strong>responseBlob</strong></td>
+        <td class="" >readonly Blob</td>
+        <td class="" >Returns the response body as a Blob. This property can be read when the request is in the Complete state.</td>
+    </tr>
+    <tr class="odd">
       <td><strong>responseText</strong></td>
         <td class="" >readonly string </td>
         <td class="" >Returns the response body as a string. This property can be read when the request is in the Interactive or Complete state.</td>
@@ -275,7 +319,80 @@ readonly attribute string <b>statusText</b> </code></pre>
         <td class="odd">readonly string </td>
         <td class="odd">Returns the status as a string (e.g. "Not Found" or "OK"). This property can be read when the request is in the Interactive or Complete state.</td>
     </tr>
+    <tr class="odd">
+      <td><strong>upload</strong></td>
+      <td class="odd">readonly Object</td>
+      <td class="odd">Returns an
+        <a href="#HttpRequestUpload">HttpRequestUpload</a> object for
+        accessing properties associated with POST or PUT data uploads.
+      </td>
+    </tr>
   </table>
+
+<!-- ########## Class Reference ########## -->
+
+<br>
+<a name="HttpRequestUpload"></a>
+<h2>HttpRequestUpload class</h2>
+
+<!-- ########## Events ########## -->
+<h3>Event Handlers</h3>
+<table>
+  <tr class="odd">
+    <th colspan="2">
+      <div align="left"><code>callback onprogress(event)</code></div>
+    </th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Parameters: </td>
+    <td width="489">
+      <code>event</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td width="113">Description: </td>
+    <td width="489">
+      An event handler that fires as PUT or POST data is uploaded.
+    </td>
+  </tr>
+</table>
+
+<!-- ########## Class Reference ########## -->
+
+<br>
+<a name="ProgressEvent"></a>
+<h2>ProgressEvent class</h2>
+
+<!-- ########## Attributes ########## -->
+<h3>Attributes</h3>
+  <table>
+    <tr class="odd">
+      <th width="158">Attribute</th>
+      <th >Type</th>
+      <th >Description</th>
+    </tr>
+    <tr class="odd">
+      <td><strong>total</strong></td>
+      <td class="" >readonly int</td>
+      <td class="" >
+        Returns the total number of bytes to be loaded.
+        Returns 0 if unknown (i.e. - lengthComputable is false).
+      </td>
+    </tr>
+    <tr class="odd">
+      <td><strong>loaded</strong></td>
+      <td class="" >readonly int</td>
+      <td class="" >Returns the total number of bytes currently loaded.</td>
+    </tr>
+    <tr class="odd">
+      <td><strong>lengthComputable</strong></td>
+      <td class="" >readonly bool</td>
+      <td class="" >
+         Returns true if the total number of bytes to be transferred is known.
+      </td>
+    </tr>
+  </table>
+
 
 </div>
 </body>
