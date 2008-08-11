@@ -67,7 +67,7 @@ bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
   return true;
 }
 
-void System::GetMainScreenBounds(glint::Rectangle *bounds) {
+void System::GetMainScreenWorkArea(glint::Rectangle *bounds) {
   assert(bounds);
   // Reset - makes rectangle 'empty'.
   bounds->Reset();
