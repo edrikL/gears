@@ -143,7 +143,7 @@ bool Win32UserActivityMonitor::IsFullScreenMode() {
   //    and its extended style should not have WS_EX_WINDOWEDGE and
   //    WS_EX_TOOLWINDOW.
   glint::Rectangle bounds;
-  System::GetMainScreenBounds(&bounds);
+  System::GetMainScreenWorkArea(&bounds);
   POINT point = { bounds.left(), bounds.top() };
   HWND wnd = ::GetAncestor(::WindowFromPoint(point), GA_ROOT);
   if (wnd != ::GetDesktopWindow()) {

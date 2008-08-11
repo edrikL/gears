@@ -30,9 +30,12 @@
 #include "gears/notifier/system.h"
 
 #include <assert.h>
+#include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 
 #include <string>
 
@@ -144,9 +147,55 @@ bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
   return true;
 }
 
-void System::GetMainScreenBounds(glint::Rectangle *bounds) {
+bool InternalGetMainScreenWorkArea(glint::Rectangle *bounds) {
   assert(bounds);
 
+  Display *display = GDK_DISPLAY();
+  if (display == NULL) {
+    return false;
+  }
+  Atom workarea_atom = XInternAtom(display, "_NET_WORKAREA", false);
+  if (workarea_atom == 0) {
+    return false;
+  }
+  Window window = GDK_ROOT_WINDOW();
+  Atom type_returned = AnyPropertyType;
+  int format_returned = 0;
+  unsigned char *value_returned = NULL;
+  unsigned long items_returned = 0;
+  unsigned long remaining_bytes = 0;
+  // TODO(levin): Handle multiple workspaces (and index
+  // appropriately into workarea to get the boundaries for the
+  // current one).
+  XGetWindowProperty(display, window, workarea_atom, 0, 4,
+                     false, XA_CARDINAL, &type_returned, &format_returned,
+                     &items_returned, &remaining_bytes, &value_returned);
+  if (!value_returned) {
+    return false;
+  }
+  if (items_returned != 4 ||
+      format_returned != XA_CARDINAL) {
+    XFree(value_returned);
+    return false;
+  }
+
+  int *work_area = reinterpret_cast<int*>(value_returned);
+  bounds->Set(work_area[0],
+              work_area[1],
+              work_area[0] + work_area[2],
+              work_area[1] + work_area[3]);
+  XFree(value_returned);
+  return true;
+}
+
+void System::GetMainScreenWorkArea(glint::Rectangle *bounds) {
+  assert(bounds);
+
+  if (InternalGetMainScreenWorkArea(bounds)) {
+    return;
+  }
+  // As a last resort, if we couldn't get the work area,
+  // we'll return the dimensions of the full screen.
   GdkRectangle rectangle;
   gdk_screen_get_monitor_geometry(gdk_screen_get_default(), 0, &rectangle);
   bounds->Set(rectangle.x,
@@ -156,7 +205,6 @@ void System::GetMainScreenBounds(glint::Rectangle *bounds) {
 }
 
 int GetDefaultCharacterWidth() {
-  // TODO(levin): check for null return values.
   GtkSettings *settings = gtk_settings_get_default();
   if (!settings)
     return kDefaultCharacterWidth;

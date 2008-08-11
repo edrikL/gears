@@ -42,8 +42,6 @@
 
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/timed_call.h"
-#include "gears/notifier/system.h"
-#include "third_party/glint/include/rectangle.h"
 
 class LinuxUserActivityMonitor : public UserActivityMonitor {
  public:
@@ -89,14 +87,14 @@ class LinuxUserActivityMonitor : public UserActivityMonitor {
 
 LinuxUserActivityMonitor *LinuxUserActivityMonitor::this_ptr_ = NULL;
 
-LinuxUserActivityMonitor::LinuxUserActivityMonitor() 
+LinuxUserActivityMonitor::LinuxUserActivityMonitor()
     : last_event_active_time_ms_(0),
       last_mouse_active_time_ms_(0),
       last_mouse_screen_(NULL),
       last_mouse_x_(0),
       last_mouse_y_(0),
       last_mouse_mask_(static_cast<GdkModifierType>(0)) {
-  assert(!this_ptr_);                            
+  assert(!this_ptr_);
   this_ptr_ = this;
   last_event_active_time_ms_ = last_mouse_active_time_ms_
                              = GetCurrentTimeMillis();
@@ -154,8 +152,8 @@ bool LinuxUserActivityMonitor::IsWindowFullScreen(Window window) {
 
   // As the last resort, check if the window size is as large as the main
   // screen.
-  glint::Rectangle bounds;
-  System::GetMainScreenBounds(&bounds);
+  GdkRectangle rectangle;
+  gdk_screen_get_monitor_geometry(gdk_screen_get_default(), 0, &rectangle);
 
   Window root_window = None;
   int x = 0, y = 0;
@@ -167,14 +165,15 @@ bool LinuxUserActivityMonitor::IsWindowFullScreen(Window window) {
                     &y,
                     &width,
                     &height,
-                     &border_width,
+                    &border_width,
                     &depth)) {
     return false;
   }
 
-  return bounds.left() == x && bounds.top() == y &&
-         bounds.size().width == static_cast<int>(width) &&
-         bounds.size().height == static_cast<int>(height);
+  return rectangle.x == x &&
+         rectangle.y == y &&
+         rectangle.width == static_cast<int>(width) &&
+         rectangle.height == static_cast<int>(height);
 }
 
 bool LinuxUserActivityMonitor::IsDesktopWindow(Window window) {
@@ -299,7 +298,7 @@ GdkFilterReturn LinuxUserActivityMonitor::FilterEvent(GdkXEvent *xevent,
 
   LinuxUserActivityMonitor *this_ptr =
       reinterpret_cast<LinuxUserActivityMonitor*>(arg);
-  
+
   XEvent *ev = reinterpret_cast<XEvent*>(xevent);
   switch (ev->xany.type) {
     case KeyPress:
@@ -354,7 +353,7 @@ void LinuxUserActivityMonitor::InternalRegisterEvents(Window window,
   }
   uint32 events = 0;
   if (to_register) {
-    events = ((attrs.all_event_masks | attrs.do_not_propagate_mask) & 
+    events = ((attrs.all_event_masks | attrs.do_not_propagate_mask) &
               (KeyPressMask | KeyReleaseMask | ButtonReleaseMask)) |
              SubstructureNotifyMask;
   } else {
@@ -492,7 +491,7 @@ bool LinuxUserActivityMonitor::IsWorkstationLocked() {
 }
 
 Window LinuxUserActivityMonitor::FindTopMostWindow(Window window) {
-  // Get all the child windows. The children are listed in current stacking 
+  // Get all the child windows. The children are listed in current stacking
   // order, from bottommost (first) to topmost (last).
   Window root_window = None;
   Window parent_window = None;
@@ -577,4 +576,3 @@ UserActivityMonitor *UserActivityMonitor::Create() {
 #endif  // defined(LINUX) && !defined(OS_MACOSX)
 
 #endif  // OFFICIAL_BUILD
-
