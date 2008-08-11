@@ -511,6 +511,7 @@
 		B5A2DC410E2FD0D400C69CE7 /* location_permissions_dialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = B5A2DC3E0E2FD0AB00C69CE7 /* location_permissions_dialog.nib */; };
 		B5A2DC420E2FD0D400C69CE7 /* shortcuts_dialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = B5A2DC3F0E2FD0AB00C69CE7 /* shortcuts_dialog.nib */; };
 		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
+		B5A945750E50C4840042D05A /* fail_blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A945730E50C4840042D05A /* fail_blob.cc */; };
 		B5A9BD1E0E06C00B00DCA259 /* managed_resource_store_module.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */; };
 		B5A9BD470E06C16400DCA259 /* geolocation_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD450E06C16400DCA259 /* geolocation_test.cc */; };
 		B5A9BD4B0E06C18900DCA259 /* location_provider_pool.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A9BD490E06C18900DCA259 /* location_provider_pool.cc */; };
@@ -1336,6 +1337,8 @@
 		B5A2DC3F0E2FD0AB00C69CE7 /* shortcuts_dialog.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = shortcuts_dialog.nib; path = ../../ui/safari/shortcuts_dialog.nib; sourceTree = SOURCE_ROOT; };
 		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
+		B5A945730E50C4840042D05A /* fail_blob.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = fail_blob.cc; path = ../../blob/fail_blob.cc; sourceTree = SOURCE_ROOT; };
+		B5A945740E50C4840042D05A /* fail_blob.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = fail_blob.h; path = ../../blob/fail_blob.h; sourceTree = SOURCE_ROOT; };
 		B5A9BD1C0E06C00B00DCA259 /* managed_resource_store_module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = managed_resource_store_module.cc; path = ../../localserver/managed_resource_store_module.cc; sourceTree = SOURCE_ROOT; };
 		B5A9BD1D0E06C00B00DCA259 /* managed_resource_store_module.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = managed_resource_store_module.h; path = ../../localserver/managed_resource_store_module.h; sourceTree = SOURCE_ROOT; };
 		B5A9BD440E06C16400DCA259 /* geolocation_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = geolocation_test.h; path = ../../geolocation/geolocation_test.h; sourceTree = SOURCE_ROOT; };
@@ -1709,6 +1712,8 @@
 				B563C4900DF5E56E00A145D1 /* blob_test.cc */,
 				79C3E93C0DB8D8E800346806 /* buffer_blob.cc */,
 				79C3E93D0DB8D8E800346806 /* buffer_blob.h */,
+				B5A945730E50C4840042D05A /* fail_blob.cc */,
+				B5A945740E50C4840042D05A /* fail_blob.h */,
 				79C3E93E0DB8D8E800346806 /* file_blob.cc */,
 				79C3E93F0DB8D8E800346806 /* file_blob.h */,
 				B563C48D0DF5E56300A145D1 /* join_blob.cc */,
@@ -3918,6 +3923,7 @@
 				B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */,
 				B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */,
 				B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */,
+				B5A945750E50C4840042D05A /* fail_blob.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
