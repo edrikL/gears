@@ -67,10 +67,32 @@ static const NSTimeInterval kTimerIntervalSecs = (NSTimeInterval)0.05;
     [self setAcceptsMouseMovedEvents:YES];
   }
 
+  // Set up observers for changes in screen resolution, work area etc.
+  // This looks for screen configuration/resolution changes.
+  [[NSNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(workAreaDidChange:)
+             name:NSApplicationDidChangeScreenParametersNotification
+           object:nil];
+
+  // This looks for dock moving around/changing size.
+  // "http://www.cocoadev.com/index.pl?DockSize" suggests using the string
+  // "com.apple.dock.prefchanged" as ID of a notification sent by the OSX Dock
+  // when its settings change. I didn't find documentation for it but it works
+  // at least on OSX 10.5.
+  [[NSDistributedNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(workAreaDidChange:)
+             name:@"com.apple.dock.prefchanged"
+           object:nil];
+
   return self;
 }
 
 - (void)dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
+
   // timer_ could be nil, but that's OK
   [timer_ invalidate];
   [timer_ release];
@@ -129,6 +151,11 @@ static const NSTimeInterval kTimerIntervalSecs = (NSTimeInterval)0.05;
 
 - (void)windowDidResignKey:(NSNotification*)notification {
   [self sendGlintMessageOfType:(glint::GL_MSG_KILLFOCUS)];
+}
+
+// Observer method (registered with NSNotificationCenter).
+- (void)workAreaDidChange:(NSNotification*)notification {
+  [self sendGlintMessageOfType:(glint::GL_MSG_WORK_AREA_CHANGED)];
 }
 
 @end
