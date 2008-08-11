@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Implementation of Platform interface and PlatformWindow for Linux
+#include "glint/linux/linux.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -35,9 +36,11 @@
 #include <string>
 #include <vector>
 
+#include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 
-#include "glint/linux/linux.h"
 #include "glint/crossplatform/core_util.h"
 #include "glint/include/bitmap.h"
 #include "glint/include/color.h"
@@ -182,57 +185,18 @@ bool draw_text_layout(PangoLayout* pango_layout,
 
 class LinuxWindow {
  public:
-  LinuxWindow(RootUI* ui)
-    : pixbuf_(NULL),
-      ui_(NULL),
-      window_(gtk_window_new(GTK_WINDOW_POPUP)),
-      width_(kDefaultWidth),
-      height_(kDefaultHeight),
-      idle_timer_id_(0) {
+  static LinuxWindow* Create(RootUI* ui) {
     ASSERT(ui != NULL);
-    if (window_ == NULL)
-      return;
-    ui_ = ui;
-    all_windows_.insert(ui_);
-    gtk_widget_set_app_paintable(window_, TRUE);
-    gtk_window_set_default_size(GTK_WINDOW(window_),
-                                width_, height_);
-    gtk_window_set_decorated(GTK_WINDOW(window_), FALSE);
-    gtk_window_set_type_hint(GTK_WINDOW(window_),
-#if GTK_CHECK_VERSION(2, 10, 0)
-                             GDK_WINDOW_TYPE_HINT_NOTIFICATION
-#else
-                             GDK_WINDOW_TYPE_HINT_DIALOG
-#endif
-                             );
-    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(window_), TRUE);
-    gtk_window_set_skip_pager_hint(GTK_WINDOW(window_), TRUE);
-    g_signal_connect(window_, "screen-changed",
-                     G_CALLBACK(ScreenChangedHandler), this);
-    g_signal_connect(window_, "expose-event", G_CALLBACK(ExposeHandler), this);
-    g_signal_connect(window_, "destroy", G_CALLBACK(DestroyHandler), this);
-    g_signal_connect(window_, "motion-notify-event",
-                     G_CALLBACK(GenericMouseHandler), this);
-    g_signal_connect(window_, "button-press-event",
-                     G_CALLBACK(GenericMouseHandler), this);
-    g_signal_connect(window_, "button-release-event",
-                     G_CALLBACK(GenericMouseHandler), this);
-    gtk_widget_add_events(window_,
-                          GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK |
-                          GDK_BUTTON_RELEASE_MASK);
 
-    idle_timer_id_ = g_timeout_add(10, SendIdleMessageHandler, this);
-    ScreenChanged();
+    scoped_ptr<LinuxWindow> linux_window(new LinuxWindow(ui));
+    if (!linux_window->Initialize()) {
+      return NULL;
+    }
+    return linux_window.release();
   }
 
   ~LinuxWindow() {
     Destroy();
-  }
-
-  bool IsGood() {
-    return window_ != NULL &&
-        all_windows_.find(ui_)!= all_windows_.end() &&
-        idle_timer_id_ != 0;
   }
 
   bool Show() {
@@ -406,7 +370,60 @@ class LinuxWindow {
 #endif
   }
 
+  RootUI* ui() {
+    return ui_;
+  }
+
  private:
+  LinuxWindow(RootUI* ui)
+    : pixbuf_(NULL),
+      ui_(ui),
+      window_(gtk_window_new(GTK_WINDOW_POPUP)),
+      width_(kDefaultWidth),
+      height_(kDefaultHeight),
+      idle_timer_id_(0) {
+    ASSERT(ui != NULL);
+  }
+
+  bool Initialize() {
+    if (!window_) {
+      return false;
+    }
+
+    gtk_widget_set_app_paintable(window_, TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(window_),
+                                width_, height_);
+    gtk_window_set_decorated(GTK_WINDOW(window_), FALSE);
+    gtk_window_set_type_hint(GTK_WINDOW(window_),
+#if GTK_CHECK_VERSION(2, 10, 0)
+                             GDK_WINDOW_TYPE_HINT_NOTIFICATION
+#else
+                             GDK_WINDOW_TYPE_HINT_DIALOG
+#endif
+                             );
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(window_), TRUE);
+    gtk_window_set_skip_pager_hint(GTK_WINDOW(window_), TRUE);
+    g_signal_connect(window_, "screen-changed",
+                     G_CALLBACK(ScreenChangedHandler), this);
+    g_signal_connect(window_, "expose-event", G_CALLBACK(ExposeHandler), this);
+    g_signal_connect(window_, "destroy", G_CALLBACK(DestroyHandler), this);
+    g_signal_connect(window_, "motion-notify-event",
+                     G_CALLBACK(GenericMouseHandler), this);
+    g_signal_connect(window_, "button-press-event",
+                     G_CALLBACK(GenericMouseHandler), this);
+    g_signal_connect(window_, "button-release-event",
+                     G_CALLBACK(GenericMouseHandler), this);
+    gtk_widget_add_events(window_,
+                          GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK |
+                          GDK_BUTTON_RELEASE_MASK);
+    idle_timer_id_ = g_timeout_add(10, SendIdleMessageHandler, this);
+    if (idle_timer_id_ == 0) {
+      return false;
+    }
+    ScreenChanged();
+    return true;
+  }
+
   static const int kDefaultWidth = 100, kDefaultHeight = 100;
   static const int kDefaultColor = 0x0080FF80;
 
@@ -452,14 +469,11 @@ class LinuxWindow {
   }
 
   void Cleanup() {
+    ui_ = NULL;
     window_ = NULL;
     if (pixbuf_) {
       g_object_unref(pixbuf_);
       pixbuf_ = NULL;
-    }
-    if (ui_) {
-      all_windows_.erase(ui_);
-      ui_ = NULL;
     }
     if (idle_timer_id_) {
       g_source_remove(idle_timer_id_);
@@ -515,7 +529,6 @@ class LinuxWindow {
   RootUI* ui_;
   GtkWidget* window_;
   gint width_, height_;
-  std::set<RootUI*> all_windows_;
   gint idle_timer_id_;
   DISALLOW_EVIL_CONSTRUCTORS(LinuxWindow);
 };
@@ -526,7 +539,22 @@ void Close(LinuxWindow* window) {
 
 class LinuxPlatform : public glint_posix::PosixPlatform {
  public:
-  LinuxPlatform() {}
+  LinuxPlatform() {
+    Display* display = GDK_DISPLAY();
+    if (display != NULL) {
+      workarea_atom_ = XInternAtom(display, "_NET_WORKAREA", false);
+    }
+    GdkWindow* window = gdk_screen_get_root_window(gdk_screen_get_default());
+    gdk_window_set_events(window, static_cast<GdkEventMask>(
+                              gdk_window_get_events(window) |
+                              GDK_PROPERTY_CHANGE_MASK));
+    gdk_window_add_filter(window, WindowEventFilter, this);
+  }
+
+  ~LinuxPlatform() {
+    GdkWindow* window = gdk_screen_get_root_window(gdk_screen_get_default());
+    gdk_window_remove_filter(window, WindowEventFilter, this);
+  }
 
   virtual bool is_compositing_supported(PlatformWindow* window) const {
     ASSERT(window);
@@ -564,11 +592,18 @@ class LinuxPlatform : public glint_posix::PosixPlatform {
                                                 bool taskbar) {
     if (!ui)
       return NULL;
-    LinuxWindow* linux_window = new LinuxWindow(ui);
-    if (linux_window->IsGood())
-      return reinterpret_cast<PlatformWindow*>(linux_window);
-    delete linux_window;
-    return NULL;
+    LinuxWindow* linux_window = LinuxWindow::Create(ui);
+    if (!linux_window) {
+      return NULL;
+    }
+    all_windows_.insert(ui);
+    return reinterpret_cast<PlatformWindow*>(linux_window);
+  }
+
+  virtual void DeleteInvisibleWindow(PlatformWindow* window) {
+    LinuxWindow* linux_window = GetLinuxWindow(window);
+    all_windows_.erase(linux_window->ui());
+    return linux_window->Destroy();
   }
 
   virtual bool UpdateInvisibleWindow(PlatformWindow* window,
@@ -637,10 +672,6 @@ class LinuxPlatform : public glint_posix::PosixPlatform {
   virtual bool ShowInteractiveWindow(PlatformWindow* window) {
     // TODO(levin): what's the difference between interactive and non-?
     return GetLinuxWindow(window)->Show();
-  }
-
-  virtual void DeleteInvisibleWindow(PlatformWindow* window) {
-    return GetLinuxWindow(window)->Destroy();
   }
 
   virtual void* GetWindowNativeHandle(PlatformWindow* window) {
@@ -903,8 +934,44 @@ class LinuxPlatform : public glint_posix::PosixPlatform {
     return pango_layout.release();
   }
 
+  void BroadcastMessage(Message& message) {
+    Message send = message;
+    for (std::set<RootUI*>::iterator it = all_windows_.begin();
+         it != all_windows_.end();
+         ++it) {
+      send.ui = *it;
+      send.platform_window = send.ui->GetPlatformWindow();
+      (*it)->HandleMessage(send);
+    }
+  }
+
+  static GdkFilterReturn WindowEventFilter(GdkXEvent* xevent,
+                                           GdkEvent*,
+                                           gpointer arg) {
+    assert(arg);
+    LinuxPlatform* this_ptr = reinterpret_cast<LinuxPlatform*>(arg);
+
+    XEvent* event = reinterpret_cast<XEvent*>(xevent);
+    switch (event->xany.type) {
+      case PropertyNotify:
+        if (event->xproperty.atom == this_ptr->workarea_atom_) {
+          Message message;
+          message.code = GL_MSG_WORK_AREA_CHANGED;
+          this_ptr->BroadcastMessage(message);
+        }
+        break;
+      default:
+        break;
+    }
+    return GDK_FILTER_CONTINUE;
+  }
+
+
   std::queue<Message> work_items_;
   LinuxResourceMap resources_;
+  std::set<RootUI*> all_windows_;
+  Atom workarea_atom_;
+
   DISALLOW_EVIL_CONSTRUCTORS(LinuxPlatform);
 };
 

@@ -295,6 +295,12 @@ glint::Size BalloonContainer::OnComputeRequiredSize(glint::Size constraint) {
   // Let children compute their size
   for (glint::Node *child = first_child(); child;
        child = child->next_sibling()) {
+    // Re-set min-max sizes on the balloons. They can change if resolution or
+    // font size changes dynamically.
+    child->set_min_width(min_balloon_width());
+    child->set_min_height(min_balloon_height());
+    child->set_max_width(max_balloon_width());
+    child->set_max_height(max_balloon_height());
     glint::Size child_size = child->ComputeRequiredSize(container_size);
   }
   return container_size;
@@ -452,12 +458,9 @@ glint::Node *Balloon::CreateTree() {
   // This only works for Win32
   std::string resource_path = "res:/";
 #endif
-
+  // Note: we set min/max sizes on this node in BalloonContainer during
+  // layout pass (see BalloonContainer::OnComputeRequiredSize)
   glint::Node *root = new glint::Node();
-  root->set_min_width(BalloonContainer::min_balloon_width());
-  root->set_min_height(BalloonContainer::min_balloon_height());
-  root->set_max_width(BalloonContainer::max_balloon_width());
-  root->set_max_height(BalloonContainer::max_balloon_height());
   root->set_alpha(glint::colors::kTransparentAlpha);
   glint::Rectangle margin(0, 0, 5, 7);
   root->set_margin(margin);
