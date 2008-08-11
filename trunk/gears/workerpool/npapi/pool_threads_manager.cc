@@ -34,6 +34,7 @@
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/event.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/url_utils.h"
@@ -89,9 +90,12 @@ struct JavaScriptWorkerInfo {
 #ifdef WIN32
         thread_handle(INVALID_HANDLE_VALUE),
 #endif
-        thread_spawned_successfully(false) {}
+        thread_spawned_successfully(false) {
+    LEAK_COUNTER_INCREMENT(JavaScriptWorkerInfo);
+  }
 
   ~JavaScriptWorkerInfo() {
+    LEAK_COUNTER_DECREMENT(JavaScriptWorkerInfo);
     while (!message_queue.empty()) {
       WorkerPoolMessage *wpm = message_queue.front();
       message_queue.pop();
@@ -186,6 +190,7 @@ PoolThreadsManager::PoolThreadsManager(
       page_security_origin_(page_security_origin),
       owner_permissions_manager_(page_security_origin, owner->EnvIsWorker()),
       browsing_context_(owner->EnvPageBrowsingContext()) {
+  LEAK_COUNTER_INCREMENT(PoolThreadsManager);
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
   owner->GetModuleEnvironment(&wi->module_environment);
@@ -201,6 +206,7 @@ PoolThreadsManager::PoolThreadsManager(
 
 
 PoolThreadsManager::~PoolThreadsManager() {
+  LEAK_COUNTER_DECREMENT(PoolThreadsManager);
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     delete worker_info_[i];
   }
