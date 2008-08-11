@@ -59,9 +59,15 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
       js_runner_(js_runner),
       browsing_context_(browsing_context),
       permissions_manager_(security_origin, is_worker) {
+  LEAK_COUNTER_INCREMENT(ModuleEnvironment);
 #if BROWSER_FF
   assert(js_context_ != NULL);
 #endif
+}
+
+
+ModuleEnvironment::~ModuleEnvironment() {
+  LEAK_COUNTER_DECREMENT(ModuleEnvironment);
 }
 
 
@@ -75,6 +81,9 @@ ModuleEnvironment *ModuleEnvironment::CreateFromDOM(JsContextPtr instance) {
   bool is_worker = false;
   SecurityOrigin security_origin;
   scoped_refptr<BrowsingContext> browsing_context;
+  // Regardlesss of BROWSER_XX, we call NewDocumentJsRunner to create a new
+  // DocumentJsRunner instance. Such an object is self-deleting, so that we do
+  // not need to, for example, put the resultant object inside a scoped_ptr.
 #if BROWSER_FF
   JsContextPtr cx;
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
