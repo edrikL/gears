@@ -134,7 +134,7 @@ bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
   return true;
 }
 
-void System::GetMainScreenBounds(glint::Rectangle *bounds) {
+void System::GetMainScreenWorkArea(glint::Rectangle *bounds) {
   assert(bounds);
   RECT work_area = {0};
   if (::SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0)) {

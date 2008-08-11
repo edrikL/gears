@@ -210,7 +210,7 @@ bool BalloonContainer::RefreshSystemMetrics() {
 
   glint::Rectangle new_work_area;
   new_work_area.Set(work_area_);
-  System::GetMainScreenBounds(&new_work_area);
+  System::GetMainScreenWorkArea(&new_work_area);
   if (!work_area_.IsEqual(new_work_area)) {
     work_area_.Set(new_work_area);
     changed = true;
@@ -287,7 +287,7 @@ glint::Point BalloonContainer::NextPosition(glint::Size balloon_size,
 
 glint::Size BalloonContainer::OnComputeRequiredSize(glint::Size constraint) {
   glint::Rectangle screen_bounds;
-  System::GetMainScreenBounds(&screen_bounds);
+  System::GetMainScreenWorkArea(&screen_bounds);
   if (screen_bounds.IsEmpty())
     return glint::Size();
 
