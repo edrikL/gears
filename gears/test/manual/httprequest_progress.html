@@ -5,6 +5,26 @@
     <script type="text/javascript" src="../../sdk/gears_init.js"></script>
     <script type="text/javascript" language="javascript">
 
+function setInnerHTML(id, html) {
+  document.getElementById(id).innerHTML = html;
+}
+
+function getReadyState(request) {
+  try {
+    return request.readyState;
+  } catch (e) {
+    return e;
+  }
+}
+
+function getStatus(request) {
+  try {
+    return request.status;
+  } catch (e) {
+    return e;
+  }
+}
+
 function onSelect(files) {
   if (files.length == 0) {
     return;
@@ -13,19 +33,19 @@ function onSelect(files) {
 
   var request = google.gears.factory.create('beta.httprequest');
   function handleUploadReadyState() {
-    document.getElementById("fileReady").innerHTML = request.readyState;
-    document.getElementById("fileStatus").innerHTML = request.status;
+    setInnerHTML('fileReady', getReadyState(request));
+    setInnerHTML('fileStatus', getStatus(request));
   }
   function handleUploadProgress(event) {
-    document.getElementById("fileProgress").innerHTML = event.loaded;
-    document.getElementById("fileTotal").innerHTML = event.total;
+    setInnerHTML('fileProgress', event.loaded);
+    setInnerHTML('fileTotal', event.total);
   }
 
 
-  document.getElementById("fileProgress").innerHTML = "<br/>";
-  document.getElementById("fileTotal").innerHTML = "<br/>";
-  document.getElementById("fileReady").innerHTML = "<br/>";
-  document.getElementById("fileStatus").innerHTML = "<br/>";
+  setInnerHTML('fileProgress', '<br/>');
+  setInnerHTML('fileTotal', '<br/>');
+  setInnerHTML('fileReady', '<br/>');
+  setInnerHTML('fileStatus', '<br/>');
 
   request.onreadystatechange = handleUploadReadyState;
   request.upload.onprogress = handleUploadProgress;
@@ -41,19 +61,19 @@ function testFileUpload() {
 function testUploadProgress() {
   var request = google.gears.factory.create('beta.httprequest');
   function handleUploadReadyState() {
-    document.getElementById("uploadReady").innerHTML = request.readyState;
-    document.getElementById("uploadStatus").innerHTML = request.status;
+    setInnerHTML('uploadReady', getReadyState(request));
+    setInnerHTML('uploadStatus', getStatus(request));
   }
   function handleUploadProgress(event) {
-    document.getElementById("uploadProgress").innerHTML = event.loaded;
-    document.getElementById("uploadTotal").innerHTML = event.total;
+    setInnerHTML('uploadProgress', event.loaded);
+    setInnerHTML('uploadTotal', event.total);
   }
 
 
-  document.getElementById("uploadProgress").innerHTML = "<br/>";
-  document.getElementById("uploadTotal").innerHTML = "<br/>";
-  document.getElementById("uploadReady").innerHTML = "<br/>";
-  document.getElementById("uploadStatus").innerHTML = "<br/>";
+  setInnerHTML('uploadProgress', '<br/>');
+  setInnerHTML('uploadTotal', '<br/>');
+  setInnerHTML('uploadReady', '<br/>');
+  setInnerHTML('uploadStatus', '<br/>');
 
   var data = 'fred';
   do {
@@ -69,19 +89,19 @@ function testUploadProgress() {
 function testDownloadProgress() {
   var request = google.gears.factory.create('beta.httprequest');
   function handleDownloadReadyState() {
-    document.getElementById("downloadReady").innerHTML = request.readyState;
-    document.getElementById("downloadStatus").innerHTML = request.status;
+    setInnerHTML('downloadReady', getReadyState(request));
+    setInnerHTML('downloadStatus', getStatus(request));
   }
   function handleDownloadProgress(event) {
-    document.getElementById("downloadProgress").innerHTML = event.loaded;
-    document.getElementById("downloadTotal").innerHTML = event.total;
+    setInnerHTML('downloadProgress', event.loaded);
+    setInnerHTML('downloadTotal', event.total);
   }
 
 
-  document.getElementById("downloadProgress").innerHTML = "<br/>";
-  document.getElementById("downloadTotal").innerHTML = "<br/>";
-  document.getElementById("downloadReady").innerHTML = "<br/>";
-  document.getElementById("downloadStatus").innerHTML = "<br/>";
+  setInnerHTML('downloadProgress', '<br/>');
+  setInnerHTML('downloadTotal', '<br/>');
+  setInnerHTML('downloadReady', '<br/>');
+  setInnerHTML('downloadStatus', '<br/>');
 
 
   request.onreadystatechange = handleDownloadReadyState;
