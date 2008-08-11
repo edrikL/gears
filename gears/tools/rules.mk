@@ -842,88 +842,6 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJ
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(SKIA_LIB) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
-else
-# Create library for S60
-ifeq ($(ARCH),i386)
-$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS)
-	@echo Creating Gears library for emulator...
-	$(MKDLL) $(DLLFLAGS) $(STAGE1_DLLFLAGS) -g $(LIBS) -implib "$(OUTDIR)\$(SHORT_NAME).lib" -o "$(OUTDIR)\$(SHORT_NAME).dll" -l $($(BROWSER)_OUTDIR) -search $(subst $(NPAPI_OUTDIR)/,,$(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS))
-
-	@rm "$(OUTDIR)\$(SHORT_NAME).dll"
-	@$(MKDLL) -S -show only,names,unmangled,verbose -o "$(OUTDIR)\$(SHORT_NAME).inf" "$(OUTDIR)\$(SHORT_NAME).lib"
-
-	@perl -S "makedef.pl"  -absent __E32Dll -Inffile "$(OUTDIR)\$(SHORT_NAME).inf" -1 ?ImplementationGroupProxy@@YAPBUTImplementationProxy@@AAH@Z "$(OUTDIR)\$(SHORT_NAME).def"
-	@rm "$(OUTDIR)\$(SHORT_NAME).inf"
-	@rm "$(OUTDIR)\$(SHORT_NAME).lib"
-
-	@$(MKDLL) $(DLLFLAGS) $(STAGE2_DLLFLAGS) -g $(LIBS) -f "$(OUTDIR)\$(SHORT_NAME).def" -o $(NPAPI_MODULE_DLL) -l $($(BROWSER)_OUTDIR) -search $(subst $(NPAPI_OUTDIR)/,,$(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS))
-	@rm "$(OUTDIR)\$(SHORT_NAME).def"
-else
-$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS)
-	@echo Creating Gears library for device...
-	@echo $(COMMON_OBJS) $(NPAPI_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) > $(OUTDIR)\$(SHORT_NAME).via
-	@$(MKDLL) $(DLLFLAGS) $(STAGE1_DLLFLAGS) \
-	-o $(OUTDIR)/$(SHORT_NAME).in \
-	--via $(OUTDIR)/$(SHORT_NAME).via
-	@rm $(OUTDIR)/$(SHORT_NAME).via
-
-	@perl -S elf2inf.pl -o $(OUTDIR)\$(SYMBIAN_TMP_FILE).inf \
-	$(OUTDIR)/$(SHORT_NAME).in
-
-	@perl -S makedef.pl  -absent _E32Dll -Inf $(OUTDIR)\$(SYMBIAN_TMP_FILE).inf \
-	-1 _Z24ImplementationGroupProxyRi \
-	$(OUTDIR)/$(SYMBIAN_TMP_FILE).def
-
-	@perl -S efreeze.pl  "$(OUTDIR)\$(SHORT_NAME).def" "$(OUTDIR)\$(SYMBIAN_TMP_FILE).def"
-
-	@perl -S prepdef.pl "$(OUTDIR)\$(SHORT_NAME).def" "$(OUTDIR)\$(SHORT_NAME).prep.def"
-
-	@def2dll.bat --path=$(OUTDIR) \
-	--bldpath=$(OUTDIR) \
-	--import=$(SYMBIAN_TMP_FILE) \
-	--deffile="$(OUTDIR)\$(SHORT_NAME).prep.def" \
-	--linkAs=$(SYMBIAN_TMP_FILE)[0xA0008EE4].dll \
-	--inter
-
-	@elf2e32 --definput="$(OUTDIR)\$(SHORT_NAME).prep.def" --dso="$(OUTDIR)\$(SYMBIAN_TMP_FILE).dso" --linkas=$(SYMBIAN_TMP_FILE)[0xA0008EE4].dll
-	@rm $(OUTDIR)/$(SHORT_NAME).prep.def
-	@rm $(OUTDIR)/$(SYMBIAN_TMP_FILE).dso
-
-	@perl -S elf2inf.pl -o $(OUTDIR)\$(SYMBIAN_TMP_FILE).inf \
-	$(OUTDIR)/$(SHORT_NAME).in
-
-	@perl -S makedef.pl  -absent _E32Dll -Inf $(OUTDIR)\$(SYMBIAN_TMP_FILE).inf \
-	-Frzfile "$(OUTDIR)\$(SHORT_NAME).def" \
-	-1 _Z24ImplementationGroupProxyRi \
-	$(OUTDIR)/$(SYMBIAN_TMP_FILE).def
-	@rm $(OUTDIR)/$(SYMBIAN_TMP_FILE).inf
-	@rm $(OUTDIR)/$(SYMBIAN_TMP_FILE).def
-
-	@def2dll.bat  -absent _E32Dll \
-	--path=$(OUTDIR) \
-	--bldpath=$(OUTDIR) \
-	--export=$(SYMBIAN_TMP_FILE) \
-	--deffile=$(OUTDIR)/$(SHORT_NAME).def \
-	--linkAs=$(SYMBIAN_TMP_FILE)[0xA0008EE4].dll \
-	--inter
-
-	@$(MKDLL) $(DLLFLAGS) $(STAGE2_DLLFLAGS) \
-	$(OUTDIR)\$(SYMBIAN_TMP_FILE).exp \
-	-o $(OUTDIR)\$(SHORT_NAME)_tmp.dll \
-	--list $(OUTDIR)\$(SHORT_NAME).dll.map \
-	$(OUTDIR)/$(SHORT_NAME).in $(LIBS)
-	@rm $(OUTDIR)/$(SHORT_NAME).in
-	@rm $(OUTDIR)/$(SYMBIAN_TMP_FILE).exp
-
-	@elftran $(ELFTRAN_FLAGS) $(OUTDIR)\$(SHORT_NAME)_tmp.dll $(NPAPI_MODULE_DLL)
-
-	@cp $(OUTDIR)\$(SHORT_NAME)_tmp.dll $(NPAPI_OUTDIR)\$(SHORT_NAME).sym
-	@rm $(OUTDIR)/$(SHORT_NAME)_tmp.dll
-
-	@rm $(OUTDIR)/$(SHORT_NAME).def
-	@rm $(OUTDIR)/$(SHORT_NAME).dll.map
-	@rm $(OUTDIR)/$(SYMBIAN_TMP_FILE).lib
-endif
 endif
 endif
 
@@ -1179,19 +1097,6 @@ $(WIN32_INSTALLER_MSI): $(WIN32_INSTALLER_WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_IN
 $(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
 	cabwiz.exe $(INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $@
-
-$(SYMBIAN_SIS_FILE) : $(NPAPI_MODULE_DLL) $(SYMBIAN_RSC_FILE) $(SYMBIAN_PKG_FILE)
-	@makesis $(SYMBIAN_PKG_FILE)
-
-$(SYMBIAN_INSTALLER_SISX) : $(SYMBIAN_SIS_FILE) $(SYMBIAN_CER_FILE) $(SYMBIAN_KEY_FILE)
-	@signsis $(SYMBIAN_SIS_FILE) $@ $(SYMBIAN_CER_FILE) $(SYMBIAN_KEY_FILE)
-
-$(SYMBIAN_RSC_FILE) : $(SYMBIAN_RSS_FILE)
-	@perl -S epocrc.pl $(RC_FLAGS) -u $< -o$@
-
-$(SYMBIAN_EMULATOR_INSTALLER) : $(NPAPI_MODULE_DLL) $(SYMBIAN_RSC_FILE)
-	@cp $< $@
-	@cp $(SYMBIAN_RSC_FILE) "$(EPOCROOT)\release\winscw\udeb\z\resource\plugins"
 
 # We generate dependency information for each source file as it is compiled.
 # Here, we include the generated dependency information, which silently fails

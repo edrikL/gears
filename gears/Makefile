@@ -2248,15 +2248,6 @@ endif
 
 #-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
-# The following makefile filters out the files that have not been ported
-# to Symbian yet
-ifeq ($(OS),symbian)
-include tools/temporary_removefiles_symbian.mk
-endif
-
-#-----------------------------------------------------------------------------
-
 include tools/rules.mk
 
 #-----------------------------------------------------------------------------
