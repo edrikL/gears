@@ -49,6 +49,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_JsWrapperDataForFunction,
   LEAK_COUNTER_TYPE_JsWrapperDataForInstance,
   LEAK_COUNTER_TYPE_JsWrapperDataForProto,
+  LEAK_COUNTER_TYPE_ModuleEnvironment,
   LEAK_COUNTER_TYPE_ModuleImplBaseClass,
   LEAK_COUNTER_TYPE_ModuleWrapper,
   LEAK_COUNTER_TYPE_PoolThreadsManager,

@@ -74,6 +74,12 @@ class JsRunnerBase : public JsRunnerInterface {
  public:
   JsRunnerBase() : alloc_js_wrapper_(NULL), js_engine_context_(NULL) {}
 
+  virtual ~JsRunnerBase() {
+    for (int i = 0; i < MAX_JSEVENTS; i++) {
+      assert(0 == event_handlers_[i].size());
+    }
+  }
+
   JsContextPtr GetContext() {
     return js_engine_context_;
   }
@@ -217,13 +223,11 @@ class JsRunnerBase : public JsRunnerInterface {
     return true;
   }
 
-#ifdef DEBUG
   void ForceGC() {
     if (js_engine_context_) {
       JS_GC(js_engine_context_);
     }
   }
-#endif
 
   // This function and others (AddEventHandler, RemoveEventHandler etc) do not
   // conatin any browser-specific code. They should be implemented in a new
@@ -655,8 +659,10 @@ class DocumentJsRunner : public JsRunnerBase {
 
   ~DocumentJsRunner() {
     LEAK_COUNTER_DECREMENT(DocumentJsRunner);
-    if (alloc_js_wrapper_)
+    if (alloc_js_wrapper_) {
+      alloc_js_wrapper_->CleanupRoots();
       delete alloc_js_wrapper_;
+    }
   }
 
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
@@ -678,8 +684,7 @@ class DocumentJsRunner : public JsRunnerBase {
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv,
                                  JsRootedToken **optional_alloc_retval);
-  bool AddEventHandler(JsEventType event_type,
-                       JsEventHandlerInterface *handler);
+  bool ListenForUnloadEvent();
 
  private:
   static void HandleEventUnload(void *user_param);  // Callback for 'onunload'
@@ -770,32 +775,36 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   return true;
 }
 
-bool DocumentJsRunner::AddEventHandler(JsEventType event_type,
-                                       JsEventHandlerInterface *handler) {
-  if (event_type == JSEVENT_UNLOAD) {
-    // Monitor 'onunload' to send the unload event when the page goes away.
-    if (unload_monitor_ == NULL) {
-      unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                                 HandleEventUnload,
-                                                 this));
-      nsCOMPtr<nsIDOMWindowInternal> dom_window_internal;
-      DOMUtils::GetDOMWindowInternal(js_engine_context_,
-                                     getter_AddRefs(dom_window_internal));
-      nsCOMPtr<nsIDOMEventTarget> dom_event_target;
-      nsIDOMEventTarget **target = getter_AddRefs(dom_event_target);
-      if (NS_SUCCEEDED(CallQueryInterface(dom_window_internal, target))) {
-        unload_monitor_->Start(dom_event_target);
-      } else {
-        return false;
-      }
-    }
+bool DocumentJsRunner::ListenForUnloadEvent() {
+  unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                             HandleEventUnload,
+                                             this));
+  nsCOMPtr<nsIDOMWindowInternal> dom_window_internal;
+  DOMUtils::GetDOMWindowInternal(js_engine_context_,
+                                 getter_AddRefs(dom_window_internal));
+  nsCOMPtr<nsIDOMEventTarget> dom_event_target;
+  nsIDOMEventTarget **target = getter_AddRefs(dom_event_target);
+  if (NS_SUCCEEDED(CallQueryInterface(dom_window_internal, target))) {
+    unload_monitor_->Start(dom_event_target);
+    return true;
   }
-
-  return JsRunnerBase::AddEventHandler(event_type, handler);
+  return false;
 }
 
 void DocumentJsRunner::HandleEventUnload(void *user_param) {
-  static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
+  DocumentJsRunner *document_js_runner =
+      static_cast<DocumentJsRunner*>(user_param);
+  document_js_runner->SendEvent(JSEVENT_UNLOAD);
+  // We collect garbage to make sure that all Gears modules are destroyed,
+  // which should clear any of those modules' outstanding references to the
+  // document_js_runner, so we are then safe to delete the document_js_runner.
+  // TODO(nigeltao): Forcing a GC might be an expensive operation, though.
+  // It might be possible to move a JsRunnerInterface to be a ref-counted
+  // object (where the DJR would have a reference to itself, and the
+  // ModuleEnvironment would have another reference), and then we wouldn't
+  // need to ForceGC.
+  document_js_runner->ForceGC();
+  delete document_js_runner;
 }
 
 bool DocumentJsRunner::InvokeCallbackSpecialized(
@@ -879,7 +888,12 @@ JsRunnerInterface* NewJsRunner(JSRuntime *js_runtime) {
 }
 
 JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
-  return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base, context));
+  scoped_ptr<DocumentJsRunner> document_js_runner(
+      new DocumentJsRunner(base, context));
+  if (!document_js_runner->ListenForUnloadEvent()) {
+    return NULL;
+  }
+  return static_cast<JsRunnerInterface*>(document_js_runner.release());
 }
 
 // Local helper function.

@@ -48,6 +48,7 @@ static const char *leak_counter_names[] = {
   "JsWrapperDataForFunction",
   "JsWrapperDataForInstance",
   "JsWrapperDataForProto",
+  "ModuleEnvironment",
   "ModuleImplBaseClass",
   "ModuleWrapper",
   "PoolThreadsManager",

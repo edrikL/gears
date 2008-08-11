@@ -73,6 +73,9 @@ static void UnregisterDocumentJsRunner(NPP instance) {
   if (!g_document_js_runners)
     return;
 
+  // TODO(nigeltao): Are we leaking the DocumentJsRunner (since the map's
+  // value type is just a raw pointer, not a linked_ptr)? If so, this would
+  // be a good time to delete it.
   g_document_js_runners->erase(instance);
   if (g_document_js_runners->empty()) {
     delete g_document_js_runners;

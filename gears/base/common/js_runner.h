@@ -163,20 +163,47 @@ class JsRunnerInterface {
 };
 
 // Wraps the calls for adding and removing event handlers.  This is designed to
-// be used with scoped_ptr<>.
-class JsEventMonitor {
+// be used with scoped_ptr<>, and also takes care of unregistering itself from
+// the JsRunnerInterface, on receiving the JSEVENT_UNLOAD event.
+class JsEventMonitor : public JsEventHandlerInterface {
  public:
   JsEventMonitor(JsRunnerInterface *js_runner,
                  JsEventType event_type,
                  JsEventHandlerInterface *handler)
       : js_runner_(js_runner), event_type_(event_type), handler_(handler) {
+    assert(js_runner_);
+    assert(handler_);
     LEAK_COUNTER_INCREMENT(JsEventMonitor);
-    js_runner_->AddEventHandler(event_type_, handler_);
+    js_runner_->AddEventHandler(event_type_, this);
+    if (event_type_ != JSEVENT_UNLOAD) {
+      js_runner_->AddEventHandler(JSEVENT_UNLOAD, this);
+    }
   }
 
   ~JsEventMonitor() {
     LEAK_COUNTER_DECREMENT(JsEventMonitor);
-    js_runner_->RemoveEventHandler(event_type_, handler_);
+    if (js_runner_) {
+      js_runner_->RemoveEventHandler(event_type_, this);
+      if (event_type_ != JSEVENT_UNLOAD) {
+        js_runner_->RemoveEventHandler(JSEVENT_UNLOAD, this);
+      }
+    }
+  }
+
+  virtual void HandleEvent(JsEventType event) {
+    if (js_runner_) {
+      JsEventHandlerInterface *handler = handler_;
+      if (event == JSEVENT_UNLOAD) {
+        js_runner_->RemoveEventHandler(event_type_, this);
+        if (event_type_ != JSEVENT_UNLOAD) {
+          js_runner_->RemoveEventHandler(JSEVENT_UNLOAD, this);
+        }
+        js_runner_ = NULL;
+        handler_ = NULL;
+      }
+      // Note that this call may delete this JsEventMonitor.
+      handler->HandleEvent(event);
+    }
   }
 
  private:

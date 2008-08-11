@@ -838,6 +838,9 @@ class DocumentJsRunner : public JsRunnerBase {
   static void HandleEventUnload(void *user_param) {
     // Callback for 'onunload'
     static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
+    // TODO(nigeltao): Are we leaking the DocumentJsRunner? This might be a
+    // good time to call
+    // delete static_cast<DocumentJsRunner*>(user_param);
   }
 
 #ifdef WINCE

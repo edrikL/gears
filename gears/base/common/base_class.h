@@ -69,9 +69,6 @@ struct ModuleEnvironment : public RefCounted {
   static ModuleEnvironment *CreateFromDOM(JsContextPtr instance);
 #endif
 
-  // Note that, if is_worker is false,  ModuleEnvironment will take ownership
-  // of the JsRunnerInterface* passed to it, and will be responsible for
-  // deleting it.
   ModuleEnvironment(SecurityOrigin security_origin,
 #if BROWSER_IE
                     IUnknown *iunknown_site,
@@ -104,26 +101,7 @@ struct ModuleEnvironment : public RefCounted {
  private:
   // This struct is ref-counted and hence has a private destructor (which
   // should only be called on the final Unref).
-  virtual ~ModuleEnvironment() {
-    // TODO(nigeltao): Yes, this is an intentional memory leak of js_runner_.
-    // As of just before CL 7536880, we were accidentally leaking
-    // DocumentJsRunner instances but not JsRunner instances (i.e. js_runner_
-    // instances that represent the JS engine on the main thread, but not those
-    // on the worker threads). That ChangeList did not modify actual behavior,
-    // but it did make it explicit that we have a memory leak that we have to
-    // fix.
-    // Unfortunately, fixing the leak isn't as easy as just enabling the
-    // delete js_runner_ call below, since at least on some platforms,
-    // doing so will crash the browser. It is up to future ChangeLists to
-    // remove the BROWSER_XXs from the #if below, once the leak is plugged
-    // properly, for each XX.
-    if (!is_worker_) {
-#if BROWSER_FF || BROWSER_IE || BROWSER_NPAPI
-#else
-      delete js_runner_;
-#endif
-    }
-  }
+  virtual ~ModuleEnvironment();
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleEnvironment);
 };
