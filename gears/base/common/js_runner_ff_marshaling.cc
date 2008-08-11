@@ -97,7 +97,7 @@ static const int kArgvInstanceIndex = -1;
 //
 // Destroying the JsRootedToken for a PROTO object will call FinalizeNative on
 // that PROTO, where we can delete the JsWrapperDataForProto. Spidermonkey does
-// not provide a finalizer for FUNCTIONS, though, and instead we delete
+// not provide a finalizer for FUNCTIONs, though, and instead we delete
 // JsWrapperDataForFunction instances in the JsContextWrapper destructor.
 //
 // One last thing that we have to manage is the heap-allocated JSClass'es.
@@ -106,8 +106,8 @@ static const int kArgvInstanceIndex = -1;
 // JSClass has to live for longer than its PROTOs and INSTANCEs, and hence,
 // for example, the PROTO does not have a scoped_ptr<JSClass>, since otherwise
 // the JSClass might be destroyed before all its INSTANCEs are. We choose to
-// hold the JSClass objects in the js_classes_ set, and clean them up during
-// JsContextWrapper's destructor.
+// hold the JSClass objects in a ref-counted SharedJsClasses object, which will
+// delete the JSClass'es when there are no longer any references to them.
 
 enum JsWrapperDataType {
   PROTO_JSOBJECT,
@@ -128,10 +128,11 @@ struct JsWrapperData {
 };
 
 struct JsWrapperDataForProto : public JsWrapperData {
-  JsContextWrapper           *js_context_wrapper;
-  JSClass                    *js_class;
-  scoped_ptr<JsRootedToken>  js_rooted_token;
-  scoped_ptr<std::string>    alloc_name;
+  JsContextWrapper                *js_context_wrapper;
+  JSClass                         *js_class;
+  scoped_ptr<JsRootedToken>       js_rooted_token;
+  scoped_ptr<std::string>         alloc_name;
+  scoped_refptr<SharedJsClasses>  shared_js_classes_;
 
   JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {
     LEAK_COUNTER_INCREMENT(JsWrapperDataForProto);
@@ -142,8 +143,9 @@ struct JsWrapperDataForProto : public JsWrapperData {
 };
 
 struct JsWrapperDataForInstance : public JsWrapperData {
-  JsContextWrapper    *js_context_wrapper;
-  ModuleImplBaseClass *module;
+  JsContextWrapper                *js_context_wrapper;
+  ModuleImplBaseClass             *module;
+  scoped_refptr<SharedJsClasses>  shared_js_classes_;
 
   JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {
     LEAK_COUNTER_INCREMENT(JsWrapperDataForInstance);
@@ -190,8 +192,34 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
 }
 
 
+SharedJsClasses::SharedJsClasses() {
+  LEAK_COUNTER_INCREMENT(SharedJsClasses);
+}
+
+
+SharedJsClasses::~SharedJsClasses() {
+  LEAK_COUNTER_DECREMENT(SharedJsClasses);
+  std::set<JSClass*>::iterator c;
+  for (c = js_classes_.begin(); c != js_classes_.end(); ++c) {
+    delete *c;
+  }
+}
+
+
+bool SharedJsClasses::Contains(JSClass *js_class) {
+  return js_classes_.find(js_class) != js_classes_.end();
+}
+
+
+void SharedJsClasses::Insert(JSClass *js_class) {
+  js_classes_.insert(js_class);
+}
+
+
 JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
-    : cx_(cx), global_obj_(global_obj), cleanup_roots_has_been_called_(false) {
+    : cx_(cx), global_obj_(global_obj),
+      shared_js_classes_(new SharedJsClasses),
+      cleanup_roots_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(JsContextWrapper);
 }
 
@@ -199,11 +227,6 @@ JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
 JsContextWrapper::~JsContextWrapper() {
   LEAK_COUNTER_DECREMENT(JsContextWrapper);
   assert(cleanup_roots_has_been_called_);
-
-  std::set<JSClass*>::iterator c;
-  for (c = js_classes_.begin(); c != js_classes_.end(); ++c) {
-    delete *c;
-  }
 
   std::vector<JsWrapperDataForFunction *>::iterator f;
   for (f = function_wrappers_.begin(); f != function_wrappers_.end(); ++f) {
@@ -262,7 +285,7 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
     // Save values, and transfer ownership.
     name_to_proto_map_[module_name] = proto;
     proto_wrappers_.push_back(proto_data.get());
-    js_classes_.insert(alloc_js_class.release());
+    shared_js_classes_->Insert(alloc_js_class.release());
     JS_SetPrivate(cx_, proto, proto_data.release());
   }
 
@@ -275,6 +298,7 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
       new JsWrapperDataForInstance);
   instance_data->js_context_wrapper = this;
   instance_data->module = module;
+  instance_data->shared_js_classes_.reset(shared_js_classes_.get());
   JS_SetPrivate(cx_, instance_obj, instance_data.release());
 
   *token_out = OBJECT_TO_JSVAL(instance_obj);
@@ -328,6 +352,7 @@ JSObject *JsContextWrapper::InitClass(const char *class_name,
   proto_data->alloc_name.swap(class_name_copy); // take ownership
   proto_data->js_rooted_token.reset(
       new JsRootedToken(cx_, OBJECT_TO_JSVAL(result)));
+  proto_data->shared_js_classes_.reset(shared_js_classes_.get());
 
   return result;
 }
@@ -468,7 +493,7 @@ ModuleImplBaseClass *JsContextWrapper::GetModuleFromJsToken(
   // that against those JSClasses we have previously seen (in this
   // JsContextWrapper) for Dispatcher-based modules.
   JSClass *js_class = JS_GET_CLASS(cx_, obj);
-  if (js_classes_.find(js_class) == js_classes_.end()) {
+  if (!shared_js_classes_->Contains(js_class)) {
     return NULL;
   }
 

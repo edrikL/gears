@@ -53,6 +53,7 @@ static const char *leak_counter_names[] = {
   "PoolThreadsManager",
   "ProgressInputStream",
   "SafeHttpRequest",
+  "SharedJsClasses",
   NULL
 };
 

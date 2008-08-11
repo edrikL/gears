@@ -35,12 +35,51 @@
 
 #include <gecko_internal/jsapi.h>
 #include "gears/base/common/dispatcher.h"
-#include "gears/base/common/leak_counter.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 typedef std::map<const std::string, JSObject*> NameToProtoMap;
 struct JsWrapperDataForProto;
 struct JsWrapperDataForFunction;
+
+
+// In Spidermonkey, each JSObject has a JSClass, and Gears allocates its own
+// JSClass objects, since we don't use the thread-unsafe XPConnect. Thus, we
+// need something to be responsible for deleting those JSClass objects, but
+// we can't delete them until all three criteria below are met:
+// (1) there are no more instances of that class,
+// (2) the prototype for that class is deleted, and
+// (3) there is no possibility of creating further instances of that class.
+//
+// Accordingly, this SharedJsClasses, declared below, is a ref-counted object,
+// and references are held by (1) each instance (via JsWrapperDataForInstance,
+// defined in the .cc file), (2) each prototype (via JsWrapperDataForProto,
+// similarly), and (3) the JsContextWrapper.
+//
+// This is not a global object, but a per-JSContext object. For example, for
+// a page with a main thread and three worker threads, there will be four
+// SharedJsClasses objects. Or, if there are two Gears-enabled web pages, but
+// neither of them have spawned any worker threads, then there will be two
+// SharedJsClasses objects.
+class SharedJsClasses : public RefCounted {
+ public:
+  SharedJsClasses();
+
+  bool Contains(JSClass *js_class);
+
+  // Takes ownership of the given JSClass*.
+  // Insert has the same semantics as a std::set, in that Insert'ing something
+  // twice is idempotent.
+  void Insert(JSClass *js_class);
+
+ protected:
+  virtual ~SharedJsClasses();
+
+ private:
+  std::set<JSClass*> js_classes_;
+  DISALLOW_EVIL_CONSTRUCTORS(SharedJsClasses);
+};
+
 
 // TODO(nigeltao): pick a better name than JsContextWrapper.
 class JsContextWrapper {
@@ -80,14 +119,9 @@ class JsContextWrapper {
   JSContext *cx_;
   JSObject  *global_obj_;
 
-  friend void FinalizeNative(JSContext *cx, JSObject *obj);
-
   // Map from module name to prototype. We use this so that we create only one
   // prototype for each module type.
   NameToProtoMap name_to_proto_map_;
-
-  // The set of JSClass objects associated with each prototype.
-  std::set<JSClass*> js_classes_;
 
   // The elements in these two vectors are "owned", meaning that the
   // JsContextWrapper is responsible for resetting their js_rooted_token
@@ -95,7 +129,10 @@ class JsContextWrapper {
   std::vector<JsWrapperDataForProto *> proto_wrappers_;
   std::vector<JsWrapperDataForFunction *> function_wrappers_;
 
+  scoped_refptr<SharedJsClasses> shared_js_classes_;
   bool cleanup_roots_has_been_called_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsContextWrapper);
 };
 
 
