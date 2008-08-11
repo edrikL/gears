@@ -91,9 +91,12 @@
     return 0;
   }
   int64 numBytesRead = blob_->Read(buffer, offset_, len);
-  assert(numBytesRead >= 0);
   if (numBytesRead < 0) {
-    return 0;
+    // It doesn't appear to be documented anywhere, but returning -1
+    // can be used to indicate an error.  Testable by uploading a large
+    // file using http://localhost:8001/manual/httprequest_progress.html
+    // and touching the file during the upload.
+    return -1;
   }
   // Confirm that BlobInterface::Read returned <= bytes requested
   assert(numBytesRead <= static_cast<int64>(len));
