@@ -39,6 +39,7 @@
 enum LeakCounterType {
   LEAK_COUNTER_TYPE_DocumentJsRunner,
   LEAK_COUNTER_TYPE_FFHttpRequest,
+  LEAK_COUNTER_TYPE_JavaScriptWorkerInfo,
   LEAK_COUNTER_TYPE_JsArray,
   LEAK_COUNTER_TYPE_JsCallContext,
   LEAK_COUNTER_TYPE_JsContextWrapper,
@@ -50,6 +51,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_JsWrapperDataForProto,
   LEAK_COUNTER_TYPE_ModuleImplBaseClass,
   LEAK_COUNTER_TYPE_ModuleWrapper,
+  LEAK_COUNTER_TYPE_PoolThreadsManager,
   LEAK_COUNTER_TYPE_ProgressInputStream,
   LEAK_COUNTER_TYPE_SafeHttpRequest,
   MAX_LEAK_COUNTER_TYPE

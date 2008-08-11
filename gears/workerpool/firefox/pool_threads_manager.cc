@@ -90,6 +90,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/exception_handler.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/thread_locals.h"
@@ -141,9 +142,12 @@ struct JavaScriptWorkerInfo {
         is_invoking_error_handler(false),
         thread_init_ok(false), script_ok(false),
         js_runtime_(NULL), thread_created(false), is_factory_suspended(false),
-        http_request(NULL) {}
+        http_request(NULL) {
+    LEAK_COUNTER_INCREMENT(JavaScriptWorkerInfo);
+  }
 
   ~JavaScriptWorkerInfo() {
+    LEAK_COUNTER_DECREMENT(JavaScriptWorkerInfo);
     while (!message_queue.empty()) {
       WorkerPoolMessage *wpm = message_queue.front();
       message_queue.pop();
@@ -345,6 +349,7 @@ PoolThreadsManager::PoolThreadsManager(
       page_security_origin_(page_security_origin),
       owner_permissions_manager_(page_security_origin, owner->EnvIsWorker()),
       browsing_context_(owner->EnvPageBrowsingContext()) {
+  LEAK_COUNTER_INCREMENT(PoolThreadsManager);
   // Make sure we have a ThreadId for this thread.
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
@@ -363,6 +368,7 @@ PoolThreadsManager::PoolThreadsManager(
 
 
 PoolThreadsManager::~PoolThreadsManager() {
+  LEAK_COUNTER_DECREMENT(PoolThreadsManager);
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     delete worker_info_[i];
   }
