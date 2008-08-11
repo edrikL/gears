@@ -54,6 +54,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_PoolThreadsManager,
   LEAK_COUNTER_TYPE_ProgressInputStream,
   LEAK_COUNTER_TYPE_SafeHttpRequest,
+  LEAK_COUNTER_TYPE_SharedJsClasses,
   MAX_LEAK_COUNTER_TYPE
 };
 
