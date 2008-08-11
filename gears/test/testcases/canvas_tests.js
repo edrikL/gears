@@ -211,14 +211,12 @@ function runLoadAndExportTest(blobs) {
     // Now compare the exported versions with golden files.
     // The golden files have been manually checked for format and size.
     assertBlobProbablyEqual(pngBlob,
-        blobs['sample-' + format + '-exported-as-png.png'],
-        "The PNG blob doesn't match the expected blob.");
+        blobs['sample-' + format + '-exported-as-png.png'], 'PNG blob');
     assertBlobProbablyEqual(jpegBlob,
-        blobs['sample-' + format + '-exported-as-jpeg.jpeg'],
-        "The JPEG blob doesn't match the expected blob.");
+        blobs['sample-' + format + '-exported-as-jpeg.jpeg'], 'JPEG blob');
     assertBlobProbablyEqual(jpegLowBlob,
         blobs['sample-' + format + '-exported-as-jpeg-with-quality-0.02.jpeg'],
-        "The JPEG low-quality blob doesn't match the expected blob.");
+        'JPEG low-quality blob');
   }
   completeAsync();
 }

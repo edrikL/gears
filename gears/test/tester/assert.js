@@ -230,11 +230,19 @@ function assertObjectEqual(expected, actual, optDescription) {
  * @param actual The actual blob.
  * @param optDescription An optional description of what went wrong.
  */
-function assertBlobProbablyEqual(expectedBlob, actualBlob, optDescription) {
-  if (isDebug) {
-    assert(actualBlob.hasSameContentsAs(expectedBlob), optDescription);
+function assertBlobProbablyEqual(expected, actual, optDescription) {
+  if (optDescription) {
+    optDescription += ' ';
   } else {
-    assertEqual(expectedBlob.length, actualBlob.length, optDescription);
+    optDescription = '';
+  }
+  assert(expected.length == actual.length, optDescription +
+      'Mismatched blob: expected: %s bytes, actual: %s bytes'.
+          subs(expected.length, actual.length));
+
+  if (isDebug) {
+    assert(actual.hasSameContentsAs(expected), optDescription +
+        'Mismatched blob: same size, different contents');
   }
 }
 
