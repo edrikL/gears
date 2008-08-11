@@ -41,7 +41,18 @@ int64 BlobInterface::ReadDirect(Reader *reader, int64 offset,
   int64 total_bytes_read(0);
   while (max_bytes > 0) {
     int64 bytes_read1 = Read(buffer.Data(0), offset, buffer_size);
-    if (bytes_read1 <= 0) break;  // No more data available, or error.
+    // Deal with error while reading.
+    if (bytes_read1 < 0) {
+      // Return the number of bytes successfully read before the error.
+      // Return -1 if we haven't read any bytes.
+      if (!total_bytes_read) {
+        total_bytes_read = -1;
+      }
+      break;
+    }
+    if (bytes_read1 == 0) {
+      break;  // No more data available.
+    }
     int64 bytes_read = reader->ReadFromBuffer(buffer.Data(0), bytes_read1);
     assert(bytes_read >= 0);
     if (bytes_read == 0) break;
