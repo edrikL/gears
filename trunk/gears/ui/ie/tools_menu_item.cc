@@ -42,7 +42,9 @@ STDMETHODIMP ToolsMenuItem::QueryContextMenu(HMENU hmenu,
   command_first_ = id_cmd_first;
 
   InsertMenu(hmenu, index_menu, MF_BYPOSITION, command_first_,
-    TEXT(PRODUCT_FRIENDLY_NAME_ASCII) L" Settings");
+      L"Gears Settings");  // TODO(andreip): [naming] looks like the i18n
+                           // strings are not built into the gears dll for WinCE
+                           // so loading IDS_REGISTRY_MENU_TEXT does not work.
 
   return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 1);
 }
@@ -58,7 +60,7 @@ STDMETHODIMP ToolsMenuItem::GetCommandString(UINT id_cmd,
   switch (flags) {
     case GCS_VERB:
     case GCS_HELPTEXT: {
-      strncpy(command_name, PRODUCT_FRIENDLY_NAME_ASCII " Settings", 
+      strncpy(command_name, "Gears Settings",  // [naming]
         command_name_len);
     } break;
     case GCS_VALIDATE:
