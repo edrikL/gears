@@ -63,6 +63,13 @@ if (!isOfficial && !isSafari && !isWince) {
   suites.push(audioSuite);
 }
 
+if (isDebug) {
+  var blobSuite = new TestSuite('Blob');
+  blobSuite.addFile('../testcases/blob_tests.js',
+      {useWorker: true, useIFrame: true});
+  suites.push(blobSuite);
+}
+
 if (!isOfficial && (isWin32 || isOsx)) {
   var canvasSuite = new TestSuite('Canvas');
   canvasSuite.addFile('../testcases/canvas_tests.js',

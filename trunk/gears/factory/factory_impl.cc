@@ -32,6 +32,10 @@
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
+#ifdef DEBUG
+#include "gears/blob/fail_blob.h"
+#include "gears/blob/blob.h"
+#endif  // DEBUG
 #include "gears/database/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/factory_utils.h"
@@ -143,9 +147,15 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
 
   std::string16 module_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
+#ifdef DEBUG
+  int64 length(0);
+#endif  // DEBUG
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &module_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
+#ifdef DEBUG
+    { JSPARAM_OPTIONAL, JSPARAM_INT64, &length },
+#endif  // DEBUG
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
@@ -185,6 +195,14 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(module_environment_.get(), context, &object);
+#ifdef DEBUG
+  } else if (module_name == STRING16(L"beta.failblob")) {
+    scoped_refptr<GearsBlob> gears_blob;
+    CreateModule<GearsBlob>(module_environment_.get(), context, &gears_blob);
+    scoped_refptr<BlobInterface> blob(new FailBlob(length));
+    gears_blob->Reset(blob.get());
+    object = gears_blob;
+#endif  // DEBUG
   } else if (module_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(module_environment_.get(),
                                    context, &object);
