@@ -362,6 +362,23 @@ bool GetCookieString(const char16 *url, BrowsingContext *context,
   return CFStringRefToString16(cookie_cfstr.get(), cookies_out);
 }
 
+#elif defined(OS_ANDROID)
+#include "gears/localserver/android/http_request_android.h"
+
+bool GetCookieString(const char16 *url, BrowsingContext *context,
+                     std::string16 *cookies_out) {
+  assert(url);
+  assert(cookies_out);
+#ifdef USING_CCTESTS
+  if (GetFakeCookieString(url, cookies_out)) {
+    return true;
+  }
+#endif
+  // Just call the handler in HttpRequestAndroid.
+  *cookies_out = HttpRequestAndroid::GetCookieForUrl(url);
+  return true;
+}
+
 #elif BROWSER_NPAPI
 
 bool GetCookieString(const char16 *url, BrowsingContext *context,
