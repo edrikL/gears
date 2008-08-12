@@ -603,6 +603,6 @@ JsRunnerInterface *NewJsRunner() {
   return static_cast<JsRunnerInterface *>(new JsRunner());
 }
 
-JsRunnerInterface *NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+JsRunnerInterface *NewDocumentJsRunner(void *, JsContextPtr context) {
   return static_cast<JsRunnerInterface *>(new DocumentJsRunner(context));
 }
