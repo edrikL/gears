@@ -44,6 +44,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class BlobInterface;
+class ProgressInputStream;
 
 class nsIChannel;
 class nsIHttpChannel;
@@ -194,7 +195,8 @@ class FFHttpRequest : public HttpRequest,
   ReadyState ready_state_;
   bool async_;
   std::string16 method_;
-  nsCOMPtr<nsIInputStream> post_data_stream_;
+  nsCOMPtr<ProgressInputStream> post_data_stream_;
+  bool post_data_stream_attached_;
   scoped_refptr<ByteStore> response_body_;
   std::string16 url_;
   SecurityOrigin origin_;

@@ -106,6 +106,7 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 FFHttpRequest::FFHttpRequest()
   : ready_state_(UNINITIALIZED),
     async_(false),
+    post_data_stream_attached_(false),
     caching_behavior_(USE_ALL_CACHES),
     redirect_behavior_(FOLLOW_ALL),
     cookie_behavior_(SEND_BROWSER_COOKIES),
@@ -125,6 +126,9 @@ FFHttpRequest::~FFHttpRequest() {
       do_GetService(kObserverServiceContractId));
   if (observer_service) {
     observer_service->RemoveObserver(this, kOnModifyRequestTopic);
+  }
+  if (post_data_stream_attached_) {
+    post_data_stream_->OnFFHttpRequestDestroyed(this);
   }
 }
 
@@ -366,8 +370,10 @@ bool FFHttpRequest::Send(BlobInterface *blob) {
   if (IsPostOrPut()) {
     nsCOMPtr<BlobInputStream> blob_stream(
         new BlobInputStream(blob ? blob : new EmptyBlob));
+    assert(!post_data_stream_attached_);
     post_data_stream_ = new ProgressInputStream(this, blob_stream,
                                                 blob ? blob->Length() : 0);
+    post_data_stream_attached_ = true;
   } else if (blob) {
     return false;
   }

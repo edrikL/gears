@@ -28,7 +28,6 @@
 
 #include <nsCOMPtr.h>
 #include <nsIInputStream.h>
-#include "gears/base/common/scoped_refptr.h"
 
 class FFHttpRequest;
 
@@ -37,6 +36,12 @@ class FFHttpRequest;
 //
 // NOTE - This relies on the owner calling ReadSegments().
 // If Read() is called, then progress cannot be provided.
+//
+// This class should only be created by a FFHttpRequest, and that FFHttpRequest
+// should call OnFFHttpRequestDestroyed whenever the FFHttpRequest no longer
+// points to this ProgressInputStream (e.g. during FFHttpRequest's destructor).
+// This constraint is in order to let the two objects point to each other
+// without causing a reference cycle that prohibits deleting them after use.
 class ProgressInputStream : public nsIInputStream {
  public:
   ProgressInputStream(FFHttpRequest *request,
@@ -47,8 +52,10 @@ class ProgressInputStream : public nsIInputStream {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
+  void OnFFHttpRequestDestroyed(FFHttpRequest *request);
+
  private:
-  scoped_refptr<FFHttpRequest> request_;
+  FFHttpRequest *request_;
   nsCOMPtr<nsIInputStream> input_stream_;
   int64 position_;
   int64 total_;
