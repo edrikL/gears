@@ -32,6 +32,9 @@
 #include "gears/blob/blob_builder.h"
 #include "gears/blob/blob_utils.h"
 #include "gears/blob/buffer_blob.h"
+#if DEBUG
+#include "gears/blob/fail_blob.h"
+#endif  // DEBUG
 #include "gears/blob/file_blob.h"
 #include "gears/blob/join_blob.h"
 #include "gears/blob/slice_blob.h"
@@ -54,6 +57,18 @@
     return false; \
   } \
 }
+
+namespace {
+
+class BlobReader : public BlobInterface::Reader {
+ public:
+  virtual int64 ReadFromBuffer(const uint8 *buffer, int64 max_bytes) {
+    // Always pretends that it was able to successfully read everything.
+    return max_bytes;
+  }
+};
+
+}  // namespace
 
 static bool TestBufferBlob(std::string16 *error) {
   std::vector<DataElement> data_elements;
@@ -570,6 +585,49 @@ static bool TestBlobUtils(std::string16 *error) {
   return true;
 }
 
+#if DEBUG
+static bool TestFailBlob(std::string16 *error) {
+  const int64 kLength(512);
+  uint8 buffer[kLength];
+  scoped_refptr<BlobInterface> blob;
+
+  // Test FailBlob::Read()
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(511 == blob->Read(buffer, 0, 511));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->Read(buffer, 511, 1));
+  TEST_ASSERT(-1 == blob->Length());
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->Read(buffer, 0, kLength));
+  TEST_ASSERT(-1 == blob->Length());
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->Read(buffer, kLength * 2, kLength));
+  TEST_ASSERT(-1 == blob->Length());
+
+  // Test FailBlob::ReadDirect()
+  BlobReader reader;
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(511 == blob->ReadDirect(&reader, 0, 511));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->ReadDirect(&reader, 511, 1));
+  TEST_ASSERT(-1 == blob->Length());
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->ReadDirect(&reader, 0, kLength));
+  TEST_ASSERT(-1 == blob->Length());
+  blob.reset(new FailBlob(kLength));
+  TEST_ASSERT(kLength == blob->Length());
+  TEST_ASSERT(-1 == blob->ReadDirect(&reader, kLength * 2, kLength));
+  TEST_ASSERT(-1 == blob->Length());
+
+  return true;
+}
+#endif  // DEBUG
+
 bool TestBlob(std::string16 *error) {
   bool ok = true;
   ok &= TestBufferBlob(error);
@@ -578,6 +636,9 @@ bool TestBlob(std::string16 *error) {
   ok &= TestSliceBlob(error);
   ok &= TestBlobDataElements(error);
   ok &= TestBlobUtils(error);
+#if DEBUG
+  ok &= TestFailBlob(error);
+#endif  // DEBUG
   return ok;
 }
 

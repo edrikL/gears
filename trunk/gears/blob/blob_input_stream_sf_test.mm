@@ -27,6 +27,9 @@
 
 #import "gears/blob/blob_input_stream_sf.h"
 #import "gears/blob/buffer_blob.h"
+#if DEBUG
+#import "gears/blob/fail_blob.h"
+#endif  // DEBUG
 #import "third_party/scoped_ptr/scoped_ptr.h"
 
 #define STRINGIFY(x) #x
@@ -135,6 +138,21 @@ bool TestBlobInputStreamSf(std::string16 *error) {
     ok &= TestBlobInputStreamSfReadFullStream(error, blobStream);
     [blobStream close];
   }
+
+#if DEBUG
+  // FailBlob is only available in debug builds.
+  {
+    // Test a BlobInputStream that has been initialized with a FailBlob.
+    // It should propagate the failure by returning -1 from |read:maxLength:|.
+    scoped_refptr<BlobInterface> blob(new FailBlob(5000));
+    BlobInputStream *stream;
+    stream = [[[BlobInputStream alloc] initFromBlob:blob.get()] autorelease];
+    [stream open];
+    NSInteger numRead = [stream read:buffer maxLength:data_size];
+    TEST_ASSERT(numRead == -1);
+    [stream close];
+  }
+#endif  // DEBUG
 
   return ok;
 }
