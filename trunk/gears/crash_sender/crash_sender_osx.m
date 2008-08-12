@@ -35,7 +35,9 @@
 #import "gears/crash_sender/crash_sender_osx.h"
 
 #define kLastSubmission @"LastSubmission"
-const int kMinidumpFileLengthLimit = 200000;
+
+// Gears: Increase default crash limit of 200K -> 800K.
+const int kMinidumpFileLengthLimit = 800000;
 
 #define kApplePrefsSyncExcludeAllKey @"com.apple.PreferenceSync.ExcludeAllSyncKeys"
 
