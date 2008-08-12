@@ -34,17 +34,11 @@ const char16 *HttpConstants::kContentEncodingHeader
                                             = STRING16(L"Content-Encoding");
 const char16 *HttpConstants::kContentLengthHeader = STRING16(L"Content-Length");
 const char16 *HttpConstants::kContentTypeHeader = STRING16(L"Content-Type");
+const char16 *HttpConstants::kCookieHeader = STRING16(L"Cookie");
 const char16 *HttpConstants::kCrLf = STRING16(L"\r\n");
 const char   *HttpConstants::kCrLfAscii = "\r\n";
-const char16 *HttpConstants::kLastModifiedHeader = STRING16(L"Last-Modified");
-const char16 *HttpConstants::kLocationHeader = STRING16(L"Location");
-const char16 *HttpConstants::kIfModifiedSinceHeader =
-                                 STRING16(L"If-Modified-Since");
-const char16 *HttpConstants::kUriHeader = STRING16(L"URI");
-const char16 *HttpConstants::kNoCache = STRING16(L"no-cache");
-const char16 *HttpConstants::kOKStatusLine = STRING16(L"HTTP/1.1 200 OK");
-const char16 *HttpConstants::kPragmaHeader = STRING16(L"Pragma");
-const char16 *HttpConstants::kRetryAfterHeader = STRING16(L"Retry-After");
+const char16 *HttpConstants::kFileScheme = STRING16(L"file");
+const char   *HttpConstants::kFileSchemeAscii =      "file";
 const char16 *HttpConstants::kHttpGET = STRING16(L"GET");
 const char   *HttpConstants::kHttpGETAscii = "GET";
 const char16 *HttpConstants::kHttpHEAD = STRING16(L"HEAD");
@@ -54,11 +48,20 @@ const char16 *HttpConstants::kHttpScheme = STRING16(L"http");
 const char   *HttpConstants::kHttpSchemeAscii =      "http";
 const char16 *HttpConstants::kHttpsScheme = STRING16(L"https");
 const char   *HttpConstants::kHttpsSchemeAscii =      "https";
-const char16 *HttpConstants::kFileScheme = STRING16(L"file");
-const char   *HttpConstants::kFileSchemeAscii =      "file";
+const char16 *HttpConstants::kIfModifiedSinceHeader =
+                                 STRING16(L"If-Modified-Since");
+const char16 *HttpConstants::kLastModifiedHeader = STRING16(L"Last-Modified");
+const char16 *HttpConstants::kLocationHeader = STRING16(L"Location");
 const char16 *HttpConstants::kMimeTextPlain = STRING16(L"text/plain");
 const char16 *HttpConstants::kMimeApplicationOctetStream =
                                  STRING16(L"application/octet-stream");
+const char16 *HttpConstants::kNoCache = STRING16(L"no-cache");
+const char16 *HttpConstants::kOKStatusLine = STRING16(L"HTTP/1.1 200 OK");
+const char16 *HttpConstants::kPragmaHeader = STRING16(L"Pragma");
+const char16 *HttpConstants::kRetryAfterHeader = STRING16(L"Retry-After");
+const char16 *HttpConstants::kSetCookieHeader = STRING16(L"Set-Cookie");
+const char16 *HttpConstants::kUriHeader = STRING16(L"URI");
+const char16 *HttpConstants::kUserAgentHeader = STRING16(L"User-Agent");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
 const char16 *HttpConstants::kXGoogleGearsBypassLocalServer =

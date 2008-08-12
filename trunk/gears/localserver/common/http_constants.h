@@ -49,6 +49,7 @@ class HttpConstants {
   static const char16 *kContentEncodingHeader;
   static const char16 *kContentLengthHeader;
   static const char16 *kContentTypeHeader;
+  static const char16 *kCookieHeader;
   static const char16 *kCrLf;
   static const char   *kCrLfAscii;
   static const char16 *kHttpScheme;
@@ -74,7 +75,9 @@ class HttpConstants {
   static const char16 *kOKStatusLine;
   static const char16 *kPragmaHeader;
   static const char16 *kRetryAfterHeader;
+  static const char16 *kSetCookieHeader;
   static const char16 *kUriHeader;
+  static const char16 *kUserAgentHeader;
   static const char16 *kXCapturedFilenameHeader;
   static const char16 *kXGoogleGearsBypassLocalServer;
   static const char16 *kXGearsSafariCapturedMimeType;
