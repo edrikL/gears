@@ -105,27 +105,6 @@ class ActiveXUtils {
                                    dispid);
   }
 
-  // Determine whether a variant is, ahem, null or undefined.
-  static bool VariantIsNullOrUndefined(const VARIANT *var) {
-    return var->vt == VT_NULL || var->vt == VT_EMPTY;
-  }
-
-  // Determine whether an optional variant parameter was specified. Handles
-  // unpassed params, as well as <undefined> and <null> valued params.
-  static bool OptionalVariantIsPresent(const VARIANT *arg) {
-    // If an optional variant was not passed, we get this
-    // See: http://msdn2.microsoft.com/en-us/library/ms931135.aspx
-    if (arg->vt == VT_ERROR && arg->scode == DISP_E_PARAMNOTFOUND) {
-      return false;
-    }
-
-    if (VariantIsNullOrUndefined(arg)) {
-      return false;
-    }
-
-    return true;
-  }
-
   // Appends to the vector out the names of dispatch's properties.
   static HRESULT GetDispatchPropertyNames(IDispatch *dispatch,
                                           std::vector<std::string16> *out);
