@@ -149,6 +149,10 @@ bool ShowNativeModal(const char16 *html_filename,
    return false;
   }
   nib_name = [dialog nibName];
+  if (kNibDictionary == nil) {
+    NSLog(@"Gears InputManager failed to load Gears, exiting...");
+    return false;
+  }
   NSNib *dialog_nib = [kNibDictionary objectForKey:nib_name];
   [dialog_nib instantiateNibWithOwner:dialog topLevelObjects:nil];
 
