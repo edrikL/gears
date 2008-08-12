@@ -57,6 +57,9 @@ using namespace glint_darwin;
       [[GlintWorkItemDispatcher alloc] initForWorkItem:item
                                                 withUI:ui
                                              container:dispatchers];
+
+  [dispatchers addObject:dispatcher];
+
   return [dispatcher autorelease];
 }
 

@@ -56,6 +56,8 @@ using glint::RootUI;
 
 // Designated initializer, initializes the dispatcher with the given work item
 // for the given Glint ui.
+// Adds the dispatcher to the list of work items so it can be canceled when the 
+// ui closes.
 - (id)initForWorkItem:(WorkItem*)item
                withUI:(RootUI*)ui
             container:(NSMutableSet*)dispatchers;

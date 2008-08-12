@@ -94,6 +94,8 @@ PlatformWindow* DarwinPlatform::CreateInvisibleWindow(RootUI *ui,
       [[[GlintWindow alloc] initWithContentRect:frame
                                         glintUI:ui] autorelease];
 
+  [window setReleasedWhenClosed:NO];
+
   if (!window)
     return NULL;
 
@@ -280,11 +282,12 @@ void DarwinPlatform::DeleteInvisibleWindow(PlatformWindow *window) {
   // (via performSelectorOnMainThread) and will be finally released
   // after dispatching.
   [work_items_for_window_ removeObjectForKey:glint_window];
-
-  [all_windows_ removeObject:glint_window];
-
-  // The close causes a release on glint_window.
+  
   [glint_window close];
+  
+  // Remove last reference to glint_window, must be done after close to ensure
+  // the window isn't deallocated before close is called.
+  [all_windows_ removeObject:glint_window];  
 }
 
 void* DarwinPlatform::GetWindowNativeHandle(PlatformWindow *window) {
