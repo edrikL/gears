@@ -133,10 +133,13 @@ void Clear(std::deque<QueuedNotification*> *notifications) {
 const int NotificationManager::kNotificationManagerVersion = 1;
 
 NotificationManager::NotificationManager(
-      UserActivityInterface *activity, DelayedRestartInterface *delayed_restart)
+      UserActivityInterface *activity,
+      DelayedRestartInterface *delayed_restart,
+      BalloonCollectionObserver *balloons_observer)
     : intiailized_(false),
       activity_(activity),
       delayed_restart_(delayed_restart),
+      balloons_observer_(balloons_observer),
       in_presentation_(false) {
   assert(activity);
   activity->AddObserver(this);
@@ -378,6 +381,9 @@ void NotificationManager::OnUserActivityChange() {
 
 void NotificationManager::OnBalloonSpaceChanged() {
   CheckAndShowNotifications();
+  if (balloons_observer_) {
+    balloons_observer_->OnBalloonSpaceChanged();
+  }
 }
 
 bool NotificationManager::CheckDelayedRestart() {
@@ -401,6 +407,10 @@ bool NotificationManager::CheckDelayedRestart() {
 
 bool NotificationManager::showing_notifications() const {
   return balloon_collection_.get() && balloon_collection_->count() > 0;
+}
+
+bool NotificationManager::has_pending_notifications() const {
+  return !show_queue_.empty() || !delayed_queue_.empty();
 }
 
 // Helper function to write a notification.

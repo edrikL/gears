@@ -61,12 +61,14 @@
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification_manager.h"
+#include "gears/notifier/user_activity.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+class BalloonCollectionObserver;
 class GearsNotification;
 class NotificationManager;
 class SecurityOrigin;
-class UserActivityMonitor;
+class TimedCall;
 
 // Interface to provide delayed restart support.
 class DelayedRestartInterface {
@@ -82,7 +84,9 @@ class DelayedRestartInterface {
 };
 
 class Notifier : public IpcMessageQueue::HandlerInterface,
-                 public DelayedRestartInterface {
+                 public DelayedRestartInterface,
+                 public BalloonCollectionObserver,
+                 public UserActivityObserver {
  public:
   Notifier();
   virtual ~Notifier();
@@ -101,6 +105,12 @@ class Notifier : public IpcMessageQueue::HandlerInterface,
   virtual bool IsRestartNeeded() const;
   virtual void Restart();
 
+  // BalloonCollectionObserver interface.
+  virtual void OnBalloonSpaceChanged();
+
+  // UserActivityObserver interface.
+  virtual void OnUserActivityChange();
+
   void AddNotification(const GearsNotification &notification);
   void RemoveNotification(const SecurityOrigin &security_origin,
                           const std::string16 &id);
@@ -116,8 +126,18 @@ class Notifier : public IpcMessageQueue::HandlerInterface,
   bool to_restart_;
 
  private:
+  // Can we shutdown notifier on lack of activity?
+  bool CanShutdownOnLackOfActivity() const;
+
+  // Perform the check for shutdown on lack of activity.
+  void CheckShutdownOnLackOfActivity();
+
+  // TimedCall callback.
+  static void ShutdownOnLackOfActivity(void *arg);
+
   scoped_ptr<UserActivityMonitor> user_activity_monitor_;
   scoped_ptr<NotificationManager> notification_manager_;
+  scoped_ptr<TimedCall> shutdown_on_lack_of_activity_timer_;
   DISALLOW_EVIL_CONSTRUCTORS(Notifier);
 };
 

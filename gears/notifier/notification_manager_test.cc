@@ -167,7 +167,7 @@ class UserActivityMock : public UserActivityInterface {
 
 TEST(NotificationManagerTest, BasicFunctionality) {
   UserActivityMock activity;
-  NotificationManager manager(&activity, NULL);
+  NotificationManager manager(&activity, NULL, NULL);
   BalloonCollectionMock *balloon_collection =
       manager.UseBalloonCollectionMock();
 
@@ -248,7 +248,7 @@ void RunMessageLoop(int max_time_ms) {
 
 TEST(NotificationManagerTest, DisplayAtTime) {
   UserActivityMock activity;
-  NotificationManager manager(&activity, NULL);
+  NotificationManager manager(&activity, NULL, NULL);
   BalloonCollectionMock *balloon_collection =
       manager.UseBalloonCollectionMock();
 

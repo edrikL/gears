@@ -55,7 +55,8 @@ class NotificationManager : public BalloonCollectionObserver,
                             public UserActivityObserver {
  public:
   NotificationManager(UserActivityInterface *activity,
-                      DelayedRestartInterface *delayed_restart);
+                      DelayedRestartInterface *delayed_restart,
+                      BalloonCollectionObserver *balloons_observer);
   ~NotificationManager();
 
   // Adds/Updates a notification (which may already be displayed).
@@ -95,6 +96,9 @@ class NotificationManager : public BalloonCollectionObserver,
 
   // Are we showing any notifications?
   bool showing_notifications() const;
+
+  // Do we have any pending notifications to show?
+  bool has_pending_notifications() const;
 
 #if USING_CCTESTS
   BalloonCollectionMock *UseBalloonCollectionMock();
@@ -163,6 +167,7 @@ class NotificationManager : public BalloonCollectionObserver,
   bool intiailized_;
   UserActivityInterface *activity_;
   DelayedRestartInterface *delayed_restart_;
+  BalloonCollectionObserver *balloons_observer_;
   scoped_ptr<BalloonCollectionInterface> balloon_collection_;
   std::deque<QueuedNotification*> show_queue_;
   std::deque<QueuedNotification*> delayed_queue_;
