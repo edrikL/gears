@@ -58,6 +58,35 @@ function testFileUpload() {
   desktop.openFiles(onSelect, {singleFile: true});
 }
 
+function testFailUpload() {
+  try {
+    var blob = google.gears.factory.create('beta.failblob', '1.0', 50000000);
+  } catch (e) {
+    setInnerHTML('failStatus', 'Test only available in debug builds.');
+    return;
+  }
+  var request = google.gears.factory.create('beta.httprequest');
+  function handleUploadReadyState() {
+    setInnerHTML('failReady', getReadyState(request));
+    setInnerHTML('failStatus', getStatus(request));
+  }
+  function handleUploadProgress(event) {
+    setInnerHTML('failProgress', event.loaded);
+    setInnerHTML('failTotal', event.total);
+  }
+
+
+  setInnerHTML('failProgress', '<br/>');
+  setInnerHTML('failTotal', '<br/>');
+  setInnerHTML('failReady', '<br/>');
+  setInnerHTML('failStatus', '<br/>');
+
+  request.onreadystatechange = handleUploadReadyState;
+  request.upload.onprogress = handleUploadProgress;
+  request.open('POST', 'testcases/cgi/send_response_of_size.py?size=5');
+  request.send(blob);
+}
+
 function testUploadProgress() {
   var request = google.gears.factory.create('beta.httprequest');
   function handleUploadReadyState() {
@@ -156,6 +185,18 @@ function testDownloadProgress() {
         <td><div id="fileTotal"><br/></div></td>
         <td><div id="fileReady"><br/></div></td>
         <td><div id="fileStatus"><br/></div></td>
+      </tr>
+      <tr>
+        <td>
+          <form action="">
+            <input type="button" value="TestFailUpload"
+            onclick="testFailUpload()">
+          </form>
+        </td>
+        <td><div id="failProgress"><br/></div></td>
+        <td><div id="failTotal"><br/></div></td>
+        <td><div id="failReady"><br/></div></td>
+        <td><div id="failStatus"><br/></div></td>
       </tr>
     </table>
 

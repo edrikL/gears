@@ -75,6 +75,16 @@ function testPostBlob200() {
   });
 }
 
+function testPostBlobFail() {
+  // FailBlobs are only available in debug builds.
+  if (isDebug) {
+    startAsync();
+    var blob = google.gears.factory.create('beta.failblob', '1.0', 500);
+    doRequest('testcases/cgi/echo_request.py', 'POST', blob,
+              null, 0, null, null, null);
+  }
+}
+
 function testPost302_200() {
   // A POST that gets redirected should GET the new location
   startAsync();
@@ -338,50 +348,58 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     success = true;
 
     // Make sure we can fetch all properties
-    assert(isNumber(request.status),
-           'Should be able to get status after request');
-    assert(isString(request.statusText),
-           'Should be able to get statusText after request');
-    assert(isString(request.getAllResponseHeaders()),
-           'Should be able to call getAllResponseHeaders() after request');
-    assert(isString(request.responseText),
-           'Should be able to get responseText after request');
-    assert(isObject(request.responseBlob),
-           'Should be able to get responseBlob after request');
-
-    // see if we got what we expected to get
-    if (expectedStatus != null) {
-      assertEqual(expectedStatus, request.status,
-                  'Wrong value for status property');
+    try {
+      assert(isNumber(request.status),
+             'Should be able to get status after request');
+    } catch (e) {
+      assertEqual(expectedStatus, 0,
+                  'Unexpected exception when accessing status');
     }
-
-    if (expectedHeaders != null) {
-      for (var i = 0; i < expectedHeaders.length; ++i) {
-        var name = expectedHeaders[i][0];
-        var expectedValue = expectedHeaders[i][1];
-        var actualValue = request.getResponseHeader(name);
-        assertEqual(expectedValue, actualValue,
-                    'Wrong value for header "%s"'.subs(name));
-      }
-    }
-
-    if (expectedResponse != null) {
-      assertEqual(expectedResponse, request.responseText, 'Wrong responseText');
-    }
-
-    if (expectedResponseLength != null) {
-      assertEqual(expectedResponseLength, request.responseBlob.length,
-                  'Wrong expectedResponseLength');
-    }
-
-    if (expectedResponse != null) {
+    if (expectedStatus != 0) {
+      assert(isString(request.statusText),
+             'Should be able to get statusText after request');
+      assert(isString(request.getAllResponseHeaders()),
+             'Should be able to call getAllResponseHeaders() after request');
       assert(isString(request.responseText),
-             'Should be able to get responseText repeatedly');
-    }
-
-    if (expectedResponseLength != null) {
+             'Should be able to get responseText after request');
       assert(isObject(request.responseBlob),
-             'Should be able to get responseBlob repeatedly');
+             'Should be able to get responseBlob after request');
+
+      // see if we got what we expected to get
+      if (expectedStatus != null) {
+        assertEqual(expectedStatus, request.status,
+                    'Wrong value for status property');
+      }
+
+      if (expectedHeaders != null) {
+        for (var i = 0; i < expectedHeaders.length; ++i) {
+          var name = expectedHeaders[i][0];
+          var expectedValue = expectedHeaders[i][1];
+          var actualValue = request.getResponseHeader(name);
+          assertEqual(expectedValue, actualValue,
+                      'Wrong value for header "%s"'.subs(name));
+        }
+      }
+
+      if (expectedResponse != null) {
+        assertEqual(expectedResponse, request.responseText,
+                    'Wrong responseText');
+      }
+
+      if (expectedResponseLength != null) {
+        assertEqual(expectedResponseLength, request.responseBlob.length,
+                    'Wrong expectedResponseLength');
+      }
+
+      if (expectedResponse != null) {
+        assert(isString(request.responseText),
+               'Should be able to get responseText repeatedly');
+      }
+
+      if (expectedResponseLength != null) {
+        assert(isObject(request.responseBlob),
+               'Should be able to get responseBlob repeatedly');
+      }
     }
     if (method == 'POST' || method == 'PUT') {
       // It appears that the timing can work out so that the progress
