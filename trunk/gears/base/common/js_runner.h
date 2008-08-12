@@ -36,29 +36,6 @@
 
 class ModuleImplBaseClass;
 
-// To insert C++ objects into JavaScript, most (all?) JS engines take a C++
-// pointer implementing some baseline interface.  The implementation differs
-// across platforms, but the concept is consistent, so we define IGeneric here.
-//
-// TODO(cprince): move this definition to its own file if somebody else needs it
-#if defined BROWSER_IE
-  #include <windows.h>
-  typedef IUnknown IGeneric;
-  typedef int gIID;
-#elif defined BROWSER_FF
-  typedef nsISupports IGeneric;
-  typedef nsIID gIID;
-#elif defined BROWSER_NPAPI
-  typedef void IGeneric;
-  typedef int gIID;
-#elif defined BROWSER_SAFARI
-  // Just placeholder values for Safari since the created workers use a separate
-  // process for JS execution.
-  typedef void IGeneric;
-  typedef int gIID;
-#endif
-
-
 #if BROWSER_FF
 // Wraps a set of calls to JS_BeginRequest and JS_EndRequest.
 class JsRequest {
@@ -232,7 +209,15 @@ JsRunnerInterface* NewJsRunner();
 
 // This creates a JsRunner that can be used with the script engine running in an
 // document.
-JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context);
+// TODO(nigeltao): void *base is unused for non-IE browsers, and JsContextPtr
+// context is unused on IE. We should merge the two concepts.
+JsRunnerInterface* NewDocumentJsRunner(
+#if BROWSER_IE
+    IUnknown *base,
+#else
+    void *base,
+#endif
+    JsContextPtr context);
 
 
 #endif  // GEARS_BASE_COMMON_JS_RUNNER_H__

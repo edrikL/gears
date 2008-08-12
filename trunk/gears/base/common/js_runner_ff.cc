@@ -650,7 +650,7 @@ bool JsRunner::InvokeCallbackSpecialized(
 // that runs in HTML pages.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(IGeneric *base, JsContextPtr context) {
+  DocumentJsRunner(JsContextPtr context) {
     LEAK_COUNTER_INCREMENT(DocumentJsRunner);
     js_engine_context_ = context;
     alloc_js_wrapper_ = new JsContextWrapper(context,
@@ -887,9 +887,9 @@ JsRunnerInterface* NewJsRunner(JSRuntime *js_runtime) {
   return static_cast<JsRunnerInterface*>(new JsRunner(js_runtime));
 }
 
-JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+JsRunnerInterface* NewDocumentJsRunner(void *, JsContextPtr context) {
   scoped_ptr<DocumentJsRunner> document_js_runner(
-      new DocumentJsRunner(base, context));
+      new DocumentJsRunner(context));
   if (!document_js_runner->ListenForUnloadEvent()) {
     return NULL;
   }

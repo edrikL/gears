@@ -364,7 +364,7 @@ class ATL_NO_VTABLE JsRunnerImpl
   }
 
   // JsRunner implementation
-  bool AddGlobal(const std::string16 &name, IGeneric *object);
+  bool AddGlobal(const std::string16 &name, IUnknown *object);
   bool Start(const std::string16 &full_script);
   bool Stop();
   bool Eval(const std::string16 &script);
@@ -392,7 +392,7 @@ class ATL_NO_VTABLE JsRunnerImpl
   CComPtr<IActiveScript> javascript_engine_;
   JsErrorHandlerInterface *error_handler_;
 
-  typedef std::map<std::string16, IGeneric *> NameToObjectMap;
+  typedef std::map<std::string16, IUnknown *> NameToObjectMap;
   NameToObjectMap global_name_to_object_;
 
   bool coinit_succeeded_;
@@ -416,7 +416,7 @@ JsRunnerImpl::~JsRunnerImpl() {
 
 
 bool JsRunnerImpl::AddGlobal(const std::string16 &name,
-                             IGeneric *object) {
+                             IUnknown *object) {
   if (!object) { return false; }
 
   // We AddRef() to make sure the object lives as long as the JS engine.
@@ -550,7 +550,7 @@ bool JsRunnerImpl::Stop() {
 
 STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
                                            IUnknown **item) {
-  IGeneric *found_item = global_name_to_object_[name];
+  IUnknown *found_item = global_name_to_object_[name];
   if (!found_item) { return TYPE_E_ELEMENTNOTFOUND; }
 
   // IActiveScript expects items coming into it to already be AddRef()'d. It
@@ -678,7 +678,7 @@ class JsRunner : public JsRunnerBase {
 // common functionality to both workers and the main thread.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(IGeneric *site) : site_(site) {}
+  DocumentJsRunner(IUnknown *site) : site_(site) {}
 
   virtual ~DocumentJsRunner() {
   }
@@ -858,6 +858,6 @@ JsRunnerInterface* NewJsRunner() {
   return static_cast<JsRunnerInterface*>(new JsRunner());
 }
 
-JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+JsRunnerInterface* NewDocumentJsRunner(IUnknown *base, JsContextPtr) {
   return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base));
 }
