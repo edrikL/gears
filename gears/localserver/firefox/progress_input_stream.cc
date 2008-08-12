@@ -44,6 +44,7 @@ ProgressInputStream::ProgressInputStream(
       position_(0),
       total_(total) {
   LEAK_COUNTER_INCREMENT(ProgressInputStream);
+  assert(request);
 }
 
 ProgressInputStream::~ProgressInputStream() {
@@ -62,7 +63,6 @@ NS_IMETHODIMP ProgressInputStream::Available(PRUint32 *out_available_bytes) {
 }
 
 NS_IMETHODIMP ProgressInputStream::Close() {
-  request_.reset();
   return input_stream_->Close();
 }
 
@@ -76,7 +76,9 @@ NS_IMETHODIMP ProgressInputStream::Read(char *buffer,
   nsresult result = input_stream_->Read(buffer, buffer_size, out_num_bytes_read);
   if (result == NS_OK && *out_num_bytes_read > 0) {
     position_ += *out_num_bytes_read;
-    ProgressEvent::Update(request_.get(), request_.get(), position_, total_);
+    if (request_) {
+      ProgressEvent::Update(request_, request_, position_, total_);
+    }
   }
   return result;
 }
@@ -91,7 +93,14 @@ NS_IMETHODIMP ProgressInputStream::ReadSegments(nsWriteSegmentFun writer,
                                                 out_num_bytes_read);
   if (result == NS_OK && *out_num_bytes_read > 0) {
     position_ += *out_num_bytes_read;
-    ProgressEvent::Update(request_.get(), request_.get(), position_, total_);
+    if (request_) {
+      ProgressEvent::Update(request_, request_, position_, total_);
+    }
   }
   return result;
+}
+
+void ProgressInputStream::OnFFHttpRequestDestroyed(FFHttpRequest *request) {
+  assert(request == request_);
+  request_ = NULL;
 }
