@@ -32,6 +32,7 @@
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/timed_call.h"
+#include "gears/notifier/balloons.h"
 #include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager.h"
@@ -42,6 +43,9 @@
 #endif  // USING_CCTESTS
 #include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/work_item.h"
+
+// Constants.
+const int kInactivityToShutdownIntervalMs = 30 * 60 * 1000;    // 30m
 
 // Posted as workitem from IPC worker thread to main UI thread.
 class NotificationTask : public glint::WorkItem {
@@ -86,8 +90,9 @@ Notifier::~Notifier() {
 
 bool Notifier::Initialize() {
   user_activity_monitor_.reset(UserActivityMonitor::Create());
+  user_activity_monitor_->AddObserver(this);
   notification_manager_.reset(
-      new NotificationManager(user_activity_monitor_.get(), this));
+      new NotificationManager(user_activity_monitor_.get(), this, this));
 
   GearsNotification::RegisterAsSerializable();
   IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
@@ -173,12 +178,67 @@ bool Notifier::IsRestartNeeded() const {
   return false;
 }
 
+bool Notifier::CanShutdownOnLackOfActivity() const {
+  // We will shutdown the notifier on lack of activity that is defined as
+  // the following:
+  // 1) No notification is showing or pending to show.
+  // 2) The user is idle or away.
+  // 3) Condition 1) and 2) have been met for a period of time, i.e. 30 minutes.
+  //    (This condition is enforced by shutdown_on_lack_of_activity_timer_.) 
+  return notification_manager_.get() &&
+         !notification_manager_->showing_notifications() &&
+         !notification_manager_->has_pending_notifications() &&
+         user_activity_monitor_.get() &&
+         (user_activity_monitor_->user_mode() == USER_IDLE_MODE ||
+          user_activity_monitor_->user_mode() == USER_AWAY_MODE);
+}
+
+void Notifier::CheckShutdownOnLackOfActivity() {
+  if (CanShutdownOnLackOfActivity()) {
+    // Since condition 1 and 2 for shutdown have been met, start a timer to see
+    // if they are still met after a period of time (condition 3).
+    if (!shutdown_on_lack_of_activity_timer_.get()) {
+      shutdown_on_lack_of_activity_timer_.reset(
+          new TimedCall(kInactivityToShutdownIntervalMs,
+                        false,
+                        &Notifier::ShutdownOnLackOfActivity,
+                        this));
+    }
+  } else {
+    shutdown_on_lack_of_activity_timer_.reset();
+  }
+}
+
+void Notifier::OnBalloonSpaceChanged() {
+  CheckShutdownOnLackOfActivity();
+}
+
+void Notifier::OnUserActivityChange() {
+  CheckShutdownOnLackOfActivity();
+}
+
+void Notifier::ShutdownOnLackOfActivity(void *arg) {
+  assert(arg);
+
+  Notifier *this_ptr = reinterpret_cast<Notifier*>(arg);
+
+  this_ptr->shutdown_on_lack_of_activity_timer_.reset();
+  if (this_ptr->CanShutdownOnLackOfActivity()) {
+    LOG(("Shut down notifier on lack of activity\n"));
+    this_ptr->UnregisterProcess();
+    this_ptr->RequestQuit();
+  }
+}
+
 void Notifier::AddNotification(const GearsNotification &notification) {
   LOG(("Add notification %S - %S ($S)\n",
        notification.security_origin().url().c_str(),
        notification.id().c_str(),
        notification.title().c_str()));
   notification_manager_->Add(notification);
+
+  // Run the check so that it sees there has been activity.
+  CheckShutdownOnLackOfActivity();
 }
 
 void Notifier::RemoveNotification(const SecurityOrigin &security_origin,
@@ -186,6 +246,9 @@ void Notifier::RemoveNotification(const SecurityOrigin &security_origin,
   LOG(("Remove notification %S - %S\n", security_origin.url().c_str(),
        id.c_str()));
   notification_manager_->Delete(security_origin, id);
+
+  // Run the check so that it sees there has been activity.
+  CheckShutdownOnLackOfActivity();
 }
 
 #endif  // OFFICIAL_BUILD
