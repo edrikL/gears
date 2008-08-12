@@ -39,7 +39,7 @@ int64 FailBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   if (failed_) {
     return -1;
   }
-  if (offset + max_bytes > length_) {
+  if (offset + max_bytes >= length_) {
     failed_ = true;
     return -1;
   }
@@ -55,7 +55,7 @@ int64 FailBlob::ReadDirect(Reader *reader, int64 offset,
   if (failed_) {
     return -1;
   }
-  if (offset + max_bytes > length_) {
+  if (offset + max_bytes >= length_) {
     failed_ = true;
     return -1;
   }

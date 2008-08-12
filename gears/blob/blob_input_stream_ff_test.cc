@@ -28,6 +28,9 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob_input_stream_ff.h"
 #include "gears/blob/buffer_blob.h"
+#if DEBUG
+#include "gears/blob/fail_blob.h"
+#endif  // DEBUG
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -126,11 +129,18 @@ enum Writer {
   READ_ZERO,
 };
 
+// Describes the type of blob being used.
+enum BlobType {
+  NORMAL,
+  FAIL,
+};
+
 // This function creates a BlobInputStream filled with data_size bytes of data.
 // It then calls ReadSegments() on that stream, passing in various writers
 // to confirm correct behavior of the stream's ReadSegments function.
 bool TestBlobInputStreamFfReadSegments(std::string16 *error,
                                        Writer type,
+                                       BlobType blob_type,
                                        BlobInterface* blob,
                                        PRUint32 in_bytes) {
   // Initialize all of these variables because some compilers complain that they
@@ -171,14 +181,31 @@ bool TestBlobInputStreamFfReadSegments(std::string16 *error,
       expected_result = NS_OK;
       break;
   }
+  switch (blob_type) {
+    case NORMAL:
+      // Leave as calculated above.
+      break;
+    case FAIL:
+      // Assumes that Writer type is SUCCEED.
+      TEST_ASSERT(type == SUCCEED);
+      expected_bytes = 0;
+      expected_count = 0;
+      expected_result = NS_ERROR_FAILURE;
+      break;
+  }
 
   consumer_count = 0;
-  PRUint32 out_bytes;
+  PRUint32 out_bytes(0);
   nsCOMPtr<BlobInputStream> bs(new BlobInputStream(blob));
   nsresult result = bs->ReadSegments(writer, 0, in_bytes, &out_bytes);
   TEST_ASSERT(result == expected_result);
   TEST_ASSERT(out_bytes == expected_bytes);
   TEST_ASSERT(consumer_count == expected_count);
+  if (blob_type == FAIL) {
+    TEST_ASSERT(blob->Length() == -1);
+  } else {
+    TEST_ASSERT(blob->Length() != -1);
+  }
   return true;
 }
 
@@ -191,70 +218,81 @@ bool TestBlobInputStreamFf(std::string16 *error) {
 
   // Test a writer that always succeeds.
   // Try to read all available data.
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           data_size);
   // Try to read 1KB of data (less than a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024);
   // Try to read 1MB of data (exactly a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024 * 1024);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024*1024*2 + 1);
   // Try to read 10MB of data (more than available).  Expect to return 8MB.
-  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, NORMAL, blob.get(),
                                           1024*1024*10);
 
   // Test a writer failing on the first call.
   // Try to read all available data.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
+                                          data_size);
   // Try to read 1KB of data (less than a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(), 1024);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
+                                          1024);
   // Try to read 1MB of data (exactly a full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
                                           1024 * 1024);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
                                           1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
                                           1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
                                           1024*1024*2 + 1);
   // Try to read 10MB of data (more than available).
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL1, NORMAL, blob.get(),
                                           1024 * 1024 * 10);
 
   // Test a writer that fails on a later call.
   // Try to read all available data, fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, NORMAL, blob.get(),
+                                          data_size);
   // Try to read all available data, fail on 8.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL8, blob.get(), data_size);
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL8, NORMAL, blob.get(),
+                                          data_size);
   // Try to read 1MB + 1 byte of data (just over 1 full buffer), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, NORMAL, blob.get(),
                                           1024 * 1024 + 1);
   // Try to read 2MB of data (multiple full buffers), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, NORMAL, blob.get(),
                                           1024 * 1024 * 2);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers), fail on 2.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL2, NORMAL, blob.get(),
                                           1024*1024*2 + 1);
   // Try to read 2MB + 1 byte of data (just over 2 full buffers), fail on 3.
-  ok &= TestBlobInputStreamFfReadSegments(error, FAIL3, blob.get(),
+  ok &= TestBlobInputStreamFfReadSegments(error, FAIL3, NORMAL, blob.get(),
                                           1024*1024*2 + 1);
 
   // Test a writer that returns NS_OK and a byte count of 0.
   // NOTE - this should result in an assert, so do NOT enable this by default!
-  //ok &= TestBlobInputStreamFfReadSegments(error, READ_ZERO, blob.get(),
-  //                                        data_size);
+  //ok &= TestBlobInputStreamFfReadSegments(error, READ_ZERO, NORMAL,
+  //                                        blob.get(), data_size);
+
+#if DEBUG
+  // Test a fail blob.
+  scoped_refptr<BlobInterface> fail_blob(new FailBlob(1024));
+  ok &= TestBlobInputStreamFfReadSegments(error, SUCCEED, FAIL, fail_blob.get(),
+                                          1024);
+#endif  // DEBUG
 
   if (!ok) {
     assert(error);
