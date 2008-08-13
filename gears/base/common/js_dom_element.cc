@@ -45,7 +45,8 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #endif
 
 
-JsDomElement::JsDomElement() {
+JsDomElement::JsDomElement()
+    : is_initialized_(false) {
   LEAK_COUNTER_INCREMENT(JsDomElement);
 }
 
