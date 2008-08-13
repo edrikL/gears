@@ -37,6 +37,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 
@@ -47,18 +48,13 @@ class GearsWorkerPool;
 
 
 class PoolThreadsManager
-    : JsErrorHandlerInterface {
+    : JsErrorHandlerInterface,
+      public RefCounted {
   friend struct ThreadsEvent; // for OnReceiveThreadsEvent
  public:
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner,
                      GearsWorkerPool *owner);
-
-  // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
-  // When all references go away, the PoolThreadsManager deletes itself.
-  // NOTE: each worker will add (and release) multiple references.
-  void AddWorkerRef();
-  void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
   bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
@@ -103,7 +99,6 @@ class PoolThreadsManager
   void ProcessError(JavaScriptWorkerInfo *wi,
                     const WorkerPoolMessage &msg);
 
-  int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
   GearsWorkerPool *unrefed_owner_;
   scoped_refptr<GearsWorkerPool> refed_owner_;

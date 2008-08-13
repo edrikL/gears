@@ -31,7 +31,6 @@
 
 #include "gears/workerpool/npapi/pool_threads_manager.h"
 
-#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/leak_counter.h"
@@ -157,11 +156,11 @@ enum ThreadsEventType {
 struct ThreadsEvent : public AsyncFunctor {
   ThreadsEvent(JavaScriptWorkerInfo *worker_info, ThreadsEventType event_type)
       : wi(worker_info), type(event_type) {
-    wi->threads_manager->AddWorkerRef();
+    wi->threads_manager->Ref();
   }
 
   ~ThreadsEvent() {
-    wi->threads_manager->ReleaseWorkerRef();
+    wi->threads_manager->Unref();
   }
 
   // Called when the event is received.
@@ -184,8 +183,7 @@ PoolThreadsManager::PoolThreadsManager(
                         const SecurityOrigin &page_security_origin,
                         JsRunnerInterface *root_js_runner,
                         GearsWorkerPool *owner)
-    : num_workers_(0),
-      is_shutting_down_(false),
+    : is_shutting_down_(false),
       unrefed_owner_(owner),
       page_security_origin_(page_security_origin),
       owner_permissions_manager_(page_security_origin, owner->EnvIsWorker()),
@@ -604,7 +602,7 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 #endif
   
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
-  wi->threads_manager->AddWorkerRef();
+  wi->threads_manager->Ref();
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
   // Setup worker thread.
@@ -676,7 +674,7 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.
   wi->js_runner = NULL;
-  wi->threads_manager->ReleaseWorkerRef();
+  wi->threads_manager->Unref();
   wi->module_environment.reset(NULL);
 
 #ifdef OS_MACOSX
@@ -943,10 +941,10 @@ void PoolThreadsManager::ShutDown() {
   // Drop any references to the owner. Unlock first since Shutdown can be
   // called recursively when unrefing the owner. Also bump our refcount while
   // unrefing to gaurd against being deleted prior to the scoped ptr reset.
-  AddWorkerRef();
+  Ref();
   unrefed_owner_ = NULL;
   refed_owner_ = NULL;
-  ReleaseWorkerRef();
+  Unref();
 }
 
 
@@ -961,14 +959,3 @@ void PoolThreadsManager::ForceGCCurrentThread() {
   wi->js_runner->ForceGC();
 }
 #endif  // DEBUG
-
-
-void PoolThreadsManager::AddWorkerRef() {
-  AtomicIncrement(&num_workers_, 1);
-}
-
-void PoolThreadsManager::ReleaseWorkerRef() {
-  if (AtomicIncrement(&num_workers_, -1) == 0) {
-    delete this;
-  }
-}
