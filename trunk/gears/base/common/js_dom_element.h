@@ -23,38 +23,56 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
-#define GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
-#ifdef OFFICIAL_BUILD
-// The Drag-and-Drop API has not been finalized for official builds.
-#else
+#ifndef GEARS_BASE_COMMON_JS_DOM_ELEMENT_H__
+#define GEARS_BASE_COMMON_JS_DOM_ELEMENT_H__
 
-#include "gears/base/common/base_class.h"
+#if BROWSER_FF
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsIDOMHTMLElement.h>
+#elif BROWSER_IE
+#include <windows.h>
+#endif
+
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/string16.h"
 
-// A DropTarget is an opaque, platform-specific class that represents a DOM
-// element that handles drag and drop events, for example of files dragged
-// from the Desktop to the browser.
-class DropTarget;
-class JsDomElement;
-
-class DragAndDropRegistry {
+// NOTE: A JsDomElement should never be created, or otherwise manipulated,
+// from a worker thread.
+class JsDomElement {
  public:
-  static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
-                                        JsDomElement &dom_element,
-                                        JsObject &js_callbacks,
-                                        std::string16 *error_out);
+  JsDomElement();
+  ~JsDomElement();
+
+  bool InitJsDomElement(JsContextPtr context, JsToken token);
+
+  bool GetFileInputElementValue(std::string16 *file_name_out);
+  bool SetFileInputElementValue(std::string16 &file_name);
+
+#if BROWSER_FF
+  nsIDOMHTMLElement *dom_html_element() {
+    assert(is_initialized_);
+    return dom_html_element_;
+  }
+#elif BROWSER_IE
+  IDispatch *dispatch() {
+    assert(is_initialized_);
+    return dispatch_;
+  }
+#elif BROWSER_NPAPI
+#endif
 
  private:
-  // Currently, a DropTarget automatically unregisters itself, on page unload,
-  // but in the future we might provide a programmatic way to deregister a
-  // drop target via a JavaScript API, and when we do, we'll promote this
-  // method from private to public.
-  static void UnregisterDropTarget(DropTarget *drop_target);
+#if BROWSER_FF
+  nsCOMPtr<nsIDOMHTMLElement> dom_html_element_;
+#elif BROWSER_IE
+  CComPtr<IDispatch> dispatch_;
+#elif BROWSER_NPAPI
+#endif
 
-  friend class DropTarget;
-  DISALLOW_EVIL_CONSTRUCTORS(DragAndDropRegistry);
+  bool is_initialized_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsDomElement);
 };
 
-#endif  // OFFICIAL_BUILD
-#endif  // GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#endif  // GEARS_BASE_COMMON_JS_DOM_ELEMENT_H__

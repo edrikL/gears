@@ -859,6 +859,7 @@ $(BROWSER)_CPPSRCS	+= \
 		file_test.cc \
 		html_event_monitor.cc \
 		http_utils.cc \
+		js_dom_element.cc \
 		js_marshal.cc \
 		js_runner_utils.cc \
 		js_types.cc \

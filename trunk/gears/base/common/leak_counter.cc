@@ -42,6 +42,7 @@ static const char *leak_counter_names[] = {
   "JsArray",
   "JsCallContext",
   "JsContextWrapper",
+  "JsDomElement",
   "JsEventMonitor",
   "JsObject",
   "JsRootedToken",

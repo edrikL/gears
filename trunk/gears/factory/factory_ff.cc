@@ -23,8 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsIXPConnect.h>
 
 #include "gears/factory/factory_ff.h"
 

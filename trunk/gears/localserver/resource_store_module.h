@@ -143,9 +143,6 @@ class GearsResourceStore
 
   void AbortAllRequests();
 
-  bool GetFileNameFromFileInputElement(IScriptable *dom_element,
-                                       std::string16 *file_name_out);
-
   scoped_ptr<JsEventMonitor> unload_monitor_;
   int next_capture_id_;
   std::deque<CaptureRequest*> pending_requests_;
