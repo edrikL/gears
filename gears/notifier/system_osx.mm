@@ -34,7 +34,9 @@
 #import "gears/base/common/common.h"
 #import "gears/base/common/file.h"
 #import "gears/base/common/string_utils.h"
+#import "third_party/glint/include/platform.h"
 #import "third_party/glint/include/rectangle.h"
+#import "third_party/glint/include/root_ui.h"
 
 std::string System::GetResourcePath() {
   return [[[NSBundle mainBundle] resourcePath] fileSystemRepresentation];
@@ -63,7 +65,7 @@ bool System::GetUserDataLocation(std::string16 *path, bool create_if_missing) {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -114,6 +116,99 @@ double System::GetSystemFontScaleFactor() {
   return [val doubleValue];
 }
 
+// Helper object to implement context menu tracking.
+@interface MenuTarget : NSObject {
+  int selectedTag_;
+}
+
+- (id)init;
+- (void)menuItemAction:(id)sender;
+- (int)selectedTag;
+
+@end
+
+@implementation MenuTarget
+
+- (id)init {
+  self = [super init];
+  if (self) {
+    selectedTag_ = -1;
+  }
+  return self;
+}
+
+- (void)menuItemAction:(id)sender {
+  selectedTag_ = [sender tag];
+}
+
+- (int)selectedTag {
+  return selectedTag_;
+}
+
+@end
+
+int System::ShowContextMenu(const MenuItem *menu_items,
+                            size_t menu_items_count,
+                            glint::RootUI *root_ui) {
+  assert(menu_items && root_ui);
+  if (menu_items_count == 0)
+    return -1;
+  MenuTarget *target = [[[MenuTarget alloc] init] autorelease];
+  NSMenu *theMenu =
+      [[[NSMenu alloc] initWithTitle:@"Notifications Settings"] autorelease];
+
+  for (size_t i = 0; i < menu_items_count; ++i) {
+    NSString *title =
+        [NSString stringWithUTF8String:(menu_items[i].title.c_str())];
+
+    // Check if the item should be a separator.
+    BOOL isSeparator = [title isEqualToString:@"-"];
+
+    NSMenuItem *newItem = (isSeparator ?
+        [NSMenuItem separatorItem] :
+        [[[NSMenuItem alloc] initWithTitle:title
+                                    action:@selector(menuItemAction:)
+                             keyEquivalent:@""] autorelease]);
+
+    [newItem setTag:menu_items[i].command_id];
+    [newItem setTarget:target];
+
+    BOOL isEnabled = menu_items[i].enabled ? YES : NO;
+    [newItem setEnabled:isEnabled];
+
+    int checkedState = menu_items[i].checked ? NSOnState : NSOffState;
+    [newItem setState:checkedState];
+    [theMenu addItem:newItem];
+  }
+
+  NSWindow *window = static_cast<NSWindow*>(
+      glint::platform()->GetWindowNativeHandle(root_ui->GetPlatformWindow()));
+  assert(window);
+
+  [NSMenu popUpContextMenu:theMenu
+                 withEvent:[window currentEvent]
+                   forView:[window contentView]];
+
+  return [target selectedTag];
+}
+
+
+void System::ShowNotifierPreferences() {
+  NSString *script_source =
+      @"tell application \"System Preferences\" \n"
+      @" activate \n"
+      @" set current pane to pane \"com.google.GearsNotifierPref\" \n"
+      @"end tell\n";
+
+  NSAppleScript *script =
+      [[[NSAppleScript alloc] initWithSource:script_source] autorelease];
+
+  NSDictionary *dictionary = nil;
+  NSAppleEventDescriptor *result = [script executeAndReturnError:&dictionary];
+  if (result == nil) {
+    NSLog(@"ShowNotifierPreferences error: %@", [dictionary description]);
+  }
+}
 #endif  // OFFICIAL_BUILD
 
 

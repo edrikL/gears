@@ -36,6 +36,7 @@
 #include "gears/notifier/balloons.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/timed_call.h"
 #include "gears/notifier/system.h"
 #include "third_party/glint/include/animation_timeline.h"
 #include "third_party/glint/include/button.h"
@@ -79,6 +80,21 @@ const double kAlphaTransitionDurationForRestore = 0.2;
 const double kMoveTransitionDuration = 0.325;
 const double kExpirationTime = 7.0;
 const double kExpirationTimeSlice = 0.25;
+
+const int kOneHourSeconds = 60 * 60;
+
+enum kContextMenuCommands {
+  SEPARATOR,
+  SHOW_PREFERENCES,
+  SNOOZE_1_HR,
+};
+
+// TODO(dimich): make this internationalized. Pull the strings from resource.
+static const System::MenuItem kContextMenuItems[] = {
+  { "Don't show notifications for 1 hour", SNOOZE_1_HR, true, false },
+  { "-", SEPARATOR, false, false },
+  { "Preferences...", SHOW_PREFERENCES, true, false },
+};
 
 // Container for balloons. Implements several static methods that provide
 // balloon metrics scaled properly in case system has "large fonts" support.
@@ -557,7 +573,7 @@ glint::Node *Balloon::CreateTree() {
   menu_button->set_margin(margin);
   menu_button->set_horizontal_alignment(glint::X_RIGHT);
   menu_button->set_vertical_alignment(glint::Y_BOTTOM);
-  // TODO(dimich): Add Menu button handler.
+  menu_button->SetClickHandler(Balloon::OnMenuButton, this);
   button_container->AddChild(menu_button);
 
   root->AddHandler(new AnimationCompletedHandler(this));
@@ -566,6 +582,28 @@ glint::Node *Balloon::CreateTree() {
   SetMoveTransition(root);
 
   return root;
+}
+
+void Balloon::OnMenuButton(const std::string &button_id, void *user_info) {
+  Balloon *this_ = reinterpret_cast<Balloon*>(user_info);
+  assert(this_);
+  this_->ShowMenu();
+}
+
+void Balloon::ShowMenu() {
+  int command = System::ShowContextMenu(kContextMenuItems,
+                                        ARRAYSIZE(kContextMenuItems),
+                                        root_->GetRootUI());
+  switch (command) {
+    case SNOOZE_1_HR:
+      collection_->Snooze(kOneHourSeconds);
+      break;
+    case SHOW_PREFERENCES:
+      System::ShowNotifierPreferences();
+      break;
+    default:
+      break;
+  }
 }
 
 void Balloon::OnCloseButton(const std::string &button_id, void *user_info) {
@@ -843,13 +881,19 @@ bool BalloonCollection::Delete(const SecurityOrigin &security_origin,
 }
 
 void BalloonCollection::ShowAll() {
-  if (root_ui_)
-    root_ui_->Show();
+  if (!root_ui_)
+    return;
+  glint::Node *root_node = root_ui_->root_node();
+  assert(root_node);
+  root_node->set_alpha(glint::colors::kOpaqueAlpha);
 }
 
 void BalloonCollection::HideAll() {
-  if (root_ui_)
-    root_ui_->Hide();
+  if (!root_ui_)
+    return;
+  glint::Node *root_node = root_ui_->root_node();
+  assert(root_node);
+  root_node->set_alpha(glint::colors::kTransparentAlpha);
 }
 
 void BalloonCollection::EnsureRoot() {
@@ -860,6 +904,22 @@ void BalloonCollection::EnsureRoot() {
   glint::Node *container = new BalloonContainer();
   container->set_id(kBalloonContainer);
   container->AddHandler(new TimerHandler(this));
+
+  // Set transitional animation for alpha.
+  glint::AnimationTimeline *timeline = new glint::AnimationTimeline();
+
+  glint::AlphaAnimationSegment *segment = new glint::AlphaAnimationSegment();
+  segment->set_type(glint::RELATIVE_TO_START);
+  timeline->AddAlphaSegment(segment);
+
+  segment = new glint::AlphaAnimationSegment();
+  segment->set_type(glint::RELATIVE_TO_FINAL);
+  segment->set_duration(kAlphaTransitionDurationShort);
+  segment->set_interpolation(glint::Interpolation::Smooth);
+  timeline->AddAlphaSegment(segment);
+
+  container->SetTransition(glint::ALPHA_TRANSITION, timeline);
+
   root_ui_->set_root_node(container);
   root_ui_->Show();
 }
@@ -944,6 +1004,22 @@ void BalloonCollection::OnTimer(double current_time) {
     balloon->InitiateClose(false);  // 'false' == not initiated by the user.
     ResetExpirationTimer();
   }
+}
+
+static void OnSnoozeTimerFired(void *arg) {
+  BalloonCollection *collection = reinterpret_cast<BalloonCollection*>(arg);
+  collection->ShowAll();
+  collection->RestoreExpirationTimer();
+}
+
+void BalloonCollection::Snooze(int timeout_seconds) {
+  ResetExpirationTimer();
+  SuspendExpirationTimer();
+  HideAll();
+  snooze_timer_.reset(new TimedCall(static_cast<int64>(timeout_seconds) * 1000,
+                                    false,  // no repeat
+                                    OnSnoozeTimerFired,
+                                    this));
 }
 
 #endif  // OFFICIAL_BULID

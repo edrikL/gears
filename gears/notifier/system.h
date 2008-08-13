@@ -35,6 +35,7 @@
 
 namespace glint {
 class Rectangle;
+class RootUI;
 }
 
 class System {
@@ -53,6 +54,28 @@ class System {
   // scene (as Windows does when it scales 10pt font to look like 18pt), this
   // will report the 'font multiplication factor" for our UI to follow.
   static double GetSystemFontScaleFactor();
+
+  // Menu Item descriptor. Not full-featured, only what we need in Notifier.
+  // If title == "-" (single dash), the separator menu item is created.
+  struct MenuItem {
+    std::string title;
+    int command_id;
+    bool enabled;
+    bool checked;
+  };
+
+  // Pops up a context menu with items specified in 'menu_items' array.
+  // When menu is closed (by user selecting an item or somehow else) it returns
+  // with a 'command_id' of the selected item or -1 if no item was selected.
+  // It is assumed that the call is made in context of processing some mouse
+  // click event (so the platform-specific implementation can pick up the mouse
+  // location to position the context menu properly).
+  static int ShowContextMenu(const MenuItem *menu_items,
+                             size_t menu_items_count,
+                             glint::RootUI *root_ui);
+
+  // Opens a UI panel with local Notifier preferences.
+  static void ShowNotifierPreferences();
 
  private:
   System() {}  // Static class.
