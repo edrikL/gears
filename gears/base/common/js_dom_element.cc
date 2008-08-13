@@ -38,9 +38,21 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "gears/base/common/js_dom_element.h"
 
+#include "gears/base/common/leak_counter.h"
+
 #if BROWSER_FF
 #include "gears/base/firefox/ns_file_utils.h"
 #endif
+
+
+JsDomElement::JsDomElement() {
+  LEAK_COUNTER_INCREMENT(JsDomElement);
+}
+
+
+JsDomElement::~JsDomElement() {
+  LEAK_COUNTER_DECREMENT(JsDomElement);
+}
 
 
 #if BROWSER_FF
