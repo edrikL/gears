@@ -75,14 +75,14 @@ GearsWorkerPool::~GearsWorkerPool() {
 
   if (threads_manager_) {
     threads_manager_->UninitWorkerThread();
-    threads_manager_->ReleaseWorkerRef();
+    threads_manager_->Unref();
   }
 }
 
 void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
   assert(!threads_manager_);
   threads_manager_ = manager;
-  threads_manager_->AddWorkerRef();
+  threads_manager_->Ref();
 
   // Leave owns_threads_manager_ set to false.
   assert(!owns_threads_manager_);

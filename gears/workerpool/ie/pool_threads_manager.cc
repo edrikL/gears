@@ -46,7 +46,6 @@
 
 #include "gears/workerpool/ie/pool_threads_manager.h"
 
-#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/module_wrapper.h"
@@ -154,8 +153,7 @@ PoolThreadsManager::PoolThreadsManager(
                         const SecurityOrigin &page_security_origin,
                         JsRunnerInterface *root_js_runner,
                         GearsWorkerPool *owner)
-    : ref_count_(0),
-      is_shutting_down_(false),
+    : is_shutting_down_(false),
       unrefed_owner_(owner),
       page_security_origin_(page_security_origin),
       owner_permissions_manager_(page_security_origin, owner->EnvIsWorker()),
@@ -623,7 +621,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   assert(args);
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
-  wi->threads_manager->AddWorkerRef();
+  wi->threads_manager->Ref();
 
   // Setup worker thread.
   // Then signal that initialization is done, and indicate success/failure.
@@ -678,7 +676,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.
   wi->js_runner = NULL;
-  wi->threads_manager->ReleaseWorkerRef();
+  wi->threads_manager->Unref();
   wi->module_environment.reset(NULL);
 
   return 0;  // value is currently unused
@@ -910,10 +908,10 @@ void PoolThreadsManager::ShutDown() {
   // Drop any references to the owner. Unlock first since Shutdown can be
   // called recursively when unrefing the owner. Also bump our refcount while
   // unrefing to gaurd against being deleted prior to the scoped ptr reset.
-  AddWorkerRef();
+  Ref();
   unrefed_owner_ = NULL;
   refed_owner_ = NULL;
-  ReleaseWorkerRef();
+  Unref();
 }
 
 
@@ -928,14 +926,3 @@ void PoolThreadsManager::ForceGCCurrentThread() {
   wi->js_runner->ForceGC();
 }
 #endif  // DEBUG
-
-
-void PoolThreadsManager::AddWorkerRef() {
-  AtomicIncrement(&ref_count_, 1);
-}
-
-void PoolThreadsManager::ReleaseWorkerRef() {
-  if (AtomicIncrement(&ref_count_, -1) == 0) {
-    delete this;
-  }
-}
