@@ -27,15 +27,14 @@
   // FileSubmitter is not implemented for WinCE.
 #else
 
-#if BROWSER_FF
-#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
-#elif BROWSER_IE
+#if BROWSER_IE
 #include <windows.h>
 #endif
 
 #include "gears/localserver/file_submitter.h"
 
 #include "gears/base/common/file.h"
+#include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
@@ -114,7 +113,7 @@ void GearsFileSubmitter::SetFileInputElement(JsCallContext *context) {
     return;
   }
 
-  IScriptable *dom_element = NULL;
+  JsDomElement dom_element;
   std::string16 url;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },
@@ -190,37 +189,10 @@ bool GearsFileSubmitter::CreateTempFile(
   return true;
 }
 
-bool GearsFileSubmitter::CaptureInputElement(IScriptable *dom_element) {
-  // TODO(nigeltao): pull this platform-specfic code out into a
-  // JsDomElement or JsFileInputElement class that has a uniform API,
-  // cross-platform, just like JsObject and JsArray.
-#if BROWSER_FF
-  nsCOMPtr<nsIDOMHTMLInputElement> input;
-  if (NS_OK != DOMUtils::VerifyAndGetFileInputElement(dom_element,
-                                                      getter_AddRefs(input))) {
-    return false;
-  }
-
-  // Security rights are gleaned from the JavaScript context.
-  // "UniversalFileRead" is required to set the value we want to set.
-  // Temporarily pushing NULL onto the JavaScript context stack lets
-  // the system know that native code is running and all rights are granted.
-  //
-  // Because this code relies on XPConnect (which doesn't exist in worker
-  // threads), this code should generally be avoided.  That's why we don't
-  // expose it as a shared 'TempJsContext' object in /base.
-  nsCOMPtr<nsIJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack) {
-    return false;
-  }
-  stack->Push(NULL);
-  nsresult nr = input->SetValue(nsString(name_of_temporary_file_.c_str()));
-  JSContext *context;
-  stack->Pop(&context);
-  return nr == NS_OK;
-
-#elif BROWSER_IE
+bool GearsFileSubmitter::CaptureInputElement(JsDomElement &dom_element) {
+  // JsDomElement::SetFileInputElementValue is unimplemented on IE, so we have
+  // to implement a BROWSER_IE specific work-around.
+#if BROWSER_IE
   if (behavior_cookie_) {
     // If the browser_cookie_ is set, then setFileInputElement has been
     // previously called (and succeeded). We should undo the attachment
@@ -235,7 +207,7 @@ bool GearsFileSubmitter::CaptureInputElement(IScriptable *dom_element) {
     html_element2_ = static_cast<IHTMLElement2*>(NULL);
   }
 
-  html_element2_ = dom_element;
+  html_element2_ = dom_element.dispatch();
   if (!html_element2_) return false;
   CComBSTR behavior_url(L"#Google" PRODUCT_SHORT_NAME L"#SubmitFile");
 
@@ -286,8 +258,7 @@ bool GearsFileSubmitter::CaptureInputElement(IScriptable *dom_element) {
   return true;
 
 #else
-  // TODO(nigeltao): Implement on NPAPI.
-  return false;
+  return dom_element.SetFileInputElementValue(name_of_temporary_file_);
 #endif
 }
 

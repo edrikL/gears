@@ -28,15 +28,12 @@
 #else
 #include "gears/desktop/drag_and_drop_registry.h"
 
-#include "third_party/scoped_ptr/scoped_ptr.h"
-
 
 #if BROWSER_FF
 #include <gecko_sdk/include/nsIDOMHTMLElement.h>
 #include <gecko_sdk/include/nsIDOMEvent.h>
 #include <gecko_sdk/include/nsIDOMEventListener.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
-#include "gears/base/firefox/dom_utils.h"
 #include "gears/desktop/drop_target_ff.h"
 
 #elif BROWSER_IE && !defined(WINCE)
@@ -44,6 +41,9 @@
 #include "gears/desktop/drop_target_ie.h"
 
 #endif
+
+#include "gears/base/common/js_dom_element.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 #if BROWSER_FF || (BROWSER_IE && !defined(WINCE))
@@ -90,19 +90,12 @@ static bool InitializeDropTarget(ModuleImplBaseClass *sibling_module,
 
 DropTarget *DragAndDropRegistry::RegisterDropTarget(
     ModuleImplBaseClass *sibling_module,
-    IScriptable *dom_element,
+    JsDomElement &dom_element,
     JsObject &js_callbacks,
     std::string16 *error_out) {
 #if BROWSER_FF
-  nsCOMPtr<nsIDOMHTMLElement> dom_html_element;
-  nsresult nr = DOMUtils::VerifyAndGetDomHtmlElement(
-      dom_element, getter_AddRefs(dom_html_element));
-  if (NS_FAILED(nr) || !dom_html_element) {
-    *error_out = STRING16(L"Argument must be a DOMHTMLElement.");
-    return NULL;
-  }
-
-  nsCOMPtr<nsIDOMEventTarget> event_target = do_QueryInterface(dom_element);
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+      do_QueryInterface(dom_element.dom_html_element());
   if (!event_target) {
     *error_out = STRING16(L"Argument must be a DOMEventTarget.");
     return NULL;
@@ -138,7 +131,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
   return drop_target;
 
 #elif BROWSER_IE && !defined(WINCE)
-  CComQIPtr<IHTMLElement2> html_element_2(dom_element);
+  CComQIPtr<IHTMLElement2> html_element_2(dom_element.dispatch());
   if (!html_element_2) return NULL;
   CComBSTR behavior_url(L"#Google" PRODUCT_SHORT_NAME L"#DropTarget");
 

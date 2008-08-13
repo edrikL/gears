@@ -29,8 +29,6 @@
 
 #include "gears/base/common/html_event_monitor.h"
 
-#include "gears/base/firefox/dom_utils.h"
-
 
 // Provides an nsIDOMEventListener interface for events to invoke.
 class HtmlEventMonitorHook

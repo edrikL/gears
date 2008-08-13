@@ -48,17 +48,12 @@ typedef JsRootedToken JsRootedCallback;
 
 #if BROWSER_FF
 
-#include <gecko_sdk/include/nsCOMPtr.h>  // for JsParamFetcher
 #include <gecko_internal/jsapi.h>
-#include <gecko_internal/nsIXPConnect.h> // for JsParamFetcher
 
 // Abstracted types for values used with JavaScript engines.
 typedef jsval JsToken;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
-
-// interface required for COM objects exposed in JS
-typedef nsISupports IScriptable;
 
 // TODO(michaeln): compare string values rather than pointers?
 struct JsTokenEqualTo : public std::equal_to<JsToken> {
@@ -74,9 +69,6 @@ struct JsTokenEqualTo : public std::equal_to<JsToken> {
 typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr;  // unused in IE
-
-// interface required for COM objects exposed in JS
-typedef IDispatch IScriptable;
 
 // On Firefox, a JsToken is a jsval, which is an int, and the natural
 // operator== is fine.  On IE, JsToken is a VARIANT, which does not have a
@@ -177,9 +169,6 @@ class ScopedNPVariant : public NPVariant {
 typedef NPVariant JsToken;
 typedef ScopedNPVariant JsScopedToken;
 typedef NPP JsContextPtr;
-
-// Not used in NPAPI or WEBKIT at the moment
-typedef void* IScriptable;
 
 struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
   JsTokenEqualTo(JsRunnerInterface *js_runner);

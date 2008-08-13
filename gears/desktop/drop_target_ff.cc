@@ -36,7 +36,6 @@
 #include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
-#include "gears/base/firefox/dom_utils.h"
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
 

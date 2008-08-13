@@ -38,11 +38,11 @@
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptObjectPrincipal.h>
 #include <gecko_internal/nsITimer.h>
+#include <gecko_internal/nsIXPConnect.h>
 
 #if BROWSER_FF3
 #include <gecko_sdk/include/nsIArray.h>
 #include <gecko_sdk/include/nsIMutableArray.h>
-#include <gecko_internal/nsIXPConnect.h>
 #include <gecko_internal/nsDOMJSUtils.h>
 #include <gecko_internal/nsIJSContextStack.h>
 #else

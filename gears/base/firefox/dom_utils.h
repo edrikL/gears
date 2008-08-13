@@ -26,20 +26,13 @@
 #ifndef GEARS_BASE_FIREFOX_DOM_UTILS_H__
 #define GEARS_BASE_FIREFOX_DOM_UTILS_H__
 
-struct JSContext; // must declare this before including nsIJSContextStack.h
-#include <gecko_internal/nsIJSContextStack.h>
-
 #include "gears/base/common/common_ff.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/ui/common/window_utils.h"  // for NativeWindowPtr
 
-class nsIDOMDocument;
-class nsIDOMEventTarget;
+struct JSContext;
 class nsIDOMWindowInternal;
-class nsIDOMHTMLElement;
-class nsIDOMHTMLInputElement;
-class nsIJSContextStack;
 class nsIScriptContext;
 class nsIURI;
 
@@ -58,16 +51,6 @@ class DOMUtils {
 
   // Returns the native window for the browser.
   static nsresult GetNativeWindow(JSContext *context, NativeWindowPtr* window);
-
-  // Verifies the given unknown is a legitimate file input element and returns
-  // its interface pointer.
-  static nsresult VerifyAndGetFileInputElement(nsISupports *unknown,
-                                           nsIDOMHTMLInputElement **file_input);
-
-  // Verifies the given unknown is a legitimate DOM HTML element and returns
-  // its interface pointer.
-  static nsresult VerifyAndGetDomHtmlElement(nsISupports *unknown,
-                                             nsIDOMHTMLElement **element);
 
   // Creates a new nsIURI object. The 'url' parameter can be a relative url or
   // an absolute url. Returns true on success

@@ -30,6 +30,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/ipc_message_queue.h"
+#include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/module_wrapper.h"
@@ -1000,7 +1001,7 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
     return;
   }
 
-  IScriptable *dom_element = NULL;
+  JsDomElement dom_element;
   JsObject drag_drop_options;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },

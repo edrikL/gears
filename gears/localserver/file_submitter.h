@@ -36,6 +36,8 @@
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/resource_store.h"
 
+class JsDomElement;
+
 
 
 #if BROWSER_IE
@@ -96,7 +98,7 @@ class GearsFileSubmitter : public ModuleImplBaseClass {
   bool CreateTempFile(const std::string16 &in_filename,
                       const WebCacheDB::PayloadInfo &payload);
 
-  bool CaptureInputElement(IScriptable *dom_element);
+  bool CaptureInputElement(JsDomElement &dom_element);
 
   friend class GearsResourceStore;
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitter);

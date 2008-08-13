@@ -29,12 +29,12 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for isnan
+#include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/common/js_runner_ff_marshaling.h"
-#include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
@@ -124,62 +124,11 @@ bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
 // Special conversion functions for FireFox
 #if BROWSER_FF
 
-static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
-                                 IScriptable** out) {
-  // TODO(nigeltao): make this work in a worker pool
-  nsresult nr;
-  nsCOMPtr<nsIXPConnect> xpc;
-  xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
-  if (NS_FAILED(nr))
-    return false;
-
-#if BROWSER_FF3
-  nsAXPCNativeCallContext *ncc;
-  nr = xpc->GetCurrentNativeCallContext(&ncc);
-#else
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
-  nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-#endif
-  if (NS_FAILED(nr))
-    return false;
-
-  if (!JSVAL_IS_OBJECT(in)) {
-    return false;
-  }
-  JSObject *obj = JSVAL_TO_OBJECT(in);
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nr = xpc->GetWrappedNativeOfJSObject(context, obj, getter_AddRefs(wrapper));
-  if (NS_FAILED(nr))
-    return false;
-
-  nsCOMPtr<nsISupports> isupports = NULL;
-  nr = wrapper->GetNative(getter_AddRefs(isupports));
-  if (NS_FAILED(nr))
-    return false;
-
-  *out = isupports.get();
-  (*out)->AddRef();
-  return true;
-}
-
 #elif BROWSER_IE
 
-static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
-                                 IScriptable** out) {
-  if (in.vt == VT_DISPATCH) {
-    *out = in.pdispVal;
-    return true;
-  }
-  return false;
-}
 
 #elif BROWSER_NPAPI
 
-static bool JsTokenToIScriptable(JsContextPtr context, JsToken in,
-                                 IScriptable** out) {
-  // TODO(nigeltao): implement.
-  return false;
-}
 
 #endif
 
@@ -945,16 +894,12 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       break;
     }
     case JSPARAM_DOM_ELEMENT: {
-#if BROWSER_NPAPI
-      return false;
-#else
-      IScriptable **value = static_cast<IScriptable **>(param->value_ptr);
-      if (!JsTokenToIScriptable(context->js_context(), variant, value)) {
+      JsDomElement *value = static_cast<JsDomElement *>(param->value_ptr);
+      if (!value->InitJsDomElement(context->js_context(), variant)) {
         context->SetException(
             STRING16(L"Invalid argument type: expected DOM element."));
         return false;
       }
-#endif
       break;
     }
     default:

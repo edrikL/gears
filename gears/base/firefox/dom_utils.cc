@@ -27,10 +27,6 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsIURI.h>
 #include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsIDOMWindow.h>
-#include <gecko_sdk/include/nsIDOMHTMLElement.h>
-#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
-#include <gecko_sdk/include/nsIDOMEventTarget.h>
-#include <gecko_sdk/include/nsIDOMDocument.h>
 #include <gecko_sdk/include/nsIInterfaceRequestor.h>
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIBaseWindow.h>
@@ -59,36 +55,6 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #if defined(LINUX) && !defined(OS_MACOSX)
 #include <gtk/gtk.h>
 #endif
-
-// The IID for nsIContent in different versions of Firefox/Gecko
-// TODO(michaeln): Add to this list as new versions show up
-
-#if BROWSER_FF3
-// Firefox 3.0.x
-#define NS_ICONTENT_IID_GECKO190 \
-{ 0x0acd0482, 0x09a2, 0x42fd, \
-  { 0xb6, 0x1b, 0x95, 0xa2, 0x01, 0x6a, 0x55, 0xd3 } }
-#else
-// Firefox 1.5.0.x
-#define NS_ICONTENT_IID_GECKO180 \
-{ 0x3fecc374, 0x2839, 0x4db3, \
-  { 0x8d, 0xe8, 0x6b, 0x76, 0xd1, 0xd8, 0xe6, 0xf6 } }
-
-// Firefox 2.0.0.x
-#define NS_ICONTENT_IID_GECKO181 \
-{ 0x9d059608, 0xddb0, 0x4e6a, \
-  { 0x99, 0x69, 0xd2, 0xf3, 0x63, 0xa1, 0xb5, 0x57 } }
-
-#endif
-
-static const nsIID kPossibleNsContentIIDs[] = {
-#if BROWSER_FF3
-      NS_ICONTENT_IID_GECKO190,
-#else
-      NS_ICONTENT_IID_GECKO180,
-      NS_ICONTENT_IID_GECKO181,
-#endif
-    };
 
 
 bool DOMUtils::GetJsContext(JSContext **context) {
@@ -194,94 +160,6 @@ nsresult DOMUtils::GetNativeWindow(JSContext *js_context,
 #else  // !LINUX && !OS_MACOSX
   *window = reinterpret_cast<NativeWindowPtr>(parentWindow);
 #endif
-
-  return NS_OK;
-}
-
-
-//
-// This is a security measure to prevent script from spoofing DOM elements.
-//
-static bool VerifyNsContent(nsISupports *unknown) {
-  if (!unknown) return false;
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIInterfaceInfoManager> iface_info_manager;
-  iface_info_manager = do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID,
-                                     &rv);
-  if (NS_FAILED(rv) || !iface_info_manager) { return false; }
-
-  // The nsIContentIID is version dependent, we test for all we know about
-  for (size_t i = 0; i < ARRAYSIZE(kPossibleNsContentIIDs); ++i) {
-    const nsIID *ns_content_iid = &kPossibleNsContentIIDs[i];
-
-    // Paranoia, ensure that the IID we query for is either unknown to the
-    // interface manager or not scriptable. The XPConnect JSWrapper
-    // QueryInterface implementation will not forward to script for such
-    // interfaces. In Firefox 2.0 and 1.5, nsIContent is not known by
-    // the interface manager.
-    nsCOMPtr<nsIInterfaceInfo> iface_info;
-    rv = iface_info_manager->GetInfoForIID(ns_content_iid,
-                                           getter_AddRefs(iface_info));
-    if (NS_SUCCEEDED(rv) && iface_info) {
-      PRBool is_scriptable = PR_TRUE;
-      rv = iface_info->IsScriptable(&is_scriptable);
-      if (NS_FAILED(rv) || is_scriptable) {
-        continue;  // Don't test for this interface id
-      }
-    }
-
-    // Test if our 'unknown' argument implements nsIContent,
-    // a positive test indicates 'unknown' is not script based.
-    nsCOMPtr<nsISupports> nscontent;
-    rv = unknown->QueryInterface(*ns_content_iid,
-                                 reinterpret_cast<void**>(&nscontent));
-    if (NS_SUCCEEDED(rv) && nscontent) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-
-nsresult DOMUtils::VerifyAndGetFileInputElement(nsISupports *unknown,
-                                          nsIDOMHTMLInputElement **file_input) {
-  // Verify 'unknown' is actually a content node from Gecko's DOM as opposed
-  // to a JavaScript object pretending to be one.
-  if (!VerifyNsContent(unknown)) return NS_ERROR_FAILURE;
-
-  // Verify unknown is an <input> element
-  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(unknown);
-  NS_ENSURE_ARG(input);
-
-  // Verify it's type attibute is "file", <input type=file>
-  nsString type;
-  nsresult rv = input->GetType(type);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_ARG(type.Equals(NS_LITERAL_STRING("file")));
-
-  // Return a reference to the interface pointer
-  *file_input = input;
-  (*file_input)->AddRef();
-
-  return NS_OK;
-}
-
-
-nsresult DOMUtils::VerifyAndGetDomHtmlElement(nsISupports *unknown,
-                                             nsIDOMHTMLElement **element) {
-  // Verify 'unknown' is actually a content node from Gecko's DOM as opposed
-  // to a JavaScript object pretending to be one.
-  if (!VerifyNsContent(unknown)) return NS_ERROR_FAILURE;
-
-  // Verify unknown is a DOM HTML element
-  nsCOMPtr<nsIDOMHTMLElement> e = do_QueryInterface(unknown);
-  NS_ENSURE_ARG(e);
-
-  // Return a reference to the interface pointer
-  *element = e;
-  (*element)->AddRef();
 
   return NS_OK;
 }
