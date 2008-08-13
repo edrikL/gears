@@ -148,7 +148,7 @@ if (isIE || isFirefox) {
 }
 suites.push(localServerSuite);
 
-if (!isOfficial && !isSafari & !isWince) {
+if (!isOfficial && !isWince) {
   var notifierSuite = new TestSuite('Notifier');
   notifierSuite.addFile('../testcases/notifier_tests.js',
       {useWorker: false, useIFrame: true});

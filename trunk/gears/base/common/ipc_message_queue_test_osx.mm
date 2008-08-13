@@ -40,6 +40,7 @@
 #import "gears/base/common/paths.h"
 #import "gears/base/common/stopwatch.h"
 #import "gears/base/common/string_utils.h"
+#import "gears/base/common/timed_call.h"
 
 const char16 *kIpcTestApp = STRING16(L"ipc_test");
 
@@ -165,6 +166,13 @@ void SlaveMessageHandler::TerminateSlave() {
   LOG(("Terminating slave process %u\n", getpid()));
   g_slave_handler.set_done(true);
   [NSApp terminate:NSApp];
+}
+
+void OnSlaveTimer(void *arg) {
+  // Terminate the slave process if the parent process is dead.
+  if (kill(getppid(), 0) != 0) {
+    SlaveMessageHandler::TerminateSlave();
+  }
 }
 
 bool InitSlave() {
