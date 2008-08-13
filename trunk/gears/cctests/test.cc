@@ -402,9 +402,9 @@ void GearsTest::TestPassArguments(JsCallContext *context) {
 }
 
 void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
-  JsRootedCallback *function = NULL;
+  scoped_ptr<JsRootedCallback> function;
   JsArgument argv[] = {
-    {JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function},
+    {JSPARAM_REQUIRED, JSPARAM_FUNCTION, as_out_parameter(function)},
   };
   assert(&argv);
   context->GetArguments(ARRAYSIZE(argv), argv);
@@ -423,8 +423,8 @@ void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
     {JSPARAM_STRING16, &string_value},
   };
 
-  GetJsRunner()->InvokeCallback(function, ARRAYSIZE(out_argv), out_argv, NULL);
-  delete function;
+  GetJsRunner()->InvokeCallback(function.get(), ARRAYSIZE(out_argv),
+                                out_argv, NULL);
 }
 
 void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
@@ -526,8 +526,9 @@ void GearsTest::TestPassObject(JsCallContext *context) {
 
 void GearsTest::TestCreateObject(JsCallContext* context) {
   const int argc = 1;
-  JsRootedCallback* func = NULL;
-  JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &func } };
+  scoped_ptr<JsRootedCallback> func;
+  JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_FUNCTION,
+                              as_out_parameter(func) } };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
@@ -551,7 +552,7 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   CreateObjectString(context, js_runner, js_object.get());
   if (context->is_exception_set()) return;
 
-  CreateObjectArray(context, js_runner, func, js_object.get());
+  CreateObjectArray(context, js_runner, func.get(), js_object.get());
   if (context->is_exception_set()) return;
 
   CreateObjectObject(context, js_runner, js_object.get());
@@ -560,7 +561,7 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   CreateObjectDate(context, js_runner, js_object.get());
   if (context->is_exception_set()) return;
 
-  CreateObjectFunction(context, func, js_object.get());
+  CreateObjectFunction(context, func.get(), js_object.get());
   if (context->is_exception_set()) return;
 
   context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
@@ -1760,16 +1761,15 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(ValidateGeneratedArray(array_5, 5));
 
   // index 6
-  JsRootedCallback* function_temp = NULL;
-  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_temp));
-  TEST_ASSERT(function_temp);
-  scoped_ptr<JsRootedCallback> function_6(function_temp);
+  scoped_ptr<JsRootedCallback> function_6;
+  TEST_ASSERT(array_many_types.GetElementAsFunction(6,
+                                                 as_out_parameter(function_6)));
+  TEST_ASSERT(function_6.get());
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
-  JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(),
-                                        0, NULL, &retval));
-  TEST_ASSERT(retval);
+  scoped_ptr<JsRootedToken> retval;
+  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(), 0, NULL,
+                                        as_out_parameter(retval)));
   std::string16 string_retval;
   JsContextPtr js_context = context->js_context();
   TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
@@ -1814,15 +1814,16 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj) {
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base) {
-  JsRootedCallback* function_temp = NULL;
-  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function_temp));
-  TEST_ASSERT(function_temp);
-  scoped_ptr<JsRootedCallback> function(function_temp);
+  scoped_ptr<JsRootedCallback> function;
+  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"),
+                                        as_out_parameter(function)));
+  TEST_ASSERT(function.get());
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
-  JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL, &retval));
-  TEST_ASSERT(retval);
+  scoped_ptr<JsRootedToken> retval;
+  TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL,
+                                        as_out_parameter(retval)));
+  TEST_ASSERT(retval.get());
   std::string16 string_retval;
   JsContextPtr js_context = context->js_context();
   TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,

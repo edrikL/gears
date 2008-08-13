@@ -901,6 +901,13 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       break;
     }
     case JSPARAM_FUNCTION: {
+      // TODO(nigeltao): make this a JsRootedCallback* instead of a pointer-
+      // to-a-pointer JsRootedCallback**, and add a JsRootedCallback::SetToken
+      // method just like JsObject::SetObject and JsArray::SetArray is called
+      // above, in order to simplify memory management issues around using
+      // JSPARAM_FUNCTION and JsCallContext::GetArguments, especially if
+      // GetArguments partially succeeds (on the first few arguments) but
+      // ultimately fails.
       JsRootedCallback **value =
           static_cast<JsRootedCallback **>(param->value_ptr);
       if (!JsTokenToNewCallback_NoCoerce(variant, context->js_context(),
@@ -1833,6 +1840,61 @@ void ScopedNPVariant::Reset(const NPVariant &value) {
 
 void ScopedNPVariant::Release() {
   VOID_TO_NPVARIANT(*this);
+}
+
+#endif
+
+//------------------------------------------------------------------------------
+// JsRootedToken
+//------------------------------------------------------------------------------
+
+#if BROWSER_FF
+
+JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
+    : context_(context), token_(token) {
+  LEAK_COUNTER_INCREMENT(JsRootedToken);
+  if (JSVAL_IS_GCTHING(token_)) {
+    JS_BeginRequest(context_);
+    JS_AddRoot(context_, &token_);
+    JS_EndRequest(context_);
+  }
+}
+
+JsRootedToken::~JsRootedToken() {
+  LEAK_COUNTER_DECREMENT(JsRootedToken);
+  if (JSVAL_IS_GCTHING(token_)) {
+    JS_BeginRequest(context_);
+    JS_RemoveRoot(context_, &token_);
+    JS_EndRequest(context_);
+  }
+}
+
+#elif BROWSER_IE
+
+JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
+    : token_(token) { // IE doesn't use JsContextPtr
+  LEAK_COUNTER_INCREMENT(JsRootedToken);
+  if (token_.vt == VT_DISPATCH) {
+    token_.pdispVal->AddRef();
+  }
+}
+
+JsRootedToken::~JsRootedToken() {
+  LEAK_COUNTER_DECREMENT(JsRootedToken);
+  if (token_.vt == VT_DISPATCH) {
+    token_.pdispVal->Release();
+  }
+}
+
+#elif BROWSER_NPAPI
+
+JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
+    : context_(context), token_(token) {
+  LEAK_COUNTER_INCREMENT(JsRootedToken);
+}
+
+JsRootedToken::~JsRootedToken() {
+  LEAK_COUNTER_DECREMENT(JsRootedToken);
 }
 
 #endif

@@ -326,27 +326,17 @@ bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out);
 bool NullToJsToken(JsContextPtr context, JsScopedToken *out);
 bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out);
 
+//------------------------------------------------------------------------------
+// JsRootedToken
+//------------------------------------------------------------------------------
+
 #if BROWSER_FF
 
 // A JsToken that won't get GC'd out from under you.
 class JsRootedToken {
  public:
-  JsRootedToken(JsContextPtr context, JsToken token)
-      : context_(context), token_(token) {
-    if (JSVAL_IS_GCTHING(token_)) {
-      JS_BeginRequest(context_);
-      JS_AddRoot(context_, &token_);
-      JS_EndRequest(context_);
-    }
-  }
-
-  ~JsRootedToken() {
-    if (JSVAL_IS_GCTHING(token_)) {
-      JS_BeginRequest(context_);
-      JS_RemoveRoot(context_, &token_);
-      JS_EndRequest(context_);
-    }
-  }
+  JsRootedToken(JsContextPtr context, JsToken token);
+  ~JsRootedToken();
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return context_; }
@@ -365,18 +355,8 @@ class JsRootedToken {
 // is an input parameter vs a return value.
 class JsRootedToken {
  public:
-  JsRootedToken(JsContextPtr context, JsToken token)
-       : token_(token) { // IE doesn't use JsContextPtr
-    if (token_.vt == VT_DISPATCH) {
-      token_.pdispVal->AddRef();
-    }
-  }
-
-  ~JsRootedToken() {
-    if (token_.vt == VT_DISPATCH) {
-      token_.pdispVal->Release();
-    }
-  }
+  JsRootedToken(JsContextPtr context, JsToken token);
+  ~JsRootedToken();
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return NULL; }
@@ -391,8 +371,8 @@ class JsRootedToken {
 // A JsToken that won't get GC'd out from under you.
 class JsRootedToken {
  public:
-  JsRootedToken(JsContextPtr context, JsToken token)
-       : context_(context), token_(token) { }
+  JsRootedToken(JsContextPtr context, JsToken token);
+  ~JsRootedToken();
 
   const JsScopedToken& token() const { return token_; }
   JsContextPtr context() const { return context_; }
