@@ -219,5 +219,17 @@ double System::GetSystemFontScaleFactor() {
   return factor;
 }
 
+int System::ShowContextMenu(const MenuItem *menu_items,
+                            size_t menu_items_count,
+                            glint::RootUI *root_ui) {
+  // TODO: Implement this.
+  return -1;
+}
+
+void System::ShowNotifierPreferences() {
+  // TODO: Implement this.
+  assert(false);
+}
+
 #endif  // WIN32
 #endif  // OFFICIAL_BUILD

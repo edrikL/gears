@@ -35,9 +35,11 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string16.h"
 #include "gears/notifier/notification.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class BalloonCollection;
 class GearsNotification;
+class TimedCall;
 class UserActivityInterface;
 
 // Glint classes
@@ -131,7 +133,9 @@ class Balloon {
                 int width,
                 int height,
                 const void *decoded_image);
+  void ShowMenu();
   static void OnCloseButton(const std::string &button_id, void *user_info);
+  static void OnMenuButton(const std::string &button_id, void *user_info);
   static bool SetAlphaTransition(glint::Node *node, double transition_duration);
   static bool SetMoveTransition(glint::Node *node);
 
@@ -181,6 +185,10 @@ class BalloonCollection : public BalloonCollectionInterface {
   }
   void OnTimer(double current_time);
 
+  // Immediately hides all notifications and stops the notification pipeline
+  // so the accumulated notifications will be shown when snooze timeout ends.
+  void Snooze(int timeout_seconds);
+
  private:
   void Clear();  // clears balloons_
   Balloon *FindBalloon(const SecurityOrigin &security_origin,
@@ -194,6 +202,7 @@ class BalloonCollection : public BalloonCollectionInterface {
   int expiration_suspended_counter_;
   double last_time_;
   double elapsed_time_;
+  scoped_ptr<TimedCall> snooze_timer_;
   bool has_space_;
   DISALLOW_EVIL_CONSTRUCTORS(BalloonCollection);
 };
