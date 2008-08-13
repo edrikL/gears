@@ -45,8 +45,7 @@
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-static const DWORD FILE_SHARE_ALL(FILE_SHARE_READ | FILE_SHARE_WRITE |
-                                  FILE_SHARE_DELETE);
+static const DWORD FILE_SHARE_ALL(FILE_SHARE_READ | FILE_SHARE_WRITE);
 
 File::~File() {
   Close();
