@@ -475,6 +475,9 @@ EXE_PREFIX =
 EXE_SUFFIX =
 EXEFLAGS += $(SHARED_LINKFLAGS) -framework Carbon -framework CoreServices
 EXEFLAGS += -framework Cocoa -mmacosx-version-min=10.4
+ifeq ($(BROWSER),NONE)
+EXEFLAGS += -framework IOKit -framework ScreenSaver
+endif
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
