@@ -180,26 +180,29 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td valign="top">
+        <!-- On IE Mobile, we can reliably hide or show div elements.
+        Showing or hiding image elements is like playing the Russian roulette:
+        it is potentially lethal. -->
+        <div id="icon-local-data" class="header-icon">
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
-          <img id="icon-local-data" class="header-icon"
-           width="32" height="32" src="data:image/png;base64,
+          <img width="32" height="32" src="data:image/png;base64,
 m4_include(genfiles/local_data.png.base64)m4_dnl
            ">
 ~,~
-          <img id="icon-local-data" class="header-icon"
-           width="32" height="32" src="local_data.png">
+          <img width="32" height="32" src="local_data.png">
 ~)
+        </div>
+        <div id="icon-locationdata" class="header-icon">
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
-          <img id="icon-locationdata" class="header-icon"
-           width="32" height="32" src="data:image/png;base64,
+          <img width="32" height="32" src="data:image/png;base64,
 m4_include(genfiles/location_data.png.base64)m4_dnl
            ">
 ~,~
-          <img id="icon-locationdata" class="header-icon"
-           width="32" height="32" src="location_data.png">
+          <img width="32" height="32" src="location_data.png">
 ~)
+        </div> 
           <!-- Some browsers automatically focus the first focusable item. We
           don't want anything focused, so we add this fake item. -->
           <a href="#" id="focus-thief"></a>
