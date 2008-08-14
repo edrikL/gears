@@ -117,7 +117,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
       STRING16(L"image/jpeg")) == 0) {
     type = SkImageEncoder::kJPEG_Type;
   } else {
-    // TODO(kart): Support BMP. Create it manually?
+    // TODO(nigeltao): Support BMP. Create it manually?
     // Skia doesn't support BMP encoding.
     context->SetException(STRING16(L"Unsupported MIME type."));
     return;
@@ -211,7 +211,7 @@ void GearsCanvas::Clone(JsCallContext *context) {
   clone->set_fill_style(fill_style());
   clone->set_font(font());
   clone->set_text_align(text_align());
-  // TODO(kart): Copy the transformation matrix and generally make sure that
+  // TODO(nigeltao): Copy the transformation matrix and generally make sure that
   // all state is copied.
 
   context->SetReturnValue(JSPARAM_MODULE, clone.get());
@@ -378,7 +378,7 @@ std::string16 GearsCanvas::fill_style() const {
 }
 
 void GearsCanvas::set_fill_style(std::string16 new_fill_style) {
-  // TODO(kart):
+  // TODO(nigeltao):
   // if (new_fill_style is not a valid CSS color)
   //  return;
 
@@ -390,7 +390,7 @@ std::string16 GearsCanvas::font() const {
 }
 
 void GearsCanvas::set_font(std::string16 new_font) {
-  // TODO(kart):
+  // TODO(nigeltao):
   // if (new_font is not a valid CSS font specification) {
   //   return;
   // }
@@ -416,7 +416,7 @@ void GearsCanvas::set_text_align(std::string16 new_text_align) {
 void GearsCanvas::ResetCanvas(int width, int height) {
   // Since we're starting with a clean slate, let's reset the SkBitmap as well.
   // For some reason things don't work otherwise.
-  // TODO(kart): Figure out why.
+  // TODO(nigeltao): Figure out why.
   skia_bitmap_.reset(new SkBitmap);
   skia_bitmap_->setConfig(skia_config, width, height);
 

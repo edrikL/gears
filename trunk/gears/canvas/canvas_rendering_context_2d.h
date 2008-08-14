@@ -145,7 +145,7 @@ class GearsCanvasRenderingContext2D
   // Fills the specified rectangle by the current fill color.
   void FillRect(JsCallContext *context);
   // Strokes the rectangle with a one-pixel think border.
-  // TODO(kart): Define stroke color.
+  // TODO(nigeltao): Define stroke color.
   void StrokeRect(JsCallContext *context);
 
   // These affect future text rendering-related

@@ -52,7 +52,7 @@ void GearsCanvasRenderingContext2D::ClearReferenceFromGearsCanvas() {
   // The canvas pointer will be null if this object didn't initalize in the
   // first place (that is, if InitBaseFromSibling failed), or after a page
   // unload event.
-  if (canvas_) 
+  if (canvas_)
     canvas_->ClearRenderingContextReference();
 }
 
@@ -123,7 +123,7 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
       &GearsCanvasRenderingContext2D::ResetTransform);
 }
 
-// TODO(kart): Unless otherwise stated, for the 2D context interface, any
+// TODO(nigeltao): Unless otherwise stated, for the 2D context interface, any
 // method call with a numeric argument whose value is infinite or
 // a NaN value must be ignored.
 
@@ -151,14 +151,14 @@ void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
     return;
   if (context->GetArgumentType(1) == JSPARAM_UNDEFINED) {
     // If only one scale argument is supplied, use it for both dimensions.
+    // TODO(nigeltao): Test this.
     scale_y = scale_x;
-    // TODO(kart): Test this.
   }
   context->SetException(STRING16(L"Unimplemented"));
 }
 
 void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
-  // TODO(kart): Remove this after unit testing.
+  // TODO(nigeltao): Remove this after unit testing.
   context->SetException(STRING16(L"Unimplemented"));
   return;
   double angle;
@@ -268,7 +268,7 @@ void GearsCanvasRenderingContext2D::GetFillStyle(
   context->SetReturnValue(JSPARAM_STRING16, &fill_style);
 }
 
-// TODO(kart): Generate a better error if given a CanvasGradient or
+// TODO(nigeltao): Generate a better error if given a CanvasGradient or
 // CanvasPattern object (from the browser's canvas implementation).
 void GearsCanvasRenderingContext2D::SetFillStyle(
     JsCallContext *context) {
@@ -277,7 +277,7 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  // TODO(kart): Do not generate error on type mismatch; fail silently
+  // TODO(nigeltao): Do not generate error on type mismatch; fail silently
   // (as per HTML5 canvas spec).
   if (context->is_exception_set())
     return;
@@ -384,9 +384,9 @@ void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
-  // TODO(kart): This function has a bug that doesn't make it work after calling
-  // resize() on the target canvas. That is, if you resize() a canvas and then
-  // draw another canvas on it, the drawImage() is a noop.
+  // TODO(nigeltao): This function has a bug that doesn't make it work after
+  // calling resize() on the target canvas. That is, if you resize() a canvas
+  // and then draw another canvas on it, the drawImage() is a noop.
   // Also this function doesn't properly respect globalAlpha and
   // globalCompositeOperation.
   // Return an error code to prevent clients from getting bitten by these bugs.
@@ -394,7 +394,7 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // Some of the functionality of this function can be achieved using
   // crop(), resize() and clone().
 
-  // TODO(kart): Generate a better error message if given a HTMLImageElement
+  // TODO(nigeltao): Generate a better error message if given a HTMLImageElement
   // or a HTMLCanvasElement.
   
   /*
@@ -474,7 +474,8 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     return;
   }
   
-  // TODO(kart): First apply geometry xform, then alpha, then compositing.
+  // TODO(nigeltao): First apply geometry xform, then alpha, then compositing,
+  // as per HTML5 canvas spec.
 
   // If the globalAlpha is not 1.0, the source image must be multiplied by
   // globalAlpha *before* compositing.
@@ -504,13 +505,13 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
 
   // When drawBitmapRect() is called with a source rectangle, it (also) handles
   // the case where source canvas is same as this canvas.
-  // TODO(kart): This function silently fails on errors. Find out what can be
-  // done about this.
+  // TODO(nigeltao): This function silently fails on errors. Find out what can
+  // be done about this.
   canvas_->skia_canvas()->drawBitmapRect(
       *modified_src, &src_irect, dest_rect);
   */
   
-  // TODO(kart): Are the colors premultiplied? If so, unpremultiply them.
+  // TODO(nigeltao): Are the colors premultiplied? If so, unpremultiply them.
 }
 
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
