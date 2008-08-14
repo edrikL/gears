@@ -70,7 +70,7 @@ function testPropertiesCanBeWrittenAndReadBack() {
   canvas.height = height;
   assertEqual(width, canvas.width);
   assertEqual(height, canvas.height);
-  // TODO(kart): set to bad values and test?
+  // TODO(nigeltao): set to bad values and test?
 
   var alpha = 0.4;
   ctx.globalAlpha = alpha;
@@ -120,7 +120,7 @@ function setContextProperties(canvas) {
   ctx.globalAlpha = 0.45;
   ctx.globalCompositeOperation = 'copy';
   ctx.fillStyle = '#12345F';
-  // TODO(kart): Uncomment after implementing the properties.
+  // TODO(nigeltao): Uncomment after implementing the properties.
   // ctx.font = '24px Tahoma';
   // ctx.textAlign = 'right';
 }
@@ -275,7 +275,7 @@ function runCloneTest(blob, dummyBlob) {
   originalCtx.globalAlpha = alpha;
   originalCtx.globalCompositeOperation = compositeOperation;
   originalCtx.fillStyle = fillStyle;
-  // TODO(kart): After implementing font and textAlign, uncomment these.
+  // TODO(nigeltao): After implementing font and textAlign, uncomment these.
   // originalCtx.font = font;
   // originalCtx.textAlign = textAlign;
 
@@ -421,9 +421,10 @@ function testResizeWeirdCases() {
 // Use the two-argument drawImage() to clone an image.
 function testDraw2ImageClone() {
   startAsync();
-  // TODO(kart): Load something into the dest canvas before the drawImage, and
-  // make sure that the dest image data is overwritten if (a) composite mode is
-  // 'copy' or (b) source image has no alpha channel but not (c) otherwise.
+  // TODO(nigeltao): Load something into the dest canvas before the drawImage,
+  // and make sure that the dest image data is overwritten if
+  // (a) composite mode is 'copy' or (b) source image has no alpha channel
+  // but not (c) otherwise.
   var src = 'sample-original.jpeg';
   var dest = 'sample-jpeg-cropped-40-40-100-100.png';
   loadBlobs([src, dest], function(blobs) {
@@ -593,7 +594,7 @@ function testDrawImage2WithAlphaZeroIsNoop() {
 }
 
 
-// TODO(kart): Test the 4- and 8- argument overloads of drawImage().
+// TODO(nigeltao): Test the 4- and 8- argument overloads of drawImage().
 
 // Test that rotation by zero radians is a noop.
 function testRotateZeroIsNoop() {
@@ -615,20 +616,19 @@ function testRotateZeroIsNoop() {
 
 */
 
-// TODO(kart): restore should do nothing if the stack is
+// TODO(nigeltao): restore should do nothing if the stack is
 // empty (i.e, blank canvas)
 
-// TODO(kart): clearRect and fillRect have no effect is width or height is zero.
-// strokeRect has no effect if both width and height are zero, and draws a line
-// if exactly one of width and height is zero.
+// TODO(nigeltao): clearRect and fillRect have no effect is width or height is
+// zero. strokeRect has no effect if both width and height are zero, and draws
+// a line if exactly one of width and height is zero.
 
-// TODO(kart): If any of the arguments to createImageData() or getImageData()
-// are infinite or NaN, or if either the sw or sh arguments are zero, the method
-// must instead raise an INDEX_SIZE_ERR exception.
+// TODO(nigeltao): If any of the arguments to createImageData() or
+// getImageData() are infinite or NaN, or if either the sw or sh arguments are
+// zero, the method must instead raise an INDEX_SIZE_ERR exception.
 
-// TODO(kart): The values of the data array may be changed
-// (the length of the array,
-//  and the other attributes in ImageData objects, are all read-only).
+// TODO(nigeltao): The values of the data array may be changed (the length of
+// the array, and the other attributes in ImageData objects, are all read-only).
 // On setting, JS undefined values must be converted to zero. Other values must
 // first be converted to numbers using JavaScript's ToNumber algorithm, and if
 // the result is a NaN value, a TYPE_MISMATCH_ERR exception must be raised. If
@@ -637,14 +637,14 @@ function testRotateZeroIsNoop() {
 //  be rounded to the nearest integer using the IEEE 754r roundTiesToEven
 // rounding mode.
 
-// TODO(kart): putImageData: If the first argment to the method is null or
+// TODO(nigeltao): putImageData: If the first argment to the method is null or
 //  not an
 // ImageData object that was returned by createImageData() or getImageData()
 // then the putImageData() method must raise a TYPE_MISMATCH_ERR exception. If
 // any of the arguments to the method are infinite or NaN, the method must raise
 // an INDEX_SIZE_ERR exception.
 
-// TODO(kart): make sure
+// TODO(nigeltao): make sure
 // context.putImageData(context.getImageData(x, y, w, h), x, y);
 // is a noop.
 

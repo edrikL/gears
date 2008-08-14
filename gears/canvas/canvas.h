@@ -147,7 +147,7 @@ class GearsCanvas : public ModuleImplBaseClass {
   scoped_ptr<SkCanvas> skia_canvas_;
 
   // Context state:
-  // TODO(kart): Move this state into SkCanvas?
+  // TODO(nigeltao): Move this state into SkCanvas?
   double alpha_;
   std::string16 composite_operation_;
   std::string16 fill_style_;
