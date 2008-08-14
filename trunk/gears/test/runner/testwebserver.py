@@ -19,6 +19,7 @@ import cgi
 import cStringIO
 import os
 import traceback
+import time
 import zlib
 import urlparse
 import urllib
@@ -93,6 +94,7 @@ class RequestHandler(asynchat.async_chat,
   MessageClass = ParseHeaders
   blocksize = 4096
   use_buffer = False
+  write_slowly = False
 
 
   def __init__(self, conn, addr, server):
@@ -273,6 +275,8 @@ class RequestHandler(asynchat.async_chat,
     # unsent data to outgoing.
     try:
       num_sent = self.send(data)
+      if (self.write_slowly):
+        time.sleep(0.01)
       if num_sent < len(data):
         if not num_sent:
           outBuff.appendleft(data)

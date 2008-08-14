@@ -1,4 +1,6 @@
 size = int(self.query['size'][0])
+# Allow the client to request a delay when sending out data.
+self.write_slowly = bool(self.query.get('write_slowly', False))
 
 self.send_response(200)
 self.send_header('Content-Type', 'text/plain')
