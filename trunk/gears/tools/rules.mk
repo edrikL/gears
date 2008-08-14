@@ -1021,7 +1021,7 @@ $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 # Copy Info.plist
 	cp $($(BROWSER)_OUTDIR)/genfiles/Info.plist $@/Contents/
 # Copy proxy DLL
-	cp $(SF_PROXY_DLL) $@/Contents/MacOS/Gears
+	cp $(SF_PROXY_DLL) $@/Contents/MacOS/libgears.dylib
 # Copy Gears.bundle
 	cp -R $(SF_PLUGIN_BUNDLE) $@/Contents/Resources/
 # Copy uninstaller
@@ -1043,7 +1043,7 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_E
 	cp -r $(CRASH_SENDER_EXE) $@/Contents/Resources/
 	cp -r $(OSX_CRASH_INSPECTOR_EXE) $@/Contents/Resources/
 # Copy the actual plugin.
-	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/Gears"
+	cp  "$(SF_MODULE_DLL)" "$@/Contents/MacOS/"
 # Copy launch_url
 	mkdir -p $@/Contents/Resources/
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
