@@ -136,7 +136,8 @@ MacUserActivityMonitor::MacUserActivityMonitor()
       events,
       this,
       &event_handler_);
-  assert(res == noErr);    
+  assert(res == noErr);
+  (void) res;             // Work around unused variable warning.
 }
 
 MacUserActivityMonitor::~MacUserActivityMonitor() {
