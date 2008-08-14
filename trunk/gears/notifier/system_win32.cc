@@ -43,7 +43,9 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/rectangle.h"
+#include "third_party/glint/include/root_ui.h"
 
 // Get the current module path. This is the path where the module of the
 // currently running code sits.
@@ -215,15 +217,95 @@ double System::GetSystemFontScaleFactor() {
       }
     }
   }
-
   return factor;
 }
+
+class ScopedMenuHandle {
+public:
+  ScopedMenuHandle() {
+    menu_ = ::CreatePopupMenu();
+   }
+  ~ScopedMenuHandle() {
+    if (menu_) {
+      ::DestroyMenu(menu_);
+    }
+  }
+  bool isValid() { return menu_ != NULL; }
+  HMENU get() { return menu_; }
+private:
+  HMENU menu_;
+};
 
 int System::ShowContextMenu(const MenuItem *menu_items,
                             size_t menu_items_count,
                             glint::RootUI *root_ui) {
-  // TODO: Implement this.
-  return -1;
+
+  ScopedMenuHandle menu;
+  if (!menu.isValid())
+    return -1;
+
+  // Build up the menu.
+  for (size_t i = 0; i < menu_items_count; ++i) {
+    if (menu_items[i].title == "-") {  // Insert a separator..
+      if (!::AppendMenu(menu.get(),
+                        MF_SEPARATOR,
+                        menu_items[i].command_id,
+                        NULL)) {
+        return -1;
+      }
+    } else {                           // Or insert a textual menu item.
+      std::string16 title;
+      if (!UTF8ToString16(menu_items[i].title, &title))
+        return -1;
+      int command_id = menu_items[i].command_id;
+      assert(command_id >= 0);
+      ++command_id;  // To avoid id = 0, which is not valid as command id.
+
+      bool isEnabled = menu_items[i].enabled;
+      bool isChecked = menu_items[i].checked;
+
+      if (!::AppendMenu(menu.get(), MF_STRING, command_id, title.c_str()))
+        return -1;
+      // New menu items are enabled by default, disable if needed.
+      if (!isEnabled) {
+        UINT flag = MF_BYCOMMAND | MF_GRAYED;
+        if (::EnableMenuItem(menu.get(), command_id, flag) == -1)
+          return -1;
+      }
+      // New menu items are unchecked by default, check if needed.
+      if (isChecked) {
+        UINT flag = MF_BYCOMMAND | MF_CHECKED;
+        if (::CheckMenuItem(menu.get(), command_id, flag) == -1)
+          return -1;
+      }
+    }
+  }
+
+  // Show the menu.
+  HWND window_handle = reinterpret_cast<HWND>(
+      glint::platform()->GetWindowNativeHandle(root_ui->GetPlatformWindow()));
+  assert(window_handle);
+
+  // If we don't set it to be foreground, it will not stop tracking even
+  // if we click outside of menu.
+  ::SetForegroundWindow(window_handle);
+
+  POINT point = {0, 0};
+  ::GetCursorPos(&point);
+  // This returns 0 if menu is dismissed w/o selection made.
+  int command_id = ::TrackPopupMenuEx(menu.get(),
+                                      TPM_LEFTALIGN | TPM_RETURNCMD |
+                                      TPM_NONOTIFY | TPM_LEFTBUTTON |
+                                      TPM_VERTICAL,
+                                      point.x,
+                                      point.y,
+                                      window_handle,
+                                      NULL);
+
+  // Return -1 in case the menu was simply dismissed, or command_id otherwise.
+  // Increment/decrement is needed to work around the fact that 0 is not a
+  // valid command id.
+  return command_id - 1;
 }
 
 void System::ShowNotifierPreferences() {

@@ -44,6 +44,7 @@
 #include "third_party/glint/include/column.h"
 #include "third_party/glint/include/current_time.h"
 #include "third_party/glint/include/image_node.h"
+#include "third_party/glint/include/interpolation.h"
 #include "third_party/glint/include/nine_grid.h"
 #include "third_party/glint/include/node.h"
 #include "third_party/glint/include/platform.h"
@@ -89,12 +90,18 @@ enum kContextMenuCommands {
   SNOOZE_1_HR,
 };
 
+#ifdef OS_MACOSX
 // TODO(dimich): make this internationalized. Pull the strings from resource.
 static const System::MenuItem kContextMenuItems[] = {
   { "Don't show notifications for 1 hour", SNOOZE_1_HR, true, false },
   { "-", SEPARATOR, false, false },
   { "Preferences...", SHOW_PREFERENCES, true, false },
 };
+#else
+static const System::MenuItem kContextMenuItems[] = {
+  { "Don't show notifications for 1 hour", SNOOZE_1_HR, true, false },
+};
+#endif  // OS_MACOSX
 
 // Container for balloons. Implements several static methods that provide
 // balloon metrics scaled properly in case system has "large fonts" support.
@@ -591,9 +598,12 @@ void Balloon::OnMenuButton(const std::string &button_id, void *user_info) {
 }
 
 void Balloon::ShowMenu() {
+  // Stop expiration while mouse is over context menu.
+  collection_->SuspendExpirationTimer();
   int command = System::ShowContextMenu(kContextMenuItems,
                                         ARRAYSIZE(kContextMenuItems),
                                         root_->GetRootUI());
+  collection_->RestoreExpirationTimer();
   switch (command) {
     case SNOOZE_1_HR:
       collection_->Snooze(kOneHourSeconds);
@@ -690,6 +700,7 @@ bool Balloon::SetMoveTransition(glint::Node *node) {
   segment = new glint::TranslationAnimationSegment();
   segment->set_type(glint::RELATIVE_TO_FINAL);
   segment->set_duration(kMoveTransitionDuration);
+  segment->set_interpolation(glint::Interpolation::Smooth);
   timeline->AddTranslationSegment(segment);
 
   node->SetTransition(glint::MOVE_TRANSITION, timeline);
