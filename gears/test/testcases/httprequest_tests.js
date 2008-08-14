@@ -186,7 +186,7 @@ function testAbortAfterSend() {
 
 function testAbortAfterInteractive() {
   startAsync();
-  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var urlbase = '/testcases/cgi/send_response_of_size.py?write_slowly=1&size=';
   var request = google.gears.factory.create('beta.httprequest');
   request.open('GET', urlbase + 1000000, true);
   request.onreadystatechange = function() {
@@ -204,7 +204,7 @@ function testAbortAfterInteractive() {
 function testAbortWithReusedObject() {
   startAsync();
 
-  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var urlbase = '/testcases/cgi/send_response_of_size.py?write_slowly=1&size=';
   var request = google.gears.factory.create('beta.httprequest');
 
   // just call abort
