@@ -250,10 +250,8 @@ function testParseGeolocationOptions() {
     // All good.
     internalTests.testParseGeolocationOptions(dummyFunction);
     internalTests.testParseGeolocationOptions(dummyFunction, dummyFunction);
-    // TODO(steveblock): Enable these tests once we can handle null values for
-    // the error callback.
-    //internalTests.testParseGeolocationOptions(dummyFunction, null);
-    //internalTests.testParseGeolocationOptions(dummyFunction, null, {});
+    internalTests.testParseGeolocationOptions(dummyFunction, null);
+    internalTests.testParseGeolocationOptions(dummyFunction, null, {});
     internalTests.testParseGeolocationOptions(dummyFunction, dummyFunction, {});
 
     // Test correct types.

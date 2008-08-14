@@ -258,6 +258,7 @@ struct JsArgument {
   JsParamRequirement requirement;
   JsParamType type;
   void* value_ptr;
+  bool was_specified;
 };
 
 //------------------------------------------------------------------------------
@@ -535,6 +536,13 @@ class JsCallContext {
   // of a native object.  Returns the number of arguments successfully read
   // (will bail at the first invalid argument).
   int GetArguments(int argc, JsArgument *argv);
+
+  // As above, except that this function tries to extract all given parameters
+  // and accepts null for optional arguments. Returns false if an exception
+  // occurs and true otherwise.
+  // TODO(andreip): post 0.4, replace the above JsCallContext::GetArguments
+  // with this implementation and fix all the call sites.
+  bool GetArguments2(int argc, JsArgument *argv);
 
   // Get the type of an argument that was passed in.
   JsParamType GetArgumentType(int i);

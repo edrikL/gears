@@ -744,20 +744,19 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   // Arguments are: function successCallback, optional function errorCallback,
   // optional object options. errorCallback can be null.
   //
-  // Note that GetArguments allocates a new JsRootedCallback.
-  // 
-  // TODO(steveblock): Need to update GetArguments to correctly handle null for
-  // an optional parameter.
+  // Note that GetArgumentsForGeolocation allocates a new JsRootedCallback.
+  //
   JsRootedCallback *success_callback = NULL;
   JsRootedCallback *error_callback = NULL;
   JsObject options;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &success_callback },
-    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback },
-    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &success_callback, false },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback, false },
+    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options, false },
   };
-  int num_arguments = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) {
+ 
+  bool success = context->GetArguments2(ARRAYSIZE(argv), argv);
+  if (!success) {
     delete success_callback;
     delete error_callback;
     return false;
@@ -768,7 +767,9 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   info->success_callback.reset(success_callback);
 
   // Set the error callback, using NULL if it was not specified.
-  info->error_callback.reset(error_callback);
+  if (argv[1].was_specified) {
+    info->error_callback.reset(error_callback);
+  }
 
   // Set default values for options.
   info->enable_high_accuracy = false;
@@ -776,7 +777,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   urls->clear();
   // We have to check that options is present because it's not valid to use an
   // uninitialised JsObject.
-  if (num_arguments == 3) {
+  if (argv[2].was_specified) {
     if (!ParseOptions(context, options, urls, info)) {
       assert(context->is_exception_set());
       return false;

@@ -2280,6 +2280,71 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   return output_argc;
 }
 
+bool JsCallContext::GetArguments2(int output_argc, JsArgument *output_argv) {
+
+  if (GetArgumentCount() > output_argc) {
+    SetException(STRING16(L"Too many parameters."));
+    return false;
+  }
+
+  for (int i = 0; i < output_argc; ++i) {
+    assert(output_argv[i].value_ptr);
+    // Do we have more arguments to look at?
+    if (i >= GetArgumentCount()) {
+      // Out of arguments.
+      // Scan the rest of the expected arguments and see if there are
+      // any JSPARAM_REQUIRED. If so, set an exception.
+      for (; i < output_argc; ++i) {
+        if (output_argv[i].requirement == JSPARAM_REQUIRED) {
+          std::string16 msg;
+          msg += STRING16(L"Required argument ");
+          msg += IntegerToString16(i + 1);
+          msg += STRING16(L" is missing.");
+          SetException(msg.c_str());    
+          return false;
+        }
+      }
+      // No JSPARAM_REQUIRED left to fill. The caller actually read
+      // the documentation. Reward with a true.
+      return true;
+    }
+
+    // We have arguments left to inspect. Inspect.
+    // Is it null? Is it undefined?
+    if (GetArgumentType(i) == JSPARAM_NULL ||
+        GetArgumentType(i) == JSPARAM_UNDEFINED) {
+      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
+        // This argument is required, but what was passed was null or
+        // undefinded, so set an exception.
+        std::string16 msg;
+        msg += STRING16(L"Null or undefined passed for required argument ");
+        msg += IntegerToString16(i + 1);
+        msg += STRING16(L".");
+        SetException(msg.c_str());
+        return false;
+      } else {
+        // This argument is optional so null or undefined values are ok.
+        output_argv[i].was_specified = false;
+      }
+    } else {
+      // What was passed is not null or undefined. Attempt to
+      // convert to the expected type.
+      if (!ConvertTokenToArgument(this, GetArgument(i), &output_argv[i])) {
+          std::string16 msg(STRING16(L"Argument "));
+          msg += IntegerToString16(i + 1);
+          msg += STRING16(L" has invalid type or is outside allowed range.");
+          SetException(msg);
+          return false;
+      }
+      // Conversion completed without fault.
+      output_argv[i].was_specified = true;
+    }
+  }
+
+  return true;
+}
+
+
 JsParamType JsCallContext::GetArgumentType(int i) {
   if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
   return JsTokenGetType(GetArgument(i), js_context());
