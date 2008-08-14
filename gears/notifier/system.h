@@ -57,6 +57,7 @@ class System {
 
   // Menu Item descriptor. Not full-featured, only what we need in Notifier.
   // If title == "-" (single dash), the separator menu item is created.
+  // command_id should be >= 0 since we return -1 as "nothing selected" result.
   struct MenuItem {
     std::string title;
     int command_id;
