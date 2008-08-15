@@ -45,6 +45,7 @@
 #include "third_party/glint/include/current_time.h"
 #include "third_party/glint/include/image_node.h"
 #include "third_party/glint/include/interpolation.h"
+#include "third_party/glint/include/message.h"
 #include "third_party/glint/include/nine_grid.h"
 #include "third_party/glint/include/node.h"
 #include "third_party/glint/include/platform.h"
@@ -83,6 +84,8 @@ const double kExpirationTime = 7.0;
 const double kExpirationTimeSlice = 0.25;
 
 const int kOneHourSeconds = 60 * 60;
+
+const int kUserMessageChangeFont = glint::GL_MSG_USER + 1;
 
 enum kContextMenuCommands {
   SEPARATOR,
@@ -184,7 +187,6 @@ class DisplayChangedHandler : public glint::MessageHandler {
   glint::MessageResultCode HandleMessage(const glint::Message &message) {
     switch (message.code) {
       case glint::GL_MSG_DISPLAY_SETTINGS_CHANGED:
-      case glint::GL_MSG_WORK_AREA_CHANGED:
         balloon_container_->OnDisplaySettingsChanged();
         break;
       default:
@@ -319,11 +321,18 @@ glint::Size BalloonContainer::OnComputeRequiredSize(glint::Size constraint) {
   for (glint::Node *child = first_child(); child;
        child = child->next_sibling()) {
     // Re-set min-max sizes on the balloons. They can change if resolution or
-    // font size changes dynamically.
+    // font size changes dynamically. Also broadcast 'font change' message
+    // so the text nodes in the balloon can update their font size.
+    glint::Message message;
+    message.code = static_cast<glint::GlintMessages>(kUserMessageChangeFont);
+    message.user_data = this;
+    glint::RootUI::BroadcastMessage(child, message);
+
     child->set_min_width(min_balloon_width());
     child->set_min_height(min_balloon_height());
     child->set_max_width(max_balloon_width());
     child->set_max_height(max_balloon_height());
+
     glint::Size child_size = child->ComputeRequiredSize(container_size);
   }
   return container_size;
@@ -353,6 +362,37 @@ void BalloonContainer::OnDisplaySettingsChanged() {
     Invalidate();
   }
 }
+
+class ChangeFontHandler : public glint::MessageHandler {
+ public:
+  ChangeFontHandler(glint::SimpleText *owner, int base_font_size)
+    : owner_(owner),
+      base_font_size_(base_font_size) {
+    assert(owner);
+    assert(base_font_size > 0);
+  }
+
+  glint::MessageResultCode HandleMessage(const glint::Message &message) {
+    switch (message.code) {
+      case kUserMessageChangeFont: {
+          BalloonContainer *container =
+              reinterpret_cast<BalloonContainer*>(message.user_data);
+          assert(container);
+          owner_->set_font_size(container->ScaleSize(base_font_size_));
+        }
+        break;
+      default:
+        // We don't care about other messages.
+        break;
+    }
+    return glint::MESSAGE_CONTINUE;
+  }
+
+ private:
+  glint::SimpleText *owner_;
+  int base_font_size_;
+  DISALLOW_EVIL_CONSTRUCTORS(ChangeFontHandler);
+};
 
 class TimerHandler : public glint::MessageHandler {
  public:
@@ -517,6 +557,7 @@ glint::Node *Balloon::CreateTree() {
   text->set_font_size(kTitleFontSize);
   text->set_bold(true);
   text->set_horizontal_alignment(glint::X_LEFT);
+  text->AddHandler(new ChangeFontHandler(text, text->font_size()));
   column->AddChild(text);
 
   text = new glint::SimpleText();
@@ -526,6 +567,7 @@ glint::Node *Balloon::CreateTree() {
   margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
+  text->AddHandler(new ChangeFontHandler(text, text->font_size()));
   column->AddChild(text);
 
   text = new glint::SimpleText();
@@ -535,6 +577,7 @@ glint::Node *Balloon::CreateTree() {
   margin.Set(0, 4, 0, 0);
   text->set_margin(margin);
   text->set_horizontal_alignment(glint::X_LEFT);
+  text->AddHandler(new ChangeFontHandler(text, text->font_size()));
   column->AddChild(text);
 
   glint::Row *actions = new glint::Row();

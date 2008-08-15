@@ -63,7 +63,8 @@ enum GlintMessages {
   // Sent when system forcefully changes position of the window
   // so we need to update the layout and margins of the root node.
   GL_MSG_WINDOW_POSITION_CHANGED,
-  // Resolution, size or color depth of the monitor changed.
+  // Resolution, size, color depth, system fonts or some other display setting
+  // has changed. Re-query the system settings/config to update the display.
   GL_MSG_DISPLAY_SETTINGS_CHANGED,
   // Following messages are typically mapped to keys in an OS-dependent way.
   // So Glint has abstract messages and the platform level is responsible for
@@ -72,9 +73,8 @@ enum GlintMessages {
   GL_MSG_COPY,
   GL_MSG_PASTE,
   GL_MSG_SELECT_ALL,
-  GL_MSG_CLOSE_DOCUMENT, // Like Ctrl+F4 on windows
-  GL_MSG_WORK_AREA_CHANGED,
-  GL_MSG_DEFAULT_FONT_SIZE_CHANGED,
+  GL_MSG_CLOSE_DOCUMENT,  // Like Ctrl+F4 on windows
+  GL_MSG_USER,  // This should be the last message in this enum.
 };
 
 // Result codes, returned from functions that return "MessageResultCode"

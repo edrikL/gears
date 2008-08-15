@@ -155,7 +155,7 @@ static const NSTimeInterval kTimerIntervalSecs = (NSTimeInterval)0.05;
 
 // Observer method (registered with NSNotificationCenter).
 - (void)workAreaDidChange:(NSNotification*)notification {
-  [self sendGlintMessageOfType:(glint::GL_MSG_WORK_AREA_CHANGED)];
+  [self sendGlintMessageOfType:(glint::GL_MSG_DISPLAY_SETTINGS_CHANGED)];
 }
 
 @end
