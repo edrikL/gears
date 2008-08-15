@@ -169,12 +169,38 @@ bool JsDomElement::InitJsDomElement(JsContextPtr context, JsToken token) {
   dom_html_element_ = do_QueryInterface(supports);
   if (dom_html_element_.get() == NULL) { return false; }
 
-  // TODO(nigeltao): Is this really the right time for an AddRef?
-  static_cast<nsISupports *>(supports.get())->AddRef();
-
   is_initialized_ = true;
   return true;
 }
+
+
+
+// Security rights are gleaned from the JavaScript context.
+// "UniversalFileRead" is required to get/set the file input value.
+// Temporarily pushing NULL onto the JavaScript context stack lets
+// the system know that native code is running and all rights are granted.
+class ScopedUniversalReadRights {
+ public:
+  ~ScopedUniversalReadRights() {
+    ReleaseRights();
+  }
+  bool GetRights() {
+    assert(!stack_);
+    stack_ = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (!stack_) return false;
+    stack_->Push(NULL);
+    return true;
+  }
+  void ReleaseRights() {
+    if (stack_) {
+      JSContext *not_used;
+      stack_->Pop(&not_used);
+      stack_ = NULL;
+    }
+  }
+ private:
+  nsCOMPtr<nsIJSContextStack> stack_;
+};
 
 
 bool JsDomElement::GetFileInputElementValue(
@@ -186,9 +212,14 @@ bool JsDomElement::GetFileInputElementValue(
   }
 
   nsString filepath;
-  if (NS_OK != input->GetValue(filepath)) {
-    return false;
+  {
+    ScopedUniversalReadRights rights;
+    if (!rights.GetRights() ||
+        input->GetValue(filepath) != NS_OK) {
+      return false;
+    }
   }
+
   // If its really a file url, handle it differently. Gecko handles file
   // input elements in this way when submitting forms.
   if (StringBeginsWith(filepath, NS_LITERAL_STRING("file:"))) {
@@ -212,23 +243,12 @@ bool JsDomElement::SetFileInputElementValue(std::string16 &file_name) {
     return false;
   }
 
-  // Security rights are gleaned from the JavaScript context.
-  // "UniversalFileRead" is required to set the value we want to set.
-  // Temporarily pushing NULL onto the JavaScript context stack lets
-  // the system know that native code is running and all rights are granted.
-  //
-  // Because this code relies on XPConnect (which doesn't exist in worker
-  // threads), this code should generally be avoided.
-  nsCOMPtr<nsIJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack) {
+  ScopedUniversalReadRights rights;
+  if (!rights.GetRights() ||
+      input->SetValue(nsString(file_name.c_str())) != NS_OK) {
     return false;
   }
-  stack->Push(NULL);
-  nsresult nr = input->SetValue(nsString(file_name.c_str()));
-  JSContext *context;
-  stack->Pop(&context);
-  return nr == NS_OK;
+  return true;
 }
 
 
