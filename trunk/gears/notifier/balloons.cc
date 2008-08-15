@@ -38,6 +38,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/timed_call.h"
 #include "gears/notifier/system.h"
+#include "gears/notifier/user_activity.h"
 #include "third_party/glint/include/animation_timeline.h"
 #include "third_party/glint/include/button.h"
 #include "third_party/glint/include/color.h"
@@ -86,6 +87,9 @@ const double kExpirationTimeSlice = 0.25;
 const int kOneHourSeconds = 60 * 60;
 
 const int kUserMessageChangeFont = glint::GL_MSG_USER + 1;
+
+static const int kUserActivityCheckIntervalMs = 5000;         // 5s
+static const double kExpirationTimeAfterUserActivity = 2.0;   // 2s
 
 enum kContextMenuCommands {
   SEPARATOR,
@@ -840,8 +844,10 @@ bool Balloon::InitializeUI(glint::Node *container) {
   return true;
 }
 
-BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer)
+BalloonCollection::BalloonCollection(BalloonCollectionObserver *observer,
+                                     UserActivityInterface *activity)
   : observer_(observer),
+    activity_(activity),
     root_ui_(NULL),
     expiration_suspended_counter_(0),
     last_time_(-1),
@@ -1051,6 +1057,14 @@ void BalloonCollection::OnTimer(double current_time) {
   elapsed_time_ += delta;
 
   if (elapsed_time_ > kExpirationTime) {
+    // Do not expire the balloon if there is not any user activity in last
+    // period of time, i.e. 5 seconds.
+    if (activity_ &&
+        activity_->QueryUserIdleTimeMs() > kUserActivityCheckIntervalMs) {
+      elapsed_time_ = kExpirationTime - kExpirationTimeAfterUserActivity;
+      return;
+    }
+
     // Expire the bottom-most balloon.
     Balloon *balloon = balloons_.front();
     if (!balloon)

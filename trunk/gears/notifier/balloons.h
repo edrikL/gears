@@ -150,7 +150,8 @@ typedef std::deque<Balloon*> Balloons;
 
 class BalloonCollection : public BalloonCollectionInterface {
  public:
-  explicit BalloonCollection(BalloonCollectionObserver *observer);
+  explicit BalloonCollection(BalloonCollectionObserver *observer,
+                             UserActivityInterface *activity);
   virtual ~BalloonCollection();
 
   // BalloonCollectionInterface overrides
@@ -198,6 +199,7 @@ class BalloonCollection : public BalloonCollectionInterface {
 
   Balloons balloons_;
   BalloonCollectionObserver *observer_;
+  UserActivityInterface *activity_;
   glint::RootUI *root_ui_;
   int expiration_suspended_counter_;
   double last_time_;

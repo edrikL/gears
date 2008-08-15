@@ -149,6 +149,10 @@ class UserActivityMock : public UserActivityInterface {
     return user_mode_;
   }
 
+  virtual uint32 QueryUserIdleTimeMs() {
+    return 0;
+  }
+
   void set_user_mode(UserMode user_mode) {
     UserMode previous_user_mode = user_mode_;
     user_mode_ = user_mode;
