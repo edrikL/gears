@@ -40,6 +40,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/desktop/desktop_test.h"
 
 #ifdef WIN32
 // For some reason Win32 thinks snprintf() needs to be marked as non-standard.
@@ -352,6 +353,11 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
   ok &= TestGeolocationDB(&error);
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+  ok &= TestNotificationMessageOrdering(&error);
+#endif  // OFFICIAL_BUILD
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -2311,6 +2317,7 @@ void GearsTest::TestNotifier(JsCallContext *context) {
     return;
   }
 #endif  // defined(WIN32) && !defined(WINCE)
+
 }
 #endif  // OFFICIAL_BUILD
 

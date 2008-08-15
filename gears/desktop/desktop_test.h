@@ -23,38 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_NOTIFIER_NOTIFIER_PROXY_H__
-#define GEARS_NOTIFIER_NOTIFIER_PROXY_H__
+#ifndef GEARS_DESKTOP_DESKTOP_TEST_H_
+#define GEARS_DESKTOP_DESKTOP_TEST_H_
 
+#if USING_CCTESTS
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-#include "gears/base/common/basictypes.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/base/common/string16.h"
 
-class GearsNotification;
-class NotifierProxyThread;
-
-class NotifierProxyInterface {
- public:
-  virtual ~NotifierProxyInterface() {}
-
-  // Takes ownership of "notification".
-  virtual void PostNotification(int message_type,
-                                GearsNotification *notification) = 0;
-};
-
-class NotifierProxy : public NotifierProxyInterface {
- public:
-  NotifierProxy();
-  virtual ~NotifierProxy();
-  virtual void PostNotification(int message_type,
-                                GearsNotification *notification);
-
- private:
-  scoped_ptr<NotifierProxyThread> thread_;
-  DISALLOW_EVIL_CONSTRUCTORS(NotifierProxy);
-};
-
+bool TestNotificationMessageOrdering(std::string16 *error);
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_NOTIFIER_NOTIFIER_PROXY_H__
+#endif  // USING_CCTESTS
+#endif  // GEARS_DESKTOP_DESKTOP_TEST_H_
