@@ -29,45 +29,49 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <html>
-  <head>
-    <title>Database - Gears Inspector</title>
-    <link rel="stylesheet" type="text/css" href="common/styles.css" />
-    <!--[if lte IE 6]>
-      <link rel="stylesheet" type="text/css" href="common/ie6hacks.css" />
-    <![endif]-->
-    <style type="text/css">
-      #heading {
-        background-image: url(common/database.gif);
-      }
+<head>
 
-      table {
-        border: 1px solid ThreeDShadow;
-      }
+<title>Database - Gears Inspector</title>
+<link rel="stylesheet" type="text/css" href="common/styles.css" />
+<!--[if lte IE 6]>
+  <link rel="stylesheet" type="text/css" href="common/ie6hacks.css" />
+<![endif]-->
+<style type="text/css">
+  #heading {
+    background-image: url(common/database.gif);
+  }
 
-      td, th {
-        font: icon;
-        padding: 2px 5px;
-      }
+  table {
+    border: 1px solid ThreeDShadow;
+  }
 
-      thead {
-        background-color: ThreeDFace;
-      }
+  td, th {
+    font: icon;
+    padding: 2px 5px;
+  }
 
-      th {
-        border: 1px solid;
-        border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
-      }
+  thead {
+    background-color: ThreeDFace;
+  }
 
-      td.even {
-        background-color: #f5f5f5;
-      }
+  th {
+    border: 1px solid;
+    border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+  }
 
-      #content {
-        margin-left: 15px;
-        margin-right: 15px;
-      }
-    </style>
+  td.even {
+    background-color: #f5f5f5;
+  }
 
+  #content {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+</style>
+
+<script type="text/javascript" src="common/gears_init.js"></script>
+<script type="text/javascript" src="common/base.js"></script>
+<script type="text/javascript" src="common/dom.js"></script>
 <script type="text/javascript">
 
 /**
@@ -75,12 +79,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @type GearsDatabase
  */
 var db;
-
-
-/**
- * @type String
- */
-var DATABASE_NAME = 'mydatabasename';
 
 
 /**
@@ -144,44 +142,15 @@ function escapeHtml(s) {
 }
 
 
-function populateLoginForm(opt_databaseName) {
-  var databaseName = opt_databaseName != null ? opt_databaseName
-                                              : DATABASE_NAME;
-  document.getElementById('database-name').value = databaseName;
+function openDatabase() {
+  clearOutput();
+  db = google.gears.factory.create('beta.database');
+  db.open(dom.getElementById('database-name').value);
 }
 
 
-/**
- * Initializes the application
- * @param {String} opt_databaseName  User ID. If left out the id is taken from
- *    the form.
- */
-function init(opt_databaseName) {
-  var dbNameInput = document.getElementById('database-name');
-  dbNameInput.blur();
-  hideLoginForm();
-
-  try {
-    db = google.gears.factory.create('beta.database');
-  } catch (ex) {
-    // Gears not installed
-    alert('Could not create database:\n\n' + ex.message);
-    showLoginForm();
-    return;
-  }
-
-  var dbNameInput = document.getElementById('database-name');
-  var databaseName = opt_databaseName != null ? opt_databaseName :
-      dbNameInput.value;
-
-  setCookieInfo(databaseName);
-  var statusBar = document.getElementById('status-bar');
-  var as = statusBar.getElementsByTagName('a');
-  as[0].firstChild.data = databaseName || 'None';
-
-  db.open(databaseName);
-
-  populateLoginForm(databaseName);
+function init() {
+  openDatabase();
 
   // set up events
   var ta = document.getElementById('ta');
@@ -382,95 +351,36 @@ function taFocus() {
 }
 
 
-function hideLoginForm() {
-  document.getElementById('login-form').style.display = 'none';
-  document.getElementById('status-bar').style.display = 'inline';
-}
-
-function showLoginForm() {
-  document.getElementById('login-form').style.display = 'inline';
-  document.getElementById('status-bar').style.display = 'none';
-  document.getElementById('database-name').focus();
-  document.getElementById('database-name').select();
-}
-
-/**
- * Checks the cookie to see if we have a 'dbinfo' stored and returns
- * it as a string or null if not found.
- * @return String|Null
- */
-function getCookieInfo() {
-  var res = /dbinfo\=([^\;\= ]+)/.exec(document.cookie);
-  return res && res[1];
-}
-
-
-/**
- * Checks the query params to see if we have a 'dbinfo' in it and returns
- * the value of that param as a string. Returns null if not found.
- * @return String|Null
- */
-function getQueryInfo() {
-  var res = /[?&]dbinfo\=([^&#]*)/.exec(window.location.href);
-  return res && res[1];
-}
-
-
-/**
- * Sets a cookie so that you don't have to reenter the user data every time
- * @param {String} databaseName  The name of the database.
- */
-function setCookieInfo(databaseName) {
-  var d = new Date();
-  d.setMonth(d.getMonth() + 1);
-  document.cookie = 'dbinfo=' + databaseName + ';expires=' + d.toUTCString();
-}
-
 </script>
 
-    <script type="text/javascript" src="common/gears_init.js"></script>
-  </head>
-  <body>
+</head>
+<body>
 
-    <script type="text/javascript" src="common/inspector_links.js"></script>
+<script type="text/javascript" src="common/inspector_links.js"></script>
 
-    <div id="heading">
-      <div class="controls">
-        <span onclick="showLoginForm(); return false;"
-          style="margin-right: 15px;">
-          Database Name:
-          <span id="status-bar"><a href=#>&nbsp;</a></span>
-          <span id="login-form">
-            <form onsubmit="init(); return false;" style="display: inline;">
-              <input id="database-name" onblur="hideLoginForm();" />
-            </form>
-          </span>
-        </span>
-        <button onclick="clearOutput();" style="font-weight: bold;">
-          Clear
-        </button>
-      </div>
-      <h1 class="heading-text">Database</h1>
-    </div>
+<div id="heading">
+  <div class="controls">
+    <form onsubmit="init(); return false;" style="display:inline; margin-right:5px;">
+      <input id="database-name" />
+    </form>
+    <button onclick="openDatabase();" style="font-weight: bold;">Open Database</button>
+  </div>
+  <h1 class="heading-text">Database</h1>
+</div>
 
-    <div id="content">
+<div id="content">
 
-      <div id="command-area">
-        <textarea id="ta" cols="80" rows="2" spellcheck="false"></textarea>
-        <br /><button onclick="execute()">Execute</button>
-      </div>
+  <div id="command-area">
+    <textarea id="ta" cols="80" rows="2" spellcheck="false"></textarea>
+    <br /><button onclick="execute()">Execute</button>
+  </div>
 
-      <div id=output></div>
+  <div id=output></div>
+</div>
 
-      <script type="text/javascript">
-        var dbInfo = getQueryInfo() || getCookieInfo();
-        if (!dbInfo) {
-          populateLoginForm();
-          showLoginForm();
-        } else {
-          init(dbInfo);
-        }
-      </script>
-    </div>
-  </body>
+<script type="text/javascript">
+  init();
+</script>
+
+</body>
 </html>
