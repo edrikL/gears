@@ -34,6 +34,7 @@
 #import "gears/base/common/common.h"
 #import "gears/base/common/file.h"
 #import "gears/base/common/string_utils.h"
+#import "gears/notifier/notifier_pref_common.h"
 #import "third_party/glint/include/platform.h"
 #import "third_party/glint/include/rectangle.h"
 #import "third_party/glint/include/root_ui.h"
@@ -197,11 +198,14 @@ void System::ShowNotifierPreferences() {
   NSString *script_source =
       @"tell application \"System Preferences\" \n"
       @" activate \n"
-      @" set current pane to pane \"com.google.GearsNotifierPref\" \n"
+      @" set current pane to pane \"%@\" \n"
       @"end tell\n";
 
+  NSString *script_source_formatted =
+    [NSString stringWithFormat:script_source, (NSString *)kGearsNotifierPrefPaneID];
+
   NSAppleScript *script =
-      [[[NSAppleScript alloc] initWithSource:script_source] autorelease];
+      [[[NSAppleScript alloc] initWithSource:script_source_formatted] autorelease];
 
   NSDictionary *dictionary = nil;
   NSAppleEventDescriptor *result = [script executeAndReturnError:&dictionary];
@@ -210,5 +214,3 @@ void System::ShowNotifierPreferences() {
   }
 }
 #endif  // OFFICIAL_BUILD
-
-

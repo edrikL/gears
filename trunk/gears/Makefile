@@ -256,6 +256,24 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/growl
+
+ifeq ($(OS),osx)
+GROWL_VPATH	+= \
+		../third_party/growl \
+		$(NULL)
+
+GROWL_CPPSRCS	+= \
+		CFGrowlAdditions.c \
+		CFMutableDictionaryAdditions.c \
+		CFURLAdditions.c \
+		GrowlApplicationBridge.m \
+		GrowlPathUtilities.m \
+		$(NULL)
+
+endif
+
+#-----------------------------------------------------------------------------
 # third_party/icu38
 
 ifeq ($(USING_ICU),1)
@@ -1444,15 +1462,21 @@ NOTIFIER_RESOURCES += \
 
 ifeq ($(OS),osx)
 NOTIFIER_CPPSRCS += \
+		$(GROWL_CPPSRCS) \
 		common_osx.mm \
+		growl_collection.mm \
 		notifier_osx.mm \
+		notifier_pref_common.cc \
+		notifier_pref_listener.cc \
 		notifier_process_osx.mm \
+		nsstring_string16.mm \
 		system_osx.mm \
 		user_activity_osx.mm \
 		$(NULL)
 
 COMMON_VPATH	+= \
 		tools/osx \
+		$(GROWL_VPATH) \
 		$(NULL)
 
 COMMON_M4SRCS += \
@@ -1508,6 +1532,39 @@ NOTIFIER_LIBS 	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# notifier_prefpane
+
+ifeq ($(OS),osx)
+COMMON_VPATH += \
+		notifier/prefpane \
+		$(GROWL_VPATH) \
+		$(NULL)
+
+NOTIFIER_PREFPANE_CPPSRCS += \
+		$(GROWL_CPPSRCS) \
+		notifier_pref.mm \
+		notifier_pref_common.cc \
+		$(NULL)
+
+NOTIFIER_PREFPANE_NIB += \
+		notifier/prefpane/English.lproj/notifier_pref.nib \
+		$(NULL)
+
+NOTIFIER_PREFPANE_STRINGS += \
+		notifier/prefpane/English.lproj/InfoPlist.strings \
+		notifier/prefpane/English.lproj/Localizable.strings \
+		$(NULL)
+
+NOTIFIER_PREFPANE_RESOURCES += \
+		notifier/prefpane/notifier_pref_icon.tiff \
+		$(NULL)
+		
+COMMON_M4SRCS += \
+		Prefpane-Info.plist.m4 \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # notifier_test
 COMMON_VPATH	+= \
 		$(GTEST_VPATH) \
@@ -1524,9 +1581,18 @@ NOTIFIER_TEST_CPPSRCS += \
 
 ifeq ($(OS),osx)
 NOTIFIER_TEST_CPPSRCS += \
+		$(GROWL_CPPSRCS) \
 		common_osx.mm \
+		growl_collection.mm \
+		notifier_pref_common.cc \
+		notifier_pref_listener.cc \
+		nsstring_string16.mm \
 		system_osx.mm \
 		unit_test_osx.mm \
+		$(NULL)
+
+COMMON_VPATH += \
+		$(GROWL_VPATH) \
 		$(NULL)
 endif
 

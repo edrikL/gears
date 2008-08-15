@@ -40,8 +40,14 @@
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notification_manager_test.h"
 #include "gears/notifier/notifier.h"
-#include "gears/notifier/user_activity.h"
 #include "gears/notifier/system.h"
+#include "gears/notifier/user_activity.h"
+
+#if defined(OS_MACOSX)
+#include "gears/notifier/growl_collection.h"
+#include "gears/notifier/notifier_pref_common.h"
+#include "gears/notifier/notifier_pref_listener.h"
+#endif  // defined(OS_MACOSX)
 
 // TODO(levin): Add logging support to gears for exe's.
 // LOG_F is like LOG but it also includes the function name in
@@ -57,7 +63,7 @@ const int kDelayedRestartCheckIntervalMs = 60000;   // 1m
 // notification is waiting to be displayed.
 class QueuedNotification {
  public:
-  QueuedNotification(const GearsNotification &notification)
+  explicit QueuedNotification(const GearsNotification &notification)
       : manager_(NULL),
         user_delayed_(false) {
     notification_.CopyFrom(notification);
@@ -136,21 +142,43 @@ NotificationManager::NotificationManager(
       UserActivityInterface *activity,
       DelayedRestartInterface *delayed_restart,
       BalloonCollectionObserver *balloons_observer)
-    : intiailized_(false),
+    : initialized_(false),
       activity_(activity),
       delayed_restart_(delayed_restart),
       balloons_observer_(balloons_observer),
+#if defined(OS_MACOSX)
+      using_growl_(false),
+#endif  // defined(OS_MACOSX)
       in_presentation_(false) {
   assert(activity);
   activity->AddObserver(this);
   balloon_collection_.reset(new BalloonCollection(this));
-  intiailized_ = true;
+  initialized_ = true;
+
+#if defined(OS_MACOSX)
+  inactive_collection_.reset(new GrowlBalloonCollection());
+  SetDoesUseGrowlBalloonCollection(ShouldUseGrowlPref());
+  NotifierPrefListener::RegisterForPreferenceChanges(this);
+#endif  // defined(OS_MACOSX)
 }
 
 NotificationManager::~NotificationManager() {
   Clear(&show_queue_);
   Clear(&delayed_queue_);
 }
+
+#if defined(OS_MACOSX)
+// TODO(chimene): In the future, transfer currently displayed notifications
+// from one collection to the other when the pref is triggered.
+void NotificationManager::SetDoesUseGrowlBalloonCollection(
+    bool should_use_growl) {
+  if (should_use_growl == using_growl_) {
+    return;
+  }
+  balloon_collection_.swap(inactive_collection_);
+  using_growl_ = should_use_growl;
+}
+#endif  // defined(OS_MACOSX)
 
 QueuedNotification* FindNotification(
     const SecurityOrigin &security_origin,
@@ -387,7 +415,7 @@ void NotificationManager::OnBalloonSpaceChanged() {
 }
 
 bool NotificationManager::CheckDelayedRestart() {
-  if (intiailized_ && delayed_restart_) {
+  if (initialized_ && delayed_restart_) {
     // Only perform the restart if the user is away or idle.
     if (activity_->user_mode() != USER_AWAY_MODE &&
         activity_->user_mode() != USER_IDLE_MODE) {
