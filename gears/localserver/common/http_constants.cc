@@ -64,6 +64,9 @@ const char16 *HttpConstants::kUriHeader = STRING16(L"URI");
 const char16 *HttpConstants::kUserAgentHeader = STRING16(L"User-Agent");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
+// These header values should not be prefixed with "X-Google" as those values
+// are special cased and stripped by GFEs.
+// [naming] Note the "X-Gears-" prefixes here.
 const char16 *HttpConstants::kXGoogleGearsBypassLocalServer =
                                  STRING16(L"X-Gears-Bypass-LocalServer");
 const char16 *HttpConstants::kXGearsSafariCapturedMimeType =
@@ -74,10 +77,8 @@ const char16 *HttpConstants::kXGearsReason_ValidateManifest =
                                  STRING16(L"validate-manifest");
 const char   *HttpConstants::kXGearsDecodedContentLengthAscii =
                                  "X-Gears-Decoded-Content-Length";
-// This header value should not be prefixed with "X-Google" as those values
-// are special cased and stripped by GFEs
 const char16 *HttpConstants::kXGoogleGearsHeader =
-                                 STRING16(L"X-Gears-Google"); // [naming]
+                                 STRING16(L"X-Gears-Google");
 
 bool ParseHttpStatusLine(const std::string16 &status_line,
                          std::string16 *version_out,

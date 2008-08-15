@@ -84,9 +84,8 @@ SUBSTITUTE_OBJ_SUFFIX = $(foreach SUFFIX,$(SOURCECODE_SUFFIXES), \
                              $(filter %.$(SUFFIX), $2) \
                            ) \
                         )
-
-# TODO(playmobil): unify CPPSRCS & CSRCS into CXX_SRCS.
-COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COMMON_CPPSRCS) $(COMMON_CSRCS))
+# TODO(playmobil): unify CPPSRCS & CSRCS into CXXSRCS.
+COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COMMON_CPPSRCS) $(COMMON_CSRCS) $(COMMON_GEN_CPPSRCS))
 $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $($(BROWSER)_CPPSRCS) $($(BROWSER)_CSRCS))
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
 IPC_TEST_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(IPC_TEST_OUTDIR), $(IPC_TEST_CPPSRCS) $(IPC_TEST_CSRCS))
@@ -123,14 +122,16 @@ COMMON_RESOURCES = \
 	ui/common/button_corner_grey.gif \
 	ui/common/icon_32x32.png \
 	ui/common/local_data.png \
-	ui/common/location_data.png
+	ui/common/location_data.png \
+	$(NULL)
 
 FF3_RESOURCES = \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.js \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.xul \
 	$(FF3_OUTDIR)/genfiles/permissions_dialog.html \
 	$(FF3_OUTDIR)/genfiles/settings_dialog.html \
-	$(FF3_OUTDIR)/genfiles/shortcuts_dialog.html
+	$(FF3_OUTDIR)/genfiles/shortcuts_dialog.html \
+	$(NULL)
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
@@ -167,22 +168,23 @@ IE_OBJS += \
 NPAPI_GEN_TYPELIBS = \
 	$(patsubst %.idl,$(NPAPI_OUTDIR)/genfiles/%.xpt,$(NPAPI_IDLSRCS))
 
-$(BROWSER)_BASE64FILES = \
-	$(patsubst %.base64,$($(BROWSER)_OUTDIR)/genfiles/%.base64,$($(BROWSER)_BASE64SRCS))
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
+COMMON_M4FILES = \
+	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 # .html m4 files are separate because they have different build rules.
 $(BROWSER)_HTML_M4FILES = \
 	$(patsubst %_m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_HTML_M4SRCS))
-$(BROWSER)_STABFILES = \
-	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_STABSRCS))
-COMMON_M4FILES = \
-	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 
 $(BROWSER)_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $($(BROWSER)_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$($(BROWSER)_M4SRCS_I18N))))
 COMMON_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
+
+$(BROWSER)_BASE64FILES = \
+	$(patsubst %.base64,$($(BROWSER)_OUTDIR)/genfiles/%.base64,$($(BROWSER)_BASE64SRCS))
+$(BROWSER)_STABFILES = \
+	$(patsubst %.stab,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_STABSRCS))
 
 $(BROWSER)_VPATH += $($(BROWSER)_OUTDIR)/genfiles
 COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
@@ -362,8 +364,8 @@ endif
 
 
 # Cross-browser targets.
-prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_HTML_M4FILES) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N) $($(BROWSER)_STABFILES)
-prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
+prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N) $($(BROWSER)_HTML_M4FILES) $($(BROWSER)_STABFILES)
+prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)                                                    $(patsubst %,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_GEN_CPPSRCS))
 prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(PORTAUDIO_OUTDIR) $(LIBSPEEX_OUTDIR) $(LIBTREMOR_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
 genheaders:: $($(BROWSER)_GEN_HEADERS)
@@ -546,6 +548,11 @@ $(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 
 $($(BROWSER)_OUTDIR)/genfiles/%: %.stab
 	python tools/parse_stab.py $(M4FLAGS) $@ $< $(I18N_INPUTS_BASEDIR)
+
+# GENERATED CPPSRCS FROM BINARIES (.from_bin.cc)
+
+$(COMMON_OUTDIR)/genfiles/%.from_bin.cc: %
+	python tools/bin2cpp.py $< > $@
 
 # IDL TARGETS
 

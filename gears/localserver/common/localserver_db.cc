@@ -42,6 +42,7 @@
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
+#include "gears/inspector/inspector_resources.h"
 #include "gears/localserver/common/blob_store.h"
 #ifdef USE_FILE_STORE
 #include "gears/localserver/common/file_store.h"
@@ -633,12 +634,8 @@ bool WebCacheDB::ExecuteSqlCommands(const char *commands[], int count) {
 //------------------------------------------------------------------------------
 bool WebCacheDB::CanService(const char16 *url, BrowsingContext *context) {
   ASSERT_SINGLE_THREAD();
-  int64 payload_id = kUnknownID;
-  std::string16 redirect_url;
-  // TODO(aa): Clean up this hook at some point. Use gears:// scheme? Other
-  // options?
-  return ServiceGearsInspectorUrl(url, NULL) ||  // Hook for Gears inspector
-         ServiceImpl(url, context, &payload_id, &redirect_url);
+
+  return ServiceImpl(url, context, NULL, false);
 }
 
 
@@ -651,29 +648,7 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
   assert(url);
   assert(payload);
 
-  // Hook for intercepting and serving up Gears inspector files
-  // TODO(aa): See comment in CanService.
-  if (ServiceGearsInspectorUrl(url, payload)) {
-    return true;
-  }
-
-  int64 payload_id = kUnknownID;
-  std::string16 session_redirect_url;
-  if (!ServiceImpl(url, context, &payload_id, &session_redirect_url)) {
-    return false;
-  }
-
-  if (payload_id != kUnknownID) {
-    if (!FindPayload(payload_id, payload, head_only)) {
-      return false;
-    }
-    return true;
-  } else if (!session_redirect_url.empty()) {
-    return payload->SynthesizeHttpRedirect(NULL, session_redirect_url.c_str());
-  } else {
-    assert(false);
-    return false;
-  }
+  return ServiceImpl(url, context, payload, head_only);
 }
 
 
@@ -682,24 +657,25 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
 //------------------------------------------------------------------------------
 bool WebCacheDB::ServiceImpl(const char16 *url,
                              BrowsingContext *context,
-                             int64 *payload_id_out,
-                             std::string16 *redirect_url_out) {
+                             PayloadInfo *payload,
+                             bool payload_head_only) {
   ASSERT_SINGLE_THREAD();
   assert(url);
-  assert(payload_id_out);
-  assert(redirect_url_out);
-
-  *payload_id_out = kUnknownID;
-  redirect_url_out->clear();
+  // 'payload' can be NULL if the caller doesn't want that information.
 
   // If the origin is not explicitly allowed, don't serve anything
   SecurityOrigin origin;
   PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions || 
+  if (!permissions ||
       !origin.InitFromUrl(url) ||
       !permissions->IsOriginAllowed(origin,
                                     PermissionsDB::PERMISSION_LOCAL_DATA)) {
     return false;
+  }
+
+  // Hook for intercepting and serving Inspector content.
+  if (ServiceInspectorUrl(url, origin, payload)) {
+    return true;
   }
 
   // If a fragment identifier is appended to the url, ignore it. The fragment
@@ -725,9 +701,15 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
 
   // First we run a query that looks for exact matches against entries not
   // intended to ignore query arguments.
+  int64 payload_id = kUnknownID;
   if (DoServiceQuery(url, true, context, url,
                      &loaded_cookie_map, &loaded_cookie_map_ok, &cookie_map,
-                     &possible_session_redirect, payload_id_out)) {
+                     &possible_session_redirect, &payload_id)) {
+    if (payload &&
+        payload_id != kUnknownID &&
+        !FindPayload(payload_id, payload, payload_head_only)) {
+      return false;
+    }
     return true;
   }
 
@@ -738,9 +720,15 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   const char16 *query = std::char_traits<char16>::find(url, url_length, '?');
   if (query) {
     std::string16 url_without_query(url, query);
+    payload_id = kUnknownID;
     if (DoServiceQuery(url_without_query.c_str(), false, context, url,
                        &loaded_cookie_map, &loaded_cookie_map_ok, &cookie_map,
-                       &possible_session_redirect, payload_id_out)) {
+                       &possible_session_redirect, &payload_id)) {
+      if (payload &&
+          payload_id != kUnknownID &&
+          !FindPayload(payload_id, payload, payload_head_only)) {
+        return false;
+      }
       return true;
     }
   }
@@ -748,7 +736,10 @@ bool WebCacheDB::ServiceImpl(const char16 *url,
   // If we found an entry that requires a cookie, and no cookie exists, and
   // specifies a redirect url for use in that case, then return the redirect.
   if (!possible_session_redirect.empty() && possible_session_redirect != url) {
-    *redirect_url_out = possible_session_redirect;
+    if (payload) {
+      return payload->SynthesizeHttpRedirect(NULL,
+                                             possible_session_redirect.c_str());
+    }
     return true;
   }
 
@@ -889,102 +880,50 @@ bool WebCacheDB::DoServiceQuery(
 }
 
 //------------------------------------------------------------------------------
-// ServiceGearsInspectorUrl
+// ServiceInspectorUrl
 //------------------------------------------------------------------------------
-bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
-                                          PayloadInfo *payload) {
-#ifdef WIN32
-  // TODO(aa): Not yet supported on WIN32. The only missing piece is to add a
-  // section to the Wix installer to lay down the files in gears/inspector/ to
-  // the Gears shared common directory.
+bool WebCacheDB::ServiceInspectorUrl(const char16 *url_char16,
+                                     const SecurityOrigin &origin,
+                                     PayloadInfo *payload) {
+#ifdef OFFICIAL_BUILD
+  // Inspector is not yet enabled in official builds.
   return false;
-
-#elif OFFICIAL_BUILD==1
-  // TODO(aa): There should be a global setting to enable/disable the Gears
-  // inspector. For now, its disabled in official builds.
-  return false;
-
 #else
-  SecurityOrigin origin;  // Only used to get length of url scheme
-  if (!origin.InitFromUrl(url)) return false;
+  // TODO(aa): There should be a global setting to enable/disable the inspector.
 
-  // We want to intercept anything that has "__gears__" as the first path
-  // component and serve up local files.
-  std::string16 url_string;
-  url_string.assign(url);
-  // Find first "/" _after_ scheme
-  // TODO(aa): We really shouldn't need to be doing this ourselves, maybe add
-  // a helper to SecurityOrigin or somewhere to get url path components.
-  std::string16::size_type location = origin.scheme().length() + 3;
-  location = url_string.find(STRING16(L"/"), location);
-  if (location != std::string16::npos) {
-    // Find next "/" after that
-    std::string16::size_type location_end = 0;
-    location_end = url_string.find(STRING16(L"/"), location + 1);
-    std::string16 path_component;
-    // There is a second "/"
-    if (location_end != std::string16::npos) {
-      path_component = url_string.substr(location + 1,
-                                         location_end - location - 1);
-    // No other "/", take everything up to the end of the string
-    } else {
-      path_component = url_string.substr(location + 1);
-    }
-    if (path_component == STRING16(L"__gears__")) {
+  // TODO(aa): Use gears:// scheme instead of /-gears-/ path?  Other options?
 
-      // Edge case: default URL must have a trailing "/" for the index page
-      // to load correctly (i.e. http://domain.com/__gears__/). Browsers
-      // usually do this automatically.
-      if (location_end == std::string16::npos) {
-        if (!payload) {
-          return true;  // Can serve but not interested in content just yet
-        } else {
-          url_string += STRING16(L"/");
-          return payload->SynthesizeHttpRedirect(NULL, url_string.c_str());
-        }
-      }
-     
-      // Get name of requested resource
-      std::string16 file_name;
-      file_name = url_string.substr(location_end + 1);
-      if (file_name == STRING16(L"")) {
-        file_name = STRING16(L"index.html");  // Default Inspector page
-      }
-     
-      // Build path to actual local file
-      std::string16 local_file;
-      if (!GetBaseResourcesDirectory(&local_file)) {
-        return false;
-      }
-      // TODO(aa): Not sure if this is completely safe. Investigate a better
-      // way of building up this path.
-      local_file += kPathSeparator;
-      local_file += STRING16(L"inspector");
-      local_file += kPathSeparator;
-      local_file += file_name;
+  // TODO(aa): Consider adding a helper to get a URL's components.
+  std::string16 url(url_char16);
+  std::string16::size_type path_position = origin.scheme().length() + 3;
+  path_position = url.find(STRING16(L"/"), path_position);
+  if (path_position == std::string16::npos) { return false; }
+  std::string16 path = url.substr(path_position);
 
-      if (!File::Exists(local_file.c_str())) return false;
-
-      // We can serve this url but are not interested in content just yet
-      if (!payload) return true;
-
-      // Set up fake HTTP response
-      payload->id = kUnknownID;
-      payload->creation_date = 0;
-      payload->headers = STRING16(L"");
-      payload->status_line = STRING16(L"");
-      payload->status_code = 200;
-      payload->is_synthesized_http_redirect = false;
-      scoped_ptr< std::vector<uint8> > data(new std::vector<uint8>);
-      if (!File::ReadFileToVector(local_file.c_str(), data.get())) {
-        return false;
-      }
-      payload->data.reset(data.release());
-      return true;
-    }
+  const unsigned char *data_pointer;
+  size_t size;
+  std::string16 headers;
+  if (!GetInspectorResource(path, &data_pointer, &size, &headers)) {
+    return false;
   }
-  return false;
-#endif
+
+  // We can serve this url but are not interested in content just yet.
+  if (!payload) return true;
+
+  // Setup fake HTTP response.
+  payload->id = kUnknownID;
+  payload->creation_date = 0;
+  payload->headers = headers;
+  payload->status_line = STRING16(L"HTTP/1.0 200 OK");
+  payload->status_code = HttpConstants::HTTP_OK;
+  payload->is_synthesized_http_redirect = false;
+
+  payload->data.reset(new std::vector<uint8>);
+  payload->data->resize(size);
+  memcpy(&((*payload->data)[0]), data_pointer, size);
+  return true;
+
+#endif  // OFFICIAL_BUILD ... else ...
 }
 
 //------------------------------------------------------------------------------

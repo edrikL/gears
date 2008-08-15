@@ -1558,7 +1558,7 @@ NOTIFIER_PREFPANE_STRINGS += \
 NOTIFIER_PREFPANE_RESOURCES += \
 		notifier/prefpane/notifier_pref_icon.tiff \
 		$(NULL)
-		
+
 COMMON_M4SRCS += \
 		Prefpane-Info.plist.m4 \
 		$(NULL)
@@ -2113,6 +2113,58 @@ SF_CPPSRCS 	+= \
 		blob_input_stream_sf.mm \
 		blob_input_stream_sf_test.mm \
 		$(NULL)
+
+#-----------------------------------------------------------------------------
+# inspector
+
+ifeq ($(OFFICIAL_BUILD),1)
+# Inspector is not yet enabled in official builds.
+else
+$(BROWSER)_VPATH += \
+		inspector \
+		$(NULL)
+$(BROWSER)_CPPSRCS += \
+		inspector_resources.cc \
+		$(NULL)
+
+COMMON_VPATH += \
+		inspector \
+		$(NULL)
+COMMON_GEN_CPPSRCS += \
+		console.html.from_bin.cc \
+		database.html.from_bin.cc \
+		index.html.from_bin.cc \
+		localserver.html.from_bin.cc \
+		$(NULL)
+
+COMMON_VPATH += \
+		inspector/common \
+		$(NULL)
+COMMON_GEN_CPPSRCS += \
+		alert-35.png.from_bin.cc \
+		database.gif.from_bin.cc \
+		error-35.png.from_bin.cc \
+		ie6hacks.css.from_bin.cc \
+		inspector_links.js.from_bin.cc \
+		lightbulb-35.png.from_bin.cc \
+		localserver.gif.from_bin.cc \
+		question-35.png.from_bin.cc \
+		styles.css.from_bin.cc \
+		workerpool.gif.from_bin.cc \
+		$(NULL)
+
+COMMON_VPATH += \
+		sdk \
+		ui/common \
+		$(NULL)
+COMMON_GEN_CPPSRCS += \
+		base.js.from_bin.cc \
+		dom.js.from_bin.cc \
+		gears_init.js.from_bin.cc \
+		icon_32x32.png.from_bin.cc \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # image
