@@ -360,8 +360,8 @@ class WebCacheDB : SQLTransactionListener {
   // Helpers used by our public Service and CanService methods
   bool ServiceImpl(const char16 *url,
                    BrowsingContext *browsing_context,
-                   int64 *payload_id,
-                   std::string16 *redirect_url);
+                   PayloadInfo *payload,
+                   bool payload_head_only);
 
   bool DoServiceQuery(const char16 *url,
                       bool exact_match,
@@ -373,7 +373,9 @@ class WebCacheDB : SQLTransactionListener {
                       std::string16 *possible_session_redirect,
                       int64 *payload_id_out);
 
-  bool ServiceGearsInspectorUrl(const char16 *url, PayloadInfo *payload);
+  bool ServiceInspectorUrl(const char16 *url,
+                           const SecurityOrigin &origin,
+                           PayloadInfo *payload);
 
   // Starts an update task for the specified managed store
   void MaybeInitiateUpdateTask(int64 server_id, BrowsingContext *context);
