@@ -55,7 +55,7 @@ class BalloonCollectionObserverMock : public BalloonCollectionObserver {
 
 TEST(BalloonCollectionTest, BasicFunctionality) {
   BalloonCollectionObserverMock observer;
-  BalloonCollection balloons(&observer);
+  BalloonCollection balloons(&observer, NULL);
 
   GearsNotification notification1;
   SecurityOrigin security_origin;

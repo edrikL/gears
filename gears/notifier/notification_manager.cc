@@ -152,7 +152,7 @@ NotificationManager::NotificationManager(
       in_presentation_(false) {
   assert(activity);
   activity->AddObserver(this);
-  balloon_collection_.reset(new BalloonCollection(this));
+  balloon_collection_.reset(new BalloonCollection(this, activity));
   initialized_ = true;
 
 #if defined(OS_MACOSX)

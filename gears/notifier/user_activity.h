@@ -83,6 +83,9 @@ class UserActivityInterface {
 
   // Get the user activity value. Note that this is the latest cached value.
   virtual UserMode user_mode() const = 0; 
+
+  // Returns the number of milliseconds the system has had no user input.
+  virtual uint32 QueryUserIdleTimeMs() = 0;
 };
 
 class UserActivityMonitor : public UserActivityInterface {
@@ -97,6 +100,7 @@ class UserActivityMonitor : public UserActivityInterface {
   virtual void AddObserver(UserActivityObserver *observer);
   virtual void CheckNow();
   virtual UserMode user_mode() const { return user_mode_; }
+  virtual uint32 QueryUserIdleTimeMs() { return GetUserIdleTimeMs(); }
 
  protected:
   // Gets the user mode by using platform-specific function if possible.
