@@ -166,7 +166,7 @@ class GearsNotification :
   const std::string16& title() const { return title_; }
   const std::string16& subtitle() const { return subtitle_; }
   const std::string16& icon_url() const { return icon_url_; }
-  const std::vector<uint8>& icon_raw_data() {
+  const std::vector<uint8>& icon_raw_data() const {
     return icon_raw_data_;
   }
   const std::string16& description() const { return description_; }

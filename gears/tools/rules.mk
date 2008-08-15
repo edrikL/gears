@@ -91,6 +91,7 @@ $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
 IPC_TEST_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(IPC_TEST_OUTDIR), $(IPC_TEST_CPPSRCS) $(IPC_TEST_CSRCS))
 NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS) $(NOTIFIER_CSRCS))
+NOTIFIER_PREFPANE_OBJS   = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_PREFPANE_CPPSRCS))
 NOTIFIER_SHELL_OBJS      = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_SHELL_CPPSRCS))
 NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_TEST_CPPSRCS)  $(NOTIFIER_TEST_CSRCS))
 OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
@@ -138,6 +139,7 @@ DEPS = \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IPC_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(NOTIFIER_PREFPANE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_SHELL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_CRASH_INSPECTOR_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -219,6 +221,7 @@ CRASH_SENDER_EXE        = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX
 IPC_TEST_EXE            = $(IPC_TEST_OUTDIR)/$(EXE_PREFIX)ipc_test$(EXE_SUFFIX)
 NOTIFIER_DLL            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(DLL_SUFFIX)
 NOTIFIER_EXE            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
+NOTIFIER_PREFPANE_EXE   = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_prefpane$(EXE_SUFFIX)
 NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
 # Note: crash_inspector name needs to stay in sync with name used in
 # exception_handler_osx/google_breakpad.mm.
@@ -235,6 +238,7 @@ PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
 NOTIFIER_BUNDLE         = $(INSTALLERS_OUTDIR)/Safari/Notifier.app
+NOTIFIER_PREFPANE_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/GearsNotifier.prefPane
 
 SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/Gears.bundle
 SF_PLUGIN_PROXY_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
@@ -404,6 +408,13 @@ ifeq ($(BROWSER), NONE)
 ifneq ($(findstring $(OS),linux|osx|win32),)
 modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
 endif
+ifeq ($(OS),osx)
+ifeq ($(OFFICIAL_BUILD),1)
+# Notifier is not yet part of the official build
+else
+modules::$(NOTIFIER_PREFPANE_EXE)
+endif
+endif
 ifeq ($(OS),win32)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
@@ -413,7 +424,7 @@ ifeq ($(OS),osx)
 ifeq ($(OFFICIAL_BUILD),1)
 # Notifier is not yet part of the official build
 else
-modules:: $(NOTIFIER_BUNDLE)
+modules:: $(NOTIFIER_BUNDLE) $(NOTIFIER_PREFPANE_BUNDLE)
 endif
 endif
 ifneq ($(OS),wince)
@@ -895,6 +906,9 @@ $(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
 endif
 
+$(NOTIFIER_PREFPANE_EXE): $(NOTIFIER_PREFPANE_OBJS)
+	$(MKEXE) $(EXEFLAGS) -bundle $(NOTIFIER_PREFPANE_OBJS) -framework PreferencePanes
+
 $(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS) $(NOTIFIER_LIBS)
 
@@ -1075,6 +1089,21 @@ $(NOTIFIER_BUNDLE): $(NOTIFIER_EXE) $(COMMON_M4FILES)
 	cp $(NOTIFIER_RESOURCES) $@/Contents/Resources/
 # Mark writeable to allow rebuilds
 	chmod 666 $@/Contents/Resources/*
+
+$(NOTIFIER_PREFPANE_BUNDLE): $(NOTIFIER_PREFPANE_EXE) $(NOTIFIER_PREFPANE_NIB) $(NOTIFIER_PREFPANE_STRINGS) $(NOTIFIER_PREFPANE_RESOURCES) $(COMMON_M4FILES)
+	rm -rf $@
+	mkdir -p $@/Contents/MacOS/
+	mkdir -p $@/Contents/Resources/
+	cp -r $(NOTIFIER_PREFPANE_EXE) $@/Contents/MacOS/
+# TODO(chimene): automate version info
+	cp $(COMMON_OUTDIR)/genfiles/Prefpane-Info.plist $@/Contents/Info.plist
+# TODO(chimene): Localization of nib file
+	mkdir -p $@/Contents/Resources/English.lproj/
+# TODO(chimene): Don't copy designable.nib
+	cp -r $(NOTIFIER_PREFPANE_NIB) $@/Contents/Resources/English.lproj/
+	cp $(NOTIFIER_PREFPANE_STRINGS) $@/Contents/Resources/English.lproj/
+	cp $(NOTIFIER_PREFPANE_RESOURCES) $@/Contents/Resources/
+	chmod -R a+rw $@/Contents/Resources/*
 endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)

@@ -104,6 +104,10 @@ class NotificationManager : public BalloonCollectionObserver,
   BalloonCollectionMock *UseBalloonCollectionMock();
 #endif  // USING_CCTESTS
 
+#if defined(OS_MACOSX)
+  void SetDoesUseGrowlBalloonCollection(bool should_use_growl);
+#endif
+
  private:
   static const int kNotificationManagerVersion;
 
@@ -164,11 +168,15 @@ class NotificationManager : public BalloonCollectionObserver,
   static bool WriteNotification(File *file,
                                 const GearsNotification &notification);
 
-  bool intiailized_;
+  bool initialized_;
   UserActivityInterface *activity_;
   DelayedRestartInterface *delayed_restart_;
   BalloonCollectionObserver *balloons_observer_;
   scoped_ptr<BalloonCollectionInterface> balloon_collection_;
+#if defined(OS_MACOSX)
+  bool using_growl_;
+  scoped_ptr<BalloonCollectionInterface> inactive_collection_;
+#endif
   std::deque<QueuedNotification*> show_queue_;
   std::deque<QueuedNotification*> delayed_queue_;
   bool in_presentation_;
