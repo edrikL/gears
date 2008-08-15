@@ -88,7 +88,7 @@ const int kOneHourSeconds = 60 * 60;
 
 const int kUserMessageChangeFont = glint::GL_MSG_USER + 1;
 
-static const int kUserActivityCheckIntervalMs = 5000;         // 5s
+static const uint32 kUserActivityCheckIntervalMs = 5000;      // 5s
 static const double kExpirationTimeAfterUserActivity = 2.0;   // 2s
 
 enum kContextMenuCommands {
