@@ -128,9 +128,9 @@ class RootUI : public BaseObject {
   bool is_on_taskbar() const { return is_on_taskbar_; }
   bool has_focus() const { return has_focus_; }
 
-  // Broadcast message to all nodes in the tree. Broadcasted messages
-  // can not be 'handled' and they do not return results.
-  void BroadcastMessage(Node *node, const Message &message);
+  // Broadcast message to all nodes in the subtree of 'node', including itself.
+  // Broadcasted messages can not be 'handled' and they do not return results.
+  static void BroadcastMessage(Node *node, const Message &message);
 
   // Directs message to the node that has keyboard focus.
   // If nobody has focus, directs it to the root node.

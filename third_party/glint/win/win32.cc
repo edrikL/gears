@@ -107,8 +107,16 @@ static const MessageMap win32_mappings[] = {
   { WM_KILLFOCUS, GL_MSG_KILLFOCUS },
   { WM_WINDOWPOSCHANGED, GL_MSG_WINDOW_POSITION_CHANGED },
   { WM_DISPLAYCHANGE, GL_MSG_DISPLAY_SETTINGS_CHANGED },
-  // The real message is filled in based on the wparam.
-  { WM_SETTINGCHANGE, GL_MSG_IDLE },
+  // From MSDN documentation for WM_SETTINGCHANGE:
+  // "In general, when you receive this message, you should check and
+  // reload any system parameter settings that are used by your application."
+  // They have various parameters sent as wparam/lparam, but in reality,
+  // OS itself does not always follow the rules. For example, XPSP2 sends
+  // WM_SETTINGCHANGE with wparam=0 and lparam="Windows" on FontSize change
+  // in DisplayProperties/Appearance dialog. So just signal generic
+  // GL_MSG_DISPLAY_SETTINGS_CHANGED and cause the app to re-query everything
+  // related.
+  { WM_SETTINGCHANGE, GL_MSG_DISPLAY_SETTINGS_CHANGED },
   { WM_QUIT,  GL_MSG_QUIT },
   { WM_CLOSE_DOCUMENT, GL_MSG_CLOSE_DOCUMENT },
 };
@@ -1374,22 +1382,13 @@ class Win32Platform : public Platform {
         message->work_item = reinterpret_cast<WorkItem*>(lparam);
         break;
 
+      case WM_SETTINGCHANGE:
       case WM_DISPLAYCHANGE: {
         RECT rect = { 0, 0, 0, 0 };
         ::GetWindowRect(window_handle, &rect);
         message->window_position = Point(rect.left, rect.top);
         break;
       }
-
-      case WM_SETTINGCHANGE:
-        if (wparam == SPI_SETWORKAREA){
-          message->code = GL_MSG_WORK_AREA_CHANGED;
-        } else if (wparam == SPI_SETICONTITLELOGFONT) {
-          message->code = GL_MSG_DEFAULT_FONT_SIZE_CHANGED;
-        } else {
-          return false;
-        }
-        break;
 
       case WM_WINDOWPOSCHANGED: {
         WINDOWPOS* window_position = reinterpret_cast<WINDOWPOS*>(lparam);

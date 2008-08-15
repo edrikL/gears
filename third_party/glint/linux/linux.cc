@@ -956,7 +956,7 @@ class LinuxPlatform : public glint_posix::PosixPlatform {
       case PropertyNotify:
         if (event->xproperty.atom == this_ptr->workarea_atom_) {
           Message message;
-          message.code = GL_MSG_WORK_AREA_CHANGED;
+          message.code = GL_MSG_DISPLAY_SETTINGS_CHANGED;
           this_ptr->BroadcastMessage(message);
         }
         break;

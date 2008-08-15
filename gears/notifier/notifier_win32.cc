@@ -216,6 +216,15 @@ bool Win32Notifier::IsRestartNeeded() const {
     return false;
   }
 
+// For debugging: when running notifier.exe directly from build location,
+// the version is empty since notifier.dll is in the same directory as
+// notifier.exe. Don't restart.
+#ifdef DEBUG
+  if (running_version_.empty()) {
+    return false;
+  }
+#endif
+
   std::string16 path;
   GetMainModulePath(&path);
   path += running_version_;

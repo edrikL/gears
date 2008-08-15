@@ -318,8 +318,7 @@ MessageResultCode RootUI::HandleMessage(const Message &message) {
       // Move the window. Windows changes its position without sending
       // corresponding messages (WM_WINDOWPOSCHANGED). One repro is
       // Media Player 9 or 10 as described above.
-      Point offset(message.window_position.x, message.window_position.y);
-      UpdateRootNodeMargin(offset);
+      UpdateRootNodeMargin(message.window_position);
 #endif
       break;
     }
