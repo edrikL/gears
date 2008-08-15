@@ -89,7 +89,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       }
     </style>
     <script type="text/javascript" src="common/gears_init.js"></script>
-    <script type="text/javascript" src="common/sample.js"></script>
+    <script type="text/javascript" src="common/base.js"></script>
+    <script type="text/javascript" src="common/dom.js"></script>
   </head>
   <body>
 
@@ -105,7 +106,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <div id="log-window"></div>
 
     <script type="text/javascript">
-      var console;
+      var gearsConsole;
 
       init();
 
@@ -115,8 +116,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           return;
         }
 
-        console = google.gears.factory.create('beta.console');
-        console.onlog = onlogHandler;
+        gearsConsole = google.gears.factory.create('beta.console');
+        gearsConsole.onlog = onlogHandler;
         addStatus('Ready.');
         
         return;
@@ -144,7 +145,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         if (log_event.type != 'debug') {
           var type_span = document.createElement('span');
           type_span.className = 'type';
-          setTextContent(type_span, type + ':');
+          dom.setTextContent(type_span, type + ':');
           left_div.appendChild(type_span);
           left_div.appendChild(document.createElement('br'));
         }
@@ -161,7 +162,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         // Source heading
         var source_span = document.createElement('span');
         source_span.style.color = '#000099';
-        setTextContent(source_span, 'Source');
+        dom.setTextContent(source_span, 'Source');
         right_div.appendChild(source_span);
         
         // Source text
@@ -172,7 +173,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         // Date heading
         var date_span = document.createElement('span');
         date_span.style.color = '#000099';
-        setTextContent(date_span, 'Date');
+        dom.setTextContent(date_span, 'Date');
         right_div.appendChild(date_span);
 
         // Date text
@@ -196,7 +197,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       function addStatus(message) {
         var node = document.createElement('div');
         node.className = 'log debug';
-        setTextContent(node, message);
+        dom.setTextContent(node, message);
         document.getElementById('log-window').insertBefore(node,
             document.getElementById('log-window').firstChild);
       }
