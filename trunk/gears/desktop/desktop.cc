@@ -46,8 +46,8 @@
 #include "gears/blob/blob_interface.h"
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
+#include "gears/desktop/notification_message_orderer.h"
 #include "gears/notifier/notification.h"
-#include "gears/notifier/notifier_proxy.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -95,7 +95,7 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
-static NotifierProxy g_notifier_proxy;
+static NotificationMessageOrderer g_notification_message_orderer;
 #endif  // OFFICIAL_BUILD
 
 bool DecodeIcon(Desktop::IconData *icon, int expected_size,
@@ -846,8 +846,16 @@ bool Desktop::ValidateNotification(GearsNotification *notification) {
 class NotificationIconHandler : public Desktop::IconHandlerInterface {
  public:
   explicit NotificationIconHandler(GearsNotification *released_notification)
-      : notification_(released_notification) {
+      : notification_(released_notification),
+        reservation_(g_notification_message_orderer.AddReservation(
+                         *released_notification)) {
     icon_.url = notification_->icon_url();
+  }
+
+  ~NotificationIconHandler() {
+    if (reservation_ != NotificationMessageOrderer::kInvalidReservation) {
+      g_notification_message_orderer.RemoveReservation(reservation_);
+    }
   }
 
   virtual void set_abort_interface(Desktop::AbortInterface *) {
@@ -876,11 +884,10 @@ class NotificationIconHandler : public Desktop::IconHandlerInterface {
       }
     }
 
-    // TODO(levin): Since this is done async, a delete or an update
-    // message may come in after this update but get processed out of order,
-    // which is bad.  Need to fix this.
-    g_notifier_proxy.PostNotification(kDesktop_AddNotification,
-                                      notification_.release());
+    g_notification_message_orderer.PostNotification(kDesktop_AddNotification,
+                                                    notification_.release(),
+                                                    reservation_);
+    reservation_ = NotificationMessageOrderer::kInvalidReservation;
   }
 
  private:
@@ -897,6 +904,7 @@ class NotificationIconHandler : public Desktop::IconHandlerInterface {
          origin.c_str(), id.c_str(), type8.c_str(), error8.c_str()));
   }
   scoped_ptr<GearsNotification> notification_;
+  int64 reservation_;
   Desktop::IconData icon_;
   DISALLOW_EVIL_CONSTRUCTORS(NotificationIconHandler);
 };
@@ -926,8 +934,10 @@ bool Desktop::ValidateAndRemoveNotification(
   if (!ValidateNotification(notification.get())) {
     return false;
   }
-  g_notifier_proxy.PostNotification(kDesktop_RemoveNotification,
-                                    notification.release());
+  g_notification_message_orderer.PostNotification(
+      kDesktop_RemoveNotification,
+      notification.release(),
+      NotificationMessageOrderer::kInvalidReservation);
   return true;
 }
 
