@@ -1293,7 +1293,9 @@ bool TestHttpRequest(BrowsingContext *context, std::string16 *error) {
 
   // Send a request synchronously
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetListener(new TestHttpRequestListener(request.get()), false);
+  TestHttpRequestListener *listener =
+      new TestHttpRequestListener(request.get());
+  request->SetListener(listener, false);
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
                           false, context);
@@ -1302,6 +1304,12 @@ bool TestHttpRequest(BrowsingContext *context, std::string16 *error) {
     // note: we leak the request and listener in this case
     ok = request->Send(NULL);
     TEST_ASSERT(ok);
+  } else {
+    // TODO(michaeln): Once SafeHttpRequest::Open can do sync requests, then we
+    // should not need an explicit clean-up, and let the listener self-delete
+    // during TestHttpRequestListener::ReadyStateChanged.
+    delete listener;
+    listener = NULL;
   }
   request.reset(NULL);
 

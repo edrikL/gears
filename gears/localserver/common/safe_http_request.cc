@@ -56,7 +56,8 @@ bool SafeHttpRequest::Open(const char16 *method,
                            bool async,
                            BrowsingContext *browsing_context) {
   assert(IsApartmentThread());
-  // TODO(michaeln): support sync requests
+  // TODO(michaeln): support sync requests. When that happens, clean up
+  // TestHttpRequest in cctests/test.cc.
   if (!async)
     return false;
   if (GetState() != UNINITIALIZED)
