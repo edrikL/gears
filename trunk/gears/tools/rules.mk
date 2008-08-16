@@ -1076,9 +1076,10 @@ endif
 ifeq ($(OFFICIAL_BUILD),1)
 # Notifier is not yet part of the official build
 else
-# Copy notifier.app
-# Must run make BROWSER=NONE prior to this line
+# Copy notifier.app and prefpane
+# Must run make BROWSER=NONE prior to this
 	cp -r $(NOTIFIER_BUNDLE) $@/Contents/Resources/
+	cp -r $(NOTIFIER_PREFPANE_BUNDLE) $@/Contents/Resources/
 endif
 
 ifeq ($(OFFICIAL_BUILD),1)
@@ -1094,8 +1095,6 @@ $(NOTIFIER_BUNDLE): $(NOTIFIER_EXE) $(COMMON_M4FILES)
 	cp -r $(NOTIFIER_EXE) $@/Contents/MacOS/
 # Copy notifier resources
 	cp $(NOTIFIER_RESOURCES) $@/Contents/Resources/
-# Mark writeable to allow rebuilds
-	chmod 666 $@/Contents/Resources/*
 
 $(NOTIFIER_PREFPANE_BUNDLE): $(NOTIFIER_PREFPANE_EXE) $(NOTIFIER_PREFPANE_NIB) $(NOTIFIER_PREFPANE_STRINGS) $(NOTIFIER_PREFPANE_RESOURCES) $(COMMON_M4FILES)
 	rm -rf $@
@@ -1110,7 +1109,6 @@ $(NOTIFIER_PREFPANE_BUNDLE): $(NOTIFIER_PREFPANE_EXE) $(NOTIFIER_PREFPANE_NIB) $
 	cp -r $(NOTIFIER_PREFPANE_NIB) $@/Contents/Resources/English.lproj/
 	cp $(NOTIFIER_PREFPANE_STRINGS) $@/Contents/Resources/English.lproj/
 	cp $(NOTIFIER_PREFPANE_RESOURCES) $@/Contents/Resources/
-	chmod -R a+rw $@/Contents/Resources/*
 endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
