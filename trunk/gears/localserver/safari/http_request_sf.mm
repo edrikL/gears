@@ -48,12 +48,18 @@
 // PIMPL store for Objective-C delegate.
 struct SFHttpRequest::HttpRequestData {
   HttpRequestDelegate *delegate;
+  NSInputStream *post_data_stream;
+  BlobInputStream *blob_stream;
   
-  HttpRequestData() : delegate(NULL) {}
+  HttpRequestData() : delegate(NULL),
+                      post_data_stream(nil),
+                      blob_stream(nil) {}
   
   ~HttpRequestData() {
     [delegate abort];
     [delegate release];
+    [post_data_stream release];
+    [blob_stream release];
     delegate = NULL;
   }
 };
@@ -271,7 +277,6 @@ bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 //------------------------------------------------------------------------------
 
 bool SFHttpRequest::Send(BlobInterface *blob) {
-  NSInputStream *post_data_stream(nil);
   if (IsPostOrPut()) {
     if (!blob) {
       blob = new EmptyBlob;
@@ -282,16 +287,18 @@ bool SFHttpRequest::Send(BlobInterface *blob) {
     std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
     headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
                                           content_length_as_string));
-    BlobInputStream *blob_stream =
-        [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
-    if (!blob_stream) {
+    assert(!delegate_holder_->blob_stream);
+    delegate_holder_->blob_stream =
+        [[BlobInputStream alloc] initFromBlob:blob];
+    if (!delegate_holder_->blob_stream) {
       return false;
     }
-    post_data_stream = [[[ProgressInputStream alloc]
-                         initFromStream:blob_stream
+    assert(!delegate_holder_->post_data_stream);
+    delegate_holder_->post_data_stream = [[ProgressInputStream alloc]
+                         initFromStream:delegate_holder_->blob_stream
                                 request:this
-                                  total:blob->Length()] autorelease];
-    if (!post_data_stream) {
+                                  total:blob->Length()];
+    if (!delegate_holder_->post_data_stream) {
       return false;
     }
   } else if (blob) {
@@ -325,7 +332,7 @@ bool SFHttpRequest::Send(BlobInterface *blob) {
   }
 
   bool send_browser_cookies = cookie_behavior_ == SEND_BROWSER_COOKIES;
-  if (![delegate_holder_->delegate send:post_data_stream
+  if (![delegate_holder_->delegate send:delegate_holder_->post_data_stream
                               userAgent:user_agent
                                 headers:headers_to_send_
                      bypassBrowserCache:ShouldBypassBrowserCache()
