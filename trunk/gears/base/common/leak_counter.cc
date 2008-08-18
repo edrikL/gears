@@ -76,7 +76,7 @@ void LeakCounterDumpCounts() {
   // TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
 #else
 
-  std::string16 s(PRODUCT_FRIENDLY_NAME);
+  std::string16 s(STRING16(PRODUCT_FRIENDLY_NAME));
   s += STRING16(L" is leaking memory. Known leaks include ");
   s += IntegerToString16(total);
   s += STRING16(L" objects:\n");
