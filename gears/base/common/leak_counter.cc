@@ -29,34 +29,38 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string>
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
+#include "genfiles/product_constants.h"
 
 static AtomicWord leak_counter_counters[MAX_LEAK_COUNTER_TYPE];
 
-static const char *leak_counter_names[] = {
-  "DocumentJsRunner",
-  "FFHttpRequest",
-  "JavaScriptWorkerInfo",
-  "JsArray",
-  "JsCallContext",
-  "JsContextWrapper",
-  "JsDomElement",
-  "JsEventMonitor",
-  "JsObject",
-  "JsRootedToken",
-  "JsRunner",
-  "JsWrapperDataForFunction",
-  "JsWrapperDataForInstance",
-  "JsWrapperDataForProto",
-  "ModuleEnvironment",
-  "ModuleImplBaseClass",
-  "ModuleWrapper",
-  "PoolThreadsManager",
-  "ProgressInputStream",
-  "SafeHttpRequest",
-  "SharedJsClasses",
+static const char16 *leak_counter_names[] = {
+  STRING16(L"DocumentJsRunner"),
+  STRING16(L"FFHttpRequest"),
+  STRING16(L"JavaScriptWorkerInfo"),
+  STRING16(L"JsArray"),
+  STRING16(L"JsCallContext"),
+  STRING16(L"JsContextWrapper"),
+  STRING16(L"JsDomElement"),
+  STRING16(L"JsEventMonitor"),
+  STRING16(L"JsObject"),
+  STRING16(L"JsRootedToken"),
+  STRING16(L"JsRunner"),
+  STRING16(L"JsWrapperDataForFunction"),
+  STRING16(L"JsWrapperDataForInstance"),
+  STRING16(L"JsWrapperDataForProto"),
+  STRING16(L"ModuleEnvironment"),
+  STRING16(L"ModuleImplBaseClass"),
+  STRING16(L"ModuleWrapper"),
+  STRING16(L"PoolThreadsManager"),
+  STRING16(L"ProgressInputStream"),
+  STRING16(L"SafeHttpRequest"),
+  STRING16(L"SharedJsClasses"),
   NULL
 };
 
@@ -68,14 +72,34 @@ void LeakCounterDumpCounts() {
   if (total == 0) {
     return;
   }
-  printf("Gears is leaking memory. Known leaks include %d objects:\n", total);
-  for (int i = 0; i < MAX_LEAK_COUNTER_TYPE; i++) {
+#ifdef WINCE
+  // TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
+#else
+
+  std::string16 s(PRODUCT_FRIENDLY_NAME);
+  s += STRING16(L" is leaking memory. Known leaks include ");
+  s += IntegerToString16(total);
+  s += STRING16(L" objects:\n");
+  for (int i = 0; i < MAX_LEAK_COUNTER_TYPE; ++i) {
     int count = leak_counter_counters[i];
     if (count == 0) {
       continue;
     }
-    printf("  %6d  %s\n", count, leak_counter_names[i]);
+    s += STRING16(L"    ");
+    s += IntegerToString16(count);
+    s += STRING16(L" ");
+    s += leak_counter_names[i];
+    s += STRING16(L"\n");
   }
+#ifdef WIN32
+  ::MessageBox(0, s.c_str(), PRODUCT_FRIENDLY_NAME, MB_OK);
+#endif
+#ifdef LINUX
+  std::string s_as_utf8;
+  String16ToUTF8(s, &s_as_utf8);
+  printf("%s", s_as_utf8.c_str());
+#endif
+#endif  // WINCE
 }
 
 void LeakCounterIncrement(LeakCounterType type, int delta) {
