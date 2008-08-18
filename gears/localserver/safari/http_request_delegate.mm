@@ -90,7 +90,7 @@
   if (!send_browser_cookies) {
     // Note that overriding the Cookies header doesn't work, despite the
     // documentation.
-    [request_ setHTTPShouldHandleCookies:FALSE];
+    [request_ setHTTPShouldHandleCookies:NO];
   }
 
   // Set the user agent header.
@@ -193,7 +193,7 @@
                  willSendRequest:(NSURLRequest *)request
                  redirectResponse:(NSURLResponse *)redirect_response {
   // if redirect_response is nil then we were called as the result of 
-  // transforming a request’s URL to its canonical form which is an event that 
+  // transforming a request's URL to its canonical form which is an event that 
   // doesn't interest us.
   if (!redirect_response) {
     return request;
