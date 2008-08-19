@@ -120,14 +120,22 @@ struct FifoMessageHeader {
 
 class OutboundIpcMessage : public RefCounted {
  public:
-  OutboundIpcMessage(int message_type,
-                     IpcMessageData *message_data)
-    : message_type_(message_type),
+  OutboundIpcMessage(IpcProcessId dest_process_id,
+                     int message_type,
+                     IpcMessageData *message_data,
+                     IpcMessageQueue::SendCompletionCallback callback,
+                     void *callback_param)
+    : dest_process_id_(dest_process_id),
+      message_type_(message_type),
       last_active_time_(0),
       message_data_(message_data),
-      sent_size_(0) {
+      sent_size_(0),
+      callback_(callback),
+      callback_param_(callback_param) {
     set_last_active_time();
   }
+
+  IpcProcessId dest_process_id() const { return dest_process_id_; }
 
   int message_type() const { return message_type_; }
 
@@ -155,12 +163,21 @@ class OutboundIpcMessage : public RefCounted {
     return serialized_message_data_.get();
   }
 
+  IpcMessageQueue::SendCompletionCallback callback() const {
+    return callback_;
+  }
+
+  void *callback_param() const { return callback_param_; }
+
  private:
+  IpcProcessId dest_process_id_;
   int message_type_;
   int64 last_active_time_;
   scoped_ptr<IpcMessageData> message_data_;
   scoped_ptr< std::vector<uint8> > serialized_message_data_;
   int sent_size_;
+  IpcMessageQueue::SendCompletionCallback callback_;
+  void *callback_param_;
 };
 
 class OutboundIpcMessageList : public RefCounted {
@@ -223,9 +240,11 @@ class LinuxIpcMessageQueue : public IpcMessageQueue {
   // IpcMessageQueue overrides
   virtual IpcProcessId GetCurrentIpcProcessId();
   // Does not support sending a message to itself.
-  virtual void Send(IpcProcessId dest_process_id,
-                    int message_type,
-                    IpcMessageData *message_data);
+  virtual void SendWithCompletion(IpcProcessId dest_process_id,
+                                  int message_type,
+                                  IpcMessageData *message_data,
+                                  SendCompletionCallback callback,
+                                  void *callback_param);
   // Not supported.
   virtual void SendToAll(int message_type,
                          IpcMessageData *message_data,
@@ -502,39 +521,74 @@ void LinuxIpcMessageQueue::ProcessOutboundMessages(
         bool *still_pending_to_send) {
   assert(still_pending_to_send);
 
-  MutexLock locker(&thread_sync_mutex_);
+  std::vector< scoped_refptr<OutboundIpcMessage> > successful_messages;
+  std::vector< scoped_refptr<OutboundIpcMessage> > failed_messages;
 
-  // Read all the signaling chars.
-  char ch = 0;
-  while (read(outbound_signaling_fds_[0], &ch, 1) > 0) {
-    if (ch == 'q') {
-      die_ = true;
-      return;
-    }
-  }
-
-  // Process the outbound list.
-  for (OutboundList::iterator iter = outbound_pendings_.begin();
-       iter != outbound_pendings_.end();
-       ) {
-    assert(!iter->get()->messages()->empty());
-    OutboundIpcMessage *message = iter->get()->messages()->front().get();
-
-    // If either all the message is sent successfully or the message is failed
-    // to send, remove it from the pending queue.
-    if (!SendOneMessage(iter->get()->dest_process_id(), message) ||
-        message->sent_size() >= 
-            static_cast<int>(message->serialized_message_data()->size())) {
-      iter->get()->messages()->pop_front();
-      if (iter->get()->messages()->empty()) {
-        iter = outbound_pendings_.erase(iter);
-        continue;
+  {
+    MutexLock locker(&thread_sync_mutex_);
+  
+    // Read all the signaling chars.
+    char ch = 0;
+    while (read(outbound_signaling_fds_[0], &ch, 1) > 0) {
+      if (ch == 'q') {
+        die_ = true;
+        return;
       }
     }
-    ++iter;
+  
+    // Process the outbound list.
+    for (OutboundList::iterator iter = outbound_pendings_.begin();
+         iter != outbound_pendings_.end();
+         ) {
+      assert(!iter->get()->messages()->empty());
+      OutboundIpcMessage *message = iter->get()->messages()->front().get();
+  
+      // If either all the message is sent successfully or the message is failed
+      // to send, remove it from the pending queue.
+      bool res = SendOneMessage(iter->get()->dest_process_id(), message);
+      if (!res ||
+          message->sent_size() >= 
+              static_cast<int>(message->serialized_message_data()->size())) {
+        if (res) {
+          successful_messages.push_back(message);
+        } else {
+          failed_messages.push_back(message);
+        }
+        iter->get()->messages()->pop_front();
+        if (iter->get()->messages()->empty()) {
+          iter = outbound_pendings_.erase(iter);
+          continue;
+        }
+      }
+      ++iter;
+    }
+  
+    *still_pending_to_send = !outbound_pendings_.empty();
   }
 
-  *still_pending_to_send = !outbound_pendings_.empty();
+  // Inform the result listener. This has to be done outside the mutex-protected
+  // block to avoid the mutex reentrancy problem if the listener callback
+  // decide to resend the message.
+  for (size_t i = 0; i < successful_messages.size(); ++i) {
+    if (successful_messages[i]->callback()) {
+      (*successful_messages[i]->callback())(
+            true,
+            successful_messages[i]->dest_process_id(),
+            successful_messages[i]->message_type(),
+            successful_messages[i]->message_data(),
+            successful_messages[i]->callback_param());
+    }
+  }
+  for (size_t i = 0; i < failed_messages.size(); ++i) {
+    if (failed_messages[i]->callback()) {
+      (*failed_messages[i]->callback())(
+            false,
+            failed_messages[i]->dest_process_id(),
+            failed_messages[i]->message_type(),
+            failed_messages[i]->message_data(),
+            failed_messages[i]->callback_param());
+    }
+  }
 }
 
 // Send one message to a destination process.
@@ -907,9 +961,11 @@ IpcProcessId LinuxIpcMessageQueue::GetCurrentIpcProcessId() {
   return current_process_id_;
 }
 
-void LinuxIpcMessageQueue::Send(IpcProcessId dest_process_id,
-                                int message_type,
-                                IpcMessageData *message_data) {
+void LinuxIpcMessageQueue::SendWithCompletion(IpcProcessId dest_process_id,
+                                              int message_type,
+                                              IpcMessageData *message_data,
+                                              SendCompletionCallback callback,
+                                              void *callback_param) {
   // Does not support sending a message to itself.
   assert(dest_process_id != static_cast<IpcProcessId>(getpid()));
 
@@ -918,8 +974,11 @@ void LinuxIpcMessageQueue::Send(IpcProcessId dest_process_id,
     return;
   }
 
-  AddToOutboundList(dest_process_id, new OutboundIpcMessage(message_type,
-                                                            message_data));
+  AddToOutboundList(dest_process_id, new OutboundIpcMessage(dest_process_id,
+                                                            message_type,
+                                                            message_data,
+                                                            callback,
+                                                            callback_param));
 }
 
 void LinuxIpcMessageQueue::SendToAll(int message_type,
