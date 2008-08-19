@@ -47,14 +47,6 @@ BREAKPAD_CPPSRCS	+= \
 		guid_string.cc \
 		$(NULL)
 
-THIRD_PARTY_VPATH	+= \
-		$(BREAKPAD_VPATH) \
-		$(NULL)
-
-THIRD_PARTY_CPPSRCS	+= \
-		$(BREAKPAD_CPPSRCS) \
-		$(NULL)
-
 
 FF3_VPATH	+= \
 		base/common \
@@ -108,14 +100,6 @@ BREAKPAD_CPPSRCS	+= \
 		protected_memory_allocator.cc \
 		string_conversion.cc \
 		string_utilities.cc \
-		$(NULL)
-
-THIRD_PARTY_VPATH	+= \
-		$(BREAKPAD_VPATH) \
-		$(NULL)
-
-THIRD_PARTY_CSRCS	+= \
-		$(BREAKPAD_CPPSRCS) \
 		$(NULL)
 
 SF_VPATH	+= \
@@ -1164,7 +1148,7 @@ VISTA_BROKER_CSRCS += \
 
 ifeq ($(OS),osx)
 COMMON_VPATH += \
-		$(BREAKPAD_CPPSRCS) \
+		$(BREAKPAD_VPATH) \
 		base/common/exception_handler_osx \
 		$(NULL)
 
@@ -1425,6 +1409,7 @@ NOTIFIER_CORE	+= \
 		notifier_process_win32.cc \
 		notifier_utils_win32.cc \
 		notification.cc \
+		paths_none.cc \
 		security_model.cc \
 		serialization.cc \
 		stopwatch.cc \
@@ -1453,6 +1438,12 @@ NOTIFIER_CPPSRCS += \
 		notifier_linux.cc \
 		notifier_win32.cc \
 		$(NULL)
+		
+ifeq ($(OS),win32)		
+NOTIFIER_CPPSRCS += \
+		exception_handler_win32.cc \
+		$(NULL)
+endif # win32
 
 NOTIFIER_RESOURCES += \
 		notifier/resources/background.png \

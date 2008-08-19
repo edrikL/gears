@@ -111,7 +111,8 @@ bool GetBaseDataDirectory(std::string16 *path);
 bool GetUmbrellaInstallDirectory(std::string16 *path);
 #endif
 
-// Returns the path to install directory for the current browser.
+// Returns the path to install directory for the current browser or to shared
+// directory for non-browser case.
 bool GetInstallDirectory(std::string16 *path);
 
 // Returns the path to directory containing plugins/exe's

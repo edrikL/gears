@@ -122,6 +122,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 <Component Id='OurSharedVersionedDirFiles' Guid='$(var.OurComponentGUID_SharedVersionedFiles)'>
                   <File Id='notifier_dll' Name='notifier.dll' DiskId='1'
                     Source="$(var.OurCommonPath)/notifier.dll" />
+                  <File Id='shared_crash_sender' Name='crash_sender.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.exe" />
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
+                  <File Id='shared_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.pdb" />
+`~)
                 </Component>
               </Directory>
             </Directory>
