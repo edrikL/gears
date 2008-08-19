@@ -82,10 +82,25 @@ class IpcMessageQueue {
   // Returns the id of the currently executing process.
   virtual IpcProcessId GetCurrentIpcProcessId() = 0;
 
+  // The callback to inform about the send result.
+  typedef void (*SendCompletionCallback)(bool is_successful,
+                                         IpcProcessId dest_process_id,
+                                         int message_type,
+                                         const IpcMessageData *message_data,
+                                         void *param);
+
   // Sends a message to the indicated process.
-  virtual void Send(IpcProcessId dest_process_id,
-                    int message_type,
-                    IpcMessageData *message_data) = 0;
+  void Send(IpcProcessId dest_process_id,
+            int message_type,
+            IpcMessageData *message_data) {
+    SendWithCompletion(dest_process_id, message_type, message_data, NULL, NULL);
+  }
+
+  virtual void SendWithCompletion(IpcProcessId dest_process_id,
+                                  int message_type,
+                                  IpcMessageData *message_data,
+                                  SendCompletionCallback callback,
+                                  void *callback_param) = 0;
 
   // Sends a messages to all processes with an IpcMessageQueue with the
   // possible exception of the current process.

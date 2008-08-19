@@ -666,15 +666,23 @@ bool IpcProcessRegistry::Verify(bool check_for_current_process) {
 
 class ShareableIpcMessage : public RefCounted {
  public:
-  ShareableIpcMessage(int ipc_message_type,
-                      IpcMessageData *ipc_message_data)
-      : ipc_message_type_(ipc_message_type),
-        ipc_message_data_(ipc_message_data) {
+  ShareableIpcMessage(IpcProcessId dest_process_id,
+                      int ipc_message_type,
+                      IpcMessageData *ipc_message_data,
+                      IpcMessageQueue::SendCompletionCallback callback,
+                      void *callback_param)
+      : dest_process_id_(dest_process_id),
+        ipc_message_type_(ipc_message_type),
+        ipc_message_data_(ipc_message_data),
+        callback_(callback),
+        callback_param_(callback_param) {
   }
 
-  int ipc_message_type() { return ipc_message_type_; }
+  IpcProcessId dest_process_id() const { return dest_process_id_; }
 
-  IpcMessageData *ipc_message_data() { return ipc_message_data_.get(); }
+  int ipc_message_type() const { return ipc_message_type_; }
+
+  IpcMessageData *ipc_message_data() const { return ipc_message_data_.get(); }
 
   std::vector<uint8> *serialized_message_data() {
     assert(ipc_message_data_.get());
@@ -688,10 +696,19 @@ class ShareableIpcMessage : public RefCounted {
     return serialized_message_data_.get();
   }
 
+  IpcMessageQueue::SendCompletionCallback callback() const {
+    return callback_;
+  }
+
+  void *callback_param() const { return callback_param_; }
+
  private:
+  IpcProcessId dest_process_id_;
   int ipc_message_type_;
   scoped_ptr<IpcMessageData> ipc_message_data_;
   scoped_ptr< std::vector<uint8> > serialized_message_data_;
+  IpcMessageQueue::SendCompletionCallback callback_;
+  void *callback_param_;
 };
 
 
@@ -752,7 +769,12 @@ class OutboundQueue : public QueueBase {
   void AddMessageToQueue(ShareableIpcMessage *message);
   void WaitComplete(HANDLE handle, bool abandoned);
   bool AddWaitHandles(int64 now, std::vector<HANDLE> *handles);
-  IpcProcessId process_id() { return process_id_; }
+
+  IpcProcessId process_id() const { return process_id_; }
+  size_t pending_message_size() const { return pending_.size(); }
+  ShareableIpcMessage *pending_message_at(size_t i) const {
+    return pending_[i].get();
+  }
 
  private:
   IpcProcessId process_id_;
@@ -814,9 +836,11 @@ class Win32IpcMessageQueue : public IpcMessageQueue {
 
   // IpcMessageQueue overrides
   virtual IpcProcessId GetCurrentIpcProcessId();
-  virtual void Send(IpcProcessId dest_process_id,
-                    int message_type,
-                    IpcMessageData *message_data);
+  virtual void SendWithCompletion(IpcProcessId dest_process_id,
+                                  int message_type,
+                                  IpcMessageData *message_data,
+                                  SendCompletionCallback callback,
+                                  void *callback_param);
   virtual void SendToAll(int message_type,
                          IpcMessageData *message_data,
                          bool including_current_process);
@@ -834,6 +858,7 @@ class Win32IpcMessageQueue : public IpcMessageQueue {
   void RemoveOutboundQueue(OutboundQueue *queue);
 
   friend class InboundQueue;
+  friend class OutboundQueue;
 
   bool as_peer_;
   bool die_;
@@ -844,6 +869,8 @@ class Win32IpcMessageQueue : public IpcMessageQueue {
   std::map<IpcProcessId, linked_ptr<OutboundQueue> > outbound_queues_;
   Mutex thread_sync_mutex_;
   IpcEvent send_data_event_;
+  std::vector< scoped_refptr<ShareableIpcMessage> > successful_messages_;
+  std::vector< scoped_refptr<ShareableIpcMessage> > failed_messages_;
 };
 
 
@@ -918,6 +945,7 @@ void OutboundQueue::AddMessageToQueue(ShareableIpcMessage *message) {
 
 void OutboundQueue::WaitComplete(HANDLE handle, bool abandoned) {
   assert(process_handle_.m_h);
+
   last_active_time_ = ::GetCurrentTimeMillis();
   if (handle == write_mutex_.m_h) {
     LOG(("OutboundQueue::WaitComplete - write_mutex_ %s\n",
@@ -973,7 +1001,10 @@ void OutboundQueue::WritePendingMessages() {
   int num_written = 0;
   bool allow_large_message = true;
   while (!pending_.empty()) {
-    if (!WriteOneMessage(pending_.front().get(), allow_large_message)) {
+    ShareableIpcMessage *message = pending_.front().get();
+    if (WriteOneMessage(message, allow_large_message)) {
+      owner_->successful_messages_.push_back(message);
+    } else {
       break;
     }
     pending_.pop_front();
@@ -1279,8 +1310,11 @@ void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
   }
 
   scoped_refptr<ShareableIpcMessage> shareable_message;
-  shareable_message = new ShareableIpcMessage(ipc_message_type,
-                                              ipc_message_data);
+  shareable_message = new ShareableIpcMessage(0,
+                                              ipc_message_type,
+                                              ipc_message_data,
+                                              NULL,
+                                              NULL);
 
   std::vector<IpcProcessId> processes;
   process_registry_.GetAll(&processes);
@@ -1310,9 +1344,11 @@ void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
 }
 
 
-void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
-                                int ipc_message_type,
-                                IpcMessageData *ipc_message_data) {
+void Win32IpcMessageQueue::SendWithCompletion(IpcProcessId dest_process_id,
+                                              int ipc_message_type,
+                                              IpcMessageData *ipc_message_data,
+                                              SendCompletionCallback callback,
+                                              void *callback_param) {
   MutexLock thread_sync_lock(&thread_sync_mutex_);
 
   if (die_) {
@@ -1321,14 +1357,19 @@ void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
   }
 
   scoped_refptr<ShareableIpcMessage> shareable_message;
-  shareable_message = new ShareableIpcMessage(ipc_message_type,
-    ipc_message_data);
+  shareable_message = new ShareableIpcMessage(dest_process_id,
+                                              ipc_message_type,
+                                              ipc_message_data,
+                                              callback,
+                                              callback_param);
 
   OutboundQueue *outbound_queue = GetOutboundQueue(dest_process_id);
   if (outbound_queue) {
     outbound_queue->AddMessageToQueue(shareable_message.get());
-    send_data_event_.Set();
+  } else {
+    failed_messages_.push_back(shareable_message.get());
   }
+  send_data_event_.Set();
 
 #ifdef USING_CCTESTS
   // For testing
@@ -1411,6 +1452,8 @@ void Win32IpcMessageQueue::Run() {
 
   bool reset_send_data_event = false;
   while (!die_) {
+    std::vector< scoped_refptr<ShareableIpcMessage> > successful_messages;
+    std::vector< scoped_refptr<ShareableIpcMessage> > failed_messages;
     {
       MutexLock lock(&thread_sync_mutex_);
       
@@ -1451,7 +1494,35 @@ void Win32IpcMessageQueue::Run() {
           RemoveOutboundQueue(queue);
         }
       }
+
+      successful_messages.swap(successful_messages_);
+      failed_messages.swap(failed_messages_);
     }
+
+    // Inform the result listener about the message sending statuses.
+    for (size_t i = 0; i < successful_messages.size(); ++i) {
+      if (successful_messages[i]->callback()) {
+        (*successful_messages[i]->callback())(
+            true,
+            successful_messages[i]->dest_process_id(),
+            successful_messages[i]->ipc_message_type(),
+            successful_messages[i]->ipc_message_data(),
+            successful_messages[i]->callback_param());
+      }
+    }
+    successful_messages.clear();
+
+    for (size_t i = 0; i < failed_messages.size(); ++i) {
+      if (failed_messages[i]->callback()) {
+        (*failed_messages[i]->callback())(
+            false,
+            failed_messages[i]->dest_process_id(),
+            failed_messages[i]->ipc_message_type(),
+            failed_messages[i]->ipc_message_data(),
+            failed_messages[i]->callback_param());
+      }
+    }
+    failed_messages.clear();
 
     const DWORD kMaxWaitHandles = MAXIMUM_WAIT_OBJECTS;
     assert(kMaxWaitHandles == 64);
@@ -1533,6 +1604,12 @@ OutboundQueue *Win32IpcMessageQueue::GetOutboundQueue(
 
 
 void Win32IpcMessageQueue::RemoveOutboundQueue(OutboundQueue *queue) {
+  // Save the message being removed from the queue so that we can inform the
+  // result listener about the failure.
+  for (size_t i = 0; i < queue->pending_message_size(); ++i) {
+    failed_messages_.push_back(queue->pending_message_at(i));
+  }
+
   outbound_queues_.erase(queue->process_id());
 }
 
