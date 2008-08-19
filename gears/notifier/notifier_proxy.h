@@ -30,6 +30,7 @@
   // The notification API has not been finalized for official builds.
 #else
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/ipc_message_queue.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsNotification;
@@ -52,6 +53,15 @@ class NotifierProxy : public NotifierProxyInterface {
                                 GearsNotification *notification);
 
  private:
+  friend class NotifierProxyThread;
+
+  // Callback to handle the send result.
+  static void SendCompletionHandler(bool is_successful,
+                                    IpcProcessId dest_process_id,
+                                    int message_type,
+                                    const IpcMessageData *message_data,
+                                    void *param);
+
   scoped_ptr<NotifierProxyThread> thread_;
   DISALLOW_EVIL_CONSTRUCTORS(NotifierProxy);
 };

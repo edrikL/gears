@@ -41,12 +41,19 @@
 #include "gears/notifier/notifier_process.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+// Constants.
+static const int kMaxSendRetries = 2;
+
 class NotifierProxyThread : public Thread {
  public:
-   NotifierProxyThread(int message_type, GearsNotification *notification)
-      : process_started_(false) {
+   NotifierProxyThread(int message_type,
+                       GearsNotification *notification,
+                       NotifierProxy *owner)
+      : owner_(owner),
+        process_started_(false) {
     assert(message_type);
     assert(notification);
+    assert(owner);
 
     notifications_.push_back(
         std::pair<int, GearsNotification*>(message_type, notification));
@@ -98,14 +105,18 @@ class NotifierProxyThread : public Thread {
       std::vector<std::pair<int, GearsNotification*> >::iterator iter =
           notifications_.begin();
       while (!stop_event_.WaitWithTimeout(1) && iter != notifications_.end()) {
-        ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                                iter->first,
-                                iter->second);
+        ipc_message_queue->SendWithCompletion(
+            static_cast<IpcProcessId>(process_id),
+            iter->first,
+            iter->second,
+            &NotifierProxy::SendCompletionHandler,
+            owner_);
         iter = notifications_.erase(iter);
       }
     }
   }
 
+  NotifierProxy *owner_;
   bool process_started_;
   Mutex lock_;
   Event stop_event_;
@@ -140,15 +151,50 @@ void NotifierProxy::PostNotification(int message_type,
     IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
     assert(ipc_message_queue);
     if (ipc_message_queue) {
-      ipc_message_queue->Send(static_cast<IpcProcessId>(process_id),
-                              message_type,
-                              notification);
+      ipc_message_queue->SendWithCompletion(
+          static_cast<IpcProcessId>(process_id),
+          message_type,
+          notification,
+          &NotifierProxy::SendCompletionHandler,
+          this);
     }
     return;
   }
 
-  thread_.reset(new NotifierProxyThread(message_type, notification));
+  thread_.reset(new NotifierProxyThread(message_type, notification, this));
   assert(thread_.get());
+}
+
+void NotifierProxy::SendCompletionHandler(bool is_successful,
+                                          IpcProcessId dest_process_id,
+                                          int message_type,
+                                          const IpcMessageData *message_data,
+                                          void *param) {
+  assert(message_data);
+  assert(param);
+
+  // Nothing to do if the sending is successful.
+  if (is_successful) {
+    return;
+  }
+
+  NotifierProxy *this_ptr = reinterpret_cast<NotifierProxy*>(param);
+
+  // Use C-style cast to work around the problem that dynamic_cast can not be
+  // used due to that no RTTI is linked with.
+  const GearsNotification *notification =
+      (const GearsNotification*) message_data;
+
+  // If exceeding the maximum number of retries, fail.
+  if (notification->send_retries() >= kMaxSendRetries) {
+    return;
+  }
+
+  GearsNotification *retried_notification = new GearsNotification();
+  retried_notification->CopyFrom(*notification);
+  retried_notification->set_send_retries(notification->send_retries() + 1);
+
+  this_ptr->PostNotification(message_type, retried_notification);
 }
 
 #endif  // OFFICIAL_BUILD

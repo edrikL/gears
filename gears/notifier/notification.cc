@@ -108,7 +108,8 @@ GearsNotification::GearsNotification()
 #endif
       version_(kNotificationVersion),
       display_at_time_ms_(0),
-      display_until_time_ms_(0) {
+      display_until_time_ms_(0),
+      send_retries_(0) {
   id_ = GenerateGuid();
 }
 
@@ -124,6 +125,8 @@ void GearsNotification::CopyFrom(const GearsNotification& from) {
   display_at_time_ms_ = from.display_at_time_ms_;
   display_until_time_ms_ = from.display_until_time_ms_;
   actions_ = from.actions_;
+
+  send_retries_ = from.send_retries_;
 }
 
 bool GearsNotification::Serialize(Serializer *out) const {
