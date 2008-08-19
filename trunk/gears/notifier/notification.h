@@ -195,6 +195,9 @@ class GearsNotification :
 
   std::string16* mutable_icon_url() { return &icon_url_; }
 
+  int send_retries() const { return send_retries_; }
+  void set_send_retries(int send_retries) { send_retries_ = send_retries; }
+
  private:
   static const int kNotificationVersion = 5;
 
@@ -217,6 +220,9 @@ class GearsNotification :
   // NOTE: Increase the kNotificationVersion every time the serialization is
   // going to produce different result. This most likely includes any change
   // to data members above.
+
+  // Other data members that are not included in the serialization.
+  int send_retries_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsNotification);
 };
