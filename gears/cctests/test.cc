@@ -332,18 +332,13 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestRefCount(&error);
   ok &= TestBlob(&error);
 
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
 #if (defined(WIN32) && !defined(WINCE)) || \
     defined(LINUX) || defined(OS_MACOSX)
   ok &= TestIpcSystemQueue(&error);
 #if BROWSER_IE
   ok &= TestIpcPeerQueue(&error);
-#endif  // BROWSER_IE
-#endif  
-#endif  // OFFICIAL_BUILD
-
+#endif
+#endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);
 #endif
