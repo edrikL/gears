@@ -88,6 +88,11 @@ const int kOneHourSeconds = 60 * 60;
 
 const int kUserMessageChangeFont = glint::GL_MSG_USER + 1;
 
+// Portion of the screen allotted for notifications.
+// When notification balloons extend over this threshold, no new notifications
+// are shown until some notifications are expired/closed.
+const double kNotificationFillFactor = 0.7;
+
 static const uint32 kUserActivityCheckIntervalMs = 5000;      // 5s
 static const double kExpirationTimeAfterUserActivity = 2.0;   // 2s
 
@@ -126,7 +131,9 @@ class BalloonContainer : public glint::Node {
   static int min_balloon_height();
   static int max_balloon_height();
 
-  // Scale the size to count in the system font factor
+  static glint::Size work_area_size();
+
+  // Scale the size to count in the system font factor.
   static int ScaleSize(int size);
 
   // Refresh the cached values for work area and drawing metrics (i.e scale
@@ -211,6 +218,10 @@ BalloonContainer::BalloonContainer() {
     RefreshSystemMetrics();
   }
   AddHandler(new DisplayChangedHandler(this));
+}
+
+glint::Size BalloonContainer::work_area_size() {
+  return work_area_.size();
 }
 
 // Scale the size to count in the system font factor
@@ -898,6 +909,15 @@ Balloon *BalloonCollection::FindBalloon(
     }
   }
   return NULL;
+}
+
+bool BalloonCollection::HasSpace() const {
+  // Root is not initialized => no balloons yet => means we have space.
+  if (!root_ui_)
+    return true;
+
+  return BalloonContainer::max_balloon_height() * count() <
+         BalloonContainer::work_area_size().height * kNotificationFillFactor;
 }
 
 void BalloonCollection::Add(const GearsNotification &notification) {

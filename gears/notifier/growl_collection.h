@@ -55,7 +55,7 @@ class GrowlBalloonCollection : public BalloonCollectionInterface {
   virtual void ShowAll() {}
   virtual void HideAll() {}
 
-  virtual bool has_space() const;
+  virtual bool HasSpace() const;
   virtual int count() const;
   virtual const GearsNotification *notification_at(int i) const;
 
