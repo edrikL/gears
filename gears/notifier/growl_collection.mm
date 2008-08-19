@@ -293,7 +293,7 @@ bool GrowlBalloonCollection::Delete(const SecurityOrigin &security_origin,
 // (Growl might be sending the notfications over email for all we know!)
 // TODO(chimene): Add a preference to limit notifications to X amount at a time
 // Make sure that it doesn't break if Growl forgets to send the callback.
-bool GrowlBalloonCollection::has_space() const {
+bool GrowlBalloonCollection::HasSpace() const {
   return true;
 }
 
