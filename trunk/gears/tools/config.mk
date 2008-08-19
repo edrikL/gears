@@ -590,6 +590,7 @@ ifeq ($(OS),wince)
 SQLITE_CFLAGS += /wd4146
 endif
 
+BREAKPAD_CPPFLAGS = /wd4018 /wd4003
 THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
 # for PortAudio:
 #   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'

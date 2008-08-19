@@ -47,8 +47,14 @@ __declspec(dllexport) int WINAPI DllEntry(const wchar_t *) {
 
 #include "gears/notifier/notifier.h"
 
+#ifdef OFFICIAL_BUILD
+#include "gears/base/common/exception_handler.h"
+#endif  // OFFICIAL_BUILD
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
+#ifdef OFFICIAL_BUILD
+#include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
+#endif  // OFFICIAL_BUILD
 #include "gears/notifier/const_notifier.h"
 #include "gears/notifier/notifier_sync_win32.h"
 #include "gears/notifier/notifier_utils_win32.h"
@@ -259,6 +265,22 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
 }
 
 __declspec(dllexport) int WINAPI DllEntry(const wchar_t *running_version) {
+#if defined(WIN32) && !defined(WINCE)
+// Only send crash reports for official builds.  Crashes on an engineer's
+// machine during internal development are confusing false alarms.
+#ifdef OFFICIAL_BUILD
+  static ExceptionManager exception_manager(true);
+  exception_manager.StartMonitoring();
+  // Trace buffers only exist in dbg official builds.
+#ifdef DEBUG
+  exception_manager.AddMemoryRange(g_trace_buffers,
+                                   sizeof(g_trace_buffers));
+  exception_manager.AddMemoryRange(g_trace_positions,
+                                   sizeof(g_trace_positions));
+#endif  // DEBUG
+#endif  // OFFICIAL_BUILD
+#endif  // WIN32 && !WINCE
+
   int argc = 0;
   char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
   if (!argv) { return __LINE__; }  // return line as a lame error code

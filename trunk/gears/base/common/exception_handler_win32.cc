@@ -49,6 +49,8 @@ const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
                                             L" (win32 ie"
 #elif BROWSER_NPAPI
                                             L" (win32 npapi"
+#elif BROWSER_NONE
+                                            L" (win32"
 #endif
 #ifdef DEBUG
                                             L" dbg"
