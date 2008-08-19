@@ -80,7 +80,7 @@ class BalloonCollectionInterface {
   virtual void HideAll() = 0;
 
   // Is there room to add another notification?
-  virtual bool has_space() const = 0;
+  virtual bool HasSpace() const = 0;
 
   // Number of balloons being shown.
   virtual int count() const = 0;
@@ -161,7 +161,7 @@ class BalloonCollection : public BalloonCollectionInterface {
                       const std::string16 &id);
   virtual void ShowAll();
   virtual void HideAll();
-  virtual bool has_space() const { return has_space_; }
+  virtual bool HasSpace() const;
   virtual int count() const { return static_cast<int>(balloons_.size()); }
   virtual const GearsNotification *notification_at(int i) const {
     return (i < static_cast<int>(balloons_.size()))

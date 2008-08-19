@@ -103,7 +103,7 @@ void BalloonCollectionMock::ShowAll() {
 void BalloonCollectionMock::HideAll() {
 }
 
-bool BalloonCollectionMock::has_space() const {
+bool BalloonCollectionMock::HasSpace() const {
   return count_ < capacity_;
 }
 

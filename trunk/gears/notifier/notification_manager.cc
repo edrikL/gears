@@ -382,7 +382,7 @@ void NotificationManager::CheckAndShowNotifications() {
 }
 
 void NotificationManager::ShowNotifications() {
-  while (!show_queue_.empty() && balloon_collection_->has_space()) {
+  while (!show_queue_.empty() && balloon_collection_->HasSpace()) {
     QueuedNotification* queued_notification = show_queue_.front();
     show_queue_.pop_front();
     balloon_collection_->Add(queued_notification->notification());
