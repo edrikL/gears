@@ -182,6 +182,7 @@ bool TestIpcPeerQueue(std::string16 *error);
 #endif
 #ifdef OS_ANDROID
 bool TestThreadMessageQueue(std::string16* error);
+bool TestJavaClass(std::string16* error);
 #endif
 bool TestStopwatch(std::string16 *error);
 bool TestJsonEscaping(std::string16 *error);
@@ -341,6 +342,7 @@ void GearsTest::RunTests(JsCallContext *context) {
 #endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);
+  ok &= TestJavaClass(&error);
 #endif
 #if BROWSER_FF
   ok &= TestBlobInputStreamFf(&error);
