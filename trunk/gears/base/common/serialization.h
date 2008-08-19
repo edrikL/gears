@@ -44,6 +44,7 @@ enum SerializableClassId {
   SERIALIZABLE_CONSOLE_LOG_EVENT,
   SERIALIZABLE_NOTIFICATION,
   SERIALIZABLE_GEOLOCATION,
+  SERIALIZABLE_DESKTOP,
 
   // The following value can not be changed for cross-version compatibility.
   SERIALIZABLE_DESKTOP_NOTIFICATION = 1000,
