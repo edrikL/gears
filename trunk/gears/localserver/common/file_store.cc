@@ -560,7 +560,7 @@ static bool CreateUniqueFile(const char16* full_dirpath,
                              std::string16 *full_filepath) {
   // Sanitize the filename.
   std::string16 filename = filename_unsanitized;
-  EnsureStringValidPathComponent(filename);
+  EnsureStringValidPathComponent(filename, true);
 
   // Split the name and extension.
   std::string16 new_name = filename;

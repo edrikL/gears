@@ -144,13 +144,23 @@ Desktop::Desktop(const SecurityOrigin &security_origin,
       browsing_context_(context) {
 }
 
-bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info) {
+bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info,
+                                   bool strict_filename) {
   // Gears doesn't allow spaces in path names, but desktop shortcuts are the
   // exception, so instead of rewriting our path validation code, patch a
   // temporary string.
   std::string16 name_without_spaces = shortcut_info->app_name;
   ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")),
              std::string16(STRING16(L"_")));
+  if (!strict_filename) {
+    // We also disallow any chars above 127, but we optionally make an exception
+    // here too.
+    for (std::string16::iterator i = name_without_spaces.begin();
+         i < name_without_spaces.end(); ++i) {
+      if (*i >= 127)
+        *i = '_';
+    }
+  }
   if (!IsUserInputValidAsPathComponent(name_without_spaces, &error_)) {
     return false;
   }
@@ -335,7 +345,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 
   // Prepare the shortcut.
   Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
-  if (!desktop.ValidateShortcutInfo(&shortcut_info)) {
+  if (!desktop.ValidateShortcutInfo(&shortcut_info, true)) {
     if (desktop.has_error())
       context->SetException(desktop.error());
     return;

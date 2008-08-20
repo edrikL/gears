@@ -223,7 +223,7 @@ inline bool IsStringValidPathComponent(const CharT *s) {
   }
   // Is every char valid?
   while (CharT c = *s++) {
-    if (!IsCharValidInPathComponent(c)) {
+    if (!IsCharValidInPathComponent(c, true)) {
       return false;
     }
   }
@@ -234,10 +234,11 @@ inline bool IsStringValidPathComponent(const CharT *s) {
 
 // Modifies a string, replacing characters that are not valid in a file path
 // component with the '_' character. Also replaces leading and trailing dots
-// with the '_' character.
+// with the '_' character.  If 'strict' is true, we also disallow non-ASCII
+// characters.
 // See IsCharValidInPathComponent
 template<class StringT>
-inline void EnsureStringValidPathComponent(StringT &s) {
+inline void EnsureStringValidPathComponent(StringT &s, bool strict) {
   if (s.empty()) {
     return;
   }
@@ -252,7 +253,7 @@ inline void EnsureStringValidPathComponent(StringT &s) {
   }
   // Is every char valid?
   while (iter != end) {
-    if (!IsCharValidInPathComponent(*iter)) {
+    if (!IsCharValidInPathComponent(*iter, strict)) {
       *iter = '_';
     }
     ++iter;
@@ -268,18 +269,21 @@ inline void EnsureStringValidPathComponent(StringT &s) {
 //
 // - visible ASCII
 // - None of the following characters: / \ : * ? " < > | ; ,
+// - if strict, no spaces or characters above 126.
 //
 // This function is a heuristic that should identify most strings that are
 // invalid pathnames on popular OSes. It's both overinclusive and
 // underinclusive, though.
 template<class CharT>
-inline bool IsCharValidInPathComponent(CharT c) {
+inline bool IsCharValidInPathComponent(CharT c, bool strict) {
   // Not visible ASCII?
-  if (c <= 32 || c >= 127) {
+  if (c < 32) {
+    return false;
+  }
+  if (strict && (c == 32 || c >= 127)) {
     return false;
   }
 
-  // Illegal characters?
   switch (c) {
     case '/':
     case '\\':
