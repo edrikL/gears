@@ -172,15 +172,15 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
           <tr>
             <!-- NOTE: Confusingly, onclick also gets fired when the checkbox changes via keyboard press. -->
             <!-- NOTE: The values in the checkboxes correspond to the SHORTCUT_LOCATION_* bitmasks defined in desktop.cc. -->
-            <td valign="middle"><input type="checkbox" id="location-desktop" value="1" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><input type="checkbox" id="location-desktop" value="1"></td>
             <td valign="middle"><label for="location-desktop"><span id="string-desktop"></span></label></td>
           </tr>
           <tr>
-            <td valign="middle"><input type="checkbox" id="location-startmenu" value="4" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><input type="checkbox" id="location-startmenu" value="4"></td>
             <td valign="middle"><label for="location-startmenu"><span id="string-startmenu"></span></label></td>
           </tr>
           <tr>
-            <td valign="middle"><input type="checkbox" id="location-quicklaunch" value="2" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><input type="checkbox" id="location-quicklaunch" value="2"></td>
             <td valign="middle"><label for="location-quicklaunch"><span id="string-quicklaunch"></span></label></td>
           </tr>
         </table>
@@ -221,7 +221,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled="true" type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
+              <input type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
               <input type="BUTTON" id="deny-button" onclick="denyShortcutsTemporarily(); return false;"></input>
             </td>
           </div>
@@ -317,8 +317,6 @@ m4_include(genfiles/shortcuts_dialog.js)
     } else {
       initDefaultStyle();
     }
-
-    resetConfirmDisabledState();
   }
 
   function initSimpleStyle() {
@@ -355,19 +353,16 @@ m4_include(genfiles/shortcuts_dialog.js)
     } else {
       // For touchscreen devices, we use buttons for all actions. Additionally,
       // we also set the sofkey labels.
-      setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
-      setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+      setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
+      setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
       setButtonLabel("string-never-allow-wince", "deny-permanently-button");
     }
     // Set the softkey labels for both softkey-only and touchscreen UIs.
-    window.pie_dialog.SetButton(dom.getElementById("string-yes").innerText,
+    window.pie_dialog.SetButton(dom.getElementById("string-ok").innerText,
                                 "allowShortcutsTemporarily();");
-    window.pie_dialog.SetCancelButton(dom.getElementById("string-no").innerText);
-    // On PIE, the allow button is disabled by default.
-    // TODO(aa): Why not just remove the disabled attribute?
-    // (andreip): Because on WinCE, we need to also call
-    // window.pie_dialog.SetButtonEnabled(true); , which enables the right
-    // softkey button.
+    window.pie_dialog.SetCancelButton(dom.getElementById("string-cancel").innerText);
+    // We need to call enableButton() on WinCE because the softkey is disabled
+    // by default.
     enableButton(dom.getElementById("allow-button"));
   }
 
@@ -375,8 +370,8 @@ m4_include(genfiles/shortcuts_dialog.js)
     document.title =
       dom.getTextContent(dom.getElementById("string-title-default"));
     setElementContents("string-header-desktop", "header");
-    setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
-    setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+    setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
+    setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
     setElementContents("string-never-allow", "deny-permanently-link");
 
     CustomButton.initializeAll();
@@ -428,29 +423,6 @@ m4_include(genfiles/shortcuts_dialog.js)
         img.src = shortcutData[prop];
       }
     }
-  }
-
-  /**
-   * Sets the confirm button's disabled state depending on whether there is
-   * at least one checkbox checked.
-   */  
-  function resetConfirmDisabledState() {
-    if (!locationsEnabled) {
-      return;
-    }
-    
-    var allowButton = dom.getElementById("allow-button");
-    var checkboxes =
-        dom.getElementById("locations").getElementsByTagName("input");
-
-    for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
-      if (checkbox.checked) {
-        enableButton(allowButton);
-        return;
-      }
-    }
-    
-    disableButton(allowButton);
   }
 
   /**
