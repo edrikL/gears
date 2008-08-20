@@ -85,7 +85,8 @@ static bool OneTimeDetectVersionCollision() {
   assert(_pgmptr && strlen(_pgmptr) > 0);  // may need _wpgmptr if flags change
   std::wstring browser_path;
   UTF8ToString16(_pgmptr, &browser_path);
-  EnsureStringValidPathComponent(browser_path);  // replace bad mutex name chars
+  // Replace bad mutex name chars.
+  EnsureStringValidPathComponent(browser_path, true);
 
   running_name += L"-";
   running_name += browser_path;

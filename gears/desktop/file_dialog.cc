@@ -219,7 +219,7 @@ bool FileDialog::IsLegalFilter(const std::string16& filter) {
     for (size_t i = 1; i < filter.length(); ++i) {
       if (L'.' == filter[i])
         return false;
-      if (!IsCharValidInPathComponent(filter[i]))
+      if (!IsCharValidInPathComponent(filter[i], true))
         return false;
     }
   } else {

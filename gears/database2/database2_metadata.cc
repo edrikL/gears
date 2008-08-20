@@ -205,7 +205,7 @@ static bool InsertDatabaseInfo(SQLDatabase *db,
     filename_temp.resize(kUserPathComponentMaxChars - suffix.length());
   }
 
-  EnsureStringValidPathComponent(filename_temp);
+  EnsureStringValidPathComponent(filename_temp, true);
   filename_temp += suffix;
 
   // Now update the row in the database with the filename

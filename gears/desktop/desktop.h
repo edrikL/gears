@@ -100,10 +100,11 @@ class Desktop {
 
   Desktop(const SecurityOrigin &security_origin, BrowsingContext *context);
 
-  // Call this after setting up the ShortcutInfo to validate it and check if
-  // the shortcut should be created.  Returns false if the shortcut should not
+  // Call this after setting up the ShortcutInfo to validate it and check if the
+  // shortcut should be created.  If strict_filename is true, we verify that the
+  // shortcut name is visible ASCII.  Returns false if the shortcut should not
   // be created, with an optional error message in error().
-  bool ValidateShortcutInfo(ShortcutInfo *shortcut_info);
+  bool ValidateShortcutInfo(ShortcutInfo *shortcut_info, bool strict_filename);
 
   // Initializes the shortcuts dialog.  Should be called after
   // validating the ShortcutInfo.  Returns false on failure, with an optional
