@@ -84,13 +84,10 @@ PermissionState PermissionsDialog::Prompt(
 #endif
   const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
 
-  HtmlDialogReturnValue dialog_result =
+  HtmlDialogReturnValue retval =
       dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
-  if (dialog_result == HTML_DIALOG_SUPPRESSED) {
-    return ALLOWED_TEMPORARILY;
-  }
 
-  if (dialog_result == HTML_DIALOG_FAILURE) {
+  if (retval == HTML_DIALOG_FAILURE) {
     LOG(("PermissionsDialog::Prompt() - Unexpected result."));
     return NOT_SET;
   }
@@ -99,7 +96,10 @@ PermissionState PermissionsDialog::Prompt(
   bool allow;
   bool permanently;
 
-  if (dialog.result == Json::Value::null) {
+  if (retval == HTML_DIALOG_SUPPRESSED) {
+    allow = true;
+    permanently = true;
+  } else if (dialog.result == Json::Value::null) {
     // A null dialog.result is okay; it means the user closed the dialog
     // instead of pressing any button.
     allow = false;
