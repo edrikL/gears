@@ -376,7 +376,14 @@ bool LinuxIpcMessageQueue::Init() {
     }
   }
 
-  inbound_fifo_fd_ = open(inbound_fifo_path_.c_str(), O_RDONLY | O_NONBLOCK);
+  // Note: we have to open the FIFO file in non-blocking RDWR mode instead of
+  // non-blocking RDONLY mode because otherwise the select operation will always
+  // return but no data is available to read after all the data has been read.
+  //
+  // When a FIFO has no writer, an EOF condition is placed on it. From now on,
+  // the FIFO will always be considered readable even though 0 byte is read,
+  // which means EOF.
+  inbound_fifo_fd_ = open(inbound_fifo_path_.c_str(), O_RDWR | O_NONBLOCK);
   if (inbound_fifo_fd_ == -1) {
     LOG(("Opening inbound fifo %s failed with errno=%d\n",
          inbound_fifo_path_.c_str(),errno));
@@ -486,7 +493,7 @@ void LinuxIpcMessageQueue::Run() {
     // TODO (jianli): consider adding a fd to facilitate the smooth sending and
     // receiving of big messages.
     // 1) The sender sends the fd in the message header.
-    // 2) The received signals via the fd when it consumes the packet.
+    // 2) The receiver signals via the fd when it consumes the packet.
     // 3) The sender adds the fd to the select set.
     fd_set select_fd_set;
     FD_ZERO(&select_fd_set);
