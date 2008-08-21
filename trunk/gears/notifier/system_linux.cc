@@ -113,8 +113,6 @@ static std::string16 GetCurrentModuleFilename() {
   return std::string16();
 }
 
-// Get the current module path. This is the path where the module of the
-// currently running code sits.
 std::string16 GetCurrentModulePath() {
   std::string16 path = GetCurrentModuleFilename();
   size_t idx = path.rfind('/');

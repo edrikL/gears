@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <gtk/gtk.h>
 #include "gears/notifier/notifier.h"
 #include "gears/notifier/notifier_process_posix.h"
 #include "third_party/glint/include/platform.h"
@@ -169,7 +171,10 @@ void LinuxNotifier::Terminate() {
 }
 
 void LinuxNotifier::RequestQuit() {
-  // TODO
+  running_ = false;
+  // TODO(levin): Should this be part of glint::platform,
+  // since it relies on knowing what loop is running there?
+  gtk_main_quit();
 }
 
 int LinuxNotifier::Run() {
