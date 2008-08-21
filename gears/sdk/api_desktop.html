@@ -41,22 +41,30 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <p>The Desktop module provides an interface for accessing desktop related
 functionality, such as creating shortcuts.
+
 <h4>Permission</h4>
 
 <p>Does not require user permission.</p>
+
+
 <h2 id="example">Example</h2>
 
-<pre><code>&lt;script type="text/javascript" src="<a href=
-  'tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 var desktop = google.gears.factory.create('beta.desktop');
-desktop.createShortcut("Test Application",
-                       "http://example.com/index.html",
-                       {"128x128": "http://example.com/icon128x128.png",
-                        "48x48": "http://example.com/icon48x48.png",
-                        "32x32": "http://example.com/icon32x32.png",
-                        "16x16": "http://example.com/icon16x16.png"},
-                        "An application at http://example.com/index.html");
+
+desktop.createShortcut('Test Application',
+                       'http://example.com/index.html',
+                       {'128x128': 'http://example.com/icon128x128.png',
+                          '48x48': 'http://example.com/icon48x48.png',
+                          '32x32': 'http://example.com/icon32x32.png',
+                          '16x16': 'http://example.com/icon16x16.png'},
+                       'An application at http://example.com/index.html');
+
+function openFilesCallback(files) {
+  alert('User selected ' + files.length + ' files.');
+}
+desktop.openFiles(openFilesCallback);
 &lt;/script&gt;</code></pre>
 
 
@@ -64,28 +72,21 @@ desktop.createShortcut("Test Application",
 
 <pre><code><a href="#Desktop">Desktop class</a>
     void <b>createShortcut</b>(name, url, icons, [description])
-    void <b>openFiles</b>(callback, [options])
-</code></pre>
+    void <b>openFiles</b>(callback, [options])</code></pre>
 
 <pre><code><a href="#OpenFilesCallback">OpenFilesCallback</a>(<a
-    href="#File">File</a>[] files)
-</code></pre>
-
-<pre><code><a href="#File">File class</a>
-    readonly attribute string <b>name</b>
-    readonly attribute Blob <b>blob</b>
-</code></pre>
+    href="#File">File</a>[] files)</code></pre>
 
 <pre><code><a href="#OpenFileOptions">OpenFileOptions class</a>
     attribute bool <b>singleFile</b>
-    attribute string[] <b>filter</b>
-</code></pre>
-<br>
+    attribute string[] <b>filter</b></code></pre>
+
+<pre><code><a href="#File">File class</a>
+    readonly attribute string <b>name</b>
+    readonly attribute Blob <b>blob</b></code></pre>
 
 
-<br>
-<a name="Desktop"></a>
-<h2>Desktop class</h2>
+<h2 id="Desktop">Desktop class</h2>
 
 <h3>Methods</h3>
 
@@ -105,6 +106,8 @@ desktop.createShortcut("Test Application",
     <td class="odd">
       <code>name</code> - The user-visible name of the shortcut. It cannot contain any of these characters:
         <code>"\/:*?&lt;&gt;|</code>
+        <!-- " This fixes syntax highlighting problems caused by the unmatched 
+        quotation mark above. -->
       <br>
       <code>url</code> - The address to launch when the user opens the shortcut.
       The URL must be in the same origin as the calling page.
@@ -145,6 +148,7 @@ desktop.createShortcut("Test Application",
     </td>
   </tr>
 </table>
+
 <table>
   <tr class="odd">
     <th colspan="2"><code>openFiles(callback, [options])</code></th>
@@ -153,7 +157,7 @@ desktop.createShortcut("Test Application",
     <td width="113">Summary:</td>
     <td width="550" class="odd">
       Provides user-driven access to files on the client machine.
-      Presents the user with a file selector dialog for selecting files
+      Presents the user with a file selection dialog for choosing files
       to make available to the application.
     </td>
   </tr>
@@ -163,11 +167,11 @@ desktop.createShortcut("Test Application",
       <code>callback</code> - After the user has selected files, this function
       is invoked with an array of the files that were selected.
       This function must conform to the
-      <a href="#OpenFilesCallback">OpenFilesCallback interface</a>.
+      <a href="#OpenFilesCallback">OpenFilesCallback</a> interface.
       <br><br>
       <code>options</code> - An optional parameter of type
       <a href="#OpenFileOptions">OpenFileOptions</a>.
-      Allows control over file selector options.
+      Provides control over file selection options.
       <br>
     </td>
   </tr>
@@ -175,21 +179,21 @@ desktop.createShortcut("Test Application",
     <td>Details:</td>
     <td class="odd">
       The <code>openFiles</code> call will immediately return after presenting
-      a file selector dialog to the user.  It does not wait for the user to
+      a file selection dialog to the user.  It does not wait for the user to
       select files, nor does it wait for the dialog to be closed.
       <br><br>
       Once the user has selected files, the callback is invoked with an array
       of the files which were selected.
       <br><br>
-      If the user cancels the dialog without selecting any files, then the
+      If the user cancels the dialog without selecting any files, the
       callback is invoked with an empty array.
     </td>
   </tr>
 </table>
 
-<br>
-<a name="OpenFilesCallback"></a>
-<h2>OpenFilesCallback interface</h2>
+
+<h2 id="OpenFilesCallback">OpenFilesCallback interface</h2>
+
 <table>
   <tr class="odd">
     <th colspan="2"><code>void OpenFilesCallback(<a
@@ -206,71 +210,65 @@ desktop.createShortcut("Test Application",
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-      <code>files</code> -
-      An array containing the files that have been selected.
-      If the user dismisses the file selector without selecting files, then
-      this array will be empty.
-      <br>
+      <code>files</code> - An array containing the files that have been
+      selected.  If the user dismisses the file selection dialog without
+      choosing any files, this array will be empty.
     </td>
   </tr>
 </table>
 
-<br>
-<a name="File"></a>
-<h2>File class</h2>
+
+<h2 id="OpenFileOptions">OpenFileOptions class</h2>
 
 <h3>Attributes</h3>
+
 <table>
-  <tr class="odd">
-    <th width="158">Attribute</th>
-    <th >Type</th>
-    <th >Description</th>
-  </tr>
-  <tr class="odd">
-    <td width="158"><strong>name</strong></td>
-    <td width="109">readonly string</td>
-    <td width="432">The name of the file, excluding the path.</td>
-  </tr>
-  <tr class="odd">
-    <td width="158"><strong>blob</strong></td>
-    <td width="109">readonly Blob</td>
-    <td width="432">The contents of the file.</td>
-  </tr>
-</table>
-
-
-<br>
-<a name="OpenFileOptions"></a>
-<h2>OpenFileOptions class</h2>
-
-<h3>Attributes</h3>
-<table>
-  <tr class="odd">
-    <th width="158">Attribute</th>
-    <th >Type</th>
-    <th >Description</th>
-  </tr>
-  <tr class="odd">
-    <td width="158"><strong>singleFile</strong></td>
-    <td width="109">bool</td>
-    <td width="432">
-      By default, the user may select multiple files.  If true, the user
-      is limited to selecting only one file.
-    </td>
-  </tr>
-  <tr class="odd">
-    <td width="158"><strong>filter</strong></td>
-    <td width="109">string[]</td>
-    <td width="432">
-      By default, all files on the local disk are selectable.
+<tr class="odd">
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
+</tr>
+<tr class="odd">
+  <td><strong>singleFile</strong></td>
+  <td class="odd">bool</td>
+  <td class="odd">By default, the user may select multiple files.  If
+  true, the user is limited to selecting only one file.</td>
+</tr>
+<tr class="odd">
+  <td><strong>filter</strong></td>
+  <td class="odd">string[]</td>
+  <td class="odd">By default, all files on the local disk are selectable.
       If a filter is provided, only files matching the filter are selectable.
       The user can turn the filter off, so be aware that selected files
       may not match the filter.  The filter is an array of Internet
       content types and/or file extensions.
-      Example: <code>['text/html', '.txt', 'image/jpeg']</code>
-    </td>
-  </tr>
+      Example: <code>['text/html', '.txt', 'image/*']</code></td>
+</tr>
 </table>
+
+
+<h2 id="File">File class</h2>
+
+<h3>Attributes</h3>
+
+<table>
+<tr class="odd">
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
+</tr>
+<tr class="odd">
+  <td><strong>name</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">The name of the file, excluding the path.</td>
+</tr>
+<tr class="odd">
+  <td><strong>blob</strong></td>
+  <td class="odd">readonly Blob</td>
+  <td class="odd">The contents of the file.</td>
+</tr>
+</table>
+
 
 </div>
 </body>

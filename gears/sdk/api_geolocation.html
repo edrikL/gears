@@ -45,7 +45,6 @@ geographical position.</p>
 
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
-    <li><a href="#permission">Permissions</a></li>
   <li><a href="#example">Example</a></li>
   <li><a href="#classes">Classes</a>
       <ol>
@@ -79,89 +78,72 @@ support an optional parameter of type <code><a href="#positionoptions">PositionO
 module, see the <a href="http://code.google.com/p/gears/wiki/GeolocationAPI">Geolocation
 API design document</a>.</p>
 
-<h2 id="permission">Permissions</h2>
+<h4>Permission</h4>
 
-<p>A site's permission to use
-location information is separate from the permission required by other
-Gears modules. Permission is granted by the user in the same way as for
-other Gears modules, through a dialog. If you would like to customize the
-default dialog, you can explicitly call the <code><a href="#getpermission">getPermission</a></code> method. </p>
+<p>A site's permission to use location information is separate from the
+permission required by other Gears modules. Permission is granted by the user
+in the same way as for other Gears modules, through a dialog. If you would like
+to customize the default dialog, you can explicitly call the
+<code><a href="#getpermission">getPermission</a></code> method.</p>
+
 
 <h2 id="example">Example</h2>
 
-<pre>&lt;script type=&quot;text/javascript&quot; src=&quot;gears_init.js&quot;&gt;&lt;/script&gt;
-&lt;script type=&quot;text/javascript&quot;&gt;
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var geo = google.gears.factory.create('beta.geolocation');
 
-var geolocation = google.gears.factory.create('beta.geolocation');
-
-function updateMap(position) {
-  // Place a map marker at the coordinates given by position.latitude and
-  // position.longitude.
-  ...
+function updatePosition(position) {
+  alert('Current lat/lon is: ' + position.latitude + ',' + position.longitude);
 }
 
 function handleError(positionError) {
   alert('Attempt to get location failed: ' + positionError.message);
 }
 
-// Make a one-shot position request using high-accuracy providers and the
-// default network provider.
-geolocation.getCurrentPosition(updateMap,
-                               handleError,
-                               { enableHighAccuracy: true });
-                               
-// Watch the position over time, using a particular network provider.
-var watchId = geolocation.watchPosition(
-    updateMap,
-    handleError,
-    { gearsLocationProviderUrls: http://gears.mylocationprovider.com });
-    
-// Cancel the watch.
-geolocation.clearWatch(watchId);
+geo.getCurrentPosition(updatePosition, handleError);
+&lt;/script&gt;</code></pre>
 
-&lt;/script&gt;</pre>
 
 <h2 id="classes">Classes</h2>
 
-<pre><a href="#geolocation">Geolocation class</a> 
-  void getCurrentPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  int watchPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  void clearWatch(int watchId);
-  boolean getPermission([siteName], [imageUrl], [extraMessage])
-  readonly attribute Position lastPosition;</pre>
+<pre><code><a href="#geolocation">Geolocation class</a> 
+  readonly attribute Position lastPosition
+  void getCurrentPosition(successCallback, [errorCallback], [options])
+  int  watchPosition(successCallback, [errorCallback], [options])
+  void clearWatch(int watchId)
+  boolean getPermission([siteName], [imageUrl], [extraMessage])</code></pre>
   
-<pre><a href="#position">Position class</a>
-  readonly attribute double latitude;
-  readonly attribute double longitude;
-  readonly attribute double altitude;
-  readonly attribute double accuracy;
-  readonly attribute double altitudeAccuracy;
-  readonly attribute Date timestamp;
-  readonly attribute Address gearsAddress;
-</pre>
+<pre><code><a href="#position">Position class</a>
+  readonly attribute double latitude
+  readonly attribute double longitude
+  readonly attribute double accuracy
+  readonly attribute double altitude
+  readonly attribute double altitudeAccuracy
+  readonly attribute Date timestamp
+  readonly attribute Address gearsAddress</code></pre>
 
-<pre><a href="#address">Address class</a>
-  readonly attribute string streetNumber;
-  readonly attribute string street;
-  readonly attribute string premises;
-  readonly attribute string city;
-  readonly attribute string county;
-  readonly attribute string region;
-  readonly attribute string country;
-  readonly attribute string countryCode;
-  readonly attribute string postalCode;</pre>
+<pre><code><a href="#positionoptions">PositionOptions class</a>
+  readwrite attribute bool enableHighAccuracy
+  readwrite attribute bool gearsRequestAddress
+  readwrite attribute string gearsAddressLanguage
+  readwrite attribute string[] gearsLocationProviderUrls</code></pre>
+
+<pre><code><a href="#positionerror">PositionError class</a>
+  readonly attribute int code
+  readonly attribute string message</code></pre>
+
+<pre><code><a href="#address">Address class</a>
+  readonly attribute string streetNumber
+  readonly attribute string street
+  readonly attribute string premises
+  readonly attribute string city
+  readonly attribute string county
+  readonly attribute string region
+  readonly attribute string country
+  readonly attribute string countryCode
+  readonly attribute string postalCode</code></pre>
   
-<pre><a href="#positionoptions">PositionOptions class</a>
-  readwrite attribute bool enableHighAccuracy;
-  readwrite attribute bool gearsRequestAddress;
-  readwrite attribute string gearsAddressLanguage;
-  readwrite attribute string[] gearsLocationProviderUrls;
-</pre>
-
-<pre><a href="#positionerror">PositionError class</a>
-  readonly attribute int code;
-  readonly attribute string message;
-</pre>
 
 <h2 id="geolocation">Geolocation class</h2>
 
@@ -192,9 +174,9 @@ error callback is called exactly once with an error message unless you
 have passed <code>null</code> for <code>errorCallback</code>. <br />
 <br />
 The signature of the success callback is:<br />
-<code>function successCallback(Position position);</code><br />
+<code>function successCallback(Position position)</code><br />
 <br />The signature of the error callback is:<br />
-<code>function errorCallback(PositionError error);</code></td>
+<code>function errorCallback(PositionError error)</code></td>
   </tr>
 </table>
 
@@ -226,10 +208,10 @@ a position fix from ever being obtained by this watch  unless you
 have passed <code>null</code> for <code>errorCallback</code>.<br />
 <br />
 The signature of the success callback is:<br />
-<code>function successCallback(Position position);</code><br />
+<code>function successCallback(Position position)</code><br />
 <br />
 The signature of the error callback is:<br />
-<code>function errorCallback(PositionError error);</code> </td>
+<code>function errorCallback(PositionError error)</code> </td>
 </tr>
 </table>
 
@@ -288,131 +270,71 @@ show those that are specified.    </td>
 
 <table>
 <tr class="odd">
-<th width="158">Attribute</th>
-<th width="109" >Type</th>
-<th width="432" >Description</th>
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
 </tr>
 <tr class="odd">
-<td><strong><code><a name="lastPosition" id="lastPosition"></a></code>lastPosition</strong></td>
-<td class="odd">readonly  Position</td>
-<td class="odd">The last known position, or null if there is no last known
-position. This does not actively trigger obtaining a new position fix,
-so is quick and does not consume computational or power resources.<br />
-</td>
-</tr></table>
+  <td><strong><code><a name="lastPosition" id="lastPosition"></a></code>lastPosition</strong></td>
+  <td class="odd">readonly  Position</td>
+  <td class="odd">The last known position, or null if there is no last known
+  position. This does not actively trigger obtaining a new position fix,
+  so it is quick and does not consume power or computational resources.</td>
+</tr>
+</table>
 
-<h2 id="position"><a name="position_param" id="position_param"></a>Position
-class</h2>
+
+<h2 id="position">Position class</h2>
 
 <h3>Attributes</h3> 
 
 <table>
 <tr class="odd">
-<th width="158">Attribute</th>
-<th >Type</th>
-<th >Description</th>
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
 </tr>
 <tr class="odd">
-<td width="158"><strong>latitude</strong></td>
-<td width="109" >readonly double</td>
-<td width="432" > Latitude in degrees using the World Geodetic System 1984
-(WGS84) datum.</td>
+  <td width="158"><strong>latitude</strong></td>
+  <td width="109" >readonly double</td>
+  <td width="432" > Latitude in degrees using the World Geodetic System 1984
+  (WGS84) datum.</td>
 </tr>
 <tr class="odd">
-<td><strong>longitude</strong></td>
-<td class="" >readonly double</td>
-<td class="" > Longitude in degrees (WGS84 datum).</td>
+  <td><strong>longitude</strong></td>
+  <td class="" >readonly double</td>
+  <td class="" > Longitude in degrees (WGS84 datum).</td>
 </tr>
 <tr class="odd">
-<td><strong>altitude</strong></td>
-<td class="odd">readonly double</td>
-<td class="odd"> Height in meters (WGS84 datum), or null if not available.</td>
+  <td><strong>accuracy</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">The horizontal accuracy of the position in meters, or null
+  if not available.</td>
 </tr>
 <tr class="odd">
-<td><strong>accuracy</strong></td>
-<td class="odd">readonly double</td>
-<td class="odd">The horizontal accuracy of the position in meters, or null
-if not available.</td>
+  <td><strong>altitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd"> Height in meters (WGS84 datum), or null if not available.</td>
 </tr>
 <tr class="odd">
-<td><strong>altitudeAccuracy</strong></td>
-<td class="odd">readonly double </td>
-<td class="odd">The vertical accuracy of the position in meters, or null
-if not available.</td>
+  <td><strong>altitudeAccuracy</strong></td>
+  <td class="odd">readonly double </td>
+  <td class="odd">The vertical accuracy of the position in meters, or null
+  if not available.</td>
 </tr>
 <tr class="odd">
-<td><strong>timestamp</strong></td>
-<td class="odd">readonly Date</td>
-<td class="odd"> The time when the location was established.</td>
+  <td><strong>timestamp</strong></td>
+  <td class="odd">readonly Date</td>
+  <td class="odd"> The time when the location was established.</td>
 </tr>
 <tr class="odd">
-<td><strong>gearsAddress</strong></td>
-<td class="odd">readonly Address</td>
-<td class="odd"> A reverse-geocoded address, if requested and available.
-See <code><a href="#address">Address</a></code>.</td>
+  <td><strong>gearsAddress</strong></td>
+  <td class="odd">readonly Address</td>
+  <td class="odd"> A reverse-geocoded address, if requested and available.
+  See <code><a href="#address">Address</a></code>.</td>
 </tr>
 </table>
 
-<h2 id="address">Address class</h2> 
-
-<h3>Attributes</h3>
-
-<table>
-<tr class="odd">
-<th width="158">Attribute</th>
-<th width="109" >Type</th>
-<th width="432" >Description</th>
-</tr>
-<tr class="odd">
-<td><strong>streetNumber</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd"> The building's street number.<br />
-</td>
-</tr>
-<tr class="odd">
-<td><strong>street</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Street name.</td>
-</tr>
-<tr class="odd">
-<td><strong>premises</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Premises, e.g. building name.</td>
-</tr>
-<tr class="odd">
-<td><strong>city</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">City name.</td>
-</tr>
-<tr class="odd">
-<td><strong>county</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">County name.</td>
-</tr>
-<tr class="odd">
-<td><strong>region</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Region, e.g. a state in the US.</td>
-
-</tr>
-<tr class="odd">
-<td><strong>country</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Country.</td>
-</tr>
-<tr class="odd">
-<td><strong>countryCode</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Country code (ISO 3166-1).<br />
-</td>
-
-</tr>
-<tr class="odd">
-<td><strong>postalCode</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">Postal code. This is the zip code in the US and postcode in the UK.</td>
-</tr>
-</table>
 
 <h2 id="positionoptions">PositionOptions class</h2>
 
@@ -420,45 +342,47 @@ See <code><a href="#address">Address</a></code>.</td>
 
 <table>
 <tr class="odd">
-<th width="158">Attribute</th>
-<th width="109" >Type</th>
-<th width="432" >Description</th>
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
 </tr>
 <tr class="odd">
-<td><strong><a name="enableHigh" id="enableHigh"></a>enableHighAccuracy</strong></td>
-<td class="odd">readwrite bool</td>
-<td class="odd">Optional, requests the most accurate possible results.
-This may result in slower response times or increased battery consumption.
-Also, there is no guarantee that the device will be able to provide more
-accurate results than if this flag is not specified. The default value
-is false.</td>
+  <td><strong><a name="enableHigh" id="enableHigh"></a>enableHighAccuracy</strong></td>
+  <td class="odd">readwrite bool</td>
+  <td class="odd">Optional, requests the most accurate possible results.
+  This may result in slower response times or increased battery consumption.
+  Also, there is no guarantee that the device will be able to provide more
+  accurate results than if this flag is not specified. The default value
+  is false.</td>
+</tr>
 <tr class="odd">
-<td><strong>gearsRequestAddress</strong></td>
-<td class="odd">readwrite bool</td>
-<td class="odd">Optional, requests reverse geocoded address information
-as part of the position data. Reverse geocoding is not performed if this
-flag is not specified or if it is set to false.</td>
+  <td><strong>gearsRequestAddress</strong></td>
+  <td class="odd">readwrite bool</td>
+  <td class="odd">Optional, requests reverse geocoded address information
+  as part of the position data. Reverse geocoding is not performed if this
+  flag is not specified or if it is set to false.</td>
+</tr>
 <tr class="odd">
-<td><strong>gearsAddressLanguage</strong></td>
-<td class="odd">readwrite string</td>
-<td class="odd">
-Optional, specifies the language in which the address (if
-requested) should be returned. Specify the language in accordance with
-RFC 3066, en-GB for British English for example.<br />
-<br>
-If this is not specified, the address is provided in the default
-language of the location provider used to perform the reverse geocoding.</td>
+  <td><strong>gearsAddressLanguage</strong></td>
+  <td class="odd">readwrite string</td>
+  <td class="odd">Optional, specifies the language in which the address (if
+  requested) should be returned. Specify the language in accordance with
+  RFC 3066, en-GB for British English for example.
+  <br><br>
+  If this is not specified, the address is provided in the default
+  language of the location provider used to perform the reverse geocoding.</td>
+</tr>
 <tr class="odd">
-<td><strong><a name="providerURLs" id="providerURLs"></a>gearsLocationProviderUrls</strong></td>
-<td class="odd">readwrite string[] </td>
-<td class="odd">Optional, specifies one
-or more URLs to contact to convert geolocation signals into positions. Note that
-these must be complete URLs which include the scheme, e.g.
-http://gears.mylocationprovider.com.
-If unset, defaults to a single Google-implemented service. The array can
-also be cleared, or set to null, so that no location providers are used.</td>
+  <td><strong><a name="providerURLs" id="providerURLs"></a>gearsLocationProviderUrls</strong></td>
+  <td class="odd">readwrite string[]</td>
+  <td class="odd">Optional, specifies one or more URLs to contact to convert
+  geolocation signals into positions. Note that these must be complete URLs
+  which include the scheme, e.g.  http://gears.mylocationprovider.com.  If
+  unset, defaults to a single Google-implemented service. The array can also be
+  cleared, or set to null, so that no location providers are used.</td>
 </tr>
 </table>
+
 
 <h2 id="positionerror">PositionError class</h2>
 
@@ -466,20 +390,82 @@ also be cleared, or set to null, so that no location providers are used.</td>
 
 <table>
 <tr class="odd">
-<th width="158">Attribute</th>
-<th width="109" >Type</th>
-<th width="432" >Description</th>
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
 </tr>
 <tr class="odd">
-<td><strong>code</strong></td>
-<td class="odd">readonly int</td>
-<td class="odd">A unique identifier for this type of message.</td>
+  <td><strong>code</strong></td>
+  <td class="odd">readonly int</td>
+  <td class="odd">A unique identifier for this type of message.</td>
+</tr>
 <tr class="odd">
-<td><strong>message</strong></td>
-<td class="odd">readonly string</td>
-<td class="odd">A human readable message, suitable for logs
-</td>
+  <td><strong>message</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">A human readable message, suitable for logs.</td>
+</tr>
 </table>
+
+
+<h2 id="address">Address class</h2> 
+
+<h3>Attributes</h3>
+
+<table>
+<tr class="odd">
+  <th width="158">Attribute</th>
+  <th width="109">Type</th>
+  <th width="432">Description</th>
+</tr>
+<tr class="odd">
+  <td><strong>streetNumber</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd"> The building's street number.</td>
+</tr>
+<tr class="odd">
+  <td><strong>street</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Street name.</td>
+</tr>
+<tr class="odd">
+  <td><strong>premises</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Premises, e.g. building name.</td>
+</tr>
+<tr class="odd">
+  <td><strong>city</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">City name.</td>
+</tr>
+<tr class="odd">
+  <td><strong>county</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">County name.</td>
+</tr>
+<tr class="odd">
+  <td><strong>region</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Region, e.g. a state in the US.</td>
+</tr>
+<tr class="odd">
+  <td><strong>country</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Country.</td>
+</tr>
+<tr class="odd">
+  <td><strong>countryCode</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Country code (ISO 3166-1).</td>
+</tr>
+<tr class="odd">
+  <td><strong>postalCode</strong></td>
+  <td class="odd">readonly string</td>
+  <td class="odd">Postal code. This is the zip code in the US and postcode in the UK.</td>
+</tr>
+</table>
+
+
+
 
 </div>
 </body>
