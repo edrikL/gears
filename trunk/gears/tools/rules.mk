@@ -929,8 +929,12 @@ $(NOTIFIER_DLL): $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS)
 	$(MKDLL) $(DLLFLAGS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 else
-$(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
+$(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
+# Dump the symbols and strip the executable
+	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a ppc $@ > $@_ppc.symbols
+	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a i386 $@ > $@_i386.symbols
+	$(STRIP_EXECUTABLE)
 endif
 
 $(NOTIFIER_PREFPANE_EXE): $(NOTIFIER_PREFPANE_OBJS)

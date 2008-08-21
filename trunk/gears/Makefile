@@ -1445,6 +1445,20 @@ NOTIFIER_CPPSRCS += \
 		$(NULL)
 endif # win32
 
+ifeq ($(OS),osx)
+COMMON_VPATH    += \
+		base/common/exception_handler_osx \
+		$(NULL)
+
+NOTIFIER_CPPSRCS += \
+		exception_handler_osx.mm \
+		google_breakpad.mm \
+		mach_ipc.mm \
+		on_demand_server.mm \
+		simple_string_dictionary.mm \
+		$(NULL)
+endif # osx
+
 NOTIFIER_RESOURCES += \
 		notifier/resources/background.png \
 		notifier/resources/button_strip.png \
