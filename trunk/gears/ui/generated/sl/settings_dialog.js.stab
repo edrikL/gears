@@ -9,6 +9,6 @@
 <string id="string-location-data">Lokacija</string>
 <string id="string-gears-settings">Nastavitve programa Gears</string>
 <string id="string-permissions-description">V spodnji tabeli so prikazana dovoljenja, ki ste jih podelili vsem spletnim mestom, ki so poskusila uporabljati program Gears.</string>
-<string id="string-version">Različica programa Gears RAZLIČICA_IZDELKA</string>
+<string id="string-version">Različica programa Gears PRODUCT_VERSION</string>
 <string id="string-html-title">Nastavitve programa Gears</string>
 <string id="string-remove">Odstrani</string>
