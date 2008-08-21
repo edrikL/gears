@@ -86,15 +86,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h3>Desktop module</h3>
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
-   void     <b>createShortcut</b>(name, url, icons, [description])</code></pre>
+   void    <b>createShortcut</b>(name, url, icons, [description])
+   void    <b>openFiles</b>(callback, [options])</code></pre>
 
 
 <h3>Geolocation module</h3>
 <p>Provides a way to obtain a user's geographical position.</p>
 <pre><code><a href="api_geolocation.html#geolocation">Geolocation class</a> 
    readonly attribute Position <b>lastPosition</b>
-   void    <b>getCurrentPosition</b>(function successCallback, [function errorCallback], [PositionOptions options])
-   int     <b>watchPosition</b>(function successCallback, [function errorCallback], [PositionOptions options])
+   void    <b>getCurrentPosition</b>(successCallback, [errorCallback], [options])
+   int     <b>watchPosition</b>(successCallback, [errorCallback], [options])
    void    <b>clearWatch</b>(int watchId)
    boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])</code></pre>
   
@@ -107,6 +108,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute Date    <b>timestamp</b>
    readonly attribute Address <b>gearsAddress</b></code></pre>
 
+<pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
+   readwrite attribute bool     <b>enableHighAccuracy</b>
+   readwrite attribute bool     <b>gearsRequestAddress</b>
+   readwrite attribute string   <b>gearsAddressLanguage</b>
+   readwrite attribute string[] <b>gearsLocationProviderUrls</b></code></pre>
+
+<pre><code><a href="api_geolocation.html#positionerror">PositionError class</a>
+   readonly attribute int    <b>code</b>
+   readonly attribute string <b>message</b></code></pre>
+
 <pre><code><a href="api_geolocation.html#address">Address class</a>
    readonly attribute string <b>streetNumber</b>
    readonly attribute string <b>street</b>
@@ -118,16 +129,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute string <b>countryCode</b>
    readonly attribute string <b>postalCode</b></code></pre>
   
-<pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
-   readwrite attribute bool     <b>enableHighAccuracy</b>
-   readwrite attribute bool     <b>gearsRequestAddress</b>
-   readwrite attribute string   <b>gearsAddressLanguage</b>
-   readwrite attribute string[] <b>gearsLocationProviderUrls</b></code></pre>
-
-<pre><code><a href="api_geolocation.html#positionerror">PositionError class</a>
-   readonly attribute int    <b>code</b>
-   readonly attribute string <b>message</b></code></pre>
-
 
 <h3>HttpRequest module</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>
