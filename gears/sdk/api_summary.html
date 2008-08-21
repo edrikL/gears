@@ -54,14 +54,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    string  <b>getBuildInfo</b>()
    boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])
    readonly attribute boolean <b>hasPermission</b>
-   readonly attribute string <b>version</b></code></pre>
+   readonly attribute string  <b>version</b></code></pre>
+
+
+<h3>Blob module</h3>
+<p>Provides a way to reference binary data.</p>
+<pre><code><a href="api_blob.html">Blob class</a>
+   readonly attribute int <b>length</b>
+   Blob    <b>slice</b>(offset, length)</code></pre>
 
 
 <h3>Database module</h3>
 <p>Provides a SQL database for storing data on the local machine.</p>
 <pre><code><a href="api_database.html">Database class</a>
-   readonly int <b>lastInsertRowId</b>
-   readonly int <b>rowsAffected</b>
+   readonly attribute int <b>lastInsertRowId</b>
+   readonly attribute int <b>rowsAffected</b>
    void      <b>open</b>([name])
    ResultSet <b>execute</b>(sqlStatement, [argArray])
    void      <b>close</b>()</code></pre>
@@ -85,41 +92,41 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h3>Geolocation module</h3>
 <p>Provides a way to obtain a user's geographical position.</p>
 <pre><code><a href="api_geolocation.html#geolocation">Geolocation class</a> 
-  void getCurrentPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  int watchPosition(function successCallback, [function errorCallback], [PositionOptions options]);
-  void clearWatch(int watchId);
-  boolean getPermission([siteName], [imageUrl], [extraMessage])
-  readonly attribute Position lastPosition;</code></pre>
+   readonly attribute Position <b>lastPosition</b>
+   void    <b>getCurrentPosition</b>(function successCallback, [function errorCallback], [PositionOptions options])
+   int     <b>watchPosition</b>(function successCallback, [function errorCallback], [PositionOptions options])
+   void    <b>clearWatch</b>(int watchId)
+   boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])</code></pre>
   
 <pre><code><a href="api_geolocation.html#position">Position class</a>
-  readonly attribute double latitude;
-  readonly attribute double longitude;
-  readonly attribute double accuracy;
-  readonly attribute double altitude;
-  readonly attribute double altitudeAccuracy;
-  readonly attribute Date timestamp;
-  readonly attribute Address gearsAddress;</code></pre>
+   readonly attribute double  <b>latitude</b>
+   readonly attribute double  <b>longitude</b>
+   readonly attribute double  <b>accuracy</b>
+   readonly attribute double  <b>altitude</b>
+   readonly attribute double  <b>altitudeAccuracy</b>
+   readonly attribute Date    <b>timestamp</b>
+   readonly attribute Address <b>gearsAddress</b></code></pre>
 
 <pre><code><a href="api_geolocation.html#address">Address class</a>
-  readonly attribute string streetNumber;
-  readonly attribute string street;
-  readonly attribute string premises;
-  readonly attribute string city;
-  readonly attribute string county;
-  readonly attribute string region;
-  readonly attribute string country;
-  readonly attribute string countryCode;
-  readonly attribute string postalCode;</code></pre>
+   readonly attribute string <b>streetNumber</b>
+   readonly attribute string <b>street</b>
+   readonly attribute string <b>premises</b>
+   readonly attribute string <b>city</b>
+   readonly attribute string <b>county</b>
+   readonly attribute string <b>region</b>
+   readonly attribute string <b>country</b>
+   readonly attribute string <b>countryCode</b>
+   readonly attribute string <b>postalCode</b></code></pre>
   
 <pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
-  readwrite attribute bool enableHighAccuracy;
-  readwrite attribute bool gearsRequestAddress;
-  readwrite attribute string gearsAddressLanguage;
-  readwrite attribute string[] gearsLocationProviderUrls;</code></pre>
+   readwrite attribute bool     <b>enableHighAccuracy</b>
+   readwrite attribute bool     <b>gearsRequestAddress</b>
+   readwrite attribute string   <b>gearsAddressLanguage</b>
+   readwrite attribute string[] <b>gearsLocationProviderUrls</b></code></pre>
 
 <pre><code><a href="api_geolocation.html#positionerror">PositionError class</a>
-  readonly attribute int code;
-  readonly attribute string message;</code></pre>
+   readonly attribute int    <b>code</b>
+   readonly attribute string <b>message</b></code></pre>
 
 
 <h3>HttpRequest module</h3>
@@ -132,7 +139,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    string   <b>getResponseHeader</b>(name)
    string   <b>getAllResponseHeaders</b>()
    callback <b>onreadystatechange</b>
-   readonly attribute int <b>readyState</b>
+   readonly attribute int    <b>readyState</b>
    readonly attribute string <b>responseText</b>
    readonly attribute int    <b>status</b>
    readonly attribute string <b>statusText</b></code></pre>
