@@ -33,6 +33,8 @@
 #else
 #include <string>
 
+class Event;
+
 class NotifierPosixUtils {
  public:
   // Called by Notifier process when it starts. If returns 'true', the calling
@@ -63,6 +65,9 @@ class NotifierPosixUtils {
   // returns its ID. It reads the ID from a lock file created by Notifier
   // process. If it returns 0, there is no Notifier yet running/ready.
   static pid_t FindNotifierProcess();
+
+  // Waits for the notifier process to start and get to "idle".
+  static bool WaitForNotifierProcess(Event *stop_event);
 
  private:
   NotifierPosixUtils() {  // static class - private ctor

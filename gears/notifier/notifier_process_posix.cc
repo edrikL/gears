@@ -45,6 +45,10 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 
+// Constants relating to waiting for a new notifier process to start.
+static int kStartTimeout = 10000;  // 10 seconds
+static int kWaitPeriodMs = 200;    // wait for 200ms at a time
+
 // Process-wide global file descriptor for a lock file.
 static int single_instance_locking_fd = -1;
 
@@ -52,7 +56,7 @@ static std::string GetSingleInstanceLockFilePath() {
   static std::string s_lock_file_path;
   if (s_lock_file_path.empty()) {
 #ifdef OS_MACOSX
-    std::string lock_file_path = TempDirectoryForCurrentUser();	 
+    std::string lock_file_path = TempDirectoryForCurrentUser();
 #else
     std::string16 lock_file_path16;
     std::string lock_file_path;
@@ -159,6 +163,17 @@ bool NotifierPosixUtils::UnregisterIPC() {
     return false;
   }
   return true;
+}
+
+bool NotifierPosixUtils::WaitForNotifierProcess(Event *stop_event) {
+  for (int loops = kStartTimeout / kWaitPeriodMs;
+       loops > 0 && !stop_event->WaitWithTimeout(kWaitPeriodMs);
+       --loops) {
+    if (NotifierPosixUtils::FindNotifierProcess()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 #endif  // defined(LINUX) || defined(ANDROID) || defined(OS_MACOSX)

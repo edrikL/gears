@@ -23,70 +23,18 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_NOTIFIER_SYSTEM_H__
+#define GEARS_NOTIFIER_SYSTEM_H__
+
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
 #if (defined(LINUX) || defined(OS_ANDROID)) && !defined(OS_MACOSX)
 
-#include "gears/notifier/notifier_process.h"
-
-#include <errno.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-#include "gears/base/common/common.h"
-#include "gears/base/common/string_utils.h"
-#include "gears/notifier/notifier_process_posix.h"
-
-#if BROWSER_FF
-#include "gears/base/common/paths.h"
-#elif BROWSER_NONE
-#include "gears/notifier/system_linux.h"
-#else
-#error Unsupported.
-#endif
-
-bool NotifierProcess::StartProcess(const char16 *cmd_line_options,
-                                   Event *stop_event,
-                                   bool async) {
-  // Command line options are not supported yet.
-  assert(!cmd_line_options);
-
-#if BROWSER_FF
-  std::string16 notifier_path16;
-  if (!GetComponentDirectory(&notifier_path16)) {
-    return false;
-  }
-#elif BROWSER_NONE
-  std::string16 notifier_path16 = GetCurrentModulePath();
-#else
-#error Unsupported.
-#endif
-  std::string notifier_path;
-  String16ToUTF8(notifier_path16.c_str(), &notifier_path);
-  notifier_path.append("/notifier");
-
-  pid_t pid = fork();
-  if (pid < 0 ) {
-    LOG(("fork failed with errno=%d\n", errno));
-    return false;
-  } else if (pid > 0) {
-    int status = 0;
-    waitpid(pid, &status, 0);
-    if (async) {
-      return true;
-    }
-    return NotifierPosixUtils::WaitForNotifierProcess(stop_event);
-  }
-
-  execl(notifier_path.c_str(), "notifier", static_cast<char*>(0));
-  // We never go here due to execl.
-  return false;
-}
-
-pid_t NotifierProcess::FindProcess() {
-  return NotifierPosixUtils::FindNotifierProcess();
-}
+// Get the current module path. This is the path where the module of the
+// currently running code sits (without a trailing '/').
+std::string16 GetCurrentModulePath();
 
 #endif  // (defined(LINUX) || defined(OS_ANDROID)) && !defined(OS_MACOSX)
 #endif  // OFFICIAL_BUILD
+#endif  // GEARS_NOTIFIER_SYSTEM_H__
