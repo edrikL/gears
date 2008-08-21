@@ -25,12 +25,60 @@
 
 #include "gears/base/npapi/plugin.h"
 
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/mutex.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"
+#include "gears/base/npapi/module.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/localserver/safari/ui_thread.h"
+#endif
+
+// In Safari, gc() can be called on a thread which is neither the main thread
+// or a worker thread.  This happens when executing .PAC files.  In this case
+// Gears object deletion will fail since we don't have the pointers to the
+// NPN functions set up correctly on the thread.
+// Fortunately, this can't happen to workers, so it's enough to forward
+// any such cases to the main thread for deletion.
+#ifdef BROWSER_WEBKIT
+static Mutex g_npapi_objects_to_delete_mutex;
+static std::vector<PluginBase *> g_objects_to_delete;
+
+class DeletePluginEventsFunctor : public AsyncFunctor {
+  virtual void Run() {
+    MutexLock locker(&g_npapi_objects_to_delete_mutex);
+    for (std::vector<PluginBase *>::iterator it = g_objects_to_delete.begin();
+         it != g_objects_to_delete.end();
+         ++it) {
+      delete *it;
+    }
+    g_objects_to_delete.clear();
+  }
+};
+#endif
 
 // static
 void PluginBase::Deallocate(NPObject *npobj) {
-  delete static_cast<PluginBase *>(npobj);
+  PluginBase *plugin_to_delete = static_cast<PluginBase *>(npobj);
+#ifdef BROWSER_WEBKIT
+  // If we have an NPN Function table attached to this thread then it's a 
+  // thread that Gears was initialized, otherwise forward to the main
+  // thread.
+  if (!ThreadLocals::HasValue(kNPNFuncsKey)) {
+    MutexLock locker(&g_npapi_objects_to_delete_mutex);
+    bool was_empty = g_objects_to_delete.empty();
+    g_objects_to_delete.push_back(plugin_to_delete);
+    
+    if (was_empty) {
+      AsyncRouter::GetInstance()->CallAsync(
+        GetUiThread(),
+        new DeletePluginEventsFunctor());
+    }
+    return;  // Delete on main thread.
+  }
+#endif
+  delete plugin_to_delete;
 }
 
 // static
