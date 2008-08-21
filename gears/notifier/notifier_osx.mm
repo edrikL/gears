@@ -32,6 +32,9 @@ int main(int argc, char *argv[]) {
 #else
 #import "gears/notifier/notifier.h"
 #import <Cocoa/Cocoa.h>
+#ifdef OFFICIAL_BUILD
+#import "gears/base/common/exception_handler.h"
+#endif  // OFFICIAL_BUILD
 #import "gears/notifier/notifier_process_posix.h"
 
 class MacNotifier : public Notifier {
@@ -91,6 +94,14 @@ extern "C" {
 int main(int argc, const char** argv) {
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   LOG(("Gears Notifier started.\n"));
+
+#ifdef OFFICIAL_BUILD
+  // TODO(jianli): need to tell the breakpad to use the custom path to find
+  // crash_inspector and crash_sender when the support is checked in.
+  static ExceptionManager exception_manager(true);
+  exception_manager.StartMonitoring();
+  LOG(("Breakpad started.\n"));
+#endif  // OFFICIAL_BUILD
 
   [NSApplication sharedApplication];
 

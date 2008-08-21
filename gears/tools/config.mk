@@ -130,6 +130,16 @@ else
 PCT=%
 endif
 
+# Enable breakpad for Safari and Notifier in MacOSX.
+ifeq ($(OS),osx)
+ifeq ($(BROWSER),SF)
+  USING_BREAKPAD_OSX = 1
+endif
+ifeq ($(BROWSER),NONE)
+  USING_BREAKPAD_OSX = 1
+endif
+endif
+
 MAKEFLAGS += --no-print-directory
 
 CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
@@ -396,7 +406,7 @@ COMMON_CXXFLAGS += -fvisibility-inlines-hidden
 
 COMPILE_FLAGS_dbg = -O0
 COMPILE_FLAGS_opt = -O2
-ifeq ($(BROWSER),SF)
+ifeq ($(USING_BREAKPAD_OSX),1)
 # Breakpad on OSX needs debug symbols to use the STABS format, rather than the
 # default DWARF debug symbols format. Note that we enable gstabs for debug &
 # opt; we strip them later in opt.
@@ -434,7 +444,7 @@ THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch ppc -arch i386 -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
 
-ifeq ($(BROWSER),SF)
+ifeq ($(USING_BREAKPAD_OSX),1)
 # libcrypto required by breakpad.
 SHARED_LINKFLAGS += -lcrypto
 endif
@@ -444,7 +454,7 @@ endif
 # as a separate phase.
 # TODO(playmobil): Remove the conditional and add to FF targets once we have
 # Breakpad working for the FF OSX release.
-ifeq ($(BROWSER),SF)
+ifeq ($(USING_BREAKPAD_OSX),1)
 ifeq ($(MODE),opt)
 STRIP_EXECUTABLE = /usr/bin/strip -S $@
 else

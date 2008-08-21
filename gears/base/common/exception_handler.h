@@ -38,7 +38,8 @@
 #ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
 #define GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
 
-#if (defined(WIN32) && !defined(WINCE)) || defined(BROWSER_WEBKIT)
+#if (defined(WIN32) && !defined(WINCE)) || \
+    (defined(OS_MACOSX) && (defined(BROWSER_WEBKIT) || defined(BROWSER_NONE)))
 
 namespace google_breakpad {
   class ExceptionHandler;
@@ -95,5 +96,5 @@ class ExceptionManager {
   static bool ReportAndContinue() { return false; }
 };
 
-#endif  // WIN32 && !WINCE
+#endif  // (WIN32 && !WINCE) || (OS_MACOSX && (BROWSER_WEBKIT || BROWSER_NONE))
 #endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
