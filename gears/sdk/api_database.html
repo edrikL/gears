@@ -29,17 +29,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
   <head>
-    <title>Database Module API</title>
+    <title>Database API</title>
     <link rel="stylesheet" type="text/css" href="gears.css" />
   </head>
 
 <body>
 
-<h1>Database Module API</h1>
+<h1>Database API</h1>
 
 <div id="pagecontent">
 
-<p>The Database module provides browser-local relational data storage to
+<p>The Database API provides browser-local relational data storage to
 your JavaScript web application. Gears uses the open source
 <a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/">SQLite</a>
 database system.</p>
@@ -61,7 +61,7 @@ database system.</p>
 </ol>
 
 <h2 id="overview">Overview</h2>
-<p>The Database module is used to persistently store an application user's data on the user's computer.  Data is stored using the same-origin security policy, meaning that a web application cannot access data outside of its domain (see <a href="security.html#model">Security</a>).</p>
+<p>The Database API is used to persistently store an application user's data on the user's computer.  Data is stored using the same-origin security policy, meaning that a web application cannot access data outside of its domain (see <a href="security.html#model">Security</a>).</p>
 <p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
 <h4>Security considerations</h4>
 <p>SQL statements passed to <code>execute()</code> can and should use bind parameters (<code>?</code>) to prevent SQL injection attacks.  Read about <a href="security.html#database">database security</a> best practices on the Security page. </p>
