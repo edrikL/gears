@@ -26,6 +26,7 @@
 #import "gears/base/common/common.h"
 #import "gears/base/common/exception_handler.h"
 #import "gears/base/common/exception_handler_osx/google_breakpad.h"
+#import "gears/base/common/paths_sf_more.h"
 
 static GoogleBreakpadRef gBreakpadRef = 0;
 
@@ -63,6 +64,18 @@ void ExceptionManager::StartMonitoring() {
   [settings setObject:@"YES" forKey:@GOOGLE_BREAKPAD_SKIP_CONFIRM];
   // Forward exception to Apple's Crashreporter.
   [settings setObject:@"NO" forKey:@GOOGLE_BREAKPAD_SEND_AND_EXIT];
+  
+  // Set paths for reporter & inspector executables.
+  NSString *gears_resource_dir = [GearsPathUtilities gearsResourcesDirectory];
+  NSString *inspector_path = 
+      [gears_resource_dir stringByAppendingPathComponent:@"crash_inspector"];
+  NSString *reporter_path = 
+      [gears_resource_dir stringByAppendingPathComponent:@"crash_sender"];
+      
+  [settings setObject:inspector_path 
+               forKey:@GOOGLE_BREAKPAD_INSPECTOR_LOCATION];
+  [settings setObject:reporter_path
+               forKey:@GOOGLE_BREAKPAD_REPORTER_EXE_LOCATION];
   
   breakpad = GoogleBreakpadCreate(settings);
   if (!breakpad) {

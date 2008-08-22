@@ -496,14 +496,10 @@ kern_return_t Inspector::SendAcknowledgement() {
 
 //=============================================================================
 void Inspector::LaunchReporter(const char *inConfigFilePath) {
-  // determine the Reporter application's path
-  NSBundle *bundle =[NSBundle mainBundle];
-  NSString *path = [bundle resourcePath];
-  path = [path stringByAppendingPathComponent:@"crash_sender"];
-  
-  const char *reporterExecutablePath = [path fileSystemRepresentation];
+  // Extract the path to the reporter executable.
+  const char *reporterExecutablePath =
+          config_params_.GetValueForKey(GOOGLE_BREAKPAD_REPORTER_EXE_LOCATION);
   DEBUGLOG(stderr, "reporter path = %s\n", reporterExecutablePath);
-
   // Setup and launch our reporter
   const char *argv[3];
   argv[0] = reporterExecutablePath;

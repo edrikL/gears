@@ -291,7 +291,7 @@ NSString * GetResourcePath() {
     DEBUGLOG(stderr, "Could not find GetResourcePath\n");
     // fallback plan
     NSBundle *bundle =
-      [NSBundle bundleWithIdentifier:@"com.google.Gears"];  // [naming]
+      [NSBundle bundleWithIdentifier:@"com.Google.BreakpadFramework"];
     resourcePath = [bundle resourcePath];
   }
 
@@ -315,38 +315,14 @@ bool GoogleBreakpad::Initialize(NSDictionary *parameters) {
   if (!ExtractParameters(parameters)) {
     return false;
   }
-
-  // Find the reporter application
-  NSString *resourcePath = GetResourcePath();
-  if (!resourcePath) {
-    DEBUGLOG(stderr, "Could not get resource path\n");
-    return false;
-  }
-
-  NSString *reporterExe =
-    [resourcePath stringByAppendingPathComponent:@"crash_sender"];
-    
-  // Verify that there is a reporter application
-  if (![[NSFileManager defaultManager] fileExistsAtPath:reporterExe]) {
-    DEBUGLOG(stderr, "Cannot find Reporter application\n");
-    return false;
-  }
-
-  // Find the Inspector tool
-  NSString *inspectorPathString =
-    [resourcePath stringByAppendingPathComponent:@"crash_inspector"];
   
-  // Verify that there is an Inspector tool
-  if (![[NSFileManager defaultManager] fileExistsAtPath:inspectorPathString]) {
-    DEBUGLOG(stderr, "Cannot find Inspector tool\n");
-    return false;
-  }
+  // Get path to Inspector executable.
+  NSString *inspectorPathString = KeyValue(@GOOGLE_BREAKPAD_INSPECTOR_LOCATION);
   
   // Standardize path (resolve symlinkes, etc.)  and escape spaces
   inspectorPathString = [inspectorPathString stringByStandardizingPath];
   inspectorPathString = [[inspectorPathString componentsSeparatedByString:@" "]
                                               componentsJoinedByString:@"\\ "];
-  
 
   // Create an on-demand server object representing the Inspector.
   // In case of a crash, we simply need to call the LaunchOnDemand()
@@ -407,6 +383,10 @@ bool GoogleBreakpad::ExtractParameters(NSDictionary *parameters) {
   NSString *version = [parameters objectForKey:@GOOGLE_BREAKPAD_VERSION];
   NSString *urlStr = [parameters objectForKey:@GOOGLE_BREAKPAD_URL];
   NSString *interval = [parameters objectForKey:@GOOGLE_BREAKPAD_REPORT_INTERVAL];
+  NSString *inspectorPathString = 
+                [parameters objectForKey:@GOOGLE_BREAKPAD_INSPECTOR_LOCATION];
+  NSString *reporterPathString = 
+                [parameters objectForKey:@GOOGLE_BREAKPAD_REPORTER_EXE_LOCATION];
 
   // skipConfirm and sendAndExit can be overridden by user defaults.
   NSString *skipConfirm = [stdDefaults stringForKey:@GOOGLE_BREAKPAD_SKIP_CONFIRM];
@@ -456,6 +436,43 @@ bool GoogleBreakpad::ExtractParameters(NSDictionary *parameters) {
         [sendAndExit isEqualToString:@"0"])
       send_and_exit_ = false;
   }
+  
+  // Find the helper applications if not specified in user config.
+  NSString *resourcePath = nil;
+  if (!inspectorPathString || !reporterPathString) {
+    resourcePath = GetResourcePath();
+    if (!resourcePath) {
+      DEBUGLOG(stderr, "Could not get resource path\n");
+      return false;
+    }
+  }
+  
+  // Find Inspector.
+  if (!inspectorPathString) {
+    inspectorPathString = 
+        [resourcePath stringByAppendingPathComponent:@"Inspector"];
+  }
+  
+  // Verify that there is an Inspector tool
+  if (![[NSFileManager defaultManager] fileExistsAtPath:inspectorPathString]) {
+    DEBUGLOG(stderr, "Cannot find Inspector tool\n");
+    return false;
+  }
+  
+  // Find Reporter.
+  if (!reporterPathString) {
+    reporterPathString =
+      [resourcePath stringByAppendingPathComponent:@"Reporter.app"];
+    reporterPathString = [[NSBundle bundleWithPath:reporterPathString] 
+                              executablePath];
+  }
+
+  // Verify that there is a Reporter application
+  if (![[NSFileManager defaultManager] 
+             fileExistsAtPath:reporterPathString]) {
+    DEBUGLOG(stderr, "Cannot find Reporter tool\n");
+    return false;
+  }
 
   // The product and version are required values
   if (![product length] || ![version length]) {
@@ -475,6 +492,10 @@ bool GoogleBreakpad::ExtractParameters(NSDictionary *parameters) {
   dictionary.SetKeyValue(GOOGLE_BREAKPAD_URL,             [urlStr UTF8String]);
   dictionary.SetKeyValue(GOOGLE_BREAKPAD_REPORT_INTERVAL, [interval UTF8String]);
   dictionary.SetKeyValue(GOOGLE_BREAKPAD_SKIP_CONFIRM,    [skipConfirm UTF8String]);
+  dictionary.SetKeyValue(GOOGLE_BREAKPAD_INSPECTOR_LOCATION, 
+                         [inspectorPathString fileSystemRepresentation]);
+    dictionary.SetKeyValue(GOOGLE_BREAKPAD_REPORTER_EXE_LOCATION, 
+                           [reporterPathString fileSystemRepresentation]);
 
 #if 0 // for testing
   GoogleBreakpadSetKeyValue(this, @"UserKey1", @"User Value 1");
