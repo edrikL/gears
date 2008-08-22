@@ -138,7 +138,7 @@ class IExploreWinCeLauncher(BaseBrowserLauncher):
   """ Launcher for pocket ie on Windows Mobile. """
 
   def __init__(self, automated=True):
-    pass
+    self.killAllInstances()
   
   def type(self):
     return 'IExploreWinCE'
@@ -167,7 +167,7 @@ class BasePosixLauncher(BaseBrowserLauncher):
       process_name: string name of process to kill
     """
     print 'Attempting to kill all processes named %s' % process_name
-    kill_cmd = ['killall', process_name]
+    kill_cmd = ['killall', '-9', process_name]
     p = subprocess.Popen(kill_cmd)
     p.wait()
 
