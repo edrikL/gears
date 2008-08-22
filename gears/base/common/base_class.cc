@@ -63,11 +63,13 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
 #if BROWSER_FF
   assert(js_context_ != NULL);
 #endif
+  js_runner_->OnModuleEnvironmentAttach();
 }
 
 
 ModuleEnvironment::~ModuleEnvironment() {
   LEAK_COUNTER_DECREMENT(ModuleEnvironment);
+  js_runner_->OnModuleEnvironmentDetach();
 }
 
 
