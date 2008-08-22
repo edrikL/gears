@@ -97,6 +97,14 @@ class JsRunnerBase : public JsRunnerInterface {
     assert(evaluator_.get() == NULL);
   }
   
+  void OnModuleEnvironmentAttach() {
+    // TODO(nigeltao): implement on NPAPI, i.e. plug the DocumentJsRunner leak.
+  }
+
+  void OnModuleEnvironmentDetach() {
+    // TODO(nigeltao): implement on NPAPI, i.e. plug the DocumentJsRunner leak.
+  }
+
   virtual NPObject *GetGlobalObject() = 0;
   
   // Because JsRunner destroys the JSEngine in it's destructor, we add this

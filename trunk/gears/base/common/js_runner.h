@@ -84,6 +84,13 @@ class JsEventHandlerInterface {
 class JsRunnerInterface {
  public:
   virtual ~JsRunnerInterface() {};
+
+  // Some JsRunnerInterface implementations are self-deleting, but will not
+  // delete themselves whilst the ModuleEnvironment for that JsRunnerInterface
+  // is attached.
+  virtual void OnModuleEnvironmentAttach() = 0;
+  virtual void OnModuleEnvironmentDetach() = 0;
+
   // increments refcount
   virtual bool AddGlobal(const std::string16 &name,
                          ModuleImplBaseClass *object) = 0;

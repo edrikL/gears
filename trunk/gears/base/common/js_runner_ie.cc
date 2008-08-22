@@ -67,6 +67,14 @@ class JsRunnerBase : public JsRunnerInterface {
  public:
   JsRunnerBase() {}
 
+  void OnModuleEnvironmentAttach() {
+    // TODO(nigeltao): implement on IE, i.e. plug the DocumentJsRunner leak.
+  }
+
+  void OnModuleEnvironmentDetach() {
+    // TODO(nigeltao): implement on IE, i.e. plug the DocumentJsRunner leak.
+  }
+
   JsContextPtr GetContext() {
     return NULL;  // not used in IE
   }

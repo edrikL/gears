@@ -223,11 +223,13 @@ class JsRunnerBase : public JsRunnerInterface {
     return true;
   }
 
+#ifdef DEBUG
   void ForceGC() {
     if (js_engine_context_) {
       JS_GC(js_engine_context_);
     }
   }
+#endif
 
   // This function and others (AddEventHandler, RemoveEventHandler etc) do not
   // conatin any browser-specific code. They should be implemented in a new
@@ -373,6 +375,14 @@ class JsRunner : public JsRunnerBase {
   }
 
   ~JsRunner();
+
+  void OnModuleEnvironmentAttach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
+  }
+
+  void OnModuleEnvironmentDetach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
+  }
 
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object);
   bool Start(const std::string16 &full_script);
@@ -650,7 +660,9 @@ bool JsRunner::InvokeCallbackSpecialized(
 // that runs in HTML pages.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(JsContextPtr context) {
+  DocumentJsRunner(JsContextPtr context)
+      : is_module_environment_detached_(true),
+        is_unloaded_(true) {
     LEAK_COUNTER_INCREMENT(DocumentJsRunner);
     js_engine_context_ = context;
     alloc_js_wrapper_ = new JsContextWrapper(context,
@@ -659,10 +671,20 @@ class DocumentJsRunner : public JsRunnerBase {
 
   ~DocumentJsRunner() {
     LEAK_COUNTER_DECREMENT(DocumentJsRunner);
+    assert(is_module_environment_detached_ && is_unloaded_);
     if (alloc_js_wrapper_) {
       alloc_js_wrapper_->CleanupRoots();
       delete alloc_js_wrapper_;
     }
+  }
+
+  void OnModuleEnvironmentAttach() {
+    is_module_environment_detached_ = false;
+  }
+
+  void OnModuleEnvironmentDetach() {
+    is_module_environment_detached_ = true;
+    DeleteIfNoLongerRelevant();
   }
 
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
@@ -689,7 +711,15 @@ class DocumentJsRunner : public JsRunnerBase {
  private:
   static void HandleEventUnload(void *user_param);  // Callback for 'onunload'
 
+  void DeleteIfNoLongerRelevant() {
+    if (is_module_environment_detached_ && is_unloaded_) {
+      delete this;
+    }
+  }
+
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
+  bool is_module_environment_detached_;
+  bool is_unloaded_;
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
@@ -786,6 +816,7 @@ bool DocumentJsRunner::ListenForUnloadEvent() {
   nsIDOMEventTarget **target = getter_AddRefs(dom_event_target);
   if (NS_SUCCEEDED(CallQueryInterface(dom_window_internal, target))) {
     unload_monitor_->Start(dom_event_target);
+    is_unloaded_ = false;
     return true;
   }
   return false;
@@ -795,16 +826,8 @@ void DocumentJsRunner::HandleEventUnload(void *user_param) {
   DocumentJsRunner *document_js_runner =
       static_cast<DocumentJsRunner*>(user_param);
   document_js_runner->SendEvent(JSEVENT_UNLOAD);
-  // We collect garbage to make sure that all Gears modules are destroyed,
-  // which should clear any of those modules' outstanding references to the
-  // document_js_runner, so we are then safe to delete the document_js_runner.
-  // TODO(nigeltao): Forcing a GC might be an expensive operation, though.
-  // It might be possible to move a JsRunnerInterface to be a ref-counted
-  // object (where the DJR would have a reference to itself, and the
-  // ModuleEnvironment would have another reference), and then we wouldn't
-  // need to ForceGC.
-  document_js_runner->ForceGC();
-  delete document_js_runner;
+  document_js_runner->is_unloaded_ = true;
+  document_js_runner->DeleteIfNoLongerRelevant();
 }
 
 bool DocumentJsRunner::InvokeCallbackSpecialized(
@@ -893,7 +916,9 @@ JsRunnerInterface* NewDocumentJsRunner(void *, JsContextPtr context) {
   if (!document_js_runner->ListenForUnloadEvent()) {
     return NULL;
   }
-  return static_cast<JsRunnerInterface*>(document_js_runner.release());
+  // A DocumentJsRunner who has had ListenForUnloadEvent called successfully
+  // is self-deleting, so we can release it from our scoped_ptr.
+  return document_js_runner.release();
 }
 
 // Local helper function.
