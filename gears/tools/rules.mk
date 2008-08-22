@@ -933,8 +933,9 @@ $(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
 ifeq ($(OS),osx)
 # Dump the symbols and strip the executable
-	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a ppc $@ > $@_ppc.symbols
-	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a i386 $@ > $@_i386.symbols
+# TODO: This triggers an assert in dump_syms, figure this out and uncomment.
+#	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a ppc $@ > $@_ppc.symbols
+#	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a i386 $@ > $@_i386.symbols
 	$(STRIP_EXECUTABLE)
 endif
 endif
