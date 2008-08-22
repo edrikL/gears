@@ -28,17 +28,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
   <head>
-    <title>Geolocation Module API</title>
+    <title>Geolocation API</title>
     <link rel="stylesheet" type="text/css" href="gears.css" />
 </head>
 
 <body>
 
-<h1>Geolocation Module API</h1>
+<h1>Geolocation API</h1>
 
 <div id="pagecontent">
 
-<p>The Geolocation module enables a web application to obtain a user's
+<p>The Geolocation API enables a web application to obtain a user's
 geographical position.</p>
 
 <h3>Contents</h3>
@@ -59,7 +59,7 @@ geographical position.</p>
 
 <h2 id="overview">Overview</h2>
 
-<p>The Geolocation module enables a web application to:</p>
+<p>The Geolocation API enables a web application to:</p>
 
 <ul>
 <li>Obtain the user's current position, using the <code><a href="#getCurrent">getCurrentPosition</a></code> method</li>  
@@ -68,21 +68,21 @@ geographical position.</p>
 the <code><a href="#lastPosition">lastPosition</a></code> property</li>
 </ul>
 
-<p>The Geolocation module provides the best estimate of the user's position
+<p>The Geolocation API provides the best estimate of the user's position
 using a number of sources (called location providers). These providers
 may be onboard (GPS for example) or server-based (a network location
 provider). The <code><a href="#getCurrent">getCurrentPosition</a></code> and <code><a href="#watchPosition">watchPosition</a></code> methods
 support an optional parameter of type <code><a href="#positionoptions">PositionOptions</a></code> which lets you specify which location providers to use. </p>
 
 <p>To find out how to implement your own network location provider for use with the Geolocation
-module, see the <a href="http://code.google.com/p/gears/wiki/GeolocationAPI">Geolocation
+API, see the <a href="http://code.google.com/p/gears/wiki/GeolocationAPI">Geolocation
 API design document</a>.</p>
 
 <h4>Permission</h4>
 
 <p>A site's permission to use location information is separate from the
-permission required by other Gears modules. Permission is granted by the user
-in the same way as for other Gears modules, through a dialog. If you would like
+permission required by other Gears APIs. Permission is granted by the user
+in the same way as for other Gears APIs, through a dialog. If you would like
 to customize the default dialog, you can explicitly call the
 <code><a href="#getpermission">getPermission</a></code> method.</p>
 

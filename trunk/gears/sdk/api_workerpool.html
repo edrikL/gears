@@ -29,17 +29,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
   <head>
-    <title>WorkerPool Module API</title>
+    <title>WorkerPool API</title>
     <link rel="stylesheet" type="text/css" href="gears.css" />
   </head>
 
 <body>
 
-<h1>WorkerPool Module API</h1>
+<h1>WorkerPool API</h1>
 
 <div id="pagecontent">
 
-<p>The WorkerPool module allows web applications to run JavaScript code
+<p>The WorkerPool API allows web applications to run JavaScript code
 in the background, without blocking the main page's script execution.
 
 
@@ -62,7 +62,7 @@ in the background, without blocking the main page's script execution.
 <h2 id="overview">Overview</h2>
 
 <p>In web browsers a single time-intensive operation, such as I/O or
-heavy computation, can make the UI unresponsive.  The WorkerPool module
+heavy computation, can make the UI unresponsive.  The WorkerPool API
 runs operations in the background, without blocking the UI.
 Scripts executing in the WorkerPool will not trigger the browser's
 "unresponsive script" dialog.
@@ -121,7 +121,7 @@ functionality, created workers can ask the main page to carry out requests.
 
 <h3 id="typical_use">Usage pattern</h3>
 
-<p>To understand how to use the WorkerPool module, it is useful to look at
+<p>To understand how to use the WorkerPool API, it is useful to look at
 a typical example.
 
   <h4>Initialization sequence</h4>
@@ -158,7 +158,7 @@ event handler is not called until the previous one returns.
 
 <p>The WorkerPool is <i>not</i> a singleton.  A page can create multiple
 WorkerPool instances, and these pools are isolated from each other.  This
-enables multiple gadgets on a page, for example, to use the WorkerPool module
+enables multiple gadgets on a page, for example, to use the WorkerPool API
 without fear of collision.
   
 
@@ -257,7 +257,7 @@ up to the parent.</td>
 
       You can use this callback to implement "last-chance" error handling for
       your workers. For example, you could log all unhandled errors into the
-      <a href="api_database.html">Database module</a>.<br><br>
+      <a href="api_database.html">Database API</a>.<br><br>
 
       <span color='red'>NOTE:</span> This callback can only be set from child workers.
     </td>
