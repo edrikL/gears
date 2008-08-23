@@ -50,9 +50,9 @@ geographical position.</p>
       <ol>
       <li><a href="#geolocation">Geolocation class</a> </li>  
       <li><a href="#position">Position class</a></li>
-      <li><a href="#address">Address class</a></li>
       <li><a href="#positionoptions">PositionOptions class</a></li>      
       <li><a href="#positionerror">PositionError class</a></li>
+      <li><a href="#address">Address class</a></li>
     </ol>
     </li>
   </ol>
@@ -151,8 +151,7 @@ geo.getCurrentPosition(updatePosition, handleError);
 
 <table>
   <tr class="odd">
-  <th colspan="2"><code><a name="getCurrent" id="getCurrent"></a>void getCurrentPosition(function
-successCallback, [function errorCallback], [PositionOptions options])</code></th>
+  <th colspan="2"><code><a name="getCurrent" id="getCurrent"></a>void getCurrentPosition(successCallback, [errorCallback], [options])</code></th>
 </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
@@ -160,11 +159,13 @@ successCallback, [function errorCallback], [PositionOptions options])</code></th
   </tr>
 <tr class="odd">
 <td>Parameters:</td>
-<td class="odd"><code>successCallback(Position position)</code><br />
-<code>errorCallback</code> <code>(PositionError error)</code> - optional,
-pass <code>null</code> if you do not want to make use of the callback.<br />
-<code>options</code> - optional, specifies the options to use for this
-request, see <code><a href="#positionoptions">PositionOptions</a></code>.</td>
+<td class="odd"><code>successCallback(Position position)</code>
+    <br />
+    <code>errorCallback</code> <code>(PositionError error)</code> - optional,
+    pass <code>null</code> if you do not want to make use of the callback.
+    <br />
+    <code>options</code> - optional, specifies the options to use for this
+    request, see <code><a href="#positionoptions">PositionOptions</a></code>.</td>
 </tr><tr class="odd">
     <td>Description:</td>
     <td class="odd">Obtains a new position. Obtains a new position. If

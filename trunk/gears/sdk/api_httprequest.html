@@ -89,7 +89,7 @@ request.send();
     void <b>abort</b>()
     string <b>getResponseHeader</b>(name)
     string <b>getAllResponseHeaders</b>()
-    callback <b>onprogress</b>(event)
+    callback <b>onprogress</b>(progressEvent)
     callback <b>onreadystatechange</b>()
     readonly attribute int <b>readyState</b>
     readonly attribute Blob <b>responseBlob</b>
@@ -99,7 +99,7 @@ request.send();
     readonly attribute HttpRequestUpload <b>upload</b>
 </code></pre>
 <pre><code><a href="#HttpRequestUpload" class="section">HttpRequestUpload class</a>
-    callback <b>onprogress</b>(event)
+    callback <b>onprogress</b>(progressEvent)
 </code></pre>
 <pre><code><a href="#ProgressEvent" class="section">ProgressEvent class</a>
     readonly attribute int <b>total</b>
@@ -238,13 +238,13 @@ request.send();
 <table>
   <tr class="odd">
     <th colspan="2">
-      <div align="left"><code>callback onprogress(event)</code></div>
+      <div align="left"><code>callback onprogress(progressEvent)</code></div>
     </th>
   </tr>
   <tr class="odd">
     <td width="113">Parameters: </td>
     <td width="489">
-      <code>event</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
+      <code>progressEvent</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
     </td>
   </tr>
   <tr class="odd">
@@ -340,13 +340,13 @@ request.send();
 <table>
   <tr class="odd">
     <th colspan="2">
-      <div align="left"><code>callback onprogress(event)</code></div>
+      <div align="left"><code>callback onprogress(progressEvent)</code></div>
     </th>
   </tr>
   <tr class="odd">
     <td width="113">Parameters: </td>
     <td width="489">
-      <code>event</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
+      <code>progressEvent</code> - A <a href="#ProgressEvent">ProgressEvent</a> object.
     </td>
   </tr>
   <tr class="odd">
