@@ -121,17 +121,6 @@ bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
 
 #endif
 
-// Special conversion functions for FireFox
-#if BROWSER_FF
-
-#elif BROWSER_IE
-
-
-#elif BROWSER_NPAPI
-
-
-#endif
-
 //------------------------------------------------------------------------------
 // JsArray
 //------------------------------------------------------------------------------
