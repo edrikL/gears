@@ -53,6 +53,10 @@ class BalloonCollectionObserver {
   // Called when there is more or less space for balloons due to
   // monitor size changes or balloons disappearing.
   virtual void OnBalloonSpaceChanged() = 0;
+
+  // Called when the user chooses to snooze the notification.
+  virtual void OnSnoozeNotification(const GearsNotification &notification,
+                                    int snooze_seconds) = 0;
 };
 
 class BalloonCollectionInterface {
@@ -134,6 +138,7 @@ class Balloon {
                 int height,
                 const void *decoded_image);
   void ShowMenu();
+  void PerformAction(const std::string16 &action);
   static void OnCloseButton(const std::string &button_id, void *user_info);
   static void OnMenuButton(const std::string &button_id, void *user_info);
   static bool SetAlphaTransition(glint::Node *node, double transition_duration);
@@ -188,6 +193,10 @@ class BalloonCollection : public BalloonCollectionInterface {
   // Immediately hides all notifications and stops the notification pipeline
   // so the accumulated notifications will be shown when snooze timeout ends.
   void Snooze(int timeout_seconds);
+
+  // Called when a notification is asked to snooze for the specified seconds.
+  void OnSnoozeNotification(const GearsNotification &notification,
+                            int snooze_seconds);
 
  private:
   void Clear();  // clears balloons_

@@ -213,4 +213,25 @@ void System::ShowNotifierPreferences() {
     NSLog(@"ShowNotifierPreferences error: %@", [dictionary description]);
   }
 }
+
+bool System::OpenUrlInBrowser(const char16 *wide_url) {
+  assert(wide_url && *wide_url);
+  
+  // We always open the url in Safari browser.
+  
+  std::string url;
+  if (!String16ToUTF8(wide_url, &url)) {
+    return false;
+  }
+
+  NSString *url_string = [NSString stringWithUTF8String:url.c_str()];
+  if (!url_string) {
+    return false;
+  }
+  NSURL *ns_url = [NSURL URLWithString:url_string];
+  if (!ns_url) {
+    return false;
+  }
+  return [[NSWorkspace sharedWorkspace] openURL:ns_url];
+}
 #endif  // OFFICIAL_BUILD

@@ -202,21 +202,6 @@ namespace std {
 #endif // END: WIN32 / LINUX / etc
 
 
-// Beyond basic_string functionality, a way to parse decimal strings is our
-// biggest need.
-//
-// This function parses the given string up to the first non-integer character.
-// If endptr is non-NULL, *endptr will be made to point at this character.
-//
-// This function is intentionally very simple.  In particular:
-// - it only supports base 10
-// - it does not handle exotic chars (negation, whitespace, exponentiation)
-// - the return value is undefined for integer overflow
-//
-// On failure, *endptr == str, and the return value is undefined.
-int ParseLeadingInteger(const char16 *str, const char16 **endptr);
-int ParseLeadingInteger(const char *str, const char **endptr);
-
 // Converting to decimal strings is also important.
 // This version does support negative values.
 std::string IntegerToString(int32 i);

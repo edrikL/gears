@@ -268,5 +268,9 @@ void System::ShowNotifierPreferences() {
   assert(false);
 }
 
+bool System::OpenUrlInBrowser(const char16 *wide_url) {
+  return false;
+}
+
 #endif  // defined(LINUX) && !defined(OS_MACOSX)
 #endif  // OFFICIAL_BUILD

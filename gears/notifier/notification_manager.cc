@@ -414,6 +414,11 @@ void NotificationManager::OnBalloonSpaceChanged() {
   }
 }
 
+void NotificationManager::OnSnoozeNotification(
+    const GearsNotification &notification, int snooze_seconds) {
+  AddWithDelay(notification, snooze_seconds * 1000);
+}
+
 bool NotificationManager::CheckDelayedRestart() {
   if (initialized_ && delayed_restart_) {
     // Only perform the restart if the user is away or idle.

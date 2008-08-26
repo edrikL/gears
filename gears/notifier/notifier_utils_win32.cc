@@ -42,10 +42,10 @@ static const char16 *kNotifierInstallPath = L"install_dir";
 static const char16 *kNotifierInstallVersion = L"install_ver";
 
 // Helper function to get the registry value.
-bool GetRegValue(HKEY parent_key,
-                 const char16 *subkey_name,
-                 const char16 *value_name,
-                 std::string16 *value) {
+bool GetRegStringValue(HKEY parent_key,
+                       const char16 *subkey_name,
+                       const char16 *value_name,
+                       std::string16 *value) {
   assert(subkey_name && *subkey_name);
   assert(value);
 
@@ -76,10 +76,10 @@ bool GetRegValue(HKEY parent_key,
 bool GetNotifierPath(std::string16 *path) {
   assert(path);
 
-  if (!GetRegValue(HKEY_LOCAL_MACHINE,
-                   kNotifierRootRegKey,
-                   kNotifierInstallPath,
-                   path)) {
+  if (!GetRegStringValue(HKEY_LOCAL_MACHINE,
+                         kNotifierRootRegKey,
+                         kNotifierInstallPath,
+                         path)) {
     return false;
   }
 
@@ -93,10 +93,10 @@ bool GetNotifierPath(std::string16 *path) {
 
 bool GetNotifierVersion(std::string16 *version) {
   assert(version);
-  return GetRegValue(HKEY_LOCAL_MACHINE,
-                     kNotifierRootRegKey,
-                     kNotifierInstallVersion,
-                     version);
+  return GetRegStringValue(HKEY_LOCAL_MACHINE,
+                           kNotifierRootRegKey,
+                           kNotifierInstallVersion,
+                           version);
 }
 
 void GetMainModulePath(std::string16 *path) {

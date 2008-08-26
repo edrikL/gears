@@ -107,6 +107,8 @@ class Notifier : public IpcMessageQueue::HandlerInterface,
 
   // BalloonCollectionObserver interface.
   virtual void OnBalloonSpaceChanged();
+  virtual void OnSnoozeNotification(const GearsNotification &notification,
+                                    int snooze_seconds) {}
 
   // UserActivityObserver interface.
   virtual void OnUserActivityChange();

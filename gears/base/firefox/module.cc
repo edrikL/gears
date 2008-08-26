@@ -41,6 +41,7 @@
 
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
 #include "gears/factory/factory_ff.h"

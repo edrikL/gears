@@ -31,6 +31,7 @@
   // The notification API has not been finalized for official builds.
 #else
 #include <string>
+#include <vector>
 #include <assert.h>
 
 #include "gears/notifier/balloons.h"
@@ -95,21 +96,23 @@ const double kNotificationFillFactor = 0.7;
 enum kContextMenuCommands {
   SEPARATOR,
   SHOW_PREFERENCES,
-  SNOOZE_1_HR,
+  DISABLE_NOTIFICATIONS_FOR_1_HOUR,
 };
 
-#ifdef OS_MACOSX
 // TODO(dimich): make this internationalized. Pull the strings from resource.
-static const System::MenuItem kContextMenuItems[] = {
-  { "Don't show notifications for 1 hour", SNOOZE_1_HR, true, false },
+static const System::MenuItem kDefaultContextMenuItems[] = {
+  { "Don't show notifications for 1 hour",
+    DISABLE_NOTIFICATIONS_FOR_1_HOUR,
+    true,
+    false },
+#ifdef OS_MACOSX
   { "-", SEPARATOR, false, false },
   { "Preferences...", SHOW_PREFERENCES, true, false },
-};
-#else
-static const System::MenuItem kContextMenuItems[] = {
-  { "Don't show notifications for 1 hour", SNOOZE_1_HR, true, false },
-};
 #endif  // OS_MACOSX
+};
+static const int kContextMenuItemOffset = 100;
+static const char16 *kSnoozeAction = STRING16(L"snooze");
+static const int kDefaultSnoozeSeconds = 5 * 60;    // 5m
 
 // Container for balloons. Implements several static methods that provide
 // balloon metrics scaled properly in case system has "large fonts" support.
@@ -652,21 +655,81 @@ void Balloon::OnMenuButton(const std::string &button_id, void *user_info) {
 }
 
 void Balloon::ShowMenu() {
+  // Add actions to context menu.
+  int num = ARRAYSIZE(kDefaultContextMenuItems);
+  if (!notification_.actions().empty()) {
+    num += notification_.actions().size() + 1;
+  }
+  std::vector<System::MenuItem> context_menu_items;
+  for (size_t i = 0; i < notification_.actions().size(); ++i) {
+    System::MenuItem menu_item;
+    String16ToUTF8(notification_.actions().at(i).text.c_str(),
+                   &menu_item.title);
+    menu_item.command_id = kContextMenuItemOffset + static_cast<int>(i);
+    menu_item.enabled = true;
+    menu_item.checked = false;
+    context_menu_items.push_back(menu_item);
+  }
+
+  // Add separator to context menu.
+  System::MenuItem separator;
+  separator.title = "-";
+  separator.command_id = -1;
+  separator.enabled = false;
+  separator.checked = false;
+  context_menu_items.push_back(separator);
+
+  // Add default menu items.
+  for (size_t i = 0; i < ARRAYSIZE(kDefaultContextMenuItems); ++i) {
+    context_menu_items.push_back(kDefaultContextMenuItems[i]);
+  }
+
   // Stop expiration while mouse is over context menu.
   collection_->SuspendExpirationTimer();
-  int command = System::ShowContextMenu(kContextMenuItems,
-                                        ARRAYSIZE(kContextMenuItems),
+  int command = System::ShowContextMenu(&context_menu_items.front(),
+                                        context_menu_items.size(),
                                         root_->GetRootUI());
   collection_->RestoreExpirationTimer();
   switch (command) {
-    case SNOOZE_1_HR:
+    case DISABLE_NOTIFICATIONS_FOR_1_HOUR:
       collection_->Snooze(kOneHourSeconds);
       break;
     case SHOW_PREFERENCES:
       System::ShowNotifierPreferences();
       break;
     default:
+      if (command >= kContextMenuItemOffset) {
+        PerformAction(
+            notification_.actions().at(command - kContextMenuItemOffset).url);
+      }
       break;
+  }
+}
+
+void Balloon::PerformAction(const std::string16 &action) {
+  assert(!action.empty());
+
+  static const std::string16 kHttpUrl = STRING16(L"http://");
+  static const std::string16 kHttpsUrl = STRING16(L"https://");
+  if (StartsWith(action, kHttpUrl) || StartsWith(action, kHttpsUrl)) {
+    System::OpenUrlInBrowser(action.c_str());
+    return;
+  }
+
+  static const std::string16 kActionDelimiters = STRING16(L",");
+  std::vector<std::string16> fields;
+  if (!Tokenize(action, kActionDelimiters, &fields) || fields.empty()) {
+    return;
+  }
+
+  if (fields[0] == kSnoozeAction) {
+    InitiateClose(true);
+    int snooze_seconds = 0;
+    if (fields.size() < 2 ||
+        !String16ToInt(fields[1].c_str(), &snooze_seconds)) {
+      snooze_seconds = kDefaultSnoozeSeconds;
+    }
+    collection_->OnSnoozeNotification(notification_, snooze_seconds);
   }
 }
 
@@ -1094,6 +1157,11 @@ void BalloonCollection::Snooze(int timeout_seconds) {
                                     false,  // no repeat
                                     OnSnoozeTimerFired,
                                     this));
+}
+
+void BalloonCollection::OnSnoozeNotification(
+    const GearsNotification &notification, int snooze_seconds) {
+  observer_->OnSnoozeNotification(notification, snooze_seconds);
 }
 
 #endif  // OFFICIAL_BULID

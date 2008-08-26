@@ -46,6 +46,12 @@ void GetMainModulePath(std::string16 *path);
 // Get the parent process ID of the specified process.
 bool GetParentProcessId(uint32 process_id, uint32 *parent_process_id);
 
+// Get the registry value of string type.
+bool GetRegStringValue(HKEY parent_key, 
+                       const char16 *subkey_name,
+                       const char16 *value_name,
+                       std::string16 *value);
+
 #endif  // WIN32
 
 #endif  // OFFICIAL_BUILD

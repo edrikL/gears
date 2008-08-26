@@ -83,6 +83,8 @@ class NotificationManager : public BalloonCollectionObserver,
 
   // BalloonCollectionObserver implementation.
   virtual void OnBalloonSpaceChanged();
+  virtual void OnSnoozeNotification(const GearsNotification &notification,
+                                    int snooze_seconds);
 
   // UserActivityObserver implementation.
   void OnUserActivityChange();
