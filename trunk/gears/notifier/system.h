@@ -78,6 +78,9 @@ class System {
   // Opens a UI panel with local Notifier preferences.
   static void ShowNotifierPreferences();
 
+  // Opens an URL in the default browser.
+  static bool OpenUrlInBrowser(const char16 *url);
+
  private:
   System() {}  // Static class.
 };

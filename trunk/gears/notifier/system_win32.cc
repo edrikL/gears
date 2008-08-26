@@ -43,9 +43,19 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/notifier/notifier_utils_win32.h"
 #include "third_party/glint/include/platform.h"
 #include "third_party/glint/include/rectangle.h"
 #include "third_party/glint/include/root_ui.h"
+
+// Constants.
+static const char16 *kRegKeyStartMenuInternet =
+    L"SOFTWARE\\Clients\\StartMenuInternet";
+static const char16 *kRegKeyShellOpenCommand = L"\\shell\\open\\command";
+static const char16 *kIeExeName = L"iexplore.exe";
+static const char16 *kRegKeyIeClass =
+    L"CLSID\\{0002DF01-0000-0000-C000-000000000046}\\LocalServer32";
+static const char16 *kRegValueIeClass = L"";
 
 // Get the current module path. This is the path where the module of the
 // currently running code sits.
@@ -203,13 +213,13 @@ double System::GetSystemFontScaleFactor() {
     int font_size_name_length = buffer_actual_bytes / sizeof(font_size_name[0]);
 
     // RegQueryValueEx does not guarantee terminating \0. So check and if there
-    // is one, don't include it in wstring.
+    // is one, don't include it in string.
     if (font_size_name_length >= 1 &&
         font_size_name[font_size_name_length - 1] == 0) {
       --font_size_name_length;
     }
 
-    std::wstring size_name(font_size_name, font_size_name_length);
+    std::string16 size_name(font_size_name, font_size_name_length);
     for (size_t i = 0; i < ARRAYSIZE(mappings); ++i) {
       if (size_name == mappings[i].size_name) {
         factor *= mappings[i].scale_factor;
@@ -311,6 +321,151 @@ int System::ShowContextMenu(const MenuItem *menu_items,
 void System::ShowNotifierPreferences() {
   // TODO: Implement this.
   assert(false);
+}
+
+void GetDefaultBrowserName(std::string16 *name) {
+  assert(name);
+  name->erase();
+
+  // Get the default browser name from current user registry.
+  bool res = GetRegStringValue(HKEY_CURRENT_USER,
+                               kRegKeyStartMenuInternet,
+                               NULL,
+                               name);
+
+  // If failed, try to get from local machine registry.
+  if (!res || name->empty()) {
+    res = GetRegStringValue(HKEY_LOCAL_MACHINE,
+                            kRegKeyStartMenuInternet,
+                            NULL,
+                            name);
+  }
+
+  // If still failed, we don't want to break in this case so
+  // we default to IEXPLORE.EXE. A scenario where this can happen is
+  // when the user installs a browser that configures itself to be default.
+  // Then the user uninstalls or somehow removes that browser and the
+  // registry is not updated correctly.
+  if (!res || name->empty()) {
+    name->assign(kIeExeName);
+  }
+}
+
+// Removes things like %1 from browser's 'open' commmand.
+void CleanBrowserPath(std::string16 *path) {
+  assert(path);
+
+  // Find one of '-nohome', '"%1"', '%1' and chop it off.
+  std::string16::size_type pos = path->find(L"-nohome", 0);
+  if (pos == std::string16::npos) {
+    pos = path->find(L"\"%1\"", 0);
+  }
+  if (pos == std::string16::npos) {
+    pos = path->find(L"%1", 0);
+  }
+  if (pos != std::string16::npos) {
+    *path = path->substr(0, pos);
+  }
+}
+
+bool GetDefaultBrowserPath(std::string16 *path) {
+  assert(path);
+  path->erase();
+
+  // Get the default browser name.
+  std::string16 name;
+  GetDefaultBrowserName(&name);
+
+  // Read the path corresponding to it.
+  std::string16 browser_key(kRegKeyStartMenuInternet);
+  browser_key += L"\\";
+  browser_key += name;
+  browser_key += kRegKeyShellOpenCommand;
+  bool res = GetRegStringValue(HKEY_LOCAL_MACHINE,
+                               browser_key.c_str(),
+                               NULL,
+                               path);
+
+  // If failed and the default browser is not IE, try IE once again.
+  if (!res || path->empty()) {
+    browser_key = kRegKeyStartMenuInternet;
+    browser_key += L"\\";
+    browser_key += kIeExeName;
+    browser_key += kRegKeyShellOpenCommand;
+    if (GetRegStringValue(HKEY_LOCAL_MACHINE,
+                          browser_key.c_str(),
+                          NULL,
+                          path)) {
+      return false;
+    }
+  }
+
+  CleanBrowserPath(path);
+  return !path->empty();
+}
+
+bool DoExecute(const char16 *file, const char16 *cmd_line_options) {
+  assert(file && * file);
+
+  std::string16 cmd_line(file);
+  std::string16::size_type idx = cmd_line.find(L"%1");
+  if (idx != std::string16::npos) {
+    cmd_line.replace(idx, 2, cmd_line_options);
+  } else {
+    if (cmd_line[0] != L'"' && cmd_line[cmd_line.length() - 1] != L'"') {
+      cmd_line.insert(0, 1, L'"');
+      cmd_line.append(1, L'"');
+    }
+    if (cmd_line_options && *cmd_line_options) {
+      cmd_line.append(1, L' ');
+      cmd_line.append(cmd_line_options);
+    }
+  }
+
+  STARTUPINFO si = { sizeof(si) };
+  PROCESS_INFORMATION pi = {0};
+  if (!::CreateProcess(NULL,
+                       const_cast<LPWSTR>(cmd_line.c_str()),
+                       NULL,
+                       NULL,
+                       false,
+                       0,
+                       NULL,
+                       NULL,
+                       &si,
+                       &pi)) {
+    return false;
+  }
+
+  ::CloseHandle(pi.hProcess);
+  ::CloseHandle(pi.hThread);
+
+  return true;
+}
+
+bool System::OpenUrlInBrowser(const char16 *url) {
+  assert(url && *url);
+
+  // Try to open with default browser.
+  std::string16 browser_path;
+  bool found_browser_path = GetDefaultBrowserPath(&browser_path);
+  if (found_browser_path &&
+      !browser_path.empty() &&
+      DoExecute(browser_path.c_str(), url)) {
+    return true;
+  }
+
+  // Try to open with IE if can't open with default browser
+  if (GetRegStringValue(HKEY_CLASSES_ROOT,
+                        kRegKeyIeClass,
+                        kRegValueIeClass,
+                        &browser_path) &&
+      DoExecute(browser_path.c_str(), url)) {
+    return true;
+  }
+
+  // ShellExecute the url directly as a last resort
+  return DoExecute(url, L"");
 }
 
 #endif  // WIN32

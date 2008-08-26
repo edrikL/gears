@@ -37,6 +37,7 @@ static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
 static bool TestStringMatch();
 static bool TestUTFConversion();
+static bool TestStringToInteger();
 
 bool TestStringUtils(std::string16 *error) {
   bool ok = true;
@@ -45,6 +46,7 @@ bool TestStringUtils(std::string16 *error) {
   ok &= TestStrUtilsReplaceAll();
   ok &= TestStringMatch();
   ok &= TestUTFConversion();
+  ok &= TestStringToInteger();
   if (!ok) {
     assert(error); \
     *error += STRING16(L"TestStringUtils - failed. "); \
@@ -335,4 +337,64 @@ static bool TestUTFConversion() {
   return true;
 }
 
+static bool TestStringToInteger() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestStringToInteger - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+  int value = 0;
+
+  TEST_ASSERT(StringToInt("0", &value));
+  TEST_ASSERT(value == 0);
+  TEST_ASSERT(StringToInt("123", &value));
+  TEST_ASSERT(value == 123);
+  TEST_ASSERT(StringToInt("+123", &value));
+  TEST_ASSERT(value == 123);
+  TEST_ASSERT(StringToInt("-123", &value));
+  TEST_ASSERT(value == -123);
+  TEST_ASSERT(StringToInt("2147483647", &value));
+  TEST_ASSERT(value == 2147483647);
+  TEST_ASSERT(StringToInt("002147483647", &value));
+  TEST_ASSERT(value == 2147483647);
+  TEST_ASSERT(StringToInt("-2147483648", &value));
+  TEST_ASSERT(value == static_cast<int>(0x80000000)); // to avoid gcc warning
+
+  TEST_ASSERT(!StringToInt("a", &value));
+  TEST_ASSERT(!StringToInt("123a", &value));
+  TEST_ASSERT(!StringToInt("12.3", &value));
+  TEST_ASSERT(!StringToInt("12e3", &value));
+  TEST_ASSERT(!StringToInt("+-123", &value));
+  TEST_ASSERT(!StringToInt("2147483648", &value));
+  TEST_ASSERT(!StringToInt("-2147483649", &value));
+
+  TEST_ASSERT(String16ToInt(STRING16(L"0"), &value));
+  TEST_ASSERT(value == 0);
+  TEST_ASSERT(String16ToInt(STRING16(L"123"), &value));
+  TEST_ASSERT(value == 123);
+  TEST_ASSERT(String16ToInt(STRING16(L"+123"), &value));
+  TEST_ASSERT(value == 123);
+  TEST_ASSERT(String16ToInt(STRING16(L"-123"), &value));
+  TEST_ASSERT(value == -123);
+  TEST_ASSERT(String16ToInt(STRING16(L"2147483647"), &value));
+  TEST_ASSERT(value == 2147483647);
+  TEST_ASSERT(String16ToInt(STRING16(L"002147483647"), &value));
+  TEST_ASSERT(value == 2147483647);
+  TEST_ASSERT(String16ToInt(STRING16(L"-2147483648"), &value));
+  TEST_ASSERT(value == static_cast<int>(0x80000000)); // to avoid gcc warning
+
+  TEST_ASSERT(!String16ToInt(STRING16(L"a"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"123a"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"12.3"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"12e3"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"+-123"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"2147483648"), &value));
+  TEST_ASSERT(!String16ToInt(STRING16(L"-2147483649"), &value));
+
+  LOG(("TestStringToInteger - passed\n"));
+  return true;
+}
 #endif  // USING_CCTESTS

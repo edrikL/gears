@@ -35,6 +35,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/desktop/shortcut_utils_win32.h"
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {

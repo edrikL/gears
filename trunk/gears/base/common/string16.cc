@@ -29,28 +29,6 @@
 #include "gears/base/common/basictypes.h"
 
 
-template<class CharT>
-inline int ParseLeadingIntegerT(const CharT *str, const CharT **endptr) {
-  const CharT *end = str;
-  long number = 0;
-
-  while (*end >= '0' && *end <= '9') {
-    number = (number * 10) + (*end - '0');
-    ++end;
-  }
-
-  if (endptr) *endptr = end;  // endptr can be NULL
-  return number;
-}
-
-int ParseLeadingInteger(const char16 *str, const char16 **endptr) {
-  return ParseLeadingIntegerT(str, endptr);
-}
-
-int ParseLeadingInteger(const char *str, const char **endptr) {
-  return ParseLeadingIntegerT(str, endptr);  
-}
-
 #ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable: 4244) // C4244: "possible loss of data" on assignment

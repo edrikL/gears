@@ -199,4 +199,86 @@ bool String16ToUTF8(const char16 *in, int len, std::string *out8) {
   return result == conversionOK;
 }
 
+//------------------------------------------------------------------------------
+// String to Integer
+//------------------------------------------------------------------------------
+template<class CharT>
+inline int ParseLeadingIntegerT(const CharT *str, const CharT **endptr) {
+  const CharT *end = str;
+  long number = 0;
 
+  while (*end >= '0' && *end <= '9') {
+    number = (number * 10) + (*end - '0');
+    ++end;
+  }
+
+  if (endptr) *endptr = end;  // endptr can be NULL
+  return number;
+}
+
+int ParseLeadingInteger(const char16 *str, const char16 **endptr) {
+  return ParseLeadingIntegerT(str, endptr);
+}
+
+int ParseLeadingInteger(const char *str, const char **endptr) {
+  return ParseLeadingIntegerT(str, endptr);  
+}
+
+template<typename charT>
+bool StringTToInt(const charT *str, int *value) {
+  assert(str);
+  assert(value);
+
+  // Process sign.
+  int c = static_cast<int>(*str++);
+  int possible_sign = c;
+  if (c == '-' || c == '+') {
+    c = static_cast<int>(*str++);
+  }
+
+  // Process numbers.
+  int total = 0;
+  while (c) {
+    // Check for non-numeric character.
+    if (c < '0' || c > '9') {
+      return false;
+    }
+    c = c - '0';
+
+    // Check for overflow.
+    if (total < kint32min / 10 ||
+        (total == kint32min / 10 && c > ((-(kint32min + 10)) % 10))) {
+      return false;
+    }
+
+    // Accumulate digit.
+    // Note that we accumulate in the negative direction so that we will not
+    // blow away with the largest negative number.
+    total = 10 * total - c;
+
+    // Get next char.
+    c = static_cast<int>(*str++);
+  }
+
+  // Negate the number if needed.
+  if (possible_sign == '-') {
+    *value = total;
+  } else {
+    // Check for overflow.
+    if (total == kint32min) {
+      return false;
+    }
+
+    *value = -total;
+  }
+
+  return true;
+}
+
+bool StringToInt(const char *str, int *value) {
+  return StringTToInt(str, value);
+}
+
+bool String16ToInt(const char16 *str, int *value) {
+  return StringTToInt(str, value);
+}

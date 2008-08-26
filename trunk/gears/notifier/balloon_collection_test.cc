@@ -43,6 +43,10 @@ class BalloonCollectionObserverMock : public BalloonCollectionObserver {
     ++space_changed_;
   }
 
+  void OnSnoozeNotification(const GearsNotification &notification,
+                            int snooze_seconds) {
+  }
+
   // Other methods.
   int space_changed() {
     return space_changed_;
