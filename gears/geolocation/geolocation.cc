@@ -267,7 +267,13 @@ void GearsGeolocation::GetLastPosition(JsCallContext *context) {
 
   // Create the object for returning to JavaScript.
   scoped_ptr<JsObject> return_object(GetJsRunner()->NewObject());
-  assert(return_object.get());
+  // If this method executes during page unload, the call to GetDispID
+  // in JsRunnerBase::NewObjectWithArguments() can actually fail, so
+  // we end up with a NULL object.
+  if (!return_object.get()) {
+    return;
+  }
+
   if (!CreateJavaScriptPositionObject(last_position_,
                                       true,  // Use address if present.
                                       GetJsRunner(),
@@ -558,7 +564,6 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
       if (!MakeSuccessCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleRepeatingRequestUpdate() : JavaScript "
              "callback failed.\n"));
-        assert(false);
       }
     } else {
       // Start an asynchronous timer which will post a message back to this
@@ -595,13 +600,11 @@ void GearsGeolocation::HandleSingleRequestUpdate(LocationProviderBase *provider,
       if (!MakeSuccessCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
              "success callback failed.\n"));
-        assert(false);
       }
     } else {
       if (!MakeErrorCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript error "
              "callback failed.\n"));
-        assert(false);
       }
     }
     DeleteFixRequest(fix_info);
@@ -677,7 +680,12 @@ bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
   assert(position.IsGoodFix());
 
   scoped_ptr<JsObject> position_object(GetJsRunner()->NewObject());
-  assert(position_object.get());
+  // If this method executes during page unload, the call to GetDispID
+  // in JsRunnerBase::NewObjectWithArguments() can actually fail, so
+  // we end up with a NULL object.
+  if (!position_object.get()) {
+    return false;
+  }
 
   if (!CreateJavaScriptPositionObject(position,
                                       fix_info->request_address,
@@ -712,7 +720,12 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
   }
 
   scoped_ptr<JsObject> position_error_object(GetJsRunner()->NewObject());
-  assert(position_error_object.get());
+  // If this method executes during page unload, the call to GetDispID
+  // in JsRunnerBase::NewObjectWithArguments() can actually fail, so
+  // we end up with a NULL object.
+  if (!position_error_object.get()) {
+    return false;
+  }
 
   if (!CreateJavaScriptPositionErrorObject(position,
                                            position_error_object.get())) {
