@@ -150,12 +150,17 @@ class ObserverCollection {
 };
 
 
+static Mutex g_service_lock;
+static MessageService *g_service = NULL;
+
 // static
 MessageService *MessageService::GetInstance() {
-  static MessageService *g_service_ = new MessageService(
-                                              ThreadMessageQueue::GetInstance(),
-                                              IpcMessageQueue::GetPeerQueue());
-  return g_service_;
+  MutexLock locker(&g_service_lock);
+  if (!g_service) {
+    g_service = new MessageService(ThreadMessageQueue::GetInstance(),
+                                   IpcMessageQueue::GetPeerQueue());
+  }
+  return g_service;
 }
 
 
