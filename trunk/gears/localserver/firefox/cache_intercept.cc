@@ -51,6 +51,7 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
+#include "gears/base/common/user_config.h"
 #include "gears/factory/factory_utils.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/firefox/cache_intercept.h"
@@ -643,15 +644,17 @@ void CacheIntercept::Init() {
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
-  static ExceptionManager exception_manager(false);  // false == only our DLL
-  exception_manager.StartMonitoring();
-  // Trace buffers only exist in dbg official builds.
+  if (IsUsageReportingAllowed()) {
+    static ExceptionManager exception_manager(false);  // false == only our DLL
+    exception_manager.StartMonitoring();
+    // Trace buffers only exist in dbg official builds.
 #ifdef DEBUG
-  exception_manager.AddMemoryRange(g_trace_buffers,
-                                   sizeof(g_trace_buffers));
-  exception_manager.AddMemoryRange(g_trace_positions,
-                                   sizeof(g_trace_positions));
+    exception_manager.AddMemoryRange(g_trace_buffers,
+                                     sizeof(g_trace_buffers));
+    exception_manager.AddMemoryRange(g_trace_positions,
+                                     sizeof(g_trace_positions));
 #endif  // DEBUG
+  }
 #endif  // OFFICIAL_BUILD
 #endif  // WIN32 && !WINCE
 

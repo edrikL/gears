@@ -908,6 +908,7 @@ $(BROWSER)_CPPSRCS	+= \
 		timed_call_test.cc \
 		url_utils.cc \
 		url_utils_test.cc \
+		user_config.cc \
 		$(NULL)
 
 ifeq ($(OS),osx)
