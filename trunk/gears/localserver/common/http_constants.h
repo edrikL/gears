@@ -52,6 +52,7 @@ class HttpConstants {
   static const char16 *kCookieHeader;
   static const char16 *kCrLf;
   static const char   *kCrLfAscii;
+  static const char16 *kExpiresHeader;
   static const char16 *kHttpScheme;
   static const char   *kHttpSchemeAscii;
   static const int     kHttpDefaultPort = 80;

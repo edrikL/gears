@@ -37,6 +37,7 @@ const char16 *HttpConstants::kContentTypeHeader = STRING16(L"Content-Type");
 const char16 *HttpConstants::kCookieHeader = STRING16(L"Cookie");
 const char16 *HttpConstants::kCrLf = STRING16(L"\r\n");
 const char   *HttpConstants::kCrLfAscii = "\r\n";
+const char16 *HttpConstants::kExpiresHeader = STRING16(L"Expires");
 const char16 *HttpConstants::kFileScheme = STRING16(L"file");
 const char   *HttpConstants::kFileSchemeAscii =      "file";
 const char16 *HttpConstants::kHttpGET = STRING16(L"GET");
