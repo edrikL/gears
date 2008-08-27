@@ -96,8 +96,6 @@ int main(int argc, const char** argv) {
   LOG(("Gears Notifier started.\n"));
 
 #ifdef OFFICIAL_BUILD
-  // TODO(jianli): need to tell the breakpad to use the custom path to find
-  // crash_inspector and crash_sender when the support is checked in.
   static ExceptionManager exception_manager(true);
   exception_manager.StartMonitoring();
   LOG(("Breakpad started.\n"));

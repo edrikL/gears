@@ -66,11 +66,14 @@ void ExceptionManager::StartMonitoring() {
   [settings setObject:@"NO" forKey:@GOOGLE_BREAKPAD_SEND_AND_EXIT];
   
 #ifdef BROWSER_NONE
-  // TODO(jianli): Fill in path to Gears Resource directory here, without this
-  // breakpad won't work in Notifier.
+  // Supplementary applications, like Notifier, live in the resource path of the
+  // Gears plugin, which also contains the reporter & inspector executables.
+  NSString *gears_resource_dir =
+      [[[NSBundle mainBundle] bundlePath] stringByDeletingLastPathComponent];
 #else
   // Set paths for reporter & inspector executables.
   NSString *gears_resource_dir = [GearsPathUtilities gearsResourcesDirectory];
+#endif
   NSString *inspector_path = 
       [gears_resource_dir stringByAppendingPathComponent:@"crash_inspector"];
   NSString *reporter_path = 
@@ -80,7 +83,6 @@ void ExceptionManager::StartMonitoring() {
                forKey:@GOOGLE_BREAKPAD_INSPECTOR_LOCATION];
   [settings setObject:reporter_path
                forKey:@GOOGLE_BREAKPAD_REPORTER_EXE_LOCATION];
-#endif
   breakpad = GoogleBreakpadCreate(settings);
   if (!breakpad) {
     NSLog(@"Breakpad init failed.");
