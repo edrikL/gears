@@ -712,4 +712,23 @@ FuncDef *sqlite3VtabOverloadFunction(
   return pNew;
 }
 
+/*
+** Make sure virtual table pTab is contained in the pParse->apVirtualLock[]
+** array so that an OP_VBegin will get generated for it.  Add pTab to the
+** array if it is missing.  If pTab is already in the array, this routine
+** is a no-op.
+*/
+void sqlite3VtabMakeWritable(Parse *pParse, Table *pTab){
+  int i, n;
+  assert( IsVirtual(pTab) );
+  for(i=0; i<pParse->nVtabLock; i++){
+    if( pTab==pParse->apVtabLock[i] ) return;
+  }
+  n = (pParse->nVtabLock+1)*sizeof(pParse->apVtabLock[0]);
+  pParse->apVtabLock = sqlite3_realloc(pParse->apVtabLock, n);
+  if( pParse->apVtabLock ){
+    pParse->apVtabLock[pParse->nVtabLock++] = pTab;
+  }
+}
+
 #endif /* SQLITE_OMIT_VIRTUALTABLE */
