@@ -313,7 +313,7 @@ void sqlite3DeleteFrom(
       /* Delete the row */
 #ifndef SQLITE_OMIT_VIRTUALTABLE
       if( IsVirtual(pTab) ){
-        pParse->pVirtualLock = pTab;
+        sqlite3VtabMakeWritable(pParse, pTab);
         sqlite3VdbeOp3(v, OP_VUpdate, 0, 1, (const char*)pTab->pVtab, P3_VTAB);
       }else
 #endif

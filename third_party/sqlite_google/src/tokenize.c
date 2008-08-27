@@ -493,6 +493,9 @@ abort_parse:
     pParse->nTableLock = 0;
   }
 #endif
+#ifndef SQLITE_OMIT_VIRTUALTABLE
+  sqlite3_free(pParse->apVtabLock);
+#endif
 
   if( !IN_DECLARE_VTAB ){
     /* If the pParse->declareVtab flag is set, do not delete any table 

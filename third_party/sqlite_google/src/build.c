@@ -157,7 +157,7 @@ void sqlite3FinishCoding(Parse *pParse){
     */
     if( pParse->cookieGoto>0 ){
       u32 mask;
-      int iDb;
+      int iDb, i;
       sqlite3VdbeJumpHere(v, pParse->cookieGoto-1);
       for(iDb=0, mask=1; iDb<db->nDb; mask<<=1, iDb++){
         if( (mask & pParse->cookieMask)==0 ) continue;
@@ -165,10 +165,11 @@ void sqlite3FinishCoding(Parse *pParse){
         sqlite3VdbeAddOp(v, OP_VerifyCookie, iDb, pParse->cookieValue[iDb]);
       }
 #ifndef SQLITE_OMIT_VIRTUALTABLE
-      if( pParse->pVirtualLock ){
-        char *vtab = (char *)pParse->pVirtualLock->pVtab;
+      for(i=0; i<pParse->nVtabLock; i++){
+        char *vtab = (char *)pParse->apVtabLock[i]->pVtab;
         sqlite3VdbeOp3(v, OP_VBegin, 0, 0, vtab, P3_VTAB);
       }
+      pParse->nVtabLock = 0;
 #endif
 
       /* Once all the cookies have been verified and transactions opened, 

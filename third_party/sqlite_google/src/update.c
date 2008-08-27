@@ -613,7 +613,7 @@ static void updateVirtualTable(
   for(i=0; i<pTab->nCol; i++){
     sqlite3VdbeAddOp(v, OP_Column, ephemTab, i+1+(pRowid!=0));
   }
-  pParse->pVirtualLock = pTab;
+  sqlite3VtabMakeWritable(pParse, pTab);
   sqlite3VdbeOp3(v, OP_VUpdate, 0, pTab->nCol+2, 
                      (const char*)pTab->pVtab, P3_VTAB);
   sqlite3VdbeAddOp(v, OP_Next, ephemTab, addr);
