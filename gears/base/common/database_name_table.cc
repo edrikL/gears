@@ -25,14 +25,14 @@
 
 #include "gears/base/common/database_name_table.h"
 
+#include "gears/base/common/file.h"
+#include "gears/base/common/paths.h"
+
 DatabaseNameTable::DatabaseNameTable(SQLDatabase *db)
     : db_(db) {
 }
 
 bool DatabaseNameTable::MaybeCreateTableVersion7() {
-  // TODO(shess): IsDeleted is there to let us later distinguish
-  // corrupt from deleted.  Not interested in changing the API at this
-  // time, though.
   const char *sql = "CREATE TABLE IF NOT EXISTS DatabaseNames ("
                     " DatabaseID INTEGER PRIMARY KEY,"
                     " Origin TEXT NOT NULL,"
@@ -298,4 +298,44 @@ bool DatabaseNameTable::MarkDatabaseCorrupt(const char16 *origin,
   }
 
   return true;
+}
+
+void DatabaseNameTable::DeleteDatabasesForOrigin(const SecurityOrigin &origin) {
+  // First mark all the databases as deleted.  Then try to remove all
+  // files backing the deleted databases.
+  //
+  // If the first step fails, continue to the second step instead of
+  // returning early.  During the second step, don't return on errors
+  // either; simply continue to the next database.
+
+  // Step 1: Mark databases as deleted.
+  const char16 *update_sql = STRING16(
+      L"UPDATE DatabaseNames SET IsDeleted = 1 WHERE Origin = ?");
+  SQLStatement update_stmt;
+  if (SQLITE_OK == update_stmt.prepare16(db_, update_sql) &&
+      SQLITE_OK == update_stmt.bind_text16(0, origin.url().c_str()) &&
+      SQLITE_DONE == update_stmt.step()) {
+    // Hooray, it succeeded. Nothing more to do here.
+  }
+
+  // Step 2: Try to remove databases marked as deleted.
+  const char16 *select_sql = STRING16(
+      L"SELECT Basename FROM DatabaseNames"
+      L" WHERE IsDeleted = 1 AND Origin = ?");
+  SQLStatement select_stmt;
+  if (SQLITE_OK == select_stmt.prepare16(db_, select_sql) &&
+      SQLITE_OK == select_stmt.bind_text16(0, origin.url().c_str())) {
+
+    std::string16 origin_data_dir;
+    if (GetDataDirectory(origin, &origin_data_dir)) {
+      origin_data_dir += kPathSeparator;
+
+      while (SQLITE_ROW == select_stmt.step()) {
+        std::string16 basename = select_stmt.column_text16_safe(0);
+        std::string16 full_path = origin_data_dir + basename;
+        File::Delete(full_path.c_str());  // ignore return value
+      }
+    }
+  }
+  
 }
