@@ -52,6 +52,7 @@ typedef std::map<ThreadId, PRThread *> ThreadMap;
 // A concrete implementation that uses Firefox's nsIEventQueue
 class FFThreadMessageQueue : public ThreadMessageQueue {
  public:
+  FFThreadMessageQueue() : next_id_(0) {}
   virtual bool InitThreadMessageQueue();
   virtual ThreadId GetCurrentThreadId();
   virtual bool Send(ThreadId thread_handle,
@@ -101,19 +102,19 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
   static void ThreadEndHook(void* value);
   void InitThreadEndHook(ThreadId thread_id);
 
-  static ThreadMap threads_;
-  static Mutex threads_mutex_;
-  static ThreadId next_id_;
+  ThreadMap threads_;
+  Mutex threads_mutex_;
+  ThreadId next_id_;
 };
 
-static FFThreadMessageQueue g_instance;
-ThreadMap FFThreadMessageQueue::threads_;
-Mutex FFThreadMessageQueue::threads_mutex_;
-ThreadId FFThreadMessageQueue::next_id_ = 0;
+// Create an instance on the heap, note that we can't use a static
+// global, because during application shutdown that may be destructed while 
+// threads are still running and referencing it.
+static FFThreadMessageQueue *g_instance = new FFThreadMessageQueue();
 
 // static
 ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
-  return &g_instance;
+  return g_instance;
 }
 
 // static
@@ -136,8 +137,8 @@ void FFThreadMessageQueue::ThreadEndHook(void* value) {
       }
     }
 #endif
-    MutexLock lock(&threads_mutex_);
-    threads_.erase(data->id);
+    MutexLock lock(&g_instance->threads_mutex_);
+    g_instance->threads_.erase(data->id);
     delete data;
   }
 }
@@ -199,7 +200,7 @@ ThreadId FFThreadMessageQueue::GetCurrentThreadId() {
 // static
 void *FFThreadMessageQueue::OnReceiveMessageEvent(MessageEvent *event) {
   RegisteredHandler handler;
-  if (g_instance.GetRegisteredHandler(event->message_type, &handler)) {
+  if (g_instance->GetRegisteredHandler(event->message_type, &handler)) {
     handler.Invoke(event->message_type, event->message_data.get());
   }
   return NULL;
