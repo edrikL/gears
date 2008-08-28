@@ -97,7 +97,7 @@ Client initiates upload:
 {{{
 POST /upload HTTP/1.1
 Host: example.com
-If-Match: vEpr6barcD
+If-Match: "vEpr6barcD"
 Content-Length: 100
 Content-Range: 0-99/100
 
@@ -111,7 +111,7 @@ Client polls the server to determine which bytes it has received:
 {{{
 POST /upload HTTP/1.1
 Host: example.com
-If-Match: vEpr6barcD
+If-Match: "vEpr6barcD"
 Content-Length: 0
 Content-Range: bytes */100
 }}}
@@ -130,7 +130,7 @@ Client resumes where the server left off:
 {{{
 POST /upload HTTP/1.1
 Host: example.com
-If-Match: vEpr6barcD
+If-Match: "vEpr6barcD"
 Content-Length: 57
 Content-Range: 43-99/100
 
