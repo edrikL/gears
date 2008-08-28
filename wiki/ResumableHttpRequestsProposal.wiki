@@ -3,7 +3,7 @@
 
 = Introduction =
 
-Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose an HTTP/1.0 protocol which provides native support for resuming HTTP requests which aren't currently resumable, such as POST and PUT. While our protocol adheres to HTTP/1.1, it avoids constructs which can not be dealt with properly by HTTP/1.0 proxies. For cases where HTTP/1.0 proxies are not a constraint, we have a separate, but very similar, proposal: ResumableHttp11RequestsProposal.
+Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose an HTTP/1.0 protocol which provides native support for resuming HTTP requests which aren't currently resumable, such as POST and PUT. While our protocol adheres to HTTP/1.1, it avoids constructs which can not be dealt with properly by HTTP/1.0 proxies. For cases where HTTP/1.0 proxies are not a constraint, an optional checkpoint can be sent as an optimization.
 
 If an HTTP connection is closed prior to the client receiving a response from the server, the client has no way of knowing how much of the content was successfully received by the server, or whether the operation completed. When this occurs, idempotent operations can be automatically retried, but in the case of non-idempotent operations HTTP/1.1 section 8.1.4 explicitly forbids the client from retrying the operation without user interaction. In order to reattempt the operation without concern for introducing unintended side effects, the server and client require a mechanism for uniquely identifying the operation across multiple requests. We thus require that each upload operation be assigned a unique, per-upload URL, whose generation is outside the scope of the resumable upload protocol itself.
 
@@ -243,7 +243,6 @@ http://www.w3.org/TR/XMLHttpRequest/
 
 == Related Google Gears APIs ==
 
-  * ResumableHttp11RequestsProposal
   * ContentRangePostProposal
   * GearsHttpRequestProposal
   * [BlobAPI]
