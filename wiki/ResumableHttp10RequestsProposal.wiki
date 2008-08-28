@@ -69,6 +69,10 @@ Query requests could be used by clients to probe servers for resumability suppor
 
 The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could issue a query request to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. While this should be the standard mode of operation, alternatively a client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate Content-Range header.
 
+= Optional Status Code: 103 Checkpoint =
+
+When interacting with HTTP/1.1 clients (through HTTP/1.1 proxies), servers can optimistically push checkpoints to clients, allowing them to resume failed operations without having to first poll the server to determine which bytes it had. This is accomplished with a new status code: 103 (Checkpoint), which is exactly the same as the 308 (Resume Incomplete) status code except that it is sent as a provisional response rather than a final response. In other words, zero or more 103 (Checkpoint) responses can be sent in response to a request that is still being processed, after which a final response code (e.g. 200 or 308) must be sent.
+
 = ETag Example =
 
 Client sends initial handshake:
