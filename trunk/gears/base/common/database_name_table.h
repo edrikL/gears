@@ -26,16 +26,17 @@
 #ifndef GEARS_BASE_COMMON_DATABASE_NAME_TABLE_H__
 #define GEARS_BASE_COMMON_DATABASE_NAME_TABLE_H__
 
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 
-// Map database names to basenames in the filesystem.
+// Maps database names to basenames in the filesystem.
 class DatabaseNameTable {
  public:
   DatabaseNameTable(SQLDatabase *db);
 
   bool MaybeCreateTableVersion7();
 
-  // Upgrade to version 7 schema (this table did not previously
+  // Upgrades to version 7 schema (this table did not previously
   // exist).
   bool UpgradeToVersion7();
 
@@ -45,23 +46,22 @@ class DatabaseNameTable {
     return MaybeCreateTableVersion7();
   }
 
-  // For a given database_name, fill basename with the name of the
+  // For a given database_name, fills basename with the name of the
   // file to use in origin's directory, and returns true if
   // successful.
   bool GetDatabaseBasename(const char16 *origin, const char16 *database_name,
                            std::string16 *basename);
 
-  // Mark the given database basename corrupt so that future calls to
+  // Marks the given database basename corrupt so that future calls to
   // GetDatabaseBasename will no longer return it.  The basename is
   // required because another thread of control could have already
   // invalidated the database for the origin.
   bool MarkDatabaseCorrupt(const char16 *origin, const char16 *database_name,
                            const char16 *basename);
 
-  // TODO(shess): This class should be easily able to support a
-  // DeleteDatabase(origin, database_name) function.  Not adding
-  // immediately because we don't want to change the API for this
-  // release.
+  // Deletes all databases associated with the given origin.  Always
+  // attempts to delete as much as possible, so no value is returned.
+  void DeleteDatabasesForOrigin(const SecurityOrigin &origin);
 
  private:
   // A pointer to the SQLDatabase our table lives in.

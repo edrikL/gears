@@ -182,6 +182,10 @@ void PermissionsDB::SetPermission(const SecurityOrigin &origin,
 
   if ((type == PERMISSION_LOCAL_DATA) &&
       (value == PERMISSION_DENIED || value == PERMISSION_NOT_SET)) {
+    // Remove Database content.
+    database_name_table_.DeleteDatabasesForOrigin(origin);
+
+    // Remove LocalServer content.
     WebCacheDB *webcacheDB = WebCacheDB::GetDB();
     if (webcacheDB) {
       webcacheDB->DeleteServersForOrigin(origin);
