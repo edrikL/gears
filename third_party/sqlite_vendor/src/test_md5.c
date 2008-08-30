@@ -11,6 +11,8 @@
 ** them.  Compute a second MD5-checksum of the file and verify that the
 ** two checksums are the same.  Such is the original use of this code.
 ** New uses may have been added since this comment was written.
+**
+** $Id: test_md5.c,v 1.8 2008/05/16 04:51:55 danielk1977 Exp $
 */
 /*
  * This code implements the MD5 message-digest algorithm.
@@ -168,7 +170,7 @@ static void MD5Transform(uint32 buf[4], const uint32 in[16]){
  * initialization constants.
  */
 static void MD5Init(MD5Context *ctx){
-	ctx->isInit = 1;
+        ctx->isInit = 1;
         ctx->buf[0] = 0x67452301;
         ctx->buf[1] = 0xefcdab89;
         ctx->buf[2] = 0x98badcfe;
@@ -269,7 +271,7 @@ static void MD5Final(unsigned char digest[16], MD5Context *pCtx){
         MD5Transform(ctx->buf, (uint32 *)ctx->in);
         byteReverse((unsigned char *)ctx->buf, 4);
         memcpy(digest, ctx->buf, 16);
-        memset(ctx, 0, sizeof(ctx));    /* In case it's sensitive */
+        memset(ctx, 0, sizeof(ctx));    /* In case it is sensitive */
 }
 
 /*
@@ -382,7 +384,9 @@ static void md5finalize(sqlite3_context *context){
   DigestToBase16(digest, zBuf);
   sqlite3_result_text(context, zBuf, -1, SQLITE_TRANSIENT);
 }
-void Md5_Register(sqlite3 *db){
-  sqlite3_create_function(db, "md5sum", -1, SQLITE_UTF8, 0, 0, 
-      md5step, md5finalize);
+int Md5_Register(sqlite3 *db){
+  int rc = sqlite3_create_function(db, "md5sum", -1, SQLITE_UTF8, 0, 0, 
+                                 md5step, md5finalize);
+  sqlite3_overload_function(db, "md5sum", -1);  /* To exercise this API */
+  return rc;
 }

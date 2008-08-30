@@ -12,12 +12,12 @@
 # The focus of the tests in this file are to verify that the
 # pager optimizations implemented in version 3.3.14 work.
 #
-# $Id: pageropt.test,v 1.2 2007/04/13 03:23:21 drh Exp $
+# $Id: pageropt.test,v 1.4 2008/04/14 01:00:58 drh Exp $
 
 set testdir [file dirname $argv0]
 source $testdir/tester.tcl
 
-ifcapable {!pager_pragmas} {
+ifcapable {!pager_pragmas||secure_delete} {
   finish_test
   return
 }
@@ -51,6 +51,7 @@ proc pagercount_sql {sql {db db}} {
 # Setup the test database
 #
 do_test pageropt-1.1 {
+  sqlite3_soft_heap_limit 0
   execsql {
     PRAGMA auto_vacuum = OFF;
     PRAGMA page_size = 1024;
@@ -187,7 +188,7 @@ do_test pageropt-4.1 {
 # reads total.  But only page1, the t1 root, and the trunk of the
 # freelist need to be journalled and written back.
 #
-do_test pageroot-4.2 {
+do_test pageropt-4.2 {
   db close
   sqlite3 db test.db
   pagercount_sql {
@@ -195,6 +196,6 @@ do_test pageroot-4.2 {
   }
 } {12 3 3 0}
 
-
+sqlite3_soft_heap_limit $soft_limit
 catch {db2 close}
 finish_test

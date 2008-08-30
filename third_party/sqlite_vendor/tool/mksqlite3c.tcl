@@ -69,7 +69,17 @@ puts $out [subst \
 **
 ** This amalgamation was generated on $today.
 */
+#define SQLITE_CORE 1
 #define SQLITE_AMALGAMATION 1}]
+if {$addstatic} {
+  puts $out \
+{#ifndef SQLITE_PRIVATE
+# define SQLITE_PRIVATE static
+#endif
+#ifndef SQLITE_API
+# define SQLITE_API
+#endif}
+}
 
 # These are the header files used by SQLite.  The first time any of these 
 # files are seen in a #include statement in the C code, include the complete
@@ -78,24 +88,30 @@ puts $out [subst \
 foreach hdr {
    btree.h
    btreeInt.h
+   fts3.h
+   fts3_hash.h
+   fts3_tokenizer.h
    hash.h
+   hwtime.h
    keywordhash.h
-   limits.h
+   mutex.h
    opcodes.h
    os_common.h
    os.h
    os_os2.h
    pager.h
    parse.h
+   rtree.h
    sqlite3ext.h
    sqlite3.h
    sqliteInt.h
+   sqliteLimit.h
    vdbe.h
    vdbeInt.h
 } {
   set available_hdr($hdr) 1
 }
-set available_hdr(sqlite3.h) 0
+set available_hdr(sqliteInt.h) 0
 
 # 78 stars used for comment formatting.
 set s78 \
@@ -120,17 +136,18 @@ proc copy_file {filename} {
   set tail [file tail $filename]
   section_comment "Begin file $tail"
   set in [open $filename r]
+  set varpattern {^[a-zA-Z][a-zA-Z_0-9 *]+(sqlite3[_a-zA-Z0-9]+)(\[|;| =)}
+  set declpattern {[a-zA-Z][a-zA-Z_0-9 ]+ \*?(sqlite3[_a-zA-Z0-9]+)\(}
   if {[file extension $filename]==".h"} {
-    set declpattern {^ *[a-zA-Z][a-zA-Z_0-9 ]+ \*?sqlite3[A-Z][a-zA-Z0-9]+\(}
-  } else {
-    set declpattern {^[a-zA-Z][a-zA-Z_0-9 ]+ \*?sqlite3[A-Z][a-zA-Z0-9]+\(}
+    set declpattern " *$declpattern"
   }
+  set declpattern ^$declpattern
   while {![eof $in]} {
     set line [gets $in]
     if {[regexp {^#\s*include\s+["<]([^">]+)[">]} $line all hdr]} {
       if {[info exists available_hdr($hdr)]} {
         if {$available_hdr($hdr)} {
-          if {$hdr!="os_common.h"} {
+          if {$hdr!="os_common.h" && $hdr!="hwtime.h"} {
             set available_hdr($hdr) 0
           }
           section_comment "Include $hdr in the middle of $tail"
@@ -145,10 +162,31 @@ proc copy_file {filename} {
       puts $out "#if 0"
     } elseif {[regexp {^#line} $line]} {
       # Skip #line directives.
-    } elseif {$addstatic && [regexp $declpattern $line] 
-                  && ![regexp {^static} $line]} {
-      # Add the "static" keyword before internal functions.
-      puts $out "static $line"
+    } elseif {$addstatic && ![regexp {^(static|typedef)} $line]} {
+      if {[regexp $declpattern $line all funcname]} {
+        # Add the SQLITE_PRIVATE or SQLITE_API keyword before functions.
+        # so that linkage can be modified at compile-time.
+        if {[regexp {^sqlite3_} $funcname]} {
+          puts $out "SQLITE_API $line"
+        } else {
+          puts $out "SQLITE_PRIVATE $line"
+        }
+      } elseif {[regexp $varpattern $line all varname]} {
+        # Add the SQLITE_PRIVATE before variable declarations or
+        # definitions for internal use
+        if {![regexp {^sqlite3_} $varname]} {
+          regsub {^extern } $line {} line
+          puts $out "SQLITE_PRIVATE $line"
+        } else {
+          regsub {^SQLITE_EXTERN } $line {} line
+          puts $out "SQLITE_API $line"
+        }
+      } elseif {[regexp {^(SQLITE_EXTERN )?void \(\*sqlite3IoTrace\)} $line]} {
+        regsub {^SQLITE_EXTERN } $line {} line
+        puts $out "SQLITE_PRIVATE $line"
+      } else {
+        puts $out $line
+      }
     } else {
       puts $out $line
     }
@@ -163,11 +201,23 @@ proc copy_file {filename} {
 # inlining opportunities.
 #
 foreach file {
-   sqlite3.h
+   sqliteInt.h
 
+   global.c
+   status.c
    date.c
    os.c
 
+   fault.c
+   mem1.c
+   mem2.c
+   mem3.c
+   mem5.c
+   mem6.c
+   mutex.c
+   mutex_os2.c
+   mutex_unix.c
+   mutex_w32.c
    malloc.c
    printf.c
    random.c
@@ -180,8 +230,10 @@ foreach file {
    os_unix.c
    os_win.c
 
+   bitvec.c
    pager.c
-   
+
+   btmutex.c
    btree.c
 
    vdbefifo.c
@@ -190,6 +242,7 @@ foreach file {
    vdbeapi.c
    vdbe.c
    vdbeblob.c
+   journal.c
 
    expr.c
    alter.c
@@ -198,7 +251,6 @@ foreach file {
    auth.c
    build.c
    callback.c
-   complete.c
    delete.c
    func.c
    insert.c
@@ -217,8 +269,18 @@ foreach file {
    parse.c
 
    tokenize.c
+   complete.c
 
    main.c
+
+   fts3.c
+   fts3_hash.c
+   fts3_porter.c
+   fts3_tokenizer.c
+   fts3_tokenizer1.c
+
+   rtree.c
+   icu.c
 } {
   copy_file tsrc/$file
 }
