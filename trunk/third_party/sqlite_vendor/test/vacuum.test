@@ -11,7 +11,7 @@
 # This file implements regression tests for SQLite library.  The
 # focus of this file is testing the VACUUM statement.
 #
-# $Id: vacuum.test,v 1.38 2006/10/04 11:55:50 drh Exp $
+# $Id: vacuum.test,v 1.41 2008/04/15 02:36:34 drh Exp $
 
 set testdir [file dirname $argv0]
 source $testdir/tester.tcl
@@ -20,36 +20,17 @@ source $testdir/tester.tcl
 # the tests in this file.
 #
 ifcapable {!vacuum} {
+  omit_test vacuum.test {Compiled with SQLITE_OMIT_VACUUM}
   finish_test
   return
 }
 if $AUTOVACUUM {
+  omit_test vacuum.test {Auto-vacuum is enabled}
   finish_test
   return
 }
 
 set fcnt 1
-proc cksum {{db db}} {
-  set sql "SELECT name, type, sql FROM sqlite_master ORDER BY name, type"
-  set txt [$db eval $sql]\n
-  set sql "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-  foreach tbl [$db eval $sql] {
-    append txt [$db eval "SELECT * FROM $tbl"]\n
-  }
-  foreach prag {default_cache_size} {
-    append txt $prag-[$db eval "PRAGMA $prag"]\n
-  }
-  if 0 {
-    global fcnt
-    set fd [open dump$fcnt.txt w]
-    puts -nonewline $fd $txt
-    close $fd
-    incr fcnt
-  }
-  set cksum [string length $txt]-[md5 $txt]
-  # puts $cksum-[file size test.db]
-  return $cksum
-}
 do_test vacuum-1.1 {
   execsql {
     BEGIN;
