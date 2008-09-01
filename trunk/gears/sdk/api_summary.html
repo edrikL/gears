@@ -43,7 +43,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- Gears API Summary Reference                             -->
 <!------------------------------------------------------------->
 
-<p>This is the complete Gears API. Click the class names to see
+<p>This is the complete list of Gears APIs. Click the class names to see
   the details.</p>
 
 
@@ -57,14 +57,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute string  <b>version</b></code></pre>
 
 
-<h3>Blob module</h3>
+<h3>Blob</h3>
 <p>Provides a way to reference binary data.</p>
 <pre><code><a href="api_blob.html">Blob class</a>
    readonly attribute int <b>length</b>
    Blob    <b>slice</b>(offset, length)</code></pre>
 
 
-<h3>Database module</h3>
+<h3>Database</h3>
 <p>Provides a SQL database for storing data on the local machine.</p>
 <pre><code><a href="api_database.html">Database class</a>
    readonly attribute int <b>lastInsertRowId</b>
@@ -83,14 +83,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    void    <b>close</b>()</code></pre>
 
 
-<h3>Desktop module</h3>
+<h3>Desktop</h3>
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
    void    <b>createShortcut</b>(name, url, icons, [description])
    void    <b>openFiles</b>(callback, [options])</code></pre>
 
 
-<h3>Geolocation module</h3>
+<h3>Geolocation</h3>
 <p>Provides a way to obtain a user's geographical position.</p>
 <pre><code><a href="api_geolocation.html#geolocation">Geolocation class</a> 
    readonly attribute Position <b>lastPosition</b>
@@ -130,7 +130,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute string <b>postalCode</b></code></pre>
   
 
-<h3>HttpRequest module</h3>
+<h3>HttpRequest</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>
 <pre><code><a href="api_httprequest.html">HttpRequest class</a>
    void     <b>open</b>(method, url)
@@ -146,7 +146,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute string <b>statusText</b></code></pre>
 
 
-<h3>LocalServer module</h3>
+<h3>LocalServer</h3>
 <p>Caches and serves your application's resources locally, making it possible to start a web application without a network connection. </p>
 <pre><code><a href="api_localserver.html" class="section">LocalServer class</a>
    boolean              <b>canServeLocally</b>(url)
@@ -190,7 +190,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <pre><code><a href="api_localserver.html#FileSubmitter">FileSubmitter class</a>
    void      <b>setFileInputElement</b>(htmlElement, url)</code></pre>
 
-<h3>Timer module</h3>
+<h3>Timer</h3>
 <p>Provides a timer that can be used in workers, as well as on the main page.</p>
 <pre><code><a href="api_timer.html">Timer class</a>
    int      <b>setTimeout</b>(function, delay)
@@ -200,7 +200,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    void     <b>clearTimeout</b>(timeoutId)
    void     <b>clearInterval</b>(intervalId)</code></pre>
 
-<h3>WorkerPool module</h3>
+<h3>WorkerPool</h3>
 <p>Provides the ability to run JavaScript code asynchronously.</p>
 
 <pre><code><a href="api_workerpool.html">WorkerPool class</a>
