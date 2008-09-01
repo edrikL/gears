@@ -105,3 +105,13 @@ function testExceptionScript() {
                    100);
 }
 
+// Test that accessing a Gears timer during window.unload does not crash.
+// Obviously, a window.unload test is only relevant for if we're not in a
+// worker thread, so first we check that we're not in a worker.
+if (typeof document != 'undefined') {
+  var windowUnloadTimer = google.gears.factory.create('beta.timer');
+  var windowUnloadInterval = windowUnloadTimer.setInterval('var i = 1;', 1000);
+  window.onunload = function() {
+    windowUnloadTimer.clearInterval(windowUnloadInterval);
+  }
+}
