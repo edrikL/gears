@@ -145,6 +145,8 @@ function getArguments() {
     argsString = window.gears_dialogArguments;
   } else if (browser.android) {
     argsString = "" + window.bridge.getDialogArguments();
+  } else if (browser.chrome) {
+    argsString = chrome.dialogArguments;
   }
 
   if (typeof argsString == "string") {
@@ -182,7 +184,14 @@ function saveAndClose(resultObject) {
     window.gears_dialog.setResults(resultString);
   } else if (browser.android) {
     window.bridge.closeDialog(resultString);
+  } else if (browser.chrome) {
+    saveChromeResults(resultString);
+    window.close();
   }
+}
+
+function saveChromeResults(resultString) {
+  chrome.send("DialogClose", [resultString]);
 }
 
 /**
