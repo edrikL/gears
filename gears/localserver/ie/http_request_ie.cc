@@ -39,7 +39,6 @@
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/localserver/ie/http_handler_ie.h"
-#include "gears/localserver/ie/progress_input_stream.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // We use URLMON's pull-data model which requires making stream read calls
@@ -91,6 +90,10 @@ HRESULT IEHttpRequest::FinalConstruct() {
 }
 
 void IEHttpRequest::FinalRelease() {
+  if (post_data_stream_) {
+    post_data_stream_->DetachRequest();
+    post_data_stream_.Release();
+  }
 }
 
 void IEHttpRequest::Ref() {
@@ -556,8 +559,8 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
 
     info->stgmedData.tymed = TYMED_ISTREAM;
     info->stgmedData.pstm = static_cast<IStream*>(stream);
-    // stream has a 0 reference count at this point.  The caller of GetBindInfo
-    // will immediately do an AddRef on stream.
+
+    post_data_stream_ = stream;
   }
 
   if (cookie_behavior_ == DO_NOT_SEND_BROWSER_COOKIES) {
