@@ -252,6 +252,8 @@ SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 SF_INSTALLER_PKG       = $(INSTALLERS_OUTDIR)/Safari/Gears.pkg
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
+NPAPI_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)-chrome.msi
+
 WIN32_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 
 WINCE_INSTALLER_CAB    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
@@ -305,6 +307,10 @@ else
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
+
+	$(MAKE) prereqs    BROWSER=NPAPI
+	$(MAKE) genheaders BROWSER=NPAPI
+	$(MAKE) modules    BROWSER=NPAPI
 
 	$(MAKE) installers
 
@@ -457,7 +463,7 @@ modules:: $(OSX_LAUNCHURL_EXE)
 installers:: $(SF_INSTALLER_PKG) $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),win32)
-installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
+installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI) $(NPAPI_INSTALLER_MSI)
 else
 ifeq ($(OS),wince)
 installers:: $(WINCE_INSTALLER_CAB)
@@ -1158,6 +1164,12 @@ $(WIN32_INSTALLER_MSI): $(WIN32_INSTALLER_WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_IN
 $(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
 	cabwiz.exe $(INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $@
+
+NPAPI_INSTALLER_WIXOBJ = $(COMMON_OUTDIR)/npapi_msi.wxiobj
+# We must disable certain WiX integrity check errors ("ICE") to successfully
+# create a per-user installer.
+$(NPAPI_INSTALLER_MSI): $(NPAPI_INSTALLER_WIXOBJ) $(NPAPI_MODULE_DLL)
+	light.exe -out $@ $(NPAPI_INSTALLER_WIXOBJ) -sice:ICE39 -sice:ICE64 -sice:ICE91
 
 # We generate dependency information for each source file as it is compiled.
 # Here, we include the generated dependency information, which silently fails
