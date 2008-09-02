@@ -44,7 +44,11 @@
 #include "gears/geolocation/timed_callback.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 
-static const int kBadLatLng = 200;
+static const double kBadLatLng = 200;
+// Lowest point on land is at approximately -400 metres.
+static const int kBadAltitude = -1000;
+static const int kBadAccuracy = -1;  // Accuracy must be non-negative.
+
 
 // Error codes for returning to JavaScript.
 const int kGeolocationLocationAcquisitionErrorCode = 2;
@@ -63,24 +67,23 @@ struct Address {
   std::string16 postal_code;   // postal code
 };
 
-// The internal representation of a position. We use kint32min to represent
-// unknown values for integer fields. Some properties use different types when
-// passed to JavaScript.
+// The internal representation of a position. Some properties use different
+// types when passed to JavaScript.
 struct Position {
  public:
   Position()
       : latitude(kBadLatLng),
         longitude(kBadLatLng),
-        altitude(kint32min),
-        accuracy(kint32min),
-        altitude_accuracy(kint32min),
+        altitude(kBadAltitude),
+        accuracy(kBadAccuracy),
+        altitude_accuracy(kBadAccuracy),
         timestamp(-1),
         error_code(kint32min) {}
   bool IsGoodFix() const {
     // A good fix has a valid latitude, longitude, accuracy and timestamp.
     return latitude >= -90.0 && latitude <= 90.0 &&
            longitude >= -180.0 && longitude <= 180.0 &&
-           accuracy != kint32min &&
+           accuracy >= 0.0 &&
            timestamp != -1;
   }
   bool IsInitialized() const {
@@ -90,9 +93,9 @@ struct Position {
   // These properties are returned to JavaScript as a Position object.
   double latitude;          // In degrees
   double longitude;         // In degrees
-  int altitude;             // In metres
-  int accuracy;             // In metres
-  int altitude_accuracy;    // In metres
+  double altitude;          // In metres
+  double accuracy;          // In metres
+  double altitude_accuracy; // In metres
   int64 timestamp;          // Milliseconds since 1st Jan 1970
   // Note that the corresponding JavaScript Position property is 'gearsAddress'.
   Address address;

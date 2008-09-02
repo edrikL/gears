@@ -369,15 +369,15 @@ static bool AddAngle(const std::string &property_name,
 // The JsValue::asXXX() methods return zero if a property isn't specified. For
 // our purposes, zero is a valid value, so we have to test for existence.
 
-// Gets an integer if it's present.
-static bool GetAsInt(const Json::Value &object,
-                     const std::string &property_name,
-                     int *out) {
+// Gets a double if it's present.
+static bool GetAsDouble(const Json::Value &object,
+                        const std::string &property_name,
+                        double *out) {
   assert(out);
-  if (!object[property_name].isInt()) {
+  if (!object[property_name].isDouble()) {
     return false;
   }
-  *out = object[property_name].asInt();
+  *out = object[property_name].asDouble();
   return true;
 }
 
@@ -427,16 +427,16 @@ static bool ParseServerResponse(const std::string &response_body,
   // latitude, longitude and accuracy fields are required.
   if (!location[kLatitudeString].isDouble() ||
       !location[kLongitudeString].isDouble() ||
-      !location[kAccuracyString].isInt()) {
+      !location[kAccuracyString].isDouble()) {
     return false;
   }
   position->latitude = location[kLatitudeString].asDouble();
   position->longitude = location[kLongitudeString].asDouble();
-  position->accuracy = location[kAccuracyString].asInt();
+  position->accuracy = location[kAccuracyString].asDouble();
 
   // Other fields are optional.
-  GetAsInt(location, kAltitudeString, &position->altitude);
-  GetAsInt(location, kAltitudeAccuracyString, &position->altitude_accuracy);
+  GetAsDouble(location, kAltitudeString, &position->altitude);
+  GetAsDouble(location, kAltitudeAccuracyString, &position->altitude_accuracy);
   Json::Value address = location[kAddressString];
   if (address.isObject()) {
     GetAsString(address, kStreetNumberString, &position->address.street_number);

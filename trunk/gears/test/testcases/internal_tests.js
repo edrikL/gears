@@ -423,9 +423,9 @@ function testGeolocationGetLocationFromResponse() {
                        '"location" : { ' +
                        '"latitude" : 53.1, ' +
                        '"longitude" : -0.1, ' +
-                       '"altitude" : 30, ' +
-                       '"horizontal_accuracy" : 1200, ' +
-                       '"vertical_accuracy" : 10, ' +
+                       '"altitude" : 30.1, ' +
+                       '"horizontal_accuracy" : 1200.1, ' +
+                       '"vertical_accuracy" : 10.1, ' +
                        '"address" : { ' +
                        '"street_number": "100", ' +
                        '"street": "Amphibian Walkway", ' +
@@ -447,9 +447,9 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition = new Object();
     correctPosition.latitude = 53.1;
     correctPosition.longitude = -0.1;
-    correctPosition.altitude = 30;
-    correctPosition.accuracy = 1200;
-    correctPosition.altitudeAccuracy = 10;
+    correctPosition.altitude = 30.1;
+    correctPosition.accuracy = 1200.1;
+    correctPosition.altitudeAccuracy = 10.1;
     correctPosition.gearsAddress = new Object();
     correctPosition.gearsAddress.streetNumber = '100';
     correctPosition.gearsAddress.street = 'Amphibian Walkway';
@@ -576,7 +576,7 @@ function testGeolocationGetCurrentPosition() {
     var mockPosition = {
       latitude: 51.0,
       longitude: -0.1,
-      accuracy: 100
+      accuracy: 100.1
     };
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     var locationAvailable2 = function(position) {

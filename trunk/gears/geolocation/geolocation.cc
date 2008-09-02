@@ -160,11 +160,6 @@ static bool GetPropertyIfSpecified(JsCallContext *context,
                                    const std::string16 &name,
                                    JsScopedToken *token);
 
-// Sets an object integer property if the input value is valid.
-static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
-                                        int value,
-                                        JsObject *object);
-
 // Sets an object string property if the input value is valid.
 static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
                                            const std::string16 &value,
@@ -918,8 +913,8 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
                                                position.latitude);
   result &= position_object->SetPropertyDouble(STRING16(L"longitude"),
                                                position.longitude);
-  result &= position_object->SetPropertyInt(STRING16(L"accuracy"),
-                                            position.accuracy);
+  result &= position_object->SetPropertyDouble(STRING16(L"accuracy"),
+                                               position.accuracy);
   scoped_ptr<JsObject> date_object(js_runner->NewDate(position.timestamp));
   result &= NULL != date_object.get();
   if (date_object.get()) {
@@ -928,12 +923,14 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
   }
 
   // Other properties may not be valid.
-  result &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
-                                        position.altitude,
-                                        position_object);
-  result &= SetObjectPropertyIfValidInt(STRING16(L"altitudeAccuracy"),
-                                        position.altitude_accuracy,
-                                        position_object);
+  if (position.altitude > kBadAltitude) {
+    result &= position_object->SetPropertyDouble(STRING16(L"altitude"),
+                                                 position.altitude);
+  }
+  if (position.altitude_accuracy >= 0.0) {
+    result &= position_object->SetPropertyDouble(STRING16(L"altitudeAccuracy"),
+                                                 position.altitude_accuracy);
+  }
 
   // Address
   if (use_address) {
@@ -1143,16 +1140,6 @@ static bool GetPropertyIfSpecified(JsCallContext *context,
     return false;
   }
   *token = token_local;
-  return true;
-}
-
-static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
-                                        int value,
-                                        JsObject *object) {
-  assert(object);
-  if (kint32min != value) {
-    return object->SetPropertyInt(property_name, value);
-  }
   return true;
 }
 

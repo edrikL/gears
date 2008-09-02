@@ -517,12 +517,12 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
                              &position.latitude);
   GetDoublePropertyIfDefined(context, object, STRING16(L"longitude"),
                              &position.longitude);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"altitude"),
-                              &position.altitude);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"accuracy"),
-                              &position.accuracy);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"altitudeAccuracy"),
-                              &position.altitude_accuracy);
+  GetDoublePropertyIfDefined(context, object, STRING16(L"altitude"),
+                             &position.altitude);
+  GetDoublePropertyIfDefined(context, object, STRING16(L"accuracy"),
+                             &position.accuracy);
+  GetDoublePropertyIfDefined(context, object, STRING16(L"altitudeAccuracy"),
+                             &position.altitude_accuracy);
   GetIntegerPropertyIfDefined(context, object, STRING16(L"errorCode"),
                              &position.error_code);
   GetStringPropertyIfDefined(context, object, STRING16(L"errorMessage"),
