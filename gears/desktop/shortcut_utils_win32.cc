@@ -48,7 +48,9 @@
 #endif
 #include "gears/ui/ie/string_table.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
-
+#if BROWSER_CHROME
+#include "gears/base/chrome/module_cr.h"
+#endif
 
 static bool CreateShellLink(const char16 *link_path,
                             const char16 *icon_path,
@@ -251,6 +253,30 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
   return false;
 }
 
+// Returns the arguments string we should use to launch the browser with the
+// given URL.
+#if BROWSER_CHROME
+static std::string16 GetArgumentsString(const std::string16 &url)  {
+  std::string url_utf8;
+  String16ToUTF8(url.c_str(), &url_utf8);
+  char* arguments_utf8 = NULL;
+  bool rv = g_cpbrowser_funcs.get_command_line_arguments(
+      g_cpid, NULL, url_utf8.c_str(), &arguments_utf8) == CPERR_SUCCESS;
+
+  std::string16 arguments;
+  if (rv && arguments_utf8) {
+    UTF8ToString16(arguments_utf8, &arguments);
+    g_cpbrowser_funcs.free(arguments_utf8);
+  }
+
+  return arguments;
+}
+#else
+static inline std::string16 GetArgumentsString(const std::string16 &url)  {
+  return url;
+}
+#endif
+
 bool CreateShortcutFileWin32(const std::string16 &name,
                              const std::string16 &browser_path,
                              const std::string16 &url,
@@ -275,8 +301,9 @@ bool CreateShortcutFileWin32(const std::string16 &name,
     return true;
   }
 
+  std::string16 arguments = GetArgumentsString(url);
   if (!CreateShellLink(link_path.c_str(), icons_path.c_str(),
-                       browser_path.c_str(), url.c_str())) {
+                       browser_path.c_str(), arguments.c_str())) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
