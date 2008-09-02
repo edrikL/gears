@@ -45,11 +45,11 @@ bool TestGeolocationDB(std::string16 *error) {
   }
 
   Position position;
-  position.latitude              = 1.0;
-  position.longitude             = 2.0;
-  position.altitude              = 3;
-  position.accuracy              = 4;
-  position.altitude_accuracy     = 5;
+  position.latitude              = 1.1;
+  position.longitude             = 2.1;
+  position.altitude              = 3.1;
+  position.accuracy              = 4.1;
+  position.altitude_accuracy     = 5.1;
   position.timestamp             = 6;
   position.address.street_number = STRING16(L"street number");
   position.address.street        = STRING16(L"street");
@@ -64,11 +64,11 @@ bool TestGeolocationDB(std::string16 *error) {
   position.error_message         = STRING16(L"error");
 
   Position updated_position;
-  updated_position.latitude              = 11.0;
-  updated_position.longitude             = 12.0;
-  updated_position.altitude              = 13;
-  updated_position.accuracy              = 14;
-  updated_position.altitude_accuracy     = 15;
+  updated_position.latitude              = 11.1;
+  updated_position.longitude             = 12.1;
+  updated_position.altitude              = 13.1;
+  updated_position.accuracy              = 14.1;
+  updated_position.altitude_accuracy     = 15.1;
   updated_position.timestamp             = 16;
   updated_position.address.street_number = STRING16(L"updated street number");
   updated_position.address.street        = STRING16(L"updated street");

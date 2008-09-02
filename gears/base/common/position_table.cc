@@ -94,15 +94,18 @@ bool PositionTable::SetPosition(const std::string16 &name,
     LOG_BIND_ERROR("longitude");
     return false;
   }
-  if (SQLITE_OK != statement.bind_int(3, position.altitude)) {
+  // The Altitude, Accuracy and AltitudeAccuracy columns have type INTEGER, but
+  // we can safely store and extract floating point values because SQLite uses
+  // type affinity. See http://www.sqlite.org/datatype3.html#affinity.
+  if (SQLITE_OK != statement.bind_double(3, position.altitude)) {
     LOG_BIND_ERROR("altitude");
     return false;
   }
-  if (SQLITE_OK != statement.bind_int(4, position.accuracy)) {
+  if (SQLITE_OK != statement.bind_double(4, position.accuracy)) {
     LOG_BIND_ERROR("horizontal accuracy");
     return false;
   }
-  if (SQLITE_OK != statement.bind_int(5, position.altitude_accuracy)) {
+  if (SQLITE_OK != statement.bind_double(5, position.altitude_accuracy)) {
     LOG_BIND_ERROR("vertical accuracy");
     return false;
   }
@@ -203,9 +206,12 @@ bool PositionTable::GetPosition(const std::string16 &name,
   // Skip Name at index 0.
   position->latitude              = statement.column_double(1);
   position->longitude             = statement.column_double(2);
-  position->altitude              = statement.column_int(3);
-  position->accuracy              = statement.column_int(4);
-  position->altitude_accuracy     = statement.column_int(5);
+  // The Altitude, Accuracy and AltitudeAccuracy columns have type INTEGER, but
+  // we can safely store and extract floating point values because SQLite uses
+  // type affinity. See http://www.sqlite.org/datatype3.html#affinity.
+  position->altitude              = statement.column_double(3);
+  position->accuracy              = statement.column_double(4);
+  position->altitude_accuracy     = statement.column_double(5);
   position->timestamp             = statement.column_int64(6);
   position->address.street_number = statement.column_text16_safe(7);
   position->address.street        = statement.column_text16_safe(8);

@@ -233,7 +233,7 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
     }
 
     if (gps_position.dwValidFields & GPS_VALID_ALTITUDE_WRT_ELLIPSOID) {
-      int altitude = static_cast<int>(gps_position.flAltitudeWRTEllipsoid);
+      double altitude = gps_position.flAltitudeWRTEllipsoid;
       if (position_.altitude != altitude) {
         position_.altitude = altitude;
         update_available = true;
