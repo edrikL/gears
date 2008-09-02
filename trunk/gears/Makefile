@@ -37,6 +37,21 @@ MODULE		= $(SHORT_NAME)
 # third_party/breakpad
 
 ifeq ($(OS),win32)
+
+ifeq ($(BROWSER),NPAPI)
+
+
+# Disable breakpad for Chrome, since it has its own.
+BREAKPAD_VPATH += \
+		../third_party/breakpad/src/client \
+		$(NULL)
+
+BREAKPAD_CPPSRCS += \
+		exception_handler_stub.cc \
+		$(NULL)
+
+else
+
 BREAKPAD_VPATH	+= \
 		../third_party/breakpad/src/client/windows/handler \
 		../third_party/breakpad/src/common/windows \
@@ -65,17 +80,8 @@ IE_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
 
-
-NPAPI_VPATH	+= \
-		base/common \
-		$(NULL)
-
-ifeq ($(OS),win32)
-NPAPI_CPPSRCS	+= \
-		exception_handler_win32.cc \
-		$(NULL)
-endif
-endif
+endif # BROWSER != NPAPI
+endif # OS == win32
 
 #-----------------------------------------------------------------------------
 # third_party/breakpad_osx
@@ -627,6 +633,24 @@ endif # symbian
 endif # USING_SQLITE
 
 #-----------------------------------------------------------------------------
+# third_party/v8/bindings
+
+CHROME_VPATH	+= \
+		../third_party/v8/bindings_local \
+		$(NULL)
+
+CHROME_CPPSRCS	+= \
+		npruntime.cc \
+		np_v8object.cc \
+		v8_helpers.cc \
+		v8_np_utils.cc \
+		v8_npobject.cc \
+ 		$(NULL)
+
+V8_DIR = ../third_party/v8/bin-$(MODE)
+CHROME_LINK_EXTRAS += $(V8_DIR)/libv8core.lib $(V8_DIR)/libjscre.lib $(V8_DIR)/no_snapshotv8.lib 
+
+#-----------------------------------------------------------------------------
 # third_party/zlib
 
 ifeq ($(USING_ZLIB),1)
@@ -818,6 +842,7 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 COMMON_M4SRCS	+= \
+		npapi_msi.wxs.m4 \
 		product_constants.h.m4 \
 		win32_msi.wxs.m4 \
 		wince_cab.inf.m4 \
@@ -1048,13 +1073,22 @@ NPAPI_CPPSRCS	+= \
 		plugin.cc \
 		$(NULL)
 
+CHROME_VPATH	+= \
+		base/chrome \
+		$(NULL)
+
+CHROME_CPPSRCS	+= \
+		js_runner_cr.cc \
+		module_cr.cc \
+		paths_cr.cc \
+		$(NULL)
+
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
 		detect_version_collision_win32.cc \
 		file_win32.cc \
 		ie_version.cc \
 		message_queue_ie.cc \
-		paths_np.cc \
 		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
@@ -1352,6 +1386,10 @@ FF3_CPPSRCS += \
 
 IE_CPPSRCS += \
 		drop_target_ie.cc \
+		$(NULL)
+
+CHROME_CPPSRCS	+= \
+		desktop_cr.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1895,6 +1933,16 @@ NPAPI_LINK_EXTRAS += \
 		$(NPAPI_OUTDIR)/ui_resources.res \
 		$(NULL)
 
+CHROME_VPATH	+= \
+		ui/chrome \
+		$(NULL)
+
+CHROME_CPPSRCS	+= \
+		settings_dialog_cr.cc \
+		html_dialog_cr.cc \
+		$(NULL)
+
+
 #-----------------------------------------------------------------------------
 # ui/safari
 
@@ -2033,10 +2081,8 @@ IE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # localserver/npapi
 
-# TODO(mpcomplete): Remove NPAPI reliance on localserver/ie, someday.
 NPAPI_VPATH	+= \
 		localserver/npapi \
-		localserver/ie \
 		$(NULL)
 
 NPAPI_IDLSRCS	+= \
@@ -2047,14 +2093,18 @@ NPAPI_CPPSRCS	+= \
 		update_task_np.cc \
 		$(NULL)
 
-ifeq ($(OS),win32)
-# These files from IE are reused on NPAPI WIN32 builds.
-NPAPI_CPPSRCS	+= \
-		http_handler_ie.cc \
-		http_request_ie.cc \
-		urlmon_utils.cc \
+CHROME_VPATH	+= \
+		localserver/chrome \
 		$(NULL)
-endif
+
+CHROME_CPPSRCS	+= \
+		gears_protocol_handler.cc \
+		network_intercept_cr.cc \
+		http_cookies_cr.cc \
+		http_request_cr.cc \
+		safe_http_request.cc \
+		update_task_cr.cc \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # localserver/safari
@@ -2366,6 +2416,31 @@ FF2_M4SRCS += $(FF3_M4SRCS)
 FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
 FF2_IDLSRCS += $(FF3_IDLSRCS)
 FF2_CPPSRCS += $(FF3_CPPSRCS)
+
+
+# Chrome-specific hackery.  NPAPI+win32 == Chrome.
+ifeq ($(BROWSER),NPAPI)
+ifeq ($(OS),win32)
+
+# Add Chrome-only sources to the NPAPI build.
+NPAPI_CPPSRCS += $(CHROME_CPPSRCS)
+NPAPI_CPPFLAGS += $(CHROME_CPPFLAGS)
+NPAPI_LINK_EXTRAS += $(CHROME_LINK_EXTRAS)
+NPAPI_VPATH += $(CHROME_VPATH)
+NPAPI_DLLFLAGS += $(CHROME_DLLFLAGS)
+
+# Remove some files that we don't want to compile for Chrome.
+NPAPI_CPPSRCS := $(subst http_cookies.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst http_request_ie.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst http_handler_ie.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst js_runner_np.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst urlmon_utils.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst update_task_np.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst paths_np.cc,,$(NPAPI_CPPSRCS))
+NPAPI_CPPSRCS := $(subst settings_dialog.cc,,$(NPAPI_CPPSRCS))
+endif
+endif
+
 
 #-----------------------------------------------------------------------------
 # Include site-specific build rules, evaluated before our built-in build rules.

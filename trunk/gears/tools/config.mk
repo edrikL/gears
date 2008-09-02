@@ -205,7 +205,7 @@ FF3_CPPFLAGS += -DBROWSER_FF=1
 FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS +=
-NPAPI_CPPFLAGS +=
+CHROME_CPPFLAGS += -I../third_party/v8/bindings_local
 
 # These flags are needed so that instead of exporting all symbols defined in
 # the code, we just export those specifically marked, this reduces the output size.
@@ -692,7 +692,15 @@ DLLFLAGS = $(DLLFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 FF2_DLLFLAGS =
 FF3_DLLFLAGS =
 IE_DLLFLAGS = /DEF:tools/mscom.def
-NPAPI_DLLFLAGS = /DEF:base/npapi/module.def
+
+CHROME_DLLFLAGS = /DEF:base/chrome/module.def
+
+# Set the preferred base address.  This value was chosen because (a) it's near
+# the top of the valid address range, and (b) it doesn't conflict with other
+# DLLs loaded by Chrome in either the browser or plugin process.
+CHROME_DLLFLAGS += /BASE:0x65000000
+
+CHROME_CPPFLAGS += -DBROWSER_CHROME=1
 
 MKEXE = link
 EXE_PREFIX =
