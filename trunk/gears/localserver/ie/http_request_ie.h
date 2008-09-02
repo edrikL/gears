@@ -34,6 +34,7 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/progress_event.h"
+#include "gears/localserver/ie/progress_input_stream.h"
 
 class BlobInterface;
 class ByteStore;
@@ -227,7 +228,9 @@ class IEHttpRequest
   int bind_verb_;
 
   // The POST data
+  friend ProgressInputStream;
   scoped_refptr<BlobInterface> post_data_;
+  CComPtr<ProgressInputStream> post_data_stream_;
 
   // Additional request headers we've been asked to send with the request
   std::string16 additional_headers_;
