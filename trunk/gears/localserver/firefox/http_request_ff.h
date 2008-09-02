@@ -30,7 +30,6 @@
 #include <vector>
 #include "gecko_sdk/include/nsIInterfaceRequestor.h"
 #include "gecko_sdk/include/nsILoadGroup.h"
-#include <gecko_sdk/include/nsIObserver.h>
 #include "gecko_sdk/include/nsIStreamListener.h"
 #include "gecko_internal/nsIChannelEventSink.h"
 #include "gecko_internal/nsIDocShellTreeItem.h"
@@ -50,6 +49,9 @@ class nsIChannel;
 class nsIHttpChannel;
 class nsIRequest;
 
+// The HttpRequestObserver class is an implementation detail of FFHttpRequest,
+// used to remove browser cookies from outgoing requests.
+class HttpRequestObserver;
 
 #if BROWSER_FF3
 class GearsLoadGroup : public nsILoadGroup,
@@ -76,7 +78,6 @@ class FFHttpRequest : public HttpRequest,
                       public nsIStreamListener,
                       public nsIChannelEventSink,
                       public nsIInterfaceRequestor,
-                      public nsIObserver,
                       public SpecialHttpRequestInterface,
                       public ProgressEvent::Listener {
  public:
@@ -85,7 +86,6 @@ class FFHttpRequest : public HttpRequest,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIOBSERVER
   NS_DECL_SPECIALHTTPREQUESTINTERFACE  // see localserver.idl.m4
 
   // Our C++ HttpRequest interface
@@ -203,6 +203,7 @@ class FFHttpRequest : public HttpRequest,
   CachingBehavior caching_behavior_;
   RedirectBehavior redirect_behavior_;
   CookieBehavior cookie_behavior_;
+  nsCOMPtr<HttpRequestObserver> observer_;
   bool was_sent_;
   bool was_aborted_;
   bool was_redirected_;
