@@ -95,7 +95,11 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android.
+#else
 static NotificationMessageOrderer g_notification_message_orderer;
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
 
 bool DecodeIcon(Desktop::IconData *icon, int expected_size,

@@ -26,6 +26,9 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android.
+#else
 
 #include "gears/notifier/notifier_proxy.h"
 
@@ -197,4 +200,5 @@ void NotifierProxy::SendCompletionHandler(bool is_successful,
   this_ptr->PostNotification(message_type, retried_notification);
 }
 
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
