@@ -128,6 +128,8 @@ def main():
     launchers.append(browser_launchers.IExploreWin32Launcher('ff2profile-win'))
     launchers.append(browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
     launchers.append(browser_launchers.Firefox3Win32Launcher('ff3profile-win'))
+    launchers.append(browser_launchers.ChromeWin32Launcher())
+    installers.append(installer.ChromeWin32Installer())
     if osutils.osIsVista():
       installers.append(installer.WinVistaInstaller())
     else:

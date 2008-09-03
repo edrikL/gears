@@ -134,6 +134,30 @@ class IExploreWin32Launcher(BaseWin32Launcher):
     return 'IExploreWin32'
 
 
+class ChromeWin32Launcher(BaseWin32Launcher):
+  """ Launcher class for win32 Google Chrome. """
+
+  CHROME_PATH = r'Google\Chrome\Application\chrome.exe'
+
+  def __init__(self):
+    self.killAllInstances()
+    home = os.getenv('USERPROFILE')
+    appdata_xp = os.path.join(home, 'Local Settings\\Application Data')
+    appdata_vista = os.path.join(home, 'AppData\\LocalLow')
+    if os.path.exists(appdata_vista):
+      self.browser_command = [os.path.join(appdata_vista, 
+          ChromeWin32Launcher.CHROME_PATH)]
+    elif os.path.exists(appdata_xp):
+      self.browser_command = [os.path.join(appdata_xp, 
+          ChromeWin32Launcher.CHROME_PATH)]
+  
+  def killAllInstances(self):
+    self._killInstancesByName('chrome.exe')
+
+  def type(self):
+    return 'ChromeWin32'
+
+
 class IExploreWinCeLauncher(BaseBrowserLauncher):
   """ Launcher for pocket ie on Windows Mobile. """
 

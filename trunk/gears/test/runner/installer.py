@@ -100,7 +100,8 @@ class BaseInstaller:
       if item.find(type) > -1:
         build = os.path.join(directory, item)
         build = build.replace('/', os.sep).replace('\\', os.sep)
-        return build
+        if os.path.isfile(build):
+          return build
     raise "Can't locate build of type '%s' in '%s'" % (type, directory)
 
   def _saveInstalledBuild(self):
@@ -254,7 +255,7 @@ class WinXpInstaller(BaseWin32Installer):
     self.ieprofile = 'permissions'
 
   def _buildPath(self, directory):
-    return self._findBuildPath('msi', directory)
+    return self._findBuildPath('win32', directory)
 
 
 class WinVistaInstaller(BaseWin32Installer):
@@ -268,7 +269,73 @@ class WinVistaInstaller(BaseWin32Installer):
     self.ieprofile = 'permissions'
 
   def _buildPath(self, directory):
-    return self._findBuildPath('msi', directory)
+    return self._findBuildPath('win32', directory)
+
+
+class ChromeWin32Installer(BaseWin32Installer):
+  """ Installer class for Win32 Google Chrome. """
+
+  CHROME_BIN_PATH = r'..\..\..\third_party\chrome\bin\chrome-win32.zip'
+  CHROME_PROFILE_PATH = r'Google\Chrome\User Data\Default\Plugin Data'
+  CHROME_PATH = r'Google\Chrome'
+
+  def __init__(self):
+    self._prepareProfiles()
+    self.profile = 'permissions'
+    home = os.getenv('USERPROFILE')
+    self.current_build = os.path.join(home, 'current_gears_build')
+    appdata_xp = os.path.join(home, 'Local Settings\\Application Data')
+    appdata_vista = os.path.join(home, 'AppData\\LocalLow')
+    if os.path.exists(appdata_vista):
+      self.permissions_path = os.path.join(appdata_vista,
+          ChromeWin32Installer.CHROME_PROFILE_PATH)
+      self.chrome_path = os.path.join(appdata_vista,
+          ChromeWin32Installer.CHROME_PATH)
+    elif os.path.exists(appdata_xp):
+      self.permissions_path = os.path.join(appdata_xp,
+          ChromeWin32Installer.CHROME_PROFILE_PATH)
+      self.chrome_path = os.path.join(appdata_xp,
+          ChromeWin32Installer.CHROME_PATH)
+
+  def install(self):
+    """ Set up Google Chrome, run Gears installer, and set profile data. """
+
+    # First, uninstall current installed Gears build, if any exists.
+    self._uninstallCurrentBuild()
+
+    if os.path.exists(ChromeWin32Installer.CHROME_BIN_PATH):
+      print 'Unpack and replace Chrome.'
+      if os.path.exists(self.chrome_path):
+        os.chmod(self.chrome_path, FULL_PERMISSION)
+        shutil.rmtree(self.chrome_path, onerror=self._handleRmError)
+      chrome_zip = open(ChromeWin32Installer.CHROME_BIN_PATH, 'rb')
+      self._unzip(chrome_zip, self.chrome_path)
+      chrome_zip.close()
+
+      # Rename unzipped folder to Application to make consistent
+      # with normal installation.
+      chrome_win32 = os.path.join(self.chrome_path, 'chrome-win32')
+      application = os.path.join(self.chrome_path, 'Application')
+      os.rename(chrome_win32, application)
+
+    else:
+      # TODO(ace): Add a mechanism to abort on install fail
+      print 'Chrome installer not found.'
+
+    build_path = self._buildPath(BaseInstaller.BUILDS)
+    print 'Installing Chrome-Gears build %s' % build_path
+    c = ['msiexec', '/passive', '/i', build_path]
+    p = subprocess.Popen(c)
+    p.wait()
+
+    print 'Copying Gears permissions.'
+    self._copyProfile(self.profile, self.permissions_path, 'Google Gears')
+
+    # Save new build as current installed build
+    self._saveInstalledBuild()
+
+  def _buildPath(self, directory):
+    return self._findBuildPath('chrome', directory)
 
 
 class WinCeInstaller(BaseInstaller):
@@ -286,14 +353,14 @@ class WinCeInstaller(BaseInstaller):
     print 'Installing and copying permissions.'
     self.__installCab()
     self.__copyPermissions()
-  
+
   def _buildPath(self, directory):
     return self._findBuildPath('cab', directory)
-  
+
   def __installCab(self):
     """ Copy installer to device and install.  """
     build_path = self._buildPath(BaseInstaller.BUILDS)
-    
+
     # Requires cecopy.exe in path.
     copy_cmd = ['cecopy.exe', build_path, 'dev:\\windows\\gears.cab']
     p = subprocess.Popen(copy_cmd)
@@ -313,7 +380,7 @@ class WinCeInstaller(BaseInstaller):
     kill_cmd = ['pkill.exe', 'iexplore.exe']
     p = subprocess.Popen(kill_cmd)
     p.wait()
-  
+
   def __copyPermissions(self):
     """ Modify permissions file to include host address and copy to device. """
     perm_path = os.path.join(self.ieprofile, 'permissions.db')
@@ -342,7 +409,7 @@ class WinCeInstaller(BaseInstaller):
 
 class BaseFirefoxMacInstaller(BaseInstaller):
   """ Abstract base class for Mac firefox installers. """
-  
+
   def __init__(self, profile_name, firefox_bin, profile_loc):
     self.profile = profile_name
     self._prepareProfiles()
@@ -358,7 +425,7 @@ class BaseFirefoxMacInstaller(BaseInstaller):
 
   def _buildPath(self, directory):
     return self._findBuildPath('xpi', directory)
-  
+
   def install(self):
     """ Do installation. """
     print 'Creating test profile and inserting extension'
@@ -395,7 +462,7 @@ class Firefox2MacInstaller(BaseFirefoxMacInstaller):
     firefox_bin = Firefox2MacInstaller.FIREFOX_PATH
     BaseFirefoxMacInstaller.__init__(self, profile_name, 
                                      firefox_bin, 'ff2profile-mac')
-  
+
 
 class Firefox3MacInstaller(BaseFirefoxMacInstaller):
   """ Firefox 3 installer for Mac OS X. """
@@ -406,11 +473,11 @@ class Firefox3MacInstaller(BaseFirefoxMacInstaller):
     firefox_bin = Firefox3MacInstaller.FIREFOX_PATH
     BaseFirefoxMacInstaller.__init__(self, profile_name, 
                                      firefox_bin, 'ff3profile-mac')
-  
+
 
 class SafariMacInstaller(BaseInstaller):
   """ Safari installer for Mac OS X. """
-  
+
   def __init__(self, build_type):
     self._prepareProfiles()
     self.build_type = build_type
@@ -422,7 +489,7 @@ class SafariMacInstaller(BaseInstaller):
 
   def _buildPath(self, directory):
     return self._findBuildPath('dmg', directory)
-  
+
   def _GetRootPassword(self):
     """ Read root password from file ~/.password. """
     home = os.getenv('HOME')
@@ -435,8 +502,8 @@ class SafariMacInstaller(BaseInstaller):
     else:
       print ('Could not find ~/.password file.  This file '
              'must exist and contain the root password.')
-      return ''      
-  
+      return ''
+
   def _RunAsRoot(self, root_cmd):
     import pexpect
     print 'Running "%s"' % root_cmd
@@ -448,7 +515,7 @@ class SafariMacInstaller(BaseInstaller):
       print 'Was not prompted for root password'
     except pexpect.TIMEOUT:
       print 'Was not prompted for password within timeout'
-  
+
   def install(self):
     """ Copy extension and profile for Safari. """
     print 'Running Safari uninstall script'
@@ -499,7 +566,7 @@ class Firefox2LinuxInstaller(BaseFirefoxLinuxInstaller):
 
 class Firefox3LinuxInstaller(BaseFirefoxLinuxInstaller):
   """ Firefox 3 installer for linux. """
-  
+
   def __init__(self, profile_name):
     self.ffprofile = 'ff3profile-linux'
     BaseFirefoxLinuxInstaller.__init__(self, profile_name)
