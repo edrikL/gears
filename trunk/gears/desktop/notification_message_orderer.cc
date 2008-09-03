@@ -26,6 +26,9 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android.
+#else
 
 #include "gears/desktop/notification_message_orderer.h"
 
@@ -233,4 +236,5 @@ void NotificationMessageOrderer::PostNotification(
       break;
   }
 }
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD

@@ -27,6 +27,9 @@
 #ifdef OFFICIAL_BUILD
   // The notification API has not been finalized for official builds.
 #else
+#ifdef OS_ANDROID
+  // The notification API has not been implemented for Android.
+#else
 #include "gears/desktop/desktop_test.h"
 
 #include <queue>
@@ -287,5 +290,6 @@ bool TestNotificationMessageOrdering(std::string16 *error) {
   return g_ok;
 }
 
+#endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
 #endif  // USING_CCTESTS
