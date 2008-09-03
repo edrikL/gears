@@ -393,7 +393,7 @@ function testGeolocationFormRequestBody() {
                       '}, ' +
                       '"radio_type" : "gsm", ' +
                       '"request_address" : true, ' +
-                      '"version" : "1.0", ' +
+                      '"version" : "1.0.1", ' +
                       '"wifi_towers" : [ { ' +
                       '"age" : 15, ' +
                       '"channel" : 19, ' +
