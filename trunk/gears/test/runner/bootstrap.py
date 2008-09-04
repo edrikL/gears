@@ -17,16 +17,16 @@ POLL_INTERVAL_SECONDS = 10
 OUTPUT_DIR = 'output'
 
 class Bootstrap:
-  """ Set up test environment and handles test execution. """
+  """Set up test environment and handles test execution. """
 
   # Temp installer directory.
   INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
-  
+
   def __init__(self, gears_binaries, installers, testrunner, suites_report):
-    """ Set test objects. 
-    
+    """Set test objects.
+
     Args:
-      gears_binaries: directory where the binaries will be published. 
+      gears_binaries: directory where the binaries will be published.
       installers: list of Installer objects
       testrunner: TestRunner object
       suites_report: SuitesReport object that outputs test suites report
@@ -35,18 +35,18 @@ class Bootstrap:
     self.__installers = installers
     self.__testrunner = testrunner
     self.__suites_report = suites_report
-    
+
   def invoke(self):
-    """ Start everything, main method. """
+    """Start everything, main method."""
     self.copyFilesLocally()
     self.install()
     self.startTesting()
     self.writeResultsToFile()
 
   def copyFilesLocally(self):
-    """ Poll until directory with installers/binaries are available.
+    """Poll until directory with installers/binaries are available.
 
-    then copies them to local directory. 
+    then copies them to local directory.
     """
     exists = os.path.exists(self.__gears_binaries)
     while not exists:
@@ -57,14 +57,44 @@ class Bootstrap:
       os.chmod(Bootstrap.INSTALLER_DIR, DELETABLE)
       shutil.rmtree(Bootstrap.INSTALLER_DIR)
     shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
+    self.renameWin32Build()
+  
+  def renameWin32Build(self):
+    """If Win32 builds exist, rename to differentiate them.
+
+    Both Win32 installers are output to the same directory.
+    In order to locate the ff/ie installer by name directly,
+    the filename must be modified.
+
+    The two installers are expected to have the following
+    filenames at build output:
+    gears-win32-{$type}-{$version}.msi
+    gears-win32-{$type}-{$version}-chrome.msi
+
+    This function changes the name of the ff/ie unified installer
+    to the following:
+    gears-win32-{$type}-{$version}-ffie.msi
+    """
+    directory = Bootstrap.INSTALLER_DIR
+    dir_list = os.listdir(directory)
+    for item in dir_list:
+      # Identify the ff/ie unified installer by the string name.
+      if item[-4:] == '.msi' and item.find('chrome') < 0:
+        ffie_build_name = item[:-4]
+        ffie_build_suffix = '.msi'
+        new_name = '%s-ffie%s' % (ffie_build_name, ffie_build_suffix)
+        old_path = os.path.join(directory, item)
+        new_path = os.path.join(directory, new_name)
+        os.rename(old_path, new_path)
+        return
 
   def install(self):
     for installer in self.__installers:
       installer.install()
-  
+
   def startTesting(self):
     self.test_results = self.__testrunner.runTests()
-    
+
   def writeResultsToFile(self):
     self.__createOutputDir(True)
     stream = open('output/TESTS-TestSuites.xml', 'w')
@@ -99,7 +129,6 @@ def serverRootDir():
     return os.path.join(os.path.dirname(__file__), '../')
 
 
-
 def main():
   # Clean up output directory before doing anything else
   clean()
@@ -109,7 +138,7 @@ def main():
   test_servers = []
   installers = []
   launchers = []
-  
+
   if ('bin-dbg' in sys.argv[1]):
     build_type = 'dbg'
   elif ('bin-opt' in sys.argv[1]):
@@ -117,7 +146,7 @@ def main():
   else:
     build_type = ''
 
-  # WinCE is a special case, because it is compiled 
+  # WinCE is a special case, because it is compiled
   # and run on different platforms.
   if len(sys.argv) > 2 and sys.argv[2] == 'wince':
     local_ip = WindowsNetworkHelper.GetLocalIp()
@@ -147,11 +176,11 @@ def main():
       launchers.append(browser_launchers.Firefox3LinuxLauncher('gears-ff3'))
       installers.append(installer.Firefox2LinuxInstaller('gears-ff2'))
       installers.append(installer.Firefox3LinuxInstaller('gears-ff3'))
-      
+
   # Adding second webserver for cross domain tests.
   test_servers.append(TestWebserver(serverRootDir(), port=8001))
   test_servers.append(TestWebserver(serverRootDir(), port=8002))
-  
+
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)
   bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
