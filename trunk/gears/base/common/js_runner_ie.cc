@@ -67,12 +67,10 @@ class JsRunnerBase : public JsRunnerInterface {
  public:
   JsRunnerBase() {}
 
-  void OnModuleEnvironmentAttach() {
-    // TODO(nigeltao): implement on IE, i.e. plug the DocumentJsRunner leak.
-  }
-
-  void OnModuleEnvironmentDetach() {
-    // TODO(nigeltao): implement on IE, i.e. plug the DocumentJsRunner leak.
+  virtual ~JsRunnerBase() {
+    for (int i = 0; i < MAX_JSEVENTS; i++) {
+      assert(0 == event_handlers_[i].size());
+    }
   }
 
   JsContextPtr GetContext() {
@@ -380,6 +378,8 @@ class ATL_NO_VTABLE JsRunnerImpl
     error_handler_ = error_handler;
   }
 
+  bool CleanUpJsGlobalVariables();
+
   // IActiveScriptSiteImpl overrides
   STDMETHOD(LookupNamedItem)(const OLECHAR *name, IUnknown **item);
   STDMETHOD(HandleScriptError)(EXCEPINFO *ei, ULONG line, LONG pos, BSTR src);
@@ -547,10 +547,52 @@ bool JsRunnerImpl::Eval(const std::string16 &script) {
   return true;
 }
 
+bool JsRunnerImpl::CleanUpJsGlobalVariables() {
+  // NOTE(nigeltao): Yes, this is as hack. Without this method, Gears is
+  // leaking all global JavaScript objects in worker ActiveScript instances.
+  // For example, this worker code:
+  // var foo = google.gears.factory.create('beta.timer');
+  // google.gears.workerPool.onmessage = function(a, b, msg) {
+  //   var bar = google.gears.factory.create('beta.timer');
+  //   google.gears.workerPool.sendMessage(msg.body, msg.sender);
+  // }
+  // will leak three objects: foo, and the two implicit global objects, viz.
+  // the GearsFactory and the GearsWorkerPool, inserted with the global names
+  // kWorkerInsertedFactoryName and kWorkerInsertedWorkerPoolName. Note that
+  // the object bound to the local variable bar is not leaked.
+  //
+  // To avoid leaking these objects, this code paragraph here first finds the
+  // names of all global variables, and then sets them to (JavaScript) null,
+  // reducing their COM ref-count and hence allowing them to be garbage
+  // collected.
+  //
+  // This solution is less than ideal - the fundamental problem is probably
+  // deeper, such as leaking the ActiveScript instance itself, but after some
+  // effort, I (nigeltao) was insufficiently awesome to pinpoint where our
+  // fundamental leak is, and as a hacky workaround, we instead clean up our
+  // Gears modules (i.e. instances of ModuleImplBaseClass). We may still be
+  // leaking memory upon worker exit, but at least we're not leaking anything
+  // that we're explicitly tracking (via Gears' LEAK_COUNTER_XXX macros).
+  IDispatch *dispatch = GetGlobalObject();
+  std::vector<std::string16> names;
+  HRESULT hr = ActiveXUtils::GetDispatchPropertyNames(dispatch, &names);
+  if (FAILED(hr)) { return false; }
+  std::string16 clean_up_script;
+
+  std::vector<std::string16>::const_iterator it;
+  for (it = names.begin(); it != names.end(); ++it) {
+    clean_up_script += STRING16(L"var ");
+    clean_up_script += *it;
+    clean_up_script += STRING16(L"=null;");
+  }
+  return Eval(clean_up_script);
+}
+
 bool JsRunnerImpl::Stop() {
   // Check pointer because dtor calls Stop() regardless of whether Start()
   // happened.
   if (javascript_engine_) {
+    if (!CleanUpJsGlobalVariables()) { return false; }
     javascript_engine_->Close();
   }
   return S_OK;
@@ -633,12 +675,14 @@ STDMETHODIMP JsRunnerImpl::GetSecurityId(BYTE *security_id,
 class JsRunner : public JsRunnerBase {
  public:
   JsRunner() {
+    LEAK_COUNTER_INCREMENT(JsRunner);
     HRESULT hr = CComObject<JsRunnerImpl>::CreateInstance(&com_obj_);
     if (com_obj_) {
       com_obj_->AddRef();  // MSDN says call AddRef after CreateInstance
     }
   }
   virtual ~JsRunner() {
+    LEAK_COUNTER_DECREMENT(JsRunner);
     // Alert modules that the engine is unloading.
     SendEvent(JSEVENT_UNLOAD);
 
@@ -646,6 +690,14 @@ class JsRunner : public JsRunnerBase {
       com_obj_->Stop();
       com_obj_->Release();
     }
+  }
+
+  void OnModuleEnvironmentAttach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
+  }
+
+  void OnModuleEnvironmentDetach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
   }
 
   IDispatch *GetGlobalObject(bool dump_on_error = false) {
@@ -686,9 +738,25 @@ class JsRunner : public JsRunnerBase {
 // common functionality to both workers and the main thread.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(IUnknown *site) : site_(site) {}
+  DocumentJsRunner(IUnknown *site)
+      : site_(site),
+        is_module_environment_detached_(true),
+        is_unloaded_(true) {
+    LEAK_COUNTER_INCREMENT(DocumentJsRunner);
+  }
 
   virtual ~DocumentJsRunner() {
+    LEAK_COUNTER_DECREMENT(DocumentJsRunner);
+    assert(is_module_environment_detached_ && is_unloaded_);
+  }
+
+  void OnModuleEnvironmentAttach() {
+    is_module_environment_detached_ = false;
+  }
+
+  void OnModuleEnvironmentDetach() {
+    is_module_environment_detached_ = true;
+    DeleteIfNoLongerRelevant();
   }
 
   IDispatch *GetGlobalObject(bool dump_on_error = false) {
@@ -789,27 +857,22 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false);  // Should not be called on the DocumentJsRunner.
   }
 
-  bool AddEventHandler(JsEventType event_type,
-                       JsEventHandlerInterface *handler) {
-    if (event_type == JSEVENT_UNLOAD) {
+  bool ListenForUnloadEvent() {
 #ifdef WINCE
-      // WinCE does not use HtmlEventMonitor to monitor page unloading.
+    // WinCE does not use HtmlEventMonitor to monitor page unloading.
 #else
-      // Create an HTML event monitor to send the unload event when the page
-      // goes away.
-      if (unload_monitor_ == NULL) {
-        unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                                   HandleEventUnload, this));
-        CComPtr<IHTMLWindow3> event_source;
-        if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
-          return false;
-        }
-        unload_monitor_->Start(event_source);
-      }
-#endif
+    // Create an HTML event monitor to send the unload event when the page
+    // goes away.
+    unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                               HandleEventUnload, this));
+    CComPtr<IHTMLWindow3> event_source;
+    if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
+      return false;
     }
-
-    return JsRunnerBase::AddEventHandler(event_type, handler);
+    unload_monitor_->Start(event_source);
+    is_unloaded_ = false;
+#endif
+    return true;
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
@@ -844,11 +907,17 @@ class DocumentJsRunner : public JsRunnerBase {
 
  private:
   static void HandleEventUnload(void *user_param) {
-    // Callback for 'onunload'
-    static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
-    // TODO(nigeltao): Are we leaking the DocumentJsRunner? This might be a
-    // good time to call
-    // delete static_cast<DocumentJsRunner*>(user_param);
+    DocumentJsRunner *document_js_runner =
+        static_cast<DocumentJsRunner*>(user_param);
+    document_js_runner->SendEvent(JSEVENT_UNLOAD);
+    document_js_runner->is_unloaded_ = true;
+    document_js_runner->DeleteIfNoLongerRelevant();
+  }
+
+  void DeleteIfNoLongerRelevant() {
+    if (is_module_environment_detached_ && is_unloaded_) {
+      delete this;
+    }
   }
 
 #ifdef WINCE
@@ -857,6 +926,8 @@ class DocumentJsRunner : public JsRunnerBase {
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
 #endif
   CComPtr<IUnknown> site_;
+  bool is_module_environment_detached_;
+  bool is_unloaded_;
 
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
@@ -867,5 +938,12 @@ JsRunnerInterface* NewJsRunner() {
 }
 
 JsRunnerInterface* NewDocumentJsRunner(IUnknown *base, JsContextPtr) {
-  return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base));
+  scoped_ptr<DocumentJsRunner> document_js_runner(
+      new DocumentJsRunner(base));
+  if (!document_js_runner->ListenForUnloadEvent()) {
+    return NULL;
+  }
+  // A DocumentJsRunner who has had ListenForUnloadEvent called successfully
+  // is self-deleting, so we can release it from our scoped_ptr.
+  return document_js_runner.release();
 }
