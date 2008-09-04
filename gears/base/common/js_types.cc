@@ -2045,6 +2045,13 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
   return true;
 }
 
+JsCallContext::JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
+                             EXCEPINFO FAR *excep_info)
+    : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
+      is_exception_set_(false), is_return_value_set_(false) {
+  LEAK_COUNTER_INCREMENT(JsCallContext);
+}
+
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the javascript caller is expecting a
   // return value.
@@ -2158,6 +2165,14 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
       assert(false);
   }
   return true;
+}
+
+JsCallContext::JsCallContext(JsContextPtr js_context, NPObject *object,
+                             int argc, const JsToken *argv, JsToken *retval)
+    : js_context_(js_context), is_exception_set_(false),
+      is_return_value_set_(false), object_(object),
+      argc_(argc), argv_(argv), retval_(retval) {
+  LEAK_COUNTER_INCREMENT(JsCallContext);
 }
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {

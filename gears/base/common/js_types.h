@@ -516,15 +516,10 @@ class JsCallContext {
   // Only browser-specific wrapper code should need to instantiate this object.
 #if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
-                int argc, const JsToken *argv, JsToken *retval)
-      : js_context_(js_context), is_exception_set_(false),
-        is_return_value_set_(false), object_(object),
-        argc_(argc), argv_(argv), retval_(retval) {}
+                int argc, const JsToken *argv, JsToken *retval);
 #elif BROWSER_IE
   JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
-                EXCEPINFO FAR *excep_info)
-      : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
-        is_exception_set_(false), is_return_value_set_(false) {}
+                EXCEPINFO FAR *excep_info);
 #elif BROWSER_FF
   JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                 int argc, JsToken *argv, JsToken *retval);
