@@ -290,16 +290,16 @@ class GearsGeolocation
   // into a separate class.
 
   // A map from providers to fix request IDs. We use this map when looking up
-  // the single fix requests in which a provider is involved, and to track when
-  // a provider is no longer involved in any fix requests and we can unregister
-  // form it. See the comment in the implementation of
-  // LocationUpdateAvailableImpl for a discussion of how and why request IDs are
-  // used.
+  // the single fix requests in which a provider is involved and to make sure
+  // that the provider from which a location update is received is still valid
+  // once the callback has been marshalled. See the comment in the
+  // implementation of LocationUpdateAvailableImpl for a discussion of how and
+  // why request IDs are used.
   typedef std::vector<int> IdList;
   typedef std::map<LocationProviderBase*, IdList> ProviderMap;
   ProviderMap providers_;
 
-  // Map from watch ID to fix request.
+  // Map from fix request ID to fix request.
   typedef std::map<int, FixRequestInfo*> FixRequestInfoMap;
   FixRequestInfoMap fix_requests_;
   int next_single_request_id_;  // Always negative

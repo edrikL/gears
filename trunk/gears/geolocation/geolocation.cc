@@ -339,6 +339,11 @@ void GearsGeolocation::GetPermission(JsCallContext *context) {
 // LocationProviderBase::ListenerInterface implementation.
 bool GearsGeolocation::LocationUpdateAvailable(LocationProviderBase *provider) {
   assert(provider);
+
+  // We check that the provider that invoked the callback is still in use, in
+  // LocationUpdateAvailableImpl. Checking here would require a mutex to guard
+  // providers_.
+
   // We marshall this callback onto the JavaScript thread. This simplifies
   // issuing new fix requests and calling back to JavaScript, which must be done
   // from the JavaScript thread.
@@ -527,6 +532,7 @@ bool GearsGeolocation::CancelWatch(const int &watch_id) {
 void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
                                                     const Position &position) {
   ASSERT_SINGLE_THREAD();
+  assert(position.IsInitialized());
 
   FixRequestInfo *fix_info = GetFixRequest(id);
   assert(fix_info->repeats);
@@ -574,6 +580,7 @@ void GearsGeolocation::HandleSingleRequestUpdate(LocationProviderBase *provider,
                                                  int id,
                                                  const Position &position) {
   ASSERT_SINGLE_THREAD();
+  assert(position.IsInitialized());
 
   FixRequestInfo *fix_info = GetFixRequest(id);
   assert(!fix_info->repeats);
@@ -610,8 +617,27 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     LocationProviderBase *provider) {
   ASSERT_SINGLE_THREAD();
 
+  // Check that the provider that invoked the callback is still in use. By the
+  // time we receive this marshalled callback the provider may have been
+  // unregistered and deleted.
+  ProviderMap::iterator provider_iter = providers_.find(provider);
+  if (provider_iter == providers_.end()) {
+    return;
+  }
+
+  // Get the position from the provider.
   Position position;
   provider->GetPosition(&position);
+  
+  // The location provider should only call us back when it has a valid
+  // position. However, it's possible that this marshalled callback is due to a
+  // previous provider, which no longer exists. If a new provider is now
+  // registered at the same address as the previous one, the above check will
+  // not detect this case and we'll call GetPosition on the new provider without
+  // it having previously called us back.
+  if (!position.IsInitialized()) {
+    return;
+  }
 
   // Update the last known position, which is the best position estimate we
   // currently have.
@@ -633,17 +659,15 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
 
   // Iterate over all non-repeating fix requests of which this provider is a
   // part.
-  ProviderMap::iterator provider_iter = providers_.find(provider);
-  if (provider_iter != providers_.end()) {
-    IdList ids = provider_iter->second;
-    while (!ids.empty()) {
-      int id = ids.back();
-      ids.pop_back();
-      if (id < 0) {
-        FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
-        if (iter != fix_requests_.end()) {
-          HandleSingleRequestUpdate(provider, id, position);
-        }
+  assert(provider_iter != providers_.end());
+  IdList ids = provider_iter->second;
+  while (!ids.empty()) {
+    int id = ids.back();
+    ids.pop_back();
+    if (id < 0) {
+      FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
+      if (iter != fix_requests_.end()) {
+        HandleSingleRequestUpdate(provider, id, position);
       }
     }
   }
@@ -672,6 +696,7 @@ bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
                                            const Position &position) {
   ASSERT_SINGLE_THREAD();
   assert(fix_info);
+  assert(position.IsInitialized());
   assert(position.IsGoodFix());
 
   scoped_ptr<JsObject> position_object(GetJsRunner()->NewObject());
@@ -707,6 +732,7 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
                                          const Position &position) {
   ASSERT_SINGLE_THREAD();
   assert(fix_info);
+  assert(position.IsInitialized());
   assert(!position.IsGoodFix());
 
   // The error callback is optional.
@@ -905,6 +931,7 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
     JsObject *position_object) {
   assert(js_runner);
   assert(position_object);
+  assert(position.IsInitialized());
   assert(position.IsGoodFix());
 
   bool result = true;
@@ -958,6 +985,7 @@ bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
     const Position &position,
     JsObject *error_object) {
   assert(error_object);
+  assert(position.IsInitialized());
   assert(!position.IsGoodFix());
 
   bool result = true;
