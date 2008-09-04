@@ -145,12 +145,12 @@ class ChromeWin32Launcher(BaseWin32Launcher):
     appdata_xp = os.path.join(home, 'Local Settings\\Application Data')
     appdata_vista = os.path.join(home, 'AppData\\LocalLow')
     if os.path.exists(appdata_vista):
-      self.browser_command = [os.path.join(appdata_vista, 
+      self.browser_command = [os.path.join(appdata_vista,
           ChromeWin32Launcher.CHROME_PATH)]
     elif os.path.exists(appdata_xp):
-      self.browser_command = [os.path.join(appdata_xp, 
+      self.browser_command = [os.path.join(appdata_xp,
           ChromeWin32Launcher.CHROME_PATH)]
-  
+
   def killAllInstances(self):
     self._killInstancesByName('chrome.exe')
 

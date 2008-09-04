@@ -104,15 +104,15 @@ class BaseInstaller:
           return build
     raise "Can't locate build of type '%s' in '%s'" % (type, directory)
 
-  def _saveInstalledBuild(self):
-    """ Copies given build to the "current build" location. """
-    if os.path.exists(self.current_build):
-      shutil.rmtree(self.current_build, onerror=self._handleRmError)
-    shutil.copytree(BaseInstaller.BUILDS, self.current_build)
+  def _saveInstalledBuild(self, build_path):
+    """ Moves given build to the "current build" location. """
+    if not os.path.exists(self.current_build):
+      os.mkdir(self.current_build)
+    shutil.copy(build_path, self.current_build)
 
   def _copyProfile(self, src, dst_folder, profile_name):
     """ Copy profile to correct location. 
-    
+
     Args:
       src: Location of profile to copy
       dst_folder: Path of folder to copy into
@@ -132,7 +132,7 @@ class BaseInstaller:
 
   def _chmod(self, target, permission):
     """ Recursively set permissions to target and children. 
-    
+
     We must set permissions recursively after unzipping and copying
     folders so that the contents will be executable.  This is necessary
     because by default zip will not mark any files as executable and this
@@ -147,7 +147,7 @@ class BaseInstaller:
       for file in os.listdir(target):
         new_target = os.path.join(target, file)
         self._chmod(new_target, permission)
-  
+
   def _handleRmError(self, func, path, exc_info):
     """ Handle errors removing files with long names on nt systems.
 
@@ -211,11 +211,11 @@ class BaseWin32Installer(BaseInstaller):
 
   def __init__(self):
     self._prepareProfiles()
-    
+
   def install(self):
     """ Do installation.  """
     # First, uninstall current installed build, if any exists
-    self._uninstallCurrentBuild()    
+    self._uninstallCurrentBuild()
 
     # Now install new build
     build_path = self._buildPath(BaseInstaller.BUILDS)
@@ -224,12 +224,12 @@ class BaseWin32Installer(BaseInstaller):
     p = subprocess.Popen(c)
     p.wait()
     google_path = os.path.join(self.appdata_path, 'Google')
-    self._copyProfile(self.ieprofile, google_path, 
+    self._copyProfile(self.ieprofile, google_path,
                       'Google Gears for Internet Explorer')
 
     # Save new build as current installed build
-    self._saveInstalledBuild()
-  
+    self._saveInstalledBuild(build_path)
+
   def _uninstallCurrentBuild(self):
     """ If a known current build exists, uninstall it. """
     if os.path.exists(self.current_build):
@@ -240,6 +240,7 @@ class BaseWin32Installer(BaseInstaller):
         c = ['msiexec', '/passive', '/uninstall', build_path]
         p = subprocess.Popen(c)
         p.wait()
+        os.remove(build_path)
       except:
         print 'Uninstall failed or no installer found.'
   
@@ -255,7 +256,7 @@ class WinXpInstaller(BaseWin32Installer):
     self.ieprofile = 'permissions'
 
   def _buildPath(self, directory):
-    return self._findBuildPath('win32', directory)
+    return self._findBuildPath('ffie', directory)
 
 
 class WinVistaInstaller(BaseWin32Installer):
@@ -269,7 +270,7 @@ class WinVistaInstaller(BaseWin32Installer):
     self.ieprofile = 'permissions'
 
   def _buildPath(self, directory):
-    return self._findBuildPath('win32', directory)
+    return self._findBuildPath('ffie', directory)
 
 
 class ChromeWin32Installer(BaseWin32Installer):
@@ -332,7 +333,7 @@ class ChromeWin32Installer(BaseWin32Installer):
     self._copyProfile(self.profile, self.permissions_path, 'Google Gears')
 
     # Save new build as current installed build
-    self._saveInstalledBuild()
+    self._saveInstalledBuild(build_path)
 
   def _buildPath(self, directory):
     return self._findBuildPath('chrome', directory)
@@ -433,7 +434,7 @@ class BaseFirefoxMacInstaller(BaseInstaller):
     os.system('%s %s' % (self.firefox_bin, self.profile_arg))
     self._installExtension(build_path)
     self._copyProfileCacheMac()
-    self._saveInstalledBuild()
+    self._saveInstalledBuild(build_path)
 
   def _copyProfileCacheMac(self):
     """ Copy cache portion of profile on mac. """
@@ -529,7 +530,7 @@ class SafariMacInstaller(BaseInstaller):
     install_command = ('/usr/sbin/installer -pkg %s -target /' % installer)
     self._RunAsRoot(install_command)    
     self._copyProfile(self.src_profile, self.profile_path, self.profile_name)
-    self._saveInstalledBuild()
+    self._saveInstalledBuild(build_path)
 
 
 class BaseFirefoxLinuxInstaller(BaseInstaller):
@@ -553,7 +554,7 @@ class BaseFirefoxLinuxInstaller(BaseInstaller):
     build_path = self._buildPath(BaseInstaller.BUILDS)
     os.system('%s %s' % (self.firefox_bin, self.profile_arg))
     self._installExtension(build_path)
-    self._saveInstalledBuild()
+    self._saveInstalledBuild(build_path)
 
 
 class Firefox2LinuxInstaller(BaseFirefoxLinuxInstaller):
