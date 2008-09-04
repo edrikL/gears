@@ -55,32 +55,36 @@ function init() {
     addStatus('Gears is not installed', 'error');
     return;
   }
-  
-  addStatus('Getting location...');
-    
-  var geolocation = google.gears.factory.create('beta.geolocation');
-  geolocation.getCurrentPosition(
-    function(p) {
-      var address = p.gearsAddress.city + ', ' 
-                    + p.gearsAddress.region + ', ' 
-                    + p.gearsAddress.country + ' (' 
-                    + p.latitude + ', ' 
-                    + p.longitude + ')';
-      
-      clearStatus();
-      addStatus('Your address is: ' + address);
-    },
 
-    function(err) {
-      var msg = 'Error retrieving your location: ' + err.message;
-      setError(msg);
-    },
-  
-    {
-      enableHighAccuracy: true, 
-      gearsRequestAddress: true 
-    }
-  );
+  addStatus('Getting location...');
+
+  function successCallback(p) {
+    var address = p.gearsAddress.city + ', '
+                  + p.gearsAddress.region + ', '
+                  + p.gearsAddress.country + ' ('
+                  + p.latitude + ', '
+                  + p.longitude + ')';
+
+    clearStatus();
+    addStatus('Your address is: ' + address);
+  }
+
+  function errorCallback(err) {
+    var msg = 'Error retrieving your location: ' + err.message;
+    setError(msg);
+  }
+
+  try {
+    var geolocation = google.gears.factory.create('beta.geolocation');
+    geolocation.getCurrentPosition(successCallback,
+                                   errorCallback,
+                                   { enableHighAccuracy: true,
+                                     gearsRequestAddress: true });
+  } catch (e) {
+    setError('Error using Geolocation API: ' + e.message);
+    return;
+  }
+
 }
 </script>
 </body>
