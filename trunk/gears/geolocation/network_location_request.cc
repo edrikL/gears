@@ -366,6 +366,15 @@ static bool AddAngle(const std::string &property_name,
   return false;
 }
 
+// Numeric values without a decimal point have type integer and IsDouble() will
+// return false. This is convenience function for detecting integer or floating
+// point numeric values. Note that isIntegral() includes boolean values, which
+// is not what we want.
+static bool IsDoubleOrInt(const Json::Value &object,
+                          const std::string &property_name) {
+  return object[property_name].isDouble() || object[property_name].isInt();
+}
+
 // The JsValue::asXXX() methods return zero if a property isn't specified. For
 // our purposes, zero is a valid value, so we have to test for existence.
 
@@ -374,7 +383,7 @@ static bool GetAsDouble(const Json::Value &object,
                         const std::string &property_name,
                         double *out) {
   assert(out);
-  if (!object[property_name].isDouble()) {
+  if (!IsDoubleOrInt(object, property_name)) {
     return false;
   }
   *out = object[property_name].asDouble();
@@ -401,6 +410,9 @@ static bool ParseServerResponse(const std::string &response_body,
     LOG(("ParseServerResponse() : Response was empty.\n"));
     return false;
   }
+  LOG(("ParseServerResponse() : Parsing response %s.\n",
+       response_body.c_str()));
+
   // Parse the response, ignoring comments.
   Json::Reader reader;
   Json::Value response_object;
@@ -425,9 +437,9 @@ static bool ParseServerResponse(const std::string &response_body,
   }
 
   // latitude, longitude and accuracy fields are required.
-  if (!location[kLatitudeString].isDouble() ||
-      !location[kLongitudeString].isDouble() ||
-      !location[kAccuracyString].isDouble()) {
+  if (!IsDoubleOrInt(location, kLatitudeString) ||
+      !IsDoubleOrInt(location, kLongitudeString) ||
+      !IsDoubleOrInt(location, kAccuracyString)) {
     return false;
   }
   position->latitude = location[kLatitudeString].asDouble();

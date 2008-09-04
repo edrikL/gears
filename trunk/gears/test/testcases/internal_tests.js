@@ -462,6 +462,39 @@ function testGeolocationGetLocationFromResponse() {
     correctPosition.timestamp = new Date(42);
     assertObjectEqual(correctPosition, position);
 
+    // We should also accept integer values for floating point fields.
+    var responseBody = '{ ' +
+                       '"location" : { ' +
+                       '"latitude" : 53, ' +
+                       '"longitude" : 0, ' +
+                       '"altitude" : 30, ' +
+                       '"horizontal_accuracy" : 1200, ' +
+                       '"vertical_accuracy" : 10, ' +
+                       '"address" : { ' +
+                       '"street_number": "100", ' +
+                       '"street": "Amphibian Walkway", ' +
+                       '"city": "Mountain View", ' +
+                       '"county": "Mountain View County", ' +
+                       '"region": "California", ' +
+                       '"country": "United States of America", ' +
+                       '"country_code": "US", ' +
+                       '"postal_code": "94043" ' +
+                       '} ' +
+                       '} ' +
+                       '}';
+    position = internalTests.testGeolocationGetLocationFromResponse(
+        true,  // HttpPost result
+        200,   // status code
+        responseBody,
+        42,    // timestamp
+        '');   // server URL
+    correctPosition.latitude = 53;
+    correctPosition.longitude = 0;
+    correctPosition.altitude = 30;
+    correctPosition.accuracy = 1200;
+    correctPosition.altitudeAccuracy = 10;
+    assertObjectEqual(correctPosition, position);
+
     // Test no response.
     position = internalTests.testGeolocationGetLocationFromResponse(
         false,  // HttpPost result
