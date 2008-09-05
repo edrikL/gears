@@ -463,7 +463,11 @@ m4_include(genfiles/permissions_dialog.js)
     } else {
       elem = dom.getElementById("origin");
       elem.style.display = "block";
-      setTextContent(elem, origin);
+      if (browser.ie_mobile) {
+        elem.innerHTML = wrapDomain(origin);
+      } else {
+        setTextContent(elem, origin);
+      }
     }
 
     if (customIcon) {
