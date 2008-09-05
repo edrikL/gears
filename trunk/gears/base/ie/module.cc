@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
@@ -39,6 +40,14 @@ class DllModule : public CAtlDllModuleT< DllModule > {
   DECLARE_LIBID(LIBID_GearsTypelib)
   DECLARE_REGISTRY_APPID_RESOURCEID(IDR_GEARSIE, \
   "{B56936F7-0433-4E0B-921B-D095E7142B6D}")
+
+  DllModule() {
+    LEAK_COUNTER_INITIALIZE();
+  }
+
+  ~DllModule() {
+    LEAK_COUNTER_DUMP_COUNTS();
+  }
 };
 
 DllModule atl_module;
