@@ -191,6 +191,14 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
     google.gears.workerPool.onerror = this.workerHandleGlobalError_;
   } else {
     window.onerror = this.handleGlobalError_;
+    // On IE6, at least, assigning window.onerror leads to a circular COM
+    // reference, and hence a memory leak. Presumably the circular reference
+    // is between between this (an instance of Harness) and the global object
+    // called window. To break this circular reference, we reset window.onerror
+    // on page unload.
+    window.onunload = function() {
+      window.onerror = null;
+    }
   }
 
   // Run the first test directly; no need to schedule.

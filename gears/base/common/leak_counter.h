@@ -27,10 +27,15 @@
 #define GEARS_BASE_COMMON_LEAK_COUNTER_H__
 
 #ifdef DEBUG
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_IE
+#ifdef WINCE
+// TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
+#else
 #define ENABLE_LEAK_COUNTING 1
 #endif
 #endif
+#endif
+
 
 #if ENABLE_LEAK_COUNTING
 
