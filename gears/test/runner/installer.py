@@ -286,7 +286,7 @@ class ChromeWin32Installer(BaseWin32Installer):
     home = os.getenv('USERPROFILE')
     self.current_build = os.path.join(home, 'current_gears_build')
     appdata_xp = os.path.join(home, 'Local Settings\\Application Data')
-    appdata_vista = os.path.join(home, 'AppData\\LocalLow')
+    appdata_vista = os.path.join(home, 'AppData\\Local')
     if os.path.exists(appdata_vista):
       self.permissions_path = os.path.join(appdata_vista,
           ChromeWin32Installer.CHROME_PROFILE_PATH)
