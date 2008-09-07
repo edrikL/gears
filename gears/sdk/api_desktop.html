@@ -240,9 +240,10 @@ desktop.openFiles(openFilesCallback);
   <td class="odd">By default, all files on the local disk are selectable.
       If a filter is provided, only files matching the filter are selectable.
       The user can turn the filter off, so be aware that selected files
-      may not match the filter.  The filter is an array of Internet
-      content types and/or file extensions.
-      Example: <code>['text/html', '.txt', 'image/*']</code></td>
+      may not match the filter.  The filter is an array of internet
+      content types and/or file extensions.<br><br>
+      Example: <code>['text/html', 'text/plain', '.mov']</code><br><br>
+      Partial content types like 'image/*' are not currently supported.</td>
 </tr>
 </table>
 
