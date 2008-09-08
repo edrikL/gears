@@ -26,7 +26,7 @@ Finally open a command prompt, setup your build environment, and build Gears.  (
     * "c:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.cmd"
     * set PATH=%PATH%;<<python path>>;<<wix path>>;<<unxutils path>>\usr\local\wbin
   * Build Gears
-    * make  (To build only the Firefox version, add BROWSER=FF)
+    * make BROWSER=[IE|FF] MODE=[dbg|opt] OS=[win32|wince]
 
 = Installing =
 
