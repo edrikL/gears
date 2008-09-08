@@ -68,8 +68,9 @@ function testPassArguments() {
                   "Incorrect value for parameter " + (i + 1));
     }
 
-    // Test not passing required args
-    var required_argument_error = "Required argument 5 is missing.";
+    // Test passing null and undefined for required args
+    var required_argument_error =
+        "Null or undefined passed for required argument 5.";
     assertError(function() {
       internalTests.testPassArguments(good_bool, good_int, good_int64,
                                       good_double, null); },
@@ -78,10 +79,12 @@ function testPassArguments() {
       internalTests.testPassArguments(good_bool, good_int, good_int64,
                                       good_double, undefined); },
       required_argument_error);
+
+    // Test not passing required args
     assertError(function() {
       internalTests.testPassArguments(good_bool, good_int, good_int64,
                                       good_double); },
-      required_argument_error);
+      "Required argument 5 is missing");
 
     // Test passing wrong type
     for (var i = 0; i < good_vals.length; i++) {
@@ -132,17 +135,43 @@ function testPassArgumentsCallback() {
 
 function testPassArgumentsOptional() {
   if (isUsingCCTests) {
+    // Method signature is testPassArgumentsOptional(int,
+    //                                               optional int,
+    //                                               int,
+    //                                               optional int,
+    //                                               optional int);
+
+    // All good, optional arguments supplied.
+    internalTests.testPassArgumentsOptional(42, 42, 42, 42, 42);
+    internalTests.testPassArgumentsOptional(42, 42, 42, 42);
     internalTests.testPassArgumentsOptional(42, 42, 42);
-    internalTests.testPassArgumentsOptional(42, 42);
-    internalTests.testPassArgumentsOptional(42);
-    
+
+    // All good, optional arguments passed null.
+    internalTests.testPassArgumentsOptional(42, null, 42, null, null);
+    internalTests.testPassArgumentsOptional(42, null, 42, null);
+    internalTests.testPassArgumentsOptional(42, null, 42);
+
+    // Missing required argument.
+    var expectedError = "Required argument 3 is missing.";
     assertError(
-      function() { internalTests.testPassArgumentsOptional(42, "hello"); },
-      "Argument 2 has invalid type or is outside allowed range");
-      
+      function() { internalTests.testPassArgumentsOptional(42, 42); },
+      expectedError);
     assertError(
-      function() { internalTests.testPassArgumentsOptional(42, 43); },
-      "Incorrect value for parameter 2");
+      function() { internalTests.testPassArgumentsOptional(42); },
+      expectedError);
+
+    // Incorrect type for optional argument.
+    assertError(
+      function() { internalTests.testPassArgumentsOptional(42, 42, 42, "hi"); },
+      "Argument 4 has invalid type or is outside allowed range.");
+    assertError(
+      function() { internalTests.testPassArgumentsOptional(42, "hi"); },
+      "Argument 2 has invalid type or is outside allowed range.");
+
+    // Incorrect value for optional argument.
+    assertError(
+      function() { internalTests.testPassArgumentsOptional(42, 42, 42, 43); },
+      "Incorrect value for parameter 4.");
   }
 }
 

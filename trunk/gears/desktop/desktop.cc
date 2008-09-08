@@ -422,13 +422,15 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, as_out_parameter(callback) },
     { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options_map },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
 
   // TODO(cdevries): set focus to tab where this function was called
 
   FileDialog::Options options;
-  if (argc > 1) {
+  if (argv[1].was_specified) {
     if (!FileDialog::ParseOptions(context, options_map, &options)) {
       assert(context->is_exception_set());
       return;

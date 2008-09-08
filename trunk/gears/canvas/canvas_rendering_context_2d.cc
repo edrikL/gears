@@ -412,9 +412,10 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
     { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_width },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &dest_height }
   };
-  int num_arguments = context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
+  if (!context->GetArguments(ARRAYSIZE(args), args)) {
+    assert(context->is_exception_set());
     return;
+  }
   assert(other_module);
   if (GearsCanvas::kModuleName != other_module->get_module_name()) {
     context->SetException(STRING16(L"Argument must be a Canvas."));
@@ -422,12 +423,23 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   }
   scoped_refptr<GearsCanvas> src = static_cast<GearsCanvas*>(other_module);
   
-  if (num_arguments != 9) {
+  bool optional_source_pos_arguments_present = args[1].was_specified &&
+                                               args[2].was_specified;
+  bool optional_source_size_arguments_present = args[3].was_specified &&
+                                                args[4].was_specified;
+  bool optional_dest_arguments_present = args[5].was_specified &&
+                                         args[6].was_specified &&
+                                         args[7].was_specified &&
+                                         args[8].was_specified;
+  if (!(optional_source_pos_arguments_present &&
+        optional_source_size_arguments_present &&
+        optional_dest_arguments_present)) {
     // Handle missing arguments.
-    if (num_arguments == 5) {
+    if (optional_source_pos_arguments_present &&
+        optional_source_size_arguments_present) {
       dest_width = source_width;
       dest_height = source_height;
-    } else if (num_arguments == 3) {
+    } else if (optional_source_pos_arguments_present) {
       dest_width = src->width();
       dest_height = src->height();
     } else {

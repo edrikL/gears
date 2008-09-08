@@ -138,9 +138,10 @@ void GearsDatabase::Execute(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expr },
     { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &arg_array },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set())
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
     return;
+  }
 
 #ifdef BROWSER_IE
   LOG16((L"DB Execute: %s\n", expr));
@@ -169,7 +170,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Bind parameters
-  if (!BindArgsToStatement(context, (argc >= 2) ? &arg_array : NULL,
+  if (!BindArgsToStatement(context, argv[1].was_specified ? &arg_array : NULL,
                            stmt.get())) {
     // BindArgsToStatement already set an exception
     return;

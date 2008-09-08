@@ -778,7 +778,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   // Arguments are: function successCallback, optional function errorCallback,
   // optional object options. errorCallback can be null.
   //
-  // Note that GetArgumentsForGeolocation allocates a new JsRootedCallback.
+  // Note that GetArguments allocates a new JsRootedCallback.
   //
   JsRootedCallback *success_callback = NULL;
   JsRootedCallback *error_callback = NULL;
@@ -789,7 +789,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
     { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options, false },
   };
  
-  bool success = context->GetArguments2(ARRAYSIZE(argv), argv);
+  bool success = context->GetArguments(ARRAYSIZE(argv), argv);
   if (!success) {
     delete success_callback;
     delete error_callback;

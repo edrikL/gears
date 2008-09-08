@@ -51,10 +51,10 @@ void GearsConsole::Log(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &message },
     { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &args_array},
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  
-  if (context->is_exception_set())
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
     return;
+  }
   
   // Check input validity.
   if (type_str.length() == 0) {
@@ -68,7 +68,7 @@ void GearsConsole::Log(JsCallContext *context) {
   }
   
   std::string16 msg = message;
-  if (argc == 3) {
+  if (argv[2].was_specified) {
     InterpolateArgs(&message, &args_array);
   }
   LogEvent *log_event = new LogEvent(message, type_str, EnvPageLocationUrl());

@@ -102,7 +102,7 @@ function testWeirdDatabaseNames() {
 function testDatabaseVersionNull() {
   assertError(function() {
     var db = db_manager.openDatabase('unit_test_db', null);
-  }, "Required argument 2 is missing.");
+  }, "Null or undefined passed for required argument 2.");
 }
 
 function testDatabaseApiSig() {

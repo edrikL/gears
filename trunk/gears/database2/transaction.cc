@@ -99,7 +99,7 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &temp_error_callback }
   };
 
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   JsArray *sql_arguments = &temp_sql_arguments;
   scoped_ptr<JsRootedCallback> callback(temp_callback);
   scoped_ptr<JsRootedCallback> error_callback(temp_error_callback);
@@ -112,13 +112,19 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
 
   // if any of the arguments are not supplied or null, send them to statement
   // factory as NULL
-  if (argc < 2 || JsTokenIsNullOrUndefined(sql_arguments->token())) {
+  if (!argv[1].was_specified ||
+      JsTokenIsNullOrUndefined(sql_arguments->token())) {
     sql_arguments = NULL;
   }
-  if (argc < 3 || JsTokenIsNullOrUndefined(callback->token())) {
+  if (!argv[1].was_specified ||  // Don't use temp_callback unless
+      !argv[2].was_specified ||  // temp_sql_arguments was also specified.
+      JsTokenIsNullOrUndefined(callback->token())) {
     callback.reset(NULL);
   }
-  if (argc < 4 || JsTokenIsNullOrUndefined(error_callback->token())) {
+  if (!argv[1].was_specified ||  // Don't use temp_error_callback unless
+      !argv[2].was_specified ||  // temp_callback and temp_sql_arguments were
+      !argv[3].was_specified ||  // also specified.
+      JsTokenIsNullOrUndefined(error_callback->token())) {
     error_callback.reset(NULL);
   }
 
