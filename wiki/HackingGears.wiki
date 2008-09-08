@@ -6,7 +6,7 @@ If you simply want to build Gears from source, you can find instructions for tha
 
 = Make Targets =
 
-{{{>> make BROWSER=[IE|FF] MODE=[dbg|opt]}}}
+{{{>> make BROWSER=[IE|FF] MODE=[dbg|opt] OS=[win32|wince]}}}
 
 e.g.
 
