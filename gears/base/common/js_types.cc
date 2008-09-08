@@ -2238,57 +2238,15 @@ const JsToken &JsCallContext::GetArgument(int index) {
 
 #endif
 
-int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
-  bool has_optional = false;
-
-  if (GetArgumentCount() > output_argc) {
-    SetException(STRING16(L"Too many parameters."));
-    return 0;
-  }
-
-  for (int i = 0; i < output_argc; ++i) {
-    assert(output_argv[i].value_ptr);
-
-    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
-    if (output_argv[i].requirement == JSPARAM_REQUIRED)
-      assert(!has_optional);  // should not have required arg after optional
-
-    // TODO(mpcomplete): We need to handle this more generally.  We should
-    // continue processing arguments for the case where a developer does
-    // something like 'method(null, foo)' if the first argument is optional.
-    if (i >= GetArgumentCount() ||
-        GetArgumentType(i) == JSPARAM_NULL || 
-        GetArgumentType(i) == JSPARAM_UNDEFINED) {
-      // Out of arguments
-      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
-        std::string16 msg;
-        msg += STRING16(L"Required argument ");
-        msg += IntegerToString16(i + 1);
-        msg += STRING16(L" is missing.");
-        SetException(msg.c_str());
-      }
-
-      // If failed on index [N], then N args succeeded
-      return i;
-    }
-
-    if (!ConvertTokenToArgument(this, GetArgument(i), &output_argv[i])) {
-      std::string16 msg(STRING16(L"Argument "));
-      msg += IntegerToString16(i + 1);
-      msg += STRING16(L" has invalid type or is outside allowed range.");
-      SetException(msg);
-      return i;
-    }
-  }
-
-  return output_argc;
-}
-
-bool JsCallContext::GetArguments2(int output_argc, JsArgument *output_argv) {
-
+bool JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   if (GetArgumentCount() > output_argc) {
     SetException(STRING16(L"Too many parameters."));
     return false;
+  }
+
+  // Intitialize all arguments to indicate unspecified.
+  for (int i = 0; i < output_argc; ++i) {
+    output_argv[i].was_specified = false;
   }
 
   for (int i = 0; i < output_argc; ++i) {
@@ -2326,10 +2284,9 @@ bool JsCallContext::GetArguments2(int output_argc, JsArgument *output_argv) {
         msg += STRING16(L".");
         SetException(msg.c_str());
         return false;
-      } else {
-        // This argument is optional so null or undefined values are ok.
-        output_argv[i].was_specified = false;
       }
+      // This argument is optional so null or undefined values are ok. We leave
+      // it unspecified.
     } else {
       // What was passed is not null or undefined. Attempt to
       // convert to the expected type.

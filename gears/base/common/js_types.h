@@ -528,16 +528,14 @@ class JsCallContext {
   ~JsCallContext();
 
   // Get the arguments a JavaScript caller has passed into a scriptable method
-  // of a native object.  Returns the number of arguments successfully read
-  // (will bail at the first invalid argument).
-  int GetArguments(int argc, JsArgument *argv);
-
-  // As above, except that this function tries to extract all given parameters
-  // and accepts null for optional arguments. Returns false if an exception
-  // occurs and true otherwise.
-  // TODO(andreip): post 0.4, replace the above JsCallContext::GetArguments
-  // with this implementation and fix all the call sites.
-  bool GetArguments2(int argc, JsArgument *argv);
+  // of a native object. Arguments may be required or optional and these types
+  // may be interspersed freely. Required arguments must always be specified,
+  // and they cannot be null or undefined.  Optional arguments may be null or
+  // undefined, or they can be omitted entirely if not followed by any required
+  // arguments. Will fail if a required argument is missing or if an invalid
+  // type is passed. In this case, sets an exception on the context and returns
+  // false. Returns true otherwise.
+  bool GetArguments(int argc, JsArgument *argv);
 
   // Get the type of an argument that was passed in.
   JsParamType GetArgumentType(int i);

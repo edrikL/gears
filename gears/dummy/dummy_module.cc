@@ -55,23 +55,22 @@ void GearsDummyModule::Method(JsCallContext *context) {
   int second_argument;
 
   // Specify which arguments and types to read and whether they are optional.
-  // JSPARAM_REQUIRED may not appear after JSPARAM_OPTIONAL in declaration.
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &first_argument },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &second_argument }
   };
 
   // Read arguments.
-  int argument_count = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
 
   // Context will throw an exception if required arguments are missing or
   // argument types are mismatched. Check for this and return if exception has
   // been thrown.
   if (context->is_exception_set()) return;
 
-  // You can check for number of arguments with which the method was called and
-  // adjust your logic accordingly.
-  if (argument_count < 2) {
+  // You can check which optional arguments were supplied and adjust your logic
+  // accordingly.
+  if (!argv[1].was_specified) {
     second_argument = -1;
   }
 

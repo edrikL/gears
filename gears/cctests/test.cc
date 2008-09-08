@@ -444,24 +444,31 @@ void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
 }
 
 void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
-  int int_values[3] = {};
+  static const int max_num_arguments = 5;
+  int int_values[max_num_arguments] = {};
 
   JsArgument argv[] = {
     {JSPARAM_REQUIRED, JSPARAM_INT, &(int_values[0])},
     {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[1])},
-    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[2])}
+    {JSPARAM_REQUIRED, JSPARAM_INT, &(int_values[2])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[3])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[4])}
   };
 
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
 
-  for (int i = 0; i < argc; ++i) {
-    if (int_values[i] != 42) {
-      std::string16 error(STRING16(L"Incorrect value for parameter "));
-      error += IntegerToString16(i + 1);
-      error += STRING16(L".");
-      context->SetException(error);
-      return;
+  for (int i = 0; i < max_num_arguments; ++i) {
+    if (argv[i].was_specified) {
+      if (int_values[i] != 42) {
+        std::string16 error(STRING16(L"Incorrect value for parameter "));
+        error += IntegerToString16(i + 1);
+        error += STRING16(L".");
+        context->SetException(error);
+        return;
+      }
     }
   }
 }
@@ -704,9 +711,7 @@ void GearsTest::TestCoerceString(JsCallContext *context) {
 void GearsTest::TestGetType(JsCallContext *context) {
   // Don't really care about the actual value of the second parameter. We
   // specify an argument of type JSPARAM_TOKEN because all types (other than
-  // NULL and undefined) can be cast to this type by GetArguments. In these two
-  // cases, GetArguments will not parse the argument (it is optional) and will
-  // return 1, rather than 2.
+  // NULL and undefined) can be cast to this type by GetArguments.
   std::string16 type;
   JsToken value;
   JsArgument argv[] = {
@@ -2044,7 +2049,7 @@ void GearsTest::RemoveEntriesFromBrowserCache(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array }
   };
-  if (context->GetArguments(ARRAYSIZE(argv), argv) != ARRAYSIZE(argv)) {
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
     assert(context->is_exception_set());
     return;
   }

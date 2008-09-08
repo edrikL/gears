@@ -108,14 +108,16 @@ void GearsBlob::Slice(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT64, &offset },
     { JSPARAM_OPTIONAL, JSPARAM_INT64, &length },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
 
   if (offset < 0) {
     context->SetException(STRING16(L"Offset must be a non-negative integer."));
     return;
   }
-  if (argc != 2) {
+  if (!argv[1].was_specified) {
     int64 blob_size = contents_->Length();
     length = (blob_size > offset) ? blob_size - offset : 0;
   }
