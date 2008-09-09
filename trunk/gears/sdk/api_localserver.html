@@ -444,11 +444,11 @@ Expected cookie format is &quot;name=value&quot;.</td>
       <td><strong>updateStatus</strong></td>
         <td class="odd">readonly attribute int</td>
         <td class="odd">
-	      Can be one of four values:
-	      <table class="noborders">
-	        <tr>
-	          <td><strong>0</strong>
-	          <td>Update OK. An update is not running. The last update to run succeeded.
+        Can be one of four values:
+        <table class="noborders">
+          <tr>
+            <td><strong>0</strong>
+            <td>Update OK. An update is not running. The last update to run succeeded.
             <tr>
               <td><strong>1</strong>
               <td>Update checking. Gears is checking for a new manifest file.
@@ -1081,7 +1081,7 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
     <table>
       <tr class="odd">
         <th width="186"><div align="center" >Attribute</div></th>
-		<th width="208"><div align="center" >Value</div></th>
+    <th width="208"><div align="center" >Value</div></th>
         <th width="336"><div align="center" >Notes</div></th>
       </tr>
       <tr class="odd">
@@ -1211,7 +1211,10 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
   <p><strong>Windows XP - Chrome </strong>- Files are stored in the user local profile directory. </p>
   <p>Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Google\Chrome\User Data\Default\Plugin Data\Google Gears<br />
     Example:  C:\Documents and Settings\Bob\Local Settings\Application Data\Google\Chrome\User Data\Default\Plugin Data\Google Gears</p>
-  <p><strong>Mac OS/X - Firefox </strong>- Files are stored in the user local profile directory. </p>
+  <p><strong>Mac OS X - Safari </strong>- Files are stored in the user Application Support directory. </p>
+  <p>Location: ~/Library/Application Support/Google/Google Gears for Safari<br />
+    Example: /Users/Bob/Library/Application Support/Google/Google Gears for Safari</p>
+  <p><strong>Mac OS X - Firefox </strong>- Files are stored in the user local profile directory. </p>
   <p>Location: Users/&lt;username&gt;/Library/Caches/Firefox/Profiles/{profile}.default/Google Gears for Firefox <br />
     Example: Users/Bob/Library/Caches/Firefox/Profiles/08ywpi3q.default/Google Gears for Firefox</p>
   <p><strong>Linux - Firefox </strong>- Files are stored in the user home directory.</p>
