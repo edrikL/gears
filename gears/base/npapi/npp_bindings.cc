@@ -41,12 +41,27 @@
 // particular plugin.
 //
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/npapi/module.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/factory_np.h"
 #include "genfiles/product_constants.h"
 
 std::string16 g_user_agent;  // Access externally via BrowserUtils class.
+
+#if ENABLE_LEAK_COUNTING
+// This class (and its sole instance) is solely to provide appropriate times
+// to set up and tear down the leak counting code.
+class NpapiLeakCounter {
+ public:
+  NpapiLeakCounter() {
+    LEAK_COUNTER_INITIALIZE();
+  }
+  ~NpapiLeakCounter() {
+    LEAK_COUNTER_DUMP_COUNTS();
+  }
+} npapi_leak_counter_global_instance;
+#endif
 
 #ifdef OS_ANDROID
 const ThreadLocals::Slot kNPPInstance = ThreadLocals::Alloc();

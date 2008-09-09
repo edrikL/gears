@@ -43,6 +43,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #include "gears/base/common/js_standalone_engine.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
@@ -73,9 +74,6 @@ static void UnregisterDocumentJsRunner(NPP instance) {
   if (!g_document_js_runners)
     return;
 
-  // TODO(nigeltao): Are we leaking the DocumentJsRunner (since the map's
-  // value type is just a raw pointer, not a linked_ptr)? If so, this would
-  // be a good time to delete it.
   g_document_js_runners->erase(instance);
   if (g_document_js_runners->empty()) {
     delete g_document_js_runners;
@@ -95,16 +93,11 @@ class JsRunnerBase : public JsRunnerInterface {
   virtual ~JsRunnerBase() {
     // Should have called Cleanup() to kill this before getting here();
     assert(evaluator_.get() == NULL);
+    for (int i = 0; i < MAX_JSEVENTS; i++) {
+      assert(0 == event_handlers_[i].size());
+    }
   }
   
-  void OnModuleEnvironmentAttach() {
-    // TODO(nigeltao): implement on NPAPI, i.e. plug the DocumentJsRunner leak.
-  }
-
-  void OnModuleEnvironmentDetach() {
-    // TODO(nigeltao): implement on NPAPI, i.e. plug the DocumentJsRunner leak.
-  }
-
   virtual NPObject *GetGlobalObject() = 0;
   
   // Because JsRunner destroys the JSEngine in it's destructor, we add this
@@ -434,7 +427,8 @@ class JsRunner : public JsRunnerBase {
 #endif
     static bool initialized = false;
     static Mutex browser_callbacks_mutex;
-    
+    LEAK_COUNTER_INCREMENT(JsRunner);
+
     if (!initialized) {
       MutexLock lock(&browser_callbacks_mutex); 
       JSStandaloneEngine::GetNPNEntryPoints(
@@ -448,6 +442,7 @@ class JsRunner : public JsRunnerBase {
   }
   
   virtual ~JsRunner() {
+    LEAK_COUNTER_DECREMENT(JsRunner);
     // Alert modules that the engine is unloading.
     SendEvent(JSEVENT_UNLOAD);
     
@@ -456,6 +451,14 @@ class JsRunner : public JsRunnerBase {
     
     NPN_ReleaseObject(global_object_);
     JSStandaloneEngine::TerminateEngine();
+  }
+
+  void OnModuleEnvironmentAttach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
+  }
+
+  void OnModuleEnvironmentDetach() {
+    // No-op. A JsRunner is not self-deleting, unlike a DocumentJsRunner.
   }
 
   JsContextPtr GetContext() {
@@ -524,19 +527,31 @@ class JsRunner : public JsRunnerBase {
 class DocumentJsRunner : public JsRunnerBase {
  public:
   DocumentJsRunner(NPP instance)
-      : np_instance_(instance) {
+      : np_instance_(instance),
+        is_module_environment_detached_(true),
+        is_unloaded_(false) {
+    LEAK_COUNTER_INCREMENT(DocumentJsRunner);
     NPN_GetValue(np_instance_, NPNVWindowNPObject, &global_object_);
     RegisterDocumentJsRunner(np_instance_, this);
   }
 
   virtual ~DocumentJsRunner() {
-    // TODO(mpcomplete): This never gets called.  When should we delete the
-    // DocumentJsRunner?
+    LEAK_COUNTER_DECREMENT(DocumentJsRunner);
+    assert(is_module_environment_detached_ && is_unloaded_);
     Cleanup();
     UnregisterDocumentJsRunner(np_instance_);
     NPN_ReleaseObject(global_object_);
   }
    
+  void OnModuleEnvironmentAttach() {
+    is_module_environment_detached_ = false;
+  }
+
+  void OnModuleEnvironmentDetach() {
+    is_module_environment_detached_ = true;
+    DeleteIfNoLongerRelevant();
+  }
+
   NPObject *GetGlobalObject() {
     return global_object_;
   }
@@ -572,6 +587,8 @@ class DocumentJsRunner : public JsRunnerBase {
   void HandleNPInstanceDestroyed() {
     SendEvent(JSEVENT_UNLOAD);
     UnregisterDocumentJsRunner(np_instance_);
+    is_unloaded_ = true;
+    DeleteIfNoLongerRelevant();
   }
 
   // TODO(mpcomplete): We only support JSEVENT_UNLOAD.  We should rework this
@@ -583,8 +600,16 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
  private:
+  void DeleteIfNoLongerRelevant() {
+    if (is_module_environment_detached_ && is_unloaded_) {
+      delete this;
+    }
+  }
+
   NPP np_instance_;
   NPObject *global_object_;
+  bool is_module_environment_detached_;
+  bool is_unloaded_;
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
