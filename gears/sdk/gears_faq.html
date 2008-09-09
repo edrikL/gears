@@ -518,7 +518,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 Open <strong>Add or Remove Programs</strong> (on XP) or <strong>Programs and Features</strong> (on Vista) from the Windows Control Panel. If Gears is not listed, then Gears is not installed.<br/>
               </li>
               <li>
-                <b>Mac OS X or Linux</b>
+                <b>Mac OS X - Safari</b>
+                <br/>
+                In Safari, select Safari &gt; Google Gears Settings.... If the 'Google Gears Settings...' is not listed,  then Gears is not installed.  
+              </li>
+              <li>
+                <b>Mac OS X or Linux - Firefox</b>
                 <br/>
                 In Firefox, select Tools &gt; Extensions (Firefox 1.x) or Tools &gt;  Add-ons (Firefox 2.0+) from the menu. If Gears is not listed,  then Gears is not installed.  
               </li>
@@ -545,12 +550,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               Go to the install directory of Gears:<br/>
               <b>Mac OS X </b> - ~/Library/Application Support/Firefox/Profiles/&lt;<em>yourprofile</em>&gt;/extensions/{000a9d1c-beef-4f90-9363-039d445309b8}
               <br/>
-              <b>Windows</b> - C:\Program Files\Google\Gears\Firefox	
+              <b>Windows</b> - C:\Program Files\Google\Gears\Firefox  
               <br/>
-              <b>Linux</b> - ./mozilla/firefox/&lt;<em>yourprofile</em>&gt;/extensions/{000a9d1c-beef-4f90-9363-039d445309b8}	
+              <b>Linux</b> - ./mozilla/firefox/&lt;<em>yourprofile</em>&gt;/extensions/{000a9d1c-beef-4f90-9363-039d445309b8}  
             </li>
             <li>
-              Modify the <em>install.rdf</em> file:		
+              Modify the <em>install.rdf</em> file:    
               <ol>
                 <li>
                   Do a search on any search engine for the GUID of the Mozilla variant you are using. The example below uses Flock's
@@ -559,10 +564,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                   Add this to your <em>install.rdf</em> file under the last &lt;/em:targetApplication&gt; (note: id is the GUID):
 <pre class="prettyprint">
 &lt;em:targetApplication&gt;
-  &lt;Description&gt;	
-    &lt;em:id&gt;{a463f10c-3994-11da-9945-000d60ca027b}&lt;/em:id&gt;	
-    &lt;em:maxVersion&gt;6.02&lt;/em:maxVersion&gt; 		
-    &lt;em:minVersion&gt;0.2&lt;/em:minVersion&gt; 	
+  &lt;Description&gt;  
+    &lt;em:id&gt;{a463f10c-3994-11da-9945-000d60ca027b}&lt;/em:id&gt;  
+    &lt;em:maxVersion&gt;6.02&lt;/em:maxVersion&gt;     
+    &lt;em:minVersion&gt;0.2&lt;/em:minVersion&gt;   
   &lt;/Description&gt; 
 &lt;/em:targetApplication&gt;
 </pre>
@@ -587,10 +592,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             There are two ways to do so.
             <ol>
               <li>
-                <a href="http://groups.google.com/group/gears-users/browse_thread/thread/4584842dd14a4882" title="64 bit Linux support -		  Gears |		  Google Groups">A patch</a>    submitted by a user.		
+                <a href="http://groups.google.com/group/gears-users/browse_thread/thread/4584842dd14a4882" title="64 bit Linux support -      Gears |      Google Groups">A patch</a>    submitted by a user.    
               </li>
               <li>
-                A plugin called <a href="http://plugindoc.mozdev.org/linux-amd64.html#nswrapper" title="PluginDoc: Linux (x86_64)">nspluginwrapper</a> to use 32-bit browser plugins with x86_64 browsers.		
+                A plugin called <a href="http://plugindoc.mozdev.org/linux-amd64.html#nswrapper" title="PluginDoc: Linux (x86_64)">nspluginwrapper</a> to use 32-bit browser plugins with x86_64 browsers.    
               </li>
             </ol>
           </p>
@@ -736,11 +741,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </p>
         <ul>
           <li>
-            Apple Mac OS X (10.2 or higher)
+            Apple Mac OS X (10.4 or higher)
           </li>
           <ul>
             <li>
               Firefox 1.5 or higher
+            </li>
+            <li>
+              Safari 3.1.1 or higher (requires OS X Tiger 10.4.11+ or Leopard 10.5.3+)
             </li>
           </ul>
           <li>
@@ -1068,7 +1076,7 @@ wp.onmessage = function(a,b,messageObject) {
         Yes. If you use a ResourceStore or a ManagedResourceStore and you store a URL with parameters then whatever was captured for that URL will be served back when that URL is requested.
         Ex:
             <pre class="prettyprint">store.capture('foobar.html?foo=1&bar=2');</pre>
-            When the browser requests <em>foobar.html?foo=1&bar=2</em> it will be served the stored page, but not when it requests <em>foobar.html</em>.		
+            When the browser requests <em>foobar.html?foo=1&bar=2</em> it will be served the stored page, but not when it requests <em>foobar.html</em>.    
       </p>
     </dd>
 
@@ -1085,7 +1093,7 @@ wp.onmessage = function(a,b,messageObject) {
       <p>
         After understanding the security risks, here are two potential solutions:<br/>
         (1) Use Gears' cross-origin workers<br/>
-        (2) Use cross-origin proxying	
+        (2) Use cross-origin proxying  
       </p>
       <b>Solution (1)</b>
       <p>
@@ -1103,24 +1111,24 @@ wp.onmessage = function(a,b,messageObject) {
       <i>test.hml (this origin is http://www.foo.com/)</i>
           <pre class="code">&lt;script type="text/javascript" src="gears_init.js"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');	
-  workerPool.onmessage = function(a, b, message) {	
-    alert('Received message from worker ' + message.sender + ': ' +	message.text);	
-  };	
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');  
+  workerPool.onmessage = function(a, b, message) {  
+    alert('Received message from worker ' + message.sender + ': ' +  message.text);  
+  };  
   var childWorkerId = workerPool.createWorkerFromUrl('http://www.bar.com/worker.js');
-  workerPool.sendMessage('', childWorkerId);	
+  workerPool.sendMessage('', childWorkerId);  
 &lt;/script&gt;</pre>
       <i>worker.js (this origin is http://www.bar.com/)</i>
           <pre class="code">var wp = google.gears.workerPool;
 wp.allowCrossOrigin();
-wp.onmessage = function(a, b, message) {	
-  localServer = google.gears.factory.create('beta.localserver', '1.1');		
-  var store = localServer.createStore("Test_Store");		
+wp.onmessage = function(a, b, message) {  
+  localServer = google.gears.factory.create('beta.localserver', '1.1');    
+  var store = localServer.createStore("Test_Store");    
   store.capture("style.css", function(){
     wp.sendMessage("Captured!", message.sender);
   });
 }</pre>
-      For ease of reading, the try catch blocks that you should be using are left out! Don't forget them or to make sure the user has Gears installed.	
+      For ease of reading, the try catch blocks that you should be using are left out! Don't forget them or to make sure the user has Gears installed.  
       <br/><br/>
       <b>Solution (2)</b>
       <p>
@@ -1135,7 +1143,7 @@ wp.onmessage = function(a, b, message) {
       <p>
         Here is what the code for php_proxy.php would look like:
       </p>
-          <pre class="code">&lt;?php		
+          <pre class="code">&lt;?php    
 header("Content-Type: text/css");
 $base_url = $_GET['url'];
 
@@ -1147,9 +1155,9 @@ curl_setopt($ch, CURLOPT_HEADER, false);
 
 echo( curl_exec($ch) );
 ?&gt;</pre>
-          Then, in my HTML instead of:	
+          Then, in my HTML instead of:  
           <pre class="code">&lt;link rel="stylesheet" type="text/css" media="print" href="http://www.bar.com/style.css"/&gt;</pre>
-          I would use:	
+          I would use:  
           <pre class="code">&lt;link rel="stylesheet" type="text/css" media="print" href="http://www.foo.com/php_proxy.php?url=http://www.bar.com/style.css" /&gt;</pre>
           The last step is to have the ResourceStore grab http://www.foo.com/php_proxy.php?url=http://www.bar.com/style.css
     </dd>
@@ -1192,10 +1200,10 @@ echo( curl_exec($ch) );
                 <pre class="prettyprint">ln localserver.db www.google.com/http_80/localserver#database</pre>
           </li>
           <li>
-            Upload the <a href="http://code.google.com/articles/support/inspect_LocalServer_dbtail.html">LocalServer inspector</a> script to the domain you want to edit. Don't forget to put <a href="http://code.google.com/apis/gears/resources/gears_init.js">gears_init.js</a> there as well.		
+            Upload the <a href="http://code.google.com/articles/support/inspect_LocalServer_dbtail.html">LocalServer inspector</a> script to the domain you want to edit. Don't forget to put <a href="http://code.google.com/apis/gears/resources/gears_init.js">gears_init.js</a> there as well.    
           </li>
           <li>
-            Navigate your browser to the location of the LocalServer inspector script.		
+            Navigate your browser to the location of the LocalServer inspector script.    
           </li>
         </ol>
       </p>
@@ -1203,22 +1211,22 @@ echo( curl_exec($ch) );
         <p>
           <strong>(Windows) How to use it:</strong>
           <p>
-            There is no utility built in to Windows to create a hard link (the equivalent of Mac/Linux symlink). There is an <a href="http://shell-shocked.org/article.php?id=284">article</a> that talks about making hard links. A simple utility is Hard Link Magic.	
+            There is no utility built in to Windows to create a hard link (the equivalent of Mac/Linux symlink). There is an <a href="http://shell-shocked.org/article.php?id=284">article</a> that talks about making hard links. A simple utility is Hard Link Magic.  
           </p>
           <p>
-            Use a hard link utility to connect the <em>localserver.db</em> file located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a> to a new file, &lt;<em>gears directory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database.	
+            Use a hard link utility to connect the <em>localserver.db</em> file located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a> to a new file, &lt;<em>gears directory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database.  
           </p>
           <p>
-            Follow steps 3 &amp; 4 of the Mac/Linux section.	
+            Follow steps 3 &amp; 4 of the Mac/Linux section.  
           </p>
 
         </p>
         <strong>How it works:</strong>
         <p>
-          The file <em>localserver.db</em>, located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a>, is an SQLite database file that keeps track of all stores and resources on all domains in your Gears LocalServer. To prevent different domains from editing each other's offline data, this file is protected from being accessed in Gears code.	
+          The file <em>localserver.db</em>, located in your <a href="http://code.google.com/apis/gears/api_database.html#directories">Gears directory</a>, is an SQLite database file that keeps track of all stores and resources on all domains in your Gears LocalServer. To prevent different domains from editing each other's offline data, this file is protected from being accessed in Gears code.  
         </p>
         <p>
-          By creating a symlink to that file in your domain, it is like putting the <em>localserver.db</em> file in that folder. The script then opens that database and queries it for the stores and databases.	
+          By creating a symlink to that file in your domain, it is like putting the <em>localserver.db</em> file in that folder. The script then opens that database and queries it for the stores and databases.  
         </p>
       </p>
       <p>
@@ -1226,7 +1234,7 @@ echo( curl_exec($ch) );
           Troubleshooting:
         </strong>
         <p>
-          If you received the "File exists" error while trying to create the symlink or there is an error when you open the LocalServer inspector tool, then delete the file &lt;<em>GearsDirectory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database and recreate the symlink.	
+          If you received the "File exists" error while trying to create the symlink or there is an error when you open the LocalServer inspector tool, then delete the file &lt;<em>GearsDirectory</em>&gt;/&lt;<em>domain</em>&gt;/http_80/localserver#database and recreate the symlink.  
         </p>
 
       </p>
@@ -1255,10 +1263,10 @@ echo( curl_exec($ch) );
         No, there isn't an isOnline function in Gears at this time. And currently, there are no plans to implement it.
       </p>
       <p>
-        There are 2 reasons why we haven't implemented it yet:		
+        There are 2 reasons why we haven't implemented it yet:    
         <ol>
           <li>
-            There are multiple definitions of the application being 'offline'. The reason could be any of these:		
+            There are multiple definitions of the application being 'offline'. The reason could be any of these:    
             <ul>
               <li>
                 The browser has the 'work offline' flag set
@@ -1279,7 +1287,7 @@ echo( curl_exec($ch) );
                 The server has a bug and cannot process your request
               </li>
             </ul>
-            We can't assume how an application should determine if it is offline or not because each application will have different requirements.		
+            We can't assume how an application should determine if it is offline or not because each application will have different requirements.    
           </li>
           <li>
             <p>
@@ -1303,7 +1311,7 @@ echo( curl_exec($ch) );
         - uses Gears v0.2+ HTTPRequest
       </p>
       <p>
-        Here is some sample code that makes use of Gears' HTTPRequest module to change the UI of an application - let the user know when they are on/offline. It requires <em>gears_init.js</em> to be in the same directory.	
+        Here is some sample code that makes use of Gears' HTTPRequest module to change the UI of an application - let the user know when they are on/offline. It requires <em>gears_init.js</em> to be in the same directory.  
       </p>
           <pre class="code">&lt;div id="serverStatus"&gt;&lt;/div&gt;
 &lt;div id="pings"&gt;&lt;/div&gt;
@@ -1316,20 +1324,20 @@ echo( curl_exec($ch) );
   function pingSuccess() {
     if(request.responseText != "" &amp;&amp; request.responseText.indexOf("404 Page not found") == -1){
       document.getElementById('serverStatus').innerHTML = "&#91;Server Accessible&#93;";
-    } else {		
-      document.getElementById('serverStatus').innerHTML = "&#91;Server Inaccessible&#93;";	
+    } else {    
+      document.getElementById('serverStatus').innerHTML = "&#91;Server Inaccessible&#93;";  
     }
   }
 
-  function isServerAvailable() {	
-    var resource_to_test = "FAQs_to_write.txt";	
-    resource_to_test += "?q=" + Math.floor(Math.random() * 100000);	
-    request.open('GET', resource_to_test);	
-    window.setTimeout("pingSuccess()",PING_TIMEOUT_SECONDS);	
-    request.onreadystatechange = function() {		
+  function isServerAvailable() {  
+    var resource_to_test = "FAQs_to_write.txt";  
+    resource_to_test += "?q=" + Math.floor(Math.random() * 100000);  
+    request.open('GET', resource_to_test);  
+    window.setTimeout("pingSuccess()",PING_TIMEOUT_SECONDS);  
+    request.onreadystatechange = function() {    
       if (request.readyState == 4) {
         numPings++;
-        document.getElementById('pings').innerHTML = "Number of pings: " +			                                              numPings;
+        document.getElementById('pings').innerHTML = "Number of pings: " +                                                    numPings;
       }
     };
     request.send();
@@ -1337,7 +1345,7 @@ echo( curl_exec($ch) );
   }
   isServerAvailable();
 &lt;/script&gt;</pre>
-      Be aware that the <em>resource_to_test</em> must be a file located on the same domain this code is running on. Also note that in the <em>pingSuccess</em> function, there is a test for a page returning "404 Page not found". Different domains will send the user a different 404 error, so please be aware of what check is correct for your domain.	
+      Be aware that the <em>resource_to_test</em> must be a file located on the same domain this code is running on. Also note that in the <em>pingSuccess</em> function, there is a test for a page returning "404 Page not found". Different domains will send the user a different 404 error, so please be aware of what check is correct for your domain.  
       <p>
         <b>
           Sample Code for browser being offline
@@ -1491,7 +1499,7 @@ echo( curl_exec($ch) );
       </p>
       <p>
         <strong>
-          Mac OS/X - Firefox 
+          Mac OS X - Firefox 
         </strong>
         - Files are stored in the user local profile directory. 
       </p>
