@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+
+
+<HTML>
+<HEAD>
+  <TITLE> GHR Performance Test </TITLE>
+  <script type="text/javascript" src="gears_init.js"></script>
+</HEAD>
+
+
+<BODY>
+  Build: <span id="version"></span><br><br>
+  <table border="0" id="inputs">
+    <tr>
+      <td>Response Size -</td>
+      <td># Of Requests</td>
+    <tr>
+  </table>
+  <input type="button" value="[ + ]" onclick="AddInputRow();"></input>
+  <input type="button" value="Go" onclick="ReadInputsAndRun();"></input>
+  <br><br>
+  <table border="1" id="results"></table><br><br>
+  Reqs Complete: <br>
+  GHR:<br><div id="ghrReq"></div>XML:<br><div id="xmlReq"></div><br><br>
+
+<script>
+window.onload = init;
+
+function init() {
+  var version = google.gears.factory.getBuildInfo();
+  document.getElementById("version").innerHTML = version;
+  DisplayResult(['Response Size', '# Of Requests', 
+                'GHR Average Latency', 'XMLHTTP Average Latency']);
+
+  // Some numbers to play with.  First array holds the size of the 
+  // desired req response; second has the number of requests
+  // to make (results will be averaged).  Make sure the two arrays
+  // stay the same length.
+  reqSize = [1024, 3145728];
+  reqNum = [50, 10];
+  PopulateInputs(reqSize, reqNum);
+  MakeRequests(reqSize, reqNum);
+}
+
+/**
+ * Make alternating requests using GHR and XMLHttpRequest.
+ * Makes n requests with response size m for each n in reqNum, m in reqSize.
+ * Reports progress and latency in the html output.
+ */
+function MakeRequests(reqSize, reqNum) {
+  var ghr = google.gears.factory.create('beta.httprequest');
+
+  var xmlhttp;
+  if (window.XMLHttpRequest) {
+    xmlhttp = new XMLHttpRequest();
+  } else if (window.ActiveXObject) {
+    xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+  }
+
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var ghrStartTime = 0;
+  var ghrStopTime = 0;
+  var ghrSum = 0;
+  var xmlStartTime = 0;
+  var xmlStopTime = 0;
+  var xmlSum = 0;
+  var i = 1;
+  var j = 0;
+
+  function MakeGHRequest(size) {
+    ghrStartTime = new Date().getTime();
+    var q = '&q=' + ghrStartTime;
+    ghr.open('GET', urlbase + size + q, true);
+    ghr.onreadystatechange = OnGHReadyStateChange;
+    ghr.send(null);
+  }
+
+  function OnGHReadyStateChange() {
+    if (ghr.readyState == 4) {
+      ghrStopTime = new Date().getTime();
+      document.getElementById("ghrReq").innerHTML += '.';
+      if (i == reqNum[j]) {
+        document.getElementById("ghrReq").innerHTML += '<br><br>';
+      }
+      MakeXMLHTTPRequest(reqSize[j]);
+    }
+  }
+
+  function MakeXMLHTTPRequest(size) {
+    xmlStartTime = new Date().getTime();
+    var q = '&q=' + xmlStartTime;
+    xmlhttp.open('GET', urlbase + size + q, true);
+    xmlhttp.onreadystatechange = OnXMLHTTPReadyStateChange;
+    xmlhttp.send(null);
+  }
+
+  function OnXMLHTTPReadyStateChange() {
+    if (xmlhttp.readyState == 4) {
+      xmlStopTime = new Date().getTime();
+      ghrSum += (ghrStopTime - ghrStartTime);
+      xmlSum += (xmlStopTime - xmlStartTime);
+      if (i < reqNum[j]) {
+        i++;
+        document.getElementById("xmlReq").innerHTML += '.';
+        MakeGHRequest(reqSize[j]);
+      } else if (i == reqNum[j]) {
+        document.getElementById("xmlReq").innerHTML += '.<br><br>';
+        RecordResult();
+        ghrSum = 0;
+        xmlSum = 0;
+        i = 1;
+        j++;
+        while (j < reqNum.length && reqNum[j] == 0) {
+          j++;
+        }
+        if (j < reqSize.length) {
+          MakeGHRequest(reqSize[j]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Records the average time to transfer complete (measured from send() to 
+   * readyState == 4) in the results table.
+   */
+  function RecordResult() {
+    var n, size;
+    n = reqNum[j];
+    size = AddSizeUnits(reqSize[j]);
+    ghrAverage = AddTimeUnits(ghrSum / n);
+    xmlAverage = AddTimeUnits(xmlSum / n);
+    DisplayResult([size, n, ghrAverage, xmlAverage]);
+  }
+
+  while (j < reqNum.length && reqNum[j] == 0) {
+    j++;
+  }
+  MakeGHRequest(reqSize[j]);
+}
+
+// The following functions aid in getting input from and
+// output to the DOM.
+
+function DisplayResult(array) {
+  var table = document.getElementById("results");
+  var tableLength = table.rows.length;
+  var row = table.insertRow(tableLength);
+  for (var elem in array) {
+    var cell = row.insertCell(elem);
+    cell.innerHTML = array[elem];
+  }
+}
+
+function AddInputRow() {
+  var table = document.getElementById("inputs");
+  var tableLength = table.rows.length;
+  var row = table.insertRow(tableLength);
+  for (var i = 0; i < 2; i++) {
+    var cell = row.insertCell(i);
+    cell.innerHTML = '<input type="text" size="9" id="cell' + 
+                     tableLength + i + '"></input>';
+  }
+  var cell = row.insertCell(2);
+  cell.innerHTML = '<input type="button" value="[ - ]" ' +  
+                   'onclick="RemoveInputRow(' + tableLength + ')"></input>';
+}
+
+function ReadInputsAndRun() {
+  document.getElementById("xmlReq").innerHTML = '';
+  document.getElementById("ghrReq").innerHTML = '';
+  var table = document.getElementById("results");
+  var tableLength = table.rows.length;
+  for (var i = 1; i < tableLength; i++) {
+    table.deleteRow(1);
+  }
+  var inputs = ReadInputs();
+  MakeRequests(inputs[0], inputs[1]);
+}
+
+function RemoveInputRow(rowString) {
+  var rowNum = parseInt(rowString);
+  var inputs = ReadInputs();
+  var oldSizeArray = inputs[0];
+  var oldNumArray = inputs[1];
+  var sizeArray = [];
+  var numArray = [];
+  for (var i = 0; i < oldSizeArray.length; i++) {
+    if ((i + 2) != rowNum) {
+      sizeArray.push(oldSizeArray[i]);
+      numArray.push(oldNumArray[i]);
+    }
+  }
+
+  var table = document.getElementById("inputs");
+  var tableLength = table.rows.length;
+  for (var i = 2; i < tableLength; i++) {
+    table.deleteRow(2);
+  }
+  PopulateInputs(sizeArray, numArray);
+}
+
+function PopulateInputs(reqSizeArray, reqNumArray) {
+  for (var i = 0; i < reqSizeArray.length; i++) {
+    var row = i + 2;
+    AddInputRow();
+    sizeCell = document.getElementById('cell' + row + '0');
+    numCell = document.getElementById('cell' + row + '1');
+    sizeCell.value = reqSizeArray[i];
+    numCell.value = reqNumArray[i];
+  }
+}
+
+function ReadInputs() {
+  var table = document.getElementById("inputs");
+  var tableLength = table.rows.length;
+  var col1 = [];
+  var col2 = [];
+  for (var i = 2; i < tableLength; i++) {
+    cell1 = document.getElementById('cell' + i + '0');
+    cell2 = document.getElementById('cell' + i + '1');
+    col1.push(parseInt(cell1.value) || 0);
+    col2.push(parseInt(cell2.value) || 0);
+  }
+  return [col1, col2];
+}
+
+// The following helpers help change numbers into
+// human-readable strings with units appended.
+
+function AddTimeUnits(timeInMs) {
+  if (timeInMs < 1000) {
+    return timeInMs + ' ms';
+  } else {
+    timeInS = timeInMs / 1000.0;
+    return timeInS + ' s';
+  }
+}
+
+function AddSizeUnits(sizeInBytes) {
+  if (sizeInBytes >= (1024 * 1024)) {
+    return (sizeInBytes / (1024 * 1024)) + ' MB';
+  } else if (sizeInBytes >= 1024) {
+    return (sizeInBytes / 1024) + ' KB';
+  } else {
+    return sizeInBytes + ' B';
+  }
+}
+
+</script>
+</BODY>
