@@ -40,9 +40,9 @@ static ExceptionManager exception_manager(true);
 + (BOOL)installHook {
 #ifdef OFFICIAL_BUILD
   // Init Breakpad.
-  LOG(("Gears: Starting breakpad"));
+  LOG(("Gears: Before BreakPad.StartMonitoring()"));
   exception_manager.StartMonitoring();
-  LOG(("Gears: Breakpad started"));
+  LOG(("Gears: After BreakPad.StartMonitoring()"));
 #endif
   SetUiThread();
   if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {

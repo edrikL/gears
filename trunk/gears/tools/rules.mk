@@ -53,6 +53,7 @@ SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
 IPC_TEST_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/ipc_test
 OSX_LAUNCHURL_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/launch_url_with_browser
+SF_INSTALLER_PLUGIN_OUTDIR = $(OUTDIR)/$(OS)-$(ARCH)/installer_plugin
 VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 
 BREAKPAD_OUTDIR            = $(COMMON_OUTDIR)/breakpad
@@ -98,6 +99,7 @@ NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOT
 OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
+SF_INSTALLER_PLUGIN_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_INSTALLER_PLUGIN_OUTDIR), $(SF_INSTALLER_PLUGIN_CPPSRCS))
 SF_PROXY_DLL_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_PROXY_DLL_CPPSRCS))
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
 MOZJS_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(MOZJS_OUTDIR), $(MOZJS_CSRCS))
@@ -148,6 +150,7 @@ DEPS = \
 	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_CRASH_INSPECTOR_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(SF_INSTALLER_PLUGIN_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SF_INPUTMANAGER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -195,7 +198,7 @@ IE_VPATH += $(IE_OUTDIR)
 IE_VPATH += $(VISTA_BROKER_OUTDIR)
 SF_VPATH += $(SF_OUTDIR)
 ifeq ($(OS),osx)
-$(BROWSER)_VPATH += $(OSX_LAUNCHURL_OUTDIR)
+$(BROWSER)_VPATH += $(OSX_LAUNCHURL_OUTDIR) $(SF_INSTALLER_PLUGIN_OUTDIR)
 endif
 
 # Make VPATH search our paths before third-party paths.
@@ -233,6 +236,7 @@ NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFI
 OSX_CRASH_INSPECTOR_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_inspector$(EXE_SUFFIX)
 SF_PROXY_DLL            = $(COMMON_OUTDIR)/$(DLL_PREFIX)gears_proxy$(DLL_SUFFIX)
 OSX_LAUNCHURL_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
+SF_INSTALLER_PLUGIN_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)stats_pane$(EXE_SUFFIX)
 PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
@@ -245,9 +249,10 @@ VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 NOTIFIER_BUNDLE         = $(INSTALLERS_OUTDIR)/Safari/Notifier.app
 NOTIFIER_PREFPANE_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/GearsNotifier.prefPane
 
-SF_PLUGIN_BUNDLE        = $(INSTALLERS_OUTDIR)/Safari/Gears.bundle
-SF_PLUGIN_PROXY_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
-SF_INPUTMANAGER_BUNDLE  = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
+SF_INSTALLER_PLUGIN_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/StatsPane.bundle
+SF_PLUGIN_BUNDLE           = $(INSTALLERS_OUTDIR)/Safari/Gears.bundle
+SF_PLUGIN_PROXY_BUNDLE     = $(INSTALLERS_OUTDIR)/Safari/Gears.plugin
+SF_INPUTMANAGER_BUNDLE     = $(INSTALLERS_OUTDIR)/Safari/GearsEnabler
 
 SF_INSTALLER_PKG       = $(INSTALLERS_OUTDIR)/Safari/Gears.pkg
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
@@ -458,9 +463,9 @@ ifeq ($(OS),linux)
 installers:: $(FFMERGED_INSTALLER_XPI)
 else
 ifeq ($(OS),osx)
-prereqs:: $(OSX_LAUNCHURL_OUTDIR)
-modules:: $(OSX_LAUNCHURL_EXE)
-installers:: $(SF_INSTALLER_PKG) $(FFMERGED_INSTALLER_XPI)
+prereqs:: $(OSX_LAUNCHURL_OUTDIR) $(SF_INSTALLER_PLUGIN_OUTDIR)
+modules:: $(OSX_LAUNCHURL_EXE) $(SF_INSTALLER_PLUGIN_EXE)
+installers:: $(SF_INSTALLER_PKG)
 else
 ifeq ($(OS),win32)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI) $(NPAPI_INSTALLER_MSI)
@@ -519,6 +524,8 @@ $(LIBGD_OUTDIR):
 $(MOZJS_OUTDIR):
 	"mkdir" -p $@
 $(OSX_LAUNCHURL_OUTDIR):
+	"mkdir" -p $@
+$(SF_INSTALLER_PLUGIN_OUTDIR):
 	"mkdir" -p $@
 $(SQLITE_OUTDIR):
 	"mkdir" -p $@
@@ -644,6 +651,10 @@ $(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.mm
 $(OSX_LAUNCHURL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+
+$(SF_INSTALLER_PLUGIN_OUTDIR)/%$(OBJ_SUFFIX): %.m
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
 
 $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
@@ -964,6 +975,10 @@ $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
 	 $(STRIP_EXECUTABLE)
 
+$(SF_INSTALLER_PLUGIN_EXE): $(SF_INSTALLER_PLUGIN_OBJS)
+	 $(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) -framework Cocoa -framework InstallerPlugins $(SF_INSTALLER_PLUGIN_OBJS)
+	 $(STRIP_EXECUTABLE)
+
 $(SF_INPUTMANAGER_EXE): $(SF_INPUTMANAGER_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework Foundation -framework AppKit -bundle $(SF_INPUTMANAGER_OBJS)
 	$(STRIP_EXECUTABLE)
@@ -1066,6 +1081,18 @@ endif
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
+$(SF_INSTALLER_PLUGIN_BUNDLE): $(SF_INSTALLER_PLUGIN_EXE)
+	rm -rf "$@"
+	mkdir -p "$@/Contents/Resources/"
+	mkdir -p "$@/Contents/Resources/AdvancedStatsSheet.nib"
+	mkdir -p "$@/Contents/MacOS"
+# Copy Info.plist
+	cp "base/safari/advanced_stats_sheet.plist" "$@/Contents/Info.plist"
+# Copy binary
+	cp "$(SF_INSTALLER_PLUGIN_EXE)" "$@/Contents/MacOS/InstallerPlugin"
+# Copy nib file
+	cp base/safari/advanced_stats_sheet.nib/* $@/Contents/Resources/AdvancedStatsSheet.nib/
+		
 $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.

@@ -941,6 +941,7 @@ $(BROWSER)_CPPSRCS	+= \
 		common_osx.mm \
 		notifier_process_osx.mm \
 		nsstring_utils.mm \
+		user_config_osx.cc \
 		$(NULL)
 endif
 
@@ -1207,6 +1208,19 @@ COMMON_VPATH += \
 
 OSX_LAUNCHURL_CPPSRCS += \
 		launch_url_in_browser.cc \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
+# Safari Installer Plugin
+
+ifeq ($(OS),osx)
+COMMON_VPATH += \
+		base/safari \
+		$(NULL)
+
+SF_INSTALLER_PLUGIN_CPPSRCS += \
+		advanced_stats_sheet.m \
 		$(NULL)
 endif
 
