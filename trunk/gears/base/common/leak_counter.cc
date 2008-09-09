@@ -59,6 +59,7 @@ static const char16 *leak_counter_names[] = {
   STRING16(L"ModuleWrapper"),
   STRING16(L"PoolThreadsManager"),
   STRING16(L"ProgressInputStream"),
+  STRING16(L"SFHttpRequest"),
   STRING16(L"SafeHttpRequest"),
   STRING16(L"SharedJsClasses"),
   NULL
@@ -93,8 +94,7 @@ void LeakCounterDumpCounts() {
   }
 #ifdef WIN32
   ::MessageBox(0, s.c_str(), PRODUCT_FRIENDLY_NAME, MB_OK);
-#endif
-#ifdef LINUX
+#else
   std::string s_as_utf8;
   String16ToUTF8(s, &s_as_utf8);
   printf("%s", s_as_utf8.c_str());

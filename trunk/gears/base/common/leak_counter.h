@@ -27,12 +27,10 @@
 #define GEARS_BASE_COMMON_LEAK_COUNTER_H__
 
 #ifdef DEBUG
-#if BROWSER_FF || BROWSER_IE
 #ifdef WINCE
 // TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
 #else
 #define ENABLE_LEAK_COUNTING 1
-#endif
 #endif
 #endif
 
@@ -61,6 +59,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_ModuleWrapper,
   LEAK_COUNTER_TYPE_PoolThreadsManager,
   LEAK_COUNTER_TYPE_ProgressInputStream,
+  LEAK_COUNTER_TYPE_SFHttpRequest,
   LEAK_COUNTER_TYPE_SafeHttpRequest,
   LEAK_COUNTER_TYPE_SharedJsClasses,
   MAX_LEAK_COUNTER_TYPE
