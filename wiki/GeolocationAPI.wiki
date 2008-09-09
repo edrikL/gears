@@ -236,10 +236,10 @@ Client identification is not explicitly included in the protocol. Cookies can be
 === Cell-Id data elements ===
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| cell_id || Unique identifier of the cell. || No || string ||
-|| location_area_code || Location Area Code (LAC) assigned to the current location area || No || int16 ||
-|| mobile_country_code || Mobile Country Code (MCC) for cell || No || int16 ||
-|| mobile_network_code || Mobile Network Code (MNC) for cell || No || int16 ||
+|| cell_id || Unique identifier of the cell. (CID for GSM, BID for CDMA) || No || string ||
+|| location_area_code || Location Area Code (LAC for GSM, NID for CDMA) || No || int16 ||
+|| mobile_country_code || Mobile Country Code (MCC for GSM and CDMA) || No || int16 ||
+|| mobile_network_code || Mobile Network Code (MNC for GSM, SID for CDMA) || No || int16 ||
 || age || The number of milliseconds since this cell was primary. If age is 0, the cell_id represents a current measurement.  || No || int32 ||
 || signal_strength || Radio signal strength measured in dBm. || No || int16 ||
 || timing_advance || Represents the distance from the cell tower. Each unit is roughly 550 meters. || No || int8 ||
