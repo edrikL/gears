@@ -27,6 +27,7 @@
 #import "gears/base/common/exception_handler.h"
 #import "gears/base/common/exception_handler_osx/google_breakpad.h"
 #import "gears/base/common/paths_sf_more.h"
+#import "gears/base/common/user_config.h"
 
 static GoogleBreakpadRef gBreakpadRef = 0;
 
@@ -48,6 +49,14 @@ ExceptionManager::~ExceptionManager() {
 
 void ExceptionManager::StartMonitoring() {
   assert(gBreakpadRef == NULL);
+  
+  //Check for Send stats preference, this is set during the installation
+  //process, if preference is not specifically turned on then disable
+  //crash reporting.
+  if (!IsUsageReportingAllowed()) {
+    LOG(("Breakpad disabled"));
+    return;
+  }
   
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   GoogleBreakpadRef breakpad = 0;
