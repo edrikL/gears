@@ -27,6 +27,7 @@
 
 #include "gears/base/chrome/browsing_context_cr.h"
 #include "gears/base/chrome/module_cr.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/desktop/desktop.h"
 #include "gears/ui/common/html_dialog.h"
@@ -144,7 +145,10 @@ bool ModelessShortcutsDialog::ShowDialog(GearsShortcutData2 *shortcut_data) {
     return false;
   }
 
+  // Make sure we pass validation on the shortcut name.
   EnsureStringValidPathComponent(shortcut_info_.app_name, false);
+  if (shortcut_info_.app_name.length() > kUserPathComponentMaxChars)
+    shortcut_info_.app_name.resize(kUserPathComponentMaxChars);
 
   // Only allow one dialog for this URL.
   if (g_open_shortcuts_dialogs &&
