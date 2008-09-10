@@ -208,7 +208,7 @@ class JsRunnerBase : public JsRunnerInterface {
                       JsRootedToken **optional_alloc_retval) {
     assert(callback && (!argc || argv));
 
-    if (JsTokenIsNullOrUndefined(callback->token())) { return false; }
+    if (!callback->IsValidCallback()) { return false; }
 
     // Setup argument array.
     scoped_array<jsval> js_engine_argv(new jsval[argc]);

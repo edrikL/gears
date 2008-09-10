@@ -50,10 +50,10 @@ bool Database2Statement::Create(const std::string16 &sql_statement,
   scoped_ptr<Database2Statement> statement(new Database2Statement());
 
   // NULL should be passed if no arguments are specified
-  assert(!sql_arguments || !JsTokenIsNullOrUndefined(sql_arguments->token()));
+  assert(!sql_arguments || sql_arguments->IsValidArray());
   // NULL should be passed if a callback is not specified
-  assert(!callback || !JsTokenIsNullOrUndefined(callback->token()));
-  assert(!error_callback || !JsTokenIsNullOrUndefined(error_callback->token()));
+  assert(!callback || callback->IsValidCallback());
+  assert(!error_callback || error_callback->IsValidCallback());
 
   statement->sql_statement_.assign(sql_statement);
   statement->callback_.reset(callback);

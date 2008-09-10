@@ -112,19 +112,18 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
 
   // if any of the arguments are not supplied or null, send them to statement
   // factory as NULL
-  if (!argv[1].was_specified ||
-      JsTokenIsNullOrUndefined(sql_arguments->token())) {
+  if (!argv[1].was_specified || !sql_arguments->IsValidArray()) {
     sql_arguments = NULL;
   }
   if (!argv[1].was_specified ||  // Don't use temp_callback unless
       !argv[2].was_specified ||  // temp_sql_arguments was also specified.
-      JsTokenIsNullOrUndefined(callback->token())) {
+      !callback->IsValidCallback()) {
     callback.reset(NULL);
   }
   if (!argv[1].was_specified ||  // Don't use temp_error_callback unless
       !argv[2].was_specified ||  // temp_callback and temp_sql_arguments were
       !argv[3].was_specified ||  // also specified.
-      JsTokenIsNullOrUndefined(error_callback->token())) {
+      !error_callback->IsValidCallback()) {
     error_callback.reset(NULL);
   }
 

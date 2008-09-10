@@ -129,11 +129,8 @@ void GearsConsole::InterpolateArgs(std::string16 *message,
     location = message->find(STRING16(L"%s"), location);
     if (location == std::string16::npos) break;
 
-    JsScopedToken token;
     std::string16 string_value(STRING16(L"<Error converting to string>"));
-    if (args->GetElement(i, &token)) {
-      JsTokenToString_Coerce(token, args->context(), &string_value);
-    }
+    args->GetElementAsStringWithCoercion(i, &string_value);
 
     message->replace(location, 2, string_value);
     location += string_value.size();

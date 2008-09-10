@@ -84,7 +84,7 @@ class GearsDatabase2Transaction
 
   bool HasErrorCallback() const {
     assert(error_callback_.get());
-    return !JsTokenIsNullOrUndefined(error_callback_->token());
+    return error_callback_->IsValidCallback();
   }
 
   void MarkClosed() { is_open_ = false; }
@@ -96,7 +96,7 @@ class GearsDatabase2Transaction
     // verify that the callback exists or _could_ be called at all (that is,
     // in case the interpereter is synchronous)
     return interpreter_->async() &&
-      !JsTokenIsNullOrUndefined(success_callback_->token());
+        success_callback_->IsValidCallback();
   }
 
   void InvokeSuccessCallback();

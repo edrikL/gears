@@ -96,10 +96,7 @@ bool Database2ResultSet::HandleColumnString(int index,
 bool Database2ResultSet::HandleColumnNull(int index) {
   assert(index >= 0 && index < column_count_);
   assert(current_row_.get());
-  JsScopedToken value;
-  // TODO(dimitri.glazkov): Add JsArray::SetElementNull and refactor.
-  NullToJsToken(GetJsRunner()->GetContext(), &value);
-  return current_row_->SetProperty(column_names_[index], value);
+  return current_row_->SetPropertyNull(column_names_[index]);
 }
 
 void Database2ResultSet::HandleStats(int64 last_insert_rowid,
