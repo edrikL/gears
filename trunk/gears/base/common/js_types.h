@@ -37,8 +37,8 @@ class JsObject;
 class JsRootedToken;
 class JsRunnerInterface;
 class MarshaledJsToken;
-class ModuleEnvironment;
 class ModuleImplBaseClass;
+struct ModuleEnvironment;
 typedef JsRootedToken JsRootedCallback;
 
 // TODO(michaeln): Split into multiple browser specific files.
