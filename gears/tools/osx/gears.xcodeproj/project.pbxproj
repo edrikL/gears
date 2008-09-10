@@ -59,6 +59,11 @@
 		B510D43E0E48F339001BFCCA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B510D44C0E48F385001BFCCA /* Gears.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8D01CCD20486CAD60068D4B7 /* Gears.bundle */; };
 		B510D4610E48F3A3001BFCCA /* plugin_proxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */; };
+		B51249990E783EB200F0EB39 /* user_config_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B51249970E783EB200F0EB39 /* user_config_osx.cc */; };
+		B51249A90E7840A000F0EB39 /* notification_message_orderer.cc in Sources */ = {isa = PBXBuildFile; fileRef = B51249A80E7840A000F0EB39 /* notification_message_orderer.cc */; };
+		B51249B90E785F2900F0EB39 /* desktop_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B51249B70E785F2900F0EB39 /* desktop_test.cc */; };
+		B51249C60E785F8E00F0EB39 /* leak_counter.cc in Sources */ = {isa = PBXBuildFile; fileRef = B51249C50E785F8E00F0EB39 /* leak_counter.cc */; };
+		B51249C90E785FAB00F0EB39 /* js_dom_element.cc in Sources */ = {isa = PBXBuildFile; fileRef = B51249C80E785FAB00F0EB39 /* js_dom_element.cc */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
 		B531A15C0E2BBC5600147648 /* media_data.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15A0E2BBC5600147648 /* media_data.cc */; };
 		B531A1610E2BBC7B00147648 /* mock_audio_recorder.cc in Sources */ = {isa = PBXBuildFile; fileRef = B531A15F0E2BBC7B00147648 /* mock_audio_recorder.cc */; };
@@ -540,10 +545,6 @@
 		B5E143660E47736A00A09974 /* factory_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143650E47736A00A09974 /* factory_np.cc */; };
 		B5E143690E47737900A09974 /* factory_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143680E47737900A09974 /* factory_utils.cc */; };
 		B5E1436C0E4773DE00A09974 /* ipc_message_queue_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1436B0E4773DE00A09974 /* ipc_message_queue_linux.cc */; };
-		B5E143800E47745F00A09974 /* canvas_rendering_context_2d.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */; };
-		B5E143810E47745F00A09974 /* canvas.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437B0E47745F00A09974 /* canvas.cc */; };
-		B5E143820E47745F00A09974 /* blob_backed_skia_input_stream.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */; };
-		B5E143830E47745F00A09974 /* blob_backed_skia_output_stream.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */; };
 		B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143890E47748700A09974 /* geolocation_db_test.cc */; };
 		B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E1438D0E47752B00A09974 /* window_utils.cc */; };
 		B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E143910E47755E00A09974 /* i18n_strings.cc */; };
@@ -762,6 +763,16 @@
 		B50E5DB00E09F72D00435FF9 /* npapi_patches.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = npapi_patches.h; path = ../../base/safari/npapi_patches.h; sourceTree = SOURCE_ROOT; };
 		B510D2D10E48F11A001BFCCA /* plugin_proxy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = plugin_proxy.mm; path = ../../base/safari/plugin_proxy.mm; sourceTree = SOURCE_ROOT; };
 		B510D4450E48F339001BFCCA /* Gears.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		B51249970E783EB200F0EB39 /* user_config_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = user_config_osx.cc; path = ../../base/common/user_config_osx.cc; sourceTree = SOURCE_ROOT; };
+		B51249980E783EB200F0EB39 /* user_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = user_config.h; path = ../../base/common/user_config.h; sourceTree = SOURCE_ROOT; };
+		B51249A70E7840A000F0EB39 /* notification_message_orderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notification_message_orderer.h; path = ../../desktop/notification_message_orderer.h; sourceTree = SOURCE_ROOT; };
+		B51249A80E7840A000F0EB39 /* notification_message_orderer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notification_message_orderer.cc; path = ../../desktop/notification_message_orderer.cc; sourceTree = SOURCE_ROOT; };
+		B51249B70E785F2900F0EB39 /* desktop_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = desktop_test.cc; path = ../../desktop/desktop_test.cc; sourceTree = SOURCE_ROOT; };
+		B51249B80E785F2900F0EB39 /* desktop_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = desktop_test.h; path = ../../desktop/desktop_test.h; sourceTree = SOURCE_ROOT; };
+		B51249C40E785F8E00F0EB39 /* leak_counter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = leak_counter.h; path = ../../base/common/leak_counter.h; sourceTree = SOURCE_ROOT; };
+		B51249C50E785F8E00F0EB39 /* leak_counter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = leak_counter.cc; path = ../../base/common/leak_counter.cc; sourceTree = SOURCE_ROOT; };
+		B51249C70E785FAB00F0EB39 /* js_dom_element.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_dom_element.h; path = ../../base/common/js_dom_element.h; sourceTree = SOURCE_ROOT; };
+		B51249C80E785FAB00F0EB39 /* js_dom_element.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_dom_element.cc; path = ../../base/common/js_dom_element.cc; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
 		B531A15A0E2BBC5600147648 /* media_data.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = media_data.cc; path = ../../media/media_data.cc; sourceTree = SOURCE_ROOT; };
@@ -1394,14 +1405,6 @@
 		B5E143670E47737900A09974 /* factory_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = factory_utils.h; path = ../../factory/factory_utils.h; sourceTree = SOURCE_ROOT; };
 		B5E143680E47737900A09974 /* factory_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = factory_utils.cc; path = ../../factory/factory_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5E1436B0E4773DE00A09974 /* ipc_message_queue_linux.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ipc_message_queue_linux.cc; path = ../../base/common/ipc_message_queue_linux.cc; sourceTree = SOURCE_ROOT; };
-		B5E143780E47745F00A09974 /* blob_backed_skia_input_stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_backed_skia_input_stream.h; path = ../../canvas/blob_backed_skia_input_stream.h; sourceTree = SOURCE_ROOT; };
-		B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas_rendering_context_2d.cc; path = ../../canvas/canvas_rendering_context_2d.cc; sourceTree = SOURCE_ROOT; };
-		B5E1437A0E47745F00A09974 /* canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas.h; path = ../../canvas/canvas.h; sourceTree = SOURCE_ROOT; };
-		B5E1437B0E47745F00A09974 /* canvas.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas.cc; path = ../../canvas/canvas.cc; sourceTree = SOURCE_ROOT; };
-		B5E1437C0E47745F00A09974 /* blob_backed_skia_output_stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_backed_skia_output_stream.h; path = ../../canvas/blob_backed_skia_output_stream.h; sourceTree = SOURCE_ROOT; };
-		B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_backed_skia_input_stream.cc; path = ../../canvas/blob_backed_skia_input_stream.cc; sourceTree = SOURCE_ROOT; };
-		B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob_backed_skia_output_stream.cc; path = ../../canvas/blob_backed_skia_output_stream.cc; sourceTree = SOURCE_ROOT; };
-		B5E1437F0E47745F00A09974 /* canvas_rendering_context_2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas_rendering_context_2d.h; path = ../../canvas/canvas_rendering_context_2d.h; sourceTree = SOURCE_ROOT; };
 		B5E143880E47748700A09974 /* geolocation_db_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = geolocation_db_test.h; path = ../../geolocation/geolocation_db_test.h; sourceTree = SOURCE_ROOT; };
 		B5E143890E47748700A09974 /* geolocation_db_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation_db_test.cc; path = ../../geolocation/geolocation_db_test.cc; sourceTree = SOURCE_ROOT; };
 		B5E1438D0E47752B00A09974 /* window_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = window_utils.cc; path = ../../ui/common/window_utils.cc; sourceTree = SOURCE_ROOT; };
@@ -1914,7 +1917,6 @@
 			children = (
 				B544D9670D2EE5D000D30561 /* base */,
 				79C3E9380DB8D89D00346806 /* blob */,
-				B5E1436E0E47742700A09974 /* canvas */,
 				B58727AB0DD4EDC0001E4E0B /* cctests */,
 				B57F3AC80DA1019D0088FE52 /* console */,
 				B54ADF8E0E115D7900884C56 /* crash_sender */,
@@ -2109,6 +2111,8 @@
 				B531A16D0E2BBD3A00147648 /* ipc_message_queue_test.h */,
 				B531A16C0E2BBD3A00147648 /* ipc_message_queue_test.cc */,
 				B531A1650E2BBCBF00147648 /* ipc_message_queue_test_osx.mm */,
+				B51249C70E785FAB00F0EB39 /* js_dom_element.h */,
+				B51249C80E785FAB00F0EB39 /* js_dom_element.cc */,
 				B5D5FC090DEF3A470033ABE2 /* js_marshal.h */,
 				B5D5FC0A0DEF3A470033ABE2 /* js_marshal.cc */,
 				B544D9930D2EE5D000D30561 /* js_runner.h */,
@@ -2119,6 +2123,8 @@
 				B578D26B0DE228EF006FD633 /* js_standalone_engine_mozjs.cc */,
 				B544D9940D2EE5D000D30561 /* js_types.h */,
 				B544D9910D2EE5D000D30561 /* js_types.cc */,
+				B51249C40E785F8E00F0EB39 /* leak_counter.h */,
+				B51249C50E785F8E00F0EB39 /* leak_counter.cc */,
 				B5A2DB930E2FBEA500C69CE7 /* memory_buffer.h */,
 				B5A2DB940E2FBEA500C69CE7 /* memory_buffer.cc */,
 				B5A2DB920E2FBEA500C69CE7 /* memory_buffer_test.cc */,
@@ -2185,6 +2191,8 @@
 				B544D9920D2EE5D000D30561 /* string16.h */,
 				B5BBD8880D8E8947001A4916 /* url_utils.cc */,
 				B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */,
+				B51249980E783EB200F0EB39 /* user_config.h */,
+				B51249970E783EB200F0EB39 /* user_config_osx.cc */,
 			);
 			name = common;
 			sourceTree = "<group>";
@@ -2695,13 +2703,17 @@
 		B56F66000DAD40DE00A5D6C5 /* desktop */ = {
 			isa = PBXGroup;
 			children = (
-				B56F660E0DAD412400A5D6C5 /* file_dialog.h */,
-				B56F660F0DAD412400A5D6C5 /* file_dialog.cc */,
-				B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */,
-				B56F66120DAD412400A5D6C5 /* desktop_osx.cc */,
 				B56F66140DAD412400A5D6C5 /* desktop.h */,
 				B56F66150DAD412400A5D6C5 /* desktop.cc */,
+				B56F66120DAD412400A5D6C5 /* desktop_osx.cc */,
+				B51249B70E785F2900F0EB39 /* desktop_test.cc */,
+				B51249B80E785F2900F0EB39 /* desktop_test.h */,
+				B56F660E0DAD412400A5D6C5 /* file_dialog.h */,
+				B56F660F0DAD412400A5D6C5 /* file_dialog.cc */,
 				B56F66160DAD412400A5D6C5 /* file_dialog_osx.h */,
+				B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */,
+				B51249A70E7840A000F0EB39 /* notification_message_orderer.h */,
+				B51249A80E7840A000F0EB39 /* notification_message_orderer.cc */,
 			);
 			name = desktop;
 			sourceTree = "<group>";
@@ -2883,21 +2895,6 @@
 				B5D5FBF90DEF39930033ABE2 /* pool_threads_manager.h */,
 			);
 			name = npapi;
-			sourceTree = "<group>";
-		};
-		B5E1436E0E47742700A09974 /* canvas */ = {
-			isa = PBXGroup;
-			children = (
-				B5E143780E47745F00A09974 /* blob_backed_skia_input_stream.h */,
-				B5E143790E47745F00A09974 /* canvas_rendering_context_2d.cc */,
-				B5E1437A0E47745F00A09974 /* canvas.h */,
-				B5E1437B0E47745F00A09974 /* canvas.cc */,
-				B5E1437C0E47745F00A09974 /* blob_backed_skia_output_stream.h */,
-				B5E1437D0E47745F00A09974 /* blob_backed_skia_input_stream.cc */,
-				B5E1437E0E47745F00A09974 /* blob_backed_skia_output_stream.cc */,
-				B5E1437F0E47745F00A09974 /* canvas_rendering_context_2d.h */,
-			);
-			name = canvas;
 			sourceTree = "<group>";
 		};
 		B5F09C810E1569BE00C7ACB7 /* notifier */ = {
@@ -3916,14 +3913,15 @@
 				B5E143660E47736A00A09974 /* factory_np.cc in Sources */,
 				B5E143690E47737900A09974 /* factory_utils.cc in Sources */,
 				B5E1436C0E4773DE00A09974 /* ipc_message_queue_linux.cc in Sources */,
-				B5E143800E47745F00A09974 /* canvas_rendering_context_2d.cc in Sources */,
-				B5E143810E47745F00A09974 /* canvas.cc in Sources */,
-				B5E143820E47745F00A09974 /* blob_backed_skia_input_stream.cc in Sources */,
-				B5E143830E47745F00A09974 /* blob_backed_skia_output_stream.cc in Sources */,
 				B5E1438A0E47748700A09974 /* geolocation_db_test.cc in Sources */,
 				B5E1438F0E47752B00A09974 /* window_utils.cc in Sources */,
 				B5E143920E47755E00A09974 /* i18n_strings.cc in Sources */,
 				B5A945750E50C4840042D05A /* fail_blob.cc in Sources */,
+				B51249990E783EB200F0EB39 /* user_config_osx.cc in Sources */,
+				B51249A90E7840A000F0EB39 /* notification_message_orderer.cc in Sources */,
+				B51249B90E785F2900F0EB39 /* desktop_test.cc in Sources */,
+				B51249C60E785F8E00F0EB39 /* leak_counter.cc in Sources */,
+				B51249C90E785FAB00F0EB39 /* js_dom_element.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4355,6 +4353,7 @@
 					"-DPA_USE_OSS",
 					"-DHAVE_SYS_SOUNDCARD_H=1",
 					"-DHAVE_CONFIG_H=1",
+					"-DOFFICIAL_BUILD=1",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
