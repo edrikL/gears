@@ -59,6 +59,7 @@
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
+#include "gears/base/firefox/module_wrapper.h"
 
 static const int kGarbageCollectionIntervalMsec = 2000;
 
@@ -169,10 +170,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return true;
   }
 
-  bool CreateJsTokenForModule(ModuleImplBaseClass *module, JsToken *token_out) {
-    return alloc_js_wrapper_->CreateJsTokenForModule(module, token_out);
-  }
-
   bool GetModuleFromJsToken(JsToken token, ModuleImplBaseClass **module_out) {
     ModuleImplBaseClass *module =
         alloc_js_wrapper_->GetModuleFromJsToken(token);
@@ -181,6 +178,25 @@ class JsRunnerBase : public JsRunnerInterface {
       return true;
     }
     return false;
+  }
+
+  bool InitializeModuleWrapper(ModuleImplBaseClass *module,
+                               DispatcherInterface *dispatcher,
+                               JsCallContext *context) {
+    JsToken js_token;
+    if (!alloc_js_wrapper_->CreateJsTokenForModule(module,
+                                                   dispatcher,
+                                                   &js_token)) {
+      if (context) {
+        context->SetException(STRING16(L"Module creation failed."));
+      }
+      return false;
+    }
+
+    ModuleWrapper *module_wrapper = new ModuleWrapper(js_token, GetContext());
+    module_wrapper->Init(module, dispatcher);
+    module->SetJsWrapper(module_wrapper);
+    return true;
   }
 
   virtual bool InvokeCallbackSpecialized(

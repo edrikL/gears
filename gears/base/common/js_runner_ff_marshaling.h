@@ -92,7 +92,9 @@ class JsContextWrapper {
 
   // Creates a new JavaScript object to represent a Gears module in the JS
   // engine.
-  bool CreateJsTokenForModule(ModuleImplBaseClass *module, JsToken *token_out);
+  bool CreateJsTokenForModule(ModuleImplBaseClass *module,
+                              DispatcherInterface *dispatcher,
+                              JsToken *token_out);
 
   ModuleImplBaseClass *GetModuleFromJsToken(const JsToken token);
 

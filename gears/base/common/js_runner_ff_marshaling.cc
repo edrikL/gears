@@ -252,6 +252,7 @@ void JsContextWrapper::CleanupRoots() {
 
 
 bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
+                                              DispatcherInterface *dispatcher,
                                               JsToken *token_out) {
   // We require the name property to be set since we use it as the key for
   // caching created prototype objects.
@@ -276,9 +277,7 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
                       alloc_js_class.get());
     js_class = alloc_js_class.get();
 
-    if (!proto ||
-        !AddAllFunctionsToPrototype(proto,
-                                    module->GetWrapper()->GetDispatcher())) {
+    if (!proto || !AddAllFunctionsToPrototype(proto, dispatcher)) {
       return false;
     }
 

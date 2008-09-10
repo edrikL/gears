@@ -26,6 +26,12 @@
 #ifndef GEARS_BASE_COMMON_MODULE_WRAPPER_H__
 #define GEARS_BASE_COMMON_MODULE_WRAPPER_H__
 
+// TODO(nigeltao): Delete this file (and all occurences of #include
+// "gears/base/common/module_wrapper.h" from the rest of the codebase), push
+// the platform-specific #include "gears/base/xx/module_wrapper.h" into
+// js_runner_xx.cc, and move CreateModule<T> out of base/xx/module_wrapper.h
+// and into base/common/base_class.h.
+
 #ifdef BROWSER_NPAPI
 #include "gears/base/npapi/module_wrapper.h"
 #elif BROWSER_FF

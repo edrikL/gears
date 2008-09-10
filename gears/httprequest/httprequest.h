@@ -43,6 +43,7 @@ class GearsHttpRequest
   static const std::string kModuleName;
 
   GearsHttpRequest();
+  ~GearsHttpRequest();
 
   // IN: -
   // OUT: -
@@ -151,7 +152,6 @@ class GearsHttpRequest
   // JsEventHandlerInterface implementation.
   virtual void HandleEvent(JsEventType event_type);
 
-  ~GearsHttpRequest();
   DISALLOW_EVIL_CONSTRUCTORS(GearsHttpRequest);
 };
 

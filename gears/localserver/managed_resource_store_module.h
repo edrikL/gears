@@ -43,6 +43,7 @@ class GearsManagedResourceStore
  public:
   GearsManagedResourceStore()
       : ModuleImplBaseClass("GearsManagedResourceStore") {}
+  ~GearsManagedResourceStore();
 
   // IN: -
   // OUT: string
@@ -106,9 +107,6 @@ class GearsManagedResourceStore
   // IN: function oncomplete
   // OUT: -
   void SetOncomplete(JsCallContext *context);
-
- protected:
-  ~GearsManagedResourceStore();
 
  private:
   // JsEventHandlerInterface

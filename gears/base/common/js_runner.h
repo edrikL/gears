@@ -34,6 +34,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 
+class DispatcherInterface;
 class ModuleImplBaseClass;
 
 #if BROWSER_FF
@@ -120,11 +121,14 @@ class JsRunnerInterface {
                                      int64 *milliseconds_since_epoch) = 0;
 
 #if BROWSER_FF
-  virtual bool CreateJsTokenForModule(ModuleImplBaseClass *module,
-                                      JsToken *token_out) = 0;
   virtual bool GetModuleFromJsToken(JsToken token,
                                     ModuleImplBaseClass **module_out) = 0;
 #endif
+
+  // Creates and associates the ModuleWrapper for the ModuleImplBaseClass.
+  virtual bool InitializeModuleWrapper(ModuleImplBaseClass *module,
+                                       DispatcherInterface *dispatcher,
+                                       JsCallContext *context) = 0;
 
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.

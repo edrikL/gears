@@ -56,6 +56,7 @@
 #endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/module_wrapper.h"
 #include "third_party/AtlActiveScriptSite.h"
 
 
@@ -147,6 +148,22 @@ class JsRunnerBase : public JsRunnerInterface {
     }
 
     *milliseconds_since_epoch = static_cast<int64>(V_R8(&retval));
+    return true;
+  }
+
+  bool InitializeModuleWrapper(ModuleImplBaseClass *module,
+                               DispatcherInterface *dispatcher,
+                               JsCallContext *context) {
+    CComObject<ModuleWrapper> *module_wrapper;
+    HRESULT hr = CComObject<ModuleWrapper>::CreateInstance(&module_wrapper);
+    if (FAILED(hr)) {
+      if (context) {
+        context->SetException(STRING16(L"Module creation failed."));
+      }
+      return false;
+    }
+    module_wrapper->Init(module, dispatcher);
+    module->SetJsWrapper(module_wrapper);
     return true;
   }
 
