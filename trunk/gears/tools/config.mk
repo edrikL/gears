@@ -478,7 +478,7 @@ ifeq ($(BROWSER),SF)
 DLLFLAGS += -mmacosx-version-min=10.4 -framework WebKit -lcurl
 DLLFLAGS += -Ltools/osx -lleopard_support
 else
-DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
+$(BROWSER)_DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
 # for PortAudio: need CoreAudio, AudioToolbox, AudioUnit, Carbon frameworks
 DLLFLAGS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
