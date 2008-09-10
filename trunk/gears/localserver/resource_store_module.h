@@ -54,6 +54,7 @@ class GearsResourceStore
   static const std::string kModuleName;
 
   GearsResourceStore();
+  ~GearsResourceStore();
 
   // IN: -
   // OUT: string
@@ -117,9 +118,6 @@ class GearsResourceStore
   // IN: -
   // OUT: GearsFileSubmitter
   void CreateFileSubmitter(JsCallContext *context);
-
- protected:
-  ~GearsResourceStore();
 
  private:
   bool ResolveAndAppendUrl(const std::string16 &url, CaptureRequest *request);

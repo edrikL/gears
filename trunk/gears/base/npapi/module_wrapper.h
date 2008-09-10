@@ -52,7 +52,6 @@ class ModuleWrapper
   void Init(ModuleImplBaseClass *impl, DispatcherInterface *dispatcher) {
     PluginBase::Init(dispatcher);
     impl_.reset(impl);
-    impl_->SetJsWrapper(this);
     dispatcher_.reset(dispatcher);
   }
 
@@ -89,26 +88,24 @@ template<class GearsClass, class OutType>
 bool CreateModule(ModuleEnvironment *module_environment,
                   JsCallContext *context,
                   scoped_refptr<OutType>* module) {
-  ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
-      NPN_CreateObject(module_environment->js_runner_->GetContext(),
-                       ModuleWrapper::GetNPClass()));
+  scoped_ptr<GearsClass> impl(new GearsClass()); 
+  impl->InitModuleEnvironment(module_environment);
+  scoped_ptr<Dispatcher<GearsClass> > dispatcher(
+      new Dispatcher<GearsClass>(impl.get()));
 
-  if (!wrapper) {
-    if (context) {
-      context->SetException(STRING16(L"Module creation failed."));
-    }
+  if (!module_environment->js_runner_->
+          InitializeModuleWrapper(impl.get(), dispatcher.get(), context)) {
     return false;
   }
 
-  GearsClass *impl = new GearsClass;
-  impl->InitModuleEnvironment(module_environment);
-  wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
-  module->reset(impl);
+  dispatcher.release();
+  module->reset(impl.release());
 
-  // In NPAPI, objects are created with refcount 1.  We want the scoped_refptr
-  // to have the only reference, so we unref here after giving a ref to the
-  // scoped_refptr.
-  wrapper->Unref();
+  // In NPAPI, objects are created with refcount 1.  We want module (the
+  // scoped_refptr<OutType>) to have the only reference, so we Unref here,
+  // after the scoped_refptr has taken a reference in the line above.
+  impl->GetWrapper()->Unref();
+
   return true;
 }
 

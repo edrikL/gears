@@ -34,6 +34,7 @@
 class GearsTimeRanges : public ModuleImplBaseClass {
  public:
   GearsTimeRanges();
+  ~GearsTimeRanges();
   
   // readonly attribute unsigned long length;
   void GetLength(JsCallContext * context);
@@ -43,9 +44,6 @@ class GearsTimeRanges : public ModuleImplBaseClass {
 
   // float end(long index)
   void End(JsCallContext *context);
-
- protected:
-  ~GearsTimeRanges();
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimeRanges);

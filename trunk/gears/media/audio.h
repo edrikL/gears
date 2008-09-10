@@ -37,6 +37,7 @@ class GearsAudio
       public ModuleImplBaseClass {
  public:
   GearsAudio();
+  ~GearsAudio();
 
   // 1. TODO(aprasath): API from GearsMedia that are overridden should be
   // added here later. Overriding of couple of API shown below.
@@ -45,9 +46,6 @@ class GearsAudio
 
   // 2. TODO(aprasath): Any new API introduced in this subclass
   // is to be added here.
-
- protected:
-  ~GearsAudio();
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsAudio);

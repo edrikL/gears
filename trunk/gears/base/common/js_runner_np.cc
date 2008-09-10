@@ -49,6 +49,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/module.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 #ifdef BROWSER_WEBKIT
@@ -173,6 +174,22 @@ class JsRunnerBase : public JsRunnerInterface {
 
     *milliseconds_since_epoch = static_cast<int64>(NPVARIANT_TO_DOUBLE(result));
 
+    return true;
+  }
+
+  bool InitializeModuleWrapper(ModuleImplBaseClass *module,
+                               DispatcherInterface *dispatcher,
+                               JsCallContext *context) {
+    ModuleWrapper *module_wrapper = static_cast<ModuleWrapper *>(
+        NPN_CreateObject(GetContext(), ModuleWrapper::GetNPClass()));
+    if (!module_wrapper) {
+      if (context) {
+        context->SetException(STRING16(L"Module creation failed."));
+      }
+      return false;
+    }
+    module_wrapper->Init(module, dispatcher);
+    module->SetJsWrapper(module_wrapper);
     return true;
   }
 
