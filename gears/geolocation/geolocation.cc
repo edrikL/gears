@@ -154,12 +154,6 @@ static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
 
 // Local functions
 
-// Gets the requested property only if it is specified. Returns true on success.
-static bool GetPropertyIfSpecified(JsCallContext *context,
-                                   const JsObject &object,
-                                   const std::string16 &name,
-                                   JsScopedToken *token);
-
 // Sets an object string property if the input value is valid.
 static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
                                            const std::string16 &value,
@@ -831,49 +825,52 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
   assert(context);
   assert(urls);
   assert(info);
-  JsScopedToken token;
-  if (GetPropertyIfSpecified(context, options, kEnableHighAccuracy, &token)) {
-    if (!JsTokenToBool_NoCoerce(token, context->js_context(),
-                                &(info->enable_high_accuracy))) {
-      std::string16 error = STRING16(L"options.");
-      error += kEnableHighAccuracy;
-      error += STRING16(L" should be a boolean.");
-      context->SetException(error);
-      return false;
-    }
+  if (options.GetPropertyType(kEnableHighAccuracy) != JSPARAM_UNDEFINED &&
+      !options.GetPropertyAsBool(kEnableHighAccuracy,
+                                 &(info->enable_high_accuracy))) {
+    std::string16 error = STRING16(L"options.");
+    error += kEnableHighAccuracy;
+    error += STRING16(L" should be a boolean.");
+    context->SetException(error);
+    return false;
   }
-  if (GetPropertyIfSpecified(context, options, kGearsRequestAddress, &token)) {
-    if (!JsTokenToBool_NoCoerce(token, context->js_context(),
-                                &(info->request_address))) {
-      std::string16 error = STRING16(L"options.");
-      error += kGearsRequestAddress;
-      error += STRING16(L" should be a boolean.");
-      context->SetException(error);
-      return false;
-    }
+  if (options.GetPropertyType(kGearsRequestAddress) != JSPARAM_UNDEFINED &&
+      !options.GetPropertyAsBool(kGearsRequestAddress,
+                                 &(info->request_address))) {
+    std::string16 error = STRING16(L"options.");
+    error += kGearsRequestAddress;
+    error += STRING16(L" should be a boolean.");
+    context->SetException(error);
+    return false;
   }
-  if (GetPropertyIfSpecified(context, options, kGearsAddressLanguage, &token)) {
-    if (!JsTokenToString_NoCoerce(token, context->js_context(),
-                                  &(info->address_language))) {
-      std::string16 error = STRING16(L"options.");
-      error += kGearsAddressLanguage;
-      error += STRING16(L" should be a string.");
-      context->SetException(error);
-      return false;
-    }
+  if (options.GetPropertyType(kGearsAddressLanguage) != JSPARAM_UNDEFINED &&
+      !options.GetPropertyAsString(kGearsAddressLanguage,
+                                   &(info->address_language))) {
+    std::string16 error = STRING16(L"options.");
+    error += kGearsAddressLanguage;
+    error += STRING16(L" should be a string.");
+    context->SetException(error);
+    return false;
   }
-  if (GetPropertyIfSpecified(context, options, kGearsLocationProviderUrls,
-                             &token)) {
-    if (!ParseLocationProviderUrls(context, token, urls)) {
-      std::string16 error = STRING16(L"options.");
-      error += kGearsLocationProviderUrls;
-      error += STRING16(L" should be null or an array of strings.");
-      context->SetException(error);
-      return false;
+  if (options.GetPropertyType(kGearsLocationProviderUrls) !=
+          JSPARAM_UNDEFINED) {
+    JsParamType type = options.GetPropertyType(kGearsLocationProviderUrls);
+    // If gearsLocationProviderUrls is null, we do not use the default URL.
+    if (type != JSPARAM_NULL) {
+      JsArray js_array;
+      if (!options.GetPropertyAsArray(kGearsLocationProviderUrls, &js_array) ||
+          !ParseLocationProviderUrls(context, js_array, urls)) {
+        // If it's not an array and not null, this is an error.
+        std::string16 error = STRING16(L"options.");
+        error += kGearsLocationProviderUrls;
+        error += STRING16(L" should be null or an array of strings.");
+        context->SetException(error);
+        return false;
+      }
     }
   } else {
-  // gearsLocationProviderUrls is not specified, so use the default URL.
-  urls->push_back(kDefaultLocationProviderUrl);
+    // gearsLocationProviderUrls is not specified, so use the default URL.
+    urls->push_back(kDefaultLocationProviderUrl);
   }
   return true;
 }
@@ -881,44 +878,23 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
 // static
 bool GearsGeolocation::ParseLocationProviderUrls(
     JsCallContext *context,
-    const JsScopedToken &token,
+    const JsArray &js_array,
     std::vector<std::string16> *urls) {
   assert(context);
   assert(urls);
-  if (JsTokenGetType(token, context->js_context()) == JSPARAM_ARRAY) {
-    // gearsLocationProviderUrls is an array.
-    JsArray js_array;
-    if (!js_array.SetArray(token, context->js_context())) {
-      LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to set "
-           "array with gearsLocationProviderUrls."));
-      assert(false);
-      return false;
-    }
-    int length;
-    if (!js_array.GetLength(&length)) {
-      LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
-           "length of gearsLocationProviderUrls."));
-      assert(false);
-      return false;
-    }
-    for (int i = 0; i < length; ++i) {
-      JsScopedToken token;
-      if (!js_array.GetElement(i, &token)) {
-        LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
-             "element from gearsLocationProviderUrls."));
-        assert(false);
-        return false;
-      }
-      std::string16 url;
-      if (!JsTokenToString_NoCoerce(token, context->js_context(), &url)) {
-        return false;
-      }
-      urls->push_back(url);
-    }
-  } else if (JsTokenGetType(token, context->js_context()) != JSPARAM_NULL) {
-    // If gearsLocationProviderUrls is null, we do not use the default URL.
-    // If it's not an array and not null, this is an error.
+  int length;
+  if (!js_array.GetLength(&length)) {
+    LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
+          "length of gearsLocationProviderUrls."));
+    assert(false);
     return false;
+  }
+  for (int i = 0; i < length; ++i) {
+    std::string16 url;
+    if (!js_array.GetElementAsString(i, &url)) {
+      return false;
+    }
+    urls->push_back(url);
   }
   return true;
 }
@@ -1151,25 +1127,6 @@ void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
 }
 
 // Local functions
-
-static bool GetPropertyIfSpecified(JsCallContext *context,
-                                   const JsObject &object,
-                                   const std::string16 &name,
-                                   JsScopedToken *token) {
-  assert(token);
-  // GetProperty should always succeed, but will get a token of type
-  // JSPARAM_UNDEFINED if the requested property is not present.
-  JsScopedToken token_local;
-  if (!object.GetProperty(name, &token_local)) {
-    assert(false);
-    return false;
-  }
-  if (JsTokenGetType(token_local, context->js_context()) == JSPARAM_UNDEFINED) {
-    return false;
-  }
-  *token = token_local;
-  return true;
-}
 
 static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
                                            const std::string16 &value,

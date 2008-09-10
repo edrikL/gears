@@ -249,7 +249,7 @@ class GearsGeolocation
   // Parses a JsScopedToken representing the gearsLocationProviderUrls field.
   // The output is a vector of URLs. Return value indicates success.
   static bool ParseLocationProviderUrls(JsCallContext *context,
-                                        const JsScopedToken &token,
+                                        const JsArray &js_array,
                                         std::vector<std::string16> *urls);
 
   // Converts a Gears position object to a JavaScript object. static for use in

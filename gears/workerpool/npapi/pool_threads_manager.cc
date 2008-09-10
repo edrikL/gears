@@ -302,7 +302,10 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
 bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                                               const JsErrorInfo &error_info) {
   assert(wi);
-  if (!wi->onerror_handler.get()) { return false; }
+  if (!wi->onerror_handler.get() ||
+      !wi->onerror_handler->IsValidCallback()) {
+    return false;
+  }
 
   // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
   // ensure that it exists on the stack even in opt builds.
@@ -335,8 +338,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
     // but if the return type of a callback is the wrong type, there is no
     // convenient place to report that, and it seems better to fail on this
     // side than rejecting a value without any explanation.
-    JsTokenToBool_Coerce(alloc_js_retval->token(), alloc_js_retval->context(),
-                         &js_retval);
+    js_retval = alloc_js_retval->CoerceToBool();
     delete alloc_js_retval;
   }
 
@@ -819,7 +821,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
   volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
   is_shutting_down;
 
-  if (wi->onmessage_handler.get()) {
+  if (wi->onmessage_handler.get() &&
+      wi->onmessage_handler->IsValidCallback()) {
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
     scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(true));
@@ -836,10 +839,9 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     onmessage_param->SetPropertyString(STRING16(L"text"), msg.text);
     onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender);
     onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin.url());
-    JsScopedToken token;
-    if (msg.body.get() &&
-        msg.body->Unmarshal(wi->module_environment.get(), &token)) {
-      onmessage_param->SetProperty(STRING16(L"body"), token);
+    if (msg.body.get()) {
+      onmessage_param->SetPropertyMarshaledJsToken(
+          STRING16(L"body"), wi->module_environment.get(), msg.body.get());
     }
 
     const int argc = 3;

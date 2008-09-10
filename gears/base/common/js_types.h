@@ -37,6 +37,7 @@ class JsObject;
 class JsRootedToken;
 class JsRunnerInterface;
 class MarshaledJsToken;
+class ModuleEnvironment;
 class ModuleImplBaseClass;
 typedef JsRootedToken JsRootedCallback;
 
@@ -264,6 +265,9 @@ struct JsArgument {
 //------------------------------------------------------------------------------
 // JsTokenToXxx, XxxToJsToken
 //------------------------------------------------------------------------------
+// TODO(nigeltao): Make this section private to js_types.cc - other classes
+// shouldn't manipulate JsTokens directly, they should use the public methods
+// of JsRunnerInterface and JsCallContext.
 
 // Utility functions to convert JsToken to various C++ types without coercion.
 // If the type of the underlying JavaScript variable does not exactly match the
@@ -320,13 +324,27 @@ bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out);
 // JsRootedToken
 //------------------------------------------------------------------------------
 
-#if BROWSER_FF
-
 // A JsToken that won't get GC'd out from under you.
+// TODO(nigeltao): On BROWSER_IE, this might leak for things like strings and
+// arrays. We should measure whether or not we are leaking, and if so, better
+// handle lifetime. We also need to think of different requirements for when
+// token is an input parameter vs a return value.
 class JsRootedToken {
  public:
   JsRootedToken(JsContextPtr context, JsToken token);
   ~JsRootedToken();
+
+  // GetAsXxx returns success or failure of the call. Failure could happen if,
+  // for example, GetAsString was called on an int token - type coercion is
+  // not applied.
+  bool GetAsString(std::string16 *out) const;
+
+  // This function does not return the success or failure of the call - the
+  // function call always succeeds. Instead, it returns the value of this
+  // JsToken, coerced to a boolean value (e.g. the integer 1 coerces to true).
+  bool CoerceToBool() const;
+
+  bool IsValidCallback() const;
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return context_; }
@@ -334,46 +352,9 @@ class JsRootedToken {
  private:
   JsContextPtr context_;
   JsToken token_;
+
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
-
-#elif BROWSER_IE
-
-// A JsToken that won't get GC'd out from under you.
-// TODO(aa): This leaks for things like strings and arrays. We need to correctly
-// handle lifetime. Also need to think of different requirements for when token
-// is an input parameter vs a return value.
-class JsRootedToken {
- public:
-  JsRootedToken(JsContextPtr context, JsToken token);
-  ~JsRootedToken();
-
-  JsToken token() const { return token_; }
-  JsContextPtr context() const { return NULL; }
-
- private:
-  JsToken token_;
-  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
-};
-
-#elif BROWSER_NPAPI
-
-// A JsToken that won't get GC'd out from under you.
-class JsRootedToken {
- public:
-  JsRootedToken(JsContextPtr context, JsToken token);
-  ~JsRootedToken();
-
-  const JsScopedToken& token() const { return token_; }
-  JsContextPtr context() const { return context_; }
-
- private:
-  JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
-  JsScopedToken token_;
-  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
-};
-
-#endif
 
 //------------------------------------------------------------------------------
 // JsArray
@@ -393,16 +374,19 @@ class JsArray {
 
   bool SetArray(JsToken value, JsContextPtr context);
 
+  // TODO(nigeltao): Remove the SetArray method, and make a JsArray well-formed
+  // on construction, rather than by a two-step construction + SetArray recipe.
+  // Once that happens, we can remove this method too.
+  bool IsValidArray();
+
   bool GetLength(int *length) const;
 
   // use the same syntax as JsRootedToken
   const JsScopedToken &token() const { return array_; }
   const JsContextPtr &context() const { return js_context_; }
 
-  // These methods return false on failure. They return true, and set out to
-  // JSPARAM_UNDEFINED if the requested element does not exist.
-  bool GetElement(int index, JsScopedToken *out) const;
-  
+  // GetElementXxx returns false on failure, including if the requested element
+  // does not exist.
   bool GetElementAsBool(int index, bool *out) const;
   bool GetElementAsInt(int index, int *out) const;
   bool GetElementAsDouble(int index, double *out) const;
@@ -411,11 +395,13 @@ class JsArray {
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
 
-  // Method to get the type of an element. Returns JSPARAM_UNDEFINED if the
-  // requested element does not exist.
+  // This method will type-coerce the element to a string, even if it wasn't
+  // already one. For example, the integer 17 would become the string "17".
+  bool GetElementAsStringWithCoercion(int index, std::string16 *out) const;
+
+  // Returns JSPARAM_UNDEFINED if the requested element does not exist.
   JsParamType GetElementType(int index) const;
 
-  bool SetElement(int index, const JsScopedToken &value);
   bool SetElementBool(int index, bool value);
   bool SetElementInt(int index, int value);
   bool SetElementDouble(int index, double value);
@@ -424,10 +410,17 @@ class JsArray {
   bool SetElementObject(int index, JsObject *value);
   bool SetElementFunction(int index, JsRootedCallback *value);
   bool SetElementModule(int index, ModuleImplBaseClass *value);
+  bool SetElementNull(int index);
+  bool SetElementUndefined(int index);
+
+  // TODO(nigeltao): These two methods should really be private.
+  bool GetElement(int index, JsScopedToken *out) const;
+  bool SetElement(int index, const JsScopedToken &value);
 
  private:
   JsContextPtr js_context_;
   JsScopedToken array_;
+
   DISALLOW_EVIL_CONSTRUCTORS(JsArray);
 };
 
@@ -442,10 +435,8 @@ class JsObject {
 
   bool SetObject(JsToken value, JsContextPtr context);
 
-  // These methods return false on failure. They return true, and set out to
-  // JSPARAM_UNDEFINED if the requested property does not exist.
-  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
-
+  // GetPropertyXxx returns false on failure, including if the requested element
+  // does not exist.
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
@@ -455,12 +446,8 @@ class JsObject {
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
 
-  // Method to get the type of a property. Returns JSPARAM_UNDEFINED if the
-  // requested property does not exist.
+  // Returns JSPARAM_UNDEFINED if the requested property does not exist.
   JsParamType GetPropertyType(const std::string16 &name) const;
-  bool HasProperty(const std::string16 &name) const {
-    return JSPARAM_UNDEFINED != GetPropertyType(name);
-  }
   
   // GetPropertyNames fills the given vector with the (string) names of this
   // JsObject's properties.  There is no guarantee that it retrieves (or does
@@ -470,8 +457,8 @@ class JsObject {
   // does not reset the vector to be empty.
   bool GetPropertyNames(std::vector<std::string16> *out) const;
 
-  // SetProperty*() overwrites the existing named property or adds a new one if
-  // none exists.
+  // SetPropertyXxx() overwrites the existing named property or adds a new one
+  // if none exists.
   bool SetPropertyBool(const std::string16& name, bool value);
   bool SetPropertyInt(const std::string16 &name, int value);
   bool SetPropertyDouble(const std::string16& name, double value);
@@ -480,15 +467,24 @@ class JsObject {
   bool SetPropertyObject(const std::string16& name, JsObject* value);
   bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
   bool SetPropertyModule(const std::string16& name,
-                                   ModuleImplBaseClass* value);
-  bool SetProperty(const std::string16 &name, const JsToken &value);
+                         ModuleImplBaseClass* value);
+  bool SetPropertyNull(const std::string16 &name);
+  bool SetPropertyUndefined(const std::string16 &name);
+  bool SetPropertyMarshaledJsToken(const std::string16& name,
+                                   ModuleEnvironment* module_environment,
+                                   MarshaledJsToken* value);
 
   const JsScopedToken &token() const { return js_object_; }
   const JsContextPtr &context() const { return js_context_; }
 
+  // TODO(nigeltao): These two methods should really be private.
+  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
+  bool SetProperty(const std::string16 &name, const JsToken &value);
+
  private:
   JsContextPtr js_context_;
   JsScopedToken js_object_;
+
   DISALLOW_EVIL_CONSTRUCTORS(JsObject);
 };
 
@@ -539,6 +535,16 @@ class JsCallContext {
 
   // Get the type of an argument that was passed in.
   JsParamType GetArgumentType(int i);
+
+  // TODO(nigeltao): Do we really need the coercion parameter? JS type coercion
+  // was introduced as part of the Console code, and was to be introduced
+  // generally, but we backed off because changing APIs from non-coercing to
+  // coercing is something we can't undo, if we want to maintain backwards
+  // compatability in future releases.
+  bool GetArgumentAsBool(int i, bool *out, bool coerce=false);
+  bool GetArgumentAsInt(int i, int *out, bool coerce=false);
+  bool GetArgumentAsDouble(int i, double *out, bool coerce=false);
+  bool GetArgumentAsString(int i, std::string16 *out, bool coerce=false);
 
   // Sets the value to be returned to the calling JavaScript.
   //

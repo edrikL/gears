@@ -265,6 +265,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
     return;
   }
 
+  // TODO(nigeltao): Make message_body's type scoped_ptr<MarshaledJsToken>.
   JsToken message_body;
   int dest_worker_id;
   JsArgument argv[] = {
@@ -290,7 +291,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
   // We also keep the old string-only message.text for backwards compatability.
   std::string16 text;
   if (message_body_type == JSPARAM_STRING16) {
-    JsTokenToString_NoCoerce(message_body, cx, &text);
+    context->GetArgumentAsString(0, &text);
   }
 
   bool succeeded = threads_manager_->PutPoolMessage(mjt,

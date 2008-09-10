@@ -487,32 +487,28 @@ void GearsTest::TestObjectProperties(JsCallContext *context) {
 
   // Internal tests on JsObject.
   scoped_ptr<JsObject> test_object(js_runner->NewObject());
-  JsScopedToken token;
   static const char16 *kPropertyName = STRING16(L"genericPropertyName");
   // Test that a new object has no properties.
   std::vector<std::string16> property_names;
-  TEST_ASSERT(test_object.get()->GetPropertyNames(&property_names));
+  TEST_ASSERT(test_object->GetPropertyNames(&property_names));
   TEST_ASSERT(property_names.empty());
-  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
-              JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_object.get()->GetProperty(kPropertyName, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+  TEST_ASSERT(test_object->GetPropertyType(kPropertyName) ==
               JSPARAM_UNDEFINED);
   // Test that we can set a property.
   const int int_in = 42;
   int int_out;
-  TEST_ASSERT(test_object.get()->SetPropertyInt(kPropertyName, int_in));
+  TEST_ASSERT(test_object->SetPropertyInt(kPropertyName, int_in));
   // Test that we can get a property.
-  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) == JSPARAM_INT);
-  TEST_ASSERT(test_object.get()->GetPropertyAsInt(kPropertyName, &int_out));
+  TEST_ASSERT(test_object->GetPropertyType(kPropertyName) == JSPARAM_INT);
+  TEST_ASSERT(test_object->GetPropertyAsInt(kPropertyName, &int_out));
   TEST_ASSERT(int_in == int_out);
   // Test that we can reset a property.
   const std::string16 string_in(STRING16(L"test"));
   std::string16 string_out;
-  TEST_ASSERT(test_object.get()->SetPropertyString(kPropertyName, string_in));
-  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
+  TEST_ASSERT(test_object->SetPropertyString(kPropertyName, string_in));
+  TEST_ASSERT(test_object->GetPropertyType(kPropertyName) ==
               JSPARAM_STRING16);
-  TEST_ASSERT(test_object.get()->GetPropertyAsString(kPropertyName,
+  TEST_ASSERT(test_object->GetPropertyAsString(kPropertyName,
                                                      &string_out));
   TEST_ASSERT(string_in == string_out);
 }
@@ -627,7 +623,7 @@ void GearsTest::TestCoerceBool(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   bool coerced_value;
-  if (!JsTokenToBool_Coerce(value, context->js_context(), &coerced_value)) {
+  if (!context->GetArgumentAsBool(0, &coerced_value, true)) {
     context->SetException(STRING16(L"Could not coerce argument to bool."));
     return;
   }
@@ -650,7 +646,7 @@ void GearsTest::TestCoerceInt(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   int coerced_value;
-  if (!JsTokenToInt_Coerce(value, context->js_context(), &coerced_value)) {
+  if (!context->GetArgumentAsInt(0, &coerced_value, true)) {
     context->SetException(STRING16(L"Could not coerce argument to int."));
     return;
   }
@@ -673,7 +669,7 @@ void GearsTest::TestCoerceDouble(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   double coerced_value;
-  if (!JsTokenToDouble_Coerce(value, context->js_context(), &coerced_value)) {
+  if (!context->GetArgumentAsDouble(0, &coerced_value, true)) {
     context->SetException(STRING16(L"Could not coerce argument to double."));
     return;
   }
@@ -696,7 +692,7 @@ void GearsTest::TestCoerceString(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   std::string16 coerced_value;
-  if (!JsTokenToString_Coerce(value, context->js_context(), &coerced_value)) {
+  if (!context->GetArgumentAsString(0, &coerced_value, true)) {
     context->SetException(STRING16(L"Could not coerce argument to string."));
     return;
   }
@@ -1457,63 +1453,38 @@ bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
 }
   // Internal tests on JsArray.
   scoped_ptr<JsArray> test_array(js_runner->NewArray());
-  JsScopedToken token;
   // Test that the length of a new array is zero.
   int length;
-  TEST_ASSERT(test_array.get()->GetLength(&length));
+  TEST_ASSERT(test_array->GetLength(&length));
   TEST_ASSERT(0 == length);
   // Test that all elements in an empty array are undefined.
-  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElement(0, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->GetElementType(0) == JSPARAM_UNDEFINED);
   // Test that we can set elements.
   int int_in = 10;
-  JsParamToSend int_element = {JSPARAM_INT, &int_in};
-  ConvertJsParamToToken(int_element, context->js_context(), &token);
-  TEST_ASSERT(test_array.get()->SetElement(0, token));
-  TEST_ASSERT(test_array.get()->SetElement(2, token));
+  TEST_ASSERT(test_array->SetElementInt(0, int_in));
+  TEST_ASSERT(test_array->SetElementInt(2, int_in));
   // Test that we can get elements.
   int int_out;
-  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_INT);
-  TEST_ASSERT(test_array.get()->GetElement(0, &token));
-  TEST_ASSERT(JsTokenToInt_NoCoerce(token, context->js_context(), &int_out));
+  TEST_ASSERT(test_array->GetElementType(0) == JSPARAM_INT);
+  TEST_ASSERT(test_array->GetElementAsInt(0, &int_out));
   TEST_ASSERT(int_out == int_in);
-  TEST_ASSERT(test_array.get()->GetElementType(2) == JSPARAM_INT);
-  TEST_ASSERT(test_array.get()->GetElement(2, &token));
-  TEST_ASSERT(JsTokenToInt_NoCoerce(token, context->js_context(), &int_out));
+  TEST_ASSERT(test_array->GetElementType(2) == JSPARAM_INT);
+  TEST_ASSERT(test_array->GetElementAsInt(2, &int_out));
   TEST_ASSERT(int_out == int_in);
   // Test that out-of-range and unspecified elements are undefined.
-  TEST_ASSERT(test_array.get()->GetElementType(-1) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElement(-1, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElementType(1) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElement(1, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElementType(3) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElement(3, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->GetElementType(-1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->GetElementType(1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->GetElementType(3) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->GetElementAsInt(3, &int_out) == false);
   // Test that an element set with type undefined has type undefined.
-  JsParamToSend undefined_element = {JSPARAM_UNDEFINED, NULL};
-  ConvertJsParamToToken(undefined_element, context->js_context(), &token);
-  TEST_ASSERT(test_array.get()->SetElement(4, token));
-  TEST_ASSERT(test_array.get()->GetElementType(4) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(test_array.get()->GetElement(4, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array->SetElementUndefined(4));
+  TEST_ASSERT(test_array->GetElementType(4) == JSPARAM_UNDEFINED);
   // Test that we can reset elements.
   std::string16 string_in(STRING16(L"test"));
   std::string16 string_out;
-  JsParamToSend string_element = {JSPARAM_STRING16, &string_in};
-  ConvertJsParamToToken(string_element, context->js_context(), &token);
-  TEST_ASSERT(test_array.get()->SetElement(0, token));
-  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_STRING16);
-  TEST_ASSERT(test_array.get()->GetElement(0, &token));
-  TEST_ASSERT(JsTokenToString_NoCoerce(token, context->js_context(),
-                                       &string_out));
+  TEST_ASSERT(test_array->SetElementString(0, string_in));
+  TEST_ASSERT(test_array->GetElementType(0) == JSPARAM_STRING16);
+  TEST_ASSERT(test_array->GetElementAsString(0, &string_out));
   TEST_ASSERT(string_out == string_in);
   return true;
 }
@@ -1800,21 +1771,12 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(js_runner->InvokeCallback(function_6.get(), 0, NULL,
                                         as_out_parameter(retval)));
   std::string16 string_retval;
-  JsContextPtr js_context = context->js_context();
-  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
-                                       &string_retval));
+  TEST_ASSERT(retval->GetAsString(&string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
 
   // Test that out-of-range elements are undefined.
-  JsScopedToken token;
   TEST_ASSERT(array_many_types.GetElementType(-1) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(array_many_types.GetElement(-1, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
   TEST_ASSERT(array_many_types.GetElementType(7) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(array_many_types.GetElement(7, &token));
-  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
-              JSPARAM_UNDEFINED);
 }
 
 void TestObjectObject(JsCallContext* context, const JsObject& obj) {
@@ -1854,9 +1816,7 @@ void TestObjectFunction(JsCallContext* context,
                                         as_out_parameter(retval)));
   TEST_ASSERT(retval.get());
   std::string16 string_retval;
-  JsContextPtr js_context = context->js_context();
-  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
-                                       &string_retval));
+  TEST_ASSERT(retval->GetAsString(&string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
 }
 

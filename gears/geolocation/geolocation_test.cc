@@ -552,35 +552,16 @@ void RemoveGeolocationMockLocationProvider() {
 }
 
 // Local functions
-static bool GetPropertyIfDefined(JsCallContext *context,
-                                 const JsObject& javascript_object,
-                                 const std::string16& name,
-                                 JsScopedToken *token) {
-  assert(context);
-  assert(token);
-  // GetProperty should always succeed, but will get a token of type
-  // JSPARAM_UNDEFINED if the requested property is not present.
-  if (!javascript_object.GetProperty(name, token)) {
-    assert(false);
-    return false;
-  }
-  if (JsTokenGetType(*token, context->js_context()) == JSPARAM_UNDEFINED) {
-    return false;
-  }
-  return true;
-}
-
 static void GetIntegerPropertyIfDefined(JsCallContext *context,
                                         const JsObject& javascript_object,
                                         const std::string16& name,
                                         int *value) {
   assert(context);
   assert(value);
-  JsScopedToken token;
-  if (!GetPropertyIfDefined(context, javascript_object, name, &token)) {
+  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!JsTokenToInt_NoCoerce(token, context->js_context(), value)) {
+  if (!javascript_object.GetPropertyAsInt(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be an integer.");
@@ -594,11 +575,10 @@ static void GetStringPropertyIfDefined(JsCallContext *context,
                                        std::string16 *value) {
   assert(context);
   assert(value);
-  JsScopedToken token;
-  if (!GetPropertyIfDefined(context, javascript_object, name, &token)) {
+  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!JsTokenToString_NoCoerce(token, context->js_context(), value)) {
+  if (!javascript_object.GetPropertyAsString(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be a string.");
@@ -612,11 +592,10 @@ static void GetDoublePropertyIfDefined(JsCallContext *context,
                                        double *value) {
   assert(context);
   assert(value);
-  JsScopedToken token;
-  if (!GetPropertyIfDefined(context, javascript_object, name, &token)) {
+  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!JsTokenToDouble_NoCoerce(token, context->js_context(), value)) {
+  if (!javascript_object.GetPropertyAsDouble(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be a double.");

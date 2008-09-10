@@ -30,6 +30,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for isnan
 #include "gears/base/common/js_dom_element.h"
+#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -362,6 +363,10 @@ bool JsArray::SetElementString(int index, const std::string16 &value) {
 
 #endif
 
+bool JsArray::IsValidArray() {
+  return JsTokenGetType(array_, js_context_) == JSPARAM_ARRAY;
+}
+
 bool JsArray::GetElementAsBool(int index, bool *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
@@ -411,6 +416,14 @@ bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
   return JsTokenToNewCallback_NoCoerce(token, js_context_, out);
 }
 
+bool JsArray::GetElementAsStringWithCoercion(int index,
+                                             std::string16 *out) const {
+  JsScopedToken token;
+  if (!GetElement(index, &token)) return false;
+
+  return JsTokenToString_Coerce(token, js_context_, out);
+}
+
 JsParamType JsArray::GetElementType(int index) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return JSPARAM_UNKNOWN;
@@ -432,6 +445,18 @@ bool JsArray::SetElementFunction(int index, JsRootedCallback *value) {
 
 bool JsArray::SetElementModule(int index, ModuleImplBaseClass *value) {
   return SetElement(index, value->GetWrapperToken());
+}
+
+bool JsArray::SetElementNull(int index) {
+  JsScopedToken value;
+  NullToJsToken(js_context_, &value);
+  return SetElement(index, value);
+}
+
+bool JsArray::SetElementUndefined(int index) {
+  JsScopedToken value;
+  UndefinedToJsToken(js_context_, &value);
+  return SetElement(index, value);
 }
 
 //------------------------------------------------------------------------------
@@ -785,6 +810,28 @@ bool JsObject::SetPropertyModule(const std::string16 &name,
                                  ModuleImplBaseClass *value) {
   return SetProperty(name, value->GetWrapperToken());
 }
+
+bool JsObject::SetPropertyNull(const std::string16 &name) {
+  JsScopedToken value;
+  NullToJsToken(js_context_, &value);
+  return SetProperty(name, value);
+}
+
+bool JsObject::SetPropertyUndefined(const std::string16 &name) {
+  JsScopedToken value;
+  UndefinedToJsToken(js_context_, &value);
+  return SetProperty(name, value);
+}
+
+bool JsObject::SetPropertyMarshaledJsToken(
+    const std::string16& name,
+    ModuleEnvironment* module_environment,
+    MarshaledJsToken* value) {
+  JsScopedToken token;
+  return value->Unmarshal(module_environment, &token) &&
+      SetProperty(name, token);
+}
+
 
 //------------------------------------------------------------------------------
 // JsTokenToXxx, XxxToJsToken
@@ -1782,56 +1829,51 @@ void ScopedNPVariant::Release() {
 // JsRootedToken
 //------------------------------------------------------------------------------
 
-#if BROWSER_FF
-
 JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
     : context_(context), token_(token) {
   LEAK_COUNTER_INCREMENT(JsRootedToken);
+#if BROWSER_FF
   if (JSVAL_IS_GCTHING(token_)) {
     JS_BeginRequest(context_);
     JS_AddRoot(context_, &token_);
     JS_EndRequest(context_);
   }
+#elif BROWSER_IE
+  if (token_.vt == VT_DISPATCH) {
+    token_.pdispVal->AddRef();
+  }
+#endif
 }
 
 JsRootedToken::~JsRootedToken() {
   LEAK_COUNTER_DECREMENT(JsRootedToken);
+#if BROWSER_FF
   if (JSVAL_IS_GCTHING(token_)) {
     JS_BeginRequest(context_);
     JS_RemoveRoot(context_, &token_);
     JS_EndRequest(context_);
   }
-}
-
 #elif BROWSER_IE
-
-JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
-    : token_(token) { // IE doesn't use JsContextPtr
-  LEAK_COUNTER_INCREMENT(JsRootedToken);
-  if (token_.vt == VT_DISPATCH) {
-    token_.pdispVal->AddRef();
-  }
-}
-
-JsRootedToken::~JsRootedToken() {
-  LEAK_COUNTER_DECREMENT(JsRootedToken);
   if (token_.vt == VT_DISPATCH) {
     token_.pdispVal->Release();
   }
-}
-
-#elif BROWSER_NPAPI
-
-JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
-    : context_(context), token_(token) {
-  LEAK_COUNTER_INCREMENT(JsRootedToken);
-}
-
-JsRootedToken::~JsRootedToken() {
-  LEAK_COUNTER_DECREMENT(JsRootedToken);
-}
-
 #endif
+}
+
+bool JsRootedToken::GetAsString(std::string16 *out) const {
+  return JsTokenToString_NoCoerce(token(), context(), out);
+}
+
+bool JsRootedToken::CoerceToBool() const {
+  bool result;
+  JsTokenToBool_Coerce(token(), context(), &result);
+  return result;
+}
+
+bool JsRootedToken::IsValidCallback() const {
+  // TODO(nigeltao): Make this test more comprehensive.
+  return !JsTokenIsNullOrUndefined(token());
+}
 
 //------------------------------------------------------------------------------
 // ConvertJsParamToToken, JsCallContext
@@ -2305,10 +2347,53 @@ bool JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   return true;
 }
 
-
 JsParamType JsCallContext::GetArgumentType(int i) {
   if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
   return JsTokenGetType(GetArgument(i), js_context());
+}
+
+bool JsCallContext::GetArgumentAsBool(int i,
+                                      bool *out,
+                                      bool coerce) {
+  if (i >= GetArgumentCount()) return false;
+  if (coerce) {
+    return JsTokenToBool_Coerce(GetArgument(i), js_context_, out);
+  } else {
+    return JsTokenToBool_NoCoerce(GetArgument(i), js_context_, out);
+  }
+}
+
+bool JsCallContext::GetArgumentAsInt(int i,
+                                     int *out,
+                                     bool coerce) {
+  if (i >= GetArgumentCount()) return false;
+  if (coerce) {
+    return JsTokenToInt_Coerce(GetArgument(i), js_context_, out);
+  } else {
+    return JsTokenToInt_NoCoerce(GetArgument(i), js_context_, out);
+  }
+}
+
+bool JsCallContext::GetArgumentAsDouble(int i,
+                                        double *out,
+                                        bool coerce) {
+  if (i >= GetArgumentCount()) return false;
+  if (coerce) {
+    return JsTokenToDouble_Coerce(GetArgument(i), js_context_, out);
+  } else {
+    return JsTokenToDouble_NoCoerce(GetArgument(i), js_context_, out);
+  }
+}
+
+bool JsCallContext::GetArgumentAsString(int i,
+                                        std::string16 *out,
+                                        bool coerce) {
+  if (i >= GetArgumentCount()) return false;
+  if (coerce) {
+    return JsTokenToString_Coerce(GetArgument(i), js_context_, out);
+  } else {
+    return JsTokenToString_NoCoerce(GetArgument(i), js_context_, out);
+  }
 }
 
 JsCallContext::~JsCallContext() {

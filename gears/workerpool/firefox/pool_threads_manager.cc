@@ -266,7 +266,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const WorkerPoolMessage &msg) {
   assert(wi);
   if (wi->onmessage_handler.get() &&
-      !JsTokenIsNullOrUndefined(wi->onmessage_handler->token())) {
+      wi->onmessage_handler->IsValidCallback()) {
 
     // TODO(zork): Remove this with dump_on_error.  It is declared as volatile
     // to ensure that it exists on the stack even in opt builds.
@@ -290,10 +290,9 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     onmessage_param->SetPropertyString(STRING16(L"text"), msg.text_);
     onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender_);
     onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin_.url());
-    JsToken token;
-    if (msg.body_.get() &&
-        msg.body_->Unmarshal(wi->module_environment.get(), &token)) {
-      onmessage_param->SetProperty(STRING16(L"body"), token);
+    if (msg.body_.get()) {
+      onmessage_param->SetPropertyMarshaledJsToken(
+          STRING16(L"body"), wi->module_environment.get(), msg.body_.get());
     }
 
     const int argc = 3;
@@ -464,8 +463,8 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
 bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                                               const JsErrorInfo &error_info) {
   assert(wi);
-  if (!wi->onerror_handler.get() || 
-      JsTokenIsNullOrUndefined(wi->onerror_handler->token())) {
+  if (!wi->onerror_handler.get() ||
+      !wi->onerror_handler->IsValidCallback()) {
     return false;
   }
 
@@ -504,8 +503,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
     // but if the return type of a callback is the wrong type, there is no
     // convenient place to report that, and it seems better to fail on this
     // side than rejecting a value without any explanation.
-    JsTokenToBool_Coerce(alloc_js_retval->token(), alloc_js_retval->context(),
-                         &js_retval);
+    js_retval = alloc_js_retval->CoerceToBool();
     delete alloc_js_retval;
   }
 
