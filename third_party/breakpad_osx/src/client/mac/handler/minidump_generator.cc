@@ -254,34 +254,52 @@ bool MinidumpGenerator::WriteStackFromStartAddress(
     mach_vm_address_t start_addr,
     MDMemoryDescriptor *stack_location) {
   UntypedMDRVA memory(&writer_);
-  size_t size = CalculateStackSize(start_addr);
-
-  // If there's an error in the calculation, return at least the current
-  // stack information
-  if (size == 0)
-    size = 16;
-
-  if (!memory.Allocate(size))
-    return false;
-
-  bool result;
-  if (dynamic_images_) {
-
-    kern_return_t kr;
-
-    void *stack_memory = ReadTaskMemory(crashing_task_,
-                                        (void*)start_addr,
-                                        size,
-                                        &kr);
-
-    if (stack_memory == NULL) {
-      return false;
-    }
-
-    result = memory.Copy(stack_memory, size);
-    free(stack_memory);
+  
+  bool result = false;
+  if (start_addr == 0) {
+      // In some situations the stack address for the thread can come back 0.
+      // In these cases we skip over the threads in question and stuff the
+      // stack with a clearly borked value.
+      start_addr = 0xDEADBEEF;
+      const size_t size = 16;
+      if (!memory.Allocate(size))
+        return false;
+    
+      unsigned long long dummy_stack[2];  // Fill dummy stack with 16 bytes of
+                                          // junk.
+      dummy_stack[0] = 0xDEADBEEF;
+      dummy_stack[1] = 0xDEADBEEF;
+     
+      result = memory.Copy(dummy_stack, size);
   } else {
-    result = memory.Copy(reinterpret_cast<const void *>(start_addr), size);
+    size_t size = CalculateStackSize(start_addr);
+
+    // If there's an error in the calculation, return at least the current
+    // stack information
+    if (size == 0)
+      size = 16;
+
+    if (!memory.Allocate(size))
+      return false;
+
+    if (dynamic_images_) {
+
+      kern_return_t kr;
+
+      void *stack_memory = ReadTaskMemory(crashing_task_,
+                                          (void*)start_addr,
+                                          size,
+                                          &kr);
+
+      if (stack_memory == NULL) {
+        return false;
+      }
+
+      result = memory.Copy(stack_memory, size);
+      free(stack_memory);
+    } else {
+      result = memory.Copy(reinterpret_cast<const void *>(start_addr), size);
+    }
   }
 
   stack_location->start_of_memory_range = start_addr;
