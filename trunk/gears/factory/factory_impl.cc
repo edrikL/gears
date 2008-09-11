@@ -51,6 +51,7 @@
 // The Canvas, Console, Database2, Image and Media APIs have not
 // been finalized for official builds.
 #else
+#include "gears/blob/blob_builder_module.h"
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
 #ifdef WINCE
@@ -218,9 +219,12 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsWorkerPool>(module_environment_.get(),
                                   context, &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Database2, Image and Media APIs have not
+  // The BlobBuilder, Canvas, Console, Database2, Image and Media APIs have not
   // been finalized for official builds.
 #else
+  } else if (module_name == STRING16(L"beta.blobbuilder")) {
+    CreateModule<GearsBlobBuilder>(module_environment_.get(),
+                                   context, &object);
   } else if (module_name == STRING16(L"beta.databasemanager")) {
     CreateModule<GearsDatabase2Manager>(module_environment_.get(),
                                    context, &object);
