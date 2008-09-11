@@ -25,7 +25,6 @@
 
 #include "gears/factory/factory_np.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/factory/factory_impl.h"
 
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {

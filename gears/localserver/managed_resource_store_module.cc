@@ -25,11 +25,10 @@
 
 #include "gears/localserver/managed_resource_store_module.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/update_task.h"
 
-DECLARE_GEARS_WRAPPER(GearsManagedResourceStore);
+DECLARE_DISPATCHER(GearsManagedResourceStore);
 
 // static
 template<>

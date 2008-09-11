@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/string16.h"
 #include "gears/media/audio_recorder_constants.h"
 #include "gears/media/base_audio_recorder.h"

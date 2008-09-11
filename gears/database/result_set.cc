@@ -25,13 +25,12 @@
 
 #include "gears/database/result_set.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/database/database.h"
 #include "gears/database/database_utils.h"
 
-DECLARE_GEARS_WRAPPER(GearsResultSet);
+DECLARE_DISPATCHER(GearsResultSet);
 
 const std::string GearsResultSet::kModuleName("GearsResultSet");
 

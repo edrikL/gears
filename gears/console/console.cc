@@ -26,10 +26,9 @@
 #include "gears/console/console.h"
 
 #include "gears/base/common/message_service.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/console/log_event.h"
 
-DECLARE_GEARS_WRAPPER(GearsConsole);
+DECLARE_DISPATCHER(GearsConsole);
 
 const std::string GearsConsole::kModuleName("GearsConsole");
 

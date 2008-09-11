@@ -29,9 +29,8 @@
 #include <map>
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/thread_locals.h"
-
-class JsCallContext;
 
 // An opaque type used to uniquely identify a method or property.
 typedef void* DispatchId;

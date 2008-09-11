@@ -34,7 +34,6 @@
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/leak_counter.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob_interface.h"

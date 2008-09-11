@@ -30,8 +30,8 @@
 
 #include "gears/factory/factory_ff.h"
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/module_wrapper.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO

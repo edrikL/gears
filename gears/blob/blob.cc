@@ -23,12 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
+
 #include "gears/blob/slice_blob.h"
 
-DECLARE_GEARS_WRAPPER(GearsBlob);
+DECLARE_DISPATCHER(GearsBlob);
 
 template<>
 void Dispatcher<GearsBlob>::Init() {

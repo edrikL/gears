@@ -26,15 +26,13 @@
 #include "gears/media/audio_recorder.h"
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/media/audio_recorder_constants.h"
 #include "gears/media/base_audio_recorder.h"
 
-DECLARE_GEARS_WRAPPER(GearsAudioRecorder);
+DECLARE_DISPATCHER(GearsAudioRecorder);
 
 template<>
 void Dispatcher<GearsAudioRecorder>::Init() {

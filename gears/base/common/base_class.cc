@@ -28,7 +28,6 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/leak_counter.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/string_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"

@@ -24,12 +24,11 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/canvas/canvas_rendering_context_2d.h"
-#include "gears/base/common/dispatcher.h"
+
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "third_party/skia/include/SkPorterDuff.h"
 
-DECLARE_GEARS_WRAPPER(GearsCanvasRenderingContext2D);
+DECLARE_DISPATCHER(GearsCanvasRenderingContext2D);
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
 

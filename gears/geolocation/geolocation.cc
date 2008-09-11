@@ -41,7 +41,6 @@
 
 #include <math.h>
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/permissions_manager.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/location_provider_pool.h"
@@ -178,7 +177,7 @@ static bool IsNewPositionMoreTimely(const Position &old_position,
 bool CreateJavaScriptAddressObject(const Address &address,
                                    JsObject *address_object);
 
-DECLARE_GEARS_WRAPPER(GearsGeolocation);
+DECLARE_DISPATCHER(GearsGeolocation);
 
 template<>
 void Dispatcher<GearsGeolocation>::Init() {

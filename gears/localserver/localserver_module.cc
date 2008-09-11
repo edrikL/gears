@@ -25,14 +25,13 @@
 
 #include "gears/localserver/localserver_module.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/managed_resource_store_module.h"
 #include "gears/localserver/resource_store_module.h"
 
-DECLARE_GEARS_WRAPPER(GearsLocalServer);
+DECLARE_DISPATCHER(GearsLocalServer);
 
 // static
 template<>

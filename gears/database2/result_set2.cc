@@ -25,12 +25,10 @@
 
 #include "gears/database2/result_set2.h"
 
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 
-DECLARE_GEARS_WRAPPER(Database2ResultSet);
+DECLARE_DISPATCHER(Database2ResultSet);
 
 template<>
 void Dispatcher<Database2ResultSet>::Init() {

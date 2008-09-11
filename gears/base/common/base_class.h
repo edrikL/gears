@@ -32,6 +32,7 @@
 
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/browsing_context.h"
+#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/permissions_manager.h"
@@ -209,6 +210,7 @@ class ModuleWrapperBaseClass {
   virtual ~ModuleWrapperBaseClass() { }
 };
 
+
 // Creates a new Module of the given type.  Returns false on failure.
 // On failure, and if context is not NULL, then context's exception string
 // will be set.
@@ -216,6 +218,29 @@ class ModuleWrapperBaseClass {
 template<class GearsClass, class OutType>
 bool CreateModule(ModuleEnvironment *module_environment,
                   JsCallContext *context,
-                  scoped_refptr<OutType> *module);
+                  scoped_refptr<OutType>* module) {
+  scoped_ptr<GearsClass> impl(new GearsClass()); 
+  impl->InitModuleEnvironment(module_environment);
+  scoped_ptr<Dispatcher<GearsClass> > dispatcher(
+      new Dispatcher<GearsClass>(impl.get()));
+
+  if (!module_environment->js_runner_->
+          InitializeModuleWrapper(impl.get(), dispatcher.get(), context)) {
+    return false;
+  }
+
+  dispatcher.release();
+  module->reset(impl.release());
+
+#if BROWSER_NPAPI
+  // In NPAPI, objects are created with refcount 1.  We want module (the
+  // scoped_refptr<OutType>) to have the only reference, so we Unref here,
+  // after the scoped_refptr has taken a reference in the line above.
+  (*module)->GetWrapper()->Unref();
+#endif
+
+  return true;
+}
+
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

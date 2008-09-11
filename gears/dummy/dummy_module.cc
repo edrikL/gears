@@ -32,13 +32,11 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 
 // TODO: Replace GearsDummyModule with the name of your module.
 
 // Define the dispatcher for your Module.
-DECLARE_GEARS_WRAPPER(GearsDummyModule);
+DECLARE_DISPATCHER(GearsDummyModule);
 
 template<>
 void Dispatcher<GearsDummyModule>::Init() {

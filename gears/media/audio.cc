@@ -26,10 +26,9 @@
 #include "gears/media/audio.h"
 #include "gears/media/time_ranges.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 
-DECLARE_GEARS_WRAPPER(GearsAudio);
+DECLARE_DISPATCHER(GearsAudio);
 REGISTER_MEDIA_PROPERTIES_AND_METHODS(GearsAudio);
 
 GearsAudio::GearsAudio() : ModuleImplBaseClass("GearsAudio") {

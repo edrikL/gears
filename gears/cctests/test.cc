@@ -29,25 +29,22 @@
 
 #include "gears/cctests/test.h"
 
-#include "third_party/jsoncpp/json.h"
-
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/desktop/desktop_test.h"
+#include "third_party/jsoncpp/json.h"
 
 #ifdef WIN32
 // For some reason Win32 thinks snprintf() needs to be marked as non-standard.
 #define snprintf _snprintf
 #endif
 
-DECLARE_GEARS_WRAPPER(GearsTest);
+DECLARE_DISPATCHER(GearsTest);
 
 template<>
 void Dispatcher<GearsTest>::Init() {
