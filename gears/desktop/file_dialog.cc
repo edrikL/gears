@@ -89,9 +89,9 @@ const char16 *kSingleFile = STRING16(L"singleFile");
 Mutex FileDialog::active_mutex_;
 FileDialog::ActiveMap FileDialog::active_;
 
-FileDialog* FileDialog::Create(const ModuleImplBaseClass* module) {
+FileDialog* FileDialog::Create(ModuleEnvironment* module_environment) {
   NativeWindowPtr parent = NULL;
-  GetBrowserWindow(module, &parent);
+  GetBrowserWindow(module_environment, &parent);
 #if defined(WIN32)
   FileDialog* dialog = new FileDialogWin32;
 #elif defined(OS_MACOSX)
@@ -102,16 +102,16 @@ FileDialog* FileDialog::Create(const ModuleImplBaseClass* module) {
   FileDialog* dialog = NULL;
 #endif
   if (dialog)
-    dialog->Init(module, parent);
+    dialog->Init(module_environment, parent);
   return dialog;
 }
 
 FileDialog::FileDialog() {
 }
 
-void FileDialog::Init(const ModuleImplBaseClass* module,
+void FileDialog::Init(ModuleEnvironment* module_environment,
                       NativeWindowPtr parent) {
-  module_ = module;
+  module_environment_.reset(module_environment);
   parent_ = parent;
 }
 
@@ -125,11 +125,8 @@ bool FileDialog::Open(const FileDialog::Options& options,
   assert(error);
 
   // Prevent more than one active dialog per JsContext using active_.
-  scoped_refptr<ModuleEnvironment> environment;
-  module_->GetModuleEnvironment(&environment);
-
   MutexLock lock(&active_mutex_);
-  ActiveMap::const_iterator it = active_.find(environment.get());
+  ActiveMap::const_iterator it = active_.find(module_environment_.get());
   if (active_.end() != it) {
     // Bring the current dialog to the front, to ensure that the user deals with
     // the dialog.
@@ -144,7 +141,7 @@ bool FileDialog::Open(const FileDialog::Options& options,
     return false;
   }
 
-  active_.insert(std::make_pair(environment.get(), this));
+  active_.insert(std::make_pair(module_environment_.get(), this));
 
   // Subclass will call CompleteSelection when done.
   return true;
@@ -167,13 +164,10 @@ void FileDialog::Cancel() {
 }
 
 void FileDialog::CompleteSelection(const StringList& selected_files) {
-  scoped_refptr<ModuleEnvironment> environment;
-  module_->GetModuleEnvironment(&environment);
-
   {
     // Allow another dialog to be created in this environment.
     MutexLock lock(&active_mutex_);
-    ActiveMap::iterator it = active_.find(environment.get());
+    ActiveMap::iterator it = active_.find(module_environment_.get());
     assert(active_.end() != it);
     if (active_.end() != it) {
       assert(it->second == this);
@@ -183,19 +177,19 @@ void FileDialog::CompleteSelection(const StringList& selected_files) {
 
   // Convert from StringList to a JavaScript array.
   std::string16 error;
-  scoped_ptr<JsArray> files_array(module_->GetJsRunner()->NewArray());
+  scoped_ptr<JsArray> files_array(module_environment_->js_runner_->NewArray());
   if (!files_array.get()) {
     HandleError(STRING16(L"Failed to create JS array"));
   } else if (!FileDialog::FilesToJsObjectArray(selected_files,
-                                               environment.get(),
+                                               module_environment_.get(),
                                                files_array.get(), &error)) {
     HandleError(error);
   } else {
     // Make the file selection callback.
     JsParamToSend callback_argv[] = { JSPARAM_ARRAY, files_array.get() };
-    module_->GetJsRunner()->InvokeCallback(callback_.get(),
-                                           ARRAYSIZE(callback_argv),
-                                           callback_argv, NULL);
+    module_environment_->js_runner_->InvokeCallback(callback_.get(),
+                                                    ARRAYSIZE(callback_argv),
+                                                    callback_argv, NULL);
   }
 
   // FileDialog is no longer needed, so destroy it.

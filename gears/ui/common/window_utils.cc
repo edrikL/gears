@@ -38,11 +38,12 @@
 #include "gears/base/npapi/scoped_npapi_handles.h"
 #endif
 
-bool GetBrowserWindow(const ModuleImplBaseClass* module,
+bool GetBrowserWindow(ModuleEnvironment* module_environment,
                       NativeWindowPtr* window) {
 #if BROWSER_FF
 
-  if (NS_OK != DOMUtils::GetNativeWindow(module->EnvPageJsContext(), window))
+  if (NS_OK != DOMUtils::GetNativeWindow(module_environment->js_context_,
+                                         window))
     return false;
   return true;
 
@@ -54,14 +55,14 @@ bool GetBrowserWindow(const ModuleImplBaseClass* module,
   // something more hackish.  In this case, give the JS page the keyboard focus,
   // and then ask the OS for the window which has the keyboard focus.
   ScopedNPObject js_window;
-  if (NPERR_NO_ERROR != NPN_GetValue(module->EnvPageJsContext(),
+  if (NPERR_NO_ERROR != NPN_GetValue(module_environment->js_context_,
                                      NPNVWindowNPObject,
                                      as_out_parameter(js_window)))
     return false;
   std::string script_utf8("window.focus()");
   NPString script = {script_utf8.data(), script_utf8.length()};
   ScopedNPVariant result;
-  if (!NPN_Evaluate(module->EnvPageJsContext(), js_window.get(), &script,
+  if (!NPN_Evaluate(module_environment->js_context_, js_window.get(), &script,
                     &result))
     return false;
   *window = GetKeyWindow();
@@ -69,7 +70,7 @@ bool GetBrowserWindow(const ModuleImplBaseClass* module,
 
 #elif BROWSER_NPAPI
 
-  if (NPERR_NO_ERROR != NPN_GetValue(module->EnvPageJsContext(),
+  if (NPERR_NO_ERROR != NPN_GetValue(module_environment->js_context_,
                                      NPNVnetscapeWindow,
                                      window))
     return false;
@@ -83,7 +84,7 @@ bool GetBrowserWindow(const ModuleImplBaseClass* module,
   return NULL != *window;
 #else  // !WINCE
   IWebBrowser2* web_browser = NULL;
-  HRESULT hr = ActiveXUtils::GetWebBrowser2(module->EnvPageIUnknownSite(),
+  HRESULT hr = ActiveXUtils::GetWebBrowser2(module_environment->iunknown_site_,
                                             &web_browser);
   if (FAILED(hr))
     return false;

@@ -437,8 +437,11 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
     }
   }
 
+  scoped_refptr<ModuleEnvironment> environment;
+  GetModuleEnvironment(&environment);
+
   std::string16 error;
-  scoped_ptr<FileDialog> dialog(FileDialog::Create(this));
+  scoped_ptr<FileDialog> dialog(FileDialog::Create(environment.get()));
   if (!dialog.get()) {
     context->SetException(STRING16(L"Failed to create dialog."));
     return;
