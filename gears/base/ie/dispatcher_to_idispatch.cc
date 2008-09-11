@@ -25,6 +25,8 @@
 
 #include "gears/base/ie/dispatcher_to_idispatch.h"
 
+#include "gears/base/common/string_utils.h"
+
 
 HRESULT DispatcherGetTypeInfoCount(DispatcherInterface* dispatcher,
                                    unsigned int FAR* retval) {

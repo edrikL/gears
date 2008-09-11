@@ -28,7 +28,6 @@
 
 #include <map>
 
-#include "gears/base/common/base_class.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/thread_locals.h"
 

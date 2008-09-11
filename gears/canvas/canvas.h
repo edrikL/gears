@@ -28,6 +28,7 @@
 
 #if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
