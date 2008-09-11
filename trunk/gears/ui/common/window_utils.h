@@ -39,7 +39,7 @@ typedef GtkWindow* NativeWindowPtr;
 typedef void* NativeWindowPtr;
 #endif
 
-class ModuleEnvironment;
+struct ModuleEnvironment;
 
 // Obtains a native window handle for the browser.  For reasons detailed in the
 // implementation, on Mac Safari, this method has a side-effect of giving
