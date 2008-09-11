@@ -351,8 +351,13 @@ class JsRootedToken {
 
  private:
   JsContextPtr context_;
+  // TODO(nigeltao): this #ifdef just matches the old NPAPI functionality.
+  // Ideally we wouldn't need it.
+#if BROWSER_NPAPI
+  JsScopedToken token_;
+#else
   JsToken token_;
-
+#endif
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
 

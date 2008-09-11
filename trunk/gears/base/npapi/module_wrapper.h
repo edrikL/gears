@@ -104,7 +104,7 @@ bool CreateModule(ModuleEnvironment *module_environment,
   // In NPAPI, objects are created with refcount 1.  We want module (the
   // scoped_refptr<OutType>) to have the only reference, so we Unref here,
   // after the scoped_refptr has taken a reference in the line above.
-  impl->GetWrapper()->Unref();
+  (*module)->GetWrapper()->Unref();
 
   return true;
 }
