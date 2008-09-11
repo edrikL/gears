@@ -38,6 +38,9 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
+#ifdef BROWSER_SAFARI
+#include "gears/base/npapi/browser_utils.h"
+#endif
 #ifdef BROWSER_WEBKIT
 #include "gears/base/safari/curl_downloader.h"
 #endif
