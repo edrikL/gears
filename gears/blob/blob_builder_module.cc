@@ -25,12 +25,10 @@
 
 #include "gears/blob/blob_builder_module.h"
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/blob_builder.h"
 
-DECLARE_GEARS_WRAPPER(GearsBlobBuilder);
+DECLARE_DISPATCHER(GearsBlobBuilder);
 
 template<>
 void Dispatcher<GearsBlobBuilder>::Init() {
