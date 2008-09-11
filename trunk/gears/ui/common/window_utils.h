@@ -39,12 +39,12 @@ typedef GtkWindow* NativeWindowPtr;
 typedef void* NativeWindowPtr;
 #endif
 
-class ModuleImplBaseClass;
+class ModuleEnvironment;
 
 // Obtains a native window handle for the browser.  For reasons detailed in the
 // implementation, on Mac Safari, this method has a side-effect of giving
 // keyboard focus to the browser window.
-bool GetBrowserWindow(const ModuleImplBaseClass* module,
+bool GetBrowserWindow(ModuleEnvironment* module_environment,
                       NativeWindowPtr* window);
 
 #endif  // GEARS_UI_COMMON_WINDOW_UTILS_H__

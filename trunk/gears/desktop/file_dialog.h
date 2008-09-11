@@ -32,6 +32,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/ui/common/window_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -59,7 +60,7 @@ class FileDialog {
     StringList filter;
   };
 
-  static FileDialog* Create(const ModuleImplBaseClass* module);
+  static FileDialog* Create(ModuleEnvironment* module_environment);
 
   virtual ~FileDialog();
 
@@ -97,7 +98,7 @@ class FileDialog {
 
   FileDialog();
 
-  void Init(const ModuleImplBaseClass* module, NativeWindowPtr parent);
+  void Init(ModuleEnvironment* module_environment, NativeWindowPtr parent);
 
   // Implemented per platform to create and display a dialog with the provided
   // options, or returns false and sets error.  The dialog displays
@@ -125,7 +126,7 @@ class FileDialog {
  private:
   typedef std::map<ModuleEnvironment*, FileDialog*> ActiveMap;
 
-  const ModuleImplBaseClass* module_;
+  scoped_refptr<ModuleEnvironment> module_environment_;
   NativeWindowPtr parent_;
   scoped_ptr<JsRootedCallback> callback_;
 
