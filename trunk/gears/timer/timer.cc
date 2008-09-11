@@ -31,9 +31,7 @@
 #endif
 #endif
 
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/module_wrapper.h"
 
 // TODO(mpcomplete): remove when we have a cross-platform timer abstraction
 #if BROWSER_NPAPI && defined(WIN32)
@@ -260,7 +258,7 @@ GearsTimer::TimerInfo::~TimerInfo() {
 
 
 
-DECLARE_GEARS_WRAPPER(GearsTimer);
+DECLARE_DISPATCHER(GearsTimer);
 
 template<>
 void Dispatcher<GearsTimer>::Init() {

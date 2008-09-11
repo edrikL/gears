@@ -32,7 +32,6 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/media/media_constants.h"
 #include "gears/media/media_data.h"

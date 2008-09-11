@@ -28,7 +28,6 @@
 
 #include "gears/workerpool/workerpool.h"
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_request.h"
@@ -41,7 +40,7 @@
 #endif
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_WRAPPER(GearsWorkerPool);
+DECLARE_DISPATCHER(GearsWorkerPool);
 
 // static
 template <>

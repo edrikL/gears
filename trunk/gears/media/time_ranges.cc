@@ -26,9 +26,7 @@
 
 #include "gears/media/time_ranges.h"
 
-#include "gears/base/common/module_wrapper.h"
-
-DECLARE_GEARS_WRAPPER(GearsTimeRanges);
+DECLARE_DISPATCHER(GearsTimeRanges);
 
 template<>
 void Dispatcher<GearsTimeRanges>::Init() {

@@ -26,7 +26,6 @@
 #include "gears/database/database.h"
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
@@ -40,7 +39,7 @@
 Stopwatch GearsDatabase::g_stopwatch_;
 #endif // DEBUG
 
-DECLARE_GEARS_WRAPPER(GearsDatabase);
+DECLARE_DISPATCHER(GearsDatabase);
 
 const std::string GearsDatabase::kModuleName("GearsDatabase");
 

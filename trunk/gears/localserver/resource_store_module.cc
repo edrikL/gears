@@ -31,7 +31,6 @@
 
 #include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/mime_detect.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
@@ -117,7 +116,7 @@ class GearsResourceStoreMessageHwnd
 //------------------------------------------------------------------------------
 // GearsResourceStore
 //------------------------------------------------------------------------------
-DECLARE_GEARS_WRAPPER(GearsResourceStore);
+DECLARE_DISPATCHER(GearsResourceStore);
 
 // static
 template<>

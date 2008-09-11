@@ -28,22 +28,22 @@
 #else
 
 #include <stdio.h>
+
+#include "gears/notifier/notification.h"
+
 #ifdef OS_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
 #include "gears/base/common/string_utils_osx.h"
 #endif
 #if !BROWSER_NONE
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #endif  // !BROWSER_NONE
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/notifier/notification.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if !BROWSER_NONE
-DECLARE_GEARS_WRAPPER(GearsNotification);
+DECLARE_DISPATCHER(GearsNotification);
 
 template<>
 void Dispatcher<GearsNotification>::Init() {

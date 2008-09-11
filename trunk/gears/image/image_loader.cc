@@ -27,13 +27,12 @@
 // The Image API has not been finalized for official builds
 #else
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
-#include "gears/blob/blob.h"
-#include "gears/image/image.h"
 #include "gears/image/image_loader.h"
 
-DECLARE_GEARS_WRAPPER(GearsImageLoader);
+#include "gears/blob/blob.h"
+#include "gears/image/image.h"
+
+DECLARE_DISPATCHER(GearsImageLoader);
 
 template<>
 void Dispatcher<GearsImageLoader>::Init() {

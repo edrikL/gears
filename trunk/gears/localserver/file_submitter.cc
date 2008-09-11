@@ -36,7 +36,6 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/url_utils.h"
 
@@ -97,7 +96,7 @@ class TempFileJanitor : public JsEventHandlerInterface {
 
 
 
-DECLARE_GEARS_WRAPPER(GearsFileSubmitter);
+DECLARE_DISPATCHER(GearsFileSubmitter);
 
 // static
 template<>

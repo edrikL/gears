@@ -90,7 +90,6 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/event.h"
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/leak_counter.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"

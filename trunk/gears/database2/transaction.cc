@@ -25,16 +25,14 @@
 
 #include "gears/database2/transaction.h"
 
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/database2/commands.h"
 #include "gears/database2/database2.h"
 #include "gears/database2/database2_common.h"
 #include "gears/database2/statement.h"
 
-DECLARE_GEARS_WRAPPER(GearsDatabase2Transaction);
+DECLARE_DISPATCHER(GearsDatabase2Transaction);
 
 template<>
 void Dispatcher<GearsDatabase2Transaction>::Init() {

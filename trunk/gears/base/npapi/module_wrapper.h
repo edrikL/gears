@@ -82,31 +82,4 @@ class ModuleWrapper
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
 };
 
-
-// Creates an instance of the class and its wrapper.
-template<class GearsClass, class OutType>
-bool CreateModule(ModuleEnvironment *module_environment,
-                  JsCallContext *context,
-                  scoped_refptr<OutType>* module) {
-  scoped_ptr<GearsClass> impl(new GearsClass()); 
-  impl->InitModuleEnvironment(module_environment);
-  scoped_ptr<Dispatcher<GearsClass> > dispatcher(
-      new Dispatcher<GearsClass>(impl.get()));
-
-  if (!module_environment->js_runner_->
-          InitializeModuleWrapper(impl.get(), dispatcher.get(), context)) {
-    return false;
-  }
-
-  dispatcher.release();
-  module->reset(impl.release());
-
-  // In NPAPI, objects are created with refcount 1.  We want module (the
-  // scoped_refptr<OutType>) to have the only reference, so we Unref here,
-  // after the scoped_refptr has taken a reference in the line above.
-  (*module)->GetWrapper()->Unref();
-
-  return true;
-}
-
 #endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

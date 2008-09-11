@@ -26,7 +26,6 @@
 #include "gears/desktop/file_dialog.h"
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string_utils.h"

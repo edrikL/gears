@@ -25,8 +25,6 @@
 
 #include "gears/media/media.h"
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
 
 GearsMedia::GearsMedia()

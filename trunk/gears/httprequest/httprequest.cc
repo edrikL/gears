@@ -23,14 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/httprequest/httprequest.h"
-
 #include <limits>
+
+#include "gears/httprequest/httprequest.h"
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"

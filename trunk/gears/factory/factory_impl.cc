@@ -30,7 +30,6 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/detect_version_collision.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
 #ifdef DEBUG
 #include "gears/blob/fail_blob.h"
@@ -74,7 +73,7 @@
 #include "gears/cctests/test.h"
 #endif
 
-DECLARE_GEARS_WRAPPER(GearsFactoryImpl);
+DECLARE_DISPATCHER(GearsFactoryImpl);
 
 // static
 template <>

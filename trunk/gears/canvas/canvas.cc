@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
+#include "gears/canvas/canvas.h"
+
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/canvas/blob_backed_skia_input_stream.h"
@@ -41,7 +41,7 @@ const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
 
 using canvas::skia_config;
 
-DECLARE_GEARS_WRAPPER(GearsCanvas);
+DECLARE_DISPATCHER(GearsCanvas);
 const std::string GearsCanvas::kModuleName("GearsCanvas");
 
 GearsCanvas::GearsCanvas()

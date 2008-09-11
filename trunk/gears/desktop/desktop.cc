@@ -26,14 +26,12 @@
 #include "gears/desktop/desktop.h"
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
@@ -54,7 +52,7 @@
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_WRAPPER(GearsDesktop);
+DECLARE_DISPATCHER(GearsDesktop);
 
 template<>
 void Dispatcher<GearsDesktop>::Init() {

@@ -25,7 +25,6 @@
 
 #include "gears/httprequest/httprequest_upload.h"
 
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/string16.h"

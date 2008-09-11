@@ -48,7 +48,6 @@
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/leak_counter.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"

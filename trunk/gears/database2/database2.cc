@@ -27,12 +27,10 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/database2/database2_common.h"
 #include "gears/database2/transaction.h"
 
-DECLARE_GEARS_WRAPPER(GearsDatabase2);
+DECLARE_DISPATCHER(GearsDatabase2);
 
 template<>
 void Dispatcher<GearsDatabase2>::Init() {
