@@ -100,7 +100,7 @@ NS_IMETHODIMP ProgressInputStream::ReadSegments(nsWriteSegmentFun writer,
   return result;
 }
 
-void ProgressInputStream::OnFFHttpRequestDestroyed(FFHttpRequest *request) {
+void ProgressInputStream::OnFFHttpRequestDetached(FFHttpRequest *request) {
   assert(request == request_);
   request_ = NULL;
 }

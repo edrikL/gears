@@ -34,6 +34,7 @@
 
 #import "gears/base/common/atomic_ops.h"
 #import "gears/base/common/http_utils.h"
+#import "gears/base/common/leak_counter.h"
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/url_utils.h"
 #import "gears/base/npapi/browser_utils.h"
@@ -99,10 +100,15 @@ SFHttpRequest::SFHttpRequest()
     was_redirected_(false),
     async_(false) {
 
+  LEAK_COUNTER_INCREMENT(SFHttpRequest);
   delegate_holder_ = new HttpRequestData;
 }
 
 SFHttpRequest::~SFHttpRequest() {
+  LEAK_COUNTER_DECREMENT(SFHttpRequest);
+  if (delegate_holder_ && delegate_holder_->post_data_stream) {
+    [delegate_holder_->post_data_stream onSFHttpRequestDetached:this];
+  }
   delete delegate_holder_;
 }
 
@@ -511,6 +517,9 @@ bool SFHttpRequest::AllowRedirect(const std::string16 &redirect_url) {
 // Reset
 //------------------------------------------------------------------------------
 void SFHttpRequest::Reset() {
+  if (delegate_holder_ && delegate_holder_->post_data_stream) {
+    [delegate_holder_->post_data_stream onSFHttpRequestDetached:this];
+  }
   [delegate_holder_->delegate abort];
   [delegate_holder_->delegate release];
   delegate_holder_->delegate = NULL;
