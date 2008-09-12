@@ -167,7 +167,7 @@ FFHttpRequest::~FFHttpRequest() {
     observer_service->RemoveObserver(observer_, kOnModifyRequestTopic);
   }
   if (post_data_stream_attached_) {
-    post_data_stream_->OnFFHttpRequestDestroyed(this);
+    post_data_stream_->OnFFHttpRequestDetached(this);
   }
 }
 

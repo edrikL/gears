@@ -33,6 +33,12 @@ class SFHttpRequest;
 
 // ProgressInputStream is a wrapper around an NSInputStream that provides
 // notification to the native HttpRequest object as the stream is read.
+//
+// This class should only be created by a SFHttpRequest, and that SFHttpRequest
+// should call OnSFHttpRequestDetached whenever the SFHttpRequest no longer
+// points to this ProgressInputStream (e.g. during SFHttpRequest's destructor).
+// This constraint is in order to let the two objects point to each other
+// without causing a reference cycle that prohibits deleting them after use.
 @interface ProgressInputStream: NSInputStream {
  @private
   SFHttpRequest *request_;
@@ -48,6 +54,8 @@ class SFHttpRequest;
 - (id)initFromStream:(NSInputStream *)input_stream
              request:(SFHttpRequest *)request
                total:(int64)total;
+
+- (void)onSFHttpRequestDetached:(SFHttpRequest *)request;
 
 @end
 #endif  // GEARS_LOCALSERVER_SAFARI_PROGRESS_INPUT_STREAM_H__

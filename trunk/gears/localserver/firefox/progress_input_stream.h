@@ -38,7 +38,7 @@ class FFHttpRequest;
 // If Read() is called, then progress cannot be provided.
 //
 // This class should only be created by a FFHttpRequest, and that FFHttpRequest
-// should call OnFFHttpRequestDestroyed whenever the FFHttpRequest no longer
+// should call OnFFHttpRequestDetached whenever the FFHttpRequest no longer
 // points to this ProgressInputStream (e.g. during FFHttpRequest's destructor).
 // This constraint is in order to let the two objects point to each other
 // without causing a reference cycle that prohibits deleting them after use.
@@ -52,7 +52,7 @@ class ProgressInputStream : public nsIInputStream {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
-  void OnFFHttpRequestDestroyed(FFHttpRequest *request);
+  void OnFFHttpRequestDetached(FFHttpRequest *request);
 
  private:
   FFHttpRequest *request_;

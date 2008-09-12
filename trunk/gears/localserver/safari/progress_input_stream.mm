@@ -25,6 +25,7 @@
 
 #import "gears/localserver/safari/progress_input_stream.h"
 
+#import "gears/base/common/leak_counter.h"
 #import "gears/localserver/common/progress_event.h"
 #import "gears/localserver/safari/http_request_sf.h"
 
@@ -38,18 +39,24 @@
 - (id)initFromStream:(NSInputStream *)input_stream
              request:(SFHttpRequest *)request
                total:(int64)total {
+  assert(request);
   self = [super init];
   if (self != nil) {
+    LEAK_COUNTER_INCREMENT(ProgressInputStream);
     input_stream_ = [input_stream retain];
     request_ = request;
-    request_->Ref();
     total_ = total;
   }
   return self;
 }
 
+- (void)onSFHttpRequestDetached:(SFHttpRequest *)request {
+  assert(request == request_);
+  request_ = NULL;
+}
+
 - (void)dealloc {
-  request_->Unref();
+  LEAK_COUNTER_DECREMENT(ProgressInputStream);
   [input_stream_ release];
   [super dealloc];
 }
@@ -60,7 +67,9 @@
   NSInteger bytes_read = [input_stream_ read:buffer maxLength:len];
   if (bytes_read > 0) {
     position_ += bytes_read;
-    ProgressEvent::Update(request_, request_, position_, total_);
+    if (request_) {
+      ProgressEvent::Update(request_, request_, position_, total_);
+    }
   }
   return bytes_read;
 }
