@@ -2,6 +2,8 @@
 
 A brief history of the Gears project.
 
+  * 2008/09/11 - Google launches Search With My Location on mobile devices. ([http://googlemobile.blogspot.com/2008/09/introducing-mobile-search-with-my.html story])
+
   * 2008/08/27 - !YouTube Multi-Video Upload ([http://www.youtube.com/my_videos_multiupload site]) switches from a custom plugin to Gears.
 
   * 2008/08/22 - [http://gearsblog.blogspot.com/2008/08/gears-04-is-here.html Gears 0.4] is released! It includes the Geolocation API, Blob object, and [http://code.google.com/apis/gears/upcoming/history.html more].
