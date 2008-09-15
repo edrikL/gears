@@ -11,7 +11,7 @@
 # This file implements regression tests for SQLite library.  The
 # focus of this script testing the sqlite_bind API.
 #
-# $Id: bind.test,v 1.40 2007/05/10 17:23:12 drh Exp $
+# $Id: bind.test,v 1.44 2008/07/09 01:39:44 drh Exp $
 #
 
 set testdir [file dirname $argv0]
@@ -90,6 +90,19 @@ do_test bind-1.9 {
   sqlite_step $VM N VALUES COLNAMES
   execsql {SELECT rowid, * FROM t1}
 } {1 123 abcdefg {} 2 456 abcdefg {}}
+
+do_test bind-1.10 {
+   set rc [catch {
+     sqlite3_prepare db {INSERT INTO t1 VALUES($abc:123,?,:abc)} -1 TAIL
+   } msg]
+   lappend rc $msg
+} {1 {(1) near ":123": syntax error}}
+do_test bind-1.11 {
+   set rc [catch {
+     sqlite3_prepare db {INSERT INTO t1 VALUES(@abc:xyz,?,:abc)} -1 TAIL
+   } msg]
+   lappend rc $msg
+} {1 {(1) near ":xyz": syntax error}}
 
 do_test bind-1.99 {
   sqlite3_finalize $VM
@@ -252,7 +265,7 @@ do_test bind-5.3 {
 do_test bind-6.1 {
   sqlite3_bind_text $VM 1 hellothere 5
   sqlite3_bind_text $VM 2 ".." 1
-  sqlite3_bind_text $VM 3 world -1
+  sqlite3_bind_text $VM 3 world\000 -1
   sqlite_step $VM N VALUES COLNAMES
   sqlite3_reset $VM
   execsql {SELECT rowid, * FROM t1}
@@ -261,6 +274,44 @@ do_test bind-6.2 {
   execsql {SELECT typeof(a), typeof(b), typeof(c) FROM t1}
 } {text text text}
 do_test bind-6.3 {
+  execsql {
+    DELETE FROM t1;
+  }
+} {}
+
+# Make sure zeros in a string work.
+#
+do_test bind-6.4 {
+  db eval {DELETE FROM t1}
+  sqlite3_bind_text $VM 1 hello\000there\000 12
+  sqlite3_bind_text $VM 2 hello\000there\000 11
+  sqlite3_bind_text $VM 3 hello\000there\000 -1
+  sqlite_step $VM N VALUES COLNAMES
+  sqlite3_reset $VM
+  execsql {SELECT * FROM t1}
+} {hello hello hello}
+set enc [db eval {PRAGMA encoding}]
+if {$enc=="UTF-8"} {
+  do_test bind-6.5 {
+    execsql {SELECT  hex(a), hex(b), hex(c) FROM t1}
+  } {68656C6C6F00746865726500 68656C6C6F007468657265 68656C6C6F}
+} elseif {$enc=="UTF-16le"} {
+  do_test bind-6.5 {
+    execsql {SELECT  hex(a), hex(b), hex(c) FROM t1}
+  } {680065006C006C006F000000740068006500720065000000 680065006C006C006F00000074006800650072006500 680065006C006C006F00}
+} elseif {$enc=="UTF-16be"} {
+  do_test bind-6.5 {
+    execsql {SELECT  hex(a), hex(b), hex(c) FROM t1}
+  } {00680065006C006C006F0000007400680065007200650000 00680065006C006C006F000000740068006500720065 00680065006C006C006F}
+} else {
+  do_test bind-6.5 {
+    set "Unknown database encoding: $::enc"
+  } {}
+}
+do_test bind-6.6 {
+  execsql {SELECT typeof(a), typeof(b), typeof(c) FROM t1}
+} {text text text}
+do_test bind-6.7 {
   execsql {
     DELETE FROM t1;
   }
@@ -279,11 +330,34 @@ ifcapable {utf16} {
   do_test bind-7.2 {
     execsql {SELECT typeof(a), typeof(b), typeof(c) FROM t1}
   } {text text text}
-}
-do_test bind-7.3 {
-  execsql {
-    DELETE FROM t1;
+  do_test bind-7.3 {
+    db eval {DELETE FROM t1}
+    sqlite3_bind_text16 $VM 1 [encoding convertto unicode hi\000yall\000] 16
+    sqlite3_bind_text16 $VM 2 [encoding convertto unicode hi\000yall\000] 14
+    sqlite3_bind_text16 $VM 3 [encoding convertto unicode hi\000yall\000] -1
+    sqlite_step $VM N VALUES COLNAMES
+    sqlite3_reset $VM
+    execsql {SELECT * FROM t1}
+  } {hi hi hi}
+  if {$enc=="UTF-8"} {
+    do_test bind-7.4 {
+      execsql {SELECT hex(a), hex(b), hex(c) FROM t1}
+    } {68690079616C6C00 68690079616C6C 6869}
+  } elseif {$enc=="UTF-16le"} {
+    do_test bind-7.4 {
+      execsql {SELECT hex(a), hex(b), hex(c) FROM t1}
+    } {680069000000790061006C006C000000 680069000000790061006C006C00 68006900}
+  } elseif {$enc=="UTF-16be"} {
+    do_test bind-7.4 {
+      execsql {SELECT hex(a), hex(b), hex(c) FROM t1}
+    } {00680069000000790061006C006C0000 00680069000000790061006C006C 00680069}
   }
+  do_test bind-7.5 {
+    execsql {SELECT typeof(a), typeof(b), typeof(c) FROM t1}
+  } {text text text}
+}
+do_test bind-7.99 {
+  execsql {DELETE FROM t1;}
 } {}
 
 # Test that the 'out of range' error works.
@@ -364,7 +438,7 @@ do_test bind-9.2 {
   } msg]
   lappend rc $msg
 } {1 {(1) variable number must be between ?1 and ?999}}
-do_test bind-9.3 {
+do_test bind-9.3.1 {
   set VM [
     sqlite3_prepare $DB {
       INSERT INTO t2(a,b) VALUES(?1,?999)
@@ -372,6 +446,15 @@ do_test bind-9.3 {
   ]
   sqlite3_bind_parameter_count $VM
 } {999}
+catch {sqlite3_finalize $VM}
+do_test bind-9.3.2 {
+  set VM [
+    sqlite3_prepare $DB {
+      INSERT INTO t2(a,b) VALUES(?2,?998)
+    } -1 TAIL
+  ]
+  sqlite3_bind_parameter_count $VM
+} {998}
 catch {sqlite3_finalize $VM}
 do_test bind-9.4 {
   set VM [

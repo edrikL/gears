@@ -39,7 +39,8 @@ g4 mail sqlite_vendor/...
 # should include the DATE line, and the sqlite version number.
 
 g4 integrate sqlite_vendor/... sqlite_google/...
-# Resolve any conflicts.
+# Resolve any conflicts.  Figure out if we've got everything we should
+# have (see below), or if we can omit any changes we no longer need.
 # NOTE(shess): The following will produce different output on grhat
 # versus goobuntu; I've been running it on goobuntu.
 (cd sqlite_google ; ./google_generate_preprocessed.sh)
@@ -78,3 +79,20 @@ egrep -v 'Ok$' /tmp/test.log
 # 0 errors out of 57887 tests
 
 Scott Hess <shess@google.com>, December 11, 2007
+
+--------------------------------------------
+
+As of September 12, 2008, these are our changes from sqlite_vendor:
+
+ - renamed src/mutex.c to sqlite_mutex.c, mutex.o already existed in
+   the Gears build system.
+ - fts2.c disables fts2_tokenizer().
+ - sqlite3Poison() in src/btree.c.
+ - BEGIN defaults to BEGIN IMMEDIATE in parse.y.
+ - Tweak to SQLITE_EXTENSION_INIT* in sqlite3ext.h.
+   - That implied a change in src/test_autoext.c for testing.
+ - Added fts.test and fts1.test in tests, modified quick.test.
+ - src/os_symbian.cc.
+ - Modifications to Makefile.linux-gcc and main.mk for compiling
+   SQLite tests.
+ - Compile warning fixed in func.c (check if this is still needed)

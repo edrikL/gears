@@ -9,7 +9,7 @@
 #
 #***********************************************************************
 #
-# $Id: incrblob.test,v 1.11 2007/06/15 15:08:08 danielk1977 Exp $
+# $Id: incrblob.test,v 1.20 2008/04/24 09:49:55 danielk1977 Exp $
 #
 
 set testdir [file dirname $argv0]
@@ -32,6 +32,7 @@ do_test incrblob-1.2.1 {
   set ::blob [db incrblob blobs v 1]
   string match incrblob_* $::blob
 } {1}
+unset -nocomplain data
 do_test incrblob-1.2.2 {
   binary scan [read $::blob] c* data
   set data
@@ -83,7 +84,6 @@ do_test incrblob-1.3.10 {
   close $::blob
 } {}
 
-
 #------------------------------------------------------------------------
 # incrblob-2.*: 
 #
@@ -96,14 +96,20 @@ do_test incrblob-1.3.10 {
 #
 proc nRead {db} {
   set bt [btree_from_db $db]
+  db_enter $db
   array set stats [btree_pager_stats $bt]
+  db_leave $db
   return $stats(read)
 }
 proc nWrite {db} {
   set bt [btree_from_db $db]
+  db_enter $db
   array set stats [btree_pager_stats $bt]
+  db_leave $db
   return $stats(write)
 }
+
+sqlite3_soft_heap_limit 0
 
 foreach AutoVacuumMode [list 0 1] {
 
@@ -202,6 +208,7 @@ foreach AutoVacuumMode [list 0 1] {
     nRead db
   } [expr $AutoVacuumMode ? 4 : 30]
 }
+sqlite3_soft_heap_limit $soft_limit
 
 #------------------------------------------------------------------------
 # incrblob-3.*: 
@@ -251,6 +258,9 @@ catch {close $::blob}
 #
 #     4.8 - Attempt to open an indexed column for writing
 #     4.9 - Attempt to open an indexed column for reading (this works)
+#
+#     4.11 - Attempt to open a column of a view.
+#     4.12 - Attempt to open a column of a virtual table.
 #
 do_test incrblob-4.1 {
   set rc [catch {
@@ -320,37 +330,68 @@ do_test incrblob-4.9.2 {
   set c
 } {1 2 3 4 5 6 7 8 9}
 
+do_test incrblob-4.10 {
+  set ::blob [db incrblob -readonly blobs k 3]
+  set rc [catch { sqlite3_blob_read $::blob 10 100 } msg]
+  list $rc $msg
+} {1 SQLITE_ERROR}
+do_test incrblob-4.10.2 {
+  close $::blob
+} {}
+
+ifcapable view {
+  do_test incrblob-4.11 {
+    execsql { CREATE VIEW blobs_view AS SELECT k, v, i FROM blobs }
+    set rc [catch { db incrblob blobs_view v 3 } msg]
+    list $rc $msg
+  } {1 {cannot open view: blobs_view}}
+}
+ifcapable vtab {
+  register_echo_module [sqlite3_connection_pointer db]
+  do_test incrblob-4.12 {
+    execsql { CREATE VIRTUAL TABLE blobs_echo USING echo(blobs) }
+    set rc [catch { db incrblob blobs_echo v 3 } msg]
+    list $rc $msg
+  } {1 {cannot open virtual table: blobs_echo}}
+}
+
+
 #------------------------------------------------------------------------
 # incrblob-5.*: 
 #
 #     Test that opening a blob in an attached database works.
 #
-do_test incrblob-5.1 {
-  file delete -force test2.db test2.db-journal
-  set ::size [expr [file size [info script]]]
-  execsql {
-    ATTACH 'test2.db' AS aux;
-    CREATE TABLE aux.files(name, text);
-    INSERT INTO aux.files VALUES('this one', zeroblob($::size));
-  }
-  set fd  [db incrblob aux files text 1]
-  set fd2 [open [info script]]
-  puts -nonewline $fd [read $fd2]
-  close $fd
-  close $fd2
-  set ::text [db one {select text from aux.files}]
-  string length $::text
-} [file size [info script]]
-do_test incrblob-5.2 {
-  set fd2 [open [info script]]
-  set ::data [read $fd2]
-  close $fd2
-  set ::data
-} $::text
+ifcapable attach {
+  do_test incrblob-5.1 {
+    file delete -force test2.db test2.db-journal
+    set ::size [expr [file size [info script]]]
+    execsql {
+      ATTACH 'test2.db' AS aux;
+      CREATE TABLE aux.files(name, text);
+      INSERT INTO aux.files VALUES('this one', zeroblob($::size));
+    }
+    set fd  [db incrblob aux files text 1]
+    fconfigure $fd -translation binary
+    set fd2 [open [info script]]
+    fconfigure $fd2 -translation binary
+    puts -nonewline $fd [read $fd2]
+    close $fd
+    close $fd2
+    set ::text [db one {select text from aux.files}]
+    string length $::text
+  } [file size [info script]]
+  do_test incrblob-5.2 {
+    set fd2 [open [info script]]
+    fconfigure $fd2 -translation binary
+    set ::data [read $fd2]
+    close $fd2
+    set ::data
+  } $::text
+}
 
 # free memory
-unset ::data
-unset ::text
+unset -nocomplain ::data
+unset -nocomplain ::text
 
 #------------------------------------------------------------------------
 # incrblob-6.*: 
@@ -363,6 +404,7 @@ unset ::text
 #     after the transaction is commited and the blob channel 
 #     closed.
 #
+sqlite3_soft_heap_limit 0
 do_test incrblob-6.1 {
   sqlite3 db2 test.db
   execsql {
@@ -438,6 +480,7 @@ do_test incrblob-6.14 {
   }
 } {a different invocation}
 db2 close
+sqlite3_soft_heap_limit $soft_limit
 
 #-----------------------------------------------------------------------
 # The following tests verify the behaviour of the incremental IO
@@ -508,7 +551,8 @@ foreach {tn arg} {1 "" 2 -readonly} {
 }
 
 set fd [open [info script]]
-set ::data [read $fd]
+fconfigure $fd -translation binary
+set ::data [read $fd 14000]
 close $fd
 
 db close
@@ -558,5 +602,18 @@ do_test incrblob-7.3.3 {
   read $::b
 } $::otherdata
 
-finish_test
+# Attempt to write on a read-only blob.  Make sure the error code
+# gets set.  Ticket #2464.
+#
+do_test incrblob-7.4 {
+  set rc [catch {sqlite3_blob_write $::b 10 HELLO} msg]
+  lappend rc $msg
+} {1 SQLITE_READONLY}
+do_test incrblob-7.5 {
+  sqlite3_errcode db
+} {SQLITE_READONLY}
+do_test incrblob-7.6 {
+  sqlite3_errmsg db
+} {attempt to write a readonly database}
 
+finish_test

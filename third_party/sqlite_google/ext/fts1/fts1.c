@@ -1,3 +1,25 @@
+/* fts1 has a design flaw which can lead to database corruption (see
+** below).  It is recommended not to use it any longer, instead use
+** fts3 (or higher).  If you believe that your use of fts1 is safe,
+** add -DSQLITE_ENABLE_BROKEN_FTS1=1 to your CFLAGS.
+*/
+#if (!defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS1)) \
+        && !defined(SQLITE_ENABLE_BROKEN_FTS1)
+#error fts1 has a design flaw and has been deprecated.
+#endif
+/* The flaw is that fts1 uses the content table's unaliased rowid as
+** the unique docid.  fts1 embeds the rowid in the index it builds,
+** and expects the rowid to not change.  The SQLite VACUUM operation
+** will renumber such rowids, thereby breaking fts1.  If you are using
+** fts1 in a system which has disabled VACUUM, then you can continue
+** to use it safely.  Note that PRAGMA auto_vacuum does NOT disable
+** VACUUM, though systems using auto_vacuum are unlikely to invoke
+** VACUUM.
+**
+** fts1 should be safe even across VACUUM if you only insert documents
+** and never delete.
+*/
+
 /* The author disclaims copyright to this source code.
  *
  * This is an SQLite module implementing full-text search.
@@ -19,11 +41,7 @@
 #endif
 
 #include <assert.h>
-#if !defined(__APPLE__)
-#include <malloc.h>
-#else
 #include <stdlib.h>
-#endif
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -859,7 +877,7 @@ static char *string_dup_n(const char *s, int n){
 }
 
 /* Duplicate a string; the caller must free() the returned string.
- * (We don't use strdup() since it's not part of the standard C library and
+ * (We don't use strdup() since it is not part of the standard C library and
  * may not be available everywhere.) */
 static char *string_dup(const char *s){
   return string_dup_n(s, strlen(s));
@@ -1553,6 +1571,7 @@ static int getToken(const char *z, int *tokenType){
       *tokenType = TOKEN_SPACE;
       return i;
     }
+    case '`':
     case '\'':
     case '"': {
       int delim = z[0];
@@ -2268,7 +2287,6 @@ static void snippetAllOffsets(fulltext_cursor *p){
   if( p->q.nTerms==0 ) return;
   pFts = p->q.pFts;
   nColumn = pFts->nColumn;
-  iColumn = p->iCursorType;
   iColumn = p->iCursorType - QUERY_FULLTEXT;
   if( iColumn<0 || iColumn>=nColumn ){
     iFirst = 0;
@@ -2300,8 +2318,8 @@ static void snippetOffsetText(Snippet *p){
   for(i=0; i<p->nMatch; i++){
     struct snippetMatch *pMatch = &p->aMatch[i];
     zBuf[0] = ' ';
-    sprintf(&zBuf[cnt>0], "%d %d %d %d", pMatch->iCol,
-        pMatch->iTerm, pMatch->iStart, pMatch->nByte);
+    sqlite3_snprintf(sizeof(zBuf)-1, &zBuf[cnt>0], "%d %d %d %d",
+        pMatch->iCol, pMatch->iTerm, pMatch->iStart, pMatch->nByte);
     append(&sb, zBuf);
     cnt++;
   }
@@ -2573,7 +2591,10 @@ static int docListOfTerm(
 
   pLeft = docListNew(DL_POSITIONS);
   rc = term_select_all(v, iColumn, pQTerm->pTerm, pQTerm->nTerm, pLeft);
-  if( rc ) return rc;
+  if( rc ){
+    docListDelete(pLeft);
+    return rc;
+  }
   for(i=1; i<=pQTerm->nPhrase; i++){
     pRight = docListNew(DL_POSITIONS);
     rc = term_select_all(v, iColumn, pQTerm[i].pTerm, pQTerm[i].nTerm, pRight);
@@ -3121,7 +3142,7 @@ static int index_update(fulltext_vtab *v, sqlite_int64 iRow,
   return insertTerms(v, pTerms, iRow, pValues);
 }
 
-/* This function implements the xUpdate callback; it's the top-level entry
+/* This function implements the xUpdate callback; it is the top-level entry
  * point for inserting, deleting or updating a row in a full-text table. */
 static int fulltextUpdate(sqlite3_vtab *pVtab, int nArg, sqlite3_value **ppArg,
                    sqlite_int64 *pRowid){
@@ -3258,6 +3279,28 @@ static int fulltextFindFunction(
   return 0;
 }
 
+/*
+** Rename an fts1 table.
+*/
+static int fulltextRename(
+  sqlite3_vtab *pVtab,
+  const char *zName
+){
+  fulltext_vtab *p = (fulltext_vtab *)pVtab;
+  int rc = SQLITE_NOMEM;
+  char *zSql = sqlite3_mprintf(
+    "ALTER TABLE %Q.'%q_content'  RENAME TO '%q_content';"
+    "ALTER TABLE %Q.'%q_term' RENAME TO '%q_term';"
+    , p->zDb, p->zName, zName
+    , p->zDb, p->zName, zName
+  );
+  if( zSql ){
+    rc = sqlite3_exec(p->db, zSql, 0, 0, 0);
+    sqlite3_free(zSql);
+  }
+  return rc;
+}
+
 static const sqlite3_module fulltextModule = {
   /* iVersion      */ 0,
   /* xCreate       */ fulltextCreate,
@@ -3278,6 +3321,7 @@ static const sqlite3_module fulltextModule = {
   /* xCommit       */ 0,
   /* xRollback     */ 0,
   /* xFindFunction */ fulltextFindFunction,
+  /* xRename       */ fulltextRename,
 };
 
 int sqlite3Fts1Init(sqlite3 *db){

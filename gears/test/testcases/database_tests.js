@@ -336,6 +336,19 @@ function testVacuumDisabled() {
   });
 }
 
+// load_extension() is a security hole, make certain it's not
+// implemented.
+function testLoadExtensionDisabled() {
+  try {
+    db.execute('SELECT load_extension(?)', ['/etc/passwd']).close();
+    assert(false,'DB should have failed with "no such function"');
+  } catch(error) {
+    var expected = /.*DETAILS: no such function: load_extension.*/;
+    assert(expected.exec(error.message),
+           'DB error should be "no such function"');
+  }
+}
+
 function testCloseDatabase() {
   var db = google.gears.factory.create('beta.database');
   db.open('testclosedb');
