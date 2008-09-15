@@ -60,8 +60,11 @@ TLIBS =
 
 # These flags match those for SQLITE_CFLAGS in config.mk.  
 
-OPTS += -DNDEBUG -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
-  -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+OPTS += -DNDEBUG
+OPTS += -DSQLITE_CORE
+OPTS += -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_BROKEN_FTS1
+OPTS += -DSQLITE_ENABLE_FTS2 -DSQLITE_ENABLE_BROKEN_FTS2
+OPTS += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 OPTS += -DHAVE_USLEEP=1
 
 # Additional SQLite tests.
@@ -120,6 +123,10 @@ LIBTCL = -ltcl8.4 -lm -ldl
 #LIBTCL = /home/drh/tcltk/8.4win/libtcl84s.a -lmsvcrt
 #LIBTCL = /home/drh/tcltk/8.3hpux/libtcl8.3.a -ldld -lm -lc
 
+#### Additional objects for SQLite library when TCL support is enabled.
+#TCLOBJ =
+TCLOBJ = tclsqlite.o
+
 #### Compiler options needed for programs that use the readline() library.
 #
 READLINE_FLAGS =
@@ -129,12 +136,6 @@ READLINE_FLAGS =
 #
 LIBREADLINE =
 #LIBREADLINE = -static -lreadline -ltermcap
-
-#### Should the database engine assume text is coded as UTF-8 or iso8859?
-#
-# ENCODING  = UTF8
-ENCODING = ISO8859
-
 
 #### Which "awk" program provides nawk compatibilty
 #

@@ -574,20 +574,35 @@ SQLITE_CSRCS	+= \
 		analyze.c \
 		attach.c \
 		auth.c \
+		bitvec.c \
 		btree.c \
+		btmutex.c \
 		build.c \
 		callback.c \
 		complete.c \
 		date.c \
 		delete.c \
 		expr.c \
+		fault.c \
 		func.c \
+		global.c \
 		hash.c \
 		insert.c \
 		legacy.c \
+		journal.c \
 		loadext.c \
 		main.c \
 		malloc.c \
+		mem1.c \
+		mem2.c \
+		mem3.c \
+		mem4.c \
+		mem5.c \
+		mem6.c \
+		sqlite_mutex.c \
+		mutex_os2.c \
+		mutex_unix.c \
+		mutex_w32.c \
 		opcodes.c \
 		os.c \
 		os_os2.c \
@@ -600,6 +615,7 @@ SQLITE_CSRCS	+= \
 		printf.c \
 		random.c \
 		select.c \
+		status.c \
 		table.c \
 		tokenize.c \
 		trigger.c \
@@ -623,6 +639,7 @@ SQLITE_CSRCS	+= \
 		fts2_hash.c \
 		fts2_porter.c \
 		fts2_tokenizer1.c \
+		fts2_tokenizer.c \
 		$(NULL)
 
 ifeq ($(OS),symbian)

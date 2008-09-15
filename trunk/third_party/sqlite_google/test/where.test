@@ -1,4 +1,4 @@
-# 2001 September 15
+# 4 2001 September 15
 #
 # The author disclaims copyright to this source code.  In place of
 # a legal notice, here is a blessing:
@@ -11,7 +11,7 @@
 # This file implements regression tests for SQLite library.  The
 # focus of this file is testing the use of indices in WHERE clases.
 #
-# $Id: where.test,v 1.42 2007/05/14 11:34:47 drh Exp $
+# $Id: where.test,v 1.46 2008/07/15 00:27:35 drh Exp $
 
 set testdir [file dirname $argv0]
 source $testdir/tester.tcl
@@ -184,7 +184,7 @@ do_test where-1.25 {
 
 do_test where-1.27 {
   count {SELECT w FROM t1 WHERE x=3 AND y+1==122}
-} {10 17}
+} {10 10}
 
 do_test where-1.28 {
   count {SELECT w FROM t1 WHERE x+1=4 AND y+1==122}
@@ -344,6 +344,11 @@ do_test where-4.6 {
     SELECT 99 WHERE 0.0
   }
 } {}
+do_test where-4.7 {
+  execsql {
+    SELECT count(*) FROM t1 WHERE t1.w
+  }
+} {100}
 
 # Verify that IN operators in a WHERE clause are handled correctly.
 # Omit these tests if the build is not capable of sub-queries.
@@ -358,7 +363,7 @@ ifcapable subquery {
     count {
       SELECT * FROM t1 WHERE rowid+0 IN (1,2,3,1234) order by 1;
     }
-  } {1 0 4 2 1 9 3 1 16 199}
+  } {1 0 4 2 1 9 3 1 16 102}
   do_test where-5.3 {
     count {
       SELECT * FROM t1 WHERE w IN (-1,1,2,3) order by 1;
@@ -368,7 +373,7 @@ ifcapable subquery {
     count {
       SELECT * FROM t1 WHERE w+0 IN (-1,1,2,3) order by 1;
     }
-  } {1 0 4 2 1 9 3 1 16 199}
+  } {1 0 4 2 1 9 3 1 16 102}
   do_test where-5.5 {
     count {
       SELECT * FROM t1 WHERE rowid IN 
@@ -382,7 +387,7 @@ ifcapable subquery {
          (select rowid from t1 where rowid IN (-1,2,4))
       ORDER BY 1;
     }
-  } {2 1 9 4 2 25 201}
+  } {2 1 9 4 2 25 103}
   do_test where-5.7 {
     count {
       SELECT * FROM t1 WHERE w IN 
@@ -396,7 +401,7 @@ ifcapable subquery {
          (select rowid from t1 where rowid IN (-1,2,4))
       ORDER BY 1;
     }
-  } {2 1 9 4 2 25 201}
+  } {2 1 9 4 2 25 103}
   do_test where-5.9 {
     count {
       SELECT * FROM t1 WHERE x IN (1,7) ORDER BY 1;
@@ -1085,7 +1090,6 @@ do_test where-14.4 {
     SELECT x.a || '/' || y.a FROM t8 x, t8 y ORDER BY x.a, x.b DESC
   } 
 } {1/1 1/4 4/1 4/4 nosort}
-btree_breakpoint
 do_test where-14.5 {
   cksort {
     SELECT x.a || '/' || y.a FROM t8 x, t8 y ORDER BY x.b, x.a||x.b
@@ -1137,6 +1141,19 @@ do_test where-14.12 {
   } 
 } {4/4 4/1 1/4 1/1 sort}
 
+# Ticket #2445.
+#
+# There was a crash that could occur when a where clause contains an
+# alias for an expression in the result set, and that expression retrieves
+# a column of the second or subsequent table in a join.
+#
+do_test where-15.1 {
+  execsql {
+    CREATE TEMP TABLE t1 (a, b, c, d, e);
+    CREATE TEMP TABLE t2 (f);
+    SELECT t1.e AS alias FROM t2, t1 WHERE alias = 1 ;
+  }
+} {}
 
 integrity_check {where-99.0}
 

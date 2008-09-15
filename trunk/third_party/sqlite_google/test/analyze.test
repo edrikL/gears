@@ -11,7 +11,7 @@
 # This file implements regression tests for SQLite library.
 # This file implements tests for the ANALYZE command.
 #
-# $Id: analyze.test,v 1.5 2005/09/10 22:40:54 drh Exp $
+# $Id: analyze.test,v 1.8 2008/08/01 18:47:02 drh Exp $
 
 set testdir [file dirname $argv0]
 source $testdir/tester.tcl
@@ -165,7 +165,7 @@ do_test analyze-3.5 {
     ANALYZE t1;
     SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
   }
-} {t1i1 {5 3} t1i2 {5 2} t1i3 {5 3 1} t2i1 {5 3} t2i2 {5 2} t2i3 {5 3 1}}
+} {t1i1 {5 3} t1i2 {5 2} t1i3 {5 3 1} t2i1 {5 3} t2i2 {5 2}}
 do_test analyze-3.6 {
   execsql {
     ANALYZE t2;
@@ -187,7 +187,36 @@ do_test analyze-3.8 {
     CREATE INDEX t3i3 ON t3(d,b,c,a);
     DROP TABLE t1;
     DROP TABLE t2;
+    SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
+  }
+} {}
+do_test analyze-3.9 {
+  execsql {
     ANALYZE;
+    SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
+  }
+} {t3i1 {5 3} t3i2 {5 3 1 1 1} t3i3 {5 5 2 1 1}}
+
+do_test analyze-3.10 {
+  execsql {
+    CREATE TABLE [silly " name](a, b, c);
+    CREATE INDEX 'foolish '' name' ON [silly " name](a, b);
+    CREATE INDEX 'another foolish '' name' ON [silly " name](c);
+    INSERT INTO [silly " name] VALUES(1, 2, 3);
+    INSERT INTO [silly " name] VALUES(4, 5, 6);
+    ANALYZE;
+    SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
+  }
+} {{another foolish ' name} {2 1} {foolish ' name} {2 1 1} t3i1 {5 3} t3i2 {5 3 1 1 1} t3i3 {5 5 2 1 1}}
+do_test analyze-3.11 {
+  execsql {
+    DROP INDEX "foolish ' name";
+    SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
+  }
+} {{another foolish ' name} {2 1} t3i1 {5 3} t3i2 {5 3 1 1 1} t3i3 {5 5 2 1 1}}
+do_test analyze-3.11 {
+  execsql {
+    DROP TABLE "silly "" name";
     SELECT idx, stat FROM sqlite_stat1 ORDER BY idx;
   }
 } {t3i1 {5 3} t3i2 {5 3 1 1 1} t3i3 {5 5 2 1 1}}
@@ -237,6 +266,16 @@ do_test analyze-4.2 {
     SELECT * FROM t4 WHERE x=1234;
   }
 } {}
+do_test analyze-4.3 {
+  execsql {
+    INSERT INTO sqlite_stat1 VALUES('t4','xyzzy','0 1 2 3');
+  }
+  db close
+  sqlite3 db test.db
+  execsql {
+    SELECT * FROM t4 WHERE x=1234;
+  }
+} {}
 
 # This test corrupts the database file so it must be the last test
 # in the series.
@@ -251,7 +290,7 @@ do_test analyze-99.1 {
   catchsql {
     ANALYZE
   }
-} {1 {malformed database schema - near "nonsense": syntax error}}
+} {1 {malformed database schema (sqlite_stat1) - near "nonsense": syntax error}}
 
 
 finish_test

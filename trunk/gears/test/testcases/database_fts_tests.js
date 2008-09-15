@@ -266,3 +266,16 @@ function testFulltextInsertCreateTableDelete() {
   db.execute("delete from t1 where rowid = ?",[1]);
   db.execute("commit"); // fails here.
 }
+
+// fts2_tokenizer() is a security hole, make certain it's not
+// implemented.
+function testLoadableTokenizerDisabled() {
+  try {
+    db.execute('SELECT fts2_tokenizer(?)', ['test']).close();
+    assert(false,'DB should have failed with "no such function"');
+  } catch(error) {
+    var expected = /.*DETAILS: no such function: fts2_tokenizer.*/;
+    assert(expected.exec(error.message),
+           'DB error should be "no such function"');
+  }
+}

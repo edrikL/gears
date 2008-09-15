@@ -37,35 +37,17 @@
 ** This is an SQLite module implementing full-text search.
 */
 
-/* TODO(shess): I am importing fts2 to capture a bunch of fixes, but
-** there were a couple pieces which came along for the ride which rely
-** on later SQLite core code.  After long and rigorous debate, I've
-** decided to list the set of things affected here, and handle them
-** with an #ifdef.  When SQLite core is imported, these should be
-** backed out.  My goal is to have the code from sqlite_vendor and
-** sqlite_google be cleanly diffable.
-**
-** SQLite core's version of fts3/2 use a hashtable to store a mapping
-** from tokenizer names to implementations.  This hashtable is scoped
-** to the module, which requires a new API function
-** sqlite3_create_module_v2() in order to handle deleting the
-** hashtable when it goes out of scope.
+/* TODO(shess): To make it easier to spot changes without groveling
+** through changelogs, I've defined GEARS_FTS2_CHANGES to call them
+** out, and I will document them here.  On imports, these changes
+** should be reviewed to make sure they are still present, or are
+** dropped as appropriate.
 **
 ** SQLite core adds the custom function fts2_tokenizer() to be used
 ** for defining new tokenizers.  The second parameter is a vtable
 ** pointer encoded as a blob.  Obviously this cannot be exposed to
-** Gears callers.  It could be suppressed in the authorizer, but for
-** now I think it's more reasonable to disable it entirely.
-**
-** The above two paragraphs lead to reverting to tokenizer-selection
-** code which is similar to how it was done before this capability was
-** added to the core.
-**
-** Additionally, the core adds sqlite3_context_db_handle().  The code
-** in optimizeFunc() actually already has a handle on the database, so
-** this can be worked around for now.
-**
-** SQLite core added a capability to rename virtual tables.
+** Gears callers for security reasons.  It could be suppressed in the
+** authorizer, but for now I have simply commented the definition out.
 */
 #define GEARS_FTS2_CHANGES 1
 
@@ -2831,22 +2813,6 @@ static char *fulltextSchema(
   return zNext;
 }
 
-#if GEARS_FTS2_CHANGES
-/*
-** The fts2 built-in tokenizers - "simple" and "porter" - are implemented
-** in files fts2_tokenizer1.c and fts2_porter.c respectively. The following
-** two forward declarations are for functions declared in these files
-** used to retrieve the respective implementations.
-**
-** Calling sqlite3Fts2SimpleTokenizerModule() sets the value pointed
-** to by the argument to point a the "simple" tokenizer implementation.
-** Function ...PorterTokenizerModule() sets *pModule to point to the
-** porter tokenizer/stemmer implementation.
-*/
-void sqlite3Fts2SimpleTokenizerModule(sqlite3_tokenizer_module const**ppModule);
-void sqlite3Fts2PorterTokenizerModule(sqlite3_tokenizer_module const**ppModule);
-#endif
-
 /*
 ** Build a new sqlite3_vtab structure that will describe the
 ** fulltext index defined by spec.
@@ -2890,24 +2856,12 @@ static int constructVtab(
   }
   nTok = strlen(zTok)+1;
 
-#if GEARS_FTS2_CHANGES
-  if( 0==strcmp(zTok, "simple") ){
-    sqlite3Fts2SimpleTokenizerModule(&m);
-  }else if( 0==strcmp(zTok, "porter") ){
-    sqlite3Fts2PorterTokenizerModule(&m);
-  }else{
-    *pzErr = sqlite3_mprintf("unknown tokenizer: %s", spec->azTokenizer[0]);
-    rc = SQLITE_ERROR;
-    goto err;
-  }
-#else
   m = (sqlite3_tokenizer_module *)sqlite3Fts2HashFind(pHash, zTok, nTok);
   if( !m ){
     *pzErr = sqlite3_mprintf("unknown tokenizer: %s", spec->azTokenizer[0]);
     rc = SQLITE_ERROR;
     goto err;
   }
-#endif
 
   for(n=0; spec->azTokenizer[n]; n++){}
   if( n ){
@@ -6345,13 +6299,8 @@ static void optimizeFunc(sqlite3_context *pContext,
  err:
     {
       char buf[512];
-#if GEARS_FTS2_CHANGES
-      sqlite3_snprintf(sizeof(buf), buf, "Error in optimize: %s",
-                       sqlite3_errmsg(v->db));
-#else
       sqlite3_snprintf(sizeof(buf), buf, "Error in optimize: %s",
                        sqlite3_errmsg(sqlite3_context_db_handle(pContext)));
-#endif
       sqlite3_result_error(pContext, buf, -1);
     }
   }
@@ -6775,9 +6724,6 @@ static int fulltextFindFunction(
   return 0;
 }
 
-#if GEARS_FTS2_CHANGES
-  /* xRename not supported here, yet. */
-#else
 /*
 ** Rename an fts2 table.
 */
@@ -6801,7 +6747,6 @@ static int fulltextRename(
   }
   return rc;
 }
-#endif
 
 static const sqlite3_module fts2Module = {
   /* iVersion      */ 0,
@@ -6823,24 +6768,14 @@ static const sqlite3_module fts2Module = {
   /* xCommit       */ fulltextCommit,
   /* xRollback     */ fulltextRollback,
   /* xFindFunction */ fulltextFindFunction,
-#if GEARS_FTS2_CHANGES
-  /* xRename not supported here, yet. */
-#else
   /* xRename */       fulltextRename,
-#endif
 };
 
-#if GEARS_FTS2_CHANGES
-/* hashDestroy() not needed until we can call
-** sqlite3_create_module_v2().
-*/
-#else
 static void hashDestroy(void *p){
   fts2Hash *pHash = (fts2Hash *)p;
   sqlite3Fts2HashClear(pHash);
   sqlite3_free(pHash);
 }
-#endif
 
 /*
 ** The fts2 built-in tokenizers - "simple" and "porter" - are implemented
@@ -6867,7 +6802,6 @@ int sqlite3Fts2InitHashTable(sqlite3 *, fts2Hash *, const char *);
 */
 int sqlite3Fts2Init(sqlite3 *db){
   int rc = SQLITE_OK;
-#if GEARS_FTS2_CHANGES
   fts2Hash *pHash = 0;
   const sqlite3_tokenizer_module *pSimple = 0;
   const sqlite3_tokenizer_module *pPorter = 0;
@@ -6896,15 +6830,14 @@ int sqlite3Fts2Init(sqlite3 *db){
       rc = SQLITE_NOMEM;
     }
   }
-#endif
 
   /* Create the virtual table wrapper around the hash-table and overload 
   ** the two scalar functions. If this is successful, register the
   ** module with sqlite.
   */
   if( SQLITE_OK==rc 
-#if GEARS_FTS2_CHANGES
-      /* Not for Gears. */
+#if GEARS_FTS2_CHANGES && !SQLITE_TEST
+      /* fts2_tokenizer() disabled for security reasons. */
 #else
    && SQLITE_OK==(rc = sqlite3Fts2InitHashTable(db, pHash, "fts2_tokenizer"))
 #endif
@@ -6916,13 +6849,9 @@ int sqlite3Fts2Init(sqlite3 *db){
    && SQLITE_OK==(rc = sqlite3_overload_function(db, "dump_doclist", -1))
 #endif
   ){
-#if GEARS_FTS2_CHANGES
-    return sqlite3_create_module(db, "fts2", &fts2Module, NULL);
-#else
     return sqlite3_create_module_v2(
         db, "fts2", &fts2Module, (void *)pHash, hashDestroy
     );
-#endif
   }
 
   /* An error has occured. Delete the hash table and return the error code. */
