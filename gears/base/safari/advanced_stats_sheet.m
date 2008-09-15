@@ -78,6 +78,11 @@
 @implementation AdvancedStatsSheetPane (PrivateMethods)
 
 - (void)setStatsKeyInGoogleInstallerPrefs:(BOOL)enabled {
+  NSString *flag_file = @"~/.__enable_gears_stats";
+  
+  // Remove any existing flag_file.
+  [[NSFileManager defaultManager] removeFileAtPath:flag_file handler:nil];
+  
   // We need to set this preference globally which requires root privileges,
   // since this plugin runs before the installer is authenticated, we can't
   // do this at this stage, also environmental variables set here aren't
@@ -86,8 +91,7 @@
   // The global preference value which Gears reads is then written by the 
   // Postflight script.
   if (enabled) {
-    NSString *flag_file_path = [@"~/.__enable_gears_stats" 
-                                    stringByExpandingTildeInPath];
+    NSString *flag_file_path = [flag_file stringByExpandingTildeInPath];
     [@"YES" writeToFile:flag_file_path 
              atomically:NO
                encoding:NSUTF8StringEncoding

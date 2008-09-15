@@ -17,6 +17,8 @@ rm -f "/Library/PreferencePanes/GearsNotifier.prefPane"
 echo "removing installer package receipts"
 rm -rf "/Library/Receipts/Gears.pkg"
 rm -rf /Library/Receipts/Google\ Gears.pkg
+echo "removing preferences"
+rm -f "/Library/Preferences/com.google.gears.plist"
 
 ksadmin=/Library/Google/GoogleSoftwareUpdate/GoogleSoftwareUpdate.bundle/Contents/MacOS/ksadmin
 $ksadmin --delete --productid "{0006FF50-C0C0-4B9B-973C-4CF98BF4EA9D}"
