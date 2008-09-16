@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+
+
+<HTML>
+<HEAD>
+  <TITLE> Workerpool Limit Test </TITLE>
+  <script type="text/javascript" src="gears_init.js"></script>
+</HEAD>
+
+<BODY>
+  Version: <span id="version"></span> <br>
+  Workers Created: <span id="numWorkers"></span> <br>
+  Workers Responded: <span id="numResponses"></span> <br>
+  Ave Time / Worker: <span id="timePer"></span><br><br>
+  <span id="error_message"></span>
+
+<script>
+window.onload = init;
+
+function init() {
+  var version = google.gears.factory.getBuildInfo();
+  document.getElementById("version").innerHTML = version;
+  CreateWorkers();
+}
+
+/**
+ * Create simple workers in a loop.  After creating a worker,
+ * send a message to and receive a response from it before
+ * creating another.
+ *
+ * Report the number of workers created, average time between
+ * creates, and any error messages to the dom.
+ */
+function CreateWorkers() {
+  var wp = google.gears.factory.create('beta.workerpool');
+  var numWorkers = 0;
+  var numResponses = 0;
+  var startTime = new Date().getTime();
+
+  function childThread() {
+    google.gears.workerPool.onmessage = function(text, sender, m) {
+      google.gears.workerPool.sendMessage('pong', m.sender);
+    }
+  }
+
+  wp.onmessage = function(text, sender, m) {
+    ++numResponses;
+    
+    if (numResponses % 100 == 0) {
+      document.getElementById("numResponses").innerHTML = numResponses;
+      var curTime = new Date().getTime();
+      var elapsed = curTime - startTime;
+      document.getElementById("timePer").innerHTML = 
+          (elapsed / numResponses) + ' ms';
+    }
+    
+    CreateWorker();
+  }
+
+  function CreateWorker() {
+    var child = childThread + ';childThread();';
+    try {
+      var childId = wp.createWorker(child);
+      ++numWorkers;
+      wp.sendMessage('ping', childId);
+    } catch (e) {
+      var error = e.message || e.toString();
+      var curTime = new Date().getTime();
+      var elapsed = curTime - startTime;
+      document.getElementById("timePer").innerHTML = 
+          (elapsed / numResponses) + ' ms';
+      document.getElementById("error_message").innerHTML = error;
+      document.getElementById("numWorkers").innerHTML = numWorkers;
+      document.getElementById("numResponses").innerHTML = numResponses;
+    }
+    if (numWorkers % 100 == 0) {
+      document.getElementById("numWorkers").innerHTML = numWorkers;
+    }
+}
+
+  CreateWorker();
+}
+
+</script>
+
+</BODY>
+</HTML>
