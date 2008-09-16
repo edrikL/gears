@@ -35,6 +35,28 @@ public:
   virtual void Run() = 0;
 };
 
+// Clients implement this interface to receive a synchronous call.
+//
+// WARNING: Make certain Run does minimal work.  If this results in a sync call
+// back to the source thread, it will deadlock.
+class SyncFunctor : public MessageData {
+public:
+  virtual void Run() = 0;
+
+  friend class AsyncRouter;
+
+private:
+  void SignalHandledEvent() {
+    handled_event_->Signal();
+  }
+
+  void SetHandledEvent(Event *handled_event) {
+    handled_event_ = handled_event;
+  }
+
+  Event *handled_event_;
+};
+
 // This is a simple class that facilitates running a method asynchronously on
 // a target thread.  The ThreadMessageQueue with the given thread_id must be
 // initialized.
@@ -46,6 +68,8 @@ class AsyncRouter : public ThreadMessageQueue::HandlerInterface {
   // Calls the functor's Run() method from the thread specified by thread_id.
   // Ownership of the functor is transferred to the AsyncRouter.
   bool CallAsync(ThreadId thread_id, AsyncFunctor *functor);
+
+  bool CallSync(ThreadId thread_id, SyncFunctor *functor);
 
  private:
   AsyncRouter();

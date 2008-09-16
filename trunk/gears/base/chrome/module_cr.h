@@ -66,7 +66,7 @@ class CP {
     return g_cpid;
   }
 
-  static bool IsBrowserProcess() { 
+  static bool IsBrowserProcess() {
     return WasInitialized() && g_cpprocess_type == CP_PROCESS_BROWSER;
   }
 
@@ -86,7 +86,7 @@ class CP {
 
   static ThreadId plugin_thread_id() {
     assert(WasInitialized());
-    return g_cpthread_id; 
+    return g_cpthread_id;
   }
 
   // Returns the browser's CPAPI version.
@@ -187,4 +187,12 @@ class PluginMessage : public Serializable {
   virtual void OnMessageReceived() = 0;
 };
 
+// This class can only be used on the plugin thread
+class PluginSyncMessage : public Serializable {
+ public:
+  bool Send();
+  virtual void OnSyncMessageReceived(std::vector<uint8> *retval) = 0;
+ protected:
+  std::vector<uint8> retval_;
+};
 #endif  // GEARS_BASE_CHROME_MODULE_CR_H__
