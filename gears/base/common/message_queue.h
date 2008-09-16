@@ -43,6 +43,7 @@ enum ThreadMessageTypes {
   kMessageService_Notify = 1,
   kAsyncRouter_Call,
   kAndroidLoop_Exit,
+  kSyncRouter_Call,
 };
 
 // A facility for sending and receiving messages asynchronously 

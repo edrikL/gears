@@ -58,6 +58,17 @@ void NPUpdateTask::Run() {
   CP::DecrementProcessKeepAliveCount();
 }
 
+void NPUpdateTask::NotifyObservers(UpdateTask::Event *event) {
+  if (CP::gears_in_renderer()) {
+    UpdateNotifyMessage update_notify_message(
+                            GetNotificationTopic(&store_).c_str(),
+                            event);
+    update_notify_message.Send();
+  }
+
+  UpdateTask::NotifyObservers(event);
+}
+
 // static 
 bool NPUpdateTask::SetRunningTask(NPUpdateTask *task) {
   MutexLock lock(&running_tasks_mutex);
@@ -87,9 +98,15 @@ void NPUpdateTask::ClearRunningTask(NPUpdateTask *task) {
 // Platform-specific implementation. See declaration in update_task.h.
 // Returns true if an UpdateTask for the given store is running
 bool UpdateTask::IsUpdateTaskForStoreRunning(int64 store_server_id) {
-  MutexLock lock(&running_tasks_mutex);
-  UpdateTaskMap::iterator found = running_tasks.find(store_server_id);
-  return (found != running_tasks.end());
+  if (IsUpdateTaskProcess()) {
+    MutexLock lock(&running_tasks_mutex);
+    UpdateTaskMap::iterator found = running_tasks.find(store_server_id);
+    return (found != running_tasks.end());
+  } else {
+    IsUpdateRunningMessage is_update_running_message(store_server_id);
+    is_update_running_message.Send();
+    return is_update_running_message.IsRunning();
+  }
 }
 
 // Platform-specific implementation. See declaration in update_task.h.
@@ -116,20 +133,57 @@ bool NPUpdateTask::StartUpdate(ManagedResourceStore *store) {
       LOG16((STRING16(
           L"Warning: NPUpdateTask sending message with no context\n")));
 
-    AutoUpdateMessage auto_update_message(store->GetServerID(), context);
-    auto_update_message.Send();
-    return false;  // this instance of the task does not actually run
+    if (CP::gears_in_renderer()) {
+      AutoUpdateSyncMessage auto_update_message(store->GetServerID(), context);
+      auto_update_message.Send();
+    } else {
+      AutoUpdateMessage auto_update_message(store->GetServerID(), context);
+      auto_update_message.Send();
+    }
+    return true;
   }
 }
 
-void AutoUpdateMessage::OnMessageReceived() {
+void NPUpdateTask::AwaitStartup() {
+  // We only wait for the startup if we're in the same proccess as the
+  // UpdateTask.  Otherwise, we wait by sending a sync message for the startup.
+  if (IsUpdateTaskProcess()) {
+    UpdateTask::AwaitStartup();
+  }
+}
+
+static void RunAutoUpdate(int64 store_id, CPBrowsingContext context) {
   assert(IsUpdateTaskProcess());
-  scoped_refptr<CRBrowsingContext> context(new CRBrowsingContext(context_));
-  scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask(context.get()));
+  scoped_refptr<CRBrowsingContext> context_ref(new CRBrowsingContext(context));
+  scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask(context_ref.get()));
   // Since auto updates can also be initiated by the plugin process,
   // we run thru the rate limiting logic here before kicking it off.
-  if (!task.get()->MaybeAutoUpdate(store_id_)) {
+  if (!task.get()->MaybeAutoUpdate(store_id)) {
     return;
   }
   task.release()->DeleteWhenDone();
+}
+
+void AutoUpdateMessage::OnMessageReceived() {
+  RunAutoUpdate(store_id_, context_);
+}
+
+void AutoUpdateSyncMessage::OnSyncMessageReceived(std::vector<uint8> *retval) {
+  RunAutoUpdate(store_id_, context_);
+}
+
+void IsUpdateRunningMessage::OnSyncMessageReceived(std::vector<uint8> *retval) {
+  assert(IsUpdateTaskProcess());
+  bool is_running = UpdateTask::IsUpdateTaskForStoreRunning(store_id_);
+  retval->clear();
+  retval->push_back(is_running);
+}
+
+bool IsUpdateRunningMessage::IsRunning() {
+  return (retval_.size() == 1 && retval_[0]);
+}
+
+void UpdateNotifyMessage::OnMessageReceived() {
+  MessageService::GetInstance()->NotifyObservers(notification_topic_.c_str(),
+                                                 event_);
 }

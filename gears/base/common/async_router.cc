@@ -35,6 +35,7 @@ AsyncRouter *AsyncRouter::GetInstance() {
 
 AsyncRouter::AsyncRouter() {
   ThreadMessageQueue::GetInstance()->RegisterHandler(kAsyncRouter_Call, this);
+  ThreadMessageQueue::GetInstance()->RegisterHandler(kSyncRouter_Call, this);
 }
 
 AsyncRouter::~AsyncRouter() {
@@ -45,10 +46,30 @@ bool AsyncRouter::CallAsync(ThreadId thread_id, AsyncFunctor *functor) {
       thread_id, kAsyncRouter_Call, functor);
 }
 
+bool AsyncRouter::CallSync(ThreadId thread_id, SyncFunctor *functor) {
+  Event handled_event;
+
+  functor->SetHandledEvent(&handled_event);
+  if (!ThreadMessageQueue::GetInstance()->Send(
+      thread_id, kSyncRouter_Call, functor)) {
+    return false;
+  }
+
+  handled_event.Wait();
+
+  return true;
+}
+
 void AsyncRouter::HandleThreadMessage(int message_type,
                                       MessageData *message_data) {
-  assert(message_type == kAsyncRouter_Call);
-  AsyncFunctor *functor = static_cast<AsyncFunctor*>(message_data);
-  functor->Run();
+  assert(message_type == kAsyncRouter_Call || message_type == kSyncRouter_Call);
+  if (message_type == kAsyncRouter_Call) {
+    AsyncFunctor *functor = static_cast<AsyncFunctor*>(message_data);
+    functor->Run();
+  } else if (message_type == kSyncRouter_Call) {
+    SyncFunctor *functor = static_cast<SyncFunctor*>(message_data);
+    functor->Run();
+    functor->SignalHandledEvent();
+  }
   // functor is deleted by the ThreadMessageQueue when this returns
 }

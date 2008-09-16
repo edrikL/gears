@@ -161,7 +161,7 @@ class UpdateTask : public AsyncTask {
   // In the rare case where this updateTask detects another updateTask
   // is already running and does not run itself, the updateStatus
   // property will be unaffected by this task.
-  void AwaitStartup() {
+  virtual void AwaitStartup() {
     MutexLock locker(&startup_signal_lock_);
     startup_signal_lock_.Await(Condition(&startup_signal_));
   }
@@ -186,6 +186,10 @@ class UpdateTask : public AsyncTask {
   // The ManagedResourceStore being updated
   ManagedResourceStore store_;
 
+ protected:
+
+  virtual void NotifyObservers(Event *event);
+
  private:
   std::string16 notification_topic_;
 
@@ -206,8 +210,6 @@ class UpdateTask : public AsyncTask {
     MutexLock locker(&startup_signal_lock_);
     startup_signal_ = startup;
   }
-
-  void NotifyObservers(Event *event);
 
   // Checks for a new manifest file. If found, inserts the version
   // described in the new manifest into the WebCacheDB. The newly inserted

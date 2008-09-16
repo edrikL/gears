@@ -210,6 +210,26 @@ void STDCALL CPP_OnMessage(void *data, uint32 data_len) {
   }
 }
 
+void STDCALL CPP_OnSyncMessage(void *data, uint32 data_len, void **retval,
+                               uint32 *retval_size) {
+  Deserializer deserializer(static_cast<uint8*>(data), data_len);
+  PluginSyncMessage *message = NULL;
+  deserializer.CreateAndReadObject(reinterpret_cast<Serializable**>(&message));
+  if (message) {
+    std::vector<uint8> buffer;
+    message->OnSyncMessageReceived(&buffer);
+
+    if (buffer.size()) {
+      *retval = CP::Alloc<uint8>(buffer.size());
+      memcpy(*retval, &(buffer.at(0)), buffer.size());
+      *retval_size = buffer.size();
+    } else {
+      *retval = NULL;
+      *retval_size = 0;
+    }
+  }
+}
+
 void STDCALL CPP_HtmlDialogClosed(void *plugin_context,
                                   const char *json_retval) {
   assert(plugin_context);
@@ -363,6 +383,7 @@ CPError CP::Initialize(CPID id, const CPBrowserFuncs *bfuncs,
   plugin_funcs.shutdown = CPP_Shutdown;
   plugin_funcs.should_intercept_request = CPP_ShouldInterceptRequest;
   plugin_funcs.on_message = CPP_OnMessage;
+  plugin_funcs.on_sync_message = CPP_OnSyncMessage;
   plugin_funcs.html_dialog_closed = CPP_HtmlDialogClosed;
   plugin_funcs.handle_command = CPP_HandleCommand;
   size_t pfuncs_size = pfuncs->size;
@@ -442,6 +463,8 @@ CPError CP::Initialize(CPID id, const CPBrowserFuncs *bfuncs,
 
   AllowNPInit(true);
   AutoUpdateMessage::Register();
+  UpdateNotifyMessage::Register();
+  IsUpdateRunningMessage::Register();
   OfflineModeMessage::Register();
   ShortcutsChangedMessage::Register();
   return CPERR_SUCCESS;
@@ -460,12 +483,36 @@ class PluginMessageOnPluginThread : public AsyncFunctor {
   std::vector<uint8> message_;
 };
 
+class SyncPluginMessageOnPluginThread : public SyncFunctor {
+ public:
+  SyncPluginMessageOnPluginThread(std::vector<uint8>& message,
+                                  std::vector<uint8> *retval) :
+    retval_(retval) {
+    message_.swap(message);
+  }
+  virtual void Run() {
+    void *buffer;
+    uint32 size;
+    CP::browser_funcs().send_sync_message(g_cpid, &message_[0], message_.size(),
+                                          &buffer, &size);
+    if (retval_ && size) {
+      retval_->resize(size);
+      memcpy(&(retval_->at(0)), buffer, size);
+    }
+    CP::browser_funcs().free(buffer);
+  }
+
+ private:
+  std::vector<uint8> message_;
+  std::vector<uint8> *retval_;
+};
+
 bool PluginMessage::Send() {
   std::vector<uint8> buf;
   Serializer serializer(&buf);
   if (!serializer.WriteObject(this))
     return false;
-  
+
   if (!IsPluginThread()) {
     AsyncRouter::GetInstance()->CallAsync(
         CP::plugin_thread_id(), new PluginMessageOnPluginThread(buf));
@@ -473,6 +520,40 @@ bool PluginMessage::Send() {
   } else {
     return CPERR_SUCCESS == CP::browser_funcs().send_message(g_cpid, &buf[0],
                                                              buf.size());
+  }
+}
+
+bool PluginSyncMessage::Send() {
+  if (!CP::browser_funcs().send_sync_message) {
+    return false;
+  }
+
+  std::vector<uint8> buf;
+  Serializer serializer(&buf);
+  if (!serializer.WriteObject(this))
+    return false;
+
+  if (!IsPluginThread()) {
+    AsyncRouter::GetInstance()->CallSync(
+        CP::plugin_thread_id(),
+        new SyncPluginMessageOnPluginThread(buf, &retval_));
+    return true;
+  } else {
+    void *buffer;
+    uint32 size;
+    if (CPERR_SUCCESS != CP::browser_funcs().send_sync_message(g_cpid,
+                                                               &buf[0],
+                                                               buf.size(),
+                                                               &buffer,
+                                                               &size)) {
+      return false;
+    }
+    if (size) {
+      retval_.resize(size);
+      memcpy(&(retval_.at(0)), buffer, size);
+    }
+    CP::browser_funcs().free(buffer);
+    return true;
   }
 }
 
