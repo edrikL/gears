@@ -154,18 +154,6 @@ const std::string16& ModuleImplBaseClass::EnvPageLocationUrl() const {
   return module_environment_->security_origin_.full_url();
 }
 
-#if BROWSER_FF || BROWSER_NPAPI
-JsContextPtr ModuleImplBaseClass::EnvPageJsContext() const {
-  assert(module_environment_.get());
-  return module_environment_->js_context_;
-}
-#elif BROWSER_IE
-IUnknown* ModuleImplBaseClass::EnvPageIUnknownSite() const {
-  assert(module_environment_.get());
-  return module_environment_->iunknown_site_;
-}
-#endif
-
 const SecurityOrigin& ModuleImplBaseClass::EnvPageSecurityOrigin() const {
   assert(module_environment_.get());
   return module_environment_->security_origin_;

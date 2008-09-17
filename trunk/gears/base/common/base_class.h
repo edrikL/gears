@@ -138,13 +138,7 @@ class ModuleImplBaseClass {
   void GetModuleEnvironment(scoped_refptr<ModuleEnvironment> *out) const;
   bool EnvIsWorker() const;
   const std::string16& EnvPageLocationUrl() const;
-#if BROWSER_FF || BROWSER_NPAPI
-  JsContextPtr EnvPageJsContext() const;
-#elif BROWSER_IE
-  IUnknown* EnvPageIUnknownSite() const;
-#endif
   const SecurityOrigin& EnvPageSecurityOrigin() const;
-
   BrowsingContext *EnvPageBrowsingContext() const;
 
   JsRunnerInterface *GetJsRunner() const;
