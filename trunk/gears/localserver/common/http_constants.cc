@@ -56,6 +56,8 @@ const char16 *HttpConstants::kLocationHeader = STRING16(L"Location");
 const char16 *HttpConstants::kMimeTextPlain = STRING16(L"text/plain");
 const char16 *HttpConstants::kMimeApplicationOctetStream =
                                  STRING16(L"application/octet-stream");
+const char16 *HttpConstants::kMimeApplicationJson =
+                                 STRING16(L"application/json");
 const char16 *HttpConstants::kNoCache = STRING16(L"no-cache");
 const char16 *HttpConstants::kOKStatusLine = STRING16(L"HTTP/1.1 200 OK");
 const char16 *HttpConstants::kPragmaHeader = STRING16(L"Pragma");
