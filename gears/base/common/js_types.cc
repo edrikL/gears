@@ -69,23 +69,25 @@ static inline bool DoubleIsInt32(double val) {
 // JsToken and friends
 //------------------------------------------------------------------------------
 
+AbstractJsToken JsTokenPtrToAbstractJsToken(JsToken *token) {
+  return reinterpret_cast<AbstractJsToken>(token);
+}
+
 #if BROWSER_NPAPI
 
-JsTokenEqualTo::JsTokenEqualTo(JsRunnerInterface *js_runner)
-  : js_runner_(js_runner), compare_func_(NULL) {
+JsTokenEqualTo::JsTokenEqualTo(NPP npp)
+  : npp_(npp), compare_func_(NULL) {
   // NPAPI doesn't guarantee that a Javascript object will have only one
   // NPObject representation, so we need to let the scripting engine compare
   // objects.
   const char kCompareFunc[] = "(function (a, b) { return a === b; })";
 
   NPObject *global;
-  if (NPN_GetValue(js_runner->GetContext(), NPNVWindowNPObject,
-                   &global) != NPERR_NO_ERROR)
+  if (NPN_GetValue(npp_, NPNVWindowNPObject, &global) != NPERR_NO_ERROR)
     return;
   ScopedNPObject global_scoped(global);
   NPString np_script = { kCompareFunc, ARRAYSIZE(kCompareFunc) - 1};
-  if (!NPN_Evaluate(js_runner->GetContext(), global, &np_script,
-                    &compare_func_) ||
+  if (!NPN_Evaluate(npp_, global, &np_script, &compare_func_) ||
       !NPVARIANT_IS_OBJECT(compare_func_)) {
     assert(false);
   }
@@ -95,7 +97,7 @@ JsTokenEqualTo::~JsTokenEqualTo() {
 }
 
 JsTokenEqualTo& JsTokenEqualTo::operator=(const JsTokenEqualTo &that) {
-  js_runner_ = that.js_runner_;
+  npp_ = that.npp_;
   compare_func_ = that.compare_func_;
   return *this;
 }
@@ -108,8 +110,7 @@ bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
 
   // Invoke the method.
   ScopedNPVariant result;
-  bool rv = NPN_InvokeDefault(js_runner_->GetContext(), compare_func_obj,
-                              args, 2, &result);
+  bool rv = NPN_InvokeDefault(npp_, compare_func_obj, args, 2, &result);
   if (!rv) { return false; }
 
   if (!NPVARIANT_IS_BOOLEAN(result)) {
@@ -936,6 +937,12 @@ static bool ConvertTokenToArgument(JsCallContext *context,
             STRING16(L"Invalid argument type: expected DOM element."));
         return false;
       }
+      break;
+    }
+    case JSPARAM_ABSTRACT_TOKEN: {
+      AbstractJsToken *value =
+          static_cast<AbstractJsToken *>(param->value_ptr);
+      *value = JsTokenPtrToAbstractJsToken(const_cast<JsToken*>(&variant));
       break;
     }
     default:

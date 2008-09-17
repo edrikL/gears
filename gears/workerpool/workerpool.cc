@@ -264,11 +264,10 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
     return;
   }
 
-  // TODO(nigeltao): Make message_body's type scoped_ptr<MarshaledJsToken>.
-  JsToken message_body;
+  AbstractJsToken message_body;
   int dest_worker_id;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &message_body },
+    { JSPARAM_REQUIRED, JSPARAM_ABSTRACT_TOKEN, &message_body },
     { JSPARAM_REQUIRED, JSPARAM_INT, &dest_worker_id },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
@@ -276,10 +275,8 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
     return;
 
   std::string16 error;
-  JsContextPtr cx = GetJsRunner()->GetContext();
-
   MarshaledJsToken *mjt = MarshaledJsToken::Marshal(
-      message_body, GetJsRunner(), cx, &error);
+      message_body, GetJsRunner(), &error);
   if (!mjt) {
     context->SetException(error.empty()
         ? STRING16(L"The message parameter has an invalid type.")

@@ -78,7 +78,6 @@
 #define GEARS_BASE_COMMON_JS_MARSHAL_H__
 
 #include <map>
-#include <vector>
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
@@ -91,48 +90,42 @@ class MarshaledModule;
 // Some JsToken's (and hence MarshaledJsToken's) can have children, e.g.
 // Arrays and Objects (which are basically treated as key-value maps).
 class MarshaledJsToken {
-public:
+ public:
   ~MarshaledJsToken();
 
   // This method returns NULL if the marshal fails (e.g. trying to marshal a
   // JavaScript function, or trying to marshal an object graph that contains
   // a cycle).  On failure, error_message_out will contain the error message.
-  static MarshaledJsToken *Marshal(const JsToken &token,
+  static MarshaledJsToken *Marshal(AbstractJsToken token,
                                    JsRunnerInterface *js_runner,
-                                   JsContextPtr js_context,
                                    std::string16 *error_message_out);
 
   // Returns whether or not this MarshaledJsToken was successfully restored to
   // be a JsScopedToken (*out) inside the given ModuleEnvironment.
   bool Unmarshal(ModuleEnvironment *module_environment, JsScopedToken *out);
 
-private:
-  typedef std::vector<JsToken> JsTokenVector;
-
+ private:
   MarshaledJsToken();
 
   static bool CausesCycle(JsRunnerInterface *js_runner,
-                          const JsToken &token,
-                          JsTokenVector *object_stack,
+                          AbstractJsToken abstract_js_token,
+                          AbstractJsTokenVector *object_stack,
                           std::string16 *error_message_out);
 
-  static MarshaledJsToken *Marshal(const JsToken &token,
+  static MarshaledJsToken *Marshal(AbstractJsToken token,
                                    JsRunnerInterface *js_runner,
-                                   JsContextPtr js_context,
                                    std::string16 *error_message_out,
-                                   JsTokenVector *object_stack);
+                                   AbstractJsTokenVector *object_stack);
 
   bool InitializeFromObject(JsObject &object,
                             JsRunnerInterface *js_runner,
-                            JsContextPtr js_context,
                             std::string16 *error_message_out,
-                            JsTokenVector *object_stack);
+                            AbstractJsTokenVector *object_stack);
 
   bool InitializeFromArray(JsArray &array,
                            JsRunnerInterface *js_runner,
-                           JsContextPtr js_context,
                            std::string16 *error_message_out,
-                           JsTokenVector *object_stack);
+                           AbstractJsTokenVector *object_stack);
 
   JsParamType type_;
   union {
