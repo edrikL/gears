@@ -344,8 +344,13 @@ function testLoadExtensionDisabled() {
     assert(false,'DB should have failed with "no such function"');
   } catch(error) {
     var expected = /.*DETAILS: no such function: load_extension.*/;
-    assert(expected.exec(error.message),
-           'DB error should be "no such function"');
+    // TODO(shess): Remove isSafariWorker test when Safari workers
+    // propagate exceptions correctly (issue 729).
+    var isSafariWorker = isSafari && google.gears.workerPool;
+    if (!isSafariWorker) {
+      assert(expected.exec(error.message),
+             'DB error should be "no such function"');
+    }
   }
 }
 
