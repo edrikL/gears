@@ -255,6 +255,119 @@ class JsRunnerBase : public JsRunnerInterface {
     ThrowGlobalErrorImpl(this, message);
   }
 
+  JsToken *AbstractJsTokenToJsTokenPtr(AbstractJsToken token) {
+    return reinterpret_cast<JsToken *>(token);
+  }
+
+  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) {
+    return js_array->SetArray(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
+    return js_object->SetObject(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
+                                        AbstractJsToken token2) {
+    const VARIANT *x = AbstractJsTokenToJsTokenPtr(token1);
+    const VARIANT *y = AbstractJsTokenToJsTokenPtr(token2);
+    // All we are looking for in this comparator is that different VARIANTs
+    // will compare differently, but that the same IDispatch* (wrapped as a
+    // VARIANT) will compare the same.  A non-goal is that the VARIANT
+    // representing the integer 3 is "equal to" one representing 3.0.
+    if (x->vt != y->vt) {
+      return false;
+    }
+    switch (x->vt) {
+      case VT_EMPTY:
+        return true;
+        break;
+      case VT_NULL:
+        return true;
+        break;
+      case VT_I4:
+        return x->lVal == y->lVal;
+        break;
+      case VT_R8:
+        return x->dblVal == y->dblVal;
+        break;
+      case VT_BSTR:
+        // TODO(michaeln): compare string values rather than pointers?
+        return x->bstrVal == y->bstrVal;
+        break;
+      case VT_DISPATCH:
+        return x->pdispVal == y->pdispVal;
+        break;
+      case VT_BOOL:
+        return x->boolVal == y->boolVal;
+        break;
+      default:
+        // do nothing
+        break;
+    }
+    return false;
+  };
+
+  virtual JsParamType JsTokenType(AbstractJsToken token) {
+    return JsTokenGetType(*AbstractJsTokenToJsTokenPtr(token), NULL);
+  }
+
+  virtual bool JsTokenToBool(AbstractJsToken token, bool *out) {
+    return JsTokenToBool_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), NULL, out);
+  }
+
+  virtual bool JsTokenToInt(AbstractJsToken token, int *out) {
+    return JsTokenToInt_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), NULL, out);
+  }
+
+  virtual bool JsTokenToDouble(AbstractJsToken token, double *out) {
+    return JsTokenToDouble_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), NULL, out);
+  }
+
+  virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
+    return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), NULL, out);
+  }
+
+  virtual bool JsTokenToModule(AbstractJsToken token,
+                               ModuleImplBaseClass **out) {
+    return ::JsTokenToModule(
+        NULL, NULL, *AbstractJsTokenToJsTokenPtr(token), out);
+  }
+
+  virtual bool BoolToJsToken(bool value,
+                             JsScopedToken *out) {
+    return ::BoolToJsToken(NULL, value, out);
+  }
+
+  virtual bool IntToJsToken(int value,
+                            JsScopedToken *out) {
+    return ::IntToJsToken(NULL, value, out);
+  }
+
+  virtual bool DoubleToJsToken(double value,
+                               JsScopedToken *out) {
+    return ::DoubleToJsToken(NULL, value, out);
+  }
+
+  virtual bool StringToJsToken(const char16 *value,
+                               JsScopedToken *out) {
+    return ::StringToJsToken(NULL, value, out);
+  }
+
+  virtual bool NullToJsToken(JsScopedToken *out) {
+    return ::NullToJsToken(NULL, out);
+  }
+
+  virtual bool UndefinedToJsToken(JsScopedToken *out) {
+    return ::UndefinedToJsToken(NULL, out);
+  }
+
  protected:
   // Alert all monitors that an event has occured.
   void SendEvent(JsEventType event_type) {

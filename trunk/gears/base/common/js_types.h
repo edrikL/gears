@@ -56,11 +56,6 @@ typedef jsval JsToken;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
 
-// TODO(michaeln): compare string values rather than pointers?
-struct JsTokenEqualTo : public std::equal_to<JsToken> {
-  JsTokenEqualTo(JsRunnerInterface *js_runner) {}
-};
-
 #elif BROWSER_IE
 
 #include <windows.h>
@@ -70,50 +65,6 @@ struct JsTokenEqualTo : public std::equal_to<JsToken> {
 typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr;  // unused in IE
-
-// On Firefox, a JsToken is a jsval, which is an int, and the natural
-// operator== is fine.  On IE, JsToken is a VARIANT, which does not have a
-// natural operator==, so we have to make one here.
-struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
-  JsTokenEqualTo(JsRunnerInterface *js_runner) {}
-  bool operator()(const JsToken &x, const JsToken &y) const {
-    // All we are looking for in this comparator is that different VARIANTs
-    // will compare differently, but that the same IDispatch* (wrapped as a
-    // VARIANT) will compare the same.  A non-goal is that the VARIANT
-    // representing the integer 3 is "equal to" one representing 3.0.
-    if (x.vt != y.vt) {
-      return false;
-    }
-    switch (x.vt) {
-      case VT_EMPTY:
-        return true;
-        break;
-      case VT_NULL:
-        return true;
-        break;
-      case VT_I4:
-        return x.lVal == y.lVal;
-        break;
-      case VT_R8:
-        return x.dblVal == y.dblVal;
-        break;
-      case VT_BSTR:
-        // TODO(michaeln): compare string values rather than pointers?
-        return x.bstrVal == y.bstrVal;
-        break;
-      case VT_DISPATCH:
-        return x.pdispVal == y.pdispVal;
-        break;
-      case VT_BOOL:
-        return x.boolVal == y.boolVal;
-        break;
-      default:
-        // do nothing
-        break;
-    }
-    return false;
-  }
-};
 
 #elif BROWSER_WEBKIT
 
@@ -172,7 +123,7 @@ typedef ScopedNPVariant JsScopedToken;
 typedef NPP JsContextPtr;
 
 struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
-  JsTokenEqualTo(JsRunnerInterface *js_runner);
+  JsTokenEqualTo(NPP npp);
   JsTokenEqualTo(const JsTokenEqualTo& that) { *this = that; }
   ~JsTokenEqualTo();
 
@@ -219,7 +170,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
  private:
   bool CompareObjects(const JsToken &x, const JsToken &y) const;
 
-  JsRunnerInterface *js_runner_;
+  NPP npp_;
   ScopedNPVariant compare_func_;
 };
 
@@ -242,6 +193,8 @@ enum JsParamType {
   JSPARAM_NULL,
   JSPARAM_UNDEFINED,
   JSPARAM_UNKNOWN,
+  JSPARAM_ABSTRACT_TOKEN,
+  // TODO(nigeltao): Can we eliminate JSPARAM_TOKEN? Is it used anymore?
   JSPARAM_TOKEN
 };
 
@@ -262,10 +215,41 @@ struct JsArgument {
   bool was_specified;
 };
 
+// A JsToken is a script-engine specific concept of a C++ data structure that
+// represents a JavaScript value (e.g. an integer, or a JS object). For
+// example, for Mozilla's Spidermonkey, a JsToken is a jsval, and for IE's
+// ActiveScript, a JsToken is a VARIANT.
+//
+// An AbstractJsToken is a cross-platform abstraction of the various JsToken
+// implementations, so that code that needs to manipulate such things (i.e.
+// the js_marshal code) can do so without being script-engine specfic.
+//
+// An AbstractJsToken can be copied using regular operator=, and the copy will
+// refer to the same underlying JsToken. Typically, an AbstractJsToken will be
+// a pointer to something, and quite possibly a pointer to something on the
+// stack (e.g. in a stack frame belonging to a JsCallContext call). Thus, code
+// that manipulates an AbstractJsToken should not keep a copy of one that will
+// live for longer than the current stack frame, such as storing a copy in a
+// member variable.
+// 
+// However, the way in which an AbstractJsToken is mapped to and from the
+// script-engine specific JsToken is a private implementation detail, and
+// should not be relied upon.
+typedef void* AbstractJsToken;
+typedef std::vector<AbstractJsToken> AbstractJsTokenVector;
+
+// TODO(nigeltao): Eliminate this function. Only code inside js_types_xx.cc
+// should manipulate or refer to JsToken instances. Currently, the only other
+// use of JsToken is in js_marshal.cc, and we should be able to fix up
+// JsScopedToken so that the js_marshal code need not need to know what a
+// (script-engine specific) JsToken is.
+AbstractJsToken JsTokenPtrToAbstractJsToken(JsToken *token);
+
 //------------------------------------------------------------------------------
 // JsTokenToXxx, XxxToJsToken
 //------------------------------------------------------------------------------
-// TODO(nigeltao): Make this section private to js_types.cc - other classes
+// TODO(nigeltao): Take this section out of js_types.h and into a separate
+// js_types_xx.h file, for xx in {activescript,npapi,spidermonkey}. Other code
 // shouldn't manipulate JsTokens directly, they should use the public methods
 // of JsRunnerInterface and JsCallContext.
 

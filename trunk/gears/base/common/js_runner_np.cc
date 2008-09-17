@@ -318,6 +318,89 @@ class JsRunnerBase : public JsRunnerInterface {
         EvalImpl(string_to_eval, false);
   }
 
+  JsToken *AbstractJsTokenToJsTokenPtr(AbstractJsToken token) {
+    return reinterpret_cast<JsToken *>(token);
+  }
+
+  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) {
+    return js_array->SetArray(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
+    return js_object->SetObject(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
+                                        AbstractJsToken token2) {
+    if (!np_variant_comparator_.get()) {
+      np_variant_comparator_.reset(new JsTokenEqualTo(GetContext()));
+    }
+    return (*np_variant_comparator_.get())(
+        *AbstractJsTokenToJsTokenPtr(token1),
+        *AbstractJsTokenToJsTokenPtr(token2));
+  }
+
+  virtual JsParamType JsTokenType(AbstractJsToken token) {
+    return JsTokenGetType(*AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool JsTokenToBool(AbstractJsToken token, bool *out) {
+    return JsTokenToBool_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToInt(AbstractJsToken token, int *out) {
+    return JsTokenToInt_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToDouble(AbstractJsToken token, double *out) {
+    return JsTokenToDouble_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
+    return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToModule(AbstractJsToken token,
+                               ModuleImplBaseClass **out) {
+    return ::JsTokenToModule(
+        NULL, GetContext(),
+        *AbstractJsTokenToJsTokenPtr(token), out);
+  }
+
+  virtual bool BoolToJsToken(bool value,
+                             JsScopedToken *out) {
+    return ::BoolToJsToken(GetContext(), value, out);
+  }
+
+  virtual bool IntToJsToken(int value,
+                            JsScopedToken *out) {
+    return ::IntToJsToken(GetContext(), value, out);
+  }
+
+  virtual bool DoubleToJsToken(double value,
+                               JsScopedToken *out) {
+    return ::DoubleToJsToken(GetContext(), value, out);
+  }
+
+  virtual bool StringToJsToken(const char16 *value,
+                               JsScopedToken *out) {
+    return ::StringToJsToken(GetContext(), value, out);
+  }
+
+  virtual bool NullToJsToken(JsScopedToken *out) {
+    return ::NullToJsToken(GetContext(), out);
+  }
+
+  virtual bool UndefinedToJsToken(JsScopedToken *out) {
+    return ::UndefinedToJsToken(GetContext(), out);
+  }
+
  protected:
   // Alert all monitors that an event has occured.
   void SendEvent(JsEventType event_type) {
@@ -426,6 +509,7 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
+  scoped_ptr<JsTokenEqualTo> np_variant_comparator_;
   ScopedNPObject evaluator_;
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
 };

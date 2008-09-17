@@ -254,6 +254,86 @@ class JsRunnerBase : public JsRunnerInterface {
     ThrowGlobalErrorImpl(this, message);
   }
 
+  JsToken *AbstractJsTokenToJsTokenPtr(AbstractJsToken token) {
+    return reinterpret_cast<JsToken *>(token);
+  }
+
+  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) {
+    return js_array->SetArray(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
+    return js_object->SetObject(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext());
+  }
+
+  virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
+                                        AbstractJsToken token2) {
+    // TODO(michaeln): compare string values rather than pointers?
+    return *AbstractJsTokenToJsTokenPtr(token1) ==
+        *AbstractJsTokenToJsTokenPtr(token2);
+  }
+
+  virtual JsParamType JsTokenType(AbstractJsToken token) {
+    return JsTokenGetType(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_);
+  }
+
+  virtual bool JsTokenToBool(AbstractJsToken token, bool *out) {
+    return JsTokenToBool_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToInt(AbstractJsToken token, int *out) {
+    return JsTokenToInt_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToDouble(AbstractJsToken token, double *out) {
+    return JsTokenToDouble_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
+    return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToModule(AbstractJsToken token,
+                               ModuleImplBaseClass **out) {
+    return GetModuleFromJsToken(
+        *AbstractJsTokenToJsTokenPtr(token), out);
+  }
+
+  virtual bool BoolToJsToken(bool value,
+                             JsScopedToken *out) {
+    return ::BoolToJsToken(js_engine_context_, value, out);
+  }
+
+  virtual bool IntToJsToken(int value,
+                            JsScopedToken *out) {
+    return ::IntToJsToken(js_engine_context_, value, out);
+  }
+
+  virtual bool DoubleToJsToken(double value,
+                               JsScopedToken *out) {
+    return ::DoubleToJsToken(js_engine_context_, value, out);
+  }
+
+  virtual bool StringToJsToken(const char16 *value,
+                               JsScopedToken *out) {
+    return ::StringToJsToken(js_engine_context_, value, out);
+  }
+
+  virtual bool NullToJsToken(JsScopedToken *out) {
+    return ::NullToJsToken(js_engine_context_, out);
+  }
+
+  virtual bool UndefinedToJsToken(JsScopedToken *out) {
+    return ::UndefinedToJsToken(js_engine_context_, out);
+  }
+
  protected:
   // Alert all monitors that an event has occured.
   void SendEvent(JsEventType event_type) {

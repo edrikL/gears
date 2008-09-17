@@ -148,6 +148,29 @@ class JsRunnerInterface {
   // Reports an error to the JsRunner's global scope. Equivalent to the
   // following JavaScript: eval("throw new Error('hello')");
   virtual void ThrowGlobalError(const std::string16 &message) = 0;
+
+  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) = 0;
+  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) = 0;
+
+  virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
+                                        AbstractJsToken token2) = 0;
+
+  virtual JsParamType JsTokenType(AbstractJsToken token) = 0;
+
+  virtual bool JsTokenToBool(AbstractJsToken token, bool *out) = 0;
+  virtual bool JsTokenToInt(AbstractJsToken token, int *out) = 0;
+  virtual bool JsTokenToDouble(AbstractJsToken abstract_js_token,
+                               double *out) = 0;
+  virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) = 0;
+  virtual bool JsTokenToModule(AbstractJsToken token,
+                               ModuleImplBaseClass **out) = 0;
+
+  virtual bool BoolToJsToken(bool value, JsScopedToken *out) = 0;
+  virtual bool IntToJsToken(int value, JsScopedToken *out) = 0;
+  virtual bool DoubleToJsToken(double value, JsScopedToken *out) = 0;
+  virtual bool StringToJsToken(const char16 *value, JsScopedToken *out) = 0;
+  virtual bool NullToJsToken(JsScopedToken *out) = 0;
+  virtual bool UndefinedToJsToken(JsScopedToken *out) = 0;
 };
 
 // Wraps the calls for adding and removing event handlers.  This is designed to
