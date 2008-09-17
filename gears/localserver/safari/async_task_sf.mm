@@ -221,6 +221,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                          full_url,
                          is_capturing,
                          reason_header_value,
+                         NULL,  // content_type_header_value
                          if_mod_since_date,
                          required_cookie,
                          false,
@@ -238,6 +239,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 bool AsyncTask::HttpPost(const char16 *full_url,
                          bool is_capturing,
                          const char16 *reason_header_value,
+                         const char16 *content_type_header_value,
                          const char16 *if_mod_since_date,
                          const char16 *required_cookie,
                          bool disable_browser_cookies,
@@ -251,6 +253,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          full_url,
                          is_capturing,
                          reason_header_value,
+                         content_type_header_value,
                          if_mod_since_date,
                          required_cookie,
                          disable_browser_cookies,
@@ -269,6 +272,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 const char16 *full_url,
                                 bool is_capturing,
                                 const char16 *reason_header_value,
+                                const char16 *content_type_header_value,
                                 const char16 *if_mod_since_date,
                                 const char16 *required_cookie,
                                 bool disable_browser_cookies,
@@ -336,6 +340,13 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   if (reason_header_value && reason_header_value[0]) {
     if (!http_request->SetRequestHeader(HttpConstants::kXGearsReasonHeader,
                                         reason_header_value)) {
+      return false;
+    }
+  }
+
+  if (content_type_header_value && content_type_header_value[0]) {
+    if (!http_request->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                        content_type_header_value)) {
       return false;
     }
   }

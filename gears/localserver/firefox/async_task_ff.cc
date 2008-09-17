@@ -225,6 +225,7 @@ struct AsyncTask::HttpRequestParameters {
   const char16 *full_url;
   bool is_capturing;
   const char16 *reason_header_value;
+  const char16 *content_type_header_value;
   const char16 *if_mod_since_date;
   const char16 *required_cookie;
   bool disable_browser_cookies;
@@ -257,6 +258,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                          full_url,
                          is_capturing,
                          reason_header_value,
+                         NULL,  // content_type_header_value
                          if_mod_since_date,
                          required_cookie,
                          false,
@@ -274,6 +276,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 bool AsyncTask::HttpPost(const char16 *full_url,
                          bool is_capturing,
                          const char16 *reason_header_value,
+                         const char16 *content_type_header_value,
                          const char16 *if_mod_since_date,
                          const char16 *required_cookie,
                          bool disable_browser_cookies,
@@ -287,6 +290,7 @@ bool AsyncTask::HttpPost(const char16 *full_url,
                          full_url,
                          is_capturing,
                          reason_header_value,
+                         content_type_header_value,
                          if_mod_since_date,
                          required_cookie,
                          disable_browser_cookies,
@@ -305,6 +309,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 const char16 *full_url,
                                 bool is_capturing,
                                 const char16 *reason_header_value,
+                                const char16 *content_type_header_value,
                                 const char16 *if_mod_since_date,
                                 const char16 *required_cookie,
                                 bool disable_browser_cookies,
@@ -349,6 +354,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   params.full_url = full_url;
   params.is_capturing = is_capturing;
   params.reason_header_value = reason_header_value;
+  params.content_type_header_value = content_type_header_value;
   params.if_mod_since_date = if_mod_since_date;
   params.required_cookie = required_cookie;
   params.disable_browser_cookies = disable_browser_cookies;
@@ -422,6 +428,14 @@ bool AsyncTask::OnStartHttpGet() {
   if (params_->reason_header_value && params_->reason_header_value[0]) {
     if (!http_request->SetRequestHeader(HttpConstants::kXGearsReasonHeader,
                                         params_->reason_header_value)) {
+      return false;
+    }
+  }
+
+  if (params_->content_type_header_value &&
+      params_->content_type_header_value[0]) {
+    if (!http_request->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                        params_->content_type_header_value)) {
       return false;
     }
   }

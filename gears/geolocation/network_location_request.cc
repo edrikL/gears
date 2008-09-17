@@ -32,7 +32,7 @@
 #include "third_party/jsoncpp/value.h"
 #include "third_party/jsoncpp/writer.h"
 
-static const char *kGearsNetworkLocationProtocolVersion = "1.0.1";
+static const char *kGearsNetworkLocationProtocolVersion = "1.0";
 
 static const char *kLatitudeString = "latitude";
 static const char *kLongitudeString = "longitude";
@@ -119,6 +119,7 @@ void NetworkLocationRequest::Run() {
   bool result = HttpPost(url_.c_str(),
                          false,            // Not capturing, so follow redirects
                          NULL,             // reason_header_value
+                         HttpConstants::kMimeApplicationJson,  // Content-Type
                          NULL,             // mod_since_date
                          NULL,             // required_cookie
                          true,             // disable_browser_cookies
