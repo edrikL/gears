@@ -1234,6 +1234,10 @@ static int winOpen(
        NULL
     );
   }else{
+#if SQLITE_OS_WINCE
+    free(zConverted);
+    return SQLITE_NOMEM;
+#else
     h = CreateFileA((char*)zConverted,
        dwDesiredAccess,
        dwShareMode,
@@ -1242,6 +1246,7 @@ static int winOpen(
        dwFlagsAndAttributes,
        NULL
     );
+#endif
   }
   if( h==INVALID_HANDLE_VALUE ){
     free(zConverted);
@@ -1316,12 +1321,17 @@ static int winDelete(
            && (cnt++ < MX_DELETION_ATTEMPTS)
            && (Sleep(100), 1) );
   }else{
+#if SQLITE_OS_WINCE
+    free(zConverted);
+    return SQLITE_NOMEM;
+#else
     do{
       DeleteFileA(zConverted);
     }while(   (   ((rc = GetFileAttributesA(zConverted)) != INVALID_FILE_ATTRIBUTES)
                || ((error = GetLastError()) == ERROR_ACCESS_DENIED))
            && (cnt++ < MX_DELETION_ATTEMPTS)
            && (Sleep(100), 1) );
+#endif
   }
   free(zConverted);
   OSTRACE2("DELETE \"%s\"\n", zFilename);
@@ -1347,7 +1357,12 @@ static int winAccess(
   if( isNT() ){
     attr = GetFileAttributesW((WCHAR*)zConverted);
   }else{
+#if SQLITE_OS_WINCE
+    free(zConverted);
+    return SQLITE_NOMEM;
+#else
     attr = GetFileAttributesA((char*)zConverted);
+#endif
   }
   free(zConverted);
   switch( flags ){
