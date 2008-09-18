@@ -93,6 +93,7 @@ class JsRunnerBase : public JsRunnerInterface {
   
   virtual ~JsRunnerBase() {
     // Should have called Cleanup() to kill this before getting here();
+    assert(np_variant_comparator_.get() == NULL);
     assert(evaluator_.get() == NULL);
     for (int i = 0; i < MAX_JSEVENTS; i++) {
       assert(0 == event_handlers_[i].size());
@@ -106,6 +107,7 @@ class JsRunnerBase : public JsRunnerInterface {
   // to be succesfully destructed.
   void Cleanup() {
     evaluator_.reset(NULL);
+    np_variant_comparator_.reset(NULL);
   }
   
   bool AddGlobal(const std::string16 &name, ModuleImplBaseClass *object) {
