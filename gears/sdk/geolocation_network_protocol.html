@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<!--
+Copyright 2008, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+  <title>Geolocation API Network Protocol</title>
+  <link rel="stylesheet" type="text/css" href="gears.css" />
+  <style type="text/css">
+    th.nameColumn, td.nameColumn {
+      width: 175px;
+    }
+    th.descriptionColumn, td.descriptionColumn {
+      width: 400px;
+    }
+    th.requiredColumn, td.requiredColumn {
+      width: 50px;
+    }
+    th.typeColumn, td.typeColumn {
+      width: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Geolocation API Network Protocol</h1>
+
+<div id="pagecontent">
+
+<p>This document describes the network protocol that Gears uses to communicate
+with the <a href="api_geolocation.html">network location providers</a> used by
+the <a href="api_geolocation.html">Geolocation API</a>.</p>
+
+<h3>Contents</h3>
+
+<ol class="toc">
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#example">Example</a></li>
+  <li><a href="#request">Request Specification</a></li>
+  <li><a href="#response">Response Specification</a></li>
+</ol>
+
+<h2 id="overview">Overview</h2>
+
+<p>The Gears <A href="api_geolocation.html">Geolocation API</A> can make use of
+network servers to obtain a position fix. The server determines the client's
+position using a set of data provided by the client. This data includes the
+client's IP address and information about any Cell towers or WiFi nodes it can
+detect. This document describes the protocol used to send this data to the
+server and to return a response to the client.</p>
+
+<p>Communication is done over HTTP, with Gears making the request using HTTP
+POST. Both request and response are formatted as JSON, and the content type of
+both is <code>application/json</code>.</p>
+
+<h2 id="example">Example</h2>
+
+<p>An example request and response are shown below.</p>
+
+<h4>Gears Request</h4>
+
+<pre><code>
+{
+  "version": "1.0",
+  "host": "maps.google.com",
+  "home_mobile_country_code": 310,
+  "home_mobile_network_code": 410,
+  "radio_type": "gsm",
+  "carrier": "Vodafone",
+  "request_address": true,
+  "address_language": "en_GB",
+  "location": {
+    "latitude": 51.0,
+    "longitude": -0.1
+  },
+  "cell_towers": [
+    {
+      "cell_id": 42,
+      "location_area_code": 415,
+      "mobile_country_code": 310,
+      "mobile_network_code": 410,
+      "age": 0,
+      "signal_strength": -60,
+      "timing_advance": 5555
+    },
+    {
+      "cell_id": 88,
+      "location_area_code": 415,
+      "mobile_country_code": 310,
+      "mobile_network_code": 580,
+      "age": 0,
+      "signal_strength": -70,
+      "timing_advance": 7777
+    }
+  ],
+  "wifi_towers": [
+    {
+      "mac_address": "01-23-45-67-89-ab",
+      "signal_strength": 8,
+      "age": 0
+    },
+    {
+      "mac_address": "01-23-45-67-89-ac",
+      "signal_strength": 4,
+      "age": 0
+    }
+  ]
+}
+</code></pre>
+
+<h4>Server Response</h4>
+
+<pre><code>
+{
+  "location": {
+    "latitude": 51.0,
+    "longitude": -0.1,
+    "altitude": 30,
+    "horizontal_accuracy": 1200,
+    "vertical_accuracy": 10,
+    "address": {
+      "street_number": "100",
+      "street": "Amphibian Walkway",
+      "postal_code": "94043",
+      "city": "Mountain View",
+      "county": "Mountain View County",
+      "region": "California",
+      "country": "United States of America",
+      "country_code": "US"
+    }
+  }
+}
+</code></pre>
+
+<h2 id="request">Request Specification</h2>
+
+<p>The details of the request protocol are provided below.</p>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">version</td>
+    <td class="descriptionColumn">The protocol version, currently, "1.0".</td>
+    <td class="requiredColumn">Yes</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">host</td>
+    <td class="descriptionColumn">The host of the web page that is requesting the location.</td>
+    <td class="requiredColumn">Yes</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">home_mobile_country_code</td>
+    <td class="descriptionColumn">The mobile country code for the device's home network.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">home_mobile_network_code</td>
+    <td class="descriptionColumn">The mobile network code for the device's home network.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">radio_type</td>
+    <td class="descriptionColumn">Mobile radio type (gsm|cdma|wcdma).</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">carrier</td>
+    <td class="descriptionColumn">Carrier name.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">request_address</td>
+    <td class="descriptionColumn">Request the server to provide an address.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">boolean</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">address_language</td>
+    <td class="descriptionColumn">Specifies the language of the requested address. Uses RFC 3066.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">location</td>
+    <td class="descriptionColumn">Current position. See description below.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">object</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">cell_towers</td>
+    <td class="descriptionColumn">Array of cell data objects. See description below.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">array</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">wifi_towers</td>
+    <td class="descriptionColumn">Array of wifi data objects. See description below.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">array</td>
+  </tr>
+</table>
+
+<h4>Location Object</h4>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">latitude</td>
+    <td class="descriptionColumn">Current latitude in degrees (WGS84 datum).</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">double</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">longitude</td>
+    <td class="descriptionColumn">Current longitude in degrees (WGS84 datum).</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">double</td>
+  </tr>
+</table>
+
+<h4>Cell Data Object</h4>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">cell_id</td>
+    <td class="descriptionColumn">Unique identifier of the cell. (CID for GSM, BID for CDMA)</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">location_area_code</td>
+    <td class="descriptionColumn">Location Area Code (LAC for GSM, NID for CDMA)</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">mobile_country_code</td>
+    <td class="descriptionColumn">Mobile Country Code (MCC for GSM and CDMA)</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">mobile_network_code</td>
+    <td class="descriptionColumn">Mobile Network Code (MNC for GSM, SID for CDMA)</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">age</td>
+    <td class="descriptionColumn">The number of milliseconds since this cell was primary. If age is 0, the cell_id represents a current measurement.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">signal_strength</td>
+    <td class="descriptionColumn">Radio signal strength measured in dBm.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">timing_advance</td>
+    <td class="descriptionColumn">Represents the distance from the cell tower. Each unit is roughly 550 meters.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+</table>
+
+<h4>Wifi Data Object</h4>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">mac_address</td>
+    <td class="descriptionColumn">The mac address of the wifi node.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">signal_strength</td>
+    <td class="descriptionColumn">Current signal strength measured in dBm.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">age</td>
+    <td class="descriptionColumn">The number of milliseconds since this access point was detected.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">channel</td>
+    <td class="descriptionColumn">Channel.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">signal_to_noise</td>
+    <td class="descriptionColumn">Current signal to noise ratio measured in dB.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">ssid</td>
+    <td class="descriptionColumn">SSID.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+</table>
+
+<h2 id="response">Response Specification</h2>
+
+<p>If the request is malformed, the server must respond with HTTP status 400.
+The details of the error should be described in plain text in the response.</p>
+
+<p>If the request is valid, the server must reply with HTTP status 200 and the
+body should specify an object with a single <code>location</code> property. If a
+position fix was successfully determined, the <code>location</code> property
+must be populated with the fields descibed below. Otherwise, it must be
+null.</p>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">latitude</td>
+    <td class="descriptionColumn">Latitude of the fix, in degrees (WGS84 datum).</td>
+    <td class="requiredColumn">Yes</td>
+    <td class="typeColumn">double</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">longitude</td>
+    <td class="descriptionColumn">Longitude of the fix, in degrees (WGS84 datum).</td>
+    <td class="requiredColumn">Yes</td>
+    <td class="typeColumn">double</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">altitude</td>
+    <td class="descriptionColumn">Altitude of the fix, in meters (WGS84 datum).</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">horizontal_accuracy</td>
+    <td class="descriptionColumn">The horizontal accuracy of the fix, in meters at a 95% confidence level.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">vertical_accuracy</td>
+    <td class="descriptionColumn">The vertical accuracy of the fix, in meters.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">int</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">address</td>
+    <td class="descriptionColumn">The address of the fix if requested and available. See description below.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">object</td>
+  </tr>
+</table>
+
+<h4>Address Object</h4>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">street_number</td>
+    <td class="descriptionColumn">The building's street number.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">street</td>
+    <td class="descriptionColumn">Street name.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">premises</td>
+    <td class="descriptionColumn">Premises, e.g. building name.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">city</td>
+    <td class="descriptionColumn">City name.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">county</td>
+    <td class="descriptionColumn">County name.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">region</td>
+    <td class="descriptionColumn">Region, e.g. a state in the US.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">country</td>
+    <td class="descriptionColumn">Country.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">country_code</td>
+    <td class="descriptionColumn">Country code (ISO 3166-1).</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">postal_code</td>
+    <td class="descriptionColumn">Postal code. This is the zip code in the US and postcode in the UK.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+</table>
+
+</div>  <!-- pagecontent -->
+
+</body>
+</html>
