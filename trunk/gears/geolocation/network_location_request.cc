@@ -32,7 +32,7 @@
 #include "third_party/jsoncpp/value.h"
 #include "third_party/jsoncpp/writer.h"
 
-static const char *kGearsNetworkLocationProtocolVersion = "1.0";
+static const char *kGearsNetworkLocationProtocolVersion = "1.0.1";
 
 static const char *kLatitudeString = "latitude";
 static const char *kLongitudeString = "longitude";
