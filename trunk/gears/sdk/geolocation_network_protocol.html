@@ -86,7 +86,7 @@ both is <code>application/json</code>.</p>
 
 <pre><code>
 {
-  "version": "1.0",
+  "version": "1.0.1",
   "host": "maps.google.com",
   "home_mobile_country_code": 310,
   "home_mobile_network_code": 410,
@@ -140,9 +140,9 @@ both is <code>application/json</code>.</p>
   "location": {
     "latitude": 51.0,
     "longitude": -0.1,
-    "altitude": 30,
-    "horizontal_accuracy": 1200,
-    "vertical_accuracy": 10,
+    "altitude": 30.1,
+    "horizontal_accuracy": 1200.4,
+    "vertical_accuracy": 10.6,
     "address": {
       "street_number": "100",
       "street": "Amphibian Walkway",
@@ -170,7 +170,7 @@ both is <code>application/json</code>.</p>
   </tr>
   <tr>
     <td class="nameColumn">version</td>
-    <td class="descriptionColumn">The protocol version, currently, "1.0".</td>
+    <td class="descriptionColumn">The protocol version, currently, "1.0.1".</td>
     <td class="requiredColumn">Yes</td>
     <td class="typeColumn">string</td>
   </tr>
@@ -393,19 +393,19 @@ null.</p>
     <td class="nameColumn">altitude</td>
     <td class="descriptionColumn">Altitude of the fix, in meters (WGS84 datum).</td>
     <td class="requiredColumn">No</td>
-    <td class="typeColumn">int</td>
+    <td class="typeColumn">double</td>
   </tr>
   <tr>
     <td class="nameColumn">horizontal_accuracy</td>
     <td class="descriptionColumn">The horizontal accuracy of the fix, in meters at a 95% confidence level.</td>
     <td class="requiredColumn">No</td>
-    <td class="typeColumn">int</td>
+    <td class="typeColumn">double</td>
   </tr>
   <tr>
     <td class="nameColumn">vertical_accuracy</td>
     <td class="descriptionColumn">The vertical accuracy of the fix, in meters.</td>
     <td class="requiredColumn">No</td>
-    <td class="typeColumn">int</td>
+    <td class="typeColumn">double</td>
   </tr>
   <tr>
     <td class="nameColumn">address</td>
