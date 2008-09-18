@@ -43,10 +43,10 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/permissions_manager.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
+#include "gears/base/common/url_utils.h"  // For ResolveAndNormalize()
 #include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/geolocation_db.h"
-#include "third_party/googleurl/src/gurl.h"
 
 static const char16 *kDefaultLocationProviderUrl =
     STRING16(L"http://www.google.com/loc/json");
@@ -459,10 +459,14 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     // Check if the url is valid. If not, skip this URL. This also handles the
     // case where the URL is 'GPS', which would confuse the location provider
     // pool.
-    GURL url(urls[i]);
-    if (url.is_valid()) {
+    std::string16 absolute_url;
+    // Form an absolute URL if the supplied URL is relative. This fails if the
+    // URL is not valid.
+    if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
+                            urls[i].c_str(),
+                            &absolute_url)) {
       LocationProviderBase *network_provider =
-          pool->Register(urls[i],
+          pool->Register(absolute_url,
                          host_name,
                          info->request_address,
                          info->address_language,
