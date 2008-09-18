@@ -153,18 +153,6 @@ PermissionsDialog::CustomContent* PermissionsDialog::CreateCustomContent(
   if (context->is_exception_set())
     return NULL;
 
-  // If site_name was not provided, ignore value provided for image_url and
-  // clear its value.
-  if (!argv[0].was_specified) {
-    image_url = STRING16(L"");
-  }
-
-  // If image_url or site_name was not provided, ignore value provided for
-  // extra_message and clear its value.
-  if (!argv[0].was_specified || !argv[1].was_specified) {
-    extra_message = STRING16(L"");
-  }
-
   return new CustomContent(image_url.c_str(),
                            site_name.c_str(),
                            extra_message.c_str());
