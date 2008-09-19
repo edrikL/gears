@@ -349,6 +349,16 @@ SQLITE_EXTENSION_INIT1
 # define TRACE(A)
 #endif
 
+#if 0
+/* Useful to set breakpoints.  See main.c sqlite3Corrupt(). */
+static int fts2Corrupt(void){
+  return SQLITE_CORRUPT;
+}
+# define SQLITE_CORRUPT_BKPT fts2Corrupt()
+#else
+# define SQLITE_CORRUPT_BKPT SQLITE_CORRUPT
+#endif
+
 /* It is not safe to call isspace(), tolower(), or isalnum() on
 ** hi-bit-set characters.  This is the same solution used in the
 ** tokenizer.
@@ -3435,8 +3445,11 @@ static int fulltextNext(sqlite3_vtab_cursor *pCursor){
       c->eof = 0;
       return SQLITE_OK;
     }
-    /* an error occurred; abort */
-    return rc==SQLITE_DONE ? SQLITE_ERROR : rc;
+
+    /* Corrupt if the index refers to missing document. */
+    if( rc==SQLITE_DONE ) return SQLITE_CORRUPT_BKPT;
+
+    return rc;
   }
 }
 
@@ -5091,6 +5104,9 @@ static void leavesReaderDestroy(LeavesReader *pReader){
 ** the leaf data was entirely contained in the root), or from the
 ** stream of blocks between iStartBlockid and iEndBlockid, inclusive.
 */
+/* TODO(shess): Figure out a means of indicating how many leaves are
+** expected, for purposes of detecting corruption.
+*/
 static int leavesReaderInit(fulltext_vtab *v,
                             int idx,
                             sqlite_int64 iStartBlockid,
@@ -5102,6 +5118,10 @@ static int leavesReaderInit(fulltext_vtab *v,
 
   dataBufferInit(&pReader->rootData, 0);
   if( iStartBlockid==0 ){
+    /* Corrupt if this can't be a leaf node. */
+    if( pRootData==NULL || nRootData<1 || pRootData[0]!='\0' ){
+      return SQLITE_CORRUPT_BKPT;
+    }
     /* Entire leaf level fit in root data. */
     dataBufferReplace(&pReader->rootData, pRootData, nRootData);
     leafReaderInit(pReader->rootData.pData, pReader->rootData.nData,
@@ -5112,22 +5132,48 @@ static int leavesReaderInit(fulltext_vtab *v,
     if( rc!=SQLITE_OK ) return rc;
 
     rc = sqlite3_bind_int64(s, 1, iStartBlockid);
-    if( rc!=SQLITE_OK ) return rc;
+    if( rc!=SQLITE_OK ) goto err;
 
     rc = sqlite3_bind_int64(s, 2, iEndBlockid);
-    if( rc!=SQLITE_OK ) return rc;
+    if( rc!=SQLITE_OK ) goto err;
 
     rc = sqlite3_step(s);
+
+    /* Corrupt if interior node referenced missing leaf node. */
     if( rc==SQLITE_DONE ){
-      pReader->eof = 1;
-      return SQLITE_OK;
+      rc = SQLITE_CORRUPT_BKPT;
+      goto err;
     }
-    if( rc!=SQLITE_ROW ) return rc;
+
+    if( rc!=SQLITE_ROW ) goto err;
+    rc = SQLITE_OK;
+
+    /* Corrupt if leaf data isn't a blob. */
+    if( sqlite3_column_type(s, 0)!=SQLITE_BLOB ){
+      rc = SQLITE_CORRUPT_BKPT;
+    }else{
+      const char *pLeafData = sqlite3_column_blob(s, 0);
+      int nLeafData = sqlite3_column_bytes(s, 0);
+
+      /* Corrupt if this can't be a leaf node. */
+      if( pLeafData==NULL || nLeafData<1 || pLeafData[0]!='\0' ){
+        rc = SQLITE_CORRUPT_BKPT;
+      }else{
+        leafReaderInit(pLeafData, nLeafData, &pReader->leafReader);
+      }
+    }
+
+ err:
+    if( rc!=SQLITE_OK ){
+      if( idx==-1 ){
+        sqlite3_finalize(s);
+      }else{
+        sqlite3_reset(s);
+      }
+      return rc;
+    }
 
     pReader->pStmt = s;
-    leafReaderInit(sqlite3_column_blob(pReader->pStmt, 0),
-                   sqlite3_column_bytes(pReader->pStmt, 0),
-                   &pReader->leafReader);
   }
   return SQLITE_OK;
 }
@@ -5150,10 +5196,22 @@ static int leavesReaderStep(fulltext_vtab *v, LeavesReader *pReader){
       pReader->eof = 1;
       return rc==SQLITE_DONE ? SQLITE_OK : rc;
     }
-    leafReaderDestroy(&pReader->leafReader);
-    leafReaderInit(sqlite3_column_blob(pReader->pStmt, 0),
-                   sqlite3_column_bytes(pReader->pStmt, 0),
-                   &pReader->leafReader);
+
+    /* Corrupt if leaf data isn't a blob. */
+    if( sqlite3_column_type(pReader->pStmt, 0)!=SQLITE_BLOB ){
+      return SQLITE_CORRUPT_BKPT;
+    }else{
+      const char *pLeafData = sqlite3_column_blob(pReader->pStmt, 0);
+      int nLeafData = sqlite3_column_bytes(pReader->pStmt, 0);
+
+      /* Corrupt if this can't be a leaf node. */
+      if( pLeafData==NULL || nLeafData<1 || pLeafData[0]!='\0' ){
+        return SQLITE_CORRUPT_BKPT;
+      }
+
+      leafReaderDestroy(&pReader->leafReader);
+      leafReaderInit(pLeafData, nLeafData, &pReader->leafReader);
+    }
   }
   return SQLITE_OK;
 }
@@ -5215,6 +5273,14 @@ static int leavesReadersInit(fulltext_vtab *v, int iLevel,
     const char *pRootData = sqlite3_column_blob(s, 2);
     int nRootData = sqlite3_column_bytes(s, 2);
 
+    /* Corrupt if we get back different types than we stored. */
+    if( sqlite3_column_type(s, 0)!=SQLITE_INTEGER ||
+        sqlite3_column_type(s, 1)!=SQLITE_INTEGER ||
+        sqlite3_column_type(s, 2)!=SQLITE_BLOB ){
+      rc = SQLITE_CORRUPT_BKPT;
+      break;
+    }
+
     assert( i<MERGE_COUNT );
     rc = leavesReaderInit(v, i, iStart, iEnd, pRootData, nRootData,
                           &pReaders[i]);
@@ -5226,6 +5292,7 @@ static int leavesReadersInit(fulltext_vtab *v, int iLevel,
     while( i-->0 ){
       leavesReaderDestroy(&pReaders[i]);
     }
+    sqlite3_reset(s);          /* So we don't leave a lock. */
     return rc;
   }
 
@@ -5602,11 +5669,27 @@ static int loadAndGetChildrenContaining(
   if( rc!=SQLITE_OK ) return rc;
 
   rc = sqlite3_step(s);
-  if( rc==SQLITE_DONE ) return SQLITE_ERROR;
+  /* Corrupt if interior node references missing child node. */
+  if( rc==SQLITE_DONE ) return SQLITE_CORRUPT_BKPT;
   if( rc!=SQLITE_ROW ) return rc;
 
-  getChildrenContaining(sqlite3_column_blob(s, 0), sqlite3_column_bytes(s, 0),
-                        pTerm, nTerm, isPrefix, piStartChild, piEndChild);
+  /* Corrupt if child node isn't a blob. */
+  if( sqlite3_column_type(s, 0)!=SQLITE_BLOB ){
+    sqlite3_reset(s);         /* So we don't leave a lock. */
+    return SQLITE_CORRUPT_BKPT;
+  }else{
+    const char *pData = sqlite3_column_blob(s, 0);
+    int nData = sqlite3_column_bytes(s, 0);
+
+    /* Corrupt if child is not a valid interior node. */
+    if( pData==NULL || nData<1 || pData[0]=='\0' ){
+      sqlite3_reset(s);         /* So we don't leave a lock. */
+      return SQLITE_CORRUPT_BKPT;
+    }
+
+    getChildrenContaining(pData, nData, pTerm, nTerm,
+                          isPrefix, piStartChild, piEndChild);
+  }
 
   /* We expect only one row.  We must execute another sqlite3_step()
    * to complete the iteration; otherwise the table will remain
@@ -5689,7 +5772,8 @@ static int loadSegment(fulltext_vtab *v, const char *pData, int nData,
   DataBuffer result;
   int rc;
 
-  assert( nData>1 );
+  /* Corrupt if segment root can't be valid. */
+  if( pData==NULL || nData<1 ) return SQLITE_CORRUPT_BKPT;
 
   /* This code should never be called with buffered updates. */
   assert( v->nPendingData<0 );
@@ -5743,6 +5827,14 @@ static int termSelect(fulltext_vtab *v, int iColumn,
     const char *pData = sqlite3_column_blob(s, 2);
     const int nData = sqlite3_column_bytes(s, 2);
     const sqlite_int64 iLeavesEnd = sqlite3_column_int64(s, 1);
+
+    /* Corrupt if we get back different types than we stored. */
+    if( sqlite3_column_type(s, 1)!=SQLITE_INTEGER ||
+        sqlite3_column_type(s, 2)!=SQLITE_BLOB ){
+      rc = SQLITE_CORRUPT_BKPT;
+      goto err;
+    }
+
     rc = loadSegment(v, pData, nData, iLeavesEnd, pTerm, nTerm, isPrefix,
                      &doclist);
     if( rc!=SQLITE_OK ) goto err;
@@ -5762,6 +5854,7 @@ static int termSelect(fulltext_vtab *v, int iColumn,
   }
 
  err:
+  sqlite3_reset(s);         /* So we don't leave a lock. */
   dataBufferDestroy(&doclist);
   return rc;
 }
@@ -6254,6 +6347,14 @@ static void optimizeFunc(sqlite3_context *pContext,
       const char *pRootData = sqlite3_column_blob(s, 2);
       int nRootData = sqlite3_column_bytes(s, 2);
 
+      /* Corrupt if we get back different types than we stored. */
+      if( sqlite3_column_type(s, 0)!=SQLITE_INTEGER ||
+          sqlite3_column_type(s, 1)!=SQLITE_INTEGER ||
+          sqlite3_column_type(s, 2)!=SQLITE_BLOB ){
+        rc = SQLITE_CORRUPT_BKPT;
+        break;
+      }
+
       assert( i<nReaders );
       rc = leavesReaderInit(v, -1, iStart, iEnd, pRootData, nRootData,
                             &readers[i].reader);
@@ -6267,6 +6368,8 @@ static void optimizeFunc(sqlite3_context *pContext,
     if( rc==SQLITE_DONE ){
       assert( i==nReaders );
       rc = optimizeInternal(v, readers, nReaders, &writer);
+    }else{
+      sqlite3_reset(s);      /* So we don't leave a lock. */
     }
 
     while( i-- > 0 ){
@@ -6330,9 +6433,18 @@ static int collectSegmentTerms(fulltext_vtab *v, sqlite3_stmt *s,
   const sqlite_int64 iEndBlockid = sqlite3_column_int64(s, 1);
   const char *pRootData = sqlite3_column_blob(s, 2);
   const int nRootData = sqlite3_column_bytes(s, 2);
+  int rc;
   LeavesReader reader;
-  int rc = leavesReaderInit(v, 0, iStartBlockid, iEndBlockid,
-                            pRootData, nRootData, &reader);
+
+  /* Corrupt if we get back different types than we stored. */
+  if( sqlite3_column_type(s, 0)!=SQLITE_INTEGER ||
+      sqlite3_column_type(s, 1)!=SQLITE_INTEGER ||
+      sqlite3_column_type(s, 2)!=SQLITE_BLOB ){
+    return SQLITE_CORRUPT_BKPT;
+  }
+
+  rc = leavesReaderInit(v, 0, iStartBlockid, iEndBlockid,
+                        pRootData, nRootData, &reader);
   if( rc!=SQLITE_OK ) return rc;
 
   while( rc==SQLITE_OK && !leavesReaderAtEnd(&reader) ){
