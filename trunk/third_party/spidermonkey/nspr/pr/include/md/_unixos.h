@@ -76,7 +76,7 @@
  */
 #include <sys/time.h>
 #include <sys/types.h>
-#if defined(AIX)  /* Only pre-4.2 AIX needs it, but for simplicity... */
+#if defined(AIX) || defined(SYMBIAN)
 #include <sys/select.h>
 #endif
 

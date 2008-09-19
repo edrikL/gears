@@ -75,7 +75,9 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
  */
 #ifdef OS_ANDROID
 // gcc isn't happy with some of the asserts in here.
-#define JS_STATIC_ASSERT(condition)
+#define JS_STATIC_ASSERT(condition) 
+#elif defined(OS_SYMBIAN)
+#define JS_STATIC_ASSERT(condition) extern void js_static_assert(int arg[1])
 #else
 #define JS_STATIC_ASSERT(condition)                                           \
     extern void js_static_assert(int arg[(condition) ? 1 : -1])

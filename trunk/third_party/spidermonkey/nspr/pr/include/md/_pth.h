@@ -147,7 +147,8 @@
 	|| defined(HPUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
 	|| defined(VMS) || defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID)
+	|| defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID) \
+	|| defined(SYMBIAN)
 #ifdef __GNU__
 /* Hurd pthreads don't have an invalid value for pthread_t. -- rmh */
 #error Using Hurd pthreads
@@ -204,7 +205,7 @@
 	|| defined(LINUX) || defined(__GNU__)|| defined(__GLIBC__) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(VMS) || defined(UNIXWARE) \
-	|| defined(DARWIN) || defined(OS_ANDROID)
+	|| defined(DARWIN) || defined(OS_ANDROID) || defined(SYMBIAN)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
@@ -235,7 +236,7 @@
 #endif /* defined(_PR_DCETHREADS) */
 
 #elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
-	|| defined(FREEBSD) || defined(OS_ANDROID)
+	|| defined(FREEBSD) || defined(OS_ANDROID) || defined(SYMBIAN)
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
 #define PT_PRIO_MAX            sched_get_priority_max(SCHED_OTHER)
 #elif defined(NTO)
@@ -295,7 +296,8 @@ extern int (*_PT_aix_yield_fcn)();
 	|| defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(NTO) || defined(DARWIN) \
-	|| defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID)
+	|| defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID) \
+	|| defined(SYMBIAN)
 #define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define _PT_PTHREAD_YIELD for this platform"

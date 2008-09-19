@@ -66,3 +66,38 @@ Modifications to /xpcom:
 Gears-only files:
 * Added gears-only file at gears_include/mozjs_api.h.
 * Files under gears_npapi_bindings/ are Gears-specific.
+
+Modifications to NSPR for Symbian:
+* merged the changes from NSPR bug # 432430 to support Symbian
+ (see https://bugzilla.mozilla.org/show_bug.cgi?id=432430).
+* added handling of _PR_STATIC_BUILD flag as on Android.
+* detailed list of changed files:
+   - nspr/pr/include/md/_pth.h
+   - nspr/pr/include/md/_unixos.h
+   - nspr/pr/include/md/prosdep.h
+   - nspr/pr/include/prtypes.h
+   - nspr/pr/src/io/prmapopt.c
+   - nspr/pr/src/md/prosdep.c
+   - nspr/pr/src/md/unix/unix.c
+   - nspr/pr/src/md/unix/uxproces.c
+   - nspr/pr/src/md/unix/uxrng.c
+   - nspr/pr/src/md/unix/uxshm.c
+   - nspr/pr/src/misc/prnetdb.c
+   - nspr/pr/src/misc/prsystem.c
+   - nspr/pr/src/pthreads/ptio.c
+   - nspr/pr/src/pthreads/ptsynch.c
+   - nspr/pr/src/pthreads/ptthread.c
+* added files:
+   - nspr/pr/include/md/_symbian.cfg
+   - nspr/pr/include/md/_symbian.h
+   - nspr/pr/src/md/unix/symbian.c
+
+Modifications to JS for Symbian:
+* Changed JS_STATIC_ASSERT() to a hardcoded success value.
+* Removed support for mmap in the garbage collector, as OpenC's mmap 
+  implementation does not support MAP_ANON
+* detailed list of changed files:
+   - js/src/jsgc.c
+   - js/src/jstypes.h
+   - js/src/jsutil.h
+  

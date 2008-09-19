@@ -187,7 +187,10 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 
 #include "primpl.h"
 
+#ifndef SYMBIAN
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
+#endif
+
 #ifdef LINUX
 /* TCP_CORK is not defined in <netinet/tcp.h> on Red Hat Linux 6.0 */
 #ifndef TCP_CORK
@@ -209,7 +212,8 @@ static PRBool _pr_ipv6_v6only_on_by_default;
     || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
     || defined(BSDI) || defined(VMS) || defined(NTO) || defined(DARWIN) \
-    || defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID)
+    || defined(UNIXWARE) || defined(RISCOS) || defined(OS_ANDROID) \
+    || defined(SYMBIAN)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -1671,6 +1675,15 @@ static PRFileDesc* pt_Accept(
     }
 #endif
 
+#ifdef SYMBIAN
+    /* Symbian OS has a special strict requirement on addr==NULL condition */
+    if (!addr)
+    {
+        PRNetAddr add;
+        osfd = accept(fd->secret->md.osfd, (struct sockaddr*)&add, &addr_len);
+    }
+    else
+#endif
     osfd = accept(fd->secret->md.osfd, (struct sockaddr*)addr, &addr_len);
     syserrno = errno;
 
@@ -1826,7 +1839,14 @@ static PRInt32 pt_Recv(
     if (0 == flags)
         osflags = 0;
     else if (PR_MSG_PEEK == flags)
+#ifndef SYMBIAN
         osflags = MSG_PEEK;
+#else
+    {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return -1;
+    }
+#endif
     else
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -3252,7 +3272,7 @@ static PRIOMethods _pr_socketpollfd_methods = {
     || defined(AIX) || defined(FREEBSD) || defined(NETBSD) \
     || defined(OPENBSD) || defined(BSDI) || defined(VMS) || defined(NTO) \
     || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS) \
-    || defined(OS_ANDROID)
+    || defined(OS_ANDROID) || defined(SYMBIAN)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"
@@ -4357,6 +4377,10 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
 {
     PRInt32 osfd[2];
 
+#ifdef SYMBIAN
+    PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+    return PR_FAILURE;
+#else
     if (pt_TestAbort()) return PR_FAILURE;
 
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, osfd) == -1) {
@@ -4377,6 +4401,7 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
         return PR_FAILURE;
     }
     return PR_SUCCESS;
+#endif
 }  /* PR_NewTCPSocketPair */
 
 PR_IMPLEMENT(PRStatus) PR_CreatePipe(
@@ -4432,6 +4457,9 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
         if (fcntl(fd->secret->md.osfd, F_SETFD,
         inheritable ? 0 : FD_CLOEXEC) == -1)
         {
+#ifdef SYMBIAN
+          PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+#endif
             return PR_FAILURE;
         }
         fd->secret->inheritable = (_PRTriStateBool) inheritable;
@@ -4607,9 +4635,15 @@ PR_IMPLEMENT(PRInt32) PR_GetSysfdTableMax(void)
 #if defined(XP_UNIX) && !defined(AIX) && !defined(VMS)
     struct rlimit rlim;
 
+#ifdef SYMBIAN
+    /* Symbian OS only use "RLIM_NLIMITS", so no getrlimit() and setrlimit() */
+    rlim.rlim_cur = RLIM_NLIMITS;
+    rlim.rlim_max = RLIM_NLIMITS;
+#else
     if ( getrlimit(RLIMIT_NOFILE, &rlim) < 0) 
        return -1;
-
+#endif
+    
     return rlim.rlim_max;
 #elif defined(AIX) || defined(VMS)
     return sysconf(_SC_OPEN_MAX);
@@ -4631,9 +4665,11 @@ PR_IMPLEMENT(PRInt32) PR_SetSysfdTableSize(PRIntn table_size)
     else
         rlim.rlim_cur = table_size;
 
+#ifndef SYMBIAN
     if ( setrlimit(RLIMIT_NOFILE, &rlim) < 0) 
         return -1;
-
+#endif
+    
     return rlim.rlim_cur;
 #elif defined(AIX) || defined(VMS)
     return -1;

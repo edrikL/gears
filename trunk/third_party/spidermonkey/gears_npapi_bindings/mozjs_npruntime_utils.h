@@ -44,6 +44,9 @@
 #if BROWSER_WEBKIT
 #include <WebKit/npapi.h>
 #include <WebKit/npruntime.h>
+#elif defined(OS_SYMBIAN)
+#include <npapi.h>
+#include <npscript.h>
 #else
 #include "third_party/npapi/npapi.h"
 #include "third_party/npapi/npruntime.h"

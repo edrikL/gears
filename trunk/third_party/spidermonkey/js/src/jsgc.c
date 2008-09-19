@@ -131,6 +131,10 @@ JS_END_EXTERN_C
 # endif
 #endif
 
+#ifdef OS_SYMBIAN
+// Symbian OpenC mmap implementation is not fully functional
+#undef JS_GC_USE_MMAP
+#endif
 /*
  * A GC arena contains a fixed number of flag bits for each thing in its heap,
  * and supports O(1) lookup of a flag given its thing's address.
