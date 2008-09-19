@@ -419,10 +419,16 @@ static bool ParseServerResponse(const std::string &response_body,
   Json::Value response_object;
   if (!reader.parse(response_body, response_object, false)) {
     LOG(("ParseServerResponse() : Failed to parse response : %s.\n",
-         reader.getFormatedErrorMessages().c_str()));
+        reader.getFormatedErrorMessages().c_str()));
     return false;
   }
-  assert(response_object.isObject());
+
+  if (!response_object.isObject()) {
+    LOG(("ParseServerResponse() : Unexpected response type: %d.\n",
+        response_object.type()));
+    return false;
+  }
+
   Json::Value location = response_object["location"];
 
   // If the network provider was unable to provide a position fix, it should
