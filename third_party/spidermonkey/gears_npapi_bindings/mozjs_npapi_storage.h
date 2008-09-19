@@ -30,6 +30,8 @@
 #include "third_party/spidermonkey/gears_include/mozjs_api.h"
 #if BROWSER_WEBKIT
 // NPAPI header not needed for WebKit.
+#elif defined(OS_SYMBIAN)
+#include <npapi.h>
 #else
 #include "third_party/npapi/npapi.h"
 #endif

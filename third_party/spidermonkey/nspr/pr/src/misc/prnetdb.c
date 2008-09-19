@@ -1277,6 +1277,23 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
 		staticBuf = nspr_getprotobyname_r(name);
 #else
 		staticBuf = getprotobyname_r(name);
+#ifdef SYMBIAN
+        /* In Symbian OS, getprotobyname() give NULL in servent.s_aliases */
+        if (NULL == staticBuf->p_aliases)
+        {
+            char* aliases[2];
+            if (NULL == strcmp(staticBuf->p_name, "ip"))
+                aliases[0] = "IP";
+            else if (NULL == strcmp(staticBuf->p_name, "tcp"))
+                aliases[0] = "TCP";
+            else if (NULL == strcmp(staticBuf->p_name, "udp"))
+                aliases[0] = "UDP";
+            else
+                aliases[0] = "UNKNOWN";
+            aliases[1] = NULL;
+            staticBuf->p_aliases = aliases;
+        }
+#endif
 #endif
 		if (NULL == staticBuf)
 		{
@@ -1361,6 +1378,23 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
 		staticBuf = nspr_getprotobynumber_r(number);
 #else
 		staticBuf = getprotobynumber_r(number);
+#ifdef SYMBIAN
+        /* In Symbian OS, getprotobyname() give NULL in servent.s_aliases */
+        if (NULL == staticBuf->p_aliases)
+        {
+            char* aliases[2];
+            if (NULL == strcmp(staticBuf->p_name, "ip"))
+                aliases[0] = "IP";
+            else if (NULL == strcmp(staticBuf->p_name, "tcp"))
+                aliases[0] = "TCP";
+            else if (NULL == strcmp(staticBuf->p_name, "udp"))
+                aliases[0] = "UDP";
+            else
+                aliases[0] = "UNKNOWN";
+            aliases[1] = NULL;
+            staticBuf->p_aliases = aliases;
+        }
+#endif
 #endif
 		if (NULL == staticBuf)
 		{

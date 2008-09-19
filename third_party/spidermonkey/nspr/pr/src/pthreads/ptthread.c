@@ -52,6 +52,12 @@
 #include <string.h>
 #include <signal.h>
 
+#ifdef SYMBIAN
+/* There is a _POSIX_THREAD_PRIORITY_SCHEDULING in unixtd.h in Symbian OS
+ * include header files, so undef it here */
+#undef _POSIX_THREAD_PRIORITY_SCHEDULING
+#endif
+
 /*
  * Record whether or not we have the privilege to set the scheduling
  * policy and priority of threads.  0 means that privilege is available.
@@ -1153,6 +1159,8 @@ static void null_signal_handler(PRIntn sig);
 static void init_pthread_gc_support(void)
 {
     PRIntn rv;
+#ifndef SYMBIAN
+    /* All signal group functions are not implemented in Symbian OS */
 
 #if defined(_PR_DCETHREADS)
 	rv = sigemptyset(&javagc_vtalarm_sigmask);
@@ -1188,6 +1196,8 @@ static void init_pthread_gc_support(void)
     }
 #endif  /* defined(PT_NO_SIGTIMEDWAIT) */
 #endif /* defined(_PR_DCETHREADS) */
+	
+#endif /* SYMBIAN */
 }
 
 PR_IMPLEMENT(void) PR_SetThreadGCAble(void)
@@ -1339,7 +1349,8 @@ static void suspend_signal_handler(PRIntn sig)
 	{
 #if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD) \
     && !defined(BSDI) && !defined(VMS) && !defined(UNIXWARE) \
-    && !defined(DARWIN) && !defined(RISCOS) /*XXX*/
+    && !defined(DARWIN) && !defined(RISCOS) \
+    && !defined(SYMBIAN) /*XXX*/
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif
@@ -1385,6 +1396,8 @@ static void pt_SuspendSet(PRThread *thred)
 	   thred, thred->id));
 #if defined(VMS)
     rv = thread_suspend(thred);
+#elif defined(SYMBIAN)
+    /* All signal group functions are not implemented in Symbian OS */
 #else
     rv = pthread_kill (thred->id, SIGUSR2);
 #endif
@@ -1441,6 +1454,8 @@ static void pt_ResumeSet(PRThread *thred)
 #if defined(PT_NO_SIGTIMEDWAIT)
 #if defined(VMS)
 	thread_resume(thred);
+#elif defined(SYMBIAN) 
+  /* All signal group functions are not implemented in Symbian OS */
 #else
 	pthread_kill(thred->id, SIGUSR1);
 #endif

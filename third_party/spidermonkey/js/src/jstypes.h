@@ -251,6 +251,12 @@
 # else
 #  error "Please add this platform configuration"
 # endif
+#elif defined(OS_SYMBIAN)
+# ifdef __WINS__    /* emulator build */
+#  include "jsautocfg.h"     /* Use auto-detected configuration */
+# else
+#  include "jsarmeabicfg.h"   /* ARM EABI gcc configuration */
+# endif
 #elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
 # include "jsautocfg.h"     /* Use auto-detected configuration */
 #else
