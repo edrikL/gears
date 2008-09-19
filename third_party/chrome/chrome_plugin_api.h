@@ -59,7 +59,7 @@ extern "C" {
 // The current version of the API, used by the 'version' field of CPPluginFuncs
 // and CPBrowserFuncs.
 #define CP_MAJOR_VERSION 0
-#define CP_MINOR_VERSION 7
+#define CP_MINOR_VERSION 8
 #define CP_VERSION       ((CP_MAJOR_VERSION << 8) | (CP_MINOR_VERSION))
 
 #define CP_GET_MAJOR_VERSION(version) ((version & 0xff00) >> 8)
@@ -413,6 +413,12 @@ typedef CPError (STDCALL *CPB_SendSyncMessageFunc)(CPID id,
                                                    void **retval,
                                                    uint32 *retval_len);
 
+// This function asynchronously calls the provided function on the plugin
+// thread.  user_data is passed as the argument to the function.
+typedef CPError (STDCALL *CPB_PluginThreadAsyncCallFunc)(CPID id,
+                                                         void (*func)(void *),
+                                                         void *user_data);
+
 // Informs the plugin of raw data having been sent from another process.
 typedef void (STDCALL *CPP_OnMessageFunc)(void *data, uint32 data_len);
 
@@ -491,6 +497,7 @@ typedef struct _CPBrowserFuncs {
   CPB_AddUICommandFunc add_ui_command;
   CPB_HandleCommandFunc handle_command;
   CPB_SendSyncMessageFunc send_sync_message;
+  CPB_PluginThreadAsyncCallFunc plugin_thread_async_call;
 } CPBrowserFuncs;
 
 
