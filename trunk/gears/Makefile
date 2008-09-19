@@ -1106,7 +1106,7 @@ NPAPI_CPPSRCS	+= \
 		detect_version_collision_win32.cc \
 		file_win32.cc \
 		ie_version.cc \
-		message_queue_ie.cc \
+		message_queue_cr.cc \
 		time_utils_win32.cc \
 		vista_utils.cc \
 		$(NULL)
