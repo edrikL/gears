@@ -66,7 +66,7 @@ class FixRequest(object):
 
     return key_value
 
-  def __HasValueInFixRequest(self, expected_value, key_name, outer_key):
+  def __HasValueInFixRequest(self, expected_value, inner_key, outer_key):
     """ Checks if a key with the given value exists in the fix request.
 
     Args:
@@ -86,8 +86,8 @@ class FixRequest(object):
         continue
 
       value = dictionary.get(inner_key, None)
-      if (value == expected_value):
-           found = True
+      if value == expected_value:
+        found = True
 
     return found
 
@@ -113,8 +113,8 @@ class FixRequest(object):
 # A valid position fix response, location data for the Google London office.
 GOOD_JSON_RESPONSE = """{
   "location": {
-    "latitude": 51.590722643120145,
-    "longitude": -1.494140625,
+    "latitude": 51.59,
+    "longitude": -1.49,
     "altitude": 30,
     "horizontal_accuracy": 1200,
     "vertical_accuracy": 10,
