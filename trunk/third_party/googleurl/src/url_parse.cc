@@ -43,6 +43,23 @@ namespace url_parse {
 
 namespace {
 
+// Forward declarations
+// armcc build fails without this.
+template<typename CHAR>
+void ParseAuthority(const CHAR* spec,
+                    const Component& auth,
+                    Component* username,
+                    Component* password,
+                    Component* hostname,
+                    Component* port_num);
+
+template<typename CHAR>
+void ParsePath(const CHAR* spec,
+               const Component& path,
+               Component* filepath,
+               Component* query,
+               Component* ref);
+
 // Returns true if the given character is a valid digit to use in a port.
 inline bool IsPortDigit(UTF16Char ch) {
   return ch >= '0' && ch <= '9';

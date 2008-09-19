@@ -34,7 +34,10 @@
 
 #ifndef GOOGLEURL_SRC_URL_CANON_INTERNAL_H__
 #define GOOGLEURL_SRC_URL_CANON_INTERNAL_H__
-
+#ifdef OS_SYMBIAN
+#include <assert.h>
+#include <e32std.h> // for TLex
+#endif
 #include <stdlib.h>
 #include <unicode/utf.h>
 
@@ -481,7 +484,36 @@ inline int _itow_s(int value, UTF16Char (&buffer)[N], int radix) {
   return _itow_s(value, buffer, N, radix);
 }
 
-#ifndef WINCE
+#ifdef OS_SYMBIAN
+inline unsigned long long _strtoui64(const char* nptr,
+                                     char** endptr, 
+                                     int base) {
+  assert(endptr == NULL);  // TODO(marcogelmi): endptr not supported,
+                           // but googleurl passes NULL.
+  TInt64 val;
+  TRadix radix;
+  TLex8 lex(reinterpret_cast<const unsigned char*>(nptr));
+  
+  switch (base) {
+    case 2:
+      radix = EBinary;
+      break;
+    case 8:
+      radix = EOctal;
+      break;
+    case 10:
+      radix = EDecimal;
+      break;
+    case 16:
+      radix = EHex;
+      break;
+    default:
+      // TODO(marcogelmi): other radixes are not supported yet.
+      assert(false);
+  }
+  return KErrNone == lex.Val(val, radix) ? val : 0;
+}
+#elif !defined(WINCE)
 // _strtoui64 and strtoull behave the same
 inline unsigned long long _strtoui64(const char* nptr,
                                      char** endptr, int base) {
