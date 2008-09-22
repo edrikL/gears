@@ -220,14 +220,14 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </td>
             <td width="50%" align="right" valign="middle">
               <input type="BUTTON" id="confirm-button"
-               onclick="saveAndClose(calculateDiff()); return false;"></input>
+               onclick="saveAndClose(result); return false;"></input>
             </td>
           </div>
 ~,m4_dnl
 ~
           <td nowrap="true" align="right" valign="middle">
             <button id="confirm-button" class="custom"
-                onclick="saveAndClose(calculateDiff()); return false;"
+                onclick="saveAndClose(result); return false;"
               ></button
             ><button id="cancel-button" accesskey="C" class="custom"
                 onclick="saveAndClose(null); return false;"
@@ -256,6 +256,7 @@ m4_include(genfiles/settings_dialog.js)
   var debug = false;
   var permissions;
   var originalPermissions;
+  var result = { modifiedOrigins: [] };
 
   // Must match values in permission_db.h
   var PERMISSION_NOT_SET = 0;
@@ -292,7 +293,7 @@ m4_include(genfiles/settings_dialog.js)
     var applyText = dom.getElementById("string-apply");
     if (applyText) {
       window.pie_dialog.SetButton(applyText.innerText, 
-        "saveAndClose(calculateDiff());");
+        "saveAndClose(result);");
     }
     var cancelText = dom.getElementById("string-cancel");
     if (cancelText) {
@@ -489,6 +490,8 @@ m4_include(genfiles/settings_dialog.js)
     updatePermission(index, "localStorage", PERMISSION_NOT_SET);
     updatePermission(index, "locationData", PERMISSION_NOT_SET);
     updatePermissionsList();
+    result.modifiedOrigins = calculateDiff();
+    updateButtonStatus();
 
     // Return false to prevent the default link action (scrolling up to top of
     // page in this case).
@@ -501,8 +504,17 @@ m4_include(genfiles/settings_dialog.js)
           permissionState) {
         permissions[index][permissionClass].permissionState =
           permissionState;
-        enableButton(dom.getElementById("confirm-button"));
+        result.modifiedOrigins = calculateDiff();
+        updateButtonStatus();
       }
+    }
+  }
+
+  function updateButtonStatus() {
+    if (result.modifiedOrigins.length > 0) {
+      enableButton(dom.getElementById("confirm-button"));
+    } else {
+      disableButton(dom.getElementById("confirm-button"));
     }
   }
 
@@ -524,7 +536,7 @@ m4_include(genfiles/settings_dialog.js)
 
   function calculateDiff() {
     var permissionClasses = ["localStorage", "locationData"];
-    var result = { "modifiedOrigins": [] };
+    var modifiedOrigins = [];
     for (var index = 0; index < originalPermissions.length; index++) {
       var originalOriginData = originalPermissions[index];
       var originData = permissions[index];
@@ -549,11 +561,11 @@ m4_include(genfiles/settings_dialog.js)
         }
         if (modified) {
           modifiedOriginData.name = originData.name;
-          result.modifiedOrigins.push(modifiedOriginData);
+          modifiedOrigins.push(modifiedOriginData);
         }
       }
     }
-    return result;
+    return modifiedOrigins;
   }
 
 </script>
