@@ -663,7 +663,8 @@ function testNotifier() {
 }
 
 function testAsyncTaskPostCookies() {
-  if (isUsingCCTests) {
+  // TODO(steveblock): Enable this test for Chrome when bug 1301226 is fixed.
+  if (isUsingCCTests && !(isWin32 && isNPAPI)) {
     var setCookieUrl = "/testcases/set_cookie.txt";
     var serveIfCookiesPresentUrl = "/testcases/serve_if_cookies_present.txt";
     var serveIfCookiesAbsentUrl = "/testcases/serve_if_cookies_absent.txt";
