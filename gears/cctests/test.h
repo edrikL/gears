@@ -203,6 +203,10 @@ class GearsTest : public ModuleImplBaseClass {
   void TestNotifier(JsCallContext *context);
 #endif  // OFFICIAL_BUILD
 
+  // IN: string url, bool send_cookies, function callback
+  // OUT: nothing
+  void TestAsyncTaskPostCookies(JsCallContext *context);
+
  private:
   // The tick count used by the perf timer.
   int64 start_ticks_;

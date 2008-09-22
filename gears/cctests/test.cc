@@ -34,6 +34,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"  // For ResolveAndNormalize()
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/desktop/desktop_test.h"
@@ -104,6 +105,8 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testNotifier", &GearsTest::TestNotifier);
 #endif  // OS_ANDROID
 #endif  // OFFICIAL_BUILD
+  RegisterMethod("testAsyncTaskPostCookies",
+                 &GearsTest::TestAsyncTaskPostCookies);
 }
 
 #ifdef WIN32
@@ -140,6 +143,7 @@ void Dispatcher<GearsTest>::Init() {
 #else
 #include "gears/media/audio_recorder_test.h"
 #endif
+#include "gears/localserver/common/async_task_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -2300,5 +2304,38 @@ void GearsTest::TestNotifier(JsCallContext *context) {
 
 }
 #endif  // OFFICIAL_BUILD
+
+void GearsTest::TestAsyncTaskPostCookies(JsCallContext *context) {
+  // Note that GetArguments allocates a new JsRootedCallback.
+  std::string16 url;
+  bool send_cookies;
+  JsRootedCallback *callback;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &send_cookies },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+  };
+
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
+
+  std::string16 absolute_url;
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(),
+                           url.c_str(),
+                           &absolute_url)) {
+    context->SetException(STRING16(L"Could not resolve URL."));
+    return;
+  }
+
+  // async_task deletes itself once it has made its callback, or if
+  // MakePostRequest fails.
+  AsyncTaskTest *async_task = new AsyncTaskTest(absolute_url, send_cookies,
+                                                GetJsRunner(), callback);
+  if (!async_task->MakePostRequest()) {
+    context->SetException(STRING16(L"Failed to make POST request."));
+  }
+}
 
 #endif  // USING_CCTESTS
