@@ -151,19 +151,24 @@ def send_response(request_handler, code, response):
   request_handler.outgoing.append (response)
 
 
-# Only respond if the request is a POST
+# We accept only POST requests with Content-Type application/json.
 if self.command == 'POST':
-  fix_request = None
-  if self.body :
-    request_body = self.body.popitem()[0]
-    fix_request = FixRequest(request_body)
+  if self.headers.get('Content-Type') == 'application/json':
+    if self.body:
+      fix_request = FixRequest(self.body)
 
-  # Hard-coded rules to return desired responses
-  if fix_request.HasMacAddress("good_mac_address"):
-    send_response(self, 200, GOOD_JSON_RESPONSE)
-  elif fix_request.HasMacAddress("no_location_mac_address"):
-    send_response(self, 200, NO_LOCATION_JSON_RESPONSE)
-  elif fix_request.HasCellId(88):
-    send_response(self, 400, "Error in request")
+      # Hard-coded rules to return desired responses
+      if fix_request.HasMacAddress("good_mac_address"):
+        send_response(self, 200, GOOD_JSON_RESPONSE)
+      elif fix_request.HasMacAddress("no_location_mac_address"):
+        send_response(self, 200, NO_LOCATION_JSON_RESPONSE)
+      elif fix_request.HasCellId(88):
+        send_response(self, 400, "Mock malformed request error")
+      else:
+        send_response(self, 400, "Unexpected request")
+    else:
+      send_response(self, 400, "Empty request")
+  else:
+    send_response(self, 400, "Content-Type should be application/json")
 else:
-  send_response(self, 405, "Please provide a POST method.")
+  send_response(self, 405, "Request must be HTTP POST.")
