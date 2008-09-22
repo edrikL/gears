@@ -130,9 +130,28 @@ class RequestHandler(asynchat.async_chat,
     self.rfile = cStringIO.StringIO(''.join(popall(self.incoming)))
     self.rfile.seek(0)
     self.do_POST()
-     
-      
+
+
+  def can_serve(self):
+    """ Serve files conditionally based on the presence of cookies in request.
+    The AyncTask unit tests rely on this. Here we check whether we can serve
+    these files.
+    """
+    if self.path.endswith('serve_if_cookies_absent.txt'):
+      if self.headers.getheader('Cookie') != '':
+        return False
+    elif self.path.endswith('serve_if_cookies_present.txt'):
+      if self.headers.getheader('Cookie') == '':
+        return False
+    return True
+
+
   def do_POST(self):
+    if not self.can_serve():
+      self.send_error(404)
+      self.outgoing.append(None)
+      return
+
     qspos = self.path.find('?')
     if qspos >= 0:
       # Added query to allow test server to run redirects at POST, and the 

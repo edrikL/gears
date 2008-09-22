@@ -662,6 +662,55 @@ function testNotifier() {
   }
 }
 
+function testAsyncTaskPostCookies() {
+  if (isUsingCCTests) {
+    var setCookieUrl = "/testcases/set_cookie.txt";
+    var serveIfCookiesPresentUrl = "/testcases/serve_if_cookies_present.txt";
+    var serveIfCookiesAbsentUrl = "/testcases/serve_if_cookies_absent.txt";
+    var testIndex = 0;
+
+    function runNextTest(returnCode) {
+      var previousIndex = testIndex;
+      testIndex++;
+      switch (previousIndex) {
+        case 0:
+          assertEqual(200, returnCode, 'Expected 200 for set_cookie.txt.');
+          internalTests.testAsyncTaskPostCookies(
+              serveIfCookiesPresentUrl, true, runNextTest);
+          break;
+        case 1:
+          assertEqual(
+              200, returnCode, 'Expected 200 for request with cookies.');
+          internalTests.testAsyncTaskPostCookies(
+              serveIfCookiesPresentUrl, false, runNextTest);
+          break;
+        case 2:
+          assertEqual(
+              404, returnCode, 'Expected 404 for request without cookies.');
+          internalTests.testAsyncTaskPostCookies(
+              serveIfCookiesAbsentUrl, true, runNextTest);
+          break;
+        case 3:
+          assertEqual(
+              404, returnCode, 'Expected 404 for request with cookies.');
+          internalTests.testAsyncTaskPostCookies(
+              serveIfCookiesAbsentUrl,false, runNextTest);
+          break;
+        case 4:
+          assertEqual(
+              200, returnCode, 'Expected 200 for request without cookies.');
+          completeAsync();
+          break;
+        default:
+          throw new Error("Unexpected test index.");
+      }
+    }
+
+    startAsync();
+    internalTests.testAsyncTaskPostCookies(setCookieUrl, true, runNextTest);
+  }
+}
+
 // Helper functions
 
 function createTestArray(length) {
