@@ -23,18 +23,83 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// TODO(steveblock): Other Geolocation tests require the test object, but
-// consider moving to this file.
-
-function testGeolocationNoProviders() {
+function testGeolocationArguments() {
   var geolocation = google.gears.factory.create('beta.geolocation');
+  var dummyFunction = function() {};
+
+  // All good.
+  geolocation.getCurrentPosition(dummyFunction);
+  geolocation.getCurrentPosition(dummyFunction, dummyFunction);
+  geolocation.getCurrentPosition(dummyFunction, null);
+  geolocation.getCurrentPosition(dummyFunction, null, {});
+  geolocation.getCurrentPosition(dummyFunction, dummyFunction, {});
+
+  // Test correct types.
+  // Missing success callback.
+  assertError(function() {
+    geolocation.getCurrentPosition();
+  });
+  // Wrong type for success callback.
+  assertError(function() {
+    geolocation.getCurrentPosition(42);
+  });
+  // Wrong type for error callback.
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction, 42);
+  });
+  // Wrong type for options.
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction, dummyFunction, 42);
+  });
+  // Wrong type for enableHighAccuracy.
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {enableHighAccuracy: 42});
+  }, 'options.enableHighAccuracy should be a boolean.');
+  // Wrong type for gearsRequestAddress.
   assertError(
-    function() {
-      geolocation.getCurrentPosition(
-        function() {},
-        function() {},
-        { gearsLocationProviderUrls: [], enableHighAccuracy: false } ); },
-    'Fix request has no location providers.',
-    'Calling getCurrentPosition() should fail if no location providers are ' +
-    'specified.');
+      function() {
+        geolocation.getCurrentPosition(dummyFunction,
+                                       dummyFunction,
+                                       {gearsRequestAddress: 42});
+      },
+      'options.gearsRequestAddress should be a boolean.');
+  // Wrong type for gearsAddressLanguage.
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(dummyFunction,
+                                       dummyFunction,
+                                       {gearsAddressLanguage: 42});
+      },
+      'options.gearsAddressLanguage should be a string.');
+  // Wrong type for gearsLocationProviderUrls.
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(dummyFunction,
+                                       dummyFunction,
+                                       {gearsLocationProviderUrls: 42});
+      },
+      'options.gearsLocationProviderUrls should be null or an array of ' +
+      'strings');
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(dummyFunction,
+                                       dummyFunction,
+                                       {gearsLocationProviderUrls: [42]});
+      },
+      'options.gearsLocationProviderUrls should be null or an array of ' +
+      'strings');
+
+  // No providers.
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(
+            dummyFunction,
+            dummyFunction,
+            {gearsLocationProviderUrls: [], enableHighAccuracy: false});
+      },
+      'Fix request has no location providers.',
+      'Calling getCurrentPosition() should fail if no location providers are ' +
+      'specified.');
 }
