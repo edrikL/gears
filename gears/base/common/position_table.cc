@@ -55,7 +55,7 @@ static const char *kCreateTableVersion1Statement =
 PositionTable::PositionTable(SQLDatabase *db) : db_(db) {
 }
 
-bool PositionTable::Create() {
+bool PositionTable::CreateTableLatestVersion() {
   return CreateVersion1();
 }
 

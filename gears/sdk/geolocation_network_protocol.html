@@ -86,8 +86,9 @@ both is <code>application/json</code>.</p>
 
 <pre><code>
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "host": "maps.google.com",
+  "access_token": "2:k7j3G6LaL6u_lafw:4iXOeOpTh1glSXe",
   "home_mobile_country_code": 310,
   "home_mobile_network_code": 410,
   "radio_type": "gsm",
@@ -153,7 +154,8 @@ both is <code>application/json</code>.</p>
       "country": "United States of America",
       "country_code": "US"
     }
-  }
+  },
+  "access_token": "2:k7j3G6LaL6u_lafw:4iXOeOpTh1glSXe"
 }
 </code></pre>
 
@@ -170,7 +172,7 @@ both is <code>application/json</code>.</p>
   </tr>
   <tr>
     <td class="nameColumn">version</td>
-    <td class="descriptionColumn">The protocol version, currently, "1.0.1".</td>
+    <td class="descriptionColumn">The protocol version, currently, "1.0.2".</td>
     <td class="requiredColumn">Yes</td>
     <td class="typeColumn">string</td>
   </tr>
@@ -178,6 +180,12 @@ both is <code>application/json</code>.</p>
     <td class="nameColumn">host</td>
     <td class="descriptionColumn">The host of the web page that is requesting the location.</td>
     <td class="requiredColumn">Yes</td>
+    <td class="typeColumn">string</td>
+  </tr>
+  <tr>
+    <td class="nameColumn">access_token</td>
+    <td class="descriptionColumn">An identifier which is set by the server and included in all subsequent requests to that server.</td>
+    <td class="requiredColumn">No</td>
     <td class="typeColumn">string</td>
   </tr>
   <tr>
@@ -365,7 +373,7 @@ both is <code>application/json</code>.</p>
 The details of the error should be described in plain text in the response.</p>
 
 <p>If the request is valid, the server must reply with HTTP status 200 and the
-body should specify an object with a single <code>location</code> property. If a
+body should specify an object with a <code>location</code> property. If a
 position fix was successfully determined, the <code>location</code> property
 must be populated with the fields descibed below. Otherwise, it must be
 null.</p>
@@ -475,6 +483,25 @@ null.</p>
   <tr>
     <td class="nameColumn">postal_code</td>
     <td class="descriptionColumn">Postal code. This is the zip code in the US and postcode in the UK.</td>
+    <td class="requiredColumn">No</td>
+    <td class="typeColumn">string</td>
+  </tr>
+</table>
+
+<p> The response object may also optionally include an <code>access_token</code>
+property. This is set by the server and used to identify the client in future
+requests.</p>
+
+<table>
+  <tr>
+    <th class="nameColumn">Name</th>
+    <th class="descriptionColumn">Description</th>
+    <th class="requiredColumn">Required</th>
+    <th class="typeColumn">Type</th>
+  </tr>
+  <tr>
+    <td class="nameColumn">access_token</td>
+    <td class="descriptionColumn">An identifier which is set by the server and included in all subsequent requests to that server.</td>
     <td class="requiredColumn">No</td>
     <td class="typeColumn">string</td>
   </tr>

@@ -27,8 +27,9 @@
 
 static const char16 *kDatabaseName = STRING16(L"geolocation.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
+static const char16 *kAccessTokenTableName = STRING16(L"AccessTokens");
 static const char16 *kVersionKey = STRING16(L"Version");
-static const int kCurrentVersion = 1;
+static const int kCurrentVersion = 2;
 
 const ThreadLocals::Slot GeolocationDB::kThreadLocalKey =
     ThreadLocals::Alloc();
@@ -36,7 +37,8 @@ const ThreadLocals::Slot GeolocationDB::kThreadLocalKey =
 
 GeolocationDB::GeolocationDB()
     : version_table_(&db_, kVersionTableName),
-      position_table_(&db_) {
+      position_table_(&db_),
+      access_token_table_(&db_, kAccessTokenTableName) {
 }
 
 //static
@@ -69,6 +71,17 @@ bool GeolocationDB::RetrievePosition(const std::string16 &name,
   return position_table_.GetPosition(name, position);
 }
 
+bool GeolocationDB::StoreAccessToken(const std::string16 &server_url,
+                                     const std::string16 &access_token) {
+  return access_token_table_.SetString(server_url.c_str(),
+                                       access_token.c_str());
+}
+
+bool GeolocationDB::RetrieveAccessToken(const std::string16 &server_url,
+                                        std::string16 *access_token) {
+  return access_token_table_.GetString(server_url.c_str(), access_token);
+}
+
 bool GeolocationDB::Create() {
   ASSERT_SINGLE_THREAD();
 
@@ -81,7 +94,9 @@ bool GeolocationDB::Create() {
     return false;
   }
 
-  if (!version_table_.MaybeCreateTable() || !position_table_.Create()) {
+  if (!version_table_.MaybeCreateTable() ||
+      !position_table_.CreateTableLatestVersion() ||
+      !access_token_table_.MaybeCreateTable()) {
     return false;
   }
 
@@ -91,6 +106,12 @@ bool GeolocationDB::Create() {
   }
 
   return transaction.Commit();
+}
+
+bool GeolocationDB::UpgradeVersion1ToVersion2() {
+  // Version 2 adds the access token table.
+  return access_token_table_.MaybeCreateTable() &&
+         version_table_.SetInt(kVersionKey, 2);
 }
 
 bool GeolocationDB::Init() {
@@ -128,9 +149,12 @@ bool GeolocationDB::Init() {
     if (!Create()) {
       return false;
     }
+  } else if (1 == version) {
+    if (!UpgradeVersion1ToVersion2()) {
+      return false;
+    }
   } else {
-    // If the database schema is modified in the future, upgrade the
-    // database here. For now, this should never happen.
+    // This should never happen.
     assert(false);
     return false;
   }

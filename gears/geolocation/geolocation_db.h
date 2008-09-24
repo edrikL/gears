@@ -40,6 +40,11 @@ class GeolocationDB {
   bool StorePosition(const std::string16 &name, const Position &position);
   bool RetrievePosition(const std::string16 &name, Position *position);
 
+  bool StoreAccessToken(const std::string16 &server_url,
+                        const std::string16 &access_token);
+  bool RetrieveAccessToken(const std::string16 &server_url,
+                           std::string16 *access_token);
+
   // The key used to cache instances of GeolocationDB in ThreadLocals.
   static const ThreadLocals::Slot kThreadLocalKey;
 
@@ -49,6 +54,8 @@ class GeolocationDB {
 
   // Creates the database at the latest version.
   bool Create();
+
+  bool UpgradeVersion1ToVersion2();
 
   // Initializes the database. Must be called before other methods.
   bool Init();
@@ -65,6 +72,9 @@ class GeolocationDB {
 
   // Table used to store positions.
   PositionTable position_table_;
+
+  // Table used to store access tokens for network location requests.
+  NameValueTable access_token_table_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GeolocationDB);
   DECL_SINGLE_THREAD

@@ -63,7 +63,8 @@ class NetworkLocationProvider
 
   // NetworkLocationRequest::ListenerInterface implementation.
   virtual void LocationResponseAvailable(const Position &position,
-                                         bool server_error);
+                                         bool server_error,
+                                         const std::string16 &access_token);
 
   // Thread implementation
   virtual void Run();

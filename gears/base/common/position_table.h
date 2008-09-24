@@ -36,7 +36,7 @@ class PositionTable {
 
   // Creates the latest version of the table. Should only be called if the
   // table does not already exist.
-  bool Create();
+  bool CreateTableLatestVersion();
 
   // Add (or overwrite) a position with the given name.
   bool SetPosition(const std::string16 &name, const Position &position);
