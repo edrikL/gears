@@ -98,11 +98,13 @@ class MockDeviceDataProviderImpl
     return new MockDeviceDataProviderImpl<DataType>();
   }
 
-  MockDeviceDataProviderImpl() {
+  MockDeviceDataProviderImpl()
+      : is_shutting_down_(false) {
     Start();
   }
   virtual ~MockDeviceDataProviderImpl() {
-    stop_event_.Signal();
+    is_shutting_down_ = true;
+    event_.Signal();
     Join();
   }
 
@@ -117,29 +119,25 @@ class MockDeviceDataProviderImpl
 
   static void SetData(const DataType &new_data) {
     MutexLock lock(&data_mutex_);
-    new_data_ = new_data;
+    data_ = new_data;
+    event_.Signal();
   }
 
  private:
   // Thread implementation.
   virtual void Run() {
-    while (!stop_event_.WaitWithTimeout(1000)) {
-      data_mutex_.Lock();
-      bool new_data_available = !data_.Matches(new_data_);
-      if (new_data_available) {
-        data_ = new_data_;
-      }
-      data_mutex_.Unlock();
-      if (new_data_available) {
+    while (!is_shutting_down_) {
+      event_.Wait();
+      if (!is_shutting_down_) {
         DeviceDataProviderImplBase<DataType>::NotifyListeners();
       }
     }
   }
 
-  Event stop_event_;
+  static Event event_;
+  bool is_shutting_down_;
 
-  DataType data_;
-  static DataType new_data_;
+  static DataType data_;
   static Mutex data_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(MockDeviceDataProviderImpl);
@@ -147,7 +145,11 @@ class MockDeviceDataProviderImpl
 
 // static
 template<typename DataType>
-DataType MockDeviceDataProviderImpl<DataType>::new_data_;
+Event MockDeviceDataProviderImpl<DataType>::event_;
+
+// static
+template<typename DataType>
+DataType MockDeviceDataProviderImpl<DataType>::data_;
 
 // static
 template<typename DataType>
