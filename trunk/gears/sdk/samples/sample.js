@@ -58,9 +58,8 @@ function setupSample() {
   // Make sure we have Gears. If not, tell the user.
   if (!window.google || !google.gears) {
     if (confirm("This demo requires Gears to be installed. Install now?")) {
-      var spliceStart = location.href.indexOf("/samples");
-      location.href =
-        location.href.substring(0, spliceStart) + "/install.html";
+      // Use an absolute URL to allow this to work when run from a local file.
+      location.href = "http://code.google.com/apis/gears/install.html";
       return;
     }
   }
