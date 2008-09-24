@@ -133,6 +133,8 @@ if (!isOfficial && isUsingCCTests && !isWince) {
   internalTestSuite.addFile('../testcases/internal_audio_recorder_tests.js',
                             {useWorker: true, useIFrame: true});
 }
+internalTestSuite.addFile('../testcases/internal_geolocation_tests.js',
+                          {useWorker: true, useIFrame: true});
 suites.push(internalTestSuite);
 
 var localServerSuite = new TestSuite('LocalServer');
