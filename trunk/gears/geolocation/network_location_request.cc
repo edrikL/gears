@@ -32,8 +32,9 @@
 #include "third_party/jsoncpp/value.h"
 #include "third_party/jsoncpp/writer.h"
 
-static const char *kGearsNetworkLocationProtocolVersion = "1.0.1";
+static const char *kGearsNetworkLocationProtocolVersion = "1.0.2";
 
+static const char *kAccessTokenString = "access_token";
 static const char *kLatitudeString = "latitude";
 static const char *kLongitudeString = "longitude";
 static const char *kAltitudeString = "altitude";
@@ -53,7 +54,6 @@ static const char *kPostalCodeString = "postal_code";
 static const char *kAccuracyString = "horizontal_accuracy";
 static const char *kAltitudeAccuracyString = "vertical_accuracy";
 
-
 // Local functions
 static const char16* RadioTypeToString(RadioType type);
 // Adds a string if it's valid to the JSON object.
@@ -72,7 +72,8 @@ static bool AddAngle(const std::string &property_name,
 // Parses the server response body. Returns true if parsing was successful.
 static bool ParseServerResponse(const std::string &response_body,
                                 int64 timestamp,
-                                Position *position);
+                                Position *position,
+                                std::string16 *access_token);
 
 // static
 NetworkLocationRequest* NetworkLocationRequest::Create(
@@ -94,15 +95,17 @@ NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
   }
 }
 
-bool NetworkLocationRequest::MakeRequest(const RadioData &radio_data,
+bool NetworkLocationRequest::MakeRequest(const std::string16 &access_token,
+                                         const RadioData &radio_data,
                                          const WifiData &wifi_data,
                                          bool request_address,
-                                         std::string16 address_language,
+                                         const std::string16 &address_language,
                                          double latitude,
                                          double longitude,
                                          int64 timestamp) {
-  if (!FormRequestBody(host_name_, radio_data, wifi_data, request_address,
-                       address_language, latitude, longitude, &post_body_)) {
+  if (!FormRequestBody(host_name_, access_token, radio_data, wifi_data,
+                       request_address, address_language, latitude, longitude,
+                       &post_body_)) {
     return false;
   }
   timestamp_ = timestamp;
@@ -111,7 +114,6 @@ bool NetworkLocationRequest::MakeRequest(const RadioData &radio_data,
 }
 
 // AsyncTask implementation.
-
 void NetworkLocationRequest::Run() {
   WebCacheDB::PayloadInfo payload;
   // TODO(andreip): remove this once WebCacheDB::PayloadInfo.data is a Blob.
@@ -148,18 +150,21 @@ void NetworkLocationRequest::Run() {
         LOG(("NetworkLocationRequest::Run() : Failed to get response body.\n"));
       }
     }
+    std::string16 access_token;
     GetLocationFromResponse(result, payload.status_code, response_body,
-                            timestamp_, url_, &position);
+                            timestamp_, url_, &position, &access_token);
 
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     bool server_error =
         !result || (payload.status_code >= 500 && payload.status_code < 600);
-    listener_->LocationResponseAvailable(position, server_error);
+    listener_->LocationResponseAvailable(position, server_error, access_token);
   }
 }
 
 // static
-bool NetworkLocationRequest::FormRequestBody(const std::string16 &host_name,
+bool NetworkLocationRequest::FormRequestBody(
+    const std::string16 &host_name,
+    const std::string16 &access_token,
     const RadioData &radio_data,
     const WifiData &wifi_data,
     bool request_address,
@@ -176,6 +181,8 @@ bool NetworkLocationRequest::FormRequestBody(const std::string16 &host_name,
   }
   body_object["version"] = Json::Value(kGearsNetworkLocationProtocolVersion);
   AddString("host", host_name, &body_object);
+
+  AddString("access_token", access_token, &body_object);
 
   AddInteger("home_mobile_country_code", radio_data.home_mobile_country_code,
              &body_object);
@@ -254,9 +261,12 @@ void NetworkLocationRequest::GetLocationFromResponse(
     int status_code,
     const std::string &response_body,
     int64 timestamp,
-    std::string16 server_url,
-    Position *position) {
+    const std::string16 &server_url,
+    Position *position,
+    std::string16 *access_token) {
   assert(position);
+  assert(access_token);
+
   // HttpPost can fail for a number of reasons. Most likely this is because
   // we're offline, or there was no response.
   if (!http_post_result) {
@@ -270,7 +280,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
   } else if (status_code == HttpConstants::HTTP_OK) {
     // We use the timestamp from the device data that was used to generate
     // this position fix.
-    if (ParseServerResponse(response_body, timestamp, position)) {
+    if (ParseServerResponse(response_body, timestamp, position, access_token)) {
       // The response was successfully parsed, but it may not be a valid
       // position fix.
       if (!position->IsGoodFix()) {
@@ -405,8 +415,11 @@ static bool GetAsString(const Json::Value &object,
 
 static bool ParseServerResponse(const std::string &response_body,
                                 int64 timestamp,
-                                Position *position) {
+                                Position *position,
+                                std::string16 *access_token) {
   assert(position);
+  assert(access_token);
+
   if (response_body.empty()) {
     LOG(("ParseServerResponse() : Response was empty.\n"));
     return false;
@@ -429,6 +442,10 @@ static bool ParseServerResponse(const std::string &response_body,
     return false;
   }
 
+  // Get the access token.
+  GetAsString(response_object, kAccessTokenString, access_token);
+
+  // Get the location
   Json::Value location = response_object["location"];
 
   // If the network provider was unable to provide a position fix, it should
@@ -444,14 +461,11 @@ static bool ParseServerResponse(const std::string &response_body,
   }
 
   // latitude, longitude and accuracy fields are required.
-  if (!IsDoubleOrInt(location, kLatitudeString) ||
-      !IsDoubleOrInt(location, kLongitudeString) ||
-      !IsDoubleOrInt(location, kAccuracyString)) {
+  if (!GetAsDouble(location, kLatitudeString, &position->latitude) ||
+      !GetAsDouble(location, kLongitudeString, &position->longitude) ||
+      !GetAsDouble(location, kAccuracyString, &position->accuracy)) {
     return false;
   }
-  position->latitude = location[kLatitudeString].asDouble();
-  position->longitude = location[kLongitudeString].asDouble();
-  position->accuracy = location[kAccuracyString].asDouble();
 
   // Other fields are optional.
   GetAsDouble(location, kAltitudeString, &position->altitude);

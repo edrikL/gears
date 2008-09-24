@@ -297,6 +297,7 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
 
   scoped_refptr<BlobInterface> blob;
   if (!NetworkLocationRequest::FormRequestBody(STRING16(L"www.google.com"),
+                                               STRING16(L"access token"),
                                                radio_data,
                                                wifi_data,
                                                true,
@@ -358,12 +359,14 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   }
 
   Position position;
+  std::string16 access_token;
   NetworkLocationRequest::GetLocationFromResponse(http_post_result,
                                                   status_code,
                                                   response_body_utf8,
                                                   timestamp,
                                                   server_url,
-                                                  &position);
+                                                  &position,
+                                                  &access_token);
 
   scoped_ptr<JsObject> return_object(js_runner->NewObject());
   assert(return_object.get());
@@ -385,6 +388,11 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                      L"PositionError object."));
       return;
     }
+  }
+
+  // Add access_token field for testing if it's set.
+  if (!access_token.empty()) {
+    return_object->SetPropertyString(STRING16(L"accessToken"), access_token);
   }
 
   context->SetReturnValue(JSPARAM_OBJECT, return_object.get());

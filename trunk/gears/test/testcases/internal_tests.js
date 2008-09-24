@@ -407,6 +407,7 @@ function testGeolocationFormRequestBody() {
   if (isUsingCCTests) {
     var body = internalTests.testGeolocationFormRequestBody();
     var correctBody = '{ ' +
+                      '"access_token" : "access token", ' +
                       '"address_language" : "en-GB", ' +
                       '"cell_towers" : [ { ' +
                       '"cell_id" : 23874, ' +
@@ -422,7 +423,7 @@ function testGeolocationFormRequestBody() {
                       '}, ' +
                       '"radio_type" : "gsm", ' +
                       '"request_address" : true, ' +
-                      '"version" : "1.0.1", ' +
+                      '"version" : "1.0.2", ' +
                       '"wifi_towers" : [ { ' +
                       '"age" : 15, ' +
                       '"channel" : 19, ' +

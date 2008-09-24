@@ -45,17 +45,20 @@ class NetworkLocationRequest : public AsyncTask {
    public:
     // Updates the listener with a new position. server_error indicates whether
     // was a server or network error - either no response or a 500 error code.
-    virtual void LocationResponseAvailable(const Position &position,
-                                           bool server_error) = 0;
+    virtual void LocationResponseAvailable(
+        const Position &position,
+        bool server_error,
+        const std::string16 &access_token) = 0;
   };
 
   static NetworkLocationRequest* Create(const std::string16 &url,
                                         const std::string16 &host_name,
                                         ListenerInterface *listener);
-  bool MakeRequest(const RadioData &radio_data,
+  bool MakeRequest(const std::string16 &access_token,
+                   const RadioData &radio_data,
                    const WifiData &wifi_data,
                    bool request_address,
-                   std::string16 address_language,
+                   const std::string16 &address_language,
                    double latitude,
                    double longitude,
                    int64 timestamp);
@@ -73,10 +76,12 @@ class NetworkLocationRequest : public AsyncTask {
                          const std::string16 &host_name,
                          ListenerInterface *listener);
   virtual ~NetworkLocationRequest() {}
+
   // AsyncTask implementation.
   virtual void Run();
 
   static bool FormRequestBody(const std::string16 &host_name,
+                              const std::string16 &access_token,
                               const RadioData &radio_data,
                               const WifiData &wifi_data,
                               bool request_address,
@@ -89,8 +94,9 @@ class NetworkLocationRequest : public AsyncTask {
                                       int status_code,
                                       const std::string &response_body,
                                       int64 timestamp,
-                                      std::string16 server_url,
-                                      Position *position);
+                                      const std::string16 &server_url,
+                                      Position *position,
+                                      std::string16 *access_token);
 
   int64 timestamp_;  // The timestamp of the data used to make the request.
   scoped_refptr<BlobInterface> post_body_;
