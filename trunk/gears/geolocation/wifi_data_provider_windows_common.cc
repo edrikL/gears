@@ -28,6 +28,7 @@
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 
 #include <assert.h>
+#include "gears/base/common/string_utils.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/wifi_data_provider_common.h"
 
@@ -36,6 +37,10 @@ bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
   assert(access_point_data);
   access_point_data->mac_address = MacAddressAsString16(data.MacAddress);
   access_point_data->radio_signal_strength = data.Rssi;
+  // Note that _NDIS_802_11_SSID::Ssid::Ssid is not null-terminated.
+  UTF8ToString16(reinterpret_cast<const char*>(data.Ssid.Ssid),
+                 data.Ssid.SsidLength,
+                 &access_point_data->ssid);
   // It appears that we can not get the age of the scan. The only way to get
   // this information would be to perform the scan ourselves, which is not
   // possible.
