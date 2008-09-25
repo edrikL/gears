@@ -401,17 +401,23 @@ void GearsGeolocation::HandleEvent(JsEventType event_type) {
   // from our location providers. Also delete the fix request objects and
   // decrement our ref count.
   //
-  // We can't iterate over fix_requests_, because RemoveFixRequest will remove
-  // entries from the map and invalidate our iterator.
-  while (!fix_requests_.empty()) {
-    FixRequestInfoMap::iterator iter = fix_requests_.begin();
+  // We can't iterate over fix_requests_ directly, because RemoveFixRequest will
+  // remove entries from the map and invalidate our iterator. Also, this object
+  // may be GC'ed once we call DeleteFixRequest() on the last request, so we
+  // can't use any member variables after this time.
+  IdList fix_request_ids;
+  for (FixRequestInfoMap::const_iterator iter = fix_requests_.begin();
+       iter != fix_requests_.end();
+       iter++) {
+    fix_request_ids.push_back(iter->first);
+  }
+  for (int i = 0; i < static_cast<int>(fix_request_ids.size()); ++i) {
     // Cache the pointer to the fix request because RemoveFixRequest will
     // invalidate the iterator.
-    FixRequestInfo *fix_request = iter->second;
-    RemoveFixRequest(iter->first);
+    FixRequestInfo *fix_request = GetFixRequest(fix_request_ids[i]);
+    RemoveFixRequest(fix_request_ids[i]);
     DeleteFixRequest(fix_request);
   }
-  assert(fix_requests_.empty());
 }
 
 // Non-API methods
