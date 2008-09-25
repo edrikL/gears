@@ -386,6 +386,7 @@ void NetworkLocationProvider::Run() {
     data_mutex_.Lock();
   }
 
+  earliest_next_request_time_ = 0;
   MakeRequest();
 
   // Loop continually, making requests whenever new data becomes available,
@@ -393,25 +394,27 @@ void NetworkLocationProvider::Run() {
   //
   // This loop is structured such that we don't require mutex locks to
   // synchronise changes to is_new_data_available_ etc with signals on
-  // thread_notification_event_.
+  // thread_notification_event_. Note that if we get a signal before we wait,
+  // the wait will proceed immediately, so we don't miss signals.
   int64 remaining_time = 1;
   while (!is_shutting_down_) {
-    // If the current request is complete, see if we need to wait for the time
-    // to expire. If not, just wait for an event.
-    if (is_last_request_complete_ && remaining_time > 0) {
-      // earliest_next_request_time_ is updated when the current request
-      // completes.
+    if (remaining_time > 0) {
       remaining_time = earliest_next_request_time_ - GetCurrentTimeMillis();
-      // If the minimum time period has not yet elapsed, set the timeout such
-      // that the wait expires when the period has elapsed.
-      if (remaining_time > 0) {
-        thread_notification_event_.WaitWithTimeout(
-            static_cast<int>(remaining_time));
-      } else {
-        thread_notification_event_.Wait();
-      }
+    }
+
+    // If the minimum time period has not yet elapsed, set the timeout such
+    // that the wait expires when the period has elapsed.
+    if (remaining_time > 0) {
+      thread_notification_event_.WaitWithTimeout(
+          static_cast<int>(remaining_time));
     } else {
       thread_notification_event_.Wait();
+    }
+
+    // Update remaining time now we've woken up. Note that it can never
+    // transition from <= 0 to > 0.
+    if (remaining_time > 0) {
+      remaining_time = earliest_next_request_time_ - GetCurrentTimeMillis();
     }
 
     bool make_request = false;
