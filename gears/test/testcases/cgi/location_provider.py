@@ -116,8 +116,8 @@ GOOD_JSON_RESPONSE = """{
     "latitude": 51.59,
     "longitude": -1.49,
     "altitude": 30,
-    "horizontal_accuracy": 1200,
-    "vertical_accuracy": 10,
+    "accuracy": 1200,
+    "altitude_accuracy": 10,
     "address": {
       "street_number": "76",
       "street": "Buckingham Palace Road",

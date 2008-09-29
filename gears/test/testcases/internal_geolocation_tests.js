@@ -129,7 +129,7 @@ function testFormRequestBody() {
                       '}, ' +
                       '"radio_type" : "gsm", ' +
                       '"request_address" : true, ' +
-                      '"version" : "1.0.2", ' +
+                      '"version" : "1.1.0", ' +
                       '"wifi_towers" : [ { ' +
                       '"age" : 15, ' +
                       '"channel" : 19, ' +
@@ -166,8 +166,8 @@ function testGetLocationFromResponse() {
                        '"latitude" : 53.1, ' +
                        '"longitude" : -0.1, ' +
                        '"altitude" : 30.1, ' +
-                       '"horizontal_accuracy" : 1200.1, ' +
-                       '"vertical_accuracy" : 10.1, ' +
+                       '"accuracy" : 1200.1, ' +
+                       '"altitude_accuracy" : 10.1, ' +
                        '"address" : { ' +
                        '"street_number": "100", ' +
                        '"street": "Amphibian Walkway", ' +
@@ -210,8 +210,8 @@ function testGetLocationFromResponse() {
                        '"latitude" : 53, ' +
                        '"longitude" : 0, ' +
                        '"altitude" : 30, ' +
-                       '"horizontal_accuracy" : 1200, ' +
-                       '"vertical_accuracy" : 10, ' +
+                       '"accuracy" : 1200, ' +
+                       '"altitude_accuracy" : 10, ' +
                        '"address" : { ' +
                        '"street_number": "100", ' +
                        '"street": "Amphibian Walkway", ' +
