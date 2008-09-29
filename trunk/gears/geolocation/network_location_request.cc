@@ -32,12 +32,14 @@
 #include "third_party/jsoncpp/value.h"
 #include "third_party/jsoncpp/writer.h"
 
-static const char *kGearsNetworkLocationProtocolVersion = "1.0.2";
+static const char *kGearsNetworkLocationProtocolVersion = "1.1.0";
 
 static const char *kAccessTokenString = "access_token";
 static const char *kLatitudeString = "latitude";
 static const char *kLongitudeString = "longitude";
 static const char *kAltitudeString = "altitude";
+static const char *kAccuracyString = "accuracy";
+static const char *kAltitudeAccuracyString = "altitude_accuracy";
 // Note that the corresponding JavaScript Position property is 'gearsAddress'.
 static const char *kAddressString = "address";
 static const char *kStreetNumberString = "street_number";
@@ -49,10 +51,6 @@ static const char *kRegionString = "region";
 static const char *kCountryString = "country";
 static const char *kCountryCodeString = "country_code";
 static const char *kPostalCodeString = "postal_code";
-// TODO(steveblock): Consider updating JSON protocol field names to match those
-// used in W3C spec.
-static const char *kAccuracyString = "horizontal_accuracy";
-static const char *kAltitudeAccuracyString = "vertical_accuracy";
 
 // Local functions
 static const char16* RadioTypeToString(RadioType type);
