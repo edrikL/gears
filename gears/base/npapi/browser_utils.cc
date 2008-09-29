@@ -27,7 +27,12 @@
 
 #include <stack>
 
+#if BROWSER_CHROME
+#include "gears/base/chrome/browsing_context_cr.h"
+#include "gears/base/chrome/module_cr.h"
+#else
 #include "gears/base/common/browsing_context.h"
+#endif
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
@@ -37,7 +42,7 @@
 extern std::string16 g_user_agent;  // Defined in base/npapi/npp_bindings.cc
 
 typedef std::stack<JsCallContext*> JsCallStack;
-const ThreadLocals::Slot kJsCallStackKey = ThreadLocals::Alloc();
+static const ThreadLocals::Slot kJsCallStackKey = ThreadLocals::Alloc();
 
 static void DeleteJsCallStack(void *context) {
   JsCallStack *call_stack = reinterpret_cast<JsCallStack*>(context);
@@ -125,8 +130,13 @@ bool BrowserUtils::GetPageSecurityOrigin(JsContextPtr context,
 
 bool BrowserUtils::GetPageBrowsingContext(
    JsContextPtr context, scoped_refptr<BrowsingContext> *browsing_context) {
+#if BROWSER_CHROME
+  CPBrowsingContext cp_context = CP::GetBrowsingContext(context);
+  browsing_context->reset(new CRBrowsingContext(cp_context));
+#else
   // TODO(mpcomplete): implement me.
   browsing_context->reset();
+#endif
   return true;
 }
 
