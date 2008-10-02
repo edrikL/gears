@@ -650,6 +650,12 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     last_position_ = position;
   }
 
+  // Whenever a fix request makes its last callback, we unref this object. This
+  // means that once the last fix request has made its last callback, we risk
+  // this object being deleted before this method completes. We therefore ref
+  // and unref this object around the callback and unref calls.
+  Ref();
+
   // The HandleXXXRequestUpdate methods called below may make a callback to
   // JavaScript. A callback may ...
   // - call back into Gears code and remove a repeating fix request.
@@ -675,6 +681,11 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     }
   }
 
+#ifdef DEBUG
+  // Force garbage collection to guard against regression. See comment above.
+  GetJsRunner()->ForceGC();
+#endif
+
   // Iterate over all repeating fix requests.
   IdList watch_ids;
   for (FixRequestInfoMap::const_iterator iter = fix_requests_.begin();
@@ -693,6 +704,8 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
       HandleRepeatingRequestUpdate(watch_id, position);
     }
   }
+
+  Unref();
 }
 
 bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
