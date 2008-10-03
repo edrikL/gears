@@ -463,6 +463,7 @@ CPError CP::Initialize(CPID id, const CPBrowserFuncs *bfuncs,
 
   AllowNPInit(true);
   AutoUpdateMessage::Register();
+  AutoUpdateSyncMessage::Register();
   UpdateNotifyMessage::Register();
   IsUpdateRunningMessage::Register();
   OfflineModeMessage::Register();
@@ -493,6 +494,10 @@ class SyncPluginMessageOnPluginThread : public SyncFunctor {
   virtual void Run() {
     void *buffer;
     uint32 size;
+    if (!CP::browser_funcs().send_sync_message) {
+      return;
+    }
+
     CP::browser_funcs().send_sync_message(g_cpid, &message_[0], message_.size(),
                                           &buffer, &size);
     if (retval_ && size) {
@@ -524,10 +529,6 @@ bool PluginMessage::Send() {
 }
 
 bool PluginSyncMessage::Send() {
-  if (!CP::browser_funcs().send_sync_message) {
-    return false;
-  }
-
   std::vector<uint8> buf;
   Serializer serializer(&buf);
   if (!serializer.WriteObject(this))
@@ -541,6 +542,10 @@ bool PluginSyncMessage::Send() {
   } else {
     void *buffer;
     uint32 size;
+    if (!CP::browser_funcs().send_sync_message) {
+      return false;
+    }
+
     if (CPERR_SUCCESS != CP::browser_funcs().send_sync_message(g_cpid,
                                                                &buf[0],
                                                                buf.size(),

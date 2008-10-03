@@ -43,7 +43,7 @@
 
 // TODO(mpcomplete): remove when we have a cross-platform timer abstraction
 #if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
+#define OS_ANDROID 1
 #endif
 
 // As an implementation detail, on IE we have a single WindowsPlatformTimer
