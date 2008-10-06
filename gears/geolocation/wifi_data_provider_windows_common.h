@@ -29,52 +29,9 @@
 #ifndef GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WINDOWS_COMMON_H__
 #define GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_WINDOWS_COMMON_H__
 
-#include <vector>
-
-#ifdef WINCE
-
-#include <ntddndis.h>
-
-#else
-
-// For Win32, _NDIS_WLAN_BSSID etc are defined in ntddndis.h just as they are
-// for WinCE. However, it seems that the definition of _NDIS_WLAN_BSSID does
-// not match the data returned by the WZC functions we use. So we use the
-// modified definitions below.
-
 #include <windows.h>
-
-typedef UCHAR NDIS_802_11_MAC_ADDRESS[6];
-
-#define NDIS_802_11_LENGTH_SSID 32
-
-typedef struct _NDIS_802_11_SSID
-{
-  ULONG SsidLength;
-  UCHAR Ssid[NDIS_802_11_LENGTH_SSID];
-} NDIS_802_11_SSID, *PNDIS_802_11_SSID;
-
-typedef LONG NDIS_802_11_RSSI;
-
-typedef struct _NDIS_WLAN_BSSID {
-  UCHAR padding1[4];
-  ULONG Length;
-  UCHAR padding2[4];
-  NDIS_802_11_MAC_ADDRESS MacAddress;
-  UCHAR Reserved[2];
-  NDIS_802_11_SSID Ssid;
-  ULONG Privacy;
-  NDIS_802_11_RSSI Rssi;
-} NDIS_WLAN_BSSID, *PNDIS_WLAN_BSSID;
-
-typedef struct _NDIS_802_11_BSSID_LIST {
-  ULONG NumberOfItems;
-  // Following data is an array of NDIS_WLAN_BSSID objects of length
-  // NumberOfItems.
-  NDIS_WLAN_BSSID Bssid[1];
-} NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
-
-#endif
+#include <ntddndis.h>
+#include <vector>
 
 struct AccessPointData;
 
