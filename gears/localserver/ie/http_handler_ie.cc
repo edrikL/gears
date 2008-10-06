@@ -979,11 +979,19 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
 
   // The cached_filepath is not provided for head requests
   if (!is_head_request_ && !payload_.cached_filepath.empty()) {
+#ifdef WINCE
+    // WinCE does not support user-initiated file downloads from the browser.
+    //
+    // Passing to the browser the filepath to the Gears cache entry can cause
+    // the cache entry to get deleted once it has been read. This has been
+    // observed when Media Player is used by the browser to open the file.
+#else
     // One way to support file downloads is to provide a file path, I don't
     // know if there are other options?
-      hr = CallReportProgress(BINDSTATUS_CACHEFILENAMEAVAILABLE,
-                              payload_.cached_filepath.c_str());
-      if (FAILED(hr)) return hr;
+    hr = CallReportProgress(BINDSTATUS_CACHEFILENAMEAVAILABLE,
+                            payload_.cached_filepath.c_str());
+    if (FAILED(hr)) return hr;
+#endif
 
     // Report content disposition, including a file path
     // TODO(michaeln): a better parser for this header value, perhaps CAtlRegExp
@@ -992,6 +1000,26 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     // See the following for an implementation
     // '//depot/google3/java/com/google/httputil/ContentDisposition.java'
     // '//depot/google3/java/com/google/parser/Parser.java'
+
+#ifdef WINCE
+    // On WinCE, it seems that different file types are treated in one of three
+    // ways (when not served by Gears) ...
+    // 1 - Displayed directly in browser, eg text/html, text/plain
+    // 2 - Prompt user for download, eg audio/mpeg
+    // 3 - Automatically download and run in other app, eg video/x-ms-wmv
+    // Setting the header 'Content-Disposition: attachment' makes no difference
+    // to any of these cases.
+    //
+    // However, when files are served from the local server, reporting
+    // BINDSTATUS_CONTENTDISPOSITIONATTACH and supplying the path to the Gears
+    // cache entry here causes a change in behaviour ...
+    // 1 - No change
+    // 2 & 3 - Prompt for download, using the Gears cache entry as the default
+    // save location. This then fails.
+    //
+    // So to maintain the normal behaviour, we do not do anything special for
+    // 'Content-Disposition: attachment' on WinCE.
+#else
     std::string16 content_disposition;
     payload_.GetHeader(L"Content-Disposition", &content_disposition);
     if (content_disposition.find(L"attachment") != std::string16::npos) {
@@ -999,6 +1027,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
                               payload_.cached_filepath.c_str());
       if (FAILED(hr)) return hr;
     }
+#endif
   }
 
   size_t response_size = payload_.data.get() ? payload_.data->size() : 0;
