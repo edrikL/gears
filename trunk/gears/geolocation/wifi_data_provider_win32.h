@@ -30,7 +30,6 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/thread.h"
 #include "gears/geolocation/device_data_provider.h"
-#include "gears/geolocation/wzcsapi.h"
 #include "gears/geolocation/wlanapi.h"
 
 class Win32WifiDataProvider
@@ -47,15 +46,6 @@ class Win32WifiDataProvider
   // Thread implementation
   virtual void Run();
 
-  // WZC methods
-  // Loads the required functions from the DLL.
-  void GetWZCFunctions(HINSTANCE wzc_library);
-  // Gets wifi data for all visible access points.
-  bool GetAccessPointDataWZC(std::vector<AccessPointData> *data);
-  // Appends the data for a single interface to the data vector.
-  void GetInterfaceDataWZC(const char16 *interface_guid,
-                           std::vector<AccessPointData> *data);
-
   // WLAN methods
   // Loads the required functions from the DLL.
   void GetWLANFunctions(HINSTANCE wlan_library);
@@ -65,9 +55,11 @@ class Win32WifiDataProvider
                            const GUID &interface_id,
                            std::vector<AccessPointData> *data);
 
-  // Function pointers for WZC
-  WZCEnumInterfacesFunction WZCEnumInterfaces_function_;
-  WZCQueryInterfaceFunction WZCQueryInterface_function_;
+  // NDIS methods.
+  bool GetInterfacesNDIS();
+  bool GetAccessPointDataNDIS(std::vector<AccessPointData> *data);
+  bool GetInterfaceDataNDIS(HANDLE adapter_handle,
+                            std::vector<AccessPointData> *data);
 
   // Function pointers for WLAN
   WlanOpenHandleFunction WlanOpenHandle_function_;
@@ -75,6 +67,10 @@ class Win32WifiDataProvider
   WlanGetNetworkBssListFunction WlanGetNetworkBssList_function_;
   WlanFreeMemoryFunction WlanFreeMemory_function_;
   WlanCloseHandleFunction WlanCloseHandle_function_;
+
+  // NDIS variables.
+  std::vector<std::string16> interface_service_names_;
+  int oid_buffer_size_;
 
   WifiData wifi_data_;
   Mutex data_mutex_;

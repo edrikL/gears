@@ -33,18 +33,13 @@
 //
 // Windows XP from Service Pack 2 onwards supports the Wireless Zero
 // Configuration (WZC) programming interface. See
-// http://msdn.microsoft.com/en-us/library/ms706587(VS.85).aspx. This uses the
-// header wzcsapi.h, which is not part of the SDK, so is replicated locally with
-// data obtained from the MSDN. See
-// http://hostap.epitest.fi/wpa_supplicant/devel/driver__ndis_8c-source.html for
-// an example of using the WZC. Note that Windows Windows Vista does not support
-// WZC.
+// http://msdn.microsoft.com/en-us/library/ms706587(VS.85).aspx. 
 //
-// It appears that it is not possible to access WiFi cards on versions of
-// Windows prior to XP Service Pack 2.
-//
-// As recommended by the MSDN, we use the WLAN API where available, and WZC
+// The MSDN recommends that one use the WLAN API where available, and WZC
 // otherwise.
+//
+// However, it seems that WZC fails for some wireless cards. When WLAN is not
+// available therefore, we use NDIS directly instead of WZC.
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
@@ -53,17 +48,39 @@
 #include "gears/geolocation/wifi_data_provider_win32.h"
 
 #include <windows.h>
+#include <ntddndis.h>  // For IOCTL_NDIS_QUERY_GLOBAL_STATS
 #include "gears/base/common/string_utils.h"
 #include "gears/geolocation/wifi_data_provider_common.h"
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 
+// Taken from ndis.h for WinCE.
+#define NDIS_STATUS_INVALID_LENGTH   ((NDIS_STATUS)0xC0010014L)
+#define NDIS_STATUS_BUFFER_TOO_SHORT ((NDIS_STATUS)0xC0010016L)
+
+// The limits on the size of the buffer used for the OID query.
+static const int kInitialBufferSize = 2 << 12;  // Good for about 50 APs.
+static const int kMaximumBufferSize = 2 << 20;  // 2MB
+
+// Length for generic string buffers passed to Win32 APIs.
+static const int kStringLength = 512;
+
 // The time period, in milliseconds, between successive polls of the wifi data.
 static const int kPollingInterval = 1000;
 
-// Local function
+// Local functions
+
 // Extracts data for an access point and converts to Gears format.
 static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
                            AccessPointData *access_point_data);
+bool UndefineDosDevice(const std::string16 &device_name);
+bool DefineDosDeviceIfNotExists(const std::string16 &device_name);
+HANDLE GetFileHandle(const std::string16 &device_name);
+// Makes the OID query and returns a Win32 error code.
+int PerformQuery(HANDLE adapter_handle,
+                 BYTE *buffer,
+                 DWORD buffer_size,
+                 DWORD *bytes_out);
+bool ResizeBuffer(int requested_size, BYTE **buffer);
 
 // static
 template<>
@@ -73,7 +90,8 @@ WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
 
 
 Win32WifiDataProvider::Win32WifiDataProvider()
-    : is_first_scan_complete_(false) {
+    : oid_buffer_size_(kInitialBufferSize),
+    is_first_scan_complete_(false) {
   // Start the polling thread.
   Start();
 }
@@ -98,21 +116,18 @@ void Win32WifiDataProvider::Run() {
   typedef bool (Win32WifiDataProvider::*GetAccessPointDataFunction)(
       std::vector<AccessPointData> *data);
   GetAccessPointDataFunction get_access_point_data_function = NULL;
-  HINSTANCE library = LoadLibrary(L"wlanapi");
-  if (library) {
+  HINSTANCE library;
+  if (library = LoadLibrary(L"wlanapi")) {
     GetWLANFunctions(library);
     get_access_point_data_function =
         &Win32WifiDataProvider::GetAccessPointDataWLAN;
   } else {
-    library = LoadLibrary(L"wzcsapi");
-    if (library) {
-      GetWZCFunctions(library);
-      get_access_point_data_function =
-          &Win32WifiDataProvider::GetAccessPointDataWZC;
-    } else {
-      is_first_scan_complete_ = true;
+    // We assume the list of interfaces doesn't change while Gears is running.
+    if (!GetInterfacesNDIS()) {
       return;
     }
+    get_access_point_data_function =
+        &Win32WifiDataProvider::GetAccessPointDataNDIS;
   }
 
   // Regularly get the access point data.
@@ -135,79 +150,7 @@ void Win32WifiDataProvider::Run() {
   FreeLibrary(library);
 }
 
-void Win32WifiDataProvider::GetWZCFunctions(HINSTANCE wzc_library) {
-  assert(wzc_library);
-  WZCEnumInterfaces_function_ = reinterpret_cast<WZCEnumInterfacesFunction>(
-      GetProcAddress(wzc_library, "WZCEnumInterfaces"));
-  WZCQueryInterface_function_ = reinterpret_cast<WZCQueryInterfaceFunction>(
-      GetProcAddress(wzc_library, "WZCQueryInterface"));
-  assert(WZCEnumInterfaces_function_ && WZCQueryInterface_function_);
-}
-
-bool Win32WifiDataProvider::GetAccessPointDataWZC(
-    std::vector<AccessPointData> *data) {
-  assert(data);
-  assert(WZCEnumInterfaces_function_);
-
-  // Get the list of interfaces. WZCEnumInterfaces allocates
-  // INTFS_KEY_TABLE::pIntfs.
-  INTFS_KEY_TABLE interface_list = {0};
-  DWORD result = (*WZCEnumInterfaces_function_)(NULL, &interface_list);
-  if (result != ERROR_SUCCESS) {
-    // This fails if WZC is not running.
-    LocalFree(interface_list.pIntfs);
-    return false;
-  }
-
-  // Go through the list of interfaces and get the data for each.
-  for (int i = 0; i < static_cast<int>(interface_list.dwNumIntfs); ++i) {
-    GetInterfaceDataWZC(interface_list.pIntfs[i].wszGuid, data);
-  }
-
-  LocalFree(interface_list.pIntfs);
-  return true;
-}
-
-// This value was taken from the WinCE equivalent at
-// http://msdn.microsoft.com/en-us/library/aa448300.aspx
-#define INTF_BSSIDLIST (0x04000000)
-
-void Win32WifiDataProvider::GetInterfaceDataWZC(
-    const char16 *interface_guid,
-    std::vector<AccessPointData> *data) {
-  assert(data);
-  assert(WZCQueryInterface_function_);
-
-  INTF_ENTRY interface_data = {0};
-  interface_data.wszGuid = const_cast<char16*>(interface_guid);
-  DWORD retrieved_fields;
-  DWORD result = (*WZCQueryInterface_function_)(NULL,
-                                                INTF_BSSIDLIST,
-                                                &interface_data,
-                                                &retrieved_fields);
-  if (result != ERROR_SUCCESS ||
-      !(retrieved_fields & INTF_BSSIDLIST) ||
-      interface_data.rdBSSIDList.dwDataLen == 0) {
-    return;
-  }
-
-  // Based on the WinCE equivalent at
-  // http://msdn.microsoft.com/en-us/library/aa448306.aspx,
-  // INTF_ENTRY::rdBSSIDList::pData points to a NDIS_802_11_BSSID_LIST object.
-  // The first member is of type ULONG, and must be valid.
-  assert(interface_data.rdBSSIDList.dwDataLen >= sizeof(ULONG));
-
-  // Cast the data to a list of BSS IDs.
-  NDIS_802_11_BSSID_LIST *bss_id_list =
-      reinterpret_cast<NDIS_802_11_BSSID_LIST*>(
-          interface_data.rdBSSIDList.pData);
-
-  GetDataFromBssIdList(*bss_id_list,
-                       interface_data.rdBSSIDList.dwDataLen,
-                       data);
-
-  LocalFree(interface_data.rdBSSIDList.pData);
-}
+// WLAN functions
 
 void Win32WifiDataProvider::GetWLANFunctions(HINSTANCE wlan_library) {
   assert(wlan_library);
@@ -235,7 +178,7 @@ bool Win32WifiDataProvider::GetAccessPointDataWLAN(
 
   // Get the handle to the WLAN API.
   DWORD negotiated_version;
-  HANDLE wlan_handle;
+  HANDLE wlan_handle = NULL;
   // We could be executing on either Windows XP or Windows Vista, so use the
   // lower version of the client WLAN API. It seems that the negotiated version
   // is the Vista version irrespective of what we pass!
@@ -246,21 +189,21 @@ bool Win32WifiDataProvider::GetAccessPointDataWLAN(
                                   &wlan_handle) != ERROR_SUCCESS) {
     return false;
   }
+  assert(wlan_handle);
 
   // Get the list of interfaces. WlanEnumInterfaces allocates interface_list.
-  WLAN_INTERFACE_INFO_LIST *interface_list;
+  WLAN_INTERFACE_INFO_LIST *interface_list = NULL;
   if ((*WlanEnumInterfaces_function_)(wlan_handle, NULL, &interface_list) !=
       ERROR_SUCCESS) {
     return false;
   }
+  assert(interface_list);
 
   // Go through the list of interfaces and get the data for each.
   for (int i = 0; i < static_cast<int>(interface_list->dwNumberOfItems); ++i) {
-    if (!GetInterfaceDataWLAN(wlan_handle,
-                              interface_list->InterfaceInfo[i].InterfaceGuid,
-                              data)) {
-      return false;
-    }
+    GetInterfaceDataWLAN(wlan_handle,
+                         interface_list->InterfaceInfo[i].InterfaceGuid,
+                         data);
   }
 
   // Free interface_list.
@@ -307,7 +250,137 @@ int Win32WifiDataProvider::GetInterfaceDataWLAN(
   return found;
 }
 
-// Local function
+// NDIS functions
+
+bool Win32WifiDataProvider::GetInterfacesNDIS() {
+  HKEY network_cards_key = NULL;
+  if (RegOpenKeyEx(
+      HKEY_LOCAL_MACHINE,
+      L"Software\\Microsoft\\Windows NT\\CurrentVersion\\NetworkCards",
+      0,
+      KEY_READ,
+      &network_cards_key) != ERROR_SUCCESS) {
+    return false;
+  }
+  assert(network_cards_key);
+
+  for (int i = 0; ; ++i) {
+    TCHAR name[kStringLength];
+    DWORD name_size = kStringLength;
+    FILETIME time;
+    if (RegEnumKeyEx(network_cards_key,
+                     i,
+                     name,
+                     &name_size,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &time) != ERROR_SUCCESS) {
+      break;
+    }
+    HKEY hardware_key = NULL;
+    if (RegOpenKeyEx(network_cards_key, name, 0, KEY_READ, &hardware_key) !=
+        ERROR_SUCCESS) {
+      break;
+    }
+    assert(hardware_key);
+
+    TCHAR service_name[kStringLength];
+    DWORD service_name_size = kStringLength;
+    DWORD type = 0;
+    if (RegQueryValueEx(hardware_key,
+                        L"ServiceName",
+                        NULL,
+                        &type,
+                        reinterpret_cast<LPBYTE>(service_name),
+                        &service_name_size) == ERROR_SUCCESS) {
+      interface_service_names_.push_back(service_name);
+    }
+    RegCloseKey(hardware_key);
+  }
+
+  RegCloseKey(network_cards_key);
+  return true;
+}
+
+bool Win32WifiDataProvider::GetAccessPointDataNDIS(
+    std::vector<AccessPointData> *data) {
+  assert(data);
+
+  for (int i = 0; i < static_cast<int>(interface_service_names_.size()); ++i) {
+    // First, check that we have a DOS device for this adapter.
+    if (!DefineDosDeviceIfNotExists(interface_service_names_[i])) {
+      continue;
+    }
+
+    // Get the handle to the device. This will fail if the named device is not
+    // valid.
+    HANDLE adapter_handle = GetFileHandle(interface_service_names_[i]);
+    if (adapter_handle == INVALID_HANDLE_VALUE) {
+      continue;
+    }
+
+    // Get the data.
+    GetInterfaceDataNDIS(adapter_handle, data);
+
+    // Clean up.
+    CloseHandle(adapter_handle);
+    UndefineDosDevice(interface_service_names_[i]);
+  }
+
+  return true;
+}
+
+bool Win32WifiDataProvider::GetInterfaceDataNDIS(
+    HANDLE adapter_handle,
+    std::vector<AccessPointData> *data) {
+  assert(data);
+
+  BYTE *buffer = reinterpret_cast<BYTE*>(malloc(oid_buffer_size_));
+  if (buffer == NULL) {
+    return false;
+  }
+
+  DWORD bytes_out;
+  int result;
+
+  while (true) {
+    bytes_out = 0;
+    result = PerformQuery(adapter_handle, buffer, oid_buffer_size_, &bytes_out);
+    if (result == ERROR_GEN_FAILURE ||  // Returned by some Intel cards.
+        result == ERROR_INSUFFICIENT_BUFFER ||
+        result == ERROR_MORE_DATA ||
+        result == NDIS_STATUS_INVALID_LENGTH ||
+        result == NDIS_STATUS_BUFFER_TOO_SHORT) {
+      // The buffer we supplied is too small, so increase it. bytes_out should
+      // provide the required buffer size, but this is not always the case.
+      if (bytes_out > static_cast<DWORD>(oid_buffer_size_)) {
+        oid_buffer_size_ = bytes_out;
+      } else {
+        oid_buffer_size_ *= 2;
+      }
+      if (!ResizeBuffer(oid_buffer_size_, &buffer)) {
+        oid_buffer_size_ = kInitialBufferSize;  // Reset for next time.
+        return false;
+      }
+    } else {
+      // The buffer is not too small.
+      break;
+    }
+  }
+  assert(buffer);
+
+  if (result == ERROR_SUCCESS) {
+    NDIS_802_11_BSSID_LIST* bssid_list =
+        reinterpret_cast<NDIS_802_11_BSSID_LIST*>(buffer);
+    GetDataFromBssIdList(*bssid_list, oid_buffer_size_, data);
+  }
+
+  free(buffer);
+  return true;
+}
+
+// Local functions
 
 static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
                            AccessPointData *access_point_data) {
@@ -322,6 +395,91 @@ static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
   //access_point_data->signal_to_noise
   //access_point_data->age
   //access_point_data->channel
+  return true;
+}
+
+bool UndefineDosDevice(const std::string16 &device_name) {
+  // We remove only the mapping we use, that is \Device\<device_name>.
+  std::string16 target_path = L"\\Device\\" + device_name;
+  return DefineDosDevice(
+      DDD_RAW_TARGET_PATH | DDD_REMOVE_DEFINITION | DDD_EXACT_MATCH_ON_REMOVE,
+      device_name.c_str(),
+      target_path.c_str()) == TRUE;
+}
+
+bool DefineDosDeviceIfNotExists(const std::string16 &device_name) {
+  // We create a DOS device name for the device at \Device\<device_name>.
+  std::string16 target_path = L"\\Device\\" + device_name;
+
+  TCHAR target[kStringLength];
+  if (QueryDosDevice(device_name.c_str(), target, kStringLength) > 0 &&
+      target_path.compare(target) == 0) {
+    // Device already exists.
+    return true;
+  }
+
+  if (GetLastError() != ERROR_FILE_NOT_FOUND) {
+    return false;
+  }
+
+  if (!DefineDosDevice(DDD_RAW_TARGET_PATH,
+                       device_name.c_str(),
+                       target_path.c_str())) {
+    return false;
+  }
+
+  // Check that the device is really there.
+  return QueryDosDevice(device_name.c_str(), target, kStringLength) > 0 &&
+      target_path.compare(target) == 0;
+}
+
+HANDLE GetFileHandle(const std::string16 &device_name) {
+  // We access a device with DOS path \Device\<device_name> at
+  // \\.\<device_name>.
+  std::string16 formatted_device_name = L"\\\\.\\" + device_name;
+
+  return CreateFile(formatted_device_name.c_str(),
+                    GENERIC_READ,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,  // share mode
+                    0,  // security attributes
+                    OPEN_EXISTING,
+                    0,  // flags and attributes
+                    INVALID_HANDLE_VALUE);
+}
+
+int PerformQuery(HANDLE adapter_handle,
+                 BYTE *buffer,
+                 DWORD buffer_size,
+                 DWORD *bytes_out) {
+  DWORD oid = OID_802_11_BSSID_LIST;
+  if (!DeviceIoControl(adapter_handle,
+                       IOCTL_NDIS_QUERY_GLOBAL_STATS,
+                       &oid,
+                       sizeof(oid),
+                       buffer,
+                       buffer_size,
+                       bytes_out,
+                       NULL)) {
+    return GetLastError();
+  }
+  return ERROR_SUCCESS;
+}
+
+bool ResizeBuffer(int requested_size, BYTE **buffer) {
+  if (requested_size > kMaximumBufferSize) {
+    free(*buffer);
+    *buffer = NULL;
+    return false;
+  }
+
+  BYTE *new_buffer = reinterpret_cast<BYTE*>(realloc(*buffer, requested_size));
+  if (new_buffer == NULL) {
+    free(*buffer);
+    *buffer = NULL;
+    return false;
+  }
+
+  *buffer = new_buffer;
   return true;
 }
 
