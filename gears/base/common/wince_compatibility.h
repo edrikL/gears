@@ -121,5 +121,31 @@ class BrowserCache {
 void CallWindowOnerror(JsRunnerInterface *js_runner,
                        const std::string16 &message);
 
+// This is a WinCE specific interface for entities that wish to handle
+// page unload events. Implementors of this interface would register with the
+// UnloadEventSource class in order to receive the page unload events.
+class UnloadEventHandlerInterface {
+public:
+  virtual ~UnloadEventHandlerInterface() {}
+  virtual void HandleFakeEvent() = 0;
+};
+// This is a WinCE specific class for entities that are capable of
+// notifying a concrete implementation of UnloadEventHandlerInterface that
+// the page is unloading. Such an entity is the GearsFactoryImpl class which,
+// with its PrivateSendUnloadEvent, can be told by the client application to
+// manually deliver a fake unload event.
+class UnloadEventSource {
+ public:
+  static void SendUnload();
+  static void RegisterHandler(UnloadEventHandlerInterface *handler);
+  static void UnregisterHandler();
+ private:
+  UnloadEventSource();
+
+  static UnloadEventHandlerInterface *handler_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(UnloadEventSource);
+};
+
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE

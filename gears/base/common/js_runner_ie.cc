@@ -45,11 +45,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler.h"
-#ifdef WINCE
-// WinCE does not use HtmlEventMonitor to monitor page unloading.
-#else
 #include "gears/base/common/html_event_monitor.h"
-#endif
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For CallWindowOnerror()
@@ -988,20 +984,23 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool ListenForUnloadEvent() {
-#ifdef WINCE
-    // WinCE does not use HtmlEventMonitor to monitor page unloading.
-#else
     // Create an HTML event monitor to send the unload event when the page
     // goes away.
     unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                HandleEventUnload, this));
+#ifdef WINCE
+    CComPtr<IPIEHTMLWindow2> event_source;
+    if (FAILED(ActiveXUtils::GetHtmlWindow2(site_, &event_source))) {
+      return false;
+    }
+#else
     CComPtr<IHTMLWindow3> event_source;
     if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
       return false;
     }
+#endif
     unload_monitor_->Start(event_source);
     is_unloaded_ = false;
-#endif
     return true;
   }
 
@@ -1050,11 +1049,7 @@ class DocumentJsRunner : public JsRunnerBase {
     }
   }
 
-#ifdef WINCE
-  // WinCE does not use HtmlEventMonitor to monitor page unloading.
-#else
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
-#endif
   CComPtr<IUnknown> site_;
   bool is_module_environment_detached_;
   bool is_unloaded_;
