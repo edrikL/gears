@@ -23,15 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
-// This class does not work in WinCE, and is not referenced.
-#else
-
 #include "gears/base/common/html_event_monitor.h"
 
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 
 const char16 *kEventUnload = STRING16(L"onunload"); 
-
 
 HtmlEventMonitor::HtmlEventMonitor(const char16 *event_name,
                                    HtmlEventCallback function,
@@ -48,4 +46,3 @@ HtmlEventMonitor::~HtmlEventMonitor() {
   }
 }
 
-#endif  // WINCE .. else

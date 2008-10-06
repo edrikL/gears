@@ -493,4 +493,29 @@ bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info) {
 }
 #endif
 
+// Unload monitoring infrastructure
+
+UnloadEventHandlerInterface* UnloadEventSource::handler_ = NULL;
+
+// static
+void UnloadEventSource::SendUnload() {
+  if (!handler_) return;
+  handler_->HandleFakeEvent();
+}
+
+// static
+void UnloadEventSource::RegisterHandler(UnloadEventHandlerInterface *handler) {
+  // If the DocumentJsRunner leaks (and it does), we will end up leaking
+  // event monitors, as well.
+  // TODO(andreip): add assert(!handler_) when we stop leaking
+  // DocumentJsRunners.
+  handler_ = handler;
+}
+
+// static
+void UnloadEventSource::UnregisterHandler() {
+  assert(handler_ != NULL);
+  handler_ = NULL;
+}
+
 #endif  // WINCE

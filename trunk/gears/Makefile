@@ -1051,6 +1051,7 @@ ifeq ($(OS),wince)
 IE_CPPSRCS	+= \
 		common_ie.cc \
 		file_wince.cc \
+		html_event_monitor_iemobile.cc \
 		wince_compatibility.cc \
 		$(NULL)
 endif

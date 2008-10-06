@@ -31,6 +31,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/string16.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #ifdef DEBUG
 #include "gears/blob/fail_blob.h"
 #include "gears/blob/blob.h"
@@ -86,6 +89,8 @@ void Dispatcher<GearsFactoryImpl>::Init() {
 #ifdef WINCE
   RegisterMethod("privateSetGlobalObject",
                  &GearsFactoryImpl::PrivateSetGlobalObject);
+  RegisterMethod("privateSendUnloadEvent",
+                 &GearsFactoryImpl::PrivateSendUnloadEvent);
 #endif
 }
 
@@ -93,6 +98,9 @@ const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
 
 GearsFactoryImpl::GearsFactoryImpl()
     : ModuleImplBaseClass(kModuleName),
+#ifdef WINCE
+      unload_event_fired_(false),
+#endif
       is_creation_suspended_(false) {
   SetActiveUserFlag();
 }
@@ -310,6 +318,25 @@ void GearsFactoryImpl::PrivateSetGlobalObject(JsCallContext *context) {
   // Nonetheless, calling factory.privateSetGlobalObject(...) should still be
   // a valid call, rather than throw a "no such method" exception, and hence
   // we provide that empty method here in GearsFactoryImpl.
+}
+
+void GearsFactoryImpl::PrivateSendUnloadEvent(JsCallContext *context) {
+  // This method cannot be called inside a worker.
+  if (module_environment_->is_worker_) {
+    context->SetException(STRING16(
+        L"privateSendUnloadEvent cannot be called in a worker."));
+    return;
+  }
+  // This method can only be called once.
+  if (unload_event_fired_) {
+    context->SetException(STRING16(
+        L"privateSendUnloadEvent was already called."));
+    return;
+  }
+
+  unload_event_fired_ = true;
+  SuspendObjectCreation();
+  UnloadEventSource::SendUnload();
 }
 #endif
 

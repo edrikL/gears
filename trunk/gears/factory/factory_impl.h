@@ -66,6 +66,9 @@ class GearsFactoryImpl : public ModuleImplBaseClass {
   // IN: -
   // OUT: -
   void PrivateSetGlobalObject(JsCallContext *context);
+  // IN: -
+  // OUT: -
+  void PrivateSendUnloadEvent(JsCallContext *context);
 #endif
 
   // Non-scriptable methods
@@ -73,6 +76,12 @@ class GearsFactoryImpl : public ModuleImplBaseClass {
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
+#ifdef WINCE
+  // The PrivateSendUnloadEvent can only be called once. We use this flag to
+  // remember if the call was made.
+  bool unload_event_fired_;
+#endif
+
   // A factory starts out operational, but it can be put in a "suspended" state,
   // unable to create objects.  This is important for some use cases, like
   // cross-origin workers.
