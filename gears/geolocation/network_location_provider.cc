@@ -25,9 +25,8 @@
 
 #include "gears/geolocation/network_location_provider.h"
 
-#include "gears/base/common/event.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
-#include "gears/geolocation/geolocation_db.h"
+#include "gears/geolocation/access_token_manager.h"
 
 // The maximum period of time we'll wait for a complete set of device data
 // before sending the request.
@@ -36,86 +35,6 @@ static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
 static const int kBaselineMinimumRequestInterval = 1000 * 5;  // 5 seconds
 // The upper limit of the minimum period between network requests.
 static const int kMinimumRequestIntervalLimit = 1000 * 60 * 60 * 3;  // 3 hours
-
-
-// NetworkLocationRequest objects are specific to host, server URL and language.
-// The access token should be specific to a server URL only. This class manages
-// sharing the access token between multiple NetworkLocationRequest objects, and
-// reading and writing the value to the database for storage between sessions.
-class AccessTokenManager {
- public:
-  static AccessTokenManager *GetInstance() {
-    return &instance_;
-  }
-
-  void Register(const std::string16 &url) {
-    MutexLock lock(&access_tokens_mutex_);
-    user_count_.Ref();
-    // If we don't have a token for this URL in the map, try to get one from the
-    // database.
-    if (access_tokens_.find(url) == access_tokens_.end()) {
-      GeolocationDB *db = GeolocationDB::GetDB();
-      std::string16 access_token;
-      if (db && db->RetrieveAccessToken(url, &access_token)) {
-        // Empty tokens should never be stored in the DB.
-        assert(!access_token.empty());
-        access_tokens_[url] = access_token;
-      }
-    }
-  }
-
-  void Unregister() {
-    MutexLock lock(&access_tokens_mutex_);
-    // If this is the last user, write the tokens to the database.
-    if (user_count_.Unref()) {
-      GeolocationDB *db = GeolocationDB::GetDB();
-      if (db) {
-        for (AccessTokenMap::const_iterator iter = access_tokens_.begin();
-             iter != access_tokens_.end();
-             iter++) {
-          if (!iter->second.empty()) {
-            db->StoreAccessToken(iter->first, iter->second);
-          }
-        }
-      }
-    }
-  }
-
-  // Returns the empty string if no token exists.
-  void GetToken(const std::string16 &url, std::string16 *access_token) {
-    assert(access_token);
-    MutexLock lock(&access_tokens_mutex_);
-    AccessTokenMap::const_iterator iter = access_tokens_.find(url);
-    if (iter == access_tokens_.end()) {
-      access_token->clear();
-    } else {
-      *access_token = iter->second;
-    }
-  }
-
-  void SetToken(const std::string16 &url, const std::string16 &access_token) {
-    MutexLock lock(&access_tokens_mutex_);
-    access_tokens_[url] = access_token;
-  }
-
- private:
-  AccessTokenManager() {}
-  ~AccessTokenManager() {}
-
-  RefCount user_count_;
-
-  // A map from server URL to access token.
-  typedef std::map<std::string16, std::string16> AccessTokenMap;
-  AccessTokenMap access_tokens_;
-  Mutex access_tokens_mutex_;
-
-  static AccessTokenManager instance_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(AccessTokenManager);
-};
-
-// static
-AccessTokenManager AccessTokenManager::instance_;
 
 
 // The BackoffManager class is used to implement exponential back-off for
