@@ -27,6 +27,7 @@
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
+#include "gears/geolocation/access_token_manager.h"
 
 
 ReverseGeocoder::ReverseGeocoder(const std::string16 &url,
@@ -39,12 +40,16 @@ ReverseGeocoder::ReverseGeocoder(const std::string16 &url,
       listener_(listener),
       request_(NULL) {
   assert(listener_);
+
+  AccessTokenManager::GetInstance()->Register(url_);
 }
 
 ReverseGeocoder::~ReverseGeocoder() {
   if (request_) {
     request_->StopThreadAndDelete();
   }
+
+  AccessTokenManager::GetInstance()->Unregister();
 }
 
 bool ReverseGeocoder::MakeRequest(const Position &position) {
@@ -57,8 +62,9 @@ bool ReverseGeocoder::MakeRequest(const Position &position) {
 
   RadioData radio_data;
   WifiData wifi_data;
-  // TODO(steveblock): Correctly handle the access token.
-  return request_->MakeRequest(STRING16(L""),  // access_token
+  std::string16 access_token;
+  AccessTokenManager::GetInstance()->GetToken(url_, &access_token);
+  return request_->MakeRequest(access_token,
                                radio_data,
                                wifi_data,
                                true,  // request_address
@@ -72,8 +78,14 @@ bool ReverseGeocoder::MakeRequest(const Position &position) {
 void ReverseGeocoder::LocationResponseAvailable(
     const Position &position,
     bool /* server_error */,
-    const std::string16 & /* access_token */) {
-  // TODO(steveblock): Correctly handle the access token and exponential
-  // back-off in case of server error.
+    const std::string16 &access_token) {
+  // TODO(steveblock): Correctly handle exponential back-off in case of server
+  // error.
+
+  // Record access_token if it's set.
+  if (!access_token.empty()) {
+    AccessTokenManager::GetInstance()->SetToken(url_, access_token);
+  }
+
   listener_->ReverseGeocodeAvailable(position);
 }
