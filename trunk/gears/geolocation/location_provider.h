@@ -91,7 +91,10 @@ class LocationProviderBase {
 // Factory functions for the various types of location provider to abstract over
 // the platform-dependent implementations.
 LocationProviderBase *NewMockLocationProvider();
-LocationProviderBase *NewGpsLocationProvider();
+LocationProviderBase *NewGpsLocationProvider(
+    const std::string16 &reverse_geocode_url,
+    const std::string16 &host_name,
+    const std::string16 &address_language);
 LocationProviderBase *NewNetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &host_name,
                                                  const std::string16 &language);

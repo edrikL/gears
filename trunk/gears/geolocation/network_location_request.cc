@@ -62,16 +62,16 @@ static void AddString(const std::string &property_name,
 static void AddInteger(const std::string &property_name,
                        const int &value,
                        Json::Value *object);
-// Adds an angle as a double if it's valid to the JSON object. Returns true if
-// added.
-static bool AddAngle(const std::string &property_name,
-                     const double &value,
-                     Json::Value *object);
+// Returns true if the value is a valid angle.
+static bool IsValidAngle(const double &value);
 // Parses the server response body. Returns true if parsing was successful.
 static bool ParseServerResponse(const std::string &response_body,
                                 int64 timestamp,
+                                bool is_reverse_geocode,
                                 Position *position,
                                 std::string16 *access_token);
+static void AddRadioData(const RadioData &radio_data, Json::Value *body_object);
+static void AddWifiData(const WifiData &wifi_data, Json::Value *body_object);
 
 // static
 NetworkLocationRequest* NetworkLocationRequest::Create(
@@ -101,9 +101,12 @@ bool NetworkLocationRequest::MakeRequest(const std::string16 &access_token,
                                          double latitude,
                                          double longitude,
                                          int64 timestamp) {
+  is_reverse_geocode_ = request_address &&
+                        IsValidAngle(latitude) &&
+                        IsValidAngle(longitude);
   if (!FormRequestBody(host_name_, access_token, radio_data, wifi_data,
                        request_address, address_language, latitude, longitude,
-                       &post_body_)) {
+                       is_reverse_geocode_, &post_body_)) {
     return false;
   }
   timestamp_ = timestamp;
@@ -150,7 +153,8 @@ void NetworkLocationRequest::Run() {
     }
     std::string16 access_token;
     GetLocationFromResponse(result, payload.status_code, response_body,
-                            timestamp_, url_, &position, &access_token);
+                            timestamp_, url_, is_reverse_geocode_,
+                            &position, &access_token);
 
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     bool server_error =
@@ -169,6 +173,7 @@ bool NetworkLocationRequest::FormRequestBody(
     std::string16 address_language,
     double latitude,
     double longitude,
+    bool is_reverse_geocode,
     scoped_refptr<BlobInterface> *blob) {
   assert(blob);
   Json::Value body_object;
@@ -182,66 +187,19 @@ bool NetworkLocationRequest::FormRequestBody(
 
   AddString("access_token", access_token, &body_object);
 
-  AddInteger("home_mobile_country_code", radio_data.home_mobile_country_code,
-             &body_object);
-  AddInteger("home_mobile_network_code", radio_data.home_mobile_network_code,
-             &body_object);
-  AddString("radio_type", RadioTypeToString(radio_data.radio_type),
-            &body_object);
-  AddString("carrier", radio_data.carrier, &body_object);
   body_object["request_address"] = request_address;
   AddString("address_language", address_language, &body_object);
 
-  Json::Value location;
-  if (AddAngle("latitude", latitude, &location) &&
-      AddAngle("longitude", longitude, &location)) {
+  if (is_reverse_geocode) {
+    assert(request_address);
+    assert(IsValidAngle(latitude) && IsValidAngle(longitude));
+    Json::Value location;
+    location["latitude"] = Json::Value(latitude);
+    location["longitude"] = Json::Value(longitude);
     body_object["location"] = location;
-  }
-
-  Json::Value cell_towers;
-  assert(cell_towers.isArray());
-  int num_cell_towers = static_cast<int>(radio_data.cell_data.size());
-  for (int i = 0; i < num_cell_towers; ++i) {
-    Json::Value cell_tower;
-    assert(cell_tower.isObject());
-    AddInteger("cell_id", radio_data.cell_data[i].cell_id, &cell_tower);
-    AddInteger("location_area_code", radio_data.cell_data[i].location_area_code,
-               &cell_tower);
-    AddInteger("mobile_country_code",
-               radio_data.cell_data[i].mobile_country_code, &cell_tower);
-    AddInteger("mobile_network_code",
-               radio_data.cell_data[i].mobile_network_code, &cell_tower);
-    AddInteger("age", radio_data.cell_data[i].age, &cell_tower);
-    AddInteger("signal_strength", radio_data.cell_data[i].radio_signal_strength,
-               &cell_tower);
-    AddInteger("timing_advance", radio_data.cell_data[i].timing_advance,
-               &cell_tower);
-    cell_towers[i] = cell_tower;
-  }
-  if (num_cell_towers > 0) {
-    body_object["cell_towers"] = cell_towers;
-  }
-
-  Json::Value wifi_towers;
-  assert(wifi_towers.isArray());
-  int num_wifi_towers = static_cast<int>(wifi_data.access_point_data.size());
-  for (int i = 0; i < num_wifi_towers; ++i) {
-    Json::Value wifi_tower;
-    assert(wifi_tower.isObject());
-    AddString("mac_address", wifi_data.access_point_data[i].mac_address,
-              &wifi_tower);
-    AddInteger("signal_strength",
-               wifi_data.access_point_data[i].radio_signal_strength,
-               &wifi_tower);
-    AddInteger("age", wifi_data.access_point_data[i].age, &wifi_tower);
-    AddInteger("channel", wifi_data.access_point_data[i].channel, &wifi_tower);
-    AddInteger("signal_to_noise",
-               wifi_data.access_point_data[i].signal_to_noise, &wifi_tower);
-    AddString("ssid", wifi_data.access_point_data[i].ssid, &wifi_tower);
-    wifi_towers[i] = wifi_tower;
-  }
-  if (num_wifi_towers > 0) {
-    body_object["wifi_towers"] = wifi_towers;
+  } else {
+    AddRadioData(radio_data, &body_object);
+    AddWifiData(wifi_data, &body_object);
   }
 
   Json::FastWriter writer;
@@ -260,6 +218,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
     const std::string &response_body,
     int64 timestamp,
     const std::string16 &server_url,
+    bool is_reverse_geocode,
     Position *position,
     std::string16 *access_token) {
   assert(position);
@@ -278,7 +237,8 @@ void NetworkLocationRequest::GetLocationFromResponse(
   } else if (status_code == HttpConstants::HTTP_OK) {
     // We use the timestamp from the device data that was used to generate
     // this position fix.
-    if (ParseServerResponse(response_body, timestamp, position, access_token)) {
+    if (ParseServerResponse(response_body, timestamp, is_reverse_geocode,
+                            position, access_token)) {
       // The response was successfully parsed, but it may not be a valid
       // position fix.
       if (!position->IsGoodFix()) {
@@ -363,16 +323,8 @@ static void AddInteger(const std::string &property_name,
   }
 }
 
-static bool AddAngle(const std::string &property_name,
-                     const double &value,
-                     Json::Value *object) {
-  assert(object);
-  assert(object->isObject());
-  if (value >= -180.0 && value <= 180.0) {
-    (*object)[property_name] = Json::Value(value);
-    return true;
-  }
-  return false;
+static bool IsValidAngle(const double &value) {
+  return value >= -180.0 && value <= 180.0;
 }
 
 // Numeric values without a decimal point have type integer and IsDouble() will
@@ -413,6 +365,7 @@ static bool GetAsString(const Json::Value &object,
 
 static bool ParseServerResponse(const std::string &response_body,
                                 int64 timestamp,
+                                bool is_reverse_geocode,
                                 Position *position,
                                 std::string16 *access_token) {
   assert(position);
@@ -458,11 +411,19 @@ static bool ParseServerResponse(const std::string &response_body,
     return false;
   }
 
-  // latitude, longitude and accuracy fields are required.
+  // latitude and longitude fields are always required.
   if (!GetAsDouble(location, kLatitudeString, &position->latitude) ||
-      !GetAsDouble(location, kLongitudeString, &position->longitude) ||
-      !GetAsDouble(location, kAccuracyString, &position->accuracy)) {
+      !GetAsDouble(location, kLongitudeString, &position->longitude)) {
     return false;
+  }
+
+  // If it's not a reverse geocode request, the accuracy field is also required.
+  if (is_reverse_geocode) {
+    position->accuracy = 0.0;
+  } else {
+    if (!GetAsDouble(location, kAccuracyString, &position->accuracy)) {
+      return false;
+    }
   }
 
   // Other fields are optional.
@@ -483,4 +444,67 @@ static bool ParseServerResponse(const std::string &response_body,
 
   position->timestamp = timestamp;
   return true;
+}
+
+static void AddRadioData(const RadioData &radio_data,
+                         Json::Value *body_object) {
+  assert(body_object);
+
+  AddInteger("home_mobile_country_code", radio_data.home_mobile_country_code,
+             body_object);
+  AddInteger("home_mobile_network_code", radio_data.home_mobile_network_code,
+             body_object);
+  AddString("radio_type", RadioTypeToString(radio_data.radio_type),
+            body_object);
+  AddString("carrier", radio_data.carrier, body_object);
+
+  Json::Value cell_towers;
+  assert(cell_towers.isArray());
+  int num_cell_towers = static_cast<int>(radio_data.cell_data.size());
+  for (int i = 0; i < num_cell_towers; ++i) {
+    Json::Value cell_tower;
+    assert(cell_tower.isObject());
+    AddInteger("cell_id", radio_data.cell_data[i].cell_id, &cell_tower);
+    AddInteger("location_area_code", radio_data.cell_data[i].location_area_code,
+               &cell_tower);
+    AddInteger("mobile_country_code",
+               radio_data.cell_data[i].mobile_country_code, &cell_tower);
+    AddInteger("mobile_network_code",
+               radio_data.cell_data[i].mobile_network_code, &cell_tower);
+    AddInteger("age", radio_data.cell_data[i].age, &cell_tower);
+    AddInteger("signal_strength", radio_data.cell_data[i].radio_signal_strength,
+               &cell_tower);
+    AddInteger("timing_advance", radio_data.cell_data[i].timing_advance,
+               &cell_tower);
+    cell_towers[i] = cell_tower;
+  }
+  if (num_cell_towers > 0) {
+    (*body_object)["cell_towers"] = cell_towers;
+  }
+}
+
+static void AddWifiData(const WifiData &wifi_data, Json::Value *body_object) {
+  assert(body_object);
+
+  Json::Value wifi_towers;
+  assert(wifi_towers.isArray());
+  int num_wifi_towers = static_cast<int>(wifi_data.access_point_data.size());
+  for (int i = 0; i < num_wifi_towers; ++i) {
+    Json::Value wifi_tower;
+    assert(wifi_tower.isObject());
+    AddString("mac_address", wifi_data.access_point_data[i].mac_address,
+              &wifi_tower);
+    AddInteger("signal_strength",
+               wifi_data.access_point_data[i].radio_signal_strength,
+               &wifi_tower);
+    AddInteger("age", wifi_data.access_point_data[i].age, &wifi_tower);
+    AddInteger("channel", wifi_data.access_point_data[i].channel, &wifi_tower);
+    AddInteger("signal_to_noise",
+               wifi_data.access_point_data[i].signal_to_noise, &wifi_tower);
+    AddString("ssid", wifi_data.access_point_data[i].ssid, &wifi_tower);
+    wifi_towers[i] = wifi_tower;
+  }
+  if (num_wifi_towers > 0) {
+    (*body_object)["wifi_towers"] = wifi_towers;
+  }
 }

@@ -45,6 +45,7 @@ class LocationProviderPool {
   // provider. Returns the provider, or NULL if it cannot be created.
   LocationProviderBase *Register(
       const std::string16 &type,
+      const std::string16 &url,
       const std::string16 &host,
       bool request_address,
       const std::string16 &language,
@@ -61,6 +62,7 @@ class LocationProviderPool {
   void UseMockLocationProvider(bool use_mock_location_provider);
 
   LocationProviderBase *NewProvider(const std::string16 &type,
+                                    const std::string16 &url,
                                     const std::string16 &host,
                                     const std::string16 &language);
 

@@ -29,9 +29,11 @@
 
 static const char16 *kMockString = STRING16(L"MOCK");
 static const char16 *kGpsString = STRING16(L"GPS");
+static const char16 *kNetworkString = STRING16(L"NETWORK");
 
 // Local functions
 static std::string16 MakeKey(const std::string16 &type,
+                             const std::string16 &url,
                              const std::string16 &host,
                              const std::string16 &language);
 
@@ -57,16 +59,17 @@ LocationProviderPool *LocationProviderPool::GetInstance() {
 
 LocationProviderBase *LocationProviderPool::Register(
       const std::string16 &type,
+      const std::string16 &url,
       const std::string16 &host,
       bool request_address,
       const std::string16 &language,
       LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
   MutexLock lock(&providers_mutex_);
-  std::string16 key = MakeKey(type, host, language);
+  std::string16 key = MakeKey(type, url, host, language);
   ProviderMap::iterator iter = providers_.find(key);
   if (iter == providers_.end()) {
-    LocationProviderBase *provider = NewProvider(type, host, language);
+    LocationProviderBase *provider = NewProvider(type, url, host, language);
     if (!provider) {
       return NULL;
     }
@@ -118,6 +121,7 @@ void LocationProviderPool::UseMockLocationProvider(
 
 LocationProviderBase *LocationProviderPool::NewProvider(
     const std::string16 &type,
+    const std::string16 &url,
     const std::string16 &host,
     const std::string16 &language) {
   if (type == kMockString) {
@@ -133,26 +137,37 @@ LocationProviderBase *LocationProviderPool::NewProvider(
     return NULL;
 #endif  // USING_CCTESTS
   } else if (type == kGpsString) {
-    return NewGpsLocationProvider();
-  } else {
-    return NewNetworkLocationProvider(type, host, language);
+    return NewGpsLocationProvider(url, host, language);
+  } else if (type == kNetworkString) {
+    return NewNetworkLocationProvider(url, host, language);
   }
+  assert(false);
+  return NULL;
 }
 
 // Local function
 static std::string16 MakeKey(const std::string16 &type,
+                             const std::string16 &url,
                              const std::string16 &host,
                              const std::string16 &language) {
-  // A network location request is made from a specific host. Also, the request
-  // includes the address language. Therefore we must key network providers on
-  // server URL, host name and language
-  if (type == kMockString || type == kGpsString) {
+  // Network requests are made from a specific host and use a specific language.
+  // Therefore we must key network and GPS providers on server URL, host and
+  // language.
+  if (type == kMockString) {
     return type;
-  } else {
-    std::string16 key = type + STRING16(L" ") + host;
+  } else if (type == kGpsString || type == kNetworkString) {
+    std::string16 key = type;
+    if (!url.empty()) {
+      key += STRING16(L" url=") + url;
+    }
+    if (!host.empty()) {
+      key += STRING16(L" host=") + host;
+    }
     if (!language.empty()) {
-      key += STRING16(L" ") + language;
+      key += STRING16(L" language=") + language;
     }
     return key;
   }
+  assert(false);
+  return STRING16(L"");
 }

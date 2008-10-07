@@ -83,7 +83,10 @@ Mutex *LocationProviderBase::GetListenersMutex() {
 // Win32, Linux and OSX do not have a GPS location provider.
 #if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
 
-LocationProviderBase *NewGpsLocationProvider() {
+LocationProviderBase *NewGpsLocationProvider(
+    const std::string16 &reverse_geocode_url,
+    const std::string16 &host_name,
+    const std::string16 &address_language) {
   return NULL;
 }
 
