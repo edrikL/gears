@@ -1109,7 +1109,6 @@ NPAPI_CPPSRCS	+= \
 		ie_version.cc \
 		message_queue_cr.cc \
 		time_utils_win32.cc \
-		vista_utils.cc \
 		$(NULL)
 # TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
