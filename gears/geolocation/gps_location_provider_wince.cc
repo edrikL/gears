@@ -60,16 +60,37 @@ static const char16 *kFailedToConnectErrorMessage =
 static const char16 *kFailedToGetFixErrorMessage =
     STRING16(L"GPS failed to get a position fix.");
 
+// Local functions.
+// These both assume that position_2 is a good fix.
+bool PositionsDiffer(const Position &position_1, const Position &position_2);
+bool PositionsDifferSiginificantly(const Position &position_1,
+                                   const Position &position_2);
 
-LocationProviderBase *NewGpsLocationProvider() {
-  return new WinceGpsLocationProvider();
+LocationProviderBase *NewGpsLocationProvider(
+    const std::string16 &reverse_geocode_url,
+    const std::string16 &host_name,
+    const std::string16 &address_language) {
+  return new WinceGpsLocationProvider(reverse_geocode_url,
+                                      host_name,
+                                      address_language);
 }
 
 
-WinceGpsLocationProvider::WinceGpsLocationProvider() {
+WinceGpsLocationProvider::WinceGpsLocationProvider(
+    const std::string16 &reverse_geocode_url,
+    const std::string16 &host_name,
+    const std::string16 &address_language)
+    : reverse_geocode_url_(reverse_geocode_url),
+      host_name_(host_name),
+      address_language_(address_language),
+      request_address_(false),
+      reverse_geocoder_(NULL),
+      is_reverse_geocode_in_progress_(false),
+      is_new_reverse_geocode_required_(false) {
   // Initialise member events.
   stop_event_.Create(NULL, FALSE, FALSE, NULL);
   new_listener_waiting_event_.Create(NULL, FALSE, FALSE, NULL);
+  new_reverse_geocode_required_event_.Create(NULL, FALSE, FALSE, NULL);
 
   // Start the worker thread.
   Start();
@@ -86,8 +107,46 @@ void WinceGpsLocationProvider::RegisterListener(
     bool request_address) {
   LocationProviderBase::RegisterListener(listener, request_address);
 
+  // Update whether or not we need to request an address.
+  if (request_address) {
+    // Lazilly create the reverse geocoder if possible.
+    if (reverse_geocoder_.get() == NULL && !reverse_geocode_url_.empty()) {
+      reverse_geocoder_.reset(new ReverseGeocoder(reverse_geocode_url_,
+                                                  host_name_,
+                                                  address_language_,
+                                                  this));
+    }
+    // Update the flag if we have a reverse geocoder.
+    if (reverse_geocoder_.get()) {
+      request_address_ = true;
+    }
+  }
+
+  LocationProviderBase::RegisterListener(listener, request_address);
+
   // Signal to the worker thread that there is a new listener.
   new_listener_waiting_event_.Set();
+}
+
+void WinceGpsLocationProvider::UnregisterListener(
+    LocationProviderBase::ListenerInterface *listener) {
+  assert(listener);
+
+  LocationProviderBase::UnregisterListener(listener);
+
+  // Update whether or not we need to request an address.
+  if (request_address_) {
+    MutexLock listeners_lock(GetListenersMutex());
+    ListenerMap *listeners = GetListeners();
+    for (ListenerMap::const_iterator iter = listeners->begin();
+         iter != listeners->end();
+         iter++) {
+      if (iter->second.first == true) {
+        return;
+      }
+    }
+    request_address_ = false;
+  }
 }
 
 // LocationProviderBase implementation
@@ -107,7 +166,8 @@ void WinceGpsLocationProvider::Run() {
   HANDLE events[] = {stop_event_,
                      new_listener_waiting_event_,
                      position_update_event,
-                     state_change_event};
+                     state_change_event,
+                     new_reverse_geocode_required_event_};
 
   // Connect to GPS.
   gps_handle_ = GPSOpenDevice(position_update_event,
@@ -170,10 +230,15 @@ void WinceGpsLocationProvider::Run() {
         shutting_down = true;
         break;
       case WAIT_OBJECT_0 + 1:  // new_listener_waiting_event_
-        // Only call back if we've got a good fix. Otherwise, the new listener
-        // should continue to wait.
+        // Only call back if we've got a good fix and we have an address if
+        // required. Otherwise, the new listener should continue to wait.
         if (state_ == STATE_FIX_ACQUIRED) {
-          UpdateListeners();
+          assert(position_.IsGoodFix());
+          if (request_address_ && !position_.IncludesAddress()) {
+            MakeReverseGeocodeRequest(position_);
+          } else {
+            UpdateListeners();
+          }
         }
         break;
       case WAIT_OBJECT_0 + 2:  // position_update_event
@@ -181,6 +246,9 @@ void WinceGpsLocationProvider::Run() {
         break;
       case WAIT_OBJECT_0 + 3:  // state_change_event
         HandleStateChange();
+        break;
+      case WAIT_OBJECT_0 + 4:  // new_reverse_geocode_required_event_
+        MakeReverseGeocodeRequest(position_);
         break;
       default:
         // Wait timed out.
@@ -212,8 +280,7 @@ void WinceGpsLocationProvider::Run() {
 }
 
 void WinceGpsLocationProvider::HandlePositionUpdate() {
-  bool update_available = false;
-  position_mutex_.Lock();
+  Position new_position;
 
   GPS_POSITION gps_position = {0};
   gps_position.dwSize = sizeof(gps_position);
@@ -224,20 +291,12 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
                      0) == ERROR_SUCCESS) {  // Reserved
     if ((gps_position.dwValidFields & GPS_VALID_LATITUDE) &&
         (gps_position.dwValidFields & GPS_VALID_LONGITUDE)) {
-      if (position_.latitude != gps_position.dblLatitude ||
-          position_.longitude != gps_position.dblLongitude) {
-        position_.latitude = gps_position.dblLatitude;
-        position_.longitude = gps_position.dblLongitude;
-        update_available = true;
-      }
+      new_position.latitude = gps_position.dblLatitude;
+      new_position.longitude = gps_position.dblLongitude;
     }
 
     if (gps_position.dwValidFields & GPS_VALID_ALTITUDE_WRT_ELLIPSOID) {
-      double altitude = gps_position.flAltitudeWRTEllipsoid;
-      if (position_.altitude != altitude) {
-        position_.altitude = altitude;
-        update_available = true;
-      }
+      new_position.altitude = gps_position.flAltitudeWRTEllipsoid;
     }
 
     // The GPS Intermediate Driver API does not provide a numerical value for
@@ -248,19 +307,14 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
     // http://en.wikipedia.org/wiki/Dilution_of_precision_(GPS) and
     // http://www.cgrer.uiowa.edu/cgrer_lab/gps/gpsdefs.html).
     if (gps_position.dwValidFields & GPS_VALID_POSITION_DILUTION_OF_PRECISION) {
-      int accuracy;
       if (gps_position.flPositionDilutionOfPrecision <= 3) {
-        accuracy = 1;
+        new_position.accuracy = 1;
       } else if (gps_position.flPositionDilutionOfPrecision <= 6) {
-        accuracy = 10;
+        new_position.accuracy = 10;
       } else if (gps_position.flPositionDilutionOfPrecision <= 8) {
-        accuracy = 20;
+        new_position.accuracy = 20;
       } else {
-        accuracy = 50;
-      }
-      if (position_.accuracy != accuracy) {
-        position_.accuracy = accuracy;
-        update_available = true;
+        new_position.accuracy = 50;
       }
     }
   }
@@ -271,20 +325,38 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
   if (GPSGetDeviceState(&device_state) == ERROR_SUCCESS) {
     if (device_state.ftLastDataReceived.dwHighDateTime != 0 ||
         device_state.ftLastDataReceived.dwLowDateTime != 0) {
-      int64 timestamp =
+      new_position.timestamp =
           FiletimeToMilliseconds(device_state.ftLastDataReceived);
-      if (position_.timestamp != timestamp) {
-        position_.timestamp = timestamp;
-      }
     }
   }
 
-  position_mutex_.Unlock();
+  if (!new_position.IsGoodFix()) {
+    return;
+  }
 
-  // Call back only if the position has changed and is good.
-  if (update_available && position_.IsGoodFix()) {
-    state_ = STATE_FIX_ACQUIRED;
-    UpdateListeners();
+  MutexLock lock(&position_mutex_);
+  Address address = position_.address;
+
+  state_ = STATE_FIX_ACQUIRED;
+
+  if (PositionsDifferSiginificantly(position_, new_position) &&
+      request_address_) {
+    // The positions differ significantly and an address was requested.
+    position_ = new_position;
+    if (is_reverse_geocode_in_progress_) {
+      is_new_reverse_geocode_required_ = true;
+    } else {
+      MakeReverseGeocodeRequest(position_);
+    }
+  } else if (PositionsDiffer(position_, new_position)) {
+    // The position changed, but we don't need a new reverse geocode.
+    position_ = new_position;
+    position_.address = address;
+    // Update the listeners only if no reverse geocode is in progress. If one is
+    // in progress, it will pick up the new position in ReverseGeocodeAvailable.
+    if (!is_reverse_geocode_in_progress_) {
+      UpdateListeners();
+    }
   }
 }
 
@@ -302,6 +374,70 @@ void WinceGpsLocationProvider::HandleStateChange() {
       state_ = STATE_ACQUIRING_FIX;
     }
   }
+}
+
+// ReverseGeocoder::ListenerInterface implementation
+void WinceGpsLocationProvider::ReverseGeocodeAvailable(
+    const Position &position) {
+  assert(is_reverse_geocode_in_progress_);
+
+  MutexLock lock(&position_mutex_);
+  // Copy only the address, so at to preserve the position if an update has been
+  // made since the reverse geocode started.
+  position_.address = position.address;
+  is_reverse_geocode_in_progress_ = false;
+  UpdateListeners();
+
+  if (is_new_reverse_geocode_required_) {
+    new_reverse_geocode_required_event_.Set();
+  }
+}
+
+void WinceGpsLocationProvider::MakeReverseGeocodeRequest(
+    const Position &position) {
+  assert(request_address_);
+  assert(reverse_geocoder_.get());
+
+  if (is_reverse_geocode_in_progress_) {
+    return;
+  }
+  is_reverse_geocode_in_progress_ = true;
+  is_new_reverse_geocode_required_ = false;
+
+  // Note that this will fail if a request is already in progress.
+  if (!reverse_geocoder_->MakeRequest(position)) {
+    LOG("Failed to make reverse geocode request.");
+    is_reverse_geocode_in_progress_ = false;
+  }
+}
+
+// Local functions
+
+bool PositionsDiffer(const Position &position_1, const Position &position_2) {
+  assert(position_2.IsGoodFix());
+
+  if (!position_1.IsGoodFix()) {
+    return true;
+  }
+  return position_1.latitude != position_2.latitude ||
+         position_1.longitude != position_2.longitude ||
+         position_1.accuracy != position_2.accuracy ||
+         position_1.altitude != position_2.altitude;
+}
+
+bool PositionsDifferSiginificantly(const Position &position_1,
+                                   const Position &position_2) {
+  assert(position_2.IsGoodFix());
+
+  if (!position_1.IsGoodFix()) {
+    return true;
+  }
+  double delta = fabs(position_1.latitude - position_2.latitude) +
+                 fabs(position_1.longitude - position_2.longitude);
+  // Convert to metres. 1 second of arc of latitude (or longitude at the
+  // equator) is 1 nautical mile or 1852m.
+  delta *= 60 * 1852;
+  return delta > 100;
 }
 
 #endif  // WINCE

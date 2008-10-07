@@ -33,18 +33,24 @@
 #include "gears/base/common/thread.h"
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/geolocation.h"
+#include "gears/geolocation/reverse_geocoder.h"
 
 class WinceGpsLocationProvider
     : public LocationProviderBase,
-      public Thread {
+      public Thread,
+      public ReverseGeocoder::ReverseGeocoderListenerInterface {
  public:
-  WinceGpsLocationProvider();
+   WinceGpsLocationProvider(const std::string16 &reverse_geocode_url,
+                            const std::string16 &host_name,
+                            const std::string16 &address_language);
   ~WinceGpsLocationProvider();
 
   // Override LocationProviderBase implementation.
   virtual void RegisterListener(
       LocationProviderBase::ListenerInterface *listener,
       bool request_address);
+  virtual void UnregisterListener(
+      LocationProviderBase::ListenerInterface *listener);
 
   // LocationProviderBase implementation.
   virtual void GetPosition(Position *position);
@@ -53,9 +59,14 @@ class WinceGpsLocationProvider
   // Thread implementation
   virtual void Run();
 
+  // ReverseGeocoder::ListenerInterface implementation
+  virtual void ReverseGeocodeAvailable(const Position &position);
+
   // Callbacks used to handle updates from the GPS Intermediate Driver library.
   void HandlePositionUpdate();
   void HandleStateChange();
+
+  void MakeReverseGeocodeRequest(const Position &position);
 
   // The current best position estimate and its mutex.
   Position position_;
@@ -67,6 +78,7 @@ class WinceGpsLocationProvider
   // Events signalled to the thread that waits for events from the GPS API.
   CEvent stop_event_;
   CEvent new_listener_waiting_event_;
+  CEvent new_reverse_geocode_required_event_;
 
   // The state of the attempt to get a fix from the GPS. Use for determining
   // timeouts.
@@ -76,6 +88,16 @@ class WinceGpsLocationProvider
     STATE_FIX_ACQUIRED,
   } State;
   State state_;
+
+  std::string16 reverse_geocode_url_;
+  std::string16 host_name_;
+  std::string16 address_language_;
+
+  bool request_address_;
+
+  scoped_ptr<ReverseGeocoder> reverse_geocoder_;
+  bool is_reverse_geocode_in_progress_;
+  bool is_new_reverse_geocode_required_;
 
   DISALLOW_EVIL_CONSTRUCTORS(WinceGpsLocationProvider);
 };

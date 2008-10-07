@@ -306,6 +306,7 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
                                                STRING16(L"en-GB"),
                                                53.1,
                                                -0.1,
+                                               false,  // is_reverse_geocode_
                                                &blob)) {
     context->SetException(STRING16(L"Failed to form request body."));
     return;
@@ -367,6 +368,7 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                                   response_body_utf8,
                                                   timestamp,
                                                   server_url,
+                                                  false,  // is_reverse_geocode
                                                   &position,
                                                   &access_token);
 

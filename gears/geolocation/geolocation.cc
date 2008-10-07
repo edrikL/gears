@@ -438,49 +438,59 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   std::string16 host_name = EnvPageSecurityOrigin().host();
   LocationProviderPool *pool = LocationProviderPool::GetInstance();
 
+  // Form the list of valid, absolute URLS.
+  std::vector<std::string16> resolved_urls;
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    std::string16 resolved_url;
+    if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
+                            urls[i].c_str(),
+                            &resolved_url)) {
+      resolved_urls.push_back(resolved_url);
+    }
+  }
+
   // Mock provider
-  LocationProviderBase *mock_provider = pool->Register(STRING16(L"MOCK"),
-                                                       host_name,
-                                                       info->request_address,
-                                                       info->address_language,
-                                                       this);
+  LocationProviderBase *mock_provider =
+      pool->Register(STRING16(L"MOCK"),
+                     STRING16(L""),  // url
+                     STRING16(L""),  // host_name,
+                     info->request_address,
+                     STRING16(L""),  // info->address_language,
+                     this);
+  // This only succeeds in builds with CCTESTS.
   if (mock_provider) {
     info->providers.push_back(mock_provider);
   }
 
   // Native providers
   if (info->enable_high_accuracy) {
-    LocationProviderBase *gps_provider = pool->Register(STRING16(L"GPS"),
-                                                        host_name,
-                                                        info->request_address,
-                                                        info->address_language,
-                                                        this);
-    if (gps_provider) {
-      info->providers.push_back(gps_provider);
-    }
+    // Use the first valid network provider URL, if present, for reverse
+    // geocoding.
+    std::string16 reverse_geocoder_url = resolved_urls.empty() ?
+                                         STRING16(L"") :
+                                         resolved_urls[0];
+    LocationProviderBase *gps_provider =
+        pool->Register(STRING16(L"GPS"),
+                       reverse_geocoder_url,
+                       host_name,
+                       info->request_address && !reverse_geocoder_url.empty(),
+                       info->address_language,
+                       this);
+    assert(gps_provider);
+    info->providers.push_back(gps_provider);
   }
 
   // Network providers
-  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
-    // Check if the url is valid. If not, skip this URL. This also handles the
-    // case where the URL is 'GPS', which would confuse the location provider
-    // pool.
-    std::string16 absolute_url;
-    // Form an absolute URL if the supplied URL is relative. This fails if the
-    // URL is not valid.
-    if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
-                            urls[i].c_str(),
-                            &absolute_url)) {
-      LocationProviderBase *network_provider =
-          pool->Register(absolute_url,
-                         host_name,
-                         info->request_address,
-                         info->address_language,
-                         this);
-      if (network_provider) {
-        info->providers.push_back(network_provider);
-      }
-    }
+  for (int i = 0; i < static_cast<int>(resolved_urls.size()); ++i) {
+    LocationProviderBase *network_provider =
+        pool->Register(STRING16(L"NETWORK"),
+                       resolved_urls[i],
+                       host_name,
+                       info->request_address,
+                       info->address_language,
+                       this);
+    assert(network_provider);
+    info->providers.push_back(network_provider);
   }
 
   // If this fix has no providers, throw an exception and quit.

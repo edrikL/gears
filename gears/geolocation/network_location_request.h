@@ -88,6 +88,7 @@ class NetworkLocationRequest : public AsyncTask {
                               std::string16 address_language,
                               double latitude,
                               double longitude,
+                              bool is_reverse_geocode,
                               scoped_refptr<BlobInterface> *blob);
 
   static void GetLocationFromResponse(bool http_post_result,
@@ -95,6 +96,7 @@ class NetworkLocationRequest : public AsyncTask {
                                       const std::string &response_body,
                                       int64 timestamp,
                                       const std::string16 &server_url,
+                                      bool is_reverse_geocode,
                                       Position *position,
                                       std::string16 *access_token);
 
@@ -105,6 +107,8 @@ class NetworkLocationRequest : public AsyncTask {
   std::string16 host_name_;
 
   Mutex is_processing_response_mutex_;
+
+  bool is_reverse_geocode_;
 
 #ifdef USING_CCTESTS
   // Uses FormRequestBody for testing.

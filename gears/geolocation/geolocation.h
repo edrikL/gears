@@ -56,6 +56,19 @@ const int kGeolocationLocationNotFoundErrorCode = 3;
 
 // The internal representation of an address.
 struct Address {
+ public:
+  bool IsPopulated() const {
+    return !street_number.empty() ||
+           !street.empty() ||
+           !premises.empty() ||
+           !city.empty() ||
+           !county.empty() ||
+           !region.empty() ||
+           !country.empty() ||
+           !country_code.empty() ||
+           !postal_code.empty();
+  }
+
   std::string16 street_number; // street number
   std::string16 street;        // street address
   std::string16 premises;      // premises, e.g. building name
@@ -88,6 +101,9 @@ struct Position {
   }
   bool IsInitialized() const {
     return IsGoodFix() || error_code != kint32min;
+  }
+  bool IncludesAddress() const {
+    return address.IsPopulated();
   }
 
   // These properties are returned to JavaScript as a Position object.
