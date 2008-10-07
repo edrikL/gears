@@ -81,6 +81,9 @@ int PerformQuery(HANDLE adapter_handle,
                  DWORD buffer_size,
                  DWORD *bytes_out);
 bool ResizeBuffer(int requested_size, BYTE **buffer);
+// Gets the system directory and appends a trailing slash if not already
+// present.
+bool GetSystemDirectory(std::string16 *path);
 
 // static
 template<>
@@ -91,7 +94,7 @@ WifiDataProviderImplBase *WifiDataProvider::DefaultFactoryFunction() {
 
 Win32WifiDataProvider::Win32WifiDataProvider()
     : oid_buffer_size_(kInitialBufferSize),
-    is_first_scan_complete_(false) {
+      is_first_scan_complete_(false) {
   // Start the polling thread.
   Start();
 }
@@ -112,23 +115,35 @@ bool Win32WifiDataProvider::GetData(WifiData *data) {
 
 // Thread implementation
 void Win32WifiDataProvider::Run() {
+  // We use an absolute path to load the DLL to avoid DLL preloading attacks.
+  HINSTANCE library = NULL;
+  std::string16 system_directory;
+  if (GetSystemDirectory(&system_directory)) {
+    assert(!system_directory.empty());
+    std::string16 dll_path = system_directory + L"wlanapi.dll";
+    library = LoadLibraryEx(dll_path.c_str(),
+                            NULL,
+                            LOAD_WITH_ALTERED_SEARCH_PATH);
+  }
+
   // Use the WLAN interface if possible, otherwise use WZC.
   typedef bool (Win32WifiDataProvider::*GetAccessPointDataFunction)(
       std::vector<AccessPointData> *data);
   GetAccessPointDataFunction get_access_point_data_function = NULL;
-  HINSTANCE library;
-  if (library = LoadLibrary(L"wlanapi")) {
+  if (library) {
     GetWLANFunctions(library);
     get_access_point_data_function =
         &Win32WifiDataProvider::GetAccessPointDataWLAN;
   } else {
     // We assume the list of interfaces doesn't change while Gears is running.
     if (!GetInterfacesNDIS()) {
+      is_first_scan_complete_ = true;
       return;
     }
     get_access_point_data_function =
         &Win32WifiDataProvider::GetAccessPointDataNDIS;
   }
+  assert(get_access_point_data_function);
 
   // Regularly get the access point data.
   do {
@@ -480,6 +495,31 @@ bool ResizeBuffer(int requested_size, BYTE **buffer) {
   }
 
   *buffer = new_buffer;
+  return true;
+}
+
+bool GetSystemDirectory(std::string16 *path) {
+  assert(path);
+  // Return value includes terminating NULL.
+  int buffer_size = GetSystemDirectory(NULL, 0);
+  if (buffer_size == 0) {
+    return false;
+  }
+  char16 *buffer = new char16[buffer_size];
+
+  // Return value excludes terminating NULL.
+  int characters_written = GetSystemDirectory(buffer, buffer_size);
+  if (characters_written == 0) {
+    return false;
+  }
+  assert(characters_written == buffer_size - 1);
+
+  path->assign(buffer);
+  delete[] buffer;
+
+  if (path->at(path->length() - 1) != L'\\') {
+    path->append(L"\\");
+  }
   return true;
 }
 

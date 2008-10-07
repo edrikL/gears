@@ -81,6 +81,9 @@ bool WinceRadioDataProvider::GetData(RadioData *data) {
 // Thread implementation.
 void WinceRadioDataProvider::Run() {
   // Get the function pointers from the DLL.
+  //
+  // Note that the DLL search strategy on WinCE does not use the current
+  // directory, so is not vulnerable to DLL preloading attacks.
   HINSTANCE ril_library = LoadLibrary(L"ril");
   if (!ril_library) {
     LOG16((L"WinceRadioDataProvider::Run() : Failed to load ril library.\n"));
