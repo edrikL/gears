@@ -38,8 +38,9 @@
 // The MSDN recommends that one use the WLAN API where available, and WZC
 // otherwise.
 //
-// However, it seems that WZC fails for some wireless cards. When WLAN is not
-// available therefore, we use NDIS directly instead of WZC.
+// However, it seems that WZC fails for some wireless cards. Also, WLAN seems
+// not to work on XP SP3. So we use WLAN on Vista, and use NDIS directly
+// otherwise.
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
@@ -50,6 +51,7 @@
 #include <windows.h>
 #include <ntddndis.h>  // For IOCTL_NDIS_QUERY_GLOBAL_STATS
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/vista_utils.h"
 #include "gears/geolocation/wifi_data_provider_common.h"
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 
@@ -126,11 +128,12 @@ void Win32WifiDataProvider::Run() {
                             LOAD_WITH_ALTERED_SEARCH_PATH);
   }
 
-  // Use the WLAN interface if possible, otherwise use WZC.
+  // Use the WLAN interface if we're on Vista and if it's available. Otherwise,
+  // use NDIS.
   typedef bool (Win32WifiDataProvider::*GetAccessPointDataFunction)(
       std::vector<AccessPointData> *data);
   GetAccessPointDataFunction get_access_point_data_function = NULL;
-  if (library) {
+  if (VistaUtils::IsRunningOnVista() && library) {
     GetWLANFunctions(library);
     get_access_point_data_function =
         &Win32WifiDataProvider::GetAccessPointDataWLAN;

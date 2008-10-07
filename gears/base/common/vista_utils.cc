@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// TODO(cprince): remove platform-specific #ifdef guards when OS-specific
+// sources (e.g. WIN32_CPPSRCS) are implemented
+#if defined(WIN32)
+
 #include <assert.h>
 #include <tchar.h>
 #include "gears/base/common/vista_utils.h"
@@ -122,3 +126,5 @@ bool VistaUtils::GetLocalAppDataLowPath(std::string16 *fullpath) {
   CoTaskMemFree(path);
   return true;
 }
+
+#endif  // WIN32

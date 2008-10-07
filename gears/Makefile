@@ -951,6 +951,7 @@ $(BROWSER)_CPPSRCS	+= \
 		url_utils.cc \
 		url_utils_test.cc \
 		user_config.cc \
+		vista_utils.cc \
 		$(NULL)
 
 ifeq ($(OS),osx)
@@ -1038,7 +1039,6 @@ IE_CPPSRCS	+= \
 		module_wrapper.cc \
 		paths_ie.cc \
 		time_utils_win32.cc \
-		vista_utils.cc \
 		$(NULL)
 ifeq ($(OS),win32)
 IE_CPPSRCS	+= \
