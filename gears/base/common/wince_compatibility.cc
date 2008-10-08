@@ -46,6 +46,7 @@ HANDLE CMutexWince::global_mutex_ = NULL;
 CriticalSection CMutexWince::lock_;
 const char16* kGlobalMutexName =
     STRING16(PRODUCT_SHORT_NAME L"GearsGlobalMutexWince");
+static const char16* kSmartphonePlatformType = L"SmartPhone";
 
 // Used by SHCreateDirectoryEx.
 static void SkipTokens(const std::string16 &path,
@@ -516,6 +517,52 @@ void UnloadEventSource::RegisterHandler(UnloadEventHandlerInterface *handler) {
 void UnloadEventSource::UnregisterHandler() {
   assert(handler_ != NULL);
   handler_ = NULL;
+}
+
+// Localization
+
+static std::string16 GetSystemParameterInfo(UINT parameter) {
+  char16 parameter_value[MAX_PATH];
+  ZeroMemory(parameter_value, sizeof(parameter_value));
+  SystemParametersInfo(parameter,
+                       sizeof(parameter_value),
+                       parameter_value,
+                       0);
+  return std::string16(parameter_value);
+}
+
+static bool GetLocaleFromLcid(int32 locale_id, std::string16 *locale) {
+  // Get the current locale formatted as RFC-1766 from mlang.dll
+  HINSTANCE mlang_library = LoadLibrary(L"mlang");
+  if (!mlang_library) return false;
+
+  char16 rfc_1766[6];
+  typedef HRESULT (LcidToRfc1766W)(LCID locale_id,
+                                   LPWSTR locale_string_out,
+                                   int nr_chars);
+  LcidToRfc1766W* convert_lcid_to_rfc_1766_function =
+      reinterpret_cast<LcidToRfc1766W*>(
+          GetProcAddress(mlang_library, L"LcidToRfc1766W"));
+  HRESULT ret = convert_lcid_to_rfc_1766_function(locale_id,
+                                                  rfc_1766,
+                                                  ARRAYSIZE(rfc_1766));
+
+  FreeLibrary(mlang_library);
+  if (ret != S_OK) {return false;}
+  assert(locale);
+  *locale = rfc_1766;
+  return true;
+}
+
+bool GetCurrentSystemLocale(std::string16 *locale) {
+  LCID locale_id;
+  std::string16 platform_type = GetSystemParameterInfo(SPI_GETPLATFORMTYPE);
+  if (platform_type == kSmartphonePlatformType) {
+    locale_id = GetUserDefaultUILanguage();
+  } else {
+    locale_id = GetUserDefaultLCID();
+  }
+  return GetLocaleFromLcid(locale_id, locale);
 }
 
 #endif  // WINCE
