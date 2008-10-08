@@ -77,15 +77,12 @@ bool ReverseGeocoder::MakeRequest(const Position &position) {
 // NetworkLocationRequest::ListenerInterface implementation.
 void ReverseGeocoder::LocationResponseAvailable(
     const Position &position,
-    bool /* server_error */,
+    bool server_error,
     const std::string16 &access_token) {
-  // TODO(steveblock): Correctly handle exponential back-off in case of server
-  // error.
-
   // Record access_token if it's set.
   if (!access_token.empty()) {
     AccessTokenManager::GetInstance()->SetToken(url_, access_token);
   }
 
-  listener_->ReverseGeocodeAvailable(position);
+  listener_->ReverseGeocodeAvailable(position, server_error);
 }

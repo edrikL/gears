@@ -2396,7 +2396,8 @@ $(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
-    access_token_manager.cc \
+		access_token_manager.cc \
+		backoff_manager.cc \
 		empty_device_data_provider.cc \
 		geolocation.cc \
 		geolocation_db.cc \
