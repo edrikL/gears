@@ -304,9 +304,9 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
                                                wifi_data,
                                                true,
                                                STRING16(L"en-GB"),
-                                               53.1,
-                                               -0.1,
-                                               false,  // is_reverse_geocode_
+                                               0.0,  // Unused
+                                               0.0,  // Unused
+                                               false,  // is_reverse_geocode
                                                &blob)) {
     context->SetException(STRING16(L"Failed to form request body."));
     return;

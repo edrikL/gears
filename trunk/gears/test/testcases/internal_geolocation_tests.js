@@ -123,10 +123,6 @@ function testFormRequestBody() {
                       '"signal_strength" : -65 ' +
                       '} ], ' +
                       '"host" : "www.google.com", ' +
-                      '"location" : { ' +
-                      '"latitude" : 53.1, ' +
-                      '"longitude" : -0.1 ' +
-                      '}, ' +
                       '"radio_type" : "gsm", ' +
                       '"request_address" : true, ' +
                       '"version" : "1.1.0", ' +
