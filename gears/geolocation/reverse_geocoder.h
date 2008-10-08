@@ -34,7 +34,8 @@ class ReverseGeocoder : public NetworkLocationRequest::ListenerInterface {
   // NetworkLocationRequest::ListenerInterface.
   class ReverseGeocoderListenerInterface {
    public:
-    virtual void ReverseGeocodeAvailable(const Position &position) = 0;
+    virtual void ReverseGeocodeAvailable(const Position &position,
+                                         bool server_error) = 0;
     virtual ~ReverseGeocoderListenerInterface() {}
   };
 

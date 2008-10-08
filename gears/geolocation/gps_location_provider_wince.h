@@ -33,12 +33,14 @@
 #include "gears/base/common/thread.h"
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/geolocation.h"
+#include "gears/geolocation/timed_callback.h"
 #include "gears/geolocation/reverse_geocoder.h"
 
 class WinceGpsLocationProvider
     : public LocationProviderBase,
       public Thread,
-      public ReverseGeocoder::ReverseGeocoderListenerInterface {
+      public ReverseGeocoder::ReverseGeocoderListenerInterface,
+      public TimedCallback::ListenerInterface {
  public:
    WinceGpsLocationProvider(const std::string16 &reverse_geocode_url,
                             const std::string16 &host_name,
@@ -60,7 +62,11 @@ class WinceGpsLocationProvider
   virtual void Run();
 
   // ReverseGeocoder::ListenerInterface implementation
-  virtual void ReverseGeocodeAvailable(const Position &position);
+  virtual void ReverseGeocodeAvailable(const Position &position,
+                                       bool server_error);
+
+  // TimedCallback::ListenerInterface implementation
+  virtual void OnTimeout(TimedCallback *caller, void *user_data);
 
   // Callbacks used to handle updates from the GPS Intermediate Driver library.
   void HandlePositionUpdate();
@@ -78,7 +84,7 @@ class WinceGpsLocationProvider
   // Events signalled to the thread that waits for events from the GPS API.
   CEvent stop_event_;
   CEvent new_listener_waiting_event_;
-  CEvent new_reverse_geocode_required_event_;
+  CEvent request_wait_time_expired_event_;
 
   // The state of the attempt to get a fix from the GPS. Use for determining
   // timeouts.
@@ -98,6 +104,11 @@ class WinceGpsLocationProvider
   scoped_ptr<ReverseGeocoder> reverse_geocoder_;
   bool is_reverse_geocode_in_progress_;
   bool is_new_reverse_geocode_required_;
+
+  // A timed callback used to trigger an event when the required wait time
+  // between subsequent requests to the reverse geocoder server has elapsed.
+  scoped_ptr<TimedCallback> request_wait_time_callback_;
+  Mutex request_wait_time_callback_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(WinceGpsLocationProvider);
 };

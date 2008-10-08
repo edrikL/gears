@@ -22,27 +22,37 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// The BackoffManager class is used to implement exponential back-off for
+// network requests in case of sever errors. Users report to the BackoffManager
+// class when they make a request to or receive a response from a given url. The
+// BackoffManager class provides the earliest time at which subsequent requests
+// should be made.
 
-#include "gears/geolocation/timed_callback.h"
+#ifndef GEARS_GEOLOCATION_BACKOFF_MANAGER_H__
+#define GEARS_GEOLOCATION_BACKOFF_MANAGER_H__
 
-TimedCallback::TimedCallback(ListenerInterface *listener,
-                             int timeout_milliseconds,
-                             void *user_data)
-    : listener_(listener),
-      timeout_(timeout_milliseconds),
-      user_data_(user_data) {
-  assert(listener_);
-  assert(timeout_ >= 0);
-  Start();
-}
+#include "gears/base/common/common.h"
+#include "gears/base/common/mutex.h"
+#include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
+#include <map>
 
-TimedCallback::~TimedCallback() {
-  stop_event_.Signal();
-  Join();
-}
+class BackoffManager {
+ public:
+  static void ReportRequest(const std::string16 &url);
+  static int64 ReportResponse(const std::string16 &url, bool server_error);
 
-void TimedCallback::Run() {
-  if (!stop_event_.WaitWithTimeout(timeout_)) {
-    listener_->OnTimeout(this, user_data_);
-  }
-}
+ private:
+  // A map from server URL to a pair of integers representing the last request
+  // time and the current minimum interval between requests, both in
+  // milliseconds.
+  typedef std::map<std::string16, std::pair<int64, int64> > ServerMap;
+  static ServerMap servers_;
+
+  // The mutex used to protect the map.
+  static Mutex servers_mutex_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(BackoffManager);
+};
+
+#endif  // GEARS_GEOLOCATION_BACKOFF_MANAGER_H__

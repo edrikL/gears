@@ -46,6 +46,7 @@
 #include <service.h>
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/time_utils_win32.h"
+#include "gears/geolocation/backoff_manager.h"
 
 // Maximum age of GPS data we'll accept.
 static const int kGpsDataMaximumAgeMilliseconds = 5 * 1000;
@@ -86,11 +87,12 @@ WinceGpsLocationProvider::WinceGpsLocationProvider(
       request_address_(false),
       reverse_geocoder_(NULL),
       is_reverse_geocode_in_progress_(false),
-      is_new_reverse_geocode_required_(false) {
+      is_new_reverse_geocode_required_(false),
+      request_wait_time_callback_(NULL) {
   // Initialise member events.
   stop_event_.Create(NULL, FALSE, FALSE, NULL);
   new_listener_waiting_event_.Create(NULL, FALSE, FALSE, NULL);
-  new_reverse_geocode_required_event_.Create(NULL, FALSE, FALSE, NULL);
+  request_wait_time_expired_event_.Create(NULL, FALSE, FALSE, NULL);
 
   // Start the worker thread.
   Start();
@@ -110,7 +112,7 @@ void WinceGpsLocationProvider::RegisterListener(
   // Update whether or not we need to request an address.
   if (request_address) {
     // Lazilly create the reverse geocoder if possible.
-    if (reverse_geocoder_.get() == NULL && !reverse_geocode_url_.empty()) {
+    if (reverse_geocoder_ == NULL && !reverse_geocode_url_.empty()) {
       reverse_geocoder_.reset(new ReverseGeocoder(reverse_geocode_url_,
                                                   host_name_,
                                                   address_language_,
@@ -167,7 +169,7 @@ void WinceGpsLocationProvider::Run() {
                      new_listener_waiting_event_,
                      position_update_event,
                      state_change_event,
-                     new_reverse_geocode_required_event_};
+                     request_wait_time_expired_event_};
 
   // Connect to GPS.
   gps_handle_ = GPSOpenDevice(position_update_event,
@@ -235,7 +237,11 @@ void WinceGpsLocationProvider::Run() {
         if (state_ == STATE_FIX_ACQUIRED) {
           assert(position_.IsGoodFix());
           if (request_address_ && !position_.IncludesAddress()) {
-            MakeReverseGeocodeRequest(position_);
+            request_wait_time_callback_mutex_.Lock();
+            if (request_wait_time_callback_ == NULL) {
+              MakeReverseGeocodeRequest(position_);
+            }
+            request_wait_time_callback_mutex_.Unlock();
           } else {
             UpdateListeners();
           }
@@ -247,8 +253,14 @@ void WinceGpsLocationProvider::Run() {
       case WAIT_OBJECT_0 + 3:  // state_change_event
         HandleStateChange();
         break;
-      case WAIT_OBJECT_0 + 4:  // new_reverse_geocode_required_event_
-        MakeReverseGeocodeRequest(position_);
+      case WAIT_OBJECT_0 + 4:  // request_wait_time_expired_event_
+        request_wait_time_callback_mutex_.Lock();
+        assert(request_wait_time_callback_.get());
+        request_wait_time_callback_.reset();
+        if (is_new_reverse_geocode_required_) {
+          MakeReverseGeocodeRequest(position_);
+        }
+        request_wait_time_callback_mutex_.Unlock();
         break;
       default:
         // Wait timed out.
@@ -343,7 +355,11 @@ void WinceGpsLocationProvider::HandlePositionUpdate() {
       request_address_) {
     // The positions differ significantly and an address was requested.
     position_ = new_position;
-    if (is_reverse_geocode_in_progress_) {
+    MutexLock lock(&request_wait_time_callback_mutex_);
+    if (is_reverse_geocode_in_progress_ ||
+        request_wait_time_callback_.get()) {
+      // A reverse geocode is in progress or we're waiting for the time between
+      // requests to expire.
       is_new_reverse_geocode_required_ = true;
     } else {
       MakeReverseGeocodeRequest(position_);
@@ -377,8 +393,8 @@ void WinceGpsLocationProvider::HandleStateChange() {
 }
 
 // ReverseGeocoder::ListenerInterface implementation
-void WinceGpsLocationProvider::ReverseGeocodeAvailable(
-    const Position &position) {
+void WinceGpsLocationProvider::ReverseGeocodeAvailable(const Position &position,
+                                                       bool server_error) {
   assert(is_reverse_geocode_in_progress_);
 
   MutexLock lock(&position_mutex_);
@@ -388,15 +404,25 @@ void WinceGpsLocationProvider::ReverseGeocodeAvailable(
   is_reverse_geocode_in_progress_ = false;
   UpdateListeners();
 
-  if (is_new_reverse_geocode_required_) {
-    new_reverse_geocode_required_event_.Set();
-  }
+  // Get earliest time for next request.
+  int64 timeout =
+      BackoffManager::ReportResponse(reverse_geocode_url_, server_error) -
+      GetCurrentTimeMillis();
+  MutexLock callback_lock(&request_wait_time_callback_mutex_);
+  assert(request_wait_time_callback_ == NULL);
+  request_wait_time_callback_.reset(new TimedCallback(
+      this,
+      timeout > 0 ? static_cast<int>(timeout) : 0,
+      NULL));
 }
 
 void WinceGpsLocationProvider::MakeReverseGeocodeRequest(
     const Position &position) {
+  // request_wait_time_callback_mutex_ should alwways be locked when this
+  // method is called.
   assert(request_address_);
   assert(reverse_geocoder_.get());
+  assert(request_wait_time_callback_ == NULL);
 
   if (is_reverse_geocode_in_progress_) {
     return;
@@ -404,11 +430,25 @@ void WinceGpsLocationProvider::MakeReverseGeocodeRequest(
   is_reverse_geocode_in_progress_ = true;
   is_new_reverse_geocode_required_ = false;
 
+  BackoffManager::ReportRequest(reverse_geocode_url_);
+
   // Note that this will fail if a request is already in progress.
   if (!reverse_geocoder_->MakeRequest(position)) {
     LOG("Failed to make reverse geocode request.");
     is_reverse_geocode_in_progress_ = false;
   }
+}
+
+// TimedCallback::ListenerInterface implementation
+void WinceGpsLocationProvider::OnTimeout(TimedCallback *caller,
+                                         void *user_data) {
+  MutexLock lock(&request_wait_time_callback_mutex_);
+
+  assert(user_data == NULL);
+  assert(request_wait_time_callback_.get());
+  assert(request_wait_time_callback_ == caller);
+
+  request_wait_time_expired_event_.Set();
 }
 
 // Local functions

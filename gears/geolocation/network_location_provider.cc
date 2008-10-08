@@ -27,73 +27,11 @@
 
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
 #include "gears/geolocation/access_token_manager.h"
+#include "gears/geolocation/backoff_manager.h"
 
 // The maximum period of time we'll wait for a complete set of device data
 // before sending the request.
 static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
-// The baseline minimum period between network requests.
-static const int kBaselineMinimumRequestInterval = 1000 * 5;  // 5 seconds
-// The upper limit of the minimum period between network requests.
-static const int kMinimumRequestIntervalLimit = 1000 * 60 * 60 * 3;  // 3 hours
-
-
-// The BackoffManager class is used to implement exponential back-off for
-// network requests in case of sever errors. Users report to the BackoffManager
-// class when they make a request to or receive a response from a given url. The
-// BackoffManager class provides the earliest time at which subsequent requests
-// should be made.
-class BackoffManager {
- public:
-  static void ReportRequest(const std::string16 &url) {
-    MutexLock lock(&servers_mutex_);
-    ServerMap::iterator iter = servers_.find(url);
-    if (iter != servers_.end()) {
-      iter->second.first = GetCurrentTimeMillis();
-    } else {
-      servers_[url] = std::make_pair(GetCurrentTimeMillis(),
-                                     kBaselineMinimumRequestInterval);
-    }
-  }
-
-  static int64 ReportResponse(const std::string16 &url, bool server_error) {
-    // Use exponential back-off on server error.
-    MutexLock lock(&servers_mutex_);
-    ServerMap::iterator iter = servers_.find(url);
-    assert(iter != servers_.end());
-    int64 *interval = &iter->second.second;
-    if (server_error) {
-      if (*interval < kMinimumRequestIntervalLimit) {
-        // Increase interval by between 90% and 110%.
-        srand(static_cast<unsigned int>(GetCurrentTimeMillis()));
-        double increment_proportion = 0.9 + 0.2 * rand() / RAND_MAX;
-        int64 increment = static_cast<int64>(*interval * increment_proportion);
-        if (increment > kMinimumRequestIntervalLimit - *interval) {
-          *interval = kMinimumRequestIntervalLimit;
-        } else {
-          *interval += increment;
-        }
-      }
-    } else {
-      *interval = kBaselineMinimumRequestInterval;
-    }
-    return iter->second.first + *interval;
-  }
-
- private:
-  // A map from server URL to a pair of integers representing the last request
-  // time and the current minimum interval between requests, both in
-  // milliseconds.
-  typedef std::map<std::string16, std::pair<int64, int64> > ServerMap;
-  static ServerMap servers_;
-
-  // The mutex used to protect the map.
-  static Mutex servers_mutex_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(BackoffManager);
-};
-
-BackoffManager::ServerMap BackoffManager::servers_;
-Mutex BackoffManager::servers_mutex_;
 
 
 LocationProviderBase *NewNetworkLocationProvider(
