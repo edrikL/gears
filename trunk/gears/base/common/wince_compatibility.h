@@ -147,5 +147,12 @@ class UnloadEventSource {
   DISALLOW_EVIL_CONSTRUCTORS(UnloadEventSource);
 };
 
+// Localization utilities
+
+// Returns the system local which the phone is operating in.
+// On smartphones this will be the locale of the selected language as opposed
+// to the selected system locale (which is a good thing).
+bool GetCurrentSystemLocale(std::string16 *locale);
+
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE

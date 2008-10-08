@@ -26,6 +26,9 @@
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/ui/common/html_dialog.h"
 #ifdef WINCE
 #include "gears/ui/ie/html_dialog_host_iemobile.h"
@@ -59,6 +62,9 @@ bool HtmlDialog::DoModelessImpl(
 }
 
 bool HtmlDialog::GetLocale(std::string16 *locale) {
+#ifdef WINCE
+  return GetCurrentSystemLocale(locale);
+#else
   char16 locale_string[MAX_PATH];
   if (LoadString(GetGearsModuleHandle(), IDS_LOCALE,
                  locale_string, MAX_PATH)) {
@@ -66,4 +72,5 @@ bool HtmlDialog::GetLocale(std::string16 *locale) {
     return true;
   }
   return false;
+#endif
 }
