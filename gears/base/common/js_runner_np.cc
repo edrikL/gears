@@ -140,19 +140,16 @@ class JsRunnerBase : public JsRunnerInterface {
                          ")");
   }
 
-  JsArray* NewArray() {
+  JsArray *NewArray() {
     scoped_ptr<JsObject> js_object(NewObjectImpl("Array()"));
     if (!js_object.get())
       return NULL;
 
-    scoped_ptr<JsArray> js_array(new JsArray());
-    if (!js_array.get())
+    JsArray *result = NULL;
+    if (!JsTokenToArray_NoCoerce(js_object->token(), GetContext(), &result))
       return NULL;
 
-    if (!js_array->SetArray(js_object->token(), js_object->context()))
-      return NULL;
-
-    return js_array.release();
+    return result;
   }
 
   bool ConvertJsObjectToDate(JsObject *obj,
@@ -324,11 +321,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return reinterpret_cast<JsToken *>(token);
   }
 
-  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) {
-    return js_array->SetArray(
-        *AbstractJsTokenToJsTokenPtr(token), GetContext());
-  }
-
   virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
     return js_object->SetObject(
         *AbstractJsTokenToJsTokenPtr(token), GetContext());
@@ -365,6 +357,11 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
     return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToArray(AbstractJsToken token, JsArray **out) {
+    return JsTokenToArray_NoCoerce(
         *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
   }
 

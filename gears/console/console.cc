@@ -44,11 +44,11 @@ void GearsConsole::Log(JsCallContext *context) {
   // Get and sanitize parameters.
   std::string16 type_str;
   std::string16 message;
-  JsArray args_array;
+  scoped_ptr<JsArray> args_array;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &type_str },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &message },
-    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &args_array},
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, as_out_parameter(args_array)},
   };
   if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
     assert(context->is_exception_set());
@@ -68,7 +68,7 @@ void GearsConsole::Log(JsCallContext *context) {
   
   std::string16 msg = message;
   if (argv[2].was_specified) {
-    InterpolateArgs(&message, &args_array);
+    InterpolateArgs(&message, args_array.get());
   }
   LogEvent *log_event = new LogEvent(message, type_str, EnvPageLocationUrl());
   MessageService::GetInstance()->NotifyObservers(observer_topic_.c_str(),

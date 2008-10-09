@@ -127,21 +127,67 @@ bool JsTokenEqualTo::CompareObjects(const JsToken &x, const JsToken &y) const {
 // JsArray
 //------------------------------------------------------------------------------
 
+class JsArrayImpl : public JsArray {
+ public:
+  JsArrayImpl();
+  virtual ~JsArrayImpl();
+
+  bool Initialize(JsToken value, JsContextPtr context);
+
+  virtual bool GetLength(int *length) const;
+
+  const JsScopedToken &token() const { return array_; }
+
+  virtual bool GetElementAsBool(int index, bool *out) const;
+  virtual bool GetElementAsInt(int index, int *out) const;
+  virtual bool GetElementAsDouble(int index, double *out) const;
+  virtual bool GetElementAsString(int index, std::string16 *out) const;
+  virtual bool GetElementAsArray(int index, JsArray **out) const;
+  virtual bool GetElementAsObject(int index, JsObject *out) const;
+  virtual bool GetElementAsFunction(int index, JsRootedCallback **out) const;
+
+  virtual bool GetElementAsStringWithCoercion(int index,
+                                              std::string16 *out) const;
+
+  virtual JsParamType GetElementType(int index) const;
+
+  virtual bool SetElementBool(int index, bool value);
+  virtual bool SetElementInt(int index, int value);
+  virtual bool SetElementDouble(int index, double value);
+  virtual bool SetElementString(int index, const std::string16 &value);
+  virtual bool SetElementArray(int index, JsArray *value);
+  virtual bool SetElementObject(int index, JsObject *value);
+  virtual bool SetElementFunction(int index, JsRootedCallback *value);
+  virtual bool SetElementModule(int index, ModuleImplBaseClass *value);
+  virtual bool SetElementNull(int index);
+  virtual bool SetElementUndefined(int index);
+
+  virtual bool GetElement(int index, JsScopedToken *out) const;
+  virtual bool SetElement(int index, const JsScopedToken &value);
+
+ private:
+  JsContextPtr js_context_;
+  JsScopedToken array_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsArrayImpl);
+};
+
+
 #if BROWSER_FF
 
-JsArray::JsArray() : js_context_(NULL), array_(0) {
-  LEAK_COUNTER_INCREMENT(JsArray);
+JsArrayImpl::JsArrayImpl() : js_context_(NULL), array_(0) {
+  LEAK_COUNTER_INCREMENT(JsArrayImpl);
 }
 
-JsArray::~JsArray() {
-  LEAK_COUNTER_DECREMENT(JsArray);
+JsArrayImpl::~JsArrayImpl() {
+  LEAK_COUNTER_DECREMENT(JsArrayImpl);
   if (array_ && JSVAL_IS_GCTHING(array_)) {
     JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &array_);
   }
 }
 
-bool JsArray::SetArray(JsToken value, JsContextPtr context) {
+bool JsArrayImpl::Initialize(JsToken value, JsContextPtr context) {
   // check that it's an array
   if (!JSVAL_IS_OBJECT(value) ||
       !JS_IsArrayObject(context, JSVAL_TO_OBJECT(value))) {
@@ -161,7 +207,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) const {
+bool JsArrayImpl::GetLength(int *length) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   JsRequest request(js_context_);
@@ -174,7 +220,7 @@ bool JsArray::GetLength(int *length) const {
   return true;
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) const {
+bool JsArrayImpl::GetElement(int index, JsScopedToken *out) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   // JS_GetElement sets the token to JS_VOID if we request a non-existent index.
@@ -184,7 +230,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
                        index, out) == JS_TRUE;
 }
 
-bool JsArray::SetElement(int index, const JsToken &value) {
+bool JsArrayImpl::SetElement(int index, const JsToken &value) {
   assert(JsTokenIsArray(array_, js_context_));
 
   JsRequest request(js_context_);
@@ -195,15 +241,15 @@ bool JsArray::SetElement(int index, const JsToken &value) {
                           JSPROP_ENUMERATE) == JS_TRUE;
 }
 
-bool JsArray::SetElementBool(int index, bool value) {
+bool JsArrayImpl::SetElementBool(int index, bool value) {
   return SetElement(index, BOOLEAN_TO_JSVAL(value));
 }
 
-bool JsArray::SetElementInt(int index, int value) {
+bool JsArrayImpl::SetElementInt(int index, int value) {
   return SetElement(index, INT_TO_JSVAL(value));
 }
 
-bool JsArray::SetElementDouble(int index, double value) {
+bool JsArrayImpl::SetElementDouble(int index, double value) {
   JsToken jsval;
   if (DoubleToJsToken(js_context_, value, &jsval)) {
     return SetElement(index, jsval);
@@ -212,7 +258,7 @@ bool JsArray::SetElementDouble(int index, double value) {
   }
 }
 
-bool JsArray::SetElementString(int index, const std::string16 &value) {
+bool JsArrayImpl::SetElementString(int index, const std::string16 &value) {
   JsToken token;
   if (StringToJsToken(js_context_, value.c_str(), &token)) {
     return SetElement(index, token);
@@ -223,13 +269,13 @@ bool JsArray::SetElementString(int index, const std::string16 &value) {
 
 #elif BROWSER_IE
 
-JsArray::JsArray() : js_context_(NULL) {
+JsArrayImpl::JsArrayImpl() : js_context_(NULL) {
 }
 
-JsArray::~JsArray() {
+JsArrayImpl::~JsArrayImpl() {
 }
 
-bool JsArray::SetArray(JsToken value, JsContextPtr context) {
+bool JsArrayImpl::Initialize(JsToken value, JsContextPtr context) {
   if (value.vt != VT_DISPATCH) return false;
 
   array_ = value;
@@ -237,7 +283,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) const {
+bool JsArrayImpl::GetLength(int *length) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   CComVariant out;
@@ -253,7 +299,7 @@ bool JsArray::GetLength(int *length) const {
   return true;
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) const {
+bool JsArrayImpl::GetElement(int index, JsScopedToken *out) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name = IntegerToString16(index);
@@ -271,7 +317,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return false;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken &in) {
+bool JsArrayImpl::SetElement(int index, const JsScopedToken &in) {
   assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name(IntegerToString16(index));
@@ -280,32 +326,32 @@ bool JsArray::SetElement(int index, const JsScopedToken &in) {
   return SUCCEEDED(hr);
 }
 
-bool JsArray::SetElementBool(int index, bool value) {
+bool JsArrayImpl::SetElementBool(int index, bool value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementInt(int index, int value) {
+bool JsArrayImpl::SetElementInt(int index, int value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementDouble(int index, double value) {
+bool JsArrayImpl::SetElementDouble(int index, double value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16 &value) {
+bool JsArrayImpl::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, CComVariant(value.c_str()));
 }
 
 #elif BROWSER_NPAPI
 
-JsArray::JsArray() : js_context_(NULL) {
+JsArrayImpl::JsArrayImpl() : js_context_(NULL) {
   VOID_TO_NPVARIANT(array_);
 }
 
-JsArray::~JsArray() {
+JsArrayImpl::~JsArrayImpl() {
 }
 
-bool JsArray::SetArray(JsToken value, JsContextPtr context) {
+bool JsArrayImpl::Initialize(JsToken value, JsContextPtr context) {
   if (!JsTokenIsArray(value, context)) return false;
 
   array_ = value;
@@ -313,7 +359,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) const {
+bool JsArrayImpl::GetLength(int *length) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -326,7 +372,7 @@ bool JsArray::GetLength(int *length) const {
   return JsTokenToInt_NoCoerce(np_length, js_context_, length);
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) const {
+bool JsArrayImpl::GetElement(int index, JsScopedToken *out) const {
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -338,7 +384,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return true;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken &in) {
+bool JsArrayImpl::SetElement(int index, const JsScopedToken &in) {
   assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -346,118 +392,124 @@ bool JsArray::SetElement(int index, const JsScopedToken &in) {
   return NPN_SetProperty(js_context_, array, index_id, &in);
 }
 
-bool JsArray::SetElementBool(int index, bool value) {
+bool JsArrayImpl::SetElementBool(int index, bool value) {
   return SetElement(index, JsScopedToken(value));
 }
 
-bool JsArray::SetElementInt(int index, int value) {
+bool JsArrayImpl::SetElementInt(int index, int value) {
   return SetElement(index, JsScopedToken(value));
 }
 
-bool JsArray::SetElementDouble(int index, double value) {
+bool JsArrayImpl::SetElementDouble(int index, double value) {
   return SetElement(index, JsScopedToken(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16 &value) {
+bool JsArrayImpl::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, JsScopedToken(value.c_str()));
 }
 
 #endif
 
-bool JsArray::IsValidArray() {
-  return JsTokenGetType(array_, js_context_) == JSPARAM_ARRAY;
-}
-
-bool JsArray::GetElementAsBool(int index, bool *out) const {
+bool JsArrayImpl::GetElementAsBool(int index, bool *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToBool_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsInt(int index, int *out) const {
+bool JsArrayImpl::GetElementAsInt(int index, int *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToInt_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsDouble(int index, double *out) const {
+bool JsArrayImpl::GetElementAsDouble(int index, double *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToDouble_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsString(int index, std::string16 *out) const {
+bool JsArrayImpl::GetElementAsString(int index, std::string16 *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToString_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsArray(int index, JsArray *out) const {
+bool JsArrayImpl::GetElementAsArray(int index, JsArray **out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
-  return out->SetArray(token, js_context_);
+  return JsTokenToArray_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsObject(int index, JsObject *out) const {
+bool JsArrayImpl::GetElementAsObject(int index, JsObject *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return out->SetObject(token, js_context_);
 }
 
-bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
+bool JsArrayImpl::GetElementAsFunction(int index,
+                                       JsRootedCallback **out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToNewCallback_NoCoerce(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsStringWithCoercion(int index,
-                                             std::string16 *out) const {
+bool JsArrayImpl::GetElementAsStringWithCoercion(int index,
+                                                 std::string16 *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToString_Coerce(token, js_context_, out);
 }
 
-JsParamType JsArray::GetElementType(int index) const {
+JsParamType JsArrayImpl::GetElementType(int index) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return JSPARAM_UNKNOWN;
 
   return JsTokenGetType(token, js_context_);
 }
 
-bool JsArray::SetElementArray(int index, JsArray *value) {
-  return SetElement(index, value->array_);
-}
-
-bool JsArray::SetElementObject(int index, JsObject *value) {
+bool JsArrayImpl::SetElementArray(int index, JsArray *value) {
   return SetElement(index, value->token());
 }
 
-bool JsArray::SetElementFunction(int index, JsRootedCallback *value) {
+bool JsArrayImpl::SetElementObject(int index, JsObject *value) {
   return SetElement(index, value->token());
 }
 
-bool JsArray::SetElementModule(int index, ModuleImplBaseClass *value) {
+bool JsArrayImpl::SetElementFunction(int index, JsRootedCallback *value) {
+  return SetElement(index, value->token());
+}
+
+bool JsArrayImpl::SetElementModule(int index, ModuleImplBaseClass *value) {
   return SetElement(index, value->GetWrapperToken());
 }
 
-bool JsArray::SetElementNull(int index) {
+bool JsArrayImpl::SetElementNull(int index) {
   JsScopedToken value;
   NullToJsToken(js_context_, &value);
   return SetElement(index, value);
 }
 
-bool JsArray::SetElementUndefined(int index) {
+bool JsArrayImpl::SetElementUndefined(int index) {
   JsScopedToken value;
   UndefinedToJsToken(js_context_, &value);
   return SetElement(index, value);
+}
+
+bool JsTokenToArray_NoCoerce(JsToken t, JsContextPtr cx, JsArray **out) {
+  scoped_ptr<JsArrayImpl> array(new JsArrayImpl);
+  if (!array->Initialize(t, cx)) {
+    return false;
+  }
+  *out = array.release();
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -764,11 +816,11 @@ bool JsObject::GetPropertyAsString(const std::string16 &name,
 }
 
 bool JsObject::GetPropertyAsArray(const std::string16 &name,
-                                  JsArray *out) const {
+                                  JsArray **out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
-  return out->SetArray(token, js_context_);
+  return JsTokenToArray_NoCoerce(token, js_context_, out);
 }
 
 bool JsObject::GetPropertyAsObject(const std::string16 &name,
@@ -880,8 +932,8 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       break;
     }
     case JSPARAM_ARRAY: {
-      JsArray *value = static_cast<JsArray *>(param->value_ptr);
-      if (!value->SetArray(variant, context->js_context())) {
+      JsArray **value = static_cast<JsArray **>(param->value_ptr);
+      if (!JsTokenToArray_NoCoerce(variant, context->js_context(), value)) {
         return false;
       }
       break;

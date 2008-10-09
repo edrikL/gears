@@ -132,10 +132,10 @@ void GearsDatabase::Execute(JsCallContext *context) {
 
   // Get parameters.
   std::string16 expr;
-  JsArray arg_array;
+  scoped_ptr<JsArray> arg_array;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expr },
-    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &arg_array },
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, as_out_parameter(arg_array) },
   };
   if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
     assert(context->is_exception_set());
@@ -169,7 +169,8 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Bind parameters
-  if (!BindArgsToStatement(context, argv[1].was_specified ? &arg_array : NULL,
+  if (!BindArgsToStatement(context,
+                           argv[1].was_specified ? arg_array.get() : NULL,
                            stmt.get())) {
     // BindArgsToStatement already set an exception
     return;

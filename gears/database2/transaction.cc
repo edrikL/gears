@@ -87,7 +87,7 @@ void GearsDatabase2Transaction::InvokeCallback() {
 
 void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
   std::string16 sql_statement;
-  JsArray temp_sql_arguments;
+  JsArray *temp_sql_arguments = NULL;
   JsRootedCallback *temp_callback = NULL;
   JsRootedCallback *temp_error_callback = NULL;
   JsArgument argv[] = {
@@ -98,7 +98,7 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
   };
 
   context->GetArguments(ARRAYSIZE(argv), argv);
-  JsArray *sql_arguments = &temp_sql_arguments;
+  scoped_ptr<JsArray> sql_arguments(temp_sql_arguments);
   scoped_ptr<JsRootedCallback> callback(temp_callback);
   scoped_ptr<JsRootedCallback> error_callback(temp_error_callback);
   if (context->is_exception_set()) return;
@@ -110,8 +110,8 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
 
   // if any of the arguments are not supplied or null, send them to statement
   // factory as NULL
-  if (!argv[1].was_specified || !sql_arguments->IsValidArray()) {
-    sql_arguments = NULL;
+  if (!argv[1].was_specified) {
+    sql_arguments.reset(NULL);
   }
   if (!argv[1].was_specified ||  // Don't use temp_callback unless
       !argv[2].was_specified ||  // temp_sql_arguments was also specified.
@@ -126,7 +126,7 @@ void GearsDatabase2Transaction::ExecuteSql(JsCallContext *context) {
   }
 
   Database2Statement *statement;
-  if (!Database2Statement::Create(sql_statement, sql_arguments,
+  if (!Database2Statement::Create(sql_statement, sql_arguments.get(),
       callback.get(), error_callback.get(), &statement)) {
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
