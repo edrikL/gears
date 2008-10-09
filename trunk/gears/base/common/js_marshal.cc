@@ -191,10 +191,10 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
     case JSPARAM_ARRAY: {
       if (!CausesCycle(js_runner, token, object_stack, error_message_out)) {
         object_stack->push_back(token);
-        JsArray value;
-        if (js_runner->SetArray(token, &value)) {
+        scoped_ptr<JsArray> value;
+        if (js_runner->JsTokenToArray(token, as_out_parameter(value))) {
           mjt.reset(new MarshaledJsToken());
-          if (!mjt->InitializeFromArray(value, js_runner,
+          if (!mjt->InitializeFromArray(value.get(), js_runner,
                                         error_message_out, object_stack)) {
             mjt.reset(NULL);
           }
@@ -347,12 +347,12 @@ bool MarshaledJsToken::InitializeFromObject(
 
 
 bool MarshaledJsToken::InitializeFromArray(
-    JsArray &js_array,
+    JsArray *js_array,
     JsRunnerInterface *js_runner,
     std::string16 *error_message_out,
     AbstractJsTokenVector *object_stack) {
   int n;
-  if (!js_array.GetLength(&n)) {
+  if (!js_array->GetLength(&n)) {
     return false;
   }
 
@@ -360,7 +360,7 @@ bool MarshaledJsToken::InitializeFromArray(
       new std::vector<MarshaledJsToken*>);
   for (int i = 0; i < n; i++) {
     JsScopedToken element_scoped_token;
-    if (js_array.GetElement(i, &element_scoped_token)) {
+    if (js_array->GetElement(i, &element_scoped_token)) {
       JsToken token = element_scoped_token;
       MarshaledJsToken *element_mjt = Marshal(
           JsTokenPtrToAbstractJsToken(&token),

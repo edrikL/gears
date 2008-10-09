@@ -33,6 +33,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"  // for string16
 
+class JsArray;
 class JsObject;
 class JsRootedToken;
 class JsRunnerInterface;
@@ -261,6 +262,7 @@ bool JsTokenToInt_NoCoerce(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToInt64_NoCoerce(JsToken t, JsContextPtr cx, int64 *out);
 bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToArray_NoCoerce(JsToken t, JsContextPtr cx, JsArray **out);
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out);
 bool JsTokenToModule(JsRunnerInterface *js_runner,
@@ -358,59 +360,46 @@ class JsRootedToken {
 
 class JsArray {
  public:
-  JsArray();
-  ~JsArray();
+  virtual ~JsArray() {};
 
-  bool SetArray(JsToken value, JsContextPtr context);
-
-  // TODO(nigeltao): Remove the SetArray method, and make a JsArray well-formed
-  // on construction, rather than by a two-step construction + SetArray recipe.
-  // Once that happens, we can remove this method too.
-  bool IsValidArray();
-
-  bool GetLength(int *length) const;
+  virtual bool GetLength(int *length) const = 0;
 
   // use the same syntax as JsRootedToken
-  const JsScopedToken &token() const { return array_; }
-  const JsContextPtr &context() const { return js_context_; }
+  virtual const JsScopedToken &token() const = 0;
 
   // GetElementXxx returns false on failure, including if the requested element
   // does not exist.
-  bool GetElementAsBool(int index, bool *out) const;
-  bool GetElementAsInt(int index, int *out) const;
-  bool GetElementAsDouble(int index, double *out) const;
-  bool GetElementAsString(int index, std::string16 *out) const;
-  bool GetElementAsArray(int index, JsArray *out) const;
-  bool GetElementAsObject(int index, JsObject *out) const;
-  bool GetElementAsFunction(int index, JsRootedCallback **out) const;
+  virtual bool GetElementAsBool(int index, bool *out) const = 0;
+  virtual bool GetElementAsInt(int index, int *out) const = 0;
+  virtual bool GetElementAsDouble(int index, double *out) const = 0;
+  virtual bool GetElementAsString(int index, std::string16 *out) const = 0;
+  virtual bool GetElementAsArray(int index, JsArray **out) const = 0;
+  virtual bool GetElementAsObject(int index, JsObject *out) const = 0;
+  virtual bool GetElementAsFunction(int index,
+                                    JsRootedCallback **out) const = 0;
 
   // This method will type-coerce the element to a string, even if it wasn't
   // already one. For example, the integer 17 would become the string "17".
-  bool GetElementAsStringWithCoercion(int index, std::string16 *out) const;
+  virtual bool GetElementAsStringWithCoercion(int index,
+                                              std::string16 *out) const = 0;
 
   // Returns JSPARAM_UNDEFINED if the requested element does not exist.
-  JsParamType GetElementType(int index) const;
+  virtual JsParamType GetElementType(int index) const = 0;
 
-  bool SetElementBool(int index, bool value);
-  bool SetElementInt(int index, int value);
-  bool SetElementDouble(int index, double value);
-  bool SetElementString(int index, const std::string16 &value);
-  bool SetElementArray(int index, JsArray *value);
-  bool SetElementObject(int index, JsObject *value);
-  bool SetElementFunction(int index, JsRootedCallback *value);
-  bool SetElementModule(int index, ModuleImplBaseClass *value);
-  bool SetElementNull(int index);
-  bool SetElementUndefined(int index);
+  virtual bool SetElementBool(int index, bool value) = 0;
+  virtual bool SetElementInt(int index, int value) = 0;
+  virtual bool SetElementDouble(int index, double value) = 0;
+  virtual bool SetElementString(int index, const std::string16 &value) = 0;
+  virtual bool SetElementArray(int index, JsArray *value) = 0;
+  virtual bool SetElementObject(int index, JsObject *value) = 0;
+  virtual bool SetElementFunction(int index, JsRootedCallback *value) = 0;
+  virtual bool SetElementModule(int index, ModuleImplBaseClass *value) = 0;
+  virtual bool SetElementNull(int index) = 0;
+  virtual bool SetElementUndefined(int index) = 0;
 
   // TODO(nigeltao): These two methods should really be private.
-  bool GetElement(int index, JsScopedToken *out) const;
-  bool SetElement(int index, const JsScopedToken &value);
-
- private:
-  JsContextPtr js_context_;
-  JsScopedToken array_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(JsArray);
+  virtual bool GetElement(int index, JsScopedToken *out) const = 0;
+  virtual bool SetElement(int index, const JsScopedToken &value) = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -430,7 +419,7 @@ class JsObject {
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
   bool GetPropertyAsString(const std::string16 &name, std::string16 *out) const;
-  bool GetPropertyAsArray(const std::string16 &name, JsArray *out) const;
+  bool GetPropertyAsArray(const std::string16 &name, JsArray **out) const;
   bool GetPropertyAsObject(const std::string16 &name, JsObject *out) const;
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;

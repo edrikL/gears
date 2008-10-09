@@ -1518,19 +1518,20 @@ void TestObjectBool(JsCallContext* context, const JsObject& obj) {
   TEST_ASSERT(obj.GetPropertyAsBool(STRING16(L"bool_false"), &property_value));
   TEST_ASSERT(property_value == false);
 
-  JsArray arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"bool_array"), &arr));
+  scoped_ptr<JsArray> arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"bool_array"),
+                                     as_out_parameter(arr)));
 
   int length = -1;
-  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(arr->GetLength(&length));
   TEST_ASSERT(length == 2);
 
   property_value = false;
-  TEST_ASSERT(arr.GetElementAsBool(0, &property_value));
+  TEST_ASSERT(arr->GetElementAsBool(0, &property_value));
   TEST_ASSERT(property_value == true);
 
   property_value = true;
-  TEST_ASSERT(arr.GetElementAsBool(1, &property_value));
+  TEST_ASSERT(arr->GetElementAsBool(1, &property_value));
   TEST_ASSERT(property_value == false);
 }
 
@@ -1561,31 +1562,32 @@ void TestObjectInt(JsCallContext* context, const JsObject& obj) {
                                     &property_value));
   TEST_ASSERT(property_value == -int_large);
 
-  JsArray arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"int_array"), &arr));
+  scoped_ptr<JsArray> arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"int_array"),
+                                     as_out_parameter(arr)));
 
   int length = -1;
-  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(arr->GetLength(&length));
   TEST_ASSERT(length == 5);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsInt(0, &property_value));
+  TEST_ASSERT(arr->GetElementAsInt(0, &property_value));
   TEST_ASSERT(property_value == 0);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsInt(1, &property_value));
+  TEST_ASSERT(arr->GetElementAsInt(1, &property_value));
   TEST_ASSERT(property_value == 1);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsInt(2, &property_value));
+  TEST_ASSERT(arr->GetElementAsInt(2, &property_value));
   TEST_ASSERT(property_value == int_large);
 
   property_value = 1;
-  TEST_ASSERT(arr.GetElementAsInt(3, &property_value));
+  TEST_ASSERT(arr->GetElementAsInt(3, &property_value));
   TEST_ASSERT(property_value == -1);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsInt(4, &property_value));
+  TEST_ASSERT(arr->GetElementAsInt(4, &property_value));
   TEST_ASSERT(property_value == -int_large);
 }
 
@@ -1620,31 +1622,32 @@ void TestObjectDouble(JsCallContext* context, const JsObject& obj) {
                                     &property_value));
   TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
 
-  JsArray arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"double_array"), &arr));
+  scoped_ptr<JsArray> arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"double_array"),
+                                     as_out_parameter(arr)));
 
   int length = -1;
-  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(arr->GetLength(&length));
   TEST_ASSERT(length == 5);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsDouble(0, &property_value));
+  TEST_ASSERT(arr->GetElementAsDouble(0, &property_value));
   TEST_ASSERT(property_value == 0.01);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsDouble(1, &property_value));
+  TEST_ASSERT(arr->GetElementAsDouble(1, &property_value));
   TEST_ASSERT(property_value == 1.01);
 
   property_value = -1;
-  TEST_ASSERT(arr.GetElementAsDouble(2, &property_value));
+  TEST_ASSERT(arr->GetElementAsDouble(2, &property_value));
   TEST_ASSERT(property_value == std::numeric_limits<double>::max());
 
   property_value = 1;
-  TEST_ASSERT(arr.GetElementAsDouble(3, &property_value));
+  TEST_ASSERT(arr->GetElementAsDouble(3, &property_value));
   TEST_ASSERT(property_value == -1.01);
 
   property_value = 1;
-  TEST_ASSERT(arr.GetElementAsDouble(4, &property_value));
+  TEST_ASSERT(arr->GetElementAsDouble(4, &property_value));
   TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
 }
 
@@ -1664,31 +1667,32 @@ void TestObjectString(JsCallContext* context, const JsObject& obj) {
       STRING16(L"asdjh1)!(@#*h38ind89!03234bnmd831%%%*&*jdlwnd8893asd1233"));
   TEST_ASSERT(property_value == string_many);
 
-  JsArray arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"string_array"), &arr));
+  scoped_ptr<JsArray> arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"string_array"),
+                                     as_out_parameter(arr)));
 
   int length = -1;
-  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(arr->GetLength(&length));
   TEST_ASSERT(length == 3);
 
   property_value = STRING16(L"");
-  TEST_ASSERT(arr.GetElementAsString(0, &property_value));
+  TEST_ASSERT(arr->GetElementAsString(0, &property_value));
   TEST_ASSERT(property_value.empty());
 
   property_value = STRING16(L"");
-  TEST_ASSERT(arr.GetElementAsString(1, &property_value));
+  TEST_ASSERT(arr->GetElementAsString(1, &property_value));
   TEST_ASSERT(property_value == STRING16(L"a"));
 
   property_value = STRING16(L"");
-  TEST_ASSERT(arr.GetElementAsString(2, &property_value));
+  TEST_ASSERT(arr->GetElementAsString(2, &property_value));
   TEST_ASSERT(property_value == string_many);
 }
 
 // The property with property_name is expected to be expected_length and contain
 // integers where index == int value. I.e. length 3 is expected to be [0, 1, 2].
-static bool ValidateGeneratedArray(const JsArray& arr, int expected_length) {
+static bool ValidateGeneratedArray(const JsArray* arr, int expected_length) {
   int length = -1;
-  if (!arr.GetLength(&length))
+  if (!arr->GetLength(&length))
     return false;
 
   if (length != expected_length)
@@ -1696,7 +1700,7 @@ static bool ValidateGeneratedArray(const JsArray& arr, int expected_length) {
 
   for (int i = 0; i < length; ++i) {
     int current_element = -1;
-    if (!arr.GetElementAsInt(i, &current_element))
+    if (!arr->GetElementAsInt(i, &current_element))
       return false;
 
     if (current_element != i)
@@ -1709,11 +1713,11 @@ static bool ValidateGeneratedArray(const JsArray& arr, int expected_length) {
 static bool ValidateGeneratedArray(const JsObject& obj,
                                    const std::string16& property_name,
                                    int expected_length) {
-  JsArray arr;
-  if (!obj.GetPropertyAsArray(property_name, &arr))
+  scoped_ptr<JsArray> arr;
+  if (!obj.GetPropertyAsArray(property_name, as_out_parameter(arr)))
     return false;
 
-  return ValidateGeneratedArray(arr, expected_length);
+  return ValidateGeneratedArray(arr.get(), expected_length);
 }
 
 void TestObjectArray(JsCallContext* context,
@@ -1724,46 +1728,47 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_8"), 8));
   TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_10000"), 10000));
 
-  JsArray array_many_types;
+  scoped_ptr<JsArray> array_many_types;
   TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"array_many_types"),
-                                     &array_many_types));
+                                     as_out_parameter(array_many_types)));
   int array_many_types_length = -1;
-  TEST_ASSERT(array_many_types.GetLength(&array_many_types_length));
+  TEST_ASSERT(array_many_types->GetLength(&array_many_types_length));
   TEST_ASSERT(array_many_types_length == 7);
 
   // index 0
   bool bool_false = true;
-  TEST_ASSERT(array_many_types.GetElementAsBool(0, &bool_false));
+  TEST_ASSERT(array_many_types->GetElementAsBool(0, &bool_false));
   TEST_ASSERT(bool_false == false);
 
   // index 1
   bool bool_true = false;
-  TEST_ASSERT(array_many_types.GetElementAsBool(1, &bool_true));
+  TEST_ASSERT(array_many_types->GetElementAsBool(1, &bool_true));
   TEST_ASSERT(bool_true == true);
 
   // index 2
   int int_2 = -1;
-  TEST_ASSERT(array_many_types.GetElementAsInt(2, &int_2));
+  TEST_ASSERT(array_many_types->GetElementAsInt(2, &int_2));
   TEST_ASSERT(int_2 == 2);
 
   // index 3
   std::string16 string_3;
-  TEST_ASSERT(array_many_types.GetElementAsString(3, &string_3));
+  TEST_ASSERT(array_many_types->GetElementAsString(3, &string_3));
   TEST_ASSERT(string_3 == STRING16(L"3"));
 
   // index 4
   double double_4 = -1;
-  TEST_ASSERT(array_many_types.GetElementAsDouble(4, &double_4));
+  TEST_ASSERT(array_many_types->GetElementAsDouble(4, &double_4));
   TEST_ASSERT(double_4 == 4.01);
 
   // index 5
-  JsArray array_5;
-  TEST_ASSERT(array_many_types.GetElementAsArray(5, &array_5));
-  TEST_ASSERT(ValidateGeneratedArray(array_5, 5));
+  scoped_ptr<JsArray> array_5;
+  TEST_ASSERT(array_many_types->GetElementAsArray(5,
+                                                  as_out_parameter(array_5)));
+  TEST_ASSERT(ValidateGeneratedArray(array_5.get(), 5));
 
   // index 6
   scoped_ptr<JsRootedCallback> function_6;
-  TEST_ASSERT(array_many_types.GetElementAsFunction(6,
+  TEST_ASSERT(array_many_types->GetElementAsFunction(6,
                                                  as_out_parameter(function_6)));
   TEST_ASSERT(function_6.get());
   JsRunnerInterface* js_runner = base.GetJsRunner();
@@ -1776,8 +1781,8 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
 
   // Test that out-of-range elements are undefined.
-  TEST_ASSERT(array_many_types.GetElementType(-1) == JSPARAM_UNDEFINED);
-  TEST_ASSERT(array_many_types.GetElementType(7) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(array_many_types->GetElementType(-1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(array_many_types->GetElementType(7) == JSPARAM_UNDEFINED);
 }
 
 void TestObjectObject(JsCallContext* context, const JsObject& obj) {
@@ -1989,15 +1994,15 @@ void CreateObjectFunction(JsCallContext* context,
 #ifdef WINCE
 // These methods are used by the JavaScript testBrowserCache test.
 
-bool GetJsArrayAsStringVector(const JsArray &js_array,
+bool GetJsArrayAsStringVector(const JsArray *js_array,
                               std::vector<std::string16> *strings) {
   int array_size;
-  if (!js_array.GetLength(&array_size)) {
+  if (!js_array->GetLength(&array_size)) {
     return false;
   }
   std::string16 url;
   for (int i = 0; i < array_size; ++i) {
-    js_array.GetElementAsString(i, &url);
+    js_array->GetElementAsString(i, &url);
     strings->push_back(url);
   }
   return true;
@@ -2006,16 +2011,16 @@ bool GetJsArrayAsStringVector(const JsArray &js_array,
 void GearsTest::RemoveEntriesFromBrowserCache(JsCallContext *context) {
   bool ok = false;
   context->SetReturnValue(JSPARAM_BOOL, &ok);
-  JsArray js_array;
+  scoped_ptr<JsArray> js_array;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array }
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, as_out_parameter(js_array) }
   };
   if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
     assert(context->is_exception_set());
     return;
   }
   std::vector<std::string16> urls;
-  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+  if (!GetJsArrayAsStringVector(js_array.get(), &urls)) {
     context->SetException(STRING16(L"Failed to get urls."));
     return;
   }
@@ -2054,11 +2059,11 @@ void GearsTest::RemoveEntriesFromBrowserCache(JsCallContext *context) {
 void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
   bool ok = false;
   context->SetReturnValue(JSPARAM_BOOL, &ok);
-  JsArray js_array;
+  scoped_ptr<JsArray> js_array;
   bool should_be_present;
   bool should_be_bogus = true;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array },
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, as_out_parameter(js_array) },
     { JSPARAM_REQUIRED, JSPARAM_BOOL, &should_be_present },
     { JSPARAM_OPTIONAL, JSPARAM_BOOL, &should_be_bogus }
   };
@@ -2067,7 +2072,7 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
     return;
   }
   std::vector<std::string16> urls;
-  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+  if (!GetJsArrayAsStringVector(js_array.get(), &urls)) {
     context->SetException(STRING16(L"Failed to get urls."));
     return;
   }

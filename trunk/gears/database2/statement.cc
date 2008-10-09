@@ -49,8 +49,6 @@ bool Database2Statement::Create(const std::string16 &sql_statement,
                                 Database2Statement **instance) {
   scoped_ptr<Database2Statement> statement(new Database2Statement());
 
-  // NULL should be passed if no arguments are specified
-  assert(!sql_arguments || sql_arguments->IsValidArray());
   // NULL should be passed if a callback is not specified
   assert(!callback || callback->IsValidCallback());
   assert(!error_callback || error_callback->IsValidCallback());

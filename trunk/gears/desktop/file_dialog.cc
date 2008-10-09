@@ -246,14 +246,14 @@ bool FileDialog::ParseOptions(JsCallContext* context, const JsObject& map,
   if (map.GetPropertyType(kFilter) != JSPARAM_UNDEFINED) {
     bool success = true;
     int count = 0;
-    JsArray filter_array;
-    if (!map.GetPropertyAsArray(kFilter, &filter_array)
-        || !filter_array.GetLength(&count)) {
+    scoped_ptr<JsArray> filter_array;
+    if (!map.GetPropertyAsArray(kFilter, as_out_parameter(filter_array)) ||
+        !filter_array->GetLength(&count)) {
       success = false;
     } else {
       for (int i = 0; i < count; ++i) {
         std::string16 filter_item;
-        if (!filter_array.GetElementAsString(i, &filter_item)) {
+        if (!filter_array->GetElementAsString(i, &filter_item)) {
           success = false;
           break;
         }

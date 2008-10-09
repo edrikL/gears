@@ -889,9 +889,10 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
     JsParamType type = options.GetPropertyType(kGearsLocationProviderUrls);
     // If gearsLocationProviderUrls is null, we do not use the default URL.
     if (type != JSPARAM_NULL) {
-      JsArray js_array;
-      if (!options.GetPropertyAsArray(kGearsLocationProviderUrls, &js_array) ||
-          !ParseLocationProviderUrls(context, js_array, urls)) {
+      scoped_ptr<JsArray> js_array;
+      if (!options.GetPropertyAsArray(kGearsLocationProviderUrls,
+                                      as_out_parameter(js_array)) ||
+          !ParseLocationProviderUrls(context, js_array.get(), urls)) {
         // If it's not an array and not null, this is an error.
         std::string16 error = STRING16(L"options.");
         error += kGearsLocationProviderUrls;
@@ -910,12 +911,12 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
 // static
 bool GearsGeolocation::ParseLocationProviderUrls(
     JsCallContext *context,
-    const JsArray &js_array,
+    const JsArray *js_array,
     std::vector<std::string16> *urls) {
   assert(context);
   assert(urls);
   int length;
-  if (!js_array.GetLength(&length)) {
+  if (!js_array->GetLength(&length)) {
     LOG(("GearsGeolocation::ParseLocationProviderUrls() : Failed to get "
           "length of gearsLocationProviderUrls."));
     assert(false);
@@ -923,7 +924,7 @@ bool GearsGeolocation::ParseLocationProviderUrls(
   }
   for (int i = 0; i < length; ++i) {
     std::string16 url;
-    if (!js_array.GetElementAsString(i, &url)) {
+    if (!js_array->GetElementAsString(i, &url)) {
       return false;
     }
     urls->push_back(url);

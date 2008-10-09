@@ -122,22 +122,19 @@ class JsRunnerBase : public JsRunnerInterface {
     return JsvalToNewJsObject(val, js_engine_context_, false);
   }
 
-  JsArray* NewArray() {
+  JsArray *NewArray() {
     JS_BeginRequest(GetContext());
-    JSObject* array_object = JS_NewArrayObject(GetContext(), 0, NULL);
+    JSObject *array_object = JS_NewArrayObject(GetContext(), 0, NULL);
     JS_EndRequest(GetContext());
     if (!array_object)
       return NULL;
 
-    scoped_ptr<JsArray> js_array(new JsArray());
-    if (!js_array.get())
-      return NULL;
-
+    JsArray *result = NULL;
     jsval array = OBJECT_TO_JSVAL(array_object);
-    if (!js_array->SetArray(array, GetContext()))
+    if (!JsTokenToArray_NoCoerce(array, GetContext(), &result))
       return NULL;
 
-    return js_array.release();
+    return result;
   }
 
   bool ConvertJsObjectToDate(JsObject *obj,
@@ -258,11 +255,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return reinterpret_cast<JsToken *>(token);
   }
 
-  virtual bool SetArray(AbstractJsToken token, JsArray *js_array) {
-    return js_array->SetArray(
-        *AbstractJsTokenToJsTokenPtr(token), GetContext());
-  }
-
   virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
     return js_object->SetObject(
         *AbstractJsTokenToJsTokenPtr(token), GetContext());
@@ -297,6 +289,11 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
     return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToArray(AbstractJsToken token, JsArray **out) {
+    return JsTokenToArray_NoCoerce(
         *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
   }
 

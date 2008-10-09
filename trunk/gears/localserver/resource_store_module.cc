@@ -210,7 +210,7 @@ void GearsResourceStore::SetEnabled(JsCallContext *context) {
 //------------------------------------------------------------------------------
 void GearsResourceStore::Capture(JsCallContext *context) {
   std::string16 url;
-  JsArray url_array;
+  scoped_ptr<JsArray> url_array;
   JsRootedCallback *callback = NULL;
 
   JsArgument argv[] = {
@@ -223,7 +223,7 @@ void GearsResourceStore::Capture(JsCallContext *context) {
   int url_arg_type = context->GetArgumentType(0);
   if (url_arg_type == JSPARAM_ARRAY) {
     argv[0].type = JSPARAM_ARRAY;
-    argv[0].value_ptr = &url_array;
+    argv[0].value_ptr = as_out_parameter(url_array);
   } else if (url_arg_type == JSPARAM_STRING16) {
     argv[0].type = JSPARAM_STRING16;
     argv[0].value_ptr = &url;
@@ -248,13 +248,13 @@ void GearsResourceStore::Capture(JsCallContext *context) {
   if (url_arg_type == JSPARAM_ARRAY) {
     // 'urls' was an array of strings
     int array_length;
-    if (!url_array.GetLength(&array_length)) {
+    if (!url_array->GetLength(&array_length)) {
       context->SetException(GET_INTERNAL_ERROR_MESSAGE());
       return;
     }
 
     for (int i = 0; i < array_length; ++i) {
-      if (!url_array.GetElementAsString(i, &url)) {
+      if (!url_array->GetElementAsString(i, &url)) {
         context->SetException(STRING16(L"Invalid parameter."));
         return;
       }

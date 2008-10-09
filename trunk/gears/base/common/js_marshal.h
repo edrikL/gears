@@ -122,7 +122,7 @@ class MarshaledJsToken {
                             std::string16 *error_message_out,
                             AbstractJsTokenVector *object_stack);
 
-  bool InitializeFromArray(JsArray &array,
+  bool InitializeFromArray(JsArray *array,
                            JsRunnerInterface *js_runner,
                            std::string16 *error_message_out,
                            AbstractJsTokenVector *object_stack);
