@@ -320,9 +320,12 @@ bool JsDomElement::SetFileInputElementValue(std::string16 &file_name) {
 
 
 bool JsDomElement::InitJsDomElement(JsContextPtr context, JsToken token) {
-  // TODO(nigeltao): implement on NPAPI.
+  // A DOM element is at least an NPObject, but an NPObject can also be
+  // an arbitrary javascript object. So this is not a strong test, just
+  // a hint that the token might be a DOM element.
   assert(!is_initialized_);
-  return false;
+  is_initialized_ = js_object_.SetObject(token, context);
+  return is_initialized_;
 }
 
 
