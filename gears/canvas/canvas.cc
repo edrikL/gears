@@ -324,7 +324,7 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   if (context->is_exception_set())
     return;
   if (context_id != STRING16(L"gears-2d")) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     // As per the HTML5 canvas spec.
     return;
   }

@@ -525,23 +525,7 @@ class JsCallContext {
   bool GetArgumentAsString(int i, std::string16 *out, bool coerce=false);
 
   // Sets the value to be returned to the calling JavaScript.
-  //
-  // The ModuleImplBaseClass* version should only be used when returning a
-  // JSPARAM_COM_MODULE.  It exists because passing a derived class through a
-  // void* and then casting to the base class is not safe - the compiler won't
-  // be able to correctly adjust the pointer offset.
-  //
-  // The int version is for use with JSPARAM_NULL, to avoid conflicting with the
-  // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
-  void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr) {
-    assert(type == JSPARAM_MODULE);
-    SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
-  }
-  void SetReturnValue(JsParamType type, int) {
-    assert(type == JSPARAM_NULL);
-    SetReturnValue(type, reinterpret_cast<const void*>(NULL));
-  }
 
   // Sets an exception to be thrown to the calling JavaScript.  Setting an
   // exception overrides any previous exception and any return values.

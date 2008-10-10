@@ -359,7 +359,7 @@ void GearsHttpRequest::GetUpload(JsCallContext *context) {
 void GearsHttpRequest::GetOnProgress(JsCallContext *context) {
   JsRootedCallback *callback = onprogresshandler_.get();
   if (callback == NULL) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetReturnValue(JSPARAM_FUNCTION, callback);
   }
@@ -385,7 +385,7 @@ void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
   // SetReturnValue(JSPARAM_FUNCTION, NULL) to get a (JavaScript) null, rather
   // than having to explicitly check for a NULL JsRootedCallback*.
   if (callback == NULL) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetReturnValue(JSPARAM_FUNCTION, callback);
   }
@@ -415,7 +415,7 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
     return;
   }
   if (!IsValidResponse()) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
   scoped_refptr<BlobInterface> unused_blob;

@@ -291,7 +291,7 @@ void GearsNotification::GetDisplayAtTime(JsCallContext *context) {
     scoped_ptr<JsObject> obj(js_runner->NewDate(display_at_time_ms_));
     context->SetReturnValue(JSPARAM_OBJECT, obj.get());
   } else {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   }
 }
 
@@ -317,7 +317,7 @@ void GearsNotification::GetDisplayUntilTime(JsCallContext *context) {
     scoped_ptr<JsObject> obj(js_runner->NewDate(display_until_time_ms_));
     context->SetReturnValue(JSPARAM_OBJECT, obj.get());
   } else {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   }
 }
 

@@ -43,7 +43,7 @@ const std::string GearsHttpRequestUpload::kModuleName("GearsHttpRequestUpload");
 void GearsHttpRequestUpload::GetOnProgress(JsCallContext *context) {
   JsRootedCallback *callback = onprogress_handler_.get();
   if (callback == NULL) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetReturnValue(JSPARAM_FUNCTION, callback);
   }

@@ -78,7 +78,7 @@ void GearsConsole::Log(JsCallContext *context) {
 void GearsConsole::GetOnLog(JsCallContext *context) {
   JsRootedCallback *callback = callback_backend_->GetCallback();
   if (callback == NULL) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetReturnValue(JSPARAM_FUNCTION, callback);
   }

@@ -151,7 +151,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
                                         name.c_str(),
                                         required_cookie.c_str(),
                                         &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
 
@@ -195,7 +195,7 @@ void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
                                         name.c_str(),
                                         required_cookie.c_str(),
                                         &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
 
@@ -279,7 +279,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
                                  name.c_str(),
                                  required_cookie.c_str(),
                                  &existing_store_id)) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
 

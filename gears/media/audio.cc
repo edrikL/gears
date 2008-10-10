@@ -40,7 +40,7 @@ GearsAudio::~GearsAudio() {
 void GearsAudio::GetError(JsCallContext *context) {
   int last_error = media_data_->GetLastError();
   if (last_error == MediaConstants::MEDIA_NO_ERROR) {
-    context->SetReturnValue(JSPARAM_NULL, MediaConstants::MEDIA_NO_ERROR);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
 
