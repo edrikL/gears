@@ -60,6 +60,10 @@ class JsDomElement {
     return dispatch_;
   }
 #elif BROWSER_NPAPI
+  JsObject *js_object() {
+    assert(is_initialized_);
+    return &js_object_;
+  }
 #endif
 
  private:
@@ -68,6 +72,7 @@ class JsDomElement {
 #elif BROWSER_IE
   CComPtr<IDispatch> dispatch_;
 #elif BROWSER_NPAPI
+  JsObject js_object_;
 #endif
 
   bool is_initialized_;
