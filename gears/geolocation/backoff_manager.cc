@@ -25,6 +25,8 @@
 
 #include "gears/geolocation/backoff_manager.h"
 
+#include <assert.h>
+
 // The baseline minimum period between network requests.
 static const int kBaselineMinimumRequestInterval = 1000 * 5;  // 5 seconds
 // The upper limit of the minimum period between network requests.
