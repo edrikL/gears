@@ -121,8 +121,7 @@ GearsAudioRecorder::~GearsAudioRecorder() {
 
 void GearsAudioRecorder::GetError(JsCallContext *context) {
   if (last_error_ == AudioRecorderConstants::AUDIO_RECORDER_NO_ERROR) {
-    context->SetReturnValue(JSPARAM_NULL,
-        AudioRecorderConstants::AUDIO_RECORDER_NO_ERROR);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
   JsRunnerInterface *js_runner = this->GetJsRunner();
@@ -401,7 +400,7 @@ void GearsAudioRecorder::RemoveCueRanges(JsCallContext *context) {
 void GearsAudioRecorder::GetBlob(JsCallContext *context) {
   // TODO(vamsikrishna): Return the blob based on the 'type' attribute.
   if (recording_) {
-    context->SetReturnValue(JSPARAM_NULL, 0);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
     return;
   }
 

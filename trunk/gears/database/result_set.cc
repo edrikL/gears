@@ -150,7 +150,7 @@ void GearsResultSet::FieldImpl(JsCallContext *context, int index) {
       break;
     }
     case SQLITE_NULL:
-      context->SetReturnValue(JSPARAM_NULL, 0);
+      context->SetReturnValue(JSPARAM_NULL, NULL);
       break;
     case SQLITE_BLOB:
       // TODO(miket): figure out right way to pass around blobs in variants.
