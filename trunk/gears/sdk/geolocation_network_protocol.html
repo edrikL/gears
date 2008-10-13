@@ -70,7 +70,7 @@ the <a href="api_geolocation.html">Geolocation API</a>.</p>
 <p>The Gears <A href="api_geolocation.html">Geolocation API</A> can make use of
 network servers to obtain a position fix. The server determines the client's
 position using a set of data provided by the client. This data includes the
-client's IP address and information about any Cell towers or WiFi nodes it can
+client's IP address and information about any cell towers or WiFi nodes it can
 detect. This document describes the protocol used to send this data to the
 server and to return a response to the client.</p>
 
@@ -238,7 +238,7 @@ both is <code>application/json</code>.</p>
   </tr>
   <tr>
     <td class="nameColumn">wifi_towers</td>
-    <td class="descriptionColumn">Array of wifi data objects. See description below.</td>
+    <td class="descriptionColumn">Array of WiFi data objects. See description below.</td>
     <td class="requiredColumn">No</td>
     <td class="typeColumn">array</td>
   </tr>
@@ -280,7 +280,7 @@ both is <code>application/json</code>.</p>
     <td class="nameColumn">cell_id</td>
     <td class="descriptionColumn">Unique identifier of the cell. (CID for GSM, BID for CDMA)</td>
     <td class="requiredColumn">No</td>
-    <td class="typeColumn">string</td>
+    <td class="typeColumn">int</td>
   </tr>
   <tr>
     <td class="nameColumn">location_area_code</td>
@@ -320,7 +320,7 @@ both is <code>application/json</code>.</p>
   </tr>
 </table>
 
-<h4>Wifi Data Object</h4>
+<h4>WiFi Data Object</h4>
 
 <table>
   <tr>
@@ -331,7 +331,7 @@ both is <code>application/json</code>.</p>
   </tr>
   <tr>
     <td class="nameColumn">mac_address</td>
-    <td class="descriptionColumn">The mac address of the wifi node.</td>
+    <td class="descriptionColumn">The mac address of the WiFi node.</td>
     <td class="requiredColumn">No</td>
     <td class="typeColumn">string</td>
   </tr>
