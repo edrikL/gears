@@ -50,6 +50,8 @@ class DragAndDropRegistry {
   // but in the future we might provide a programmatic way to deregister a
   // drop target via a JavaScript API, and when we do, we'll promote this
   // method from private to public.
+  //
+  // Note that this call might cause the drop_target object to be deleted.
   static void UnregisterDropTarget(DropTarget *drop_target);
 
   friend class DropTarget;

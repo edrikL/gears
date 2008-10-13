@@ -108,26 +108,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
     return NULL;
   }
 
-  if (drop_target->on_drag_enter_.get()) {
-    event_target->AddEventListener(
-        NS_LITERAL_STRING("dragenter"), drop_target, false);
-  }
-  if (drop_target->on_drag_over_.get()) {
-    event_target->AddEventListener(
-        NS_LITERAL_STRING("dragover"), drop_target, false);
-  }
-  if (drop_target->on_drag_leave_.get()) {
-    // Note that the HTML5 event name ("dragleave") differs from the Mozilla
-    // event name ("dragexit"). The former is the one that the Gears API uses.
-    event_target->AddEventListener(
-        NS_LITERAL_STRING("dragexit"), drop_target, false);
-  }
-  if (drop_target->on_drop_.get()) {
-    // Note that the HTML5 event name ("drop") differs from the Mozilla
-    // event name ("dragdrop"). The former is the one that the Gears API uses.
-    event_target->AddEventListener(
-        NS_LITERAL_STRING("dragdrop"), drop_target, false);
-  }
+  drop_target->AddSelfAsEventListeners(event_target);
   return drop_target;
 
 #elif BROWSER_IE && !defined(WINCE)
@@ -174,7 +155,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
 
 void DragAndDropRegistry::UnregisterDropTarget(DropTarget *drop_target) {
 #if BROWSER_FF
-  delete drop_target;
+  drop_target->RemoveSelfAsEventListeners();
 #elif BROWSER_IE && !defined(WINCE)
   // On IE, DropTarget is a COM object, which is ref-counted, so it should
   // automatically delete itself when no longer referred to.
