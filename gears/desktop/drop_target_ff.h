@@ -51,7 +51,11 @@ class DropTarget
   scoped_ptr<JsRootedCallback> on_drag_leave_;
   scoped_ptr<JsRootedCallback> on_drop_;
 
-  DropTarget() {}
+  DropTarget();
+  virtual ~DropTarget();
+
+  void AddSelfAsEventListeners(nsIDOMEventTarget *event_target);
+  void RemoveSelfAsEventListeners();
 
   // This is the JsEventHandlerInterface callback, not the
   // nsIDOMEventListener one. The latter is declared by the
@@ -63,6 +67,13 @@ class DropTarget
                        std::string16 *error_out);
 
  private:
+  static const nsString kDragEnterAsString;
+  static const nsString kDragOverAsString;
+  static const nsString kDragExitAsString;
+  static const nsString kDragDropAsString;
+
+  nsCOMPtr<nsIDOMEventTarget> event_target_;
+
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };
 

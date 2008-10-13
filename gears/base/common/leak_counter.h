@@ -41,6 +41,7 @@
 // and also update the leak_counter_names array in leak_counter.cc.
 enum LeakCounterType {
   LEAK_COUNTER_TYPE_DocumentJsRunner,
+  LEAK_COUNTER_TYPE_DropTarget,
   LEAK_COUNTER_TYPE_FFHttpRequest,
   LEAK_COUNTER_TYPE_JavaScriptWorkerInfo,
   LEAK_COUNTER_TYPE_JsArrayImpl,

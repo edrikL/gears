@@ -36,19 +36,71 @@
 #include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
+#include "gears/base/common/leak_counter.h"
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
+
+
+// Note that some Mozilla event names differ from the HTML5 standard event
+// names - the latter being the one we expose in the Gears API. Specifically,
+// Mozilla's "dragexit" is HTML5's "dragleave", and "dragdrop" is "drop".
+const nsString DropTarget::kDragEnterAsString(STRING16(L"dragenter"));
+const nsString DropTarget::kDragOverAsString(STRING16(L"dragover"));
+const nsString DropTarget::kDragExitAsString(STRING16(L"dragexit"));
+const nsString DropTarget::kDragDropAsString(STRING16(L"dragdrop"));
 
 
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
 
 
-NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
-  static const nsString drag_enter_as_string(STRING16(L"dragenter"));
-  static const nsString drag_over_as_string(STRING16(L"dragover"));
-  static const nsString drag_exit_as_string(STRING16(L"dragexit"));
-  static const nsString drag_drop_as_string(STRING16(L"dragdrop"));
+DropTarget::DropTarget() {
+  LEAK_COUNTER_INCREMENT(DropTarget);
+}
 
+
+DropTarget::~DropTarget() {
+  LEAK_COUNTER_DECREMENT(DropTarget);
+}
+
+
+void DropTarget::AddSelfAsEventListeners(nsIDOMEventTarget *event_target) {
+  event_target_ = event_target;
+  AddRef();  // Balanced by a Release() call during RemoveSelfAsEventListeners.
+
+  if (on_drag_enter_.get()) {
+    event_target_->AddEventListener(kDragEnterAsString, this, false);
+  }
+  if (on_drag_over_.get()) {
+    event_target_->AddEventListener(kDragOverAsString, this, false);
+  }
+  if (on_drag_leave_.get()) {
+    event_target_->AddEventListener(kDragExitAsString, this, false);
+  }
+  if (on_drop_.get()) {
+    event_target_->AddEventListener(kDragDropAsString, this, false);
+  }
+}
+
+
+void DropTarget::RemoveSelfAsEventListeners() {
+  if (on_drag_enter_.get()) {
+    event_target_->RemoveEventListener(kDragEnterAsString, this, false);
+  }
+  if (on_drag_over_.get()) {
+    event_target_->RemoveEventListener(kDragOverAsString, this, false);
+  }
+  if (on_drag_leave_.get()) {
+    event_target_->RemoveEventListener(kDragExitAsString, this, false);
+  }
+  if (on_drop_.get()) {
+    event_target_->RemoveEventListener(kDragDropAsString, this, false);
+  }
+
+  Release();  // Balanced by an AddRef() call during AddSelfAsEventListeners.
+}
+
+
+NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsCOMPtr<nsIDragService> drag_service =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!drag_service) { return false; }
@@ -61,7 +113,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsString event_type;
   event->GetType(event_type);
 
-  if (on_drop_.get() && event_type.Equals(drag_drop_as_string)) {
+  if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
     std::string16 error;
     scoped_ptr<JsArray> file_objects(
         module_environment_->js_runner_->NewArray());
@@ -86,11 +138,11 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
 
   } else {
     JsRootedCallback *callback = NULL;
-    if (on_drag_enter_.get() && event_type.Equals(drag_enter_as_string)) {
+    if (on_drag_enter_.get() && event_type.Equals(kDragEnterAsString)) {
       callback = on_drag_enter_.get();
-    } else if (on_drag_over_.get() && event_type.Equals(drag_over_as_string)) {
+    } else if (on_drag_over_.get() && event_type.Equals(kDragOverAsString)) {
       callback = on_drag_over_.get();
-    } else if (on_drag_leave_.get() && event_type.Equals(drag_exit_as_string)) {
+    } else if (on_drag_leave_.get() && event_type.Equals(kDragExitAsString)) {
       callback = on_drag_leave_.get();
     }
     if (callback) {
