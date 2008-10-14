@@ -69,7 +69,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script>
 var STORE_NAME = 'helloworld-store'
 var localServer;
-var store;
 
 var filesToCapture = [
   location.pathname,
@@ -99,7 +98,6 @@ function init() {
 
     return;
   }
-  store = localServer.openStore(STORE_NAME);
   addStatus('Ready');
 }
 
@@ -107,13 +105,17 @@ function createStore() {
   if (!checkProtocol()) return;
 
   // If the store already exists, it will be opened
-  store = localServer.createStore(STORE_NAME);
-
-  clearStatus();
-  addStatus('Created the store');
+  try {
+    localServer.createStore(STORE_NAME);
+    clearStatus();
+    addStatus('Created the store');
+  } catch (ex) {
+    setError('Could not create store: ' + ex.message);
+  }
 }
 
 function capture() {
+  var store = localServer.openStore(STORE_NAME);
   if (!store) {
     setError('Please create a store for the captured resources');
     return;
@@ -131,6 +133,7 @@ function captureCallback(url, success, captureId) {
 }
 
 function uncapture() {
+  var store = localServer.openStore(STORE_NAME);
   if (!store) {
     setError('Please create a store for the captured resources');
     return;
@@ -148,7 +151,6 @@ function removeStore() {
   // We call openStore() to test for it's existence prior to removing it
   if (localServer.openStore(STORE_NAME)) {
     localServer.removeStore(STORE_NAME);
-    store = null;
     clearStatus();
     addStatus('Removed the store');
   } else {
