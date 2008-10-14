@@ -1,7 +1,6 @@
 import os
 import sys
 import zipfile
-import os.path
 import shutil
 import time
 import stat

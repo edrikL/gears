@@ -1,6 +1,5 @@
 import os
 import shutil
-import stat
 import zipfile
 import time
 import subprocess
@@ -37,7 +36,7 @@ class BaseInstaller:
 
   def _installExtension(self, build):
     """ Locate the desired ff profile, overwrite it, and unzip build to it. 
-    
+
     Args:
       build: local filename for the build
     """
@@ -50,7 +49,7 @@ class BaseInstaller:
 
   def _copyProfileAndInstall(self, extension):
     """ Profile and extension placement for mac/linux.
-    
+
     Args:
       extension: path to folder containing extension to install
     """
@@ -343,6 +342,7 @@ class WinCeInstaller(BaseInstaller):
   """ Installer for WinCE, extends Installer. """
 
   def __init__(self, host):
+    self._prepareProfiles()
     self.ieprofile = 'permissions'
     self.host = host
   
