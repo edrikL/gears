@@ -96,6 +96,14 @@ m4_ifelse(PRODUCT_OS,~android~,m4_dnl
   margin:1em;
 }
 
+#buttons-wince {
+  /*
+  On Windows Mobile, we hide the div containing the buttons by default, as
+  they are only used on touchscreen devices.
+  */
+  display:none;
+}
+
 .accesskey {
   text-decoration: underline;
 
