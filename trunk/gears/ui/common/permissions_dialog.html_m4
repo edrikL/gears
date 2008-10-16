@@ -136,11 +136,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       padding:0 1em;
 ~)
     }
-
-    #permissions-help {
-      margin:4px;
-      display:none;
-    }
   </style>
 </head>
 <body>
@@ -153,29 +148,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     <div id="string-trust-site-accesskey"></div>
   </div>
 
-  <!--
-  PIE only works with one window, and we are in a modal dialog.
-  Using window.open(this.href) replaces the content of the current dialog,
-  which is annoying when no back button is displayed...
-  The workaround is to embed directly a short explanation text, and
-  hide/show the div container for the help and the settings dialog.
-  -->
-
-  <div id="permissions-help">
-   <h2>Information</h2>
-   <p>
-     <span id="string-description"></span>
-   </p>
-   <ul>
-     <li><span id="string-localserver-desc"></span></li>
-     <li><span id="string-database-desc"></span></li>
-     <li><span id="string-workerpool-desc"></span></li>
-   </ul>
-   <a href="#" onclick="showHelp(false); return false;">Go back</a>
-  </div>
-
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~ <div id="permissions-settings">~)
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -322,8 +294,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     </div>
   </div>
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~ </div>~)
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
 </object>~)
 </body>
@@ -381,26 +351,6 @@ m4_include(genfiles/permissions_dialog.js)
       elem.appendChild(document.createTextNode(content)); 
     } else {
       elem.innerText = content;
-    }
-  }
-
-  function showHelp(show) {
-    if (browser.ie_mobile) {
-      var elemSettings = dom.getElementById("permissions-settings"); 
-      var elemHelp = dom.getElementById("permissions-help"); 
-      if (show) {
-        elemSettings.style.display = 'none';
-        elemHelp.style.display = 'block';
-        window.pie_dialog.SetButton("Back", "showHelp(false);");
-        window.pie_dialog.SetButtonEnabled(true);
-      } else {
-        elemSettings.style.display = 'block';
-        elemHelp.style.display = 'none';
-        window.pie_dialog.SetButton("Allow", "allowAccessPermanently();");
-      }
-      window.pie_dialog.ResizeDialog();
-    } else {
-      window.open('http://gears.google.com/?action=help');
     }
   }
 
