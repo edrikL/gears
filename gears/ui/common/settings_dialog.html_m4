@@ -122,17 +122,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       width: 70px;
     }
 
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-    /* 
-     * On Windows Mobile, we hide the div containing the buttons
-     * by default, to only show the correct one (ie smartphone or not)
-     */
-    #button-row {
-      display:none;
-    }
-~,~~)
-
     td.origin-name {
       font-weight: bold;
       width: 100%;
@@ -212,17 +201,19 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-          <div id="div-buttons">
-            <td width="50%" valign="middle">
-              <input type="BUTTON" id="cancel-button"
-               onclick="saveAndClose(null); return false;"></input>
-            </td>
-            <td width="50%" align="right" valign="middle">
-              <input type="BUTTON" id="confirm-button"
-               onclick="saveAndClose(result); return false;"></input>
-            </td>
-          </div>
+~         <!--
+          We use form input buttons instead of button elements as PIE
+          does not support them.
+          -->
+
+          <td width="50%" valign="middle">
+            <input type="BUTTON" id="cancel-button"
+              onclick="saveAndClose(null); return false;"></input>
+          </td>
+          <td width="50%" align="right" valign="middle">
+            <input type="BUTTON" id="confirm-button"
+              onclick="saveAndClose(result); return false;"></input>
+          </td>
 ~,m4_dnl
 ~
           <td nowrap="true" align="right" valign="middle">

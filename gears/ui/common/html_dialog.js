@@ -30,14 +30,11 @@ function initDialog() {
   if (!browser.ie_mobile) {
     dom.addEvent(document, "keyup", handleKeyUp);
   } else {
-    var buttonRowElem = null;
-    if (window.pie_dialog.IsSmartPhone()) {
-      buttonRowElem = dom.getElementById("button-row-smartphone");
-    } else {
-      buttonRowElem = dom.getElementById("button-row");
-    }
-    if (buttonRowElem) {
-      buttonRowElem.style.display = 'block';
+    if (!window.pie_dialog.IsSmartPhone()) {
+      var buttonRowElem = dom.getElementById("buttons-wince");
+      if (buttonRowElem) {
+        buttonRowElem.style.display = 'block';
+      }
     }
   }
   if (browser.ie_mobile) {

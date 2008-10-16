@@ -44,32 +44,9 @@ m4_include(ui/common/html_dialog.css)
       padding-right:1em;
     }
 
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-    /* 
-     * On Windows Mobile, we hide the div containing the buttons
-     * by default, to only show the correct one (ie smartphone or not)
-     */
-
-    #button-row {
-      display:none;
-    }
-
-    #button-row-smartphone {
-      margin-left:2em;
-      display:none;
-    }
-~,~~)
-
     #checkbox-row {
       margin-top:1em;
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-      margin-bottom:0.5em;
-~,
-~
       margin-bottom:1em;
-~)
     }
 
     .header-icon {
@@ -212,7 +189,7 @@ m4_include(genfiles/location_data.png.base64)m4_dnl
 
     <div id="string-location-privacy-statement" style="display:none; padding-top:3px;"></div>
 
-    <p id="checkbox-row" style="display:none">
+    <div id="checkbox-row" style="display:none">
       <table width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
           <td valign="middle">
@@ -226,31 +203,11 @@ m4_include(genfiles/location_data.png.base64)m4_dnl
           </td>
         </tr>
       </table>
-    </p>
+    </div>
     m4_ifelse(PRODUCT_OS,~wince~,~~,m4_ifelse(PRODUCT_OS,~android~,~~,~<br>~))
   </div>
 
   <div id="foot">
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-    <!--
-    On Windows Mobile, we use the softkey bar in addition to HTML buttons.
-    On Windows Mobile smartphone, we only display this div and hide the
-    button-row containing the HTML buttons (as screen estate is expensive
-    and we already have the buttons through the softkey bar)
-    -->
-
-    <div id="button-row-smartphone">
-      <table cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td valign="middle">
-          <a href="#" onclick="denyAccessPermanently(); return false;">
-            <span id="string-never-allow-link"></span></a>
-        </td>
-      </tr>
-      </table>
-    </div>
-~,~~)
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
@@ -277,10 +234,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           -->
 
           <td width="50%" align="right" valign="middle">
-            <form>
+            <div id="buttons-wince">
               <input type="BUTTON" id="allow-button" onclick="allowAccessPermanently(); return false;"></input>
               <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
-            </form>
+            </div>
           </td>
 ~,~
           <td nowrap="true" align="right" valign="middle">
@@ -313,6 +270,19 @@ m4_include(genfiles/permissions_dialog.js)
 
 <script>
   var debug = false;
+  if (debug) {
+    // Handy for debugging layout:
+    if (browser.ie_mobile) {
+      window.pie_dialog = new Object();
+      window.pie_dialog.IsSmartPhone = function() { return false; };
+      window.pie_dialog.SetCancelButton = function() {};
+      window.pie_dialog.SetButton = function() {};
+      window.pie_dialog.SetButtonEnabled = function() {};
+      window.pie_dialog.SetScriptContext = function() {};
+      window.pie_dialog.ResizeDialog = function() {};
+    }
+  }
+
   initDialog();
 
   initWarning();
