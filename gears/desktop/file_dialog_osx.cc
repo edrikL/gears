@@ -180,6 +180,8 @@ bool FileDialogCarbon::InitDialog(NativeWindowPtr parent,
     *error = STRING16(L"Failed to create dialog options.");
     return false;
   }
+  dialog_options.windowTitle = CFStringCreateWithString16(
+                                   options.dialog_title.c_str());
   if (parent) {
     dialog_options.parentWindow = parent;
     dialog_options.modality = kWindowModalityWindowModal;
@@ -243,9 +245,9 @@ bool FileDialogCarbon::SetFilter(const StringList& filter,
   // Add entries to the filter drop-down.  The first entry displays any file
   // that conforms to a UTI in utis_.  The second entry displays all files.
   scoped_CFString default_label(CFStringCreateWithString16(
-      GetLocalString(SK_AllReadableDocuments).c_str()));
+      GetLocalString(RECOMMENDED_FILE_TYPES_STRING).c_str()));
   scoped_CFString all_label(CFStringCreateWithString16(
-      GetLocalString(SK_AllDocuments).c_str()));
+      GetLocalString(ALL_FILE_TYPES_STRING).c_str()));
   const void* kFilterNames[] = {
     default_label.get(),
     all_label.get()

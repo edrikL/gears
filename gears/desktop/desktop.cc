@@ -430,16 +430,17 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
 
   // TODO(cdevries): set focus to tab where this function was called
 
+  scoped_refptr<ModuleEnvironment> environment;
+  GetModuleEnvironment(&environment);
+
   FileDialog::Options options;
   if (argv[1].was_specified) {
-    if (!FileDialog::ParseOptions(context, options_map, &options)) {
+    if (!FileDialog::ParseOptions(context, *environment, options_map,
+                                  &options)) {
       assert(context->is_exception_set());
       return;
     }
   }
-
-  scoped_refptr<ModuleEnvironment> environment;
-  GetModuleEnvironment(&environment);
 
   std::string16 error;
   scoped_ptr<FileDialog> dialog(FileDialog::Create(environment.get()));

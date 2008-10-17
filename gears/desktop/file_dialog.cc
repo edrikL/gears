@@ -31,6 +31,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
+#include "gears/ui/common/i18n_strings.h"
 
 #if defined(WIN32)
 #include "gears/desktop/file_dialog_win32.h"
@@ -240,8 +241,9 @@ bool FileDialog::IsLegalFilter(const std::string16& filter) {
   return true;
 }
 
-bool FileDialog::ParseOptions(JsCallContext* context, const JsObject& map,
-                              Options* options) {
+bool FileDialog::ParseOptions(JsCallContext* context,
+                              const ModuleEnvironment& module_environment,
+                              const JsObject& map, Options* options) {
   // options.filter = [ ".txt", "text/html", "text/*" ];
   if (map.GetPropertyType(kFilter) != JSPARAM_UNDEFINED) {
     bool success = true;
@@ -274,6 +276,7 @@ bool FileDialog::ParseOptions(JsCallContext* context, const JsObject& map,
       return false;
     }
   }
+
   // options.singleFile = true;
   if (map.GetPropertyType(kSingleFile) != JSPARAM_UNDEFINED) {
     bool singleFile = false;
@@ -286,6 +289,18 @@ bool FileDialog::ParseOptions(JsCallContext* context, const JsObject& map,
     }
     options->mode = singleFile ? SINGLE_FILE : MULTIPLE_FILES;
   }
+
+  // Also fill out a dialog_title field.  It's not a caller-defined option,
+  // but this the most convenient place to set it.
+  //
+  // We show only the host.  The scheme and port are less interesting for
+  // end users making decisions about what access to allow, and they clutter
+  // the important part (the host).
+  options->dialog_title = GetLocalString(OPEN_FILES_STRING);
+  options->dialog_title += STRING16(L" (");
+  options->dialog_title += module_environment.security_origin_.host();
+  options->dialog_title += STRING16(L")");
+
   return true;
 }
 
