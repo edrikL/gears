@@ -35,8 +35,8 @@
 # For more information on the MSI ProductVersion field, see:
 # http://msdn.microsoft.com/en-us/library/aa370859(VS.85).aspx
 MAJOR = 0
-MINOR = 4
-BUILD = 24
+MINOR = 5
+BUILD = 1
 PATCH = 0
 
 VERSION = $(MAJOR).$(MINOR).$(BUILD).$(PATCH)
