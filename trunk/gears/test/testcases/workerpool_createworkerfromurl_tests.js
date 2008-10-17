@@ -152,3 +152,41 @@ function testOneShotWorkerFromUrl() {
   var wp = google.gears.factory.create('beta.workerpool');
   wp.createWorkerFromUrl(sameOriginWorkerFile);
 }
+
+// The following two tests test redirects for HttpRequest/AsyncTask where the
+// redirect behaviour is FOLLOW_ALL.
+var localPath = '/testcases/';
+var redirect = 'cgi/server_redirect.py?location=';
+
+function testRedirectToCrossOrigin() {
+  // Tests loading a worker where the URL results in a cross-origin redirect.
+  if (isSafari) {
+    // TODO(steveblock): Work out why this fails on Safari.
+  } else {
+    var wp = google.gears.factory.create('beta.workerpool');
+    wp.onmessage = function(text, sender, m) {
+      completeAsync();
+    };
+    var workerUrl = crossOriginPath + crossOriginWorkerFile;
+    var redirectUrl = localPath + redirect;
+    var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
+
+    startAsync();
+    wp.sendMessage('cross origin ping', childId);
+  }
+}
+
+function testCrossOriginToRedirect() {
+  // Tests loading a worker where the URL is cross-origin and results in a
+  // redirect.
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.onmessage = function(text, sender, m) {
+    completeAsync();
+  };
+  var workerUrl = localPath + crossOriginWorkerFile;
+  var redirectUrl = crossOriginPath + redirect;
+  var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
+
+  startAsync();
+  wp.sendMessage('cross origin ping', childId);
+}

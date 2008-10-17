@@ -477,6 +477,24 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
 STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
   LOG16((L"IEHttpRequest::OnStopBinding - %d, %s\n",
              hresult, error_text ? error_text : L"null"));
+#ifdef WINCE
+  // On Win32, in the case of a redirect to an bad domain (no NDS lookup), we
+  // get a call to OnProgress with status_code == BINDSTATUS_REDIRECTING before
+  // being called back here. However, on WinCE, we do not get the callback to
+  // OnProgress, we only get a callback here with hresult == E_ACCESSDENIED.
+  // This means that handling of redirect_behaviour_ FOLLOW_NONE or
+  // FOLLOW_WITHIN_ORIGIN in OnRedirect is skipped. We therefore handle these
+  // cases here.
+  if (hresult == E_ACCESSDENIED &&
+      (redirect_behavior_ == FOLLOW_NONE ||
+       redirect_behavior_ == FOLLOW_WITHIN_ORIGIN)) {
+    response_payload_.SynthesizeHttpRedirect(NULL, L"http://bad_domain");
+    response_body_.reset(new ByteStore);
+    has_synthesized_response_payload_ = true;
+    ignore_stopbinding_error_ = true;
+  }
+#endif
+
   binding_.Release();
   bind_ctx_.Release();
   url_moniker_.Release();
