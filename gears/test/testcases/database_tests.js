@@ -575,3 +575,51 @@ function testRowsAffected() {
   db.execute('delete from simple where 1');
   assertEqual(2, db.rowsAffected);
 }
+
+function testRemove() {
+  var db1 = google.gears.factory.create('beta.database');
+  db1.open('testremoveddb');
+  db1.execute('create table if not exists foo(foo)');
+  db1.execute('insert into foo values (\'foo\')');
+  db1.remove();
+
+  // Test the handle starts throwing after delete
+  assertError(function() {
+    db1.execute('insert into foo values (\'bar\')');
+  }, 'Database has been removed.');
+
+  // Create a new db with same name and verify it is empty.
+  db1.open('testremoveddb');
+  db1.execute('create table if not exists foo(foo)');
+  handleResult(db1.execute('select * from foo'),
+               function(rs) {
+    assertEqual(false, rs.isValidRow());
+  });
+}
+
+function testRemoveCrossThread() {
+  var db1 = google.gears.factory.create('beta.database');
+  db1.open('testremoveddb');
+
+  // Test that a database deleted in a worker starts throwing for every handle
+  // in the same process.
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.onmessage = function() {
+    assertError(function() {
+      db1.execute('insert into foo values (\'foo\')');
+    }, 'Database has been removed.');
+    completeAsync();
+  };
+
+  var workerId = wp.createWorker(
+    'google.gears.workerPool.onmessage = function(m, s) {\n' +
+    '  var db = google.gears.factory.create("beta.database")\n' +
+    '  db.open("testremoveddb")\n' +
+    '  db.remove()\n' +
+    '  google.gears.workerPool.sendMessage("pong", s)\n' +
+    '}'
+  );
+  wp.sendMessage("ping", workerId);
+
+  startAsync();
+}

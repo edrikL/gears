@@ -86,6 +86,8 @@ class GearsResultSet : public ModuleImplBaseClass {
   bool NextImpl(std::string16 *error_message);
   bool Finalize();
 
+  bool EnsureResultSetAndDatabaseAreOpen(JsCallContext *context);
+
   scoped_refptr<GearsDatabase> database_;
   sqlite3_stmt *statement_;
   bool is_valid_row_;

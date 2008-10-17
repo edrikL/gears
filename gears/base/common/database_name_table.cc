@@ -300,6 +300,29 @@ bool DatabaseNameTable::MarkDatabaseCorrupt(const char16 *origin,
   return true;
 }
 
+bool DatabaseNameTable::DeleteDatabase(const SecurityOrigin &origin,
+                                       const std::string16 &basename) {
+  // Mark the database deleted in the name table.
+  const char16 *sql = STRING16(
+      L"UPDATE DatabaseNames SET IsDeleted = 1 "
+      L"WHERE Origin = ? AND Basename = ?");
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(db_, sql)) return false;
+  if (SQLITE_OK != statement.bind_text16(0, origin.url().c_str())) return false;
+  if (SQLITE_OK != statement.bind_text16(1, basename.c_str())) return false;
+  if (SQLITE_DONE != statement.step()) return false;
+
+  // Attempt to delete the file. Note that on Windows, this won't succeed until
+  // the last file handle is closed.
+  std::string16 origin_data_dir;
+  if (!GetDataDirectory(origin, &origin_data_dir)) return false;
+
+  std::string16 file_path = origin_data_dir + kPathSeparator + basename;
+  File::Delete(file_path.c_str());  // ignore return value
+
+  return true;
+}
+
 void DatabaseNameTable::DeleteDatabasesForOrigin(const SecurityOrigin &origin) {
   // First mark all the databases as deleted.  Then try to remove all
   // files backing the deleted databases.

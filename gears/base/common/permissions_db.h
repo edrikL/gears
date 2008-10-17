@@ -81,6 +81,11 @@ class PermissionsDB {
   // Gets a thread-specific PermissionsDB instance.
   static PermissionsDB *GetDB();
 
+  // Gets the DatabaseNameTable instance for this database.
+  DatabaseNameTable *GetDatabaseNameTable() {
+    return &database_name_table_;
+  }
+
   // Sets the Gears access level for a given SecurityOrigin and PermissionType.
   void SetPermission(const SecurityOrigin &origin,
                      PermissionType type,

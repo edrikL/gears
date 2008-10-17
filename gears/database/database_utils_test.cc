@@ -84,8 +84,10 @@ bool TestDatabaseUtilsAll(std::string16 *error) {
 
   // Open a couple handles to the database.
   scoped_sqlite3_handle db, db2;
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db)));
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db2)));
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, NULL,
+              as_out_parameter(db)));
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, NULL,
+              as_out_parameter(db2)));
 
   // Test that the database works.
   const char *kInsertSql("INSERT INTO t VALUES ('x')");
@@ -123,7 +125,8 @@ bool TestDatabaseUtilsAll(std::string16 *error) {
   TEST_ASSERT(basename == current_basename);
 
   // Open the database again.  It should work.
-  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, as_out_parameter(db)));
+  TEST_ASSERT(OpenSqliteDatabase(kFooDatabaseName, foo, NULL,
+                                 as_out_parameter(db)));
 
   // The basename should be different.
   TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,

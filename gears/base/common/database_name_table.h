@@ -59,6 +59,12 @@ class DatabaseNameTable {
   bool MarkDatabaseCorrupt(const char16 *origin, const char16 *database_name,
                            const char16 *basename);
 
+  // Marks the database as having been deleted. The 'basename' parameter is the
+  // same as the value returned by the GetDatabaseBasename() method, and is
+  // really the filename of the database file on disk, including the [n] suffix.
+  bool DeleteDatabase(const SecurityOrigin &origin,
+                      const std::string16 &basename);
+
   // Deletes all databases associated with the given origin.  Always
   // attempts to delete as much as possible, so no value is returned.
   void DeleteDatabasesForOrigin(const SecurityOrigin &origin);

@@ -26,8 +26,10 @@
 #include "gears/database/database.h"
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/database_name_table.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/paths.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
@@ -43,12 +45,15 @@ DECLARE_DISPATCHER(GearsDatabase);
 
 const std::string GearsDatabase::kModuleName("GearsDatabase");
 
+static const char16 *kDatabaseDeletedTopic = STRING16(L"database deleted");
+
 // static
 template<>
 void Dispatcher<GearsDatabase>::Init() {
   RegisterMethod("open", &GearsDatabase::Open);
   RegisterMethod("execute", &GearsDatabase::Execute);
   RegisterMethod("close", &GearsDatabase::Close);
+  RegisterMethod("remove", &GearsDatabase::Remove);
   RegisterProperty("rowsAffected", &GearsDatabase::GetRowsAffected, NULL);
   RegisterProperty("lastInsertRowId", &GearsDatabase::GetLastInsertRowId, NULL);
 #ifdef DEBUG
@@ -58,16 +63,12 @@ void Dispatcher<GearsDatabase>::Init() {
 
 GearsDatabase::GearsDatabase()
     : ModuleImplBaseClass(kModuleName),
-      db_(NULL) {
+      db_(NULL), deleted_(false) {
 }
 
 GearsDatabase::~GearsDatabase() {
   assert(result_sets_.empty());
-
-  if (db_) {
-    sqlite3_close(db_);
-    db_ = NULL;
-  }
+  CloseInternal();
 }
 
 void GearsDatabase::Open(JsCallContext *context) {
@@ -98,13 +99,27 @@ void GearsDatabase::Open(JsCallContext *context) {
     return;
   }
 
+  // Must reset this flag in case the same JS variable is opening a new DB.
+  deleted_ = false;
+
+  // Register to receive notification when other database objects are deleted.
+  // We must do this before we actually open the database so that we don't miss
+  // a message between opening the DB and registering for notifications.
+  MessageService *message_service = MessageService::GetInstance();
+  assert(message_service);
+
+  SerializableString16::RegisterSerializableString16();
+  message_service->AddObserver(this, kDatabaseDeletedTopic);
+
   // For now, callers cannot open DBs in other security origins.
   // To support that, parse an 'origin' argument here and call
   // IsOriginAccessAllowed (yet to be written).
 
   // Open the database.
   if (!OpenSqliteDatabase(database_name.c_str(), EnvPageSecurityOrigin(),
-                          &db_)) {
+                          &file_name_, &db_)) {
+    assert(!db_);
+    message_service->RemoveObserver(this, kDatabaseDeletedTopic);
     context->SetException(STRING16(L"Couldn't open SQLite database."));
   }
 }
@@ -125,10 +140,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (!db_) {
-    context->SetException(STRING16(L"Database handle was NULL."));
-    return;
-  }
+  if (!EnsureDatabaseIsOpen(context)) return;
 
   // Get parameters.
   std::string16 expr;
@@ -335,21 +347,30 @@ void GearsDatabase::Close(JsCallContext *context) {
   }
 }
 
-void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
-  if (!db_) {
-    context->SetException(STRING16(L"Database handle was NULL."));
+void GearsDatabase::Remove(JsCallContext *context) {
+  if (!RemoveInternal()) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
+
+  // Notify any other GearsDatabase instances that their underlying database has
+  // been deleted.
+  MessageService *message_service = MessageService::GetInstance();
+  assert(message_service);
+
+  message_service->NotifyObservers(
+      kDatabaseDeletedTopic, new SerializableString16(file_name_.c_str()));
+}
+
+void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
+  if (!EnsureDatabaseIsOpen(context)) return;
 
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
   context->SetReturnValue(JSPARAM_INT64, &rowid);
 }
 
 void GearsDatabase::GetRowsAffected(JsCallContext *context) {
-  if (!db_) {
-    context->SetException(STRING16(L"Database handle was NULL."));
-    return;
-  }
+  if (!EnsureDatabaseIsOpen(context)) return;
 
   int retval = sqlite3_changes(db_);
   context->SetReturnValue(JSPARAM_INT, &retval);
@@ -374,6 +395,10 @@ bool GearsDatabase::CloseInternal() {
       (*result_set)->Finalize();
     }
 
+    MessageService *message_service = MessageService::GetInstance();
+    assert(message_service);
+    message_service->RemoveObserver(this, kDatabaseDeletedTopic);
+  
     int sql_status = sqlite3_close(db_);
     db_ = NULL;
     if (sql_status != SQLITE_OK) {
@@ -401,9 +426,52 @@ void GearsDatabase::HandleEvent(JsEventType event_type) {
   result_sets_.clear();
 }
 
+void GearsDatabase::OnNotify(MessageService *service, const char16 *topic,
+                             const NotificationData *data) {
+  assert(data->GetSerializableClassId() == SERIALIZABLE_STRING16);
+
+  if (deleted_) return;
+
+  const SerializableString16 *received_file_name =
+      static_cast<const SerializableString16 *>(data);
+  if (file_name_ == received_file_name->string_) {
+    RemoveInternal();
+  }
+}
+
+bool GearsDatabase::RemoveInternal() {
+  if (!CloseInternal()) return false;
+
+  PermissionsDB *pdb = PermissionsDB::GetDB();
+  assert(pdb);
+
+  DatabaseNameTable *name_table = pdb->GetDatabaseNameTable();
+  assert(name_table);
+
+  if (!name_table->DeleteDatabase(EnvPageSecurityOrigin(), file_name_))
+    return false;
+
+  deleted_ = true;
+  return true;
+}
+
 #ifdef DEBUG
 void GearsDatabase::GetExecuteMsec(JsCallContext *context) {
   int retval = GearsDatabase::g_stopwatch_.GetElapsed();
   context->SetReturnValue(JSPARAM_INT, &retval);
 }
 #endif
+
+bool GearsDatabase::EnsureDatabaseIsOpen(JsCallContext *context) {
+  if (deleted_) {
+    context->SetException(STRING16(L"Database has been removed."));
+    return false;
+  }
+
+  if (!db_) {
+    context->SetException(STRING16(L"Database is not open."));
+    return false;
+  }
+
+  return true;
+}

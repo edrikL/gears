@@ -76,16 +76,19 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
   assert(db);
   assert(error_message);
   statement_ = statement;
+  database_ = db;
+
   // convention: call next() when the statement is set
   bool succeeded = NextImpl(error_message); 
   if (!succeeded || sqlite3_column_count(statement_) == 0) {
     // Either an error occurred or this was a command that does
     // not return a row, so we can just close automatically
     Finalize();
+    database_ = NULL;
   } else {
-    database_ = db;
     db->AddResultSet(this);
   }
+
   return succeeded;
 }
 
@@ -122,10 +125,6 @@ void GearsResultSet::FieldImpl(JsCallContext *context, int index) {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (statement_ == NULL) {
-    context->SetException(STRING16(L"SQL statement is NULL."));
-    return;
-  }
   if ((index < 0) || (index >= sqlite3_column_count(statement_))) {
     context->SetException(STRING16(L"Invalid index."));
     return;
@@ -163,6 +162,8 @@ void GearsResultSet::FieldImpl(JsCallContext *context, int index) {
 }
 
 void GearsResultSet::Field(JsCallContext *context) {
+  if (!EnsureResultSetAndDatabaseAreOpen(context)) return;
+
   // Get parameters.
   int index;
   JsArgument argv[] = {
@@ -180,10 +181,7 @@ void GearsResultSet::FieldByName(JsCallContext *context) {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (statement_ == NULL) {
-    context->SetException(STRING16(L"SQL statement is NULL."));
-    return;
-  }
+  if (!EnsureResultSetAndDatabaseAreOpen(context)) return;
 
   // Get parameters.
   std::string16 field_name;
@@ -218,10 +216,7 @@ void GearsResultSet::FieldName(JsCallContext *context) {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (statement_ == NULL) {
-    context->SetException(STRING16(L"SQL statement is NULL."));
-    return;
-  }
+  if (!EnsureResultSetAndDatabaseAreOpen(context)) return;
 
   // Get parameters.
   int index;
@@ -263,10 +258,8 @@ void GearsResultSet::Close(JsCallContext *context) {
 }
 
 void GearsResultSet::Next(JsCallContext *context) {
-  if (!statement_) {
-    context->SetException(STRING16(L"Called Next() with NULL statement."));
-    return;
-  }
+  if (!EnsureResultSetAndDatabaseAreOpen(context)) return;
+
   std::string16 error_message;
   if (!NextImpl(&error_message)) {
     context->SetException(error_message.c_str());
@@ -279,6 +272,12 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #endif // DEBUG
   assert(statement_);
   assert(error_message);
+
+  if (database_->deleted_) {
+    *error_message = STRING16(L"Database was deleted.");
+    return false;
+  }
+
   int sql_status = sqlite3_step(statement_);
   sql_status = SqlitePoisonIfCorrupt(sqlite3_db_handle(statement_),
                                      sql_status);
@@ -315,4 +314,13 @@ void GearsResultSet::IsValidRow(JsCallContext *context) {
   }
 
   context->SetReturnValue(JSPARAM_BOOL, &valid);
+}
+
+bool GearsResultSet::EnsureResultSetAndDatabaseAreOpen(JsCallContext *context) {
+  if (!statement_ || !database_) {
+    context->SetException(STRING16(L"ResultSet is closed."));
+    return false;
+  }
+
+  return database_->EnsureDatabaseIsOpen(context);
 }

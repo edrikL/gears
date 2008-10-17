@@ -48,11 +48,11 @@ int SqlitePoisonIfCorrupt(sqlite3 *db, int rc);
 // Creates the database (and appropriate directories) if necessary.
 // Stores a pointer to the opened database in 'db'.
 //
-// All parameters are required, but 'name' can be the empty string.
+// The 'name', 'origin', and 'db' parameters are all required. 'name' can
+// be the empty string. 'basename' is optional and can be NULL.
 //
 // Returns 'true' if the function succeeds.
 bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
-                        sqlite3 **db);
-
+                        std::string16 *basename, sqlite3 **db);
 
 #endif // GEARS_DATABASE_DATABASE_UTILS_H__
