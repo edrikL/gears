@@ -147,10 +147,48 @@ function testGet302NoCrossOriginBadDomain() {
 }
 
 function testRequestDisallowedHeaders() {
-  var headers = [["Referer", "http://somewhere.else.com/"]];
-  assertError(function() {
-    doRequest('should_fail', 'GET', null, headers, null, null, null, null);
-  });
+  var headerSets = [
+      [["Referer", "http://somewhere.else.com/"]],
+      [["Proxy-blah", "prefix is disallowed"]],
+      [["Sec-blah", "prefix is disallowed"]],
+      [["", "CantBeEmpty"]],
+      [["No\nNewlines", "x"]],
+      [["ValidName", "No\nNewlinesInValue"]],
+      [["No\rCRs", "x"]],
+      [["ValidName", "No\rCRsInValue"]],
+      [["No:Delimiters", "ValidValue"]],
+      [["NoSplitting", "def\x0aHost:attacker"]],
+      [["Host:", "attacker"]],
+      [["Host\x09", "attacker"]]
+    ];
+
+  for (var i = 0; i < headerSets.length; ++i) {
+    assertError(
+      function() {
+        doRequest('should_fail', 'GET', null, headerSets[i],
+                  null, null, null, null);
+      },
+      null, '[' + headerSets[i] + ']');
+  }
+}
+
+function testRequestDisallowedMethods() {
+  var methods = [
+      "TRACE",
+      "TRACK",
+      "CONNECT",
+      "GET\x09/some/page.jsp\x09HTTP/1.1\x0aHost:\x09vi.ct.im\x0aContent-Length:\x090\x0a\x0aPOST",
+      ""  // can't be empty
+    ];
+
+  for (var i = 0; i < methods.length; ++i) {
+    assertError(
+      function() {
+        doRequest('should_fail', methods[i], null, null,
+                  null, null, null, null);
+      },
+      null, methods[i]);
+  }
 }
 
 function testRequestReuse() {
@@ -267,20 +305,19 @@ function testGetCapturedResource() {
   startAsync();
 
   var myLocalServer = google.gears.factory.create('beta.localserver');
-  // We don't delete and recreate the store or captured url to avoid
-  // interfering with this same test running in the other thread. 
   var storeName = 'testGet_CapturedResource';
   myLocalServer.removeStore(storeName);
   var myStore = myLocalServer.createStore(storeName);
   var url = 'testcases/cgi/echo_request.py?httprequest_a_captured_url';
-  var captureSuccess;
-
-
-  var expectedHeaders = [["echo-Method", "GET"]];
   
   myStore.capture(url, function(url, success, id) {
     assert(success, 'Expected captured to succeed');
-    doRequest(url, 'GET', null, null, 200, null, expectedHeaders, null);
+    // To ensure we're fetching from the localserver, make a copy under a url
+    // that does not exist on the server and fetch that url.
+    var local_url = 'local_url';
+    var expectedHeaders = [["echo-Method", "GET"]];
+    myStore.copy(url, local_url);
+    doRequest(local_url, 'GET', null, null, 200, null, expectedHeaders, null);
   });
 }
 
