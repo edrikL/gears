@@ -25,7 +25,7 @@
 
 // TODO(andreip): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented.
-#ifdef WINCE
+#ifdef OS_WINCE
 #ifndef GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
@@ -106,6 +106,7 @@ class CMutexWince : public ATL::CMutex {
   static CriticalSection lock_;
 };
 
+#ifdef BROWSER_IE
 class BrowserCache {
  public:
   // This method adds a zero-size entry of type EDITED_CACHE_ENTRY to the
@@ -146,6 +147,7 @@ class UnloadEventSource {
 
   DISALLOW_EVIL_CONSTRUCTORS(UnloadEventSource);
 };
+#endif  // BROWSER_IE
 
 // Localization utilities
 
@@ -155,4 +157,4 @@ class UnloadEventSource {
 bool GetCurrentSystemLocale(std::string16 *locale);
 
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
-#endif  // WINCE
+#endif  // OS_WINCE

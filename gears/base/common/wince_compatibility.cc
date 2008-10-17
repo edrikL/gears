@@ -28,7 +28,7 @@
 
 // TODO(andreip): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented.
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 
 #include <shellapi.h>
@@ -53,7 +53,8 @@ static void SkipTokens(const std::string16 &path,
                        int &pos,
                        bool skip_separators);
 
-// Used by BrowserCache methods.
+#ifdef BROWSER_IE
+// Used by BrowserCache methods for IE Mobile.
 static void IncrementFiletime(FILETIME *file_time,
                               const int64 &hundreds_of_nanoseconds);
 static bool IsFiletimeGreater(const FILETIME &left_hand,
@@ -63,6 +64,7 @@ static bool IsFiletimeGreater(const FILETIME &left_hand,
 static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url);
 // Determines if a cache entry is a bogus Gears entry.
 static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info);
+#endif  // BROWSER_IE
 
 // There seem to be no way to implement this properly on Windows Mobile
 // since the algorithm for path shortening isn't fully specified, according
@@ -202,8 +204,10 @@ BOOL CMutexWince::Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName) {
   return success;
 }
 
-// This function is required because on WinCE, throwing a JavaScript exception
-// from C++ doesn't trigger the default JS exception handler.
+#ifdef BROWSER_IE
+// This function is required because on IE Mobile on WinCE, throwing a
+// JavaScript exception from C++ doesn't trigger the default JS exception
+// handler.
 //
 // We try to call window.onerror. If this fails, we show an alert if script
 // errors are enabled in the browser.
@@ -255,8 +259,10 @@ void CallWindowOnerror(JsRunnerInterface *js_runner,
     return;
   }
 }
+#endif  // BROWSER_IE
 
-// BrowserCache
+#ifdef BROWSER_IE
+// BrowserCache - used on IE Mobile.
 
 // A cache entry inserted with NORMAL_CACHE_ENTRY is used whenever the
 // LocalServer can not serve the resource it represents, even if the device is
@@ -405,6 +411,7 @@ bool BrowserCache::RemoveBogusEntry(const char16 *url) {
   LOG16((L"BrowserCache: No bogus cache entry for %s, not removing.\n", url));
   return true;
 }
+#endif  // BROWSER_IE
 
 // Internal
 
@@ -423,6 +430,7 @@ static void SkipTokens(const std::string16 &path,
   }
 }
 
+#ifdef BROWSER_IE
 static void IncrementFiletime(FILETIME *file_time,
                               const int64 &hundreds_of_nanoseconds) {
   int64 file_time_integer = static_cast<int64>(file_time->dwHighDateTime) << 32;
@@ -493,8 +501,10 @@ bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info) {
   return IsEntryBogus(info);
 }
 #endif
+#endif  // BROWSER_IE
 
-// Unload monitoring infrastructure
+#ifdef BROWSER_IE
+// Unload monitoring infrastructure - used on IE Mobile
 
 UnloadEventHandlerInterface* UnloadEventSource::handler_ = NULL;
 
@@ -518,6 +528,7 @@ void UnloadEventSource::UnregisterHandler() {
   assert(handler_ != NULL);
   handler_ = NULL;
 }
+#endif  // BROWSER_IE
 
 // Localization
 
@@ -565,4 +576,4 @@ bool GetCurrentSystemLocale(std::string16 *locale) {
   return GetLocaleFromLcid(locale_id, locale);
 }
 
-#endif  // WINCE
+#endif  // OS_WINCE

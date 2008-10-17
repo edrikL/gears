@@ -37,7 +37,7 @@ struct IHTMLElement;
 class BrowsingContext;
 class SecurityOrigin;
 
-#ifdef WINCE
+#ifdef OS_WINCE
 struct IWebBrowser2;
 struct IPIEHTMLDocument;
 struct IPIEHTMLDocument2;
@@ -61,7 +61,7 @@ class ActiveXUtils {
   static bool GetPageBrowsingContext(
       IUnknown *site, scoped_refptr<BrowsingContext> *browsing_context);
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // We're not able to get IWebBrowser2 on WinCE. Instead we obtain the window
   // and document objects from the script engine's IDispatch pointer.
 #else
@@ -76,13 +76,13 @@ class ActiveXUtils {
 
   // Returns the IHTMLWindow2 interface corresponding to the given site.
   static HRESULT GetHtmlWindow2(IUnknown *site,
-#ifdef WINCE
+#ifdef OS_WINCE
                                 IPIEHTMLWindow2 **window2);
 #else
                                 IHTMLWindow2 **window2);
 #endif
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // WinCE does not provide I(PIE)HTMLWindow3, but we do not need it.
 #else
   // Returns the IHTMLWindow3 interface corresponding to the given site.
@@ -152,7 +152,7 @@ class ActiveXUtils {
                                            const char16* name,
                                            const VARIANT* value);
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // TODO(andreip): implement on Windows Mobile.
 #else
   // Returns the html attribute value of the given HTMLElement.

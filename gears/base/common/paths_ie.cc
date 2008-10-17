@@ -25,7 +25,7 @@
 
 #include <windows.h>
 #include <shlobj.h>
-#ifdef WINCE
+#ifdef OS_WINCE
 // No shlwapi.h on Windows Mobile.
 #else
 #include <shlwapi.h>
@@ -36,7 +36,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/vista_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 
@@ -48,7 +48,7 @@ static const char16 *kDataSubdir = STRING16(L"Google\\"
                                             L" for Internet Explorer");
 
 bool GetInstallDirectory(std::string16 *path) {
-#ifdef WINCE
+#ifdef OS_WINCE
   assert(path);
   wchar_t dir[MAX_PATH];
   HRESULT hr = SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,

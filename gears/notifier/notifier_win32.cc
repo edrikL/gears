@@ -265,7 +265,7 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
 }
 
 __declspec(dllexport) int WINAPI DllEntry(const wchar_t *running_version) {
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 // Only send crash reports for official builds.  Crashes on an engineer's
 // machine during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
@@ -279,7 +279,7 @@ __declspec(dllexport) int WINAPI DllEntry(const wchar_t *running_version) {
                                    sizeof(g_trace_positions));
 #endif  // DEBUG
 #endif  // OFFICIAL_BUILD
-#endif  // WIN32 && !WINCE
+#endif  // WIN32 && !OS_WINCE
 
   int argc = 0;
   char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);

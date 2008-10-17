@@ -295,7 +295,7 @@ bool Desktop::HandleDialogResults(ShortcutInfo *shortcut_info,
 
   // TODO(zork): Get the shortcut location from the dialog.
   uint32 locations =
-#ifdef WINCE
+#ifdef OS_WINCE
       // WinCE only supports the start menu.
       SHORTCUT_LOCATION_STARTMENU;
 #else

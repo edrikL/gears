@@ -47,7 +47,7 @@ import "ocidl.idl";
 
 import "ui/ie/html_dialog_host.idl";
 
-#ifdef WINCE
+#ifdef OS_WINCE
 import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
@@ -93,7 +93,7 @@ library GearsTypelib
     [default] interface HtmlDialogHostInterface;
   };
 
-#ifdef WINCE
+#ifdef OS_WINCE
   [
     uuid(134AB400-1A81-4fc8-85DD-29CD51E9D6DE)
   ]

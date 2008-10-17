@@ -467,7 +467,7 @@ bool CanonicalizePartialPath(const UTF16Char* spec,
                              int path_begin_in_output,
                              CanonOutput* output);
 
-#if !defined(WIN32) || defined(WINCE)
+#if !defined(WIN32) || defined(OS_WINCE)
 
 // Implementations of Windows' int-to-string conversions
 int _itoa_s(int value, char* buffer, size_t size_in_chars, int radix);
@@ -513,7 +513,7 @@ inline unsigned long long _strtoui64(const char* nptr,
   }
   return KErrNone == lex.Val(val, radix) ? val : 0;
 }
-#elif !defined(WINCE)
+#elif !defined(OS_WINCE)
 // _strtoui64 and strtoull behave the same
 inline unsigned long long _strtoui64(const char* nptr,
                                      char** endptr, int base) {

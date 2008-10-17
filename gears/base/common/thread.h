@@ -35,7 +35,7 @@
 typedef int ThreadId;
 #elif BROWSER_WEBKIT || defined(LINUX) || defined(ANDROID)
 typedef pthread_t ThreadId;
-#elif BROWSER_IE || defined(WIN32) || defined(WINCE)
+#elif BROWSER_IE || defined(WIN32) || defined(OS_WINCE)
 typedef DWORD ThreadId;
 #endif
 

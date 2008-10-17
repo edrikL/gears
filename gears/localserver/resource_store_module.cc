@@ -434,7 +434,7 @@ void GearsResourceStore::Copy(JsCallContext *context) {
 // CaptureBlob
 //------------------------------------------------------------------------------
 void GearsResourceStore::CaptureBlob(JsCallContext *context) {
-#ifdef WINCE
+#ifdef OS_WINCE
   context->SetException(STRING16(L"captureBlob is not implemented."));
 #else
 
@@ -619,7 +619,7 @@ void GearsResourceStore::GetAllHeaders(JsCallContext *context) {
 // CreateFileSubmitter
 //------------------------------------------------------------------------------
 void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   context->SetException(STRING16(L"createFileSubmitter is not implemented."));
   return;
 #elif BROWSER_NPAPI

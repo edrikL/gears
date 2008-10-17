@@ -44,7 +44,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 
 #include "gears/geolocation/wifi_data_provider_win32.h"
 
@@ -526,4 +526,4 @@ bool GetSystemDirectory(std::string16 *path) {
   return true;
 }
 
-#endif  // WIN32 && !WINCE
+#endif  // WIN32 && !OS_WINCE

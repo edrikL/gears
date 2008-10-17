@@ -50,7 +50,7 @@
 #if BROWSER_IE
 #include "gears/base/common/vista_utils.h"
 #endif
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/desktop/dll_data_wince.h"
 #endif
 #include "gears/desktop/shortcut_utils_win32.h"
@@ -75,7 +75,7 @@ struct IcoDirectory {
   uint32 offset;
 };
 
-#ifdef WINCE
+#ifdef OS_WINCE
 bool WriteIconAsDLL(const char16 *file_path,
                     const uint8 *icon_data,
                     const int data_size) {
@@ -220,7 +220,7 @@ bool WriteIconAsDLL(const char16 *file_path,
   }
   return true;
 }
-#endif // WINCE
+#endif // OS_WINCE
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcoFile(const std::string16 &icons_path,
@@ -228,7 +228,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   std::vector<const Desktop::IconData *> icons_to_write;
 
   // Add each icon size that has been provided to the icon list.
-#ifdef WINCE
+#ifdef OS_WINCE
   // We don't use 128x128 or 48x48 on WinCE.
 #else
   // We ignore 128x128 because it isn't supported by Windows.
@@ -371,7 +371,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     dest_offset += mask_row_bytes * icons_to_write[i]->height;
   }
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // On WinCE, we don't write the icon directly, but embed it in a DLL.
   bool success = WriteIconAsDLL(icons_path.c_str(), data, data_size);
 #else
@@ -404,7 +404,7 @@ bool Desktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
   AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icons_path);
   icons_path += kPathSeparator;
   icons_path += shortcut.app_name;
-#ifdef WINCE
+#ifdef OS_WINCE
   // On WinCE, we don't write the icon directly, but embed it in a DLL. We don't
   // use extension '.dll' because this casues some devices to warn the user that
   // they are running an untrusted application when the icon is used.

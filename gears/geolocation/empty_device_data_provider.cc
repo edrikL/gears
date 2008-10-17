@@ -24,7 +24,9 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Win32, Linux and OSX use the empty device data provider for radio data.
-#if (defined(WIN32) && !defined(WINCE)) || defined(LINUX) || defined(OS_MACOSX)
+#if (defined(WIN32) && !defined(OS_WINCE)) || \
+    defined(LINUX) || \
+    defined(OS_MACOSX)
 
 #include "gears/geolocation/empty_device_data_provider.h"
 
@@ -34,4 +36,4 @@ RadioDataProviderImplBase *RadioDataProvider::DefaultFactoryFunction() {
   return new EmptyDeviceDataProvider<RadioData>();
 }
 
-#endif  // (WIN32 && !WINCE) || LINUX || OS_MACOSX
+#endif  // (WIN32 && !OS_WINCE) || LINUX || OS_MACOSX

@@ -30,7 +30,9 @@
 #define GEARS_BASE_COMMON_ATOMIC_OPS_WIN32_H__
 
 #include <windows.h>
-#include <crtdefs.h>  // for intptr_t on WINCE
+#ifdef OS_WINCE
+#include <crtdefs.h>  // for intptr_t
+#endif
 
 typedef intptr_t AtomicWord;
 #ifdef _WIN64
@@ -77,7 +79,7 @@ inline AtomicWord AtomicIncrement(volatile AtomicWord* ptr,
 inline AtomicWord AtomicIncrement(volatile AtomicWord* ptr,
                                   AtomicWord increment) {
   return InterlockedExchangeAdd(
-#ifdef WINCE
+#ifdef OS_WINCE
       // It seems that for WinCE InterlockedExchangeAdd takes LONG* as its first
       // parameter. The const_cast is required to remove the volatile modifier.
       const_cast<LONG*>(reinterpret_cast<volatile LONG*>(ptr)),

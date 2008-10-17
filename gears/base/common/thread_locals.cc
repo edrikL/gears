@@ -37,7 +37,7 @@
 // not. It's set in when DllMain(processAttached) is called, will initializing
 // it via the CRT squash that value set via DllMain?
 #if BROWSER_IE
-#ifdef WINCE
+#ifdef OS_WINCE
 // On Windows Mobile 5 TLS_OUT_OF_INDEXES is undefined.
 // On Windows Mobile 6 TLS_OUT_OF_INDEXES is defined to 0xffffffff
 // (see http://msdn2.microsoft.com/en-us/library/aa908741.aspx).

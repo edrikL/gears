@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
+#ifdef OS_WINCE
 
 #include "gears/base/common/basictypes.h"
 
@@ -1217,4 +1217,4 @@ extern const uint8 kIcon32and16DllEnd[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 extern const int kIcon32and16DllEndSize = ARRAYSIZE(kIcon32and16DllEnd);
 
-#endif  // WINCE
+#endif  // OS_WINCE

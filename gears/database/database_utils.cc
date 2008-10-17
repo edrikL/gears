@@ -153,7 +153,7 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
                             "PRAGMA auto_vacuum = 1;"
                             "PRAGMA cache_size = 2048;"
                             "PRAGMA page_size = 4096;"
-#ifdef WINCE
+#ifdef OS_WINCE
                             // Using in-memory temp files gives approximately
                             // 3x speed improvement on Windows Mobile.
                             "PRAGMA temp_store = MEMORY;"

@@ -39,7 +39,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#ifdef WINCE
+#ifdef OS_WINCE
 
 #include "gears/geolocation/gps_location_provider_wince.h"
 
@@ -480,4 +480,4 @@ bool PositionsDifferSiginificantly(const Position &position_1,
   return delta > 100;
 }
 
-#endif  // WINCE
+#endif  // OS_WINCE

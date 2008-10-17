@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 
 #include <deque>
 #include <map>
@@ -1253,7 +1253,7 @@ static Win32IpcMessageQueue * volatile g_peer_queue_instance = NULL;
 
 // static
 IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-#if defined(BROWSER_IE) && !defined(WINCE)
+#ifdef BROWSER_IE
   if (!g_peer_queue_instance) {
     MutexLock locker(&g_peer_queue_instance_lock);
     if (!g_peer_queue_instance) {
@@ -1268,7 +1268,7 @@ IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
   return g_peer_queue_instance;
 #else
   return NULL;
-#endif  // defined(BROWSER_IE) && !defined(WINCE)
+#endif  // BROWSER_IE
 }
 
 static Mutex g_system_queue_instance_lock;
@@ -1693,4 +1693,4 @@ void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
 
 #endif
 
-#endif  // defined(WIN32) && !defined(WINCE)
+#endif  // defined(WIN32) && !defined(OS_WINCE)

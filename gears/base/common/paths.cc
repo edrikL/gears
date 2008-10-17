@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 #include <shlobj.h>
 #endif
 
@@ -124,7 +124,7 @@ bool IsUserInputValidAsPathComponent(const std::string16 &user_input,
   return true;
 }
 
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 bool GetUmbrellaInstallDirectory(std::string16 *path) {
   wchar_t dir[MAX_PATH];
 

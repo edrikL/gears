@@ -131,7 +131,7 @@ inline HRESULT CComClassFactoryProtocol::SetTargetCLSID(REFCLSID clsid,
   DWORD clsContext)
 {
   CComPtr<IClassFactory> spTargetCF;
-#ifdef WINCE
+#ifdef OS_WINCE
   // Gears - the normal way to create the class object is as follows:
   // HRESULT hr = CoGetClassObject(clsid, clsContext, 0, IID_IClassFactory,
   //  reinterpret_cast<void**>(&spTargetCF));

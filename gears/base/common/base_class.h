@@ -43,7 +43,7 @@
 
 class ModuleWrapperBaseClass;
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 class GearsFactory;
 #endif
 
@@ -167,9 +167,10 @@ class ModuleImplBaseClass {
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   // This method is defined in desktop/ie/factory.cc. It lets us verify that
-  // privateSetGlobalObject() has been called from JavaScript on WinCE.
+  // privateSetGlobalObject() has been called from JavaScript in IE Mobile on
+  // WinCE.
   friend bool IsFactoryInitialized(GearsFactory *factory);
 #endif
 

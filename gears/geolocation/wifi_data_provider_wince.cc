@@ -25,7 +25,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#ifdef WINCE
+#ifdef OS_WINCE
 
 #include "gears/geolocation/wifi_data_provider_wince.h"
 
@@ -213,4 +213,4 @@ static bool GetAccessPointData(const HANDLE &ndis_handle,
   return true;
 }
 
-#endif  // WINCE
+#endif  // OS_WINCE

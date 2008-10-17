@@ -62,7 +62,7 @@ class GearsFactoryImpl : public ModuleImplBaseClass {
   // OUT: string version_string
   void GetVersion(JsCallContext *context);
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   // IN: -
   // OUT: -
   void PrivateSetGlobalObject(JsCallContext *context);
@@ -76,7 +76,7 @@ class GearsFactoryImpl : public ModuleImplBaseClass {
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   // The PrivateSendUnloadEvent can only be called once. We use this flag to
   // remember if the call was made.
   bool unload_event_fired_;

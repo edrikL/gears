@@ -25,7 +25,7 @@
 
 #ifndef GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
 #define GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
-#ifdef WINCE
+#ifdef OS_WINCE
 // FileSubmitter is not implemented for WinCE.
 #else
 
@@ -120,5 +120,5 @@ class ATL_NO_VTABLE SubmitFileBehavior
   static const DISPID kName_DispId = 1;
 };
 
-#endif  // WINCE
+#endif  // OS_WINCE
 #endif  // GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__

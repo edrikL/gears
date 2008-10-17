@@ -231,14 +231,15 @@ function testCreateError() {
   }
 }
 
-// Tests the bogus browser cache entries used on WinCE to prevent the 'Cannot
-// Connect' popup when serving content from the LocalServer when offline.
+// Tests the bogus browser cache entries used on IE Mobile on WinCE to prevent
+// the 'Cannot Connect' popup when serving content from the LocalServer when
+// offline.
 // TODO(steveblock): Add more tests once test harness is fully working for
 // WinCE.
 // - Managed resource store.
 // - Test that existing browser cache entires are not over-written.
 function testBrowserCache() {
-  if (isUsingCCTests && isWince) {
+  if (isUsingCCTests && isWince && isIE) {
     // Clear the browser cache.
     var urls = ['/testcases/test_file_1.txt',
                 '/testcases/test_file_1024.txt'];

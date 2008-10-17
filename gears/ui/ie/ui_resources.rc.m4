@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
+#ifdef OS_WINCE
   #include "aygshell.h"
   #include "afxres.h"
   #include "genfiles/product_constants.h"
@@ -71,7 +71,7 @@ shortcuts_dialog.html.end    HTML {"\0END\0"}
 // Dialogs
 //-----------------------------------------------------------------------------
 
-#ifdef WINCE
+#ifdef OS_WINCE
 
 // NOTE: Resources files aren't run through the translation
 // console, so we can't localize the strings here.

@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // WIN32 systems.
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 
 #include "gears/base/common/thread_win32.h"
 
@@ -34,7 +34,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/thread.h"
-#if defined(WINCE)
+#if defined(OS_WINCE)
 #include "gears/base/common/wince_compatibility.h"
 #endif
 
@@ -84,4 +84,4 @@ unsigned int __stdcall Thread::ThreadInternal::ThreadRun(void *data) {
   return 0;
 }
 
-#endif  // defined(WIN32) || defined(WINCE)
+#endif  // defined(WIN32) || defined(OS_WINCE)

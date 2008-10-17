@@ -26,8 +26,8 @@
 #ifndef GEARS_LOCALSERVER_FILE_SUBMITTER_H__
 #define GEARS_LOCALSERVER_FILE_SUBMITTER_H__
 
-#ifdef WINCE
-  // FileSubmitter is not implemented for WinCE.
+#if defined(OS_WINCE) && defined(BROWSER_IE)
+  // FileSubmitter is not implemented for IE Mobile on WinCE.
 #else
 
 #include "gears/base/common/base_class.h"
@@ -104,5 +104,5 @@ class GearsFileSubmitter : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitter);
 };
 
-#endif // WINCE
+#endif // #if defined(OS_WINCE) && defined(BROWSER_IE)
 #endif // GEARS_LOCALSERVER_FILE_SUBMITTER_H__

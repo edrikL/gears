@@ -33,7 +33,7 @@
 #include "gears/base/ie/atl_headers.h"
 
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // Use of ATLTRACE (which is used by LOG and LOG16) may cause a stack fault on
 // WinCE. See http://code.google.com/p/google-gears/issues/detail?id=342 for
 // details. So we disable logging by default on WinCE.
@@ -42,7 +42,7 @@
 #endif
 
 #if defined(DEBUG) && defined(ENABLE_LOGGING)
-#if defined(WINCE)
+#if defined(OS_WINCE)
 // ATLTRACE for WinCE takes a wide string, so we can not call it directly.
 // Instead we convert the message and call ATL::CTrace so that we can pass the
 // the file name and line number from the call site.
@@ -110,11 +110,11 @@ class GearsTrace {
 };
 #define LOG(args) GearsTrace(__FILE__, __LINE__) args
 #define LOG16(args) ATLTRACE args
-#else  // defined(WINCE)
+#else  // defined(OS_WINCE)
 // ATLTRACE for Win32 can take either a wide or narrow string.
 #define LOG(args) ATLTRACE args
 #define LOG16(args) ATLTRACE args
-#endif  // defined(WINCE)
+#endif  // defined(OS_WINCE)
 #else  // defined(DEBUG) && defined(ENABLE_LOGGING)
 #define LOG(args) __noop
 #define LOG16(args) __noop

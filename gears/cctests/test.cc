@@ -64,7 +64,7 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   RegisterMethod("removeEntriesFromBrowserCache",
                  &GearsTest::RemoveEntriesFromBrowserCache);
   RegisterMethod("testEntriesPresentInBrowserCache",
@@ -131,7 +131,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/timed_call_test.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/wince_compatibility.h"
 #endif
@@ -179,7 +179,7 @@ bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
 bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
 bool TestBlob(std::string16 *error);  // from blob_test.cc
-#if (defined(WIN32) && !defined(WINCE)) || \
+#if (defined(WIN32) && !defined(OS_WINCE)) || \
     defined(LINUX) || defined(OS_MACOSX)
 // from ipc_message_queue_test.cc
 bool TestIpcSystemQueue(std::string16 *error);
@@ -338,7 +338,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestRefCount(&error);
   ok &= TestBlob(&error);
 
-#if (defined(WIN32) && !defined(WINCE)) || \
+#if (defined(WIN32) && !defined(OS_WINCE)) || \
     defined(LINUX) || defined(OS_MACOSX)
   ok &= TestIpcSystemQueue(&error);
 #if BROWSER_IE
@@ -1991,7 +1991,7 @@ void CreateObjectFunction(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyFunction(STRING16(L"func"), func));
 }
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 // These methods are used by the JavaScript testBrowserCache test.
 
 bool GetJsArrayAsStringVector(const JsArray *js_array,
@@ -2109,7 +2109,7 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
   ok = true;
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
-#endif
+#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
 
 void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
   ::TestParseGeolocationOptions(context, GetJsRunner());
@@ -2176,7 +2176,7 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
 // The notification API has not been finalized for official builds.
 #else
 
-#if (defined(WIN32) && !defined(WINCE)) || defined(LINUX)
+#if (defined(WIN32) && !defined(OS_WINCE)) || defined(LINUX)
 class ProcessCreator {
  public:
   static ProcessCreator* Create(const char16 *full_filepath);
@@ -2264,7 +2264,7 @@ int ProcessCreator::GetExitCode(int wait_seconds) {
   return exit_code;
 }
 #endif  // WIN32
-#endif  // (defined(WIN32) && !defined(WINCE)) || defined(LINUX)
+#endif  // (defined(WIN32) && !defined(OS_WINCE)) || defined(LINUX)
 
 #if defined(WIN32)
 const char16* kNotifierTestApp = STRING16(L"notifier_test.exe");
@@ -2273,7 +2273,7 @@ const char16* kNotifierTestApp = STRING16(L"notifier_test");
 #endif  // WIN32
 
 void GearsTest::TestNotifier(JsCallContext *context) {
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
   std::string16 component_directory;
   if (!GetComponentDirectory(&component_directory)) {
     context->SetException(STRING16(L"Couldn't get install directory."));
@@ -2305,7 +2305,7 @@ void GearsTest::TestNotifier(JsCallContext *context) {
                                    L"notifier_test.exe for more information."));
     return;
   }
-#endif  // defined(WIN32) && !defined(WINCE)
+#endif  // defined(WIN32) && !defined(OS_WINCE)
 
 }
 #endif  // OFFICIAL_BUILD

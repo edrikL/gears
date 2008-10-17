@@ -180,7 +180,7 @@ void FileDialogWin32::InitDialog(NativeWindowPtr parent,
   ofn_.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER
                | OFN_HIDEREADONLY;
   if (MULTIPLE_FILES == options.mode) {
-#ifdef WINCE
+#ifdef OS_WINCE
     // The native WinCE file picker does not support multi-select.
 #else
     ofn_.Flags |= OFN_ALLOWMULTISELECT;

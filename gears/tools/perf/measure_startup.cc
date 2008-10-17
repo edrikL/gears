@@ -33,12 +33,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef WIN32
- #ifdef WINCE
+ #ifdef OS_WINCE
   #define execv(A,B)  printf("WinCE doesn't have execv!\n")
  #else
   #include <process.h>
   #define execv _execv
- #endif // WINCE
+ #endif // OS_WINCE
   #define PRINTF_64BIT_SPECIFIER "I64"
 #else
   #include <unistd.h>

@@ -28,7 +28,7 @@
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#ifdef WINCE
+#ifdef OS_WINCE
 // The Drag-and-Drop API is not implemented on Windows CE.
 #else
 
@@ -99,6 +99,6 @@ class ATL_NO_VTABLE DropTarget
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };
 
-#endif  // WINCE
+#endif  // OS_WINCE
 #endif  // OFFICIAL_BUILD
 #endif  // GEARS_DESKTOP_DROP_TARGET_IE_H__

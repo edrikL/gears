@@ -29,7 +29,7 @@
 #ifndef _ATL_NO_EXCEPTIONS  // may be defined via command-line flags
 #define _ATL_NO_EXCEPTIONS
 #endif
-#ifdef WINCE
+#ifdef OS_WINCE
 #define _ATL_FREE_THREADED
 #else
 #define _ATL_APARTMENT_THREADED

@@ -27,11 +27,11 @@
 #define GEARS_BASE_COMMON_THREAD_WIN32_H__
 
 // WIN32 systems.
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 
 #include <atlsync.h>
 #include "gears/base/common/thread.h"
-#if defined(WINCE)
+#if defined(OS_WINCE)
 #include "gears/base/common/wince_compatibility.h"
 #endif
 
@@ -59,6 +59,6 @@ class Thread::ThreadInternal {
   static unsigned int __stdcall ThreadRun(void *data);
 };
 
-#endif // defined(WIN32) || defined(WINCE)
+#endif // defined(WIN32) || defined(OS_WINCE)
 
 #endif  // GEARS_BASE_COMMON_THREAD_WIN32_H__

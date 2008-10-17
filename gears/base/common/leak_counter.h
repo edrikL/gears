@@ -27,7 +27,7 @@
 #define GEARS_BASE_COMMON_LEAK_COUNTER_H__
 
 #ifdef DEBUG
-#ifdef WINCE
+#ifdef OS_WINCE
 // TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
 #else
 #define ENABLE_LEAK_COUNTING 1

@@ -74,7 +74,7 @@ void LeakCounterDumpCounts() {
   if (total == 0) {
     return;
   }
-#ifdef WINCE
+#ifdef OS_WINCE
   // TODO(nigeltao): figure out some sort of UI for showing leaks on WinCE.
 #else
 
@@ -100,7 +100,7 @@ void LeakCounterDumpCounts() {
   String16ToUTF8(s, &s_as_utf8);
   printf("%s", s_as_utf8.c_str());
 #endif
-#endif  // WINCE
+#endif  // OS_WINCE
 }
 
 void LeakCounterIncrement(LeakCounterType type, int delta) {

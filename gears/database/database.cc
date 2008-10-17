@@ -110,7 +110,7 @@ void GearsDatabase::Open(JsCallContext *context) {
 }
 
 void GearsDatabase::Execute(JsCallContext *context) {
-#ifdef WINCE
+#ifdef OS_WINCE
   // Sleep() is used as a poor-man's yield() here to improve concurrency
   // and prevent possible thread starvation on Windows Mobile,
   // especially for cases when one thread is using the database very 
@@ -119,7 +119,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
   // uses a busy wait.
   // TODO(shess): more efficient locking implementation on SQLite level.
   Sleep(0);  
-#endif  // WINCE
+#endif  // OS_WINCE
 
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);

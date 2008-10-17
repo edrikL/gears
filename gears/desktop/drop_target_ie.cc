@@ -27,7 +27,7 @@
 // The Drag-and-Drop API has not been finalized for official builds.
 // Nor is it implemented on Windows CE.
 #else
-#ifdef WINCE
+#ifdef OS_WINCE
 // The Drag-and-Drop API is not implemented on Windows CE.
 #else
 #include "gears/desktop/drop_target_ie.h"
@@ -282,5 +282,5 @@ void DropTarget::HandleEvent(JsEventType event_type) {
 }
 
 
-#endif  // WINCE
+#endif  // OS_WINCE
 #endif  // OFFICIAL_BUILD

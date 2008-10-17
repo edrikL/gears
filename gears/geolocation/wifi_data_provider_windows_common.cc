@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 
@@ -74,4 +74,4 @@ int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST &bss_id_list,
   return found;
 }
 
-#endif  // WIN32 || WINCE
+#endif  // WIN32 || OS_WINCE
