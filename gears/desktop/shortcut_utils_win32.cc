@@ -73,8 +73,20 @@ static bool CreateShellLink(const char16 *link_path,
   shortcut += object_path;
   shortcut += STRING16(L"\"");
   if (arguments) {
-    shortcut += STRING16(L" ");
-    shortcut += arguments;
+    // It seems that the system splits the argument from the module at the first
+    // occurence of '?'. So if the supplied argument contains a '?', the parsing
+    // will be incorrect. This allows exploits where the system is forced to try
+    // to load an icon from a location other than that in icon_path. (Note that
+    // in the case where arguments is a URL, this also prevents the use of query
+    // params.)
+    //
+    // For this reason, we terminate arguments just before the occurence of the
+    // first '?'.
+    int num_characters = wcscspn(arguments, L"?");
+    if (num_characters > 0) {
+      shortcut += STRING16(L" ");
+      shortcut.append(arguments, 0 , num_characters);
+    }
   }
   if (icon_path) {
     shortcut += STRING16(L"?");

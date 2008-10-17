@@ -111,6 +111,8 @@ desktop.openFiles(openFilesCallback);
       <br>
       <code>url</code> - The address to launch when the user opens the shortcut.
       The URL must be in the same origin as the calling page.
+      Note that for technical reasons, on Windows Mobile, any query parameters
+      are stripped from the URL.
       <br>
       <code>icons</code> - An object containing one or more of these named
         properties: <code>128x128</code>, <code>48x48</code>,
