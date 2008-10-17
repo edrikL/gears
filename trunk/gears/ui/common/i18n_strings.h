@@ -29,9 +29,9 @@
 #include "gears/base/common/string16.h"
 
 enum I18NStringKey {
-  SK_AllReadableDocuments,
-  SK_AllDocuments,
-  SK_OpenFile,
+  OPEN_FILES_STRING,
+  RECOMMENDED_FILE_TYPES_STRING,
+  ALL_FILE_TYPES_STRING,
 };
 
 // Returns the localized string identified by key.

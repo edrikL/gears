@@ -79,6 +79,8 @@ class FileDialogWin32 : public FileDialog, public Thread,
   OPENFILENAME ofn_;
   // Provides the backing memory for ofn_.lpstrFilter.
   std::string16 filter_;
+  // Provides the backing memory for ofn_.lpstrTitle.
+  std::string16 dialog_title_;
   // Provides the backing memory for ofn_.lpstrFile.
   std::vector<TCHAR> filename_buffer_;
   // MessageService topic for communication from worker to main thread.

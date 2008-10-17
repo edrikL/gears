@@ -28,9 +28,9 @@
 
 const char16* const kLocalStrings[] = {
   // TODO(zork): Grab these strings from i18n_string_db.cc.stab
-  STRING16(L"All Readable Documents"),
-  STRING16(L"All Documents"),
-  STRING16(L"Open File"),
+  STRING16(L"Open Files"),  // used in dialog title bar
+  STRING16(L"Recommended File Types"),  // filetype filter
+  STRING16(L"All Files"),  // filetype filter
 };
   
 std::string16 GetLocalString(I18NStringKey key) {

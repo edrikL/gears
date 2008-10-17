@@ -103,7 +103,7 @@ bool FileDialogGtk::InitDialog(NativeWindowPtr parent,
                                const FileDialog::Options& options,
                                std::string16* error) {
   dialog_.reset(gtk_file_chooser_dialog_new(
-      String16ToUTF8(GetLocalString(SK_OpenFile)).c_str(), parent,
+      String16ToUTF8(options.dialog_title).c_str(), parent,
       GTK_FILE_CHOOSER_ACTION_OPEN,
       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
       GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -129,8 +129,9 @@ bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
       continue;
     if (!gtk_filter) {
       gtk_filter = gtk_file_filter_new();
-      gtk_file_filter_set_name(gtk_filter, 
-          String16ToUTF8(GetLocalString(SK_AllReadableDocuments)).c_str());
+      gtk_file_filter_set_name(gtk_filter,
+                               String16ToUTF8(GetLocalString(
+                                   RECOMMENDED_FILE_TYPES_STRING)).c_str());
     }
     if ('.' == filter_item[0]) {
       std::string pattern("*");
@@ -148,7 +149,7 @@ bool FileDialogGtk::SetFilter(const StringList& filter, std::string16* error) {
   // Always include an unrestricted filter that the user may select.
   gtk_filter = gtk_file_filter_new();
   gtk_file_filter_set_name(gtk_filter,
-      String16ToUTF8(GetLocalString(SK_AllDocuments)).c_str());
+      String16ToUTF8(GetLocalString(ALL_FILE_TYPES_STRING)).c_str());
   gtk_file_filter_add_custom(gtk_filter, static_cast<GtkFileFilterFlags>(0),
                              &AnyFileFilter, NULL, &AnyFileFilterDestroy);
   gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog_.get()), gtk_filter);

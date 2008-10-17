@@ -166,12 +166,14 @@ void FileDialogWin32::OnNotify(MessageService *service,
 // Initialize an open file dialog to open multiple files.
 void FileDialogWin32::InitDialog(NativeWindowPtr parent,
                                  const FileDialog::Options& options) {
+  dialog_title_ = options.dialog_title;
   filename_buffer_.resize(kFilenameBufferSize);
 
   // Initialize OPENFILENAME
   memset(&ofn_, 0, sizeof(ofn_));
   ofn_.lStructSize = sizeof(ofn_);
   ofn_.hwndOwner = parent;
+  ofn_.lpstrTitle = dialog_title_.c_str();
   ofn_.lpstrFile = &filename_buffer_[0];
   ofn_.lpstrFile[0] = '\0';
   ofn_.nMaxFile = kFilenameBufferSize;
@@ -243,7 +245,8 @@ bool FileDialogWin32::SetFilter(const StringList& filter,
   if (default_filter.empty())
     return true;
 
-  filter_.append(GetLocalString(SK_AllReadableDocuments));
+  filter_.clear();
+  filter_.append(GetLocalString(RECOMMENDED_FILE_TYPES_STRING));
   filter_.push_back('\0');
   // Append everything but the first character, which is always ';'.
   filter_.insert(filter_.end(), default_filter.begin() + 1, 
@@ -252,7 +255,7 @@ bool FileDialogWin32::SetFilter(const StringList& filter,
   
   // Always include an unrestricted filter that the user may select.
   // On Win32, *.* matches everything, even files with no extension.
-  filter_.append(GetLocalString(SK_AllDocuments));
+  filter_.append(GetLocalString(ALL_FILE_TYPES_STRING));
   filter_.push_back('\0');
   filter_.append(STRING16(L"*.*"));
   filter_.push_back('\0');

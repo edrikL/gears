@@ -33,6 +33,7 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/string16.h"
 #include "gears/ui/common/window_utils.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -54,6 +55,7 @@ class FileDialog {
     Options() : mode(MULTIPLE_FILES) { }
 
     Mode mode;
+    std::string16 dialog_title;
     // filter is a vector of Internet Media Types (eg, text/plain) and
     // filename extensions (eg, .txt).  If non-empty, the file dialog will
     // filter the selectable files by this criteria.
@@ -81,8 +83,9 @@ class FileDialog {
   // Prematurely terminates the dialog selection.
   void Cancel();
 
-  static bool ParseOptions(JsCallContext* context, const JsObject& map,
-                           Options* options);
+  static bool ParseOptions(JsCallContext* context,
+                           const ModuleEnvironment& module_environment,
+                           const JsObject& map, Options* options);
 
   // Creates an array of javascript objects from files.
   // Each javascript object has the following properties.
