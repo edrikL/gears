@@ -32,6 +32,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_service.h"
 #include "gears/base/common/stopwatch.h"
 
 struct sqlite3;
@@ -40,7 +41,8 @@ class GearsResultSet;
 
 class GearsDatabase
     : public ModuleImplBaseClass,
-      public JsEventHandlerInterface {
+      public JsEventHandlerInterface,
+      public MessageObserverInterface {
  public:
   static const std::string kModuleName;
 
@@ -60,6 +62,10 @@ class GearsDatabase
   void Close(JsCallContext *context);
 
   // IN: -
+  // OUT: -
+  void Remove(JsCallContext *context);
+
+  // IN: -
   // OUT: int
   void GetLastInsertRowId(JsCallContext *context);
 
@@ -67,7 +73,12 @@ class GearsDatabase
   // OUT: int
   void GetRowsAffected(JsCallContext *context);
 
-  void HandleEvent(JsEventType event_type);
+  virtual void HandleEvent(JsEventType event_type);
+
+  virtual void OnNotify(MessageService *service, const char16 *topic,
+                        const NotificationData *data);
+
+  bool EnsureDatabaseIsOpen(JsCallContext *context);
 
 // Right now this is just used for testing perf. If we ever want to make it a
 // real feature of Gears, then it will need to keep separate stopwatches for
@@ -86,10 +97,13 @@ class GearsDatabase
   void AddResultSet(GearsResultSet *rs);
   void RemoveResultSet(GearsResultSet *rs);
   bool CloseInternal();
+  bool RemoveInternal();
   bool BindArgsToStatement(JsCallContext *context,
                            const JsArray *arg_array, sqlite3_stmt *stmt);
 
   sqlite3 *db_;
+  bool deleted_;
+  std::string16 file_name_;
   std::set<GearsResultSet *> result_sets_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
 

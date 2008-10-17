@@ -176,11 +176,13 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
 // Combine dirname and dbname to create an appropriate internal
 // database name, and open that database.  If the database is corrupt,
 // poison it (so that other clients don't trust it) and signal
-// PermissionsDB to stop using this name.  db is only a valid sqlite3
-// handle if true is returned.
+// PermissionsDB to stop using this name.  On success, *basename_out
+// contains the basename for the new database and *db contains a valid
+// sqlite handle.
 static bool OpenAndCheckDatabase(const SecurityOrigin &origin,
                                  const std::string16 &dirname,
                                  const std::string16 &dbname,
+                                 std::string16 *basename_out,
                                  sqlite3 **db) {
   PermissionsDB *pdb = PermissionsDB::GetDB();
   if (pdb == NULL) {
@@ -210,11 +212,15 @@ static bool OpenAndCheckDatabase(const SecurityOrigin &origin,
   }
 
   *db = temp_db;
+  if (basename_out) {
+    *basename_out = basename;
+  }
+
   return true;
 }
 
 bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
-                        sqlite3 **db) {
+                        std::string16 *basename, sqlite3 **db) {
   std::string16 dirname;
 
   // Setup the directory.
@@ -232,12 +238,12 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
   }
 
   // Open the SQLite database and check for corruption.
-  if (OpenAndCheckDatabase(origin, dirname, name, db)) {
+  if (OpenAndCheckDatabase(origin, dirname, name, basename, db)) {
     return true;
   }
 
   // If the existing database was corrupt, the first open will fail.
   // Give it one more chance.  If this call fails, further calls are
   // likely to also fail, so don't bother.
-  return OpenAndCheckDatabase(origin, dirname, name, db);
+  return OpenAndCheckDatabase(origin, dirname, name, basename, db);
 }
