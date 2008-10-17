@@ -27,7 +27,9 @@
 // TODO(aa): There needs to be a way to get the cross-origin URL from inside a
 // test. Or, more generally, there needs to be some test configuration that gets
 // setup in the main frame, and passed into both iframe and worker contexts.
-var crossOriginUrl = 'http://localhost:8002';
+// Note that we can't use 'localhost' here, because it's not a valid domain on
+// WinCE.
+var crossOriginUrl = 'http://www.google.com';
 crossOriginUrl += '/testcases/test_file_1024.txt';
 
 // TODO(bgarcia): Add a test that examines the responseText after the request
@@ -111,7 +113,7 @@ function testGet302_404() {
   startAsync();
   doRequest('testcases/cgi/server_redirect.py?location=nosuchfile___', 'GET', null, null,
             404, null, null, null);
-}  
+}
 
 function testGetNoCrossOrigin() {
   assertError(function() {
@@ -124,6 +126,24 @@ function testGet302NoCrossOrigin() {
   var headers = [["location", crossOriginUrl]];
   doRequest('testcases/cgi/server_redirect.py?location=' + crossOriginUrl,
             'GET', null, null, 302, "", headers, 0);
+}
+
+function testGet302NoCrossOriginBadDomain() {
+  // The behaviour in the case of a cross-origin redirect should be consistent
+  // irrespective of the domain to which the redirect points. However, on WinCE
+  // the behaviour of URLMON is different if the domain to which the redirect
+  // points does not have a DNS entry. HttpRequest for WinCE handles this case
+  // (although we are unable to get the redirected URL). This test tests that
+  // code.
+  startAsync();
+  var redirectUrl = 'http://nosuchdomain___/nosuchfile___';
+  var headers = [["location", redirectUrl]];
+  if (isWince) {
+    // In this case on WinCE, we don't get the redirect URL.
+    headers = null;
+  }
+  doRequest('testcases/cgi/server_redirect.py?location=' + redirectUrl,
+      'GET', null, null, 302, "", headers, 0);
 }
 
 function testRequestDisallowedHeaders() {
