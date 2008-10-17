@@ -382,11 +382,9 @@ inline std::string String16ToUTF8(const std::string16 &in) {
   return String16ToUTF8(in, &out8) ? out8 : std::string();
 }
 
-// ----------------------------------------------------------------------
 // Replaces all occurences of old_pattern found in str with new_pattern
 // and returns the number of replacements that were made. All arguments
 // must be of the same type of basic_string derived class.
-// ----------------------------------------------------------------------
 template<class StringT>
 inline int ReplaceAll(StringT &str,
                       const StringT &old_pattern,
@@ -410,6 +408,13 @@ inline bool StartsWith(const StringT &left, const StringT &right) {
          memstr(left.c_str(), right_len, right.c_str(), right_len);
 }
 
+template<class StringT>
+inline bool StartsWithIgnoreCase(const StringT &left, const StringT &right) {
+  size_t right_len = right.length();
+  return (left.length() >= right_len) &&
+         memistr(left.c_str(), right_len, right.c_str(), right_len);
+}
+
 // Does "left" end with "right"
 template<class StringT>
 inline bool EndsWith(const StringT &left, const StringT &right) {
@@ -417,6 +422,14 @@ inline bool EndsWith(const StringT &left, const StringT &right) {
   size_t right_len = right.length();
   return (left_len >= right_len) &&
          memstr(left.c_str() + (left_len - right_len), right.c_str());
+}
+
+template<class StringT>
+inline bool EndsWithIgnoreCase(const StringT &left, const StringT &right) {
+  size_t left_len = left.length();
+  size_t right_len = right.length();
+  return (left_len >= right_len) &&
+         memistr(left.c_str() + (left_len - right_len), right.c_str());
 }
 
 // Split a string into its fields delimited by any of the charactes
@@ -509,6 +522,8 @@ bool StringToInt(const char *str, int *value);
 bool String16ToInt(const char16 *str, int *value);
 
 #ifdef ANDROID
+// TODO(michaeln): do these belong in string16.h?
+
 // Wide character version of strlen, not implemented on Android.
 size_t wcslen(const char16 *str);
 

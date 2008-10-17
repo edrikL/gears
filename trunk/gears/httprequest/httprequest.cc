@@ -51,6 +51,99 @@ static const char16 *kNotInteractiveError =
 static const char16 *kURLNotFromSameOriginError =
                          STRING16(L"URL is not from the same origin.");
 
+// Determines if a string is a valid token, as defined by
+// "token" in section 2.2 of RFC 2616.
+static bool IsValidToken(const std::string16 &token) {
+  if (token.empty()) {
+    return false;
+  }
+  size_t length = token.length();
+  for (size_t i = 0; i < length; ++i) {
+    char16 c = token[i];
+    if (c >= 127 || c <= 32) {
+      return false;
+    }
+    if (c == '(' || c == ')' || c == '<' || c == '>' || c == '@' ||
+        c == ',' || c == ';' || c == ':' || c == '\\' || c == '\"' ||
+        c == '/' || c == '[' || c == ']' || c == '?' || c == '=' ||
+        c == '{' || c == '}') {
+      return false;
+    }
+  }
+  return true;
+}
+
+static const char kInvalidHeaderValueChars[] = { '\r', '\n' };
+
+static bool IsValidHeaderValue(const std::string16 &value) {
+  // TODO(michaeln): Should validate more thoroughly per RFC 2616, section 4
+  // For now, just checking for line breaks to defeat header splitting
+  // security attacks.
+  std::string utf8 = String16ToUTF8(value);
+  return utf8.find_first_of(kInvalidHeaderValueChars, 0,
+                            ARRAYSIZE(kInvalidHeaderValueChars)) ==
+         std::string16::npos;
+}
+
+// Header prefixes that are disallowed
+static const std::string16 kDisallowedHeaderPrefixes[] = {
+      std::string16(STRING16(L"Proxy-")),
+      std::string16(STRING16(L"Sec-")) };
+
+// Headers which cannot be set according to the w3c spec
+static const char16* kDisallowedHeaders[] = {
+      STRING16(L"Accept-Charset"),
+      STRING16(L"Accept-Encoding"),
+      STRING16(L"Connection"),
+      STRING16(L"Content-Length"),
+      STRING16(L"Content-Transfer-Encoding"),
+      STRING16(L"Date"),
+      STRING16(L"Expect"),
+      STRING16(L"Host"),
+      STRING16(L"Keep-Alive"),
+      STRING16(L"Referer"),
+      STRING16(L"TE"),
+      STRING16(L"Trailer"),
+      STRING16(L"Transfer-Encoding"),
+      STRING16(L"Upgrade"),
+      STRING16(L"Via") };
+
+// Methods which cannot be used according to the w3c spec
+static const char16* kDisallowedMethods[] = {
+      STRING16(L"CONNECT"),
+      STRING16(L"TRACE"),
+      STRING16(L"TRACK") };
+
+static bool IsValidHeader(const std::string16 &header) {
+  if (!IsValidToken(header)) {
+    return false;
+  }
+  for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaderPrefixes));
+       ++i) {
+    if (StartsWithIgnoreCase(header, kDisallowedHeaderPrefixes[i])) {
+      return false;
+    }
+  }
+  for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaders)); ++i) {
+    if (StringCompareIgnoreCase(header.c_str(), kDisallowedHeaders[i]) == 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool IsValidMethod(const std::string16 &method) {
+  if (!IsValidToken(method)) {
+    return false;
+  }
+  for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedMethods)); ++i) {
+    if (StringCompareIgnoreCase(method.c_str(), kDisallowedMethods[i]) == 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 DECLARE_DISPATCHER(GearsHttpRequest);
 
 // static
@@ -125,6 +218,10 @@ void GearsHttpRequest::Open(JsCallContext *context) {
     context->SetException(STRING16(L"The method parameter is required."));
     return;
   }
+  if (!IsValidMethod(method)) {
+    context->SetException(STRING16(L"This method is not allowed."));
+    return;
+  }
   if (url.empty()) {
     context->SetException(STRING16(L"The url parameter is required."));
     return;
@@ -148,31 +245,6 @@ void GearsHttpRequest::Open(JsCallContext *context) {
   }
 }
 
-static bool IsDisallowedHeader(const char16 *header) {
-  // Headers which cannot be set according to the w3c spec.
-  static const char16* kDisallowedHeaders[] = {
-      STRING16(L"Accept-Charset"),
-      STRING16(L"Accept-Encoding"),
-      STRING16(L"Connection"),
-      STRING16(L"Content-Length"),
-      STRING16(L"Content-Transfer-Encoding"),
-      STRING16(L"Date"),
-      STRING16(L"Expect"),
-      STRING16(L"Host"),
-      STRING16(L"Keep-Alive"),
-      STRING16(L"Referer"),
-      STRING16(L"TE"),
-      STRING16(L"Trailer"),
-      STRING16(L"Transfer-Encoding"),
-      STRING16(L"Upgrade"),
-      STRING16(L"Via") };
-  for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaders)); ++i) {
-    if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
 
 void GearsHttpRequest::SetRequestHeader(JsCallContext *context) {
   std::string16 name;
@@ -190,8 +262,12 @@ void GearsHttpRequest::SetRequestHeader(JsCallContext *context) {
     context->SetException(kNotOpenError);
     return;
   }
-  if (IsDisallowedHeader(name.c_str())) {
+  if (!IsValidHeader(name)) {
     context->SetException(STRING16(L"This header may not be set."));
+    return;
+  }
+  if (!IsValidHeaderValue(value)) {
+    context->SetException(STRING16(L"This header value may not be set."));
     return;
   }
   if (!request_->SetRequestHeader(name.c_str(), value.c_str())) {
@@ -432,7 +508,7 @@ void GearsHttpRequest::GetResponseText(JsCallContext *context) {
     return;
   }
   if (!IsValidResponse()) {
-    std::string empty_string;
+    std::string16 empty_string;
     context->SetReturnValue(JSPARAM_STRING16, &empty_string);
     return;
   }
