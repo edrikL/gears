@@ -103,8 +103,9 @@ class HttpRequestObserver : public nsIObserver {
     // this HTTP request. See
     // http://developer.mozilla.org/En/Creating_Sandboxed_HTTP_Connections.
     if (channel_ == channel) {
-      nsIHttpChannel *http_channel = nsnull;
-      CallQueryInterface(channel_, &http_channel);
+      nsCOMPtr<nsIHttpChannel> http_channel(do_QueryInterface(channel_));
+      // TODO(nigeltao): Can we actually make this assertion? What happens if
+      // we pass a file:// URL?
       assert(http_channel);
       nsresult rv = http_channel->SetRequestHeader(nsCString("Cookie"),
                                                    nsCString(""),
@@ -161,10 +162,12 @@ FFHttpRequest::FFHttpRequest()
 
 FFHttpRequest::~FFHttpRequest() {
   LEAK_COUNTER_DECREMENT(FFHttpRequest);
-  nsCOMPtr<nsIObserverService> observer_service(
-      do_GetService(kObserverServiceContractId));
-  if (observer_service && observer_) {
-    observer_service->RemoveObserver(observer_, kOnModifyRequestTopic);
+  if (observer_) {
+    nsCOMPtr<nsIObserverService> observer_service(
+        do_GetService(kObserverServiceContractId));
+    if (observer_service) {
+      observer_service->RemoveObserver(observer_, kOnModifyRequestTopic);
+    }
   }
   if (post_data_stream_attached_) {
     post_data_stream_->OnFFHttpRequestDetached(this);
