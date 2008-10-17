@@ -31,6 +31,7 @@
 #include "gears/localserver/ie/http_request_ie.h"
 
 #include "gears/base/common/byte_store.h"
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
@@ -39,6 +40,7 @@
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/localserver/ie/http_handler_ie.h"
+#include "gears/localserver/ie/progress_input_stream.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // We use URLMON's pull-data model which requires making stream read calls
@@ -83,17 +85,11 @@ IEHttpRequest::IEHttpRequest()
       ready_state_(UNINITIALIZED),
       has_synthesized_response_payload_(false),
       async_(false) {
+  LEAK_COUNTER_INCREMENT(IEHttpRequest);
 }
 
-HRESULT IEHttpRequest::FinalConstruct() {
-  return S_OK;
-}
-
-void IEHttpRequest::FinalRelease() {
-  if (post_data_stream_) {
-    post_data_stream_->DetachRequest();
-    post_data_stream_.Release();
-  }
+IEHttpRequest::~IEHttpRequest() {
+  LEAK_COUNTER_DECREMENT(IEHttpRequest);
 }
 
 void IEHttpRequest::Ref() {
@@ -577,8 +573,7 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
 
     info->stgmedData.tymed = TYMED_ISTREAM;
     info->stgmedData.pstm = static_cast<IStream*>(stream);
-
-    post_data_stream_ = stream;
+    info->stgmedData.pstm->AddRef();  // caller is responsible for releasing
   }
 
   if (cookie_behavior_ == DO_NOT_SEND_BROWSER_COOKIES) {

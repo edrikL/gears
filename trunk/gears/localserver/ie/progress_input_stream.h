@@ -42,7 +42,6 @@ class ProgressInputStream : public CComObjectRootEx<CComMultiThreadModel>,
   ProgressInputStream();
   virtual ~ProgressInputStream();
   void Initialize(IEHttpRequest * request, IStream *input_stream);
-  void DetachRequest();
 
   // ISequentialStream
   STDMETHOD(Read)(void* pv, ULONG cb, ULONG* read);
@@ -64,7 +63,7 @@ class ProgressInputStream : public CComObjectRootEx<CComMultiThreadModel>,
   STDMETHOD(Clone)(IStream **ppstm);
 
  private:
-  IEHttpRequest *request_;
+  scoped_refptr<IEHttpRequest> request_;
   CComPtr<IStream> input_stream_;
 };
 

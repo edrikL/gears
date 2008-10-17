@@ -23,26 +23,22 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/localserver/ie/progress_input_stream.h"
+
+#include "gears/base/common/leak_counter.h"
 #include "gears/localserver/common/progress_event.h"
 #include "gears/localserver/ie/http_request_ie.h"
-#include "gears/localserver/ie/progress_input_stream.h"
 
 //------------------------------------------------------------------------------
 //ProgressInputStream implementation
 //------------------------------------------------------------------------------
 
-ProgressInputStream::ProgressInputStream() : request_(NULL) {
+ProgressInputStream::ProgressInputStream() {
+  LEAK_COUNTER_INCREMENT(ProgressInputStream);
 }
 
 ProgressInputStream::~ProgressInputStream() {
-  // When the yahoo toolbar is installed, the stream gets released one too
-  // many times. We arrange to detect when this is occuring and avoid the
-  // extra release in that case.
-  if (request_) {
-    // The request still has a reference to this object, yet it's being deleted.
-    // Drop our reference w/o releasing it.
-    request_->post_data_stream_.Detach();
-  }
+  LEAK_COUNTER_DECREMENT(ProgressInputStream);
 }
 
 void ProgressInputStream::Initialize(IEHttpRequest * request,
@@ -51,16 +47,11 @@ void ProgressInputStream::Initialize(IEHttpRequest * request,
   input_stream_ = input_stream;
 }
 
-void ProgressInputStream::DetachRequest() {
-  request_ = NULL;
-}
-
 //------------------------------------------------------------------------------
 // ISequentialStream implementation
 //------------------------------------------------------------------------------
 
 STDMETHODIMP ProgressInputStream::Read(void* pv, ULONG cb, ULONG* read) {
-  if (!request_) return E_FAIL;
   HRESULT result = input_stream_->Read(pv, cb, read);
   if (SUCCEEDED(result) && *read > 0) {
     static const LARGE_INTEGER offset = { 0 };
@@ -68,7 +59,7 @@ STDMETHODIMP ProgressInputStream::Read(void* pv, ULONG cb, ULONG* read) {
     input_stream_->Seek(offset, STREAM_SEEK_CUR, &position);
     STATSTG statstg;
     input_stream_->Stat(&statstg, STATFLAG_NONAME);
-    ProgressEvent::Update(request_, request_,
+    ProgressEvent::Update(request_.get(), request_.get(),
                           position.QuadPart, statstg.cbSize.QuadPart);
   }
   return result;
@@ -124,7 +115,6 @@ STDMETHODIMP ProgressInputStream::Stat(STATSTG *pstatstg, ULONG grfStatFlag) {
 }
 
 STDMETHODIMP ProgressInputStream::Clone(IStream **ppstm) {
-  if (!request_) return E_FAIL;
   CComObject<ProgressInputStream> *stream = NULL;
   HRESULT result = CComObject<ProgressInputStream>::CreateInstance(&stream);
   if (FAILED(result)) {
@@ -136,7 +126,7 @@ STDMETHODIMP ProgressInputStream::Clone(IStream **ppstm) {
   if (FAILED(result)) {
     return result;
   }
-  stream->Initialize(request_, input_stream_clone);
+  stream->Initialize(request_.get(), input_stream_clone);
   *ppstm = istream.Detach();
   return S_OK;
 }

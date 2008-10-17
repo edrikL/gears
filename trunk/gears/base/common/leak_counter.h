@@ -43,6 +43,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_DocumentJsRunner,
   LEAK_COUNTER_TYPE_DropTarget,
   LEAK_COUNTER_TYPE_FFHttpRequest,
+  LEAK_COUNTER_TYPE_IEHttpRequest,
   LEAK_COUNTER_TYPE_JavaScriptWorkerInfo,
   LEAK_COUNTER_TYPE_JsArrayImpl,
   LEAK_COUNTER_TYPE_JsCallContext,
