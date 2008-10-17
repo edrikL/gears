@@ -25,7 +25,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#ifdef WINCE
+#ifdef OS_WINCE
 
 #include "gears/geolocation/radio_data_provider_wince.h"
 
@@ -339,4 +339,4 @@ static int FromDeviceDataFormat(const int &value) {
   return value ? value : kint32min;
 }
 
-#endif  // WINCE
+#endif  // OS_WINCE

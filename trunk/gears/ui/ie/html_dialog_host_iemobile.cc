@@ -34,10 +34,6 @@
 // Some macros defined here to keep changes from original source to a low roar.
 // See //depot/googleclient/bar/common/(debugbase|macros).h for original
 // definitions.
-#ifdef WINCE
-#else
-#define ASSERT(expr) assert(expr);
-#endif
 
 // Checks for HRESULT and if it fails returns. The macro will ASSERT in debug.
 #define CHK(cmd) \

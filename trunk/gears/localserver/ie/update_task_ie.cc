@@ -23,12 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/localserver/ie/update_task_ie.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 typedef CMutexWince CATLMutex;
 #else
 typedef CMutex CATLMutex;

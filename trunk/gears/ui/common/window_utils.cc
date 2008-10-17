@@ -31,7 +31,7 @@
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
 #include "gears/base/ie/activex_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/ie/bho.h"
 #endif
 #elif BROWSER_NPAPI
@@ -78,11 +78,11 @@ bool GetBrowserWindow(ModuleEnvironment* module_environment,
 
 #elif BROWSER_IE
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // On WinCE, only the BHO has an IWebBrowser2 pointer to the browser.
   *window = BrowserHelperObject::GetBrowserWindow();
   return NULL != *window;
-#else  // !WINCE
+#else  // !OS_WINCE
   IWebBrowser2* web_browser = NULL;
   HRESULT hr = ActiveXUtils::GetWebBrowser2(module_environment->iunknown_site_,
                                             &web_browser);
@@ -95,7 +95,7 @@ bool GetBrowserWindow(ModuleEnvironment* module_environment,
   }
   web_browser->Release();
   return true;
-#endif  // !WINCE
+#endif  // !OS_WINCE
 
 #endif  // BROWSER_IE
 

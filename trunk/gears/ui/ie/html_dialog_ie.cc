@@ -26,11 +26,11 @@
 #include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/ui/common/html_dialog.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/ui/ie/html_dialog_host_iemobile.h"
 #else
 #include "gears/ui/ie/html_dialog_host.h"
@@ -62,7 +62,7 @@ bool HtmlDialog::DoModelessImpl(
 }
 
 bool HtmlDialog::GetLocale(std::string16 *locale) {
-#ifdef WINCE
+#ifdef OS_WINCE
   return GetCurrentSystemLocale(locale);
 #else
   char16 locale_string[MAX_PATH];

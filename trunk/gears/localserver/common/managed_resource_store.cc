@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/localserver/common/managed_resource_store.h"
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/localserver/common/manifest.h"
@@ -324,7 +324,7 @@ bool ManagedResourceStore::SetUpdateInfo(WebCacheDB::UpdateStatus status,
   }
 }
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 //------------------------------------------------------------------------------
 // InsertBogusBrowserCacheEntries
 //------------------------------------------------------------------------------
@@ -377,4 +377,4 @@ bool ManagedResourceStore::GetCurrentVersionUrls(
   }
   return true;
 }
-#endif
+#endif  // defined(OS_WINCE) && defined(BROWSER_IE)

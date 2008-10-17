@@ -31,7 +31,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/string16.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #ifdef DEBUG
@@ -56,15 +56,16 @@
 #include "gears/blob/blob_builder_module.h"
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
-#ifdef WINCE
-// Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
+#if defined(OS_WINCE) && defined(BROWSER_IE)
+// Furthermore, Canvas, Console, Image and Media are unimplemented on IE on
+// WinCE.
 #else
 #include "gears/canvas/canvas.h"
 #include "gears/console/console.h"
 #include "gears/image/image_loader.h"
 #include "gears/media/audio.h"
 #include "gears/media/audio_recorder.h"
-#endif  // WINCE
+#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
 #endif  // OFFICIAL_BUILD
 
 #ifdef WIN32
@@ -86,7 +87,7 @@ void Dispatcher<GearsFactoryImpl>::Init() {
   RegisterMethod("create", &GearsFactoryImpl::Create);
   RegisterMethod("getBuildInfo", &GearsFactoryImpl::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   RegisterMethod("privateSetGlobalObject",
                  &GearsFactoryImpl::PrivateSetGlobalObject);
   RegisterMethod("privateSendUnloadEvent",
@@ -98,7 +99,7 @@ const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
 
 GearsFactoryImpl::GearsFactoryImpl()
     : ModuleImplBaseClass(kModuleName),
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
       unload_event_fired_(false),
 #endif
       is_creation_suspended_(false) {
@@ -237,8 +238,9 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
                                    context, &object);
   } else if (module_name == STRING16(L"beta.dummymodule")) {
     CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
-#ifdef WINCE
-  // Furthermore, Canvas, Console, Image and Media are unimplemented on WinCE.
+#if defined(OS_WINCE) && defined(BROWSER_IE)
+  // Furthermore, Canvas, Console, Image and Media are unimplemented on IE on
+  // WinCE.
 #else
   } else if (module_name == STRING16(L"beta.audio")) {
     CreateModule<GearsAudio>(module_environment_.get(), context, &object);
@@ -253,7 +255,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsConsole>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(module_environment_.get(), context, &object);
-#endif  // WINCE
+#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
 #endif  // OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
@@ -308,7 +310,7 @@ void GearsFactoryImpl::GetVersion(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_STRING16, &version);
 }
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 void GearsFactoryImpl::PrivateSetGlobalObject(JsCallContext *context) {
   // This is a no-op, because to start with, on WinCE, privateSetGlobalObject
   // is provided by the GearsFactory, not the GearsFactoryImpl. The purpose of

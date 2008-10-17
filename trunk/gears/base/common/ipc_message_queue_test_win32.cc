@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 
 #ifdef USING_CCTESTS
 
@@ -307,4 +307,4 @@ __declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
 
 #endif  // USING_CCTESTS
 
-#endif  //defined(WIN32) && !defined(WINCE)
+#endif  //defined(WIN32) && !defined(OS_WINCE)

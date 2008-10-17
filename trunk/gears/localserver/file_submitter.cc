@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
-  // FileSubmitter is not implemented for WinCE.
+#if defined(OS_WINCE) && defined(BROWSER_IE)
+  // FileSubmitter is not implemented for IE Mobile on WinCE.
 #else
 
 #if BROWSER_IE
@@ -265,4 +265,4 @@ bool GearsFileSubmitter::CaptureInputElement(JsDomElement &dom_element) {
 #endif
 }
 
-#endif // WINCE
+#endif // #if defined(OS_WINCE) && defined(BROWSER_IE)

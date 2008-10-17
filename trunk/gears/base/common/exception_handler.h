@@ -38,7 +38,7 @@
 #ifndef GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
 #define GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__
 
-#if (defined(WIN32) && !defined(WINCE)) || \
+#if (defined(WIN32) && !defined(OS_WINCE)) || \
     (defined(OS_MACOSX) && (defined(BROWSER_WEBKIT) || defined(BROWSER_NONE)))
 
 namespace google_breakpad {
@@ -75,7 +75,7 @@ class ExceptionManager {
   static bool ReportAndContinue();
 
 // None of this is used on OS X.
-#if (defined(WIN32) && !defined(WINCE))
+#if (defined(WIN32) && !defined(OS_WINCE))
   // TODO(michaeln): Cleanup. The following should not be called
   // directly, ideally these should be private methods.
   bool catch_entire_process() { return catch_entire_process_; }
@@ -96,5 +96,6 @@ class ExceptionManager {
   static bool ReportAndContinue() { return false; }
 };
 
-#endif  // (WIN32 && !WINCE) || (OS_MACOSX && (BROWSER_WEBKIT || BROWSER_NONE))
+#endif  // (WIN32 && !OS_WINCE) ||
+        // (OS_MACOSX && (BROWSER_WEBKIT || BROWSER_NONE))
 #endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_H__

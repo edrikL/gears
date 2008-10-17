@@ -22,7 +22,7 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/ie/activex_utils.h"
 #endif
 #include "gears/base/common/detect_version_collision.h"
@@ -31,17 +31,17 @@
 #include "gears/base/common/user_config.h"
 #include "gears/base/ie/bho.h"
 #include "gears/factory/factory_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/installer/iemobile/cab_updater.h"
 #endif
 #include "gears/localserver/ie/http_handler_ie.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 HWND BrowserHelperObject::browser_window_ = NULL;
 #endif
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
@@ -57,7 +57,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #endif  // DEBUG
   }
 #endif  // OFFICIAL_BUILD
-#endif  // WIN32 && !WINCE
+#endif  // WIN32 && !OS_WINCE
 
   if (DetectedVersionCollision())
     return S_OK;
@@ -70,7 +70,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     LOG16((L"SetSite(): pUnkSite is NULL\n"));
   } else {
     HttpHandler::Register();
-#ifdef WINCE
+#ifdef OS_WINCE
     static CabUpdater updater;
     CComQIPtr<IWebBrowser2> site = pUnkSite;
     ASSERT(site);
@@ -82,7 +82,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   return S_OK;
 }
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // static
 HWND BrowserHelperObject::GetBrowserWindow() {
   return browser_window_;

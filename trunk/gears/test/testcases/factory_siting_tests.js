@@ -66,7 +66,7 @@ function testSiting() {
     assertError(function() { factory.create('any string'); },
         'Google Gears has not been initialized correctly. Please ensure that ' +
         'you are using the most recent version of gears_init.js.',
-        'Calling factory.create() on WinCE should fail if ' +
+        'Calling factory.create() on IE Mobile on WinCE should fail if ' +
         'privateSetGlobalObject() has not been called.');
   }
   function checkCanSite(factory) {
@@ -79,14 +79,13 @@ function testSiting() {
   // Attempt to create a module without calling privateSetGlobalObject.
   var localFactory = createLocalFactory();
   var buildInfo = checkCanGetBuildInfo(localFactory);
-  var isWinCE = buildInfo.indexOf('wince') != -1;
-  if (isWinCE) {
+  if (isWince && isIE) {
     checkCanNotCreateModule(localFactory);
   } else {
     checkCanCreateModule(localFactory);
   }
   // Call privateSetGlobalObject and try again.
-  if (isWinCE) {
+  if (isWince && isIE) {
     checkCanSite(localFactory);
   } else {
     checkCanNotSite(localFactory);
@@ -94,7 +93,7 @@ function testSiting() {
   checkCanGetBuildInfo(localFactory);
   checkCanCreateModule(localFactory);
   // Call privateSetGlobalObject again and check all is well.
-  if (isWinCE) {
+  if (isWince && isIE) {
     checkCanSite(localFactory);
   } else {
     checkCanNotSite(localFactory);

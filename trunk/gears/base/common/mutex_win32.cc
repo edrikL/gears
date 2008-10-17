@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 
 #include <assert.h>
 #include <windows.h>
@@ -171,4 +171,4 @@ void CondVar::SignalAll() {
 #endif
 }
 
-#endif  // defined(WIN32) || defined(WINCE)
+#endif  // defined(WIN32) || defined(OS_WINCE)

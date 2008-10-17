@@ -28,7 +28,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -149,7 +149,7 @@ bool TestFileUtils(std::string16 *error) {
   TEST_ASSERT(File::DeleteRecursively(temp_dir.c_str()));
   TEST_ASSERT(!File::DirectoryExists(temp_dir.c_str()));
 
-#ifdef WINCE
+#ifdef OS_WINCE
    // Test the directory creation on Windows Mobile
   const char16 *kValidDirNames[] = {
       STRING16(L"\\Dir1"),
@@ -421,7 +421,7 @@ bool TestFileObject(std::string16 *error) {
 
 bool TestLongPaths(std::string16 *error) {
 // Only Win32 has issues with long pathnames, ignore WinCE for now.
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 
   // Constants
   const std::string16 kDrv(STRING16(L"c:"));
@@ -578,7 +578,7 @@ bool TestLongPaths(std::string16 *error) {
     TEST_ASSERT(File::DeleteRecursively(parent_dir.c_str()));
 
   }
-#endif  // defined(WIN32) && !defined(WINCE)
+#endif  // defined(WIN32) && !defined(OS_WINCE)
   return true;
 }
 

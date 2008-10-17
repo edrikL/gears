@@ -25,7 +25,7 @@
 
 #include "gears/localserver/ie/async_task_ie.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/base/ie/activex_utils.h"
@@ -382,7 +382,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     // We need to run a message loop receive COM callbacks from URLMON
     DWORD rv = MsgWaitForMultipleObjectsEx(
                    ARRAYSIZE(handles), handles, INFINITE, QS_ALLINPUT,
-#ifdef WINCE
+#ifdef OS_WINCE
                    MWMO_INPUTAVAILABLE);
 #else
                    MWMO_INPUTAVAILABLE | MWMO_ALERTABLE);

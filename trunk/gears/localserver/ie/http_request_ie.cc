@@ -477,8 +477,8 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
 STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
   LOG16((L"IEHttpRequest::OnStopBinding - %d, %s\n",
              hresult, error_text ? error_text : L"null"));
-#ifdef WINCE
-  // On Win32, in the case of a redirect to an bad domain (no NDS lookup), we
+#ifdef OS_WINCE
+  // On Win32, in the case of a redirect to an bad domain (no DNS lookup), we
   // get a call to OnProgress with status_code == BINDSTATUS_REDIRECTING before
   // being called back here. However, on WinCE, we do not get the callback to
   // OnProgress, we only get a callback here with hresult == E_ACCESSDENIED.

@@ -52,7 +52,7 @@
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/base/ie/activex_utils.h"
@@ -386,7 +386,7 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   //   (http://blogs.msdn.com/oldnewthing/archive/2005/04/18/409205.aspx)
   HMODULE hmodule = _AtlBaseModule.GetModuleInstance();
 
-#ifdef WINCE
+#ifdef OS_WINCE
   WNDCLASS wc = {0};
 #else
   WNDCLASSEX wc = {0};
@@ -396,7 +396,7 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   wc.hInstance     = hmodule;
   wc.lpszClassName = kWindowClassName;
   // use 0 for all other fields
-#ifdef WINCE
+#ifdef OS_WINCE
   RegisterClass(&wc);
 #else
   RegisterClassEx(&wc);

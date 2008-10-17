@@ -34,7 +34,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/blob/blob_interface.h"
@@ -147,7 +147,7 @@ void UpdateTask::Run() {
           if (downloading_version == completed_version) {
             // Manifest has not changed
             LOG((kLogVersionSwapping));
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
             // Before we swap in the new version, get the list of URLs for the
             // old version.
             std::vector<std::string16> old_urls;
@@ -157,7 +157,7 @@ void UpdateTask::Run() {
               LOG((kLogVersionSwappingFailed));
               success = false;
             }
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
             // If the version swap succeeded, remove browser cache entries for
             // the previous version.
             if (success) {
@@ -180,7 +180,7 @@ void UpdateTask::Run() {
           }
         }
       }
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
       store_.InsertBogusBrowserCacheEntries();
 #endif
       if (success) {

@@ -34,7 +34,7 @@
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/base/ie/activex_utils.h"
@@ -42,7 +42,7 @@
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // On WinCE, when a request is made for a network resource, the device first
 // checks the cache. If the resource is not present in the cache, the device
 // attempts to make a network connection. If this fails, a pop-up a dialog box
@@ -161,7 +161,7 @@ static HRESULT RegisterNoLock() {
     UnregisterNoLock();
     return hr;
   }
-#ifdef WINCE
+#ifdef OS_WINCE
   // SetSessionOption is not implemented on WinCE.
 #else
   BOOL bypass = FALSE;
@@ -197,7 +197,7 @@ static HRESULT UnregisterNoLock() {
     factory_https.Release();
   }
   factory_protocol_info.Release();
-#ifdef WINCE
+#ifdef OS_WINCE
   // SetSessionOption is not implemented on WinCE.
 #else
   BOOL bypass = TRUE;
@@ -293,7 +293,7 @@ STDMETHODIMP PassthruSink::ReportProgress(
 // remove this workaround code.
 //------------------------------------------------------------------------------
 
-#ifdef WINCE
+#ifdef OS_WINCE
 class ActiveHandlers {
  public:
   void Add(HttpHandler *handler) {}
@@ -890,7 +890,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
   }
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // Re-insert the cache entry to make sure it's there. We add an entry whether
   // or not this is a redirect.
   BrowserCache::EnsureBogusEntry(url);
@@ -979,7 +979,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
 
   // The cached_filepath is not provided for head requests
   if (!is_head_request_ && !payload_.cached_filepath.empty()) {
-#ifdef WINCE
+#ifdef OS_WINCE
     // WinCE does not support user-initiated file downloads from the browser.
     //
     // Passing to the browser the filepath to the Gears cache entry can cause
@@ -1001,7 +1001,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     // '//depot/google3/java/com/google/httputil/ContentDisposition.java'
     // '//depot/google3/java/com/google/parser/Parser.java'
 
-#ifdef WINCE
+#ifdef OS_WINCE
     // On WinCE, it seems that different file types are treated in one of three
     // ways (when not served by Gears) ...
     // 1 - Displayed directly in browser, eg text/html, text/plain

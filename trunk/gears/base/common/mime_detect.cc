@@ -36,7 +36,7 @@
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_internal/nsIMIMEService.h>
 
-#elif defined(WIN32) && !defined(WINCE)
+#elif defined(WIN32) && !defined(OS_WINCE)
 #include <shlwapi.h>
 #include <windows.h>
 #endif
@@ -70,7 +70,7 @@ std::string16 DetectMimeTypeOfFile(const std::string16 &filename) {
   UTF8ToString16(result_as_utf8.c_str(), &result);
   return result;
 
-#elif defined(WIN32) && !defined(WINCE)
+#elif defined(WIN32) && !defined(OS_WINCE)
   uint8 buffer[256];
   memset(buffer, 0, sizeof(uint8) * 256);
   int64 bytes_read_64 = File::ReadFileSegmentToBuffer(filename.c_str(),

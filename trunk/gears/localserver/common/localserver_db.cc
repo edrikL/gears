@@ -39,7 +39,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/inspector/inspector_resources.h"
@@ -1369,7 +1369,7 @@ bool WebCacheDB::DeleteServer(int64 id) {
   response_bodies_store_->DeleteDirectoryForServer(id);
 #endif
 
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   std::vector<EntryInfo> entries;
   VersionInfo version;
   if (FindVersion(id, VERSION_CURRENT, &version)) {
@@ -1404,7 +1404,7 @@ bool WebCacheDB::DeleteServer(int64 id) {
   }
 
   bool committed = transaction.Commit();
-#ifdef WINCE
+#if defined(OS_WINCE) && defined(BROWSER_IE)
   if (committed) {
     for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
       BrowserCache::RemoveBogusEntry(entries[i].url.c_str());

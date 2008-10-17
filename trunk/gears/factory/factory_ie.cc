@@ -28,7 +28,7 @@
 #include "gears/base/ie/dispatcher_to_idispatch.h"
 #include "gears/factory/factory_utils.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // On regular Windows, the factory_impl_ is created in SetSite. On WinCE,
 // we need to explicitly call privateSetGlobalObject on the factory object,
 // and this kPrivateSetGlobalObject string plays the role of a DISPID for the
@@ -57,7 +57,7 @@ const std::string16 GearsFactory::kUninitializedGearsFactoryImpl(
 // afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   HRESULT hr = IObjectWithSiteImpl<GearsFactory>::SetSite(site);
-#ifdef WINCE
+#ifdef OS_WINCE
   // See comments in GearsFactory::Invoke for why this is disabled for WinCE.
 #else
   scoped_refptr<ModuleEnvironment> module_environment(
@@ -91,7 +91,7 @@ HRESULT GearsFactory::GetIDsOfNames(REFIID iid, OLECHAR FAR* FAR* names,
                                     unsigned int num_names, LCID lcid, 
                                     DISPID FAR* retval) {
   if (!factory_impl_.get()) {
-#ifdef WINCE
+#ifdef OS_WINCE
     std::string16 name_as_string(static_cast<char16 *>(*names));
     if (kPrivateSetGlobalObject == name_as_string) {
       *retval = reinterpret_cast<DISPID>(&kPrivateSetGlobalObject);
@@ -117,7 +117,7 @@ HRESULT GearsFactory::Invoke(DISPID member_id, REFIID iid, LCID lcid,
                              VARIANT FAR* retval, EXCEPINFO FAR* exception,
                              unsigned int FAR* arg_error_index) {
   if (!factory_impl_.get()) {
-#ifdef WINCE
+#ifdef OS_WINCE
     // On WinCE, we intercept the privateSetGlobalObject method call. On
     // regular Windows, this is done during SetSite, but on WinCE we are not
     // able to get the necessary IWebBrowser2 from the IUnknown *site, and

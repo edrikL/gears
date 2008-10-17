@@ -95,7 +95,7 @@ void AppendBuildInfo(std::string16 *s) {
 #elif defined(LINUX)
   s->append(STRING16(L";linux"));
 #elif defined(WIN32)
-#ifdef WINCE
+#ifdef OS_WINCE
   s->append(STRING16(L";wince"));
 #else
   s->append(STRING16(L";win32"));
@@ -107,7 +107,7 @@ void AppendBuildInfo(std::string16 *s) {
 
 #if BROWSER_IE
   s->append(STRING16(L";ie"));
-#ifdef WINCE
+#ifdef OS_WINCE
   s->append(STRING16(L"_mobile"));
 #endif
 #elif BROWSER_FF

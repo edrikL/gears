@@ -579,7 +579,7 @@ else
 CPPFLAGS += -D_WIN32_WCE=0x501 \
             -DWINVER=_WIN32_WCE \
             -DUNDER_CE=0x501 \
-            -DWINCE \
+            -DOS_WINCE \
             -DWIN32_PLATFORM_PSPC \
             -DARM \
             -D_ARM_ \
@@ -729,7 +729,7 @@ RCFLAGS_dbg = -DDEBUG=1
 RCFLAGS_opt = -DNDEBUG=1
 RCFLAGS = $(RCFLAGS_$(MODE)) -D_UNICODE -DUNICODE -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR) /l 0x409 /fo"$(@D)/$(*F).res"
 ifeq ($(OS),wince)
-RCFLAGS += -DWINCE -D_WIN32 -D_WIN32_WCE -DUNDER_CE -N -I..
+RCFLAGS += -DOS_WINCE -D_WIN32 -D_WIN32_WCE -DUNDER_CE -N -I..
 endif
 
 GGUIDGEN = tools/gguidgen.exe

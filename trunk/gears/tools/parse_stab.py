@@ -109,7 +109,7 @@ function loadI18nStrings(locale) {
 # Template for the header of .rc files.  This is basically just the standard
 # include files.
 RC_TEMPLATE = u"""
-#ifdef WINCE
+#ifdef OS_WINCE
   #include "aygshell.h"
   #include "afxres.h"
   #include "genfiles/product_constants.h"

@@ -164,7 +164,7 @@ const  int64 kint64max  = (( int64) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 // - wan 2005-11-16
 // 
 // Starting with Visual C++ 2005, ARRAYSIZE is defined in WinNT.h
-#if defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(WINCE)
+#if defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(OS_WINCE)
 #include <windows.h>
 #else
 #define ARRAYSIZE(a) \

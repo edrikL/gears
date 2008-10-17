@@ -33,7 +33,7 @@
 #include <assert.h>
 #include <windows.h>
 #include "gears/base/common/time_utils_win32.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 

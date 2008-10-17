@@ -216,13 +216,13 @@ GearsGeolocation::~GearsGeolocation() {
   ASSERT_SINGLE_THREAD();
 
   // We should never be deleted until all pending requests have been cancelled.
-#ifdef WINCE
-  // The lack of unload monitoring on WinCE means that we may leak providers and
-  // fix requests.
+#if defined(OS_WINCE) && defined(BROWSER_IE)
+  // The lack of unload monitoring on IE Mobile on WinCE means that we may leak
+  // providers and fix requests.
 #else
   assert(providers_.empty());
   assert(fix_requests_.empty());
-#endif  // WINCE
+#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
 
   MessageService::GetInstance()->RemoveObserver(
       this,

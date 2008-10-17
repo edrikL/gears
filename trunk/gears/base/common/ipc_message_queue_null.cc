@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WINCE) || defined(OS_ANDROID)
+#if (defined(OS_WINCE) && defined(BROWSER_IE)) || defined(OS_ANDROID)
 
 #include "gears/base/common/ipc_message_queue.h"
 
@@ -40,4 +40,4 @@ IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
   return NULL;
 }
 
-#endif  // defined(WINCE) || defined(OS_ANDROID)
+#endif  // (defined(OS_WINCE) && defined(BROWSER_IE)) || defined(OS_ANDROID)

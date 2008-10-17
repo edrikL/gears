@@ -28,9 +28,9 @@
 
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/common.h"
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 #include "gears/base/common/scoped_refptr.h"
-#endif  // defined(WIN32) || defined(WINCE)
+#endif  // defined(WIN32) || defined(OS_WINCE)
 
 class Condition;
 
@@ -77,7 +77,7 @@ class Mutex {
   bool AwaitImpl(const Condition &cond, int64 end_time);
   friend class CondVar;
 #ifdef DEBUG
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
   // Track whether the mutex is locked to detect recursive usage.
   bool is_locked_;
 #elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
@@ -88,7 +88,7 @@ class Mutex {
 #endif
 #endif // DEBUG
 
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
   CRITICAL_SECTION crit_sec_;
 #elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
   pthread_mutex_t mutex_;
@@ -246,7 +246,7 @@ class CondVar {
   void SignalAll();
 
  private:
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
   class Event;  // This is a win32 event with reference counting added.
   Mutex current_event_mutex_;
   scoped_refptr<Event> current_event_;

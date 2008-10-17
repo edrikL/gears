@@ -74,7 +74,7 @@ class ATL_NO_VTABLE GearsFactory
   STDMETHOD(SetSite)(IUnknown *site);
 
  private:
-#ifdef WINCE
+#ifdef OS_WINCE
   static const std::string16 kGetBuildInfo;
   static const std::string16 kPrivateSetGlobalObject;
   static const std::string16 kUninitializedGearsFactoryImpl;

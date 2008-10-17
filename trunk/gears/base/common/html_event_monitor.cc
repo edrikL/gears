@@ -25,10 +25,6 @@
 
 #include "gears/base/common/html_event_monitor.h"
 
-#ifdef WINCE
-#include "gears/base/common/wince_compatibility.h"
-#endif
-
 const char16 *kEventUnload = STRING16(L"onunload"); 
 
 HtmlEventMonitor::HtmlEventMonitor(const char16 *event_name,

@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // FileSubmitter is not implemented for WinCE.
 #else
 
@@ -202,4 +202,4 @@ HRESULT SubmitFileBehavior::Invoke(DISPID dispid,
   }
 }
 
-#endif  // WINCE
+#endif  // OS_WINCE

@@ -25,16 +25,9 @@
 
 // TODO(mpcomplete): make this not win32 specific.
 
-#ifdef WINCE
-#include "gears/base/common/wince_compatibility.h"
-#endif
 #include "gears/localserver/npapi/update_task_np.h"
 
-#ifdef WINCE
-typedef CMutexWince CATLMutex;
-#else
 typedef CMutex CATLMutex;
-#endif
 
 inline void GetUpdateTaskMutexName(int64 store_server_id,
                                    CStringW *mutex_name) {

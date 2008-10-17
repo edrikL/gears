@@ -31,7 +31,7 @@
 // Some methods implementations are browser neutral and can be found
 // in file.cc.
 
-#ifdef WINCE
+#ifdef OS_WINCE
 #include <assert.h>
 #include <limits>
 #include <windows.h>
@@ -380,11 +380,7 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
   fileop.wFunc = FO_DELETE;
   fileop.pFrom = delete_op_path.c_str();
   fileop.fFlags = FOF_SILENT | FOF_NOCONFIRMATION;
-#ifdef WINCE
   // FOF_NOERRORUI is not defined in Windows Mobile.
-#else
-  fileop.fFlags |= FOF_NOERRORUI;
-#endif
   return (SHFileOperationW(&fileop) == 0);
 }
-#endif  // WINCE
+#endif  // OS_WINCE

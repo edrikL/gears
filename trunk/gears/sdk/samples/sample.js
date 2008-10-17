@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Some WinCE devices use 'unknown' rather than 'undefined'. If an element has
-// type 'unknown', we can not pass it to a function, so we must pass its type
-// instead.
+// On some WinCE devices, IE Mobile uses 'unknown' rather than 'undefined'. If
+// an element has type 'unknown', we can not pass it to a function, so we must
+// pass its type instead.
 function isDefined(type) {
   return (type != 'undefined' && type != 'unknown');
 }

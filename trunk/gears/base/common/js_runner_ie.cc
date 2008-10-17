@@ -47,7 +47,7 @@
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"  // For CallWindowOnerror()
 #endif
 #include "gears/base/ie/activex_utils.h"
@@ -959,7 +959,7 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool Eval(const std::string16 &script) {
-#ifdef WINCE
+#ifdef OS_WINCE
     // On WinCE, exceptions do not get thrown from JavaScript code that is
     // invoked from C++ in the context of the main page. Therefore, to allow
     // the user to handle these exceptions, we manually call window.onerror.
@@ -985,7 +985,7 @@ class DocumentJsRunner : public JsRunnerBase {
     // goes away.
     unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                HandleEventUnload, this));
-#ifdef WINCE
+#ifdef OS_WINCE
     CComPtr<IPIEHTMLWindow2> event_source;
     if (FAILED(ActiveXUtils::GetHtmlWindow2(site_, &event_source))) {
       return false;
@@ -1004,7 +1004,7 @@ class DocumentJsRunner : public JsRunnerBase {
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
-#ifdef WINCE
+#ifdef OS_WINCE
     // On WinCE, exceptions do not get thrown from JavaScript code that is
     // invoked from C++ in the context of the main page. Therefore, to allow
     // the user to handle these exceptions, we manually call window.onerror.
@@ -1023,7 +1023,7 @@ class DocumentJsRunner : public JsRunnerBase {
 #endif
   }
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // On WinCE, exceptions thrown from C++ don't trigger the default JS exception
   // handler, so we call window.onerror manually.
   virtual void ThrowGlobalError(const std::string16 &message) {

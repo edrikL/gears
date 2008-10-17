@@ -30,7 +30,7 @@
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #elif BROWSER_IE
-#ifdef WINCE
+#ifdef OS_WINCE 
 // On WinCE we use privateSendUnloadEvent and IPIEHTMLWindow2::put_onunload()
 // instead of IHTMLWindow3 and attachEvent().
 #include <webvw.h>
@@ -65,7 +65,7 @@ class HtmlEventMonitor {
 #if BROWSER_FF
   bool Start(nsIDOMEventTarget *event_source);
 #elif BROWSER_IE
-#ifdef WINCE
+#ifdef OS_WINCE
   bool Start(IPIEHTMLWindow2 *event_source);
 #else
   bool Start(IHTMLWindow3 *event_source);
@@ -85,7 +85,7 @@ class HtmlEventMonitor {
 #if BROWSER_FF
   nsCOMPtr<nsIDOMEventTarget> event_source_;
 #elif BROWSER_IE
-#ifdef WINCE
+#ifdef OS_WINCE
   CComPtr<IPIEHTMLWindow2> event_source_;
 #else
   CComPtr<IHTMLWindow3> event_source_;

@@ -38,7 +38,7 @@
 class ATL_NO_VTABLE ToolsMenuItem
     : public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<ToolsMenuItem, &CLSID_ToolsMenuItem>,
-#ifdef WINCE
+#ifdef OS_WINCE
       public IObjectWithSiteImpl<ToolsMenuItem>,
       public IContextMenu {
 #else
@@ -50,7 +50,7 @@ class ATL_NO_VTABLE ToolsMenuItem
   DECLARE_PROTECT_FINAL_CONSTRUCT()
 
   BEGIN_COM_MAP(ToolsMenuItem)
-#ifdef WINCE
+#ifdef OS_WINCE
     COM_INTERFACE_ENTRY(IObjectWithSite)
     COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
 #else
@@ -58,7 +58,7 @@ class ATL_NO_VTABLE ToolsMenuItem
 #endif
   END_COM_MAP()
 
-#ifdef WINCE
+#ifdef OS_WINCE
   STDMETHOD(QueryContextMenu)(HMENU hmenu, UINT index_menu, UINT id_cmd_first, 
               UINT id_cmd_last, UINT flags);
   STDMETHOD(GetCommandString)(UINT id_cmd, UINT flags, UINT *reserved, 

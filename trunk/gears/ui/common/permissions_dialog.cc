@@ -75,7 +75,7 @@ PermissionState PermissionsDialog::Prompt(
     return NOT_SET;
   }
 
-#ifdef WINCE
+#ifdef OS_WINCE
   const int kDialogWidth = 230;
   const int kDialogHeight = 240;
 #else

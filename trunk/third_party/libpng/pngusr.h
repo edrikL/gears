@@ -27,7 +27,7 @@
 #define GEARS_THIRD_PARTY_LIBPNG_PNGUSR_H__
 
 // Windows CE doesn't have an abort function.
-#ifdef WINCE
+#ifdef OS_WINCE
   #define abort() exit(EXIT_FAILURE)
 #endif
 

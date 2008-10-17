@@ -26,8 +26,6 @@
 #ifndef GEARS_UI_IE_HTML_DIALOG_BRIDGE_IEMOBILE_H__
 #define GEARS_UI_IE_HTML_DIALOG_BRIDGE_IEMOBILE_H__
 
-#ifdef WINCE
-
 #include <piedocvw.h>
 #include "gears/base/common/base_class.h"
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
@@ -101,7 +99,5 @@ class ATL_NO_VTABLE PIEDialogBridge
   DISALLOW_EVIL_CONSTRUCTORS(PIEDialogBridge);
 };
 OBJECT_ENTRY_AUTO(__uuidof(PIEDialogBridge), PIEDialogBridge)
-
-#endif
 
 #endif  // GEARS_UI_IE_HTML_DIALOG_BRIDGE_IEMOBILE_H__

@@ -189,6 +189,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           </td>
 
 
+<!--
+Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
+browser flags available here.
+-->
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~         <!-- 
           We use form input buttons instead of buttons elements as PIE
@@ -213,9 +217,15 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       </table>
     </div>
   </div>
+
+<!--
+Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
+browser flags available here.
+-->
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
 </object>~)
+
 </body>
 <!--
 We include all files through m4 as the HTML dialog implementation on

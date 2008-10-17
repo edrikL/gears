@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <tchar.h>
 #include "gears/base/common/vista_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 // Force GetProcAddress to be defined to the ASCII version in order to
 // make the call compile.
 #undef GetProcAddress

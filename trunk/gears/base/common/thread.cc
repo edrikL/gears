@@ -27,7 +27,7 @@
 #include "gears/base/common/event.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread.h"
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
 #include "gears/base/common/thread_win32.h"
 #elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
 #include "gears/base/common/thread_posix.h"
@@ -76,11 +76,11 @@ void Thread::ThreadMain() {
 #ifdef BROWSER_NONE
   // TODO: remove the following when ThreadMessageQueue is implemented
   // per-platform, instead of per-browser.
-#if defined(WIN32) || defined(WINCE)
+#if defined(WIN32) || defined(OS_WINCE)
   thread_id_ = ::GetCurrentThreadId();
 #elif defined(LINUX) || defined(OS_MACOSX) || defined(OS_ANDROID)
   thread_id_ = pthread_self();
-#endif  // defined(WIN32) || defined(WINCE)
+#endif  // defined(WIN32) || defined(OS_WINCE)
 #else
   // Initialize the message queue.
   ThreadMessageQueue* queue = ThreadMessageQueue::GetInstance();

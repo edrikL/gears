@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#ifdef WINCE
+#ifdef OS_WINCE
 #include <piedocvw.h>
 #include <webvw.h>
 #else
@@ -39,7 +39,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
 #include <dispex.h>  // for IDispatchEx
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
 
@@ -53,7 +53,7 @@ bool ActiveXUtils::GetPageLocation(IUnknown *site,
   HRESULT hr;
   CComBSTR location;
 
-#ifdef WINCE
+#ifdef OS_WINCE
   CComPtr<IHTMLDocument2> document2;
   hr = GetHtmlDocument2(site, &document2);
   if (FAILED(hr) || !document2) { return false; }
@@ -86,7 +86,7 @@ bool ActiveXUtils::GetPageBrowsingContext(
   return true;
 }
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // We can't get IWebBrowser2 for WinCE.
 #else
 HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
@@ -104,7 +104,7 @@ HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
                                        IHTMLDocument2 **document2) {
   HRESULT hr;
 
-#ifdef WINCE
+#ifdef OS_WINCE
   // Follow path Window2 -> Window -> Document -> Document2
   CComPtr<IPIEHTMLWindow2> window2;
   hr = GetHtmlWindow2(site, &window2);
@@ -130,7 +130,7 @@ HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
 
 
 HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
-#ifdef WINCE
+#ifdef OS_WINCE
                                      IPIEHTMLWindow2 **window2) {
   // site is javascript IDispatch pointer.
   return site->QueryInterface(__uuidof(*window2),
@@ -149,7 +149,7 @@ HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
 }
 
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // WinCE does not provide I(PIE)HTMLWindow3, but we do not need it.
 #else
 HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
@@ -169,7 +169,7 @@ HRESULT ActiveXUtils::GetScriptDispatch(IUnknown *site,
   // not used in NPAPI.
   // TODO(mpcomplete): clean this up.
   return E_FAIL;
-#elif WINCE
+#elif OS_WINCE
   // site is JavaScript IDispatch pointer.
   return site->QueryInterface(script_dispatch);
 #else
@@ -259,7 +259,7 @@ HRESULT ActiveXUtils::AddAndSetDispatchProperty(IDispatch* dispatch,
   return SetDispatchProperty(dispatch, dispid, value);
 }
 
-#ifdef WINCE
+#ifdef OS_WINCE
 // TODO(andreip): Implement on Windows Mobile
 #else
 HRESULT ActiveXUtils::GetHTMLElementAttributeValue(IHTMLElement *element,

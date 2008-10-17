@@ -27,7 +27,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented.
-#if defined(WIN32) && !defined(WINCE)
+#if defined(WIN32) && !defined(OS_WINCE)
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
@@ -65,9 +65,6 @@ static const DWORD FILE_SHARE_ALL(FILE_SHARE_READ | FILE_SHARE_WRITE |
 // Convert to the long form if it is in 8.3 file name format. Note that this
 // is not supported for WinCE.
 static std::string16 ToLongFileName(const std::string16 &path) {
-#ifdef WINCE
-  return path;
-#else
   std::string16 long_path;
   DWORD length_to_try = path.length() * 2;
   long_path.resize(length_to_try);
@@ -92,7 +89,6 @@ static std::string16 ToLongFileName(const std::string16 &path) {
   } else {
     return path;
   }
-#endif  // WINCE
 }
 
 
@@ -613,4 +609,4 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
 
   return DeleteRecursiveImp(dir_to_delete);
 }
-#endif  // #if defined(WIN32) && !defined(WINCE)
+#endif  // #if defined(WIN32) && !defined(OS_WINCE)

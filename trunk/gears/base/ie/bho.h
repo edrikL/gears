@@ -44,7 +44,7 @@ class ATL_NO_VTABLE BrowserHelperObject
   END_COM_MAP()
 
   STDMETHOD(SetSite)(IUnknown *pUnkSite);
-#ifdef WINCE
+#ifdef OS_WINCE
   static HWND GetBrowserWindow();
  private:
   static HWND browser_window_;

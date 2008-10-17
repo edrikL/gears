@@ -31,7 +31,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIXPConnect.h>
 #elif BROWSER_IE
-#ifdef WINCE
+#ifdef OS_WINCE
 #include <webvw.h>  // For IPIEHTMLInputTextElement
 #endif
 #endif
@@ -262,7 +262,7 @@ bool JsDomElement::InitJsDomElement(JsContextPtr context, JsToken token) {
   if (token.vt != VT_DISPATCH) { return false; }
   IDispatch *dispatch = token.pdispVal;
 
-#ifdef WINCE
+#ifdef OS_WINCE
   CComQIPtr<IPIEHTMLElement> html_element(dispatch);
 #else
   CComQIPtr<IHTMLElement> html_element(dispatch);
@@ -278,7 +278,7 @@ bool JsDomElement::InitJsDomElement(JsContextPtr context, JsToken token) {
 bool JsDomElement::GetFileInputElementValue(
     std::string16 *file_name_out) {
   assert(is_initialized_);
-#ifdef WINCE
+#ifdef OS_WINCE
   // If it implements the IPIEHTMLInputTextElement interface, and has type
   // 'file', then accept it.
   CComQIPtr<IPIEHTMLInputTextElement> input(dispatch_);

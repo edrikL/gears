@@ -36,7 +36,7 @@
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #include "gears/desktop/drop_target_ff.h"
 
-#elif BROWSER_IE && !defined(WINCE)
+#elif BROWSER_IE && !defined(OS_WINCE)
 #include <windows.h>
 #include "gears/desktop/drop_target_ie.h"
 
@@ -46,7 +46,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 
-#if BROWSER_FF || (BROWSER_IE && !defined(WINCE))
+#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE))
 static bool InitializeCallback(const std::string16 name,
                                JsObject &js_callbacks,
                                scoped_ptr<JsRootedCallback> *scoped_callback,
@@ -111,7 +111,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
   drop_target->AddSelfAsEventListeners(event_target);
   return drop_target;
 
-#elif BROWSER_IE && !defined(WINCE)
+#elif BROWSER_IE && !defined(OS_WINCE)
   CComQIPtr<IHTMLElement2> html_element_2(dom_element.dispatch());
   if (!html_element_2) return NULL;
   CComBSTR behavior_url(L"#Google" PRODUCT_SHORT_NAME L"#DropTarget");
@@ -156,7 +156,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
 void DragAndDropRegistry::UnregisterDropTarget(DropTarget *drop_target) {
 #if BROWSER_FF
   drop_target->RemoveSelfAsEventListeners();
-#elif BROWSER_IE && !defined(WINCE)
+#elif BROWSER_IE && !defined(OS_WINCE)
   // On IE, DropTarget is a COM object, which is ref-counted, so it should
   // automatically delete itself when no longer referred to.
   // In the future, if we allow explicit unregistration of a DropTarget, then

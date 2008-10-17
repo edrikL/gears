@@ -28,7 +28,7 @@
 #include "gears/ui/ie/tools_menu_item.h"
 #include "genfiles/product_constants.h"
 
-#ifdef WINCE
+#ifdef OS_WINCE
 
 STDMETHODIMP ToolsMenuItem::QueryContextMenu(HMENU hmenu, 
                                              UINT index_menu,

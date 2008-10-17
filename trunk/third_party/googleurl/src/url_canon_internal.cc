@@ -28,7 +28,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
-#ifndef WINCE
+#ifdef OS_WINCE
+// WinCE does not use errno.h.
+#else
 #include <errno.h>
 #endif
 #include <stdlib.h>
@@ -362,13 +364,13 @@ bool SetupUTF16OverrideComponents(const char* base,
   return success;
 }
 
-#if !defined(WIN32) || defined(WINCE)
+#if !defined(WIN32) || defined(OS_WINCE)
 
 int _itoa_s(int value, char* buffer, size_t size_in_chars, int radix) {
   if (radix != 10)
     return EINVAL;
 
-#ifdef WINCE
+#ifdef OS_WINCE
   size_t written = _snprintf(buffer, size_in_chars, "%d", value);
 #else
   size_t written = snprintf(buffer, size_in_chars, "%d", value);
@@ -387,7 +389,7 @@ int _itow_s(int value, UTF16Char* buffer, size_t size_in_chars, int radix) {
   // No more than 12 characters will be required for a 32-bit integer.
   // Add an extra byte for the terminating null.
   char temp[13];
-#ifdef WINCE
+#ifdef OS_WINCE
   size_t written = _snprintf(temp, sizeof(temp), "%d", value);
 #else
   size_t written = snprintf(temp, sizeof(temp), "%d", value);

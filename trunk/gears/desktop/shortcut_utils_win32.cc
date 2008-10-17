@@ -37,13 +37,13 @@
 
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/process_utils_win32.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/base/common/file.h"
 #endif
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
+#ifdef OS_WINCE
 #include "gears/desktop/dll_data_wince.h"  // For kDllIconId
 #endif
 #include "gears/ui/ie/string_table.h"
@@ -56,7 +56,7 @@ static bool CreateShellLink(const char16 *link_path,
                             const char16 *icon_path,
                             const char16 *object_path,
                             const char16 *arguments) {
-#ifdef WINCE
+#ifdef OS_WINCE
   // IShellLink does not exist on WinCE and the alternative (SHCreateShortcut)
   // does not allow us to set a custom icon. So we write the shortcut by hand.
   // The format is ...
@@ -127,7 +127,7 @@ static bool ReadShellLink(const char16 *link_path,
                           std::string16 *icon_path,
                           std::string16 *object_path,
                           std::string16 *arguments) {
-#ifdef WINCE
+#ifdef OS_WINCE
   char16 target[CHAR_MAX];
   if (SHGetShortcutTarget(link_path, target, CHAR_MAX) == FALSE) {
     return false;
@@ -208,7 +208,7 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
 
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
-#ifdef WINCE
+#ifdef OS_WINCE
   // On WinCE, we only support desktop.
   if (location != Desktop::SHORTCUT_LOCATION_STARTMENU) {
     assert(false);
@@ -310,4 +310,4 @@ bool CreateShortcutFileWin32(const std::string16 &name,
 
   return true;
 }
-#endif  // #if defined(WIN32) && !defined(WINCE)
+#endif  // #ifdef WIN32

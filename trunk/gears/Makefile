@@ -784,6 +784,7 @@ endif # USING_PORTAUDIO
 # third_party/libspeex
 ifeq ($(USING_LIBSPEEX),1)
 ifneq ($(OFFICIAL_BUILD),1)
+ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		../third_party/speex/libspeex \
 		$(NULL)
@@ -821,12 +822,14 @@ LIBSPEEX_CSRCS	+= \
 		window_spx.c \
 		$(NULL)
 
+endif # not wince
 endif # not OFFICIAL_BUILD
 endif # USING_LIBSPEEX
 #-----------------------------------------------------------------------------
 # third_party/libtremor
 ifeq ($(USING_LIBTREMOR),1)
 ifneq ($(OFFICIAL_BUILD),1)
+ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		../third_party/tremor \
 		$(NULL)
@@ -848,6 +851,7 @@ LIBTREMOR_CSRCS	+= \
 		window_tremor.c \
 		$(NULL)
 
+endif # not wince
 endif # not OFFICIAL_BUILD
 endif # USING_LIBTREMOR
 #-----------------------------------------------------------------------------
@@ -2324,6 +2328,7 @@ endif
 # installer/iemobile
 
 ifeq ($(OS),wince)
+ifeq ($(BROWSER),IE)
 IE_VPATH	+= \
 		installer/iemobile \
 		$(NULL)
@@ -2350,6 +2355,7 @@ IE_LINK_EXTRAS += \
 IE_CPPSRCS += \
 		cab_updater.cc \
 		$(NULL)
+endif # IE
 endif # wince
 
 #-----------------------------------------------------------------------------

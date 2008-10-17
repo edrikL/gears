@@ -51,7 +51,7 @@ class DllModule : public CAtlDllModuleT< DllModule > {
 };
 
 DllModule atl_module;
-#ifdef WINCE
+#ifdef OS_WINCE
 int _charmax = 255;
 #endif
 
@@ -90,7 +90,7 @@ STDAPI DllGetClassObject(REFCLSID class_id, REFIID riid, LPVOID* ppv) {
 
 STDAPI DllRegisterServer(void) {
   HRESULT hr = atl_module.DllRegisterServer();
-#ifdef WINCE
+#ifdef OS_WINCE
   // TODO(zork): Move WinCE part of tools_menu_item.rgs.m4 here as well.
 #else
   if (SUCCEEDED(hr)) {
@@ -125,7 +125,7 @@ STDAPI DllRegisterServer(void) {
 }
 
 STDAPI DllUnregisterServer(void) {
-#ifdef WINCE
+#ifdef OS_WINCE
   // TODO(zork): Move WinCE part of tools_menu_item.rgs.m4 here as well.
 #else
   // Remove the localized strings from the registry.
