@@ -804,6 +804,18 @@ HRESULT HttpHandler::CallOnResponse(DWORD status_code,
 // 3) handling - Our handler will be used to satisfy the request from our cache
 //      The return value is S_OK and is_handling_ == true.
 //------------------------------------------------------------------------------
+
+class BindInfoReleaser {
+ public:
+  BindInfoReleaser(BINDINFO *info) : info_(info) {
+  }
+  ~BindInfoReleaser() {
+    ReleaseBindInfo(info_);
+  }
+ private:
+  BINDINFO *info_;
+};
+
 HRESULT HttpHandler::StartImpl(LPCWSTR url,
                                IInternetProtocolSink *protocol_sink,
                                IInternetBindInfo *bind_info,
@@ -827,6 +839,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     LOG16((L"GetBindInfo failed, error = %d\n", hr));
     return hr;
   }
+  BindInfoReleaser releaser(&bindinfo);
 
   // TODO(michaeln): Better understand flags, bindinfoFlags, and bindinfoOptions
   // TODO(michaeln): Better understand how our method calls should respond

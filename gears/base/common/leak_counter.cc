@@ -43,6 +43,7 @@ static const char16 *leak_counter_names[] = {
   STRING16(L"DocumentJsRunner"),
   STRING16(L"DropTarget"),
   STRING16(L"FFHttpRequest"),
+  STRING16(L"IEHttpRequest"),
   STRING16(L"JavaScriptWorkerInfo"),
   STRING16(L"JsArrayImpl"),
   STRING16(L"JsCallContext"),
