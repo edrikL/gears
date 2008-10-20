@@ -322,18 +322,28 @@ function testCaptureDeferredAbort() {
 }
 
 function testCaptureBlob() {
- startAsync();
- var url = '/testcases/test_file_1024.txt';
- httpGetAsRequest(url, function(request) {
-   var store = getFreshStore();
-   var captureUrl = '/captured.txt';
-   var responseBlob = request.responseBlob;
-   store.captureBlob(responseBlob, captureUrl);
-   httpGetAsRequest(captureUrl, function(request2) {
-     assertBlobProbablyEqual(responseBlob, request2.responseBlob);
-     completeAsync();
-     });
-   });
+  startAsync();
+  var url = '/testcases/test_file_1024.txt';
+  httpGetAsRequest(url, function(request) {
+    var store = getFreshStore();
+    var captureUrl = '/captured.txt';
+    var responseBlob = request.responseBlob;
+    if (isWince) {
+      assertError(
+          function() {
+            store.captureBlob(responseBlob, captureUrl)
+          },
+          'captureBlob is not implemented',
+          'captureBlob is not yet implemented on WinCE');
+      completeAsync();
+      return;
+    }
+    store.captureBlob(responseBlob, captureUrl);
+    httpGetAsRequest(captureUrl, function(request2) {
+      assertBlobProbablyEqual(responseBlob, request2.responseBlob);
+      completeAsync();
+    });
+  });
 }
 
 function testGoodManifest() {
