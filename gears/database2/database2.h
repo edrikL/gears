@@ -63,7 +63,7 @@ class GearsDatabase2 : public ModuleImplBaseClass {
   static bool CreateError(const ModuleImplBaseClass *sibling, 
                           const int code, 
                           const std::string16 &message,
-                          JsObject *instance);
+                          JsObject **instance);
 
   // returns (or creates) a transaction queue for this database
   Database2TransactionQueue *GetQueue();

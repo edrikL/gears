@@ -73,17 +73,17 @@ static const char16 *kSsidString = STRING16(L"ssid");
 // the property is undefined but throws an exception if the property is of any
 // other non-integer type.
 static void GetIntegerPropertyIfDefined(JsCallContext *context,
-                                        const JsObject &javascript_object,
+                                        const JsObject *javascript_object,
                                         const std::string16 &name,
                                         int *value);
 // As above but for a string property.
 static void GetStringPropertyIfDefined(JsCallContext *context,
-                                       const JsObject &javascript_object,
+                                       const JsObject *javascript_object,
                                        const std::string16 &name,
                                        std::string16 *value);
 // As above but for a double property.
 static void GetDoublePropertyIfDefined(JsCallContext *context,
-                                       const JsObject& javascript_object,
+                                       const JsObject *javascript_object,
                                        const std::string16& name,
                                        double *value);
 
@@ -406,9 +406,9 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
   assert(context);
 
   // Get the arguments provided from JavaScript. 
-  JsObject object;
+  scoped_ptr<JsObject> object;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &object },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(object) },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
@@ -418,29 +418,34 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
   // Note that we only support providing data for a single cell.
   CellData cell_data;
   // Update the fields of cell_data, if they have been provided.
-  GetIntegerPropertyIfDefined(context, object, kCellIdString,
+  GetIntegerPropertyIfDefined(context, object.get(), kCellIdString,
                               &cell_data.cell_id);
-  GetIntegerPropertyIfDefined(context, object, kLocationAreaCodeString,
+  GetIntegerPropertyIfDefined(context, object.get(), kLocationAreaCodeString,
                               &cell_data.location_area_code);
-  GetIntegerPropertyIfDefined(context, object, kMobileNetworkCodeString,
+  GetIntegerPropertyIfDefined(context, object.get(), kMobileNetworkCodeString,
                               &cell_data.mobile_network_code);
-  GetIntegerPropertyIfDefined(context, object, kMobileCountryCodeString,
+  GetIntegerPropertyIfDefined(context, object.get(), kMobileCountryCodeString,
                               &cell_data.mobile_country_code);
-  GetIntegerPropertyIfDefined(context, object, kAgeString, &cell_data.age);
-  GetIntegerPropertyIfDefined(context, object, kRadioSignalStrengthString,
+  GetIntegerPropertyIfDefined(context, object.get(), kAgeString,
+                              &cell_data.age);
+  GetIntegerPropertyIfDefined(context, object.get(),
+                              kRadioSignalStrengthString,
                               &cell_data.radio_signal_strength);
-  GetIntegerPropertyIfDefined(context, object, kTimingAdvanceString,
+  GetIntegerPropertyIfDefined(context, object.get(), kTimingAdvanceString,
                               &cell_data.timing_advance);
 
   RadioData radio_data;
-  GetStringPropertyIfDefined(context, object, kDeviceIdString,
+  GetStringPropertyIfDefined(context, object.get(), kDeviceIdString,
                              &radio_data.device_id);
-  GetIntegerPropertyIfDefined(context, object, kHomeMobileNetworkCodeString,
+  GetIntegerPropertyIfDefined(context, object.get(),
+                              kHomeMobileNetworkCodeString,
                               &radio_data.home_mobile_network_code);
-  GetIntegerPropertyIfDefined(context, object, kHomeMobileCountryCodeString,
+  GetIntegerPropertyIfDefined(context, object.get(),
+                              kHomeMobileCountryCodeString,
                               &radio_data.home_mobile_country_code);
   int radio_type = RADIO_TYPE_UNKNOWN;
-  GetIntegerPropertyIfDefined(context, object, kRadioTypeString, &radio_type);
+  GetIntegerPropertyIfDefined(context, object.get(), kRadioTypeString,
+                              &radio_type);
   switch (radio_type) {
     case RADIO_TYPE_UNKNOWN:
       radio_data.radio_type = RADIO_TYPE_UNKNOWN;
@@ -458,7 +463,7 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
       LOG(("ConfigureGeolocationRadioDataProviderForTest() : Ignoring value %s "
            "for radio_type.\n", radio_type));
   }
-  GetStringPropertyIfDefined(context, object, kCarrierString,
+  GetStringPropertyIfDefined(context, object.get(), kCarrierString,
                              &radio_data.carrier);
 
   // The GetXXXPropertyIfDefined functions set an exception if the property has
@@ -477,8 +482,10 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
   assert(context);
 
   // Get the arguments provided from JavaScript. 
-  JsObject object;
-  JsArgument argv[] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &object }, };
+  scoped_ptr<JsObject> object;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(object) }
+  };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
     return;
@@ -487,17 +494,17 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
   // Note that we only support providing data for a single access point.
   AccessPointData access_point_data;
   // Update the fields of access_point_data, if they have been provided.
-  GetStringPropertyIfDefined(context, object, kMacAddressString,
+  GetStringPropertyIfDefined(context, object.get(), kMacAddressString,
                              &access_point_data.mac_address);
-  GetIntegerPropertyIfDefined(context, object, kRadioSignalStrengthString,
+  GetIntegerPropertyIfDefined(context, object.get(), kRadioSignalStrengthString,
                               &access_point_data.radio_signal_strength);
-  GetIntegerPropertyIfDefined(context, object, kAgeString,
+  GetIntegerPropertyIfDefined(context, object.get(), kAgeString,
                               &access_point_data.age);
-  GetIntegerPropertyIfDefined(context, object, kChannelString,
+  GetIntegerPropertyIfDefined(context, object.get(), kChannelString,
                               &access_point_data.channel);
-  GetIntegerPropertyIfDefined(context, object, kSignalToNoiseString,
+  GetIntegerPropertyIfDefined(context, object.get(), kSignalToNoiseString,
                               &access_point_data.signal_to_noise);
-  GetStringPropertyIfDefined(context, object, kSsidString,
+  GetStringPropertyIfDefined(context, object.get(), kSsidString,
                              &access_point_data.ssid);
 
   // The GetXXXPropertyIfDefined functions set an exception if the property has
@@ -517,27 +524,30 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
   assert(context);
 
   // Get the arguments provided from JavaScript. 
-  JsObject object;
-  JsArgument argv[] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &object }, };
+  scoped_ptr<JsObject> object;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(object) }
+  };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
     return;
   }
   
   Position position;
-  GetDoublePropertyIfDefined(context, object, STRING16(L"latitude"),
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"latitude"),
                              &position.latitude);
-  GetDoublePropertyIfDefined(context, object, STRING16(L"longitude"),
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"longitude"),
                              &position.longitude);
-  GetDoublePropertyIfDefined(context, object, STRING16(L"altitude"),
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"altitude"),
                              &position.altitude);
-  GetDoublePropertyIfDefined(context, object, STRING16(L"accuracy"),
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"accuracy"),
                              &position.accuracy);
-  GetDoublePropertyIfDefined(context, object, STRING16(L"altitudeAccuracy"),
+  GetDoublePropertyIfDefined(context, object.get(),
+                             STRING16(L"altitudeAccuracy"),
                              &position.altitude_accuracy);
-  GetIntegerPropertyIfDefined(context, object, STRING16(L"errorCode"),
+  GetIntegerPropertyIfDefined(context, object.get(), STRING16(L"errorCode"),
                              &position.error_code);
-  GetStringPropertyIfDefined(context, object, STRING16(L"errorMessage"),
+  GetStringPropertyIfDefined(context, object.get(), STRING16(L"errorMessage"),
                              &position.error_message);
 
   // The GetXXXPropertyIfDefined functions set an exception if the property has
@@ -565,15 +575,15 @@ void RemoveGeolocationMockLocationProvider() {
 
 // Local functions
 static void GetIntegerPropertyIfDefined(JsCallContext *context,
-                                        const JsObject& javascript_object,
-                                        const std::string16& name,
+                                        const JsObject *javascript_object,
+                                        const std::string16 &name,
                                         int *value) {
   assert(context);
   assert(value);
-  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
+  if (javascript_object->GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!javascript_object.GetPropertyAsInt(name, value)) {
+  if (!javascript_object->GetPropertyAsInt(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be an integer.");
@@ -582,15 +592,15 @@ static void GetIntegerPropertyIfDefined(JsCallContext *context,
 }
 
 static void GetStringPropertyIfDefined(JsCallContext *context,
-                                       const JsObject& javascript_object,
-                                       const std::string16& name,
+                                       const JsObject *javascript_object,
+                                       const std::string16 &name,
                                        std::string16 *value) {
   assert(context);
   assert(value);
-  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
+  if (javascript_object->GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!javascript_object.GetPropertyAsString(name, value)) {
+  if (!javascript_object->GetPropertyAsString(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be a string.");
@@ -599,15 +609,15 @@ static void GetStringPropertyIfDefined(JsCallContext *context,
 }
 
 static void GetDoublePropertyIfDefined(JsCallContext *context,
-                                       const JsObject& javascript_object,
-                                       const std::string16& name,
+                                       const JsObject *javascript_object,
+                                       const std::string16 &name,
                                        double *value) {
   assert(context);
   assert(value);
-  if (javascript_object.GetPropertyType(name) == JSPARAM_UNDEFINED) {
+  if (javascript_object->GetPropertyType(name) == JSPARAM_UNDEFINED) {
     return;
   }
-  if (!javascript_object.GetPropertyAsDouble(name, value)) {
+  if (!javascript_object->GetPropertyAsDouble(name, value)) {
     std::string16 error = STRING16(L"property ");
     error += name;
     error += STRING16(L" should be a double.");

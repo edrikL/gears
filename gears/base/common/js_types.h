@@ -262,6 +262,7 @@ bool JsTokenToInt_NoCoerce(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToInt64_NoCoerce(JsToken t, JsContextPtr cx, int64 *out);
 bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToObject_NoCoerce(JsToken t, JsContextPtr cx, JsObject **out);
 bool JsTokenToArray_NoCoerce(JsToken t, JsContextPtr cx, JsArray **out);
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out);
@@ -374,7 +375,7 @@ class JsArray {
   virtual bool GetElementAsDouble(int index, double *out) const = 0;
   virtual bool GetElementAsString(int index, std::string16 *out) const = 0;
   virtual bool GetElementAsArray(int index, JsArray **out) const = 0;
-  virtual bool GetElementAsObject(int index, JsObject *out) const = 0;
+  virtual bool GetElementAsObject(int index, JsObject **out) const = 0;
   virtual bool GetElementAsFunction(int index,
                                     JsRootedCallback **out) const = 0;
 
@@ -408,24 +409,27 @@ class JsArray {
 
 class JsObject {
  public:
-  JsObject();
-  ~JsObject();
-
-  bool SetObject(JsToken value, JsContextPtr context);
+  virtual ~JsObject() {}
 
   // GetPropertyXxx returns false on failure, including if the requested element
   // does not exist.
-  bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
-  bool GetPropertyAsInt(const std::string16 &name, int *out) const;
-  bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
-  bool GetPropertyAsString(const std::string16 &name, std::string16 *out) const;
-  bool GetPropertyAsArray(const std::string16 &name, JsArray **out) const;
-  bool GetPropertyAsObject(const std::string16 &name, JsObject *out) const;
-  bool GetPropertyAsFunction(const std::string16 &name,
-                             JsRootedCallback **out) const;
+  virtual bool GetPropertyAsBool(const std::string16 &name,
+                                 bool *out) const = 0;
+  virtual bool GetPropertyAsInt(const std::string16 &name,
+                                int *out) const = 0;
+  virtual bool GetPropertyAsDouble(const std::string16 &name,
+                                   double *out) const = 0;
+  virtual bool GetPropertyAsString(const std::string16 &name,
+                                   std::string16 *out) const = 0;
+  virtual bool GetPropertyAsArray(const std::string16 &name,
+                                  JsArray **out) const = 0;
+  virtual bool GetPropertyAsObject(const std::string16 &name,
+                                   JsObject **out) const = 0;
+  virtual bool GetPropertyAsFunction(const std::string16 &name,
+                                     JsRootedCallback **out) const = 0;
 
   // Returns JSPARAM_UNDEFINED if the requested property does not exist.
-  JsParamType GetPropertyType(const std::string16 &name) const;
+  virtual JsParamType GetPropertyType(const std::string16 &name) const = 0;
   
   // GetPropertyNames fills the given vector with the (string) names of this
   // JsObject's properties.  There is no guarantee that it retrieves (or does
@@ -433,37 +437,40 @@ class JsObject {
   // rule anything in or out about property keys that aren't strings.  Also,
   // this only *appends* property names to the vector out.  In particular, it
   // does not reset the vector to be empty.
-  bool GetPropertyNames(std::vector<std::string16> *out) const;
+  virtual bool GetPropertyNames(std::vector<std::string16> *out) const = 0;
 
   // SetPropertyXxx() overwrites the existing named property or adds a new one
   // if none exists.
-  bool SetPropertyBool(const std::string16& name, bool value);
-  bool SetPropertyInt(const std::string16 &name, int value);
-  bool SetPropertyDouble(const std::string16& name, double value);
-  bool SetPropertyString(const std::string16 &name, const std::string16 &value);
-  bool SetPropertyArray(const std::string16& name, JsArray* value);
-  bool SetPropertyObject(const std::string16& name, JsObject* value);
-  bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
-  bool SetPropertyModule(const std::string16& name,
-                         ModuleImplBaseClass* value);
-  bool SetPropertyNull(const std::string16 &name);
-  bool SetPropertyUndefined(const std::string16 &name);
-  bool SetPropertyMarshaledJsToken(const std::string16& name,
-                                   ModuleEnvironment* module_environment,
-                                   MarshaledJsToken* value);
+  virtual bool SetPropertyBool(const std::string16& name,
+                               bool value) = 0;
+  virtual bool SetPropertyInt(const std::string16 &name,
+                              int value) = 0;
+  virtual bool SetPropertyDouble(const std::string16& name,
+                                 double value) = 0;
+  virtual bool SetPropertyString(const std::string16 &name,
+                                 const std::string16 &value) = 0;
+  virtual bool SetPropertyArray(const std::string16& name,
+                                JsArray* value) = 0;
+  virtual bool SetPropertyObject(const std::string16& name,
+                                 JsObject* value) = 0;
+  virtual bool SetPropertyFunction(const std::string16& name,
+                                   JsRootedCallback* value) = 0;
+  virtual bool SetPropertyModule(const std::string16& name,
+                                 ModuleImplBaseClass* value) = 0;
+  virtual bool SetPropertyNull(const std::string16 &name) = 0;
+  virtual bool SetPropertyUndefined(const std::string16 &name) = 0;
+  virtual bool SetPropertyMarshaledJsToken(
+      const std::string16& name,
+      ModuleEnvironment* module_environment,
+      MarshaledJsToken* value) = 0;
 
-  const JsScopedToken &token() const { return js_object_; }
-  const JsContextPtr &context() const { return js_context_; }
+  virtual const JsScopedToken &token() const = 0;
 
   // TODO(nigeltao): These two methods should really be private.
-  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
-  bool SetProperty(const std::string16 &name, const JsToken &value);
-
- private:
-  JsContextPtr js_context_;
-  JsScopedToken js_object_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(JsObject);
+  virtual bool GetProperty(const std::string16 &name,
+                           JsScopedToken *value) const = 0;
+  virtual bool SetProperty(const std::string16 &name,
+                           const JsToken &value) = 0;
 };
 
 //------------------------------------------------------------------------------

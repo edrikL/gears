@@ -101,10 +101,10 @@ void GearsCanvas::Load(JsCallContext *context) {
 
 void GearsCanvas::ToBlob(JsCallContext *context) {
   std::string16 mime_type;
-  JsObject attributes;
+  scoped_ptr<JsObject> attributes;
   JsArgument args[] = {
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &mime_type },
-    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &attributes }
+    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, as_out_parameter(attributes) }
   };
   if (!context->GetArguments(ARRAYSIZE(args), args)) {
     assert(context->is_exception_set());
@@ -168,7 +168,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   double quality;
   if (args[0].was_specified &&  // Only use attributes if mime_types was also
       args[1].was_specified &&  // specified.
-      attributes.GetPropertyAsDouble(STRING16(L"quality"), &quality)) {
+      attributes->GetPropertyAsDouble(STRING16(L"quality"), &quality)) {
     if (quality < 0.0 || quality > 1.0) {
       context->SetException(STRING16(L"quality must be between 0.0 and 1.0"));
       return;

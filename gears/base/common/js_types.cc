@@ -143,7 +143,7 @@ class JsArrayImpl : public JsArray {
   virtual bool GetElementAsDouble(int index, double *out) const;
   virtual bool GetElementAsString(int index, std::string16 *out) const;
   virtual bool GetElementAsArray(int index, JsArray **out) const;
-  virtual bool GetElementAsObject(int index, JsObject *out) const;
+  virtual bool GetElementAsObject(int index, JsObject **out) const;
   virtual bool GetElementAsFunction(int index, JsRootedCallback **out) const;
 
   virtual bool GetElementAsStringWithCoercion(int index,
@@ -171,7 +171,6 @@ class JsArrayImpl : public JsArray {
 
   DISALLOW_EVIL_CONSTRUCTORS(JsArrayImpl);
 };
-
 
 #if BROWSER_FF
 
@@ -445,11 +444,11 @@ bool JsArrayImpl::GetElementAsArray(int index, JsArray **out) const {
   return JsTokenToArray_NoCoerce(token, js_context_, out);
 }
 
-bool JsArrayImpl::GetElementAsObject(int index, JsObject *out) const {
+bool JsArrayImpl::GetElementAsObject(int index, JsObject **out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
-  return out->SetObject(token, js_context_);
+  return JsTokenToObject_NoCoerce(token, js_context_, out);
 }
 
 bool JsArrayImpl::GetElementAsFunction(int index,
@@ -516,21 +515,79 @@ bool JsTokenToArray_NoCoerce(JsToken t, JsContextPtr cx, JsArray **out) {
 // JsObject
 //------------------------------------------------------------------------------
 
+class JsObjectImpl : public JsObject {
+ public:
+  JsObjectImpl();
+  virtual ~JsObjectImpl();
+
+  bool Initialize(JsToken value, JsContextPtr context);
+
+  virtual bool GetPropertyAsBool(const std::string16 &name,
+                                 bool *out) const;
+  virtual bool GetPropertyAsInt(const std::string16 &name,
+                                int *out) const;
+  virtual bool GetPropertyAsDouble(const std::string16 &name,
+                                   double *out) const;
+  virtual bool GetPropertyAsString(const std::string16 &name,
+                                   std::string16 *out) const;
+  virtual bool GetPropertyAsArray(const std::string16 &name,
+                                  JsArray **out) const;
+  virtual bool GetPropertyAsObject(const std::string16 &name,
+                                   JsObject **out) const;
+  virtual bool GetPropertyAsFunction(const std::string16 &name,
+                                     JsRootedCallback **out) const;
+
+  virtual JsParamType GetPropertyType(const std::string16 &name) const;
+  
+  virtual bool GetPropertyNames(std::vector<std::string16> *out) const;
+
+  virtual bool SetPropertyBool(const std::string16& name, bool value);
+  virtual bool SetPropertyInt(const std::string16 &name, int value);
+  virtual bool SetPropertyDouble(const std::string16& name, double value);
+  virtual bool SetPropertyString(const std::string16 &name,
+                                 const std::string16 &value);
+  virtual bool SetPropertyArray(const std::string16& name, JsArray* value);
+  virtual bool SetPropertyObject(const std::string16& name, JsObject* value);
+  virtual bool SetPropertyFunction(const std::string16& name,
+                                   JsRootedCallback* value);
+  virtual bool SetPropertyModule(const std::string16& name,
+                                 ModuleImplBaseClass* value);
+  virtual bool SetPropertyNull(const std::string16 &name);
+  virtual bool SetPropertyUndefined(const std::string16 &name);
+  virtual bool SetPropertyMarshaledJsToken(
+      const std::string16& name,
+      ModuleEnvironment* module_environment,
+      MarshaledJsToken* value);
+
+  virtual const JsScopedToken &token() const { return js_object_; }
+
+  virtual bool GetProperty(const std::string16 &name,
+                           JsScopedToken *value) const;
+  virtual bool SetProperty(const std::string16 &name,
+                           const JsToken &value);
+
+ private:
+  JsContextPtr js_context_;
+  JsScopedToken js_object_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsObjectImpl);
+};
+
 #if BROWSER_FF
 
-JsObject::JsObject() : js_context_(NULL), js_object_(0) {
-  LEAK_COUNTER_INCREMENT(JsObject);
+JsObjectImpl::JsObjectImpl() : js_context_(NULL), js_object_(0) {
+  LEAK_COUNTER_INCREMENT(JsObjectImpl);
 }
 
-JsObject::~JsObject() {
-  LEAK_COUNTER_DECREMENT(JsObject);
+JsObjectImpl::~JsObjectImpl() {
+  LEAK_COUNTER_DECREMENT(JsObjectImpl);
   if (js_object_ && JSVAL_IS_GCTHING(js_object_)) {
     JsRequest request(js_context_);
     JS_RemoveRoot(js_context_, &js_object_);
   }
 }
 
-bool JsObject::SetObject(JsToken value, JsContextPtr context) {
+bool JsObjectImpl::Initialize(JsToken value, JsContextPtr context) {
   if (JSVAL_IS_OBJECT(value)) {
     if (js_object_ && JSVAL_IS_GCTHING(js_object_))
       JS_RemoveRoot(js_context_, &js_object_);
@@ -546,7 +603,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+bool JsObjectImpl::GetPropertyNames(std::vector<std::string16> *out) const {
   assert(JsTokenIsObject(js_object_));
 
   JsRequest request(js_context_);
@@ -567,7 +624,7 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   return true;
 }
 
-bool JsObject::GetProperty(const std::string16 &name,
+bool JsObjectImpl::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
   assert(JsTokenIsObject(js_object_));
 
@@ -577,7 +634,8 @@ bool JsObject::GetProperty(const std::string16 &name,
                           name.length(), out) == JS_TRUE;
 }
 
-bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+bool JsObjectImpl::SetProperty(const std::string16 &name,
+                               const JsToken &value) {
   assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
@@ -600,15 +658,15 @@ bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
   return true;
 }
 
-bool JsObject::SetPropertyBool(const std::string16& name, bool value) {
+bool JsObjectImpl::SetPropertyBool(const std::string16& name, bool value) {
   return SetProperty(name, BOOLEAN_TO_JSVAL(value));
 }
 
-bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+bool JsObjectImpl::SetPropertyInt(const std::string16 &name, int value) {
   return SetProperty(name, INT_TO_JSVAL(value));
 }
 
-bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
+bool JsObjectImpl::SetPropertyDouble(const std::string16& name, double value) {
   JsToken jsval;
   if (DoubleToJsToken(js_context_, value, &jsval)) {
     return SetProperty(name, jsval);
@@ -617,7 +675,7 @@ bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
   }
 }
 
-bool JsObject::SetPropertyString(const std::string16 &name,
+bool JsObjectImpl::SetPropertyString(const std::string16 &name,
                                  const std::string16 &value) {
   JsToken token;
   if (StringToJsToken(js_context_, value.c_str(), &token)) {
@@ -629,13 +687,13 @@ bool JsObject::SetPropertyString(const std::string16 &name,
 
 #elif BROWSER_IE
 
-JsObject::JsObject() : js_context_(NULL) {
+JsObjectImpl::JsObjectImpl() : js_context_(NULL) {
 }
 
-JsObject::~JsObject() {
+JsObjectImpl::~JsObjectImpl() {
 }
 
-bool JsObject::SetObject(JsToken value, JsContextPtr context) {
+bool JsObjectImpl::Initialize(JsToken value, JsContextPtr context) {
   if (value.vt != VT_DISPATCH) return false;
 
   js_object_ = value;
@@ -643,15 +701,15 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+bool JsObjectImpl::GetPropertyNames(std::vector<std::string16> *out) const {
   assert(JsTokenIsObject(js_object_));
 
   return SUCCEEDED(
       ActiveXUtils::GetDispatchPropertyNames(js_object_.pdispVal, out));
 }
 
-bool JsObject::GetProperty(const std::string16 &name,
-                           JsScopedToken *out) const {
+bool JsObjectImpl::GetProperty(const std::string16 &name,
+                               JsScopedToken *out) const {
   assert(JsTokenIsObject(js_object_));
 
   // If the property name is unknown, GetDispatchProperty will return
@@ -667,7 +725,8 @@ bool JsObject::GetProperty(const std::string16 &name,
   return SUCCEEDED(hr);
 }
 
-bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+bool JsObjectImpl::SetProperty(const std::string16 &name,
+                               const JsToken &value) {
   assert(JsTokenIsObject(js_object_));
 
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
@@ -675,33 +734,33 @@ bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
   return SUCCEEDED(hr);
 }
 
-bool JsObject::SetPropertyBool(const std::string16& name, bool value) {
+bool JsObjectImpl::SetPropertyBool(const std::string16& name, bool value) {
   return SetProperty(name, CComVariant(value));
 }
 
-bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+bool JsObjectImpl::SetPropertyInt(const std::string16 &name, int value) {
   return SetProperty(name, CComVariant(value));
 }
 
-bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
+bool JsObjectImpl::SetPropertyDouble(const std::string16& name, double value) {
   return SetProperty(name, CComVariant(value));
 }
 
-bool JsObject::SetPropertyString(const std::string16 &name,
-                                 const std::string16 &value) {
+bool JsObjectImpl::SetPropertyString(const std::string16 &name,
+                                     const std::string16 &value) {
   return SetProperty(name, CComVariant(value.c_str()));
 }
 
 #elif BROWSER_NPAPI
 
-JsObject::JsObject() : js_context_(NULL) {
+JsObjectImpl::JsObjectImpl() : js_context_(NULL) {
   VOID_TO_NPVARIANT(js_object_);
 }
 
-JsObject::~JsObject() {
+JsObjectImpl::~JsObjectImpl() {
 }
 
-bool JsObject::SetObject(JsToken value, JsContextPtr context) {
+bool JsObjectImpl::Initialize(JsToken value, JsContextPtr context) {
   if (NPVARIANT_IS_OBJECT(value)) {
     js_object_ = value;
     js_context_ = context;
@@ -711,7 +770,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+bool JsObjectImpl::GetPropertyNames(std::vector<std::string16> *out) const {
   assert(JsTokenIsObject(js_object_));
 
   NPIdentifier *identifiers;
@@ -742,7 +801,7 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
   return true;
 }
 
-bool JsObject::GetProperty(const std::string16 &name,
+bool JsObjectImpl::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
   assert(JsTokenIsObject(js_object_));
 
@@ -755,7 +814,8 @@ bool JsObject::GetProperty(const std::string16 &name,
   return NPN_GetProperty(js_context_, object, name_id, out);
 }
 
-bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+bool JsObjectImpl::SetProperty(const std::string16 &name,
+                   const JsToken &value) {
   assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
@@ -766,117 +826,121 @@ bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
   return NPN_SetProperty(js_context_, np_object, np_name, &value);
 }
 
-bool JsObject::SetPropertyString(const std::string16 &name,
-                                 const std::string16 &value) {
+bool JsObjectImpl::SetPropertyString(const std::string16 &name,
+                                     const std::string16 &value) {
   return SetProperty(name, ScopedNPVariant(value.c_str()));
 }
 
-bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+bool JsObjectImpl::SetPropertyInt(const std::string16 &name, int value) {
   return SetProperty(name, ScopedNPVariant(value));
 }
 
-bool JsObject::SetPropertyBool(const std::string16 &name, bool value) {
+bool JsObjectImpl::SetPropertyBool(const std::string16 &name, bool value) {
   return SetProperty(name, ScopedNPVariant(value));
 }
 
-bool JsObject::SetPropertyDouble(const std::string16 &name, double value) {
+bool JsObjectImpl::SetPropertyDouble(const std::string16 &name, double value) {
   return SetProperty(name, ScopedNPVariant(value));
 }
 
 #endif
 
-bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) const {
+bool JsObjectImpl::GetPropertyAsBool(const std::string16 &name,
+                                     bool *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToBool_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) const {
+bool JsObjectImpl::GetPropertyAsInt(const std::string16 &name,
+                                    int *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToInt_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsDouble(const std::string16 &name,
-                                   double *out) const {
+bool JsObjectImpl::GetPropertyAsDouble(const std::string16 &name,
+                                       double *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToDouble_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsString(const std::string16 &name,
-                                   std::string16 *out) const {
+bool JsObjectImpl::GetPropertyAsString(const std::string16 &name,
+                                       std::string16 *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToString_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsArray(const std::string16 &name,
-                                  JsArray **out) const {
+bool JsObjectImpl::GetPropertyAsArray(const std::string16 &name,
+                                      JsArray **out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToArray_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsObject(const std::string16 &name,
-                                   JsObject *out) const {
+bool JsObjectImpl::GetPropertyAsObject(const std::string16 &name,
+                                       JsObject **out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
-  return out->SetObject(token, js_context_);
+  return JsTokenToObject_NoCoerce(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsFunction(const std::string16 &name,
-                                     JsRootedCallback **out) const {
+bool JsObjectImpl::GetPropertyAsFunction(const std::string16 &name,
+                                         JsRootedCallback **out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToNewCallback_NoCoerce(token, js_context_, out);
 }
 
-JsParamType JsObject::GetPropertyType(const std::string16 &name) const {
+JsParamType JsObjectImpl::GetPropertyType(const std::string16 &name) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return JSPARAM_UNKNOWN;
 
   return JsTokenGetType(token, js_context_);
 }
 
-bool JsObject::SetPropertyArray(const std::string16& name, JsArray* value) {
+bool JsObjectImpl::SetPropertyArray(const std::string16& name,
+                                    JsArray* value) {
   return SetProperty(name, value->token());
 }
 
-bool JsObject::SetPropertyObject(const std::string16& name, JsObject* value) {
+bool JsObjectImpl::SetPropertyObject(const std::string16& name,
+                                     JsObject* value) {
   return SetProperty(name, value->token());
 }
 
-bool JsObject::SetPropertyFunction(const std::string16& name,
-                                   JsRootedCallback* value) {
+bool JsObjectImpl::SetPropertyFunction(const std::string16& name,
+                                       JsRootedCallback* value) {
   return SetProperty(name, value->token());
 }
 
-bool JsObject::SetPropertyModule(const std::string16 &name,
-                                 ModuleImplBaseClass *value) {
+bool JsObjectImpl::SetPropertyModule(const std::string16 &name,
+                                     ModuleImplBaseClass *value) {
   return SetProperty(name, value->GetWrapperToken());
 }
 
-bool JsObject::SetPropertyNull(const std::string16 &name) {
+bool JsObjectImpl::SetPropertyNull(const std::string16 &name) {
   JsScopedToken value;
   NullToJsToken(js_context_, &value);
   return SetProperty(name, value);
 }
 
-bool JsObject::SetPropertyUndefined(const std::string16 &name) {
+bool JsObjectImpl::SetPropertyUndefined(const std::string16 &name) {
   JsScopedToken value;
   UndefinedToJsToken(js_context_, &value);
   return SetProperty(name, value);
 }
 
-bool JsObject::SetPropertyMarshaledJsToken(
+bool JsObjectImpl::SetPropertyMarshaledJsToken(
     const std::string16& name,
     ModuleEnvironment* module_environment,
     MarshaledJsToken* value) {
@@ -885,6 +949,14 @@ bool JsObject::SetPropertyMarshaledJsToken(
       SetProperty(name, token);
 }
 
+bool JsTokenToObject_NoCoerce(JsToken t, JsContextPtr cx, JsObject **out) {
+  scoped_ptr<JsObjectImpl> object(new JsObjectImpl);
+  if (!object->Initialize(t, cx)) {
+    return false;
+  }
+  *out = object.release();
+  return true;
+}
 
 //------------------------------------------------------------------------------
 // JsTokenToXxx, XxxToJsToken
@@ -925,8 +997,8 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       break;
     }
     case JSPARAM_OBJECT: {
-      JsObject *value = static_cast<JsObject *>(param->value_ptr);
-      if (!value->SetObject(variant, context->js_context())) {
+      JsObject **value = static_cast<JsObject **>(param->value_ptr);
+      if (!JsTokenToObject_NoCoerce(variant, context->js_context(), value)) {
         return false;
       }
       break;
@@ -939,13 +1011,6 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       break;
     }
     case JSPARAM_FUNCTION: {
-      // TODO(nigeltao): make this a JsRootedCallback* instead of a pointer-
-      // to-a-pointer JsRootedCallback**, and add a JsRootedCallback::SetToken
-      // method just like JsObject::SetObject and JsArray::SetArray is called
-      // above, in order to simplify memory management issues around using
-      // JSPARAM_FUNCTION and JsCallContext::GetArguments, especially if
-      // GetArguments partially succeeds (on the first few arguments) but
-      // ultimately fails.
       JsRootedCallback **value =
           static_cast<JsRootedCallback **>(param->value_ptr);
       if (!JsTokenToNewCallback_NoCoerce(variant, context->js_context(),

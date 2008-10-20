@@ -296,16 +296,16 @@ void GearsNotification::GetDisplayAtTime(JsCallContext *context) {
 }
 
 void GearsNotification::SetDisplayAtTime(JsCallContext *context) {
-  JsObject obj;
+  scoped_ptr<JsObject> obj;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &obj },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(obj) },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
   JsRunnerInterface *js_runner = GetJsRunner();
-  if (!js_runner->ConvertJsObjectToDate(&obj, &display_at_time_ms_)) {
+  if (!js_runner->ConvertJsObjectToDate(obj.get(), &display_at_time_ms_)) {
     context->SetException(STRING16(L"failed to set value for displayAtTime."));
     return;
   }
@@ -322,16 +322,16 @@ void GearsNotification::GetDisplayUntilTime(JsCallContext *context) {
 }
 
 void GearsNotification::SetDisplayUntilTime(JsCallContext *context) {
-  JsObject obj;
+  scoped_ptr<JsObject> obj;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &obj },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(obj) },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
   JsRunnerInterface *js_runner = GetJsRunner();
-  if (!js_runner->ConvertJsObjectToDate(&obj, &display_until_time_ms_)) {
+  if (!js_runner->ConvertJsObjectToDate(obj.get(), &display_until_time_ms_)) {
     context->SetException(
         STRING16(L"failed to set value for displayUntilTime."));
     return;

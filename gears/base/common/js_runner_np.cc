@@ -222,17 +222,17 @@ class JsRunnerBase : public JsRunnerInterface {
       return false;
     }
 
-    JsObject obj;
-    obj.SetObject(result, GetContext());
+    scoped_ptr<JsObject> obj;
+    JsTokenToObject_NoCoerce(result, GetContext(), as_out_parameter(obj));
 
     std::string16 exception;
-    if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
+    if (obj->GetPropertyAsString(STRING16(L"exception"), &exception)) {
       SetException(exception);
       return false;
     }
 
     ScopedNPVariant retval;
-    if (!obj.GetProperty(STRING16(L"retval"), &retval)) {
+    if (!obj->GetProperty(STRING16(L"retval"), &retval)) {
       retval.Reset();  // Reset to "undefined"
     }
 
@@ -321,11 +321,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return reinterpret_cast<JsToken *>(token);
   }
 
-  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
-    return js_object->SetObject(
-        *AbstractJsTokenToJsTokenPtr(token), GetContext());
-  }
-
   virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
                                         AbstractJsToken token2) {
     if (!np_variant_comparator_.get()) {
@@ -357,6 +352,11 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
     return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
+  }
+
+  virtual bool JsTokenToObject(AbstractJsToken token, JsObject **out) {
+    return JsTokenToObject_NoCoerce(
         *AbstractJsTokenToJsTokenPtr(token), GetContext(), out);
   }
 
@@ -498,13 +498,13 @@ class JsRunnerBase : public JsRunnerInterface {
       return NULL;
     }
 
-    scoped_ptr<JsObject> retval(new JsObject);
-    if (!retval->SetObject(object, GetContext())) {
+    JsObject *retval = NULL;
+    if (!JsTokenToObject_NoCoerce(object, GetContext(), &retval)) {
       LOG(("Could not assign to JsObject."));
       return NULL;
     }
 
-    return retval.release();
+    return retval;
   }
 
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];

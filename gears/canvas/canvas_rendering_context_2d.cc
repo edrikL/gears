@@ -552,10 +552,10 @@ void GearsCanvasRenderingContext2D::GetImageData(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
-  JsObject image_data;
+  scoped_ptr<JsObject> image_data;
   int dx, dy, dirty_x, dirty_y, dirty_width, dirty_height;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &image_data },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(image_data) },
     { JSPARAM_REQUIRED, JSPARAM_INT, &dx },
     { JSPARAM_REQUIRED, JSPARAM_INT, &dy },
     { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_x },
@@ -570,9 +570,9 @@ void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::ColorTransform(JsCallContext *context) {
-  JsObject matrix;
+  scoped_ptr<JsObject> matrix;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix}
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(matrix) }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -582,9 +582,9 @@ void GearsCanvasRenderingContext2D::ColorTransform(JsCallContext *context) {
 
 void GearsCanvasRenderingContext2D::ConvolutionTransform(
     JsCallContext *context) {
-  JsObject matrix;
+  scoped_ptr<JsObject> matrix;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &matrix }
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(matrix) }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())

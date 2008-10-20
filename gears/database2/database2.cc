@@ -61,9 +61,9 @@ bool GearsDatabase2::Create(ModuleEnvironment *module_environment,
 
 // static
 bool GearsDatabase2::CreateError(const ModuleImplBaseClass *sibling,
-                            const int code,
-                            const std::string16 &message,
-                            JsObject *instance) {
+                                 const int code,
+                                 const std::string16 &message,
+                                 JsObject **instance) {
   // TODO(dimitri.glazkov): create an instance of the error object
   return false;
 }

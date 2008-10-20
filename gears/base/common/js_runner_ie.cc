@@ -252,11 +252,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return reinterpret_cast<JsToken *>(token);
   }
 
-  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
-    return js_object->SetObject(
-        *AbstractJsTokenToJsTokenPtr(token), GetContext());
-  }
-
   virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
                                         AbstractJsToken token2) {
     const VARIANT *x = AbstractJsTokenToJsTokenPtr(token1);
@@ -319,6 +314,11 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
     return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), NULL, out);
+  }
+
+  virtual bool JsTokenToObject(AbstractJsToken token, JsObject **out) {
+    return JsTokenToObject_NoCoerce(
         *AbstractJsTokenToJsTokenPtr(token), NULL, out);
   }
 
@@ -438,13 +438,13 @@ class JsRunnerBase : public JsRunnerInterface {
       return NULL;
     }
 
-    scoped_ptr<JsObject> retval(new JsObject);
-    if (!retval->SetObject(result, GetContext())) {
+    JsObject *retval = NULL;
+    if (!JsTokenToObject_NoCoerce(result, GetContext(), &retval)) {
       LOG(("Could not assign to JsObject."));
       return NULL;
     }
 
-    return retval.release();
+    return retval;
   }
 
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];

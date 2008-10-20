@@ -149,8 +149,6 @@ class JsRunnerInterface {
   // following JavaScript: eval("throw new Error('hello')");
   virtual void ThrowGlobalError(const std::string16 &message) = 0;
 
-  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) = 0;
-
   virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
                                         AbstractJsToken token2) = 0;
 
@@ -161,6 +159,7 @@ class JsRunnerInterface {
   virtual bool JsTokenToDouble(AbstractJsToken abstract_js_token,
                                double *out) = 0;
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) = 0;
+  virtual bool JsTokenToObject(AbstractJsToken token, JsObject **out) = 0;
   virtual bool JsTokenToArray(AbstractJsToken token, JsArray **out) = 0;
   virtual bool JsTokenToModule(AbstractJsToken token,
                                ModuleImplBaseClass **out) = 0;

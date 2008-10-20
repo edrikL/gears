@@ -48,10 +48,10 @@
 
 #if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE))
 static bool InitializeCallback(const std::string16 name,
-                               JsObject &js_callbacks,
+                               JsObject *js_callbacks,
                                scoped_ptr<JsRootedCallback> *scoped_callback,
                                std::string16 *error_out) {
-  JsParamType property_type = js_callbacks.GetPropertyType(name);
+  JsParamType property_type = js_callbacks->GetPropertyType(name);
   if (property_type != JSPARAM_UNDEFINED &&
       property_type != JSPARAM_FUNCTION) {
     *error_out = STRING16(L"options.");
@@ -60,7 +60,7 @@ static bool InitializeCallback(const std::string16 name,
     return false;
   }
   JsRootedCallback *callback;
-  if (js_callbacks.GetPropertyAsFunction(name, &callback)) {
+  if (js_callbacks->GetPropertyAsFunction(name, &callback)) {
     scoped_callback->reset(callback);
   }
   return true;
@@ -68,7 +68,7 @@ static bool InitializeCallback(const std::string16 name,
 
 
 static bool InitializeDropTarget(ModuleImplBaseClass *sibling_module,
-                                 JsObject &js_callbacks,
+                                 JsObject *js_callbacks,
                                  DropTarget *drop_target,
                                  std::string16 *error_out) {
   sibling_module->GetModuleEnvironment(&drop_target->module_environment_);
@@ -91,7 +91,7 @@ static bool InitializeDropTarget(ModuleImplBaseClass *sibling_module,
 DropTarget *DragAndDropRegistry::RegisterDropTarget(
     ModuleImplBaseClass *sibling_module,
     JsDomElement &dom_element,
-    JsObject &js_callbacks,
+    JsObject *js_callbacks,
     std::string16 *error_out) {
 #if BROWSER_FF
   nsCOMPtr<nsIDOMEventTarget> event_target =

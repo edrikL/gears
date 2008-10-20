@@ -243,13 +243,13 @@ bool FileDialog::IsLegalFilter(const std::string16& filter) {
 
 bool FileDialog::ParseOptions(JsCallContext* context,
                               const ModuleEnvironment& module_environment,
-                              const JsObject& map, Options* options) {
+                              const JsObject* map, Options* options) {
   // options.filter = [ ".txt", "text/html", "text/*" ];
-  if (map.GetPropertyType(kFilter) != JSPARAM_UNDEFINED) {
+  if (map->GetPropertyType(kFilter) != JSPARAM_UNDEFINED) {
     bool success = true;
     int count = 0;
     scoped_ptr<JsArray> filter_array;
-    if (!map.GetPropertyAsArray(kFilter, as_out_parameter(filter_array)) ||
+    if (!map->GetPropertyAsArray(kFilter, as_out_parameter(filter_array)) ||
         !filter_array->GetLength(&count)) {
       success = false;
     } else {
@@ -278,9 +278,9 @@ bool FileDialog::ParseOptions(JsCallContext* context,
   }
 
   // options.singleFile = true;
-  if (map.GetPropertyType(kSingleFile) != JSPARAM_UNDEFINED) {
+  if (map->GetPropertyType(kSingleFile) != JSPARAM_UNDEFINED) {
     bool singleFile = false;
-    if (!map.GetPropertyAsBool(kSingleFile, &singleFile)) {
+    if (!map->GetPropertyAsBool(kSingleFile, &singleFile)) {
       std::string16 error = STRING16(L"options.");
       error += kSingleFile;
       error += STRING16(L" should be a boolean.");

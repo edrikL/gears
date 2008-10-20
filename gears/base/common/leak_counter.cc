@@ -50,7 +50,7 @@ static const char16 *leak_counter_names[] = {
   STRING16(L"JsContextWrapper"),
   STRING16(L"JsDomElement"),
   STRING16(L"JsEventMonitor"),
-  STRING16(L"JsObject"),
+  STRING16(L"JsObjectImpl"),
   STRING16(L"JsRootedToken"),
   STRING16(L"JsRunner"),
   STRING16(L"JsWrapperDataForFunction"),
