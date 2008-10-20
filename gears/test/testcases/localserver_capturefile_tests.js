@@ -2,6 +2,15 @@ var localServer = google.gears.factory.create('beta.localserver');
 var resourceStore = localServer.createStore('noworker_tests');
 
 function testCreateFileSubmitter() {
+  if (isWince) {
+    assertError(
+        function() {
+          resourceStore.createFileSubmitter()
+        },
+        'createFileSubmitter is not implemented',
+        'createFileSubmitter is not yet implemented on WinCE');
+    return;
+  }
   assertNotNull(resourceStore.createFileSubmitter(),
                 'Could not create FileSubmitter');
 }
