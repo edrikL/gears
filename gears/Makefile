@@ -2354,6 +2354,7 @@ IE_LINK_EXTRAS += \
 # TODO(cprince): move this to another source path; IE_MODULE_DLL links it.
 IE_CPPSRCS += \
 		cab_updater.cc \
+		periodic_checker.cc \
 		$(NULL)
 endif # IE
 endif # wince
