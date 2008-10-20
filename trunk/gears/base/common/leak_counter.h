@@ -50,7 +50,7 @@ enum LeakCounterType {
   LEAK_COUNTER_TYPE_JsContextWrapper,
   LEAK_COUNTER_TYPE_JsDomElement,
   LEAK_COUNTER_TYPE_JsEventMonitor,
-  LEAK_COUNTER_TYPE_JsObject,
+  LEAK_COUNTER_TYPE_JsObjectImpl,
   LEAK_COUNTER_TYPE_JsRootedToken,
   LEAK_COUNTER_TYPE_JsRunner,
   LEAK_COUNTER_TYPE_JsWrapperDataForFunction,

@@ -85,7 +85,7 @@ class FileDialog {
 
   static bool ParseOptions(JsCallContext* context,
                            const ModuleEnvironment& module_environment,
-                           const JsObject& map, Options* options);
+                           const JsObject* map, Options* options);
 
   // Creates an array of javascript objects from files.
   // Each javascript object has the following properties.

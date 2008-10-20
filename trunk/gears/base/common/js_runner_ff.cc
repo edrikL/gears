@@ -64,7 +64,7 @@
 static const int kGarbageCollectionIntervalMsec = 2000;
 
 // Local helper function.
-static JsObject* JsvalToNewJsObject(const jsval &val, JsContextPtr context,
+static JsObject* JsvalToNewJsObject(jsval val, JsContextPtr context,
                                     bool dump_on_error);
 
 // Internal base class used to share some code between DocumentJsRunner and
@@ -255,11 +255,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return reinterpret_cast<JsToken *>(token);
   }
 
-  virtual bool SetObject(AbstractJsToken token, JsObject *js_object) {
-    return js_object->SetObject(
-        *AbstractJsTokenToJsTokenPtr(token), GetContext());
-  }
-
   virtual bool AbstractJsTokensAreEqual(AbstractJsToken token1,
                                         AbstractJsToken token2) {
     // TODO(michaeln): compare string values rather than pointers?
@@ -289,6 +284,11 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool JsTokenToString(AbstractJsToken token, std::string16 *out) {
     return JsTokenToString_NoCoerce(
+        *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
+  }
+
+  virtual bool JsTokenToObject(AbstractJsToken token, JsObject **out) {
+    return JsTokenToObject_NoCoerce(
         *AbstractJsTokenToJsTokenPtr(token), js_engine_context_, out);
   }
 
@@ -1015,12 +1015,12 @@ JsRunnerInterface* NewDocumentJsRunner(void *, JsContextPtr context) {
 }
 
 // Local helper function.
-static JsObject* JsvalToNewJsObject(const jsval &val, JsContextPtr context,
+static JsObject* JsvalToNewJsObject(jsval val, JsContextPtr context,
                                     bool dump_on_error) {
   if (JSVAL_IS_OBJECT(val)) {
-    scoped_ptr<JsObject> retval(new JsObject);
+    scoped_ptr<JsObject> retval;
 
-    if (!retval->SetObject(val, context)) {
+    if (!JsTokenToObject_NoCoerce(val, context, as_out_parameter(retval))) {
       if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not assign to JsObject."));
       return NULL;

@@ -259,7 +259,7 @@ class GearsGeolocation
   // Parses a JsObject representing the options parameter. The output is a
   // vector of URLs and the fix request info. Return value indicates success.
   static bool ParseOptions(JsCallContext *context,
-                           const JsObject &options,
+                           const JsObject *options,
                            std::vector<std::string16> *urls,
                            GearsGeolocation::FixRequestInfo *info);
   // Parses a JsScopedToken representing the gearsLocationProviderUrls field.

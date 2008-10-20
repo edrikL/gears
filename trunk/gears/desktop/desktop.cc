@@ -320,12 +320,12 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   }
 
   Desktop::ShortcutInfo shortcut_info;
-  JsObject icons;
+  scoped_ptr<JsObject> icons;
 
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_name },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_url },
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &icons },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(icons) },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &shortcut_info.app_description },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
@@ -342,11 +342,11 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   }
 
   // Get the icons the user specified
-  icons.GetPropertyAsString(STRING16(L"16x16"), &shortcut_info.icon16x16.url);
-  icons.GetPropertyAsString(STRING16(L"32x32"), &shortcut_info.icon32x32.url);
-  icons.GetPropertyAsString(STRING16(L"48x48"), &shortcut_info.icon48x48.url);
-  icons.GetPropertyAsString(STRING16(L"128x128"),
-                            &shortcut_info.icon128x128.url);
+  icons->GetPropertyAsString(STRING16(L"16x16"), &shortcut_info.icon16x16.url);
+  icons->GetPropertyAsString(STRING16(L"32x32"), &shortcut_info.icon32x32.url);
+  icons->GetPropertyAsString(STRING16(L"48x48"), &shortcut_info.icon48x48.url);
+  icons->GetPropertyAsString(STRING16(L"128x128"),
+                             &shortcut_info.icon128x128.url);
 
   // Prepare the shortcut.
   Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
@@ -418,10 +418,10 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
   }
 
   scoped_ptr<JsRootedCallback> callback;
-  JsObject options_map;
+  scoped_ptr<JsObject> options_map;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, as_out_parameter(callback) },
-    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options_map },
+    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, as_out_parameter(options_map) },
   };
   if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
     assert(context->is_exception_set());
@@ -435,7 +435,7 @@ void GearsDesktop::OpenFiles(JsCallContext *context) {
 
   FileDialog::Options options;
   if (argv[1].was_specified) {
-    if (!FileDialog::ParseOptions(context, *environment, options_map,
+    if (!FileDialog::ParseOptions(context, *environment, options_map.get(),
                                   &options)) {
       assert(context->is_exception_set());
       return;
@@ -1033,10 +1033,10 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   }
 
   JsDomElement dom_element;
-  JsObject drag_drop_options;
+  scoped_ptr<JsObject> drag_drop_options;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &drag_drop_options },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(drag_drop_options) },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
@@ -1044,7 +1044,7 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   std::string16 error;
   if (!DragAndDropRegistry::RegisterDropTarget(this,
                                                dom_element,
-                                               drag_drop_options,
+                                               drag_drop_options.get(),
                                                &error)) {
     context->SetException(error);
     return;

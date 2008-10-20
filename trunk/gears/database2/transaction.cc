@@ -173,16 +173,16 @@ void GearsDatabase2Transaction::InvokeErrorCallback() {
     return;
   }
 
-  JsObject* error = new JsObject();
+  scoped_ptr<JsObject> error;
   if (!GearsDatabase2::CreateError(this, connection()->error_code(),
-      connection()->error_message(), error)) {
+      connection()->error_message(), as_out_parameter(error))) {
     // unable to create an error object
     GetJsRunner()->ThrowGlobalError(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
 
   JsParamToSend send_argv[] = {
-    { JSPARAM_OBJECT, error },
+    { JSPARAM_OBJECT, error.get() },
   };
 
   GetJsRunner()->InvokeCallback(error_callback_.get(), ARRAYSIZE(send_argv),

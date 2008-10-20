@@ -36,6 +36,7 @@
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/string16.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // NOTE: A JsDomElement should never be created, or otherwise manipulated,
 // from a worker thread.
@@ -62,7 +63,7 @@ class JsDomElement {
 #elif BROWSER_NPAPI
   JsObject *js_object() {
     assert(is_initialized_);
-    return &js_object_;
+    return js_object_.get();
   }
 #endif
 
@@ -72,7 +73,7 @@ class JsDomElement {
 #elif BROWSER_IE
   CComPtr<IDispatch> dispatch_;
 #elif BROWSER_NPAPI
-  JsObject js_object_;
+  scoped_ptr<JsObject> js_object_;
 #endif
 
   bool is_initialized_;

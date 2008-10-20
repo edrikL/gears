@@ -324,7 +324,8 @@ bool JsDomElement::InitJsDomElement(JsContextPtr context, JsToken token) {
   // an arbitrary javascript object. So this is not a strong test, just
   // a hint that the token might be a DOM element.
   assert(!is_initialized_);
-  is_initialized_ = js_object_.SetObject(token, context);
+  is_initialized_ = JsTokenToObject_NoCoerce(token, context,
+                                             as_out_parameter(js_object_));
   return is_initialized_;
 }
 

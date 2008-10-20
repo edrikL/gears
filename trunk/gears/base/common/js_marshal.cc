@@ -175,10 +175,10 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
         // else it's a regular JavaScript object (that isn't a Gears module).
         if (!CausesCycle(js_runner, token, object_stack, error_message_out)) {
           object_stack->push_back(token);
-          JsObject value;
-          if (js_runner->SetObject(token, &value)) {
+          scoped_ptr<JsObject> value;
+          if (js_runner->JsTokenToObject(token, as_out_parameter(value))) {
             mjt.reset(new MarshaledJsToken());
-            if (!mjt->InitializeFromObject(value, js_runner,
+            if (!mjt->InitializeFromObject(value.get(), js_runner,
                                            error_message_out, object_stack)) {
               mjt.reset(NULL);
             }
@@ -307,12 +307,12 @@ bool MarshaledJsToken::Unmarshal(
 
 
 bool MarshaledJsToken::InitializeFromObject(
-    JsObject &js_object,
+    JsObject *js_object,
     JsRunnerInterface *js_runner,
     std::string16 *error_message_out,
     AbstractJsTokenVector *object_stack) {
   std::vector<std::string16> property_names;
-  if (!js_object.GetPropertyNames(&property_names)) {
+  if (!js_object->GetPropertyNames(&property_names)) {
     return false;
   }
 
@@ -321,7 +321,7 @@ bool MarshaledJsToken::InitializeFromObject(
   for (std::vector<std::string16>::iterator i = property_names.begin();
       i != property_names.end(); ++i) {
     JsScopedToken property_scoped_token;
-    if (!js_object.GetProperty(*i, &property_scoped_token)) {
+    if (!js_object->GetProperty(*i, &property_scoped_token)) {
       DeleteMarshaledJsTokens(o.get());
       return false;
     }

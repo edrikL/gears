@@ -223,16 +223,16 @@ void CreateObjectFunction(JsCallContext* context,
                           JsRootedCallback* func,
                           JsObject* out);
 
-void TestObjectBool(JsCallContext* context, const JsObject& obj);
-void TestObjectInt(JsCallContext* context, const JsObject& obj);
-void TestObjectDouble(JsCallContext* context, const JsObject& obj);
-void TestObjectString(JsCallContext* context, const JsObject& obj);
+void TestObjectBool(JsCallContext* context, const JsObject* obj);
+void TestObjectInt(JsCallContext* context, const JsObject* obj);
+void TestObjectDouble(JsCallContext* context, const JsObject* obj);
+void TestObjectString(JsCallContext* context, const JsObject* obj);
 void TestObjectArray(JsCallContext* context,
-                     const JsObject& obj,
+                     const JsObject* obj,
                      const ModuleImplBaseClass& base);
-void TestObjectObject(JsCallContext* context, const JsObject& obj);
+void TestObjectObject(JsCallContext* context, const JsObject* obj);
 void TestObjectFunction(JsCallContext* context,
-                        const JsObject& obj,
+                        const JsObject* obj,
                         const ModuleImplBaseClass& base);
 
 // from localserver_perf_test.cc
@@ -518,30 +518,32 @@ void GearsTest::TestObjectProperties(JsCallContext *context) {
 // JsObject::Get* functions.
 void GearsTest::TestPassObject(JsCallContext *context) {
   const int argc = 1;
-  JsObject obj;
-  JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &obj } };
+  scoped_ptr<JsObject> obj;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(obj) }
+  };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  TestObjectBool(context, obj);
+  TestObjectBool(context, obj.get());
   if (context->is_exception_set()) return;
 
-  TestObjectInt(context, obj);
+  TestObjectInt(context, obj.get());
   if (context->is_exception_set()) return;
 
-  TestObjectDouble(context, obj);
+  TestObjectDouble(context, obj.get());
   if (context->is_exception_set()) return;
 
-  TestObjectString(context, obj);
+  TestObjectString(context, obj.get());
   if (context->is_exception_set()) return;
 
-  TestObjectArray(context, obj, *this);
+  TestObjectArray(context, obj.get(), *this);
   if (context->is_exception_set()) return;
 
-  TestObjectObject(context, obj);
+  TestObjectObject(context, obj.get());
   if (context->is_exception_set()) return;
 
-  TestObjectFunction(context, obj, *this);
+  TestObjectFunction(context, obj.get(), *this);
 }
 
 void GearsTest::TestCreateObject(JsCallContext* context) {
@@ -1509,18 +1511,18 @@ bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
   } \
 }
 
-void TestObjectBool(JsCallContext* context, const JsObject& obj) {
+void TestObjectBool(JsCallContext* context, const JsObject* obj) {
   bool property_value = false;
-  TEST_ASSERT(obj.GetPropertyAsBool(STRING16(L"bool_true"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsBool(STRING16(L"bool_true"), &property_value));
   TEST_ASSERT(property_value == true);
 
   property_value = true;
-  TEST_ASSERT(obj.GetPropertyAsBool(STRING16(L"bool_false"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsBool(STRING16(L"bool_false"), &property_value));
   TEST_ASSERT(property_value == false);
 
   scoped_ptr<JsArray> arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"bool_array"),
-                                     as_out_parameter(arr)));
+  TEST_ASSERT(obj->GetPropertyAsArray(STRING16(L"bool_array"),
+                                      as_out_parameter(arr)));
 
   int length = -1;
   TEST_ASSERT(arr->GetLength(&length));
@@ -1537,34 +1539,34 @@ void TestObjectBool(JsCallContext* context, const JsObject& obj) {
 
 const static int int_large = 1073741823;  // 2 ** 30 - 1
 
-void TestObjectInt(JsCallContext* context, const JsObject& obj) {
+void TestObjectInt(JsCallContext* context, const JsObject* obj) {
   // integer (assumed to be tagged 32 bit signed integer,
   //          30 bits magnitude, 1 bit sign, 1 bit tag)
   int property_value = -1;
-  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_0"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsInt(STRING16(L"int_0"), &property_value));
   TEST_ASSERT(property_value == 0);
 
   property_value = -1;
-  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_1"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsInt(STRING16(L"int_1"), &property_value));
   TEST_ASSERT(property_value == 1);
 
   property_value = -1;
-  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_large"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsInt(STRING16(L"int_large"), &property_value));
   TEST_ASSERT(property_value == int_large);
 
   property_value = 1;
-  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_negative_1"),
+  TEST_ASSERT(obj->GetPropertyAsInt(STRING16(L"int_negative_1"),
                                     &property_value));
   TEST_ASSERT(property_value == -1);
 
   property_value = 1;
-  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_negative_large"),
+  TEST_ASSERT(obj->GetPropertyAsInt(STRING16(L"int_negative_large"),
                                     &property_value));
   TEST_ASSERT(property_value == -int_large);
 
   scoped_ptr<JsArray> arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"int_array"),
-                                     as_out_parameter(arr)));
+  TEST_ASSERT(obj->GetPropertyAsArray(STRING16(L"int_array"),
+                                      as_out_parameter(arr)));
 
   int length = -1;
   TEST_ASSERT(arr->GetLength(&length));
@@ -1596,35 +1598,35 @@ void TestObjectInt(JsCallContext* context, const JsObject& obj) {
 //   Core_JavaScript_1.5_Reference:Global_Objects:Number:MIN_VALUE
 const static double JS_NUMBER_MIN_VALUE = 5e-324;
 
-void TestObjectDouble(JsCallContext* context, const JsObject& obj) {
+void TestObjectDouble(JsCallContext* context, const JsObject* obj) {
   // JavaScript interprets 1.0 as an integer.
   // This is why 1 is 1.01.
   double property_value = -1.0;
-  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_0"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsDouble(STRING16(L"double_0"), &property_value));
   TEST_ASSERT(property_value == 0.01);
 
   property_value = -1.0;
-  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_1"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsDouble(STRING16(L"double_1"), &property_value));
   TEST_ASSERT(property_value == 1.01);
 
   property_value = -1;
-  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_large"),
-                                      &property_value));
+  TEST_ASSERT(obj->GetPropertyAsDouble(STRING16(L"double_large"),
+                                       &property_value));
   TEST_ASSERT(property_value == std::numeric_limits<double>::max());
 
   property_value = 1;
-  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_negative_1"),
-                                    &property_value));
+  TEST_ASSERT(obj->GetPropertyAsDouble(STRING16(L"double_negative_1"),
+                                       &property_value));
   TEST_ASSERT(property_value == -1.01);
 
   property_value = 1;
-  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_negative_large"),
-                                    &property_value));
+  TEST_ASSERT(obj->GetPropertyAsDouble(STRING16(L"double_negative_large"),
+                                       &property_value));
   TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
 
   scoped_ptr<JsArray> arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"double_array"),
-                                     as_out_parameter(arr)));
+  TEST_ASSERT(obj->GetPropertyAsArray(STRING16(L"double_array"),
+                                      as_out_parameter(arr)));
 
   int length = -1;
   TEST_ASSERT(arr->GetLength(&length));
@@ -1651,25 +1653,25 @@ void TestObjectDouble(JsCallContext* context, const JsObject& obj) {
   TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
 }
 
-void TestObjectString(JsCallContext* context, const JsObject& obj) {
+void TestObjectString(JsCallContext* context, const JsObject* obj) {
   std::string16 property_value = STRING16(L"not empty");
-  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_0"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsString(STRING16(L"string_0"), &property_value));
   TEST_ASSERT(property_value.empty());
 
   property_value = STRING16(L"");
-  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_1"), &property_value));
+  TEST_ASSERT(obj->GetPropertyAsString(STRING16(L"string_1"), &property_value));
   TEST_ASSERT(property_value == STRING16(L"a"));
 
   property_value = STRING16(L"");
-  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_many"),
-                                      &property_value));
+  TEST_ASSERT(obj->GetPropertyAsString(STRING16(L"string_many"),
+                                       &property_value));
   const static std::string16 string_many(
       STRING16(L"asdjh1)!(@#*h38ind89!03234bnmd831%%%*&*jdlwnd8893asd1233"));
   TEST_ASSERT(property_value == string_many);
 
   scoped_ptr<JsArray> arr;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"string_array"),
-                                     as_out_parameter(arr)));
+  TEST_ASSERT(obj->GetPropertyAsArray(STRING16(L"string_array"),
+                                      as_out_parameter(arr)));
 
   int length = -1;
   TEST_ASSERT(arr->GetLength(&length));
@@ -1710,18 +1712,18 @@ static bool ValidateGeneratedArray(const JsArray* arr, int expected_length) {
   return true;
 }
 
-static bool ValidateGeneratedArray(const JsObject& obj,
+static bool ValidateGeneratedArray(const JsObject* obj,
                                    const std::string16& property_name,
                                    int expected_length) {
   scoped_ptr<JsArray> arr;
-  if (!obj.GetPropertyAsArray(property_name, as_out_parameter(arr)))
+  if (!obj->GetPropertyAsArray(property_name, as_out_parameter(arr)))
     return false;
 
   return ValidateGeneratedArray(arr.get(), expected_length);
 }
 
 void TestObjectArray(JsCallContext* context,
-                     const JsObject& obj,
+                     const JsObject* obj,
                      const ModuleImplBaseClass& base) {
   TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_0"), 0));
   TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_1"), 1));
@@ -1729,8 +1731,8 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_10000"), 10000));
 
   scoped_ptr<JsArray> array_many_types;
-  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"array_many_types"),
-                                     as_out_parameter(array_many_types)));
+  TEST_ASSERT(obj->GetPropertyAsArray(STRING16(L"array_many_types"),
+                                      as_out_parameter(array_many_types)));
   int array_many_types_length = -1;
   TEST_ASSERT(array_many_types->GetLength(&array_many_types_length));
   TEST_ASSERT(array_many_types_length == 7);
@@ -1785,35 +1787,36 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(array_many_types->GetElementType(7) == JSPARAM_UNDEFINED);
 }
 
-void TestObjectObject(JsCallContext* context, const JsObject& obj) {
-  JsObject child_obj;
-  TEST_ASSERT(obj.GetPropertyAsObject(STRING16(L"obj"), &child_obj));
+void TestObjectObject(JsCallContext* context, const JsObject* obj) {
+  scoped_ptr<JsObject> child_obj;
+  TEST_ASSERT(obj->GetPropertyAsObject(STRING16(L"obj"),
+                                       as_out_parameter(child_obj)));
 
   bool bool_true = false;
-  TEST_ASSERT(child_obj.GetPropertyAsBool(STRING16(L"bool_true"), &bool_true));
+  TEST_ASSERT(child_obj->GetPropertyAsBool(STRING16(L"bool_true"), &bool_true));
   TEST_ASSERT(bool_true == true);
 
   int int_0 = -1;
-  TEST_ASSERT(child_obj.GetPropertyAsInt(STRING16(L"int_0"), &int_0));
+  TEST_ASSERT(child_obj->GetPropertyAsInt(STRING16(L"int_0"), &int_0));
   TEST_ASSERT(int_0 == 0);
 
   double double_0 = -1.0;
-  TEST_ASSERT(child_obj.GetPropertyAsDouble(STRING16(L"double_0"), &double_0));
+  TEST_ASSERT(child_obj->GetPropertyAsDouble(STRING16(L"double_0"), &double_0));
   TEST_ASSERT(double_0 == 0.01);
 
   std::string16 string_0(STRING16(L"not empty"));
-  TEST_ASSERT(child_obj.GetPropertyAsString(STRING16(L"string_0"), &string_0));
+  TEST_ASSERT(child_obj->GetPropertyAsString(STRING16(L"string_0"), &string_0));
   TEST_ASSERT(string_0.empty());
 
-  TEST_ASSERT(ValidateGeneratedArray(child_obj, STRING16(L"array_0"), 0));
+  TEST_ASSERT(ValidateGeneratedArray(child_obj.get(), STRING16(L"array_0"), 0));
 }
 
 void TestObjectFunction(JsCallContext* context,
-                        const JsObject& obj,
+                        const JsObject* obj,
                         const ModuleImplBaseClass& base) {
   scoped_ptr<JsRootedCallback> function;
-  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"),
-                                        as_out_parameter(function)));
+  TEST_ASSERT(obj->GetPropertyAsFunction(STRING16(L"func"),
+                                         as_out_parameter(function)));
   TEST_ASSERT(function.get());
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);

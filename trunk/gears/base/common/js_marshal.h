@@ -117,7 +117,7 @@ class MarshaledJsToken {
                                    std::string16 *error_message_out,
                                    AbstractJsTokenVector *object_stack);
 
-  bool InitializeFromObject(JsObject &object,
+  bool InitializeFromObject(JsObject *object,
                             JsRunnerInterface *js_runner,
                             std::string16 *error_message_out,
                             AbstractJsTokenVector *object_stack);

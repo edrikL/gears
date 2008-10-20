@@ -808,11 +808,11 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   //
   JsRootedCallback *success_callback = NULL;
   JsRootedCallback *error_callback = NULL;
-  JsObject options;
+  scoped_ptr<JsObject> options;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &success_callback, false },
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback, false },
-    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, &options, false },
+    { JSPARAM_OPTIONAL, JSPARAM_OBJECT, as_out_parameter(options), false },
   };
  
   bool success = context->GetArguments(ARRAYSIZE(argv), argv);
@@ -838,7 +838,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
   // We have to check that options is present because it's not valid to use an
   // uninitialised JsObject.
   if (argv[2].was_specified) {
-    if (!ParseOptions(context, options, urls, info)) {
+    if (!ParseOptions(context, options.get(), urls, info)) {
       assert(context->is_exception_set());
       return false;
     }
@@ -851,46 +851,46 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
 
 // static
 bool GearsGeolocation::ParseOptions(JsCallContext *context,
-                                    const JsObject &options,
+                                    const JsObject *options,
                                     std::vector<std::string16> *urls,
                                     FixRequestInfo *info) {
   assert(context);
   assert(urls);
   assert(info);
-  if (options.GetPropertyType(kEnableHighAccuracy) != JSPARAM_UNDEFINED &&
-      !options.GetPropertyAsBool(kEnableHighAccuracy,
-                                 &(info->enable_high_accuracy))) {
+  if (options->GetPropertyType(kEnableHighAccuracy) != JSPARAM_UNDEFINED &&
+      !options->GetPropertyAsBool(kEnableHighAccuracy,
+                                  &(info->enable_high_accuracy))) {
     std::string16 error = STRING16(L"options.");
     error += kEnableHighAccuracy;
     error += STRING16(L" should be a boolean.");
     context->SetException(error);
     return false;
   }
-  if (options.GetPropertyType(kGearsRequestAddress) != JSPARAM_UNDEFINED &&
-      !options.GetPropertyAsBool(kGearsRequestAddress,
-                                 &(info->request_address))) {
+  if (options->GetPropertyType(kGearsRequestAddress) != JSPARAM_UNDEFINED &&
+      !options->GetPropertyAsBool(kGearsRequestAddress,
+                                  &(info->request_address))) {
     std::string16 error = STRING16(L"options.");
     error += kGearsRequestAddress;
     error += STRING16(L" should be a boolean.");
     context->SetException(error);
     return false;
   }
-  if (options.GetPropertyType(kGearsAddressLanguage) != JSPARAM_UNDEFINED &&
-      !options.GetPropertyAsString(kGearsAddressLanguage,
-                                   &(info->address_language))) {
+  if (options->GetPropertyType(kGearsAddressLanguage) != JSPARAM_UNDEFINED &&
+      !options->GetPropertyAsString(kGearsAddressLanguage,
+                                    &(info->address_language))) {
     std::string16 error = STRING16(L"options.");
     error += kGearsAddressLanguage;
     error += STRING16(L" should be a string.");
     context->SetException(error);
     return false;
   }
-  if (options.GetPropertyType(kGearsLocationProviderUrls) !=
+  if (options->GetPropertyType(kGearsLocationProviderUrls) !=
           JSPARAM_UNDEFINED) {
-    JsParamType type = options.GetPropertyType(kGearsLocationProviderUrls);
+    JsParamType type = options->GetPropertyType(kGearsLocationProviderUrls);
     // If gearsLocationProviderUrls is null, we do not use the default URL.
     if (type != JSPARAM_NULL) {
       scoped_ptr<JsArray> js_array;
-      if (!options.GetPropertyAsArray(kGearsLocationProviderUrls,
+      if (!options->GetPropertyAsArray(kGearsLocationProviderUrls,
                                       as_out_parameter(js_array)) ||
           !ParseLocationProviderUrls(context, js_array.get(), urls)) {
         // If it's not an array and not null, this is an error.
