@@ -1,0 +1,61 @@
+<html><head><title>Gears Drag and Drop</title></head>
+<body>
+<div id="dropZone" style="background-color: yellow; width:20em; height:15em">
+<ol>
+<li>Drag some files from the desktop.</li>
+<li>Drop them on this DIV.</li>
+<li>???</li>
+<li>Profit!</li>
+</ol>
+</div>
+<div id="dragEnterOutput">&nbsp;</div>
+<div id="dragOverOutput">&nbsp;</div>
+<div id="dragLeaveOutput">&nbsp;</div>
+<div id="dropOutput">&nbsp;</div>
+
+<script type="text/javascript" src="../../sdk/gears_init.js"></script>
+<script type="text/javascript">
+var dragEnterCount = 0;
+var dragOverCount = 0;
+var dragLeaveCount = 0;
+var dropCount = 0;
+var eventCount = 0;
+var desktop = google.gears.factory.create('beta.desktop');
+desktop.registerDropTarget(document.getElementById('dropZone'), {
+  'ondragenter': function() {
+    dragEnterCount++;
+    eventCount++;
+    document.getElementById('dragEnterOutput').innerHTML =
+        'Got <b>dragenter</b>: ' + dragEnterCount +
+            ' times, most recent sequence number is ' + eventCount;
+  },
+  'ondragover': function() {
+    dragOverCount++;
+    eventCount++;
+    document.getElementById('dragOverOutput').innerHTML =
+        'Got <b>dragover</b>: ' + dragOverCount +
+            ' times, most recent sequence number is ' +  eventCount;
+  },
+  'ondragleave': function() {
+    dragLeaveCount++;
+    eventCount++;
+    document.getElementById('dragLeaveOutput').innerHTML =
+        'Got <b>dragleave</b>: ' + dragLeaveCount +
+            ' times, most recent sequence number is ' +  eventCount;
+  },
+  'ondrop': function(files) {
+    dropCount++;
+    eventCount++;
+    var s = 'Got <b>drop</b>: ' + dropCount +
+        ' times, most recent sequence number is ' +  eventCount + '<hr/>';
+    for (i = 0; i < files.length; i++) {
+      var file = files[i];
+      s += '<b>' + file.name + '</b> has length <b>' +
+          file.blob.length + '</b>.<br/>';
+    }
+    document.getElementById('dropOutput').innerHTML = s;
+  }
+});
+</script>
+</body>
+</html>
