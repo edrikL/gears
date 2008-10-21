@@ -23,14 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//
 // This file contains code that is specific to Symbian.
 // Differently from the rest of SQLite, it is implemented in C++ as this is
 // the native language of the OS and all interfaces we need to use are C++.
 //
-// Most of the code is just a stub for the moment
-// TODO(marcogelmi): implement the missing functions
-//
+// This file follows the Gears code style guidelines.
 
 #ifdef OS_SYMBIAN
 #include <coemain.h>
@@ -40,65 +37,57 @@
 
 extern "C" {
 #include "sqliteInt.h"
-// Include code that is common to all os_*.c files
 #include "os_common.h"
 }
 
-// The SymbianFile structure is a subclass of OsFile specific for the
-// Symbian portability layer.
-struct SymbianFile {
-  IoMethod const *methods;  // Always the first entry
-  RFile file;               // The file descriptor
-  unsigned char locktype;   // The type of lock held on this fd
-  TInt16 shared_lock_byte;  // Randomly chosen byte used as a shared lock
-  int delete_on_close;
-};
+const TInt kFileLockAttempts = 3;
 
+// The global file system session.
+RFs g_fs_session;
 
-static TInt UTF8ToUTF16(const char *in, TDes* out16) {
+static TInt UTF8ToUTF16(const char *in, TDes *out16) {
   assert(in);
   TPtrC8 in_des(reinterpret_cast<const unsigned char*>(in));
   return CnvUtfConverter::ConvertToUnicodeFromUtf8(*out16, in_des);
 }
 
-static TInt UTF16ToUTF8(TDesC16& in16, TDes8* out8) {
+static TInt UTF16ToUTF8(const TDesC16& in16, TDes8 *out8) {
   return CnvUtfConverter::ConvertFromUnicodeToUtf8(*out8, in16);
 }
 
-static int SymbianClose(OsFile **id) {
-  assert(id);
-  assert(*id);
+// The SymbianFile structure is a subclass of sqlite3_file* specific to the
+// Symbian portability layer.
+struct SymbianFile {
+  const sqlite3_io_methods *methods;
+  RFile handle;              // The file handle
+  TUint8 lock_type;          // Type of lock currently held on this file
+  TUint16 shared_lock_byte;  // Randomly chosen byte used as a shared lock
+};
 
-  TFileName file_name;
-  SymbianFile *file_id = reinterpret_cast<SymbianFile*>(*id);
-  if (file_id->delete_on_close &&
-      file_id->file.FullName(file_name) != KErrNone) {
-    return SQLITE_ERROR;
-  }
-  file_id->file.Close();
-  if (file_id->delete_on_close &&
-      CCoeEnv::Static()->FsSession().Delete(file_name) != KErrNone) {
-    return SQLITE_ERROR;
-  }
+static SymbianFile* ConvertToSymbianFile(sqlite3_file* const id) {
+  assert(id);
+  return reinterpret_cast<SymbianFile*>(id);
+}
+
+static int SymbianClose(sqlite3_file *id) {
+  SymbianFile *file_id = ConvertToSymbianFile(id);
+  file_id->handle.Close();
   OpenCounter(-1);
-  sqliteFree(file_id);
   return SQLITE_OK;
 }
 
-static int SymbianOpenDirectory(OsFile *id, const char *dir_name) {
-  // noop on Symbian
-  return SQLITE_OK;
-}
-
-static int SymbianRead(OsFile *id, void *buffer, int amount) {
-  assert(id);
+static int SymbianRead(sqlite3_file *id,
+                       void *buffer,
+                       int amount,
+                       sqlite3_int64 offset) {
   assert(buffer);
   assert(amount >=0);
+  assert(offset >=0);
 
-  SymbianFile* file_id = reinterpret_cast<SymbianFile*>(id);
+  SymbianFile* file_id = ConvertToSymbianFile(id);
   TPtr8 dest(static_cast<unsigned char*>(buffer), amount);
 
-  if (KErrNone == file_id->file.Read(dest, amount)) {
+  if (KErrNone == file_id->handle.Read(offset, dest, amount)) {
     if (dest.Length() == amount) {
       return SQLITE_OK;
     } else {
@@ -109,320 +98,411 @@ static int SymbianRead(OsFile *id, void *buffer, int amount) {
   }
 }
 
-static int SymbianWrite(OsFile *id, const void *buffer, int amount) {
-  assert(id);
+static int SymbianWrite(sqlite3_file *id,
+                        const void *buffer,
+                        int amount,
+                        sqlite3_int64 offset) {
   assert(buffer);
   assert(amount >=0);
-
-  SymbianFile *file_id = reinterpret_cast<SymbianFile*>(id);
-  TPtrC8 src(static_cast<const unsigned char*>(buffer), amount);
-  if (file_id->file.Write(src) != KErrNone) return SQLITE_IOERR_WRITE;
-  
-  return SQLITE_OK;
-}
-
-static int SymbianSeek(OsFile *id, i64 offset) {
-  assert(id);
   assert(offset >=0);
 
-  SymbianFile* file_id = reinterpret_cast<SymbianFile*>(id);
-  TInt pos = static_cast<TInt>(offset);
-  if (file_id->file.Seek(ESeekStart, pos) != KErrNone) return SQLITE_IOERR;
+  SymbianFile *file_id = ConvertToSymbianFile(id);
+  TPtrC8 src(static_cast<const unsigned char*>(buffer), amount);
+  if (file_id->handle.Write(offset, src) != KErrNone) {
+    return SQLITE_IOERR_WRITE;
+  }
 
   return SQLITE_OK;
 }
 
-static int SymbianTruncate(OsFile *id, i64 bytes) {
-  assert(id);
+static int SymbianTruncate(sqlite3_file *id, sqlite3_int64 bytes) {
   assert(bytes >=0);
 
-  SymbianFile* file_id = reinterpret_cast<SymbianFile*>(id);
-  TInt length =  static_cast<TInt>(bytes);
-  if (file_id->file.SetSize(length) != KErrNone) return SQLITE_ERROR;
-
+  SymbianFile *file_id = ConvertToSymbianFile(id);
+  if (file_id->handle.SetSize(bytes) != KErrNone) {
+    return SQLITE_IOERR;
+  }
   return SQLITE_OK;
 }
 
-static int SymbianSync(OsFile *id, int /*flags*/) {
-  assert(id);
-  TInt err = KErrGeneral;
-  SymbianFile *file_id = reinterpret_cast<SymbianFile*>(id);
-  if (file_id->file.Flush() != KErrNone) return SQLITE_ERROR;
-
-  return SQLITE_OK;
-}
-
-static void SymbianSetFullSync(OsFile* /*id*/, int /*v*/) {
-  // noop on Symbian
-  return;
-}
-
-static int SymbianFileHandle(OsFile* /*id*/) {
-  return 0;
-}
-
-static int SymbianFileSize(OsFile *id, i64 *size_out) {
-  assert(id);
-  assert(size_out);
-
-  TInt size;
-  SymbianFile *file_id = reinterpret_cast<SymbianFile*>(id);
-  if (file_id->file.Size(size) != KErrNone) return SQLITE_ERROR;
-
-  *size_out = static_cast<i64>(size);
-  return SQLITE_OK;
-}
-
-// TODO(marcogelmi): implement using RFile::Lock()
-static int SymbianLock(OsFile *id, int locktype) {
-  return SQLITE_OK;
-}
-
-// TODO(marcogelmi): implement (see above)
-static int SymbianUnlock(OsFile *id, int locktype) {
-  return SQLITE_OK;
-}
-
-// TODO(marcogelmi): implement
-static int SymbianLockState(OsFile *id) {
-  assert(id);
-  return (reinterpret_cast<SymbianFile*>(id))->locktype;
-}
-
-// TODO(marcogelmi): implement
-static int SymbianCheckReservedLock(OsFile *id) {
-  return 0;
-}
-
-static int SymbianVectorSize(OsFile *id) {
-  return SQLITE_DEFAULT_SECTOR_SIZE;
-}
-
-// This vector defines all the methods that can operate on an
-// OsFile for Symbian.
-static const IoMethod SymbianIoMethod = {
-  SymbianClose,
-  SymbianOpenDirectory,
-  SymbianRead,
-  SymbianWrite,
-  SymbianSeek,
-  SymbianTruncate,
-  SymbianSync,
-  SymbianSetFullSync,
-  SymbianFileHandle,
-  SymbianFileSize,
-  SymbianLock,
-  SymbianUnlock,
-  SymbianLockState,
-  SymbianCheckReservedLock,
-  SymbianVectorSize,
-};
-
-static int AllocateSymbianFile(SymbianFile *file_in,
-                               OsFile **id,
-                               int del_flag) {
-  assert(file_in);
-  assert(id);
-
-  SymbianFile *tmp_file;
-  tmp_file = static_cast<SymbianFile*>(sqliteMalloc(sizeof(*tmp_file)));
-  if ( NULL == tmp_file ) {
-    file_in->file.Close();
-    *id = NULL;
-    return SQLITE_NOMEM;
+static int SymbianSync(sqlite3_file *id, int /*flags*/) {
+  SymbianFile *file_id = ConvertToSymbianFile(id);
+  if (file_id->handle.Flush() != KErrNone) {
+    return SQLITE_IOERR;
   } else {
-    *tmp_file = *file_in;
-    tmp_file->methods = &SymbianIoMethod;
-    tmp_file->locktype = NO_LOCK;
-    tmp_file->shared_lock_byte = 0;
-    tmp_file->delete_on_close = del_flag;
-    *id = reinterpret_cast<OsFile*>(tmp_file);
-    OpenCounter(+1);
     return SQLITE_OK;
   }
 }
 
-int sqlite3SymbianOpenReadOnly(const char *file_name, OsFile **id) {
-  assert(file_name);
-  assert(id);
+static int SymbianFileSize(sqlite3_file *id, sqlite3_int64 *size) {
+  assert(size);
 
-  SymbianFile sfile;
-  TFileName file_name_utf16;
-
-  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone) 
-    return SQLITE_CANTOPEN;
-
-  if (sfile.file.Open(CCoeEnv::Static()->FsSession(), 
-                      file_name_utf16, 
-                      EFileRead) !=  KErrNone)
-    return SQLITE_CANTOPEN;
-
-  return AllocateSymbianFile(&sfile, id, 0);
+  SymbianFile *file_id = ConvertToSymbianFile(id);
+  TInt size_tmp;
+  if (file_id->handle.Size(size_tmp) != KErrNone) {
+    return SQLITE_IOERR;
+  }
+  *size = size_tmp;
+  return SQLITE_OK;
 }
 
-int sqlite3SymbianOpenReadWrite(const char *file_name,
-                                OsFile **id,
-                                int *read_only) {
-  assert(file_name);
-  assert(id);
-  assert(read_only);
-
-  TInt err = KErrGeneral;
-  SymbianFile sfile;
-  TFileName file_name_utf16;
-
-  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone)
-    return SQLITE_CANTOPEN;
-
-  err = sfile.file.Create(CCoeEnv::Static()->FsSession(), 
-                          file_name_utf16, 
-                          EFileWrite);
-
-  if (KErrAlreadyExists == err) {
-    err = sfile.file.Open(CCoeEnv::Static()->FsSession(), 
-                          file_name_utf16, 
-                          EFileWrite);
-  }
-
-  if (KErrNone == err) {
-    *read_only = 0;
-    return AllocateSymbianFile(&sfile, id, 0);
-  }
-  
-  return SQLITE_CANTOPEN;
+// File lock/unlock functions; see os_win.c for a description
+// of the algorithm used.
+static int GetReadLock(SymbianFile *file) {
+  file->shared_lock_byte = Math::Random() % (SHARED_SIZE - 1);
+  return file->handle.Lock(SHARED_FIRST + file->shared_lock_byte, 1);
 }
 
-int sqlite3SymbianOpenExclusive(const char *file_name,
-                                OsFile **id,
-                                int del_flag) {
-  assert(file_name);
-  assert(id);
-
-  SymbianFile sfile;
-  TFileName file_name_utf16;
-
-  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone)
-    return SQLITE_CANTOPEN;
-
-  if (sfile.file.Create(CCoeEnv::Static()->FsSession(),
-                        file_name_utf16,
-                        EFileWrite | EFileShareExclusive) ==  KErrNone) {
-    return AllocateSymbianFile(&sfile, id, del_flag);
-  }
-
-  return SQLITE_CANTOPEN;
+static int UnlockReadLock(SymbianFile *file) {
+  return file->handle.UnLock(SHARED_FIRST + file->shared_lock_byte, 1);
 }
 
-int sqlite3SymbianDelete(const char *file_name) {
+static int SymbianLock(sqlite3_file *id, int lock_type) {
+  SymbianFile *file = ConvertToSymbianFile(id);
+  if (file->lock_type >= lock_type) {
+    return SQLITE_OK;
+  }
+
+  // Make sure the locking sequence is correct
+  assert(file->lock_type != NO_LOCK || lock_type == SHARED_LOCK);
+  assert(lock_type != PENDING_LOCK);
+  assert(lock_type != RESERVED_LOCK || file->lock_type == SHARED_LOCK);
+
+  // Lock the PENDING_LOCK byte if we need to acquire a PENDING lock or
+  // a SHARED lock.  If we are acquiring a SHARED lock, the acquisition of
+  // the PENDING_LOCK byte is temporary.
+  int new_lock_type = file->lock_type;
+  int got_pending_lock = 0;
+  int res = KErrNone;
+  if (file->lock_type == NO_LOCK ||
+         (lock_type == EXCLUSIVE_LOCK && file->lock_type == RESERVED_LOCK)) {
+    int count = kFileLockAttempts;
+    while (count-- > 0 &&
+        (res = file->handle.Lock(PENDING_BYTE, 1)) != KErrNone ) {
+      // Try 3 times to get the pending lock.  The pending lock might be
+      // held by another reader process who will release it momentarily.
+      OSTRACE2("could not get a PENDING lock. cnt=%d\n", cnt);
+      User::After(1000);
+    }
+    got_pending_lock = (res == KErrNone? 1 : 0);
+  }
+
+  // Acquire a shared lock
+  if (lock_type == SHARED_LOCK && res == KErrNone) {
+    assert(file->lock_type == NO_LOCK);
+    res = GetReadLock(file);
+    if (res == KErrNone) {
+      new_lock_type = SHARED_LOCK;
+    }
+  }
+
+  // Acquire a RESERVED lock
+  if (lock_type == RESERVED_LOCK && res == KErrNone) {
+    assert(file->lock_type == SHARED_LOCK);
+    res = file->handle.Lock(RESERVED_BYTE, 1);
+    if (res == KErrNone) {
+      new_lock_type = RESERVED_LOCK;
+    }
+  }
+
+  // Acquire a PENDING lock
+  if (lock_type == EXCLUSIVE_LOCK && res == KErrNone) {
+    new_lock_type = PENDING_LOCK;
+    got_pending_lock = 0;
+  }
+
+  // Acquire an EXCLUSIVE lock
+  if (lock_type == EXCLUSIVE_LOCK && res == KErrNone) {
+    assert(file->lock_type >= SHARED_LOCK);
+    res = UnlockReadLock(file);
+    OSTRACE2("unreadlock = %d\n", res);
+    res = file->handle.Lock(SHARED_FIRST, SHARED_SIZE);
+    if (res == KErrNone) {
+      new_lock_type = EXCLUSIVE_LOCK;
+    } else {
+      OSTRACE2("error-code = %d\n", GetLastError());
+      GetReadLock(file);
+    }
+  }
+
+  // If we are holding a PENDING lock that ought to be released, then
+  // release it now.
+  if (got_pending_lock && lock_type == SHARED_LOCK) {
+    file->handle.UnLock(PENDING_BYTE, 1);
+  }
+
+  // Update the state of the lock held in the file descriptor, then
+  // return the appropriate result code.
+  file->lock_type = new_lock_type;
+  if (res == KErrNone) {
+    return SQLITE_OK;
+  } else {
+    OSTRACE4("LOCK FAILED %d trying for %d but got %d\n", file->handle,
+           lock_type, new_lock_type);
+    return SQLITE_BUSY;
+  }
+}
+
+static int SymbianUnlock(sqlite3_file *id, int lock_type) {
+  int type;
+  int rc = SQLITE_OK;
+  SymbianFile *file = ConvertToSymbianFile(id);
+  assert(lock_type <= SHARED_LOCK);
+  OSTRACE5("UNLOCK %d to %d was %d(%d)\n", file->handle, lock_type,
+          file->lock_type, file->shared_lock_byte);
+  type = file->lock_type;
+  if (type >= EXCLUSIVE_LOCK) {
+    file->handle.UnLock(SHARED_FIRST, SHARED_SIZE);
+    if (lock_type == SHARED_LOCK && GetReadLock(file) != KErrNone) {
+      // This should never happen.  We should always be able to
+      // reacquire the read lock
+      rc = SQLITE_IOERR_UNLOCK;
+    }
+  }
+  if (type >= RESERVED_LOCK) {
+    file->handle.UnLock(RESERVED_BYTE, 1);
+  }
+  if (lock_type == NO_LOCK && type >= SHARED_LOCK) {
+    UnlockReadLock(file);
+  }
+  if (type >= PENDING_LOCK) {
+    file->handle.UnLock(PENDING_BYTE, 1);
+  }
+  file->lock_type = lock_type;
+  return rc;
+}
+
+static int SymbianCheckReservedLock(sqlite3_file *id, int *result) {
+  int rc;
+  SymbianFile *file = ConvertToSymbianFile(id);
+  if (file->lock_type >= RESERVED_LOCK) {
+    rc = 1;
+    OSTRACE3("TEST WR-LOCK %d %d (local)\n", pFile->h, rc);
+  } else {
+    rc = file->handle.Lock(RESERVED_BYTE, 1);
+    if (rc == KErrNone) {
+      file->handle.UnLock(RESERVED_BYTE, 1);
+    }
+    rc = !rc;
+    OSTRACE3("TEST WR-LOCK %d %d (remote)\n", file->handle, rc);
+  }
+  *result = rc;
+  return SQLITE_OK;
+}
+
+static int SymbianFileControl(sqlite3_file */*id*/,
+                              int /*op*/,
+                              void */*arg*/) {
+  return SQLITE_OK;
+}
+
+static int SymbianSectorSize(sqlite3_file */*id*/) {
+  return SQLITE_DEFAULT_SECTOR_SIZE;
+}
+
+static int SymbianDeviceCharacteristics(sqlite3_file */*id*/) {
+  return 0;
+}
+
+/*
+** This vector defines all the methods that can operate on a
+** sqlite3_file for Symbian.
+*/
+static const sqlite3_io_methods SymbianIoMethod = {
+  1,    // iVersion
+  SymbianClose,
+  SymbianRead,
+  SymbianWrite,
+  SymbianTruncate,
+  SymbianSync,
+  SymbianFileSize,
+  SymbianLock,
+  SymbianUnlock,
+  SymbianCheckReservedLock,
+  SymbianFileControl,
+  SymbianSectorSize,
+  SymbianDeviceCharacteristics
+};
+
+// ============================================================================
+// vfs methods begin here
+// ============================================================================
+static int SymbianOpen(sqlite3_vfs */*vfs*/,
+                       const char *name,
+                       sqlite3_file *id,
+                       int flags,
+                       int *out_flags) {
+  TUint desired_access;
+  TUint share_mode;
+  TInt err = KErrNone;
+  TFileName name_utf16;
+  SymbianFile *file = ConvertToSymbianFile(id);
+
+  if (out_flags) {
+    *out_flags = flags;
+  }
+
+  // if the name is NULL we have to open a temporary file.
+  if (!name) {
+    TPath private_path;
+    TFileName file_name;
+    if (g_fs_session.PrivatePath(private_path) != KErrNone) {
+      return SQLITE_CANTOPEN;
+    }
+    if (file->handle.Temp(g_fs_session,
+                          private_path,
+                          file_name,
+                          EFileWrite) !=
+        KErrNone) {
+      return SQLITE_CANTOPEN;
+    }
+    file->methods = &SymbianIoMethod;
+    file->lock_type = NO_LOCK;
+    file->shared_lock_byte = 0;
+    OpenCounter(+1);
+    return SQLITE_OK;
+  }
+
+  if (UTF8ToUTF16(name, &name_utf16) != KErrNone)
+    return SQLITE_CANTOPEN;
+
+  if (flags & SQLITE_OPEN_READWRITE) {
+    desired_access = EFileWrite;
+  } else {
+    desired_access = EFileRead;
+  }
+  if (flags & SQLITE_OPEN_MAIN_DB) {
+    share_mode = EFileShareReadersOrWriters;
+  } else {
+    share_mode = 0;
+  }
+
+  if (flags & SQLITE_OPEN_CREATE) {
+    err = file->handle.Create(g_fs_session,
+                              name_utf16,
+                              desired_access | share_mode);
+    if (err != KErrNone && err != KErrAlreadyExists) {
+      return SQLITE_CANTOPEN;
+    }
+  }
+
+  if (err != KErrNone) {
+    err = file->handle.Open(g_fs_session,
+                            name_utf16,
+                            desired_access | share_mode);
+    if (err != KErrNone && flags & SQLITE_OPEN_READWRITE) {
+      if (out_flags) {
+        *out_flags = (flags | SQLITE_OPEN_READONLY) & ~SQLITE_OPEN_READWRITE;
+      }
+      desired_access = EFileRead;
+      err = file->handle.Open(g_fs_session,
+                              name_utf16,
+                              desired_access | share_mode);
+    }
+    if (err != KErrNone) {
+      return SQLITE_CANTOPEN;
+    }
+  }
+  file->methods = &SymbianIoMethod;
+  file->lock_type = NO_LOCK;
+  file->shared_lock_byte = 0;
+  OpenCounter(+1);
+  return SQLITE_OK;
+}
+
+static int SymbianDelete(sqlite3_vfs */*vfs*/,
+                         const char *file_name,
+                         int /*sync_dir*/) {
   assert(file_name);
   TFileName file_name_utf16;
 
-  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone)
+  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone) {
     return SQLITE_ERROR;
+  }
 
-  return KErrNone == CCoeEnv::Static()->FsSession().Delete(file_name_utf16) ?
-         SQLITE_OK : SQLITE_ERROR;
+  TInt result = g_fs_session.Delete(file_name_utf16);
+  return (result == KErrNone || result == KErrPathNotFound)?
+         SQLITE_OK : SQLITE_IOERR_DELETE;
 }
 
-int sqlite3SymbianFileExists(const char *file_name) {
+static int SymbianAccess(sqlite3_vfs */*vfs*/,
+                         const char *file_name,
+                         int flags,
+                         int *result) {
   assert(file_name);
-
   TEntry entry;
   TFileName file_name_utf16;
 
-  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone)
+  if (UTF8ToUTF16(file_name, &file_name_utf16) != KErrNone) {
     return SQLITE_ERROR;
+  }
 
-  if (KErrNone == CCoeEnv::Static()->FsSession().Entry(file_name_utf16, entry))
-    return !entry.IsDir();
+  if (g_fs_session.Entry(file_name_utf16, entry) != KErrNone) {
+    *result = 0;
+    return SQLITE_OK;
+  }
 
-  return SQLITE_ERROR;
+  switch (flags) {
+    case SQLITE_ACCESS_READ:
+    case SQLITE_ACCESS_EXISTS:
+      *result = !entry.IsDir();
+      break;
+    case SQLITE_ACCESS_READWRITE:
+      *result = !entry.IsDir() && !entry.IsReadOnly();
+      break;
+    default:
+      return SQLITE_ERROR;
+  }
+
+  return SQLITE_OK;
 }
 
-char *sqlite3SymbianFullPathname(const char *relative) {
+static int SymbianFullPathname(sqlite3_vfs */*vfs*/,
+                               const char *relative,
+                               int full_len,
+                               char *full) {
   assert(relative);
-  // TODO(marcogelmi): implement this properly using TParse
-  return sqliteStrDup(relative);
-}
+  assert(full);
 
-int sqlite3SymbianIsDirWritable(char *dir_name) {
-  assert(dir_name);
-  assert(strlen(dir_name) < KMaxPath);
+  TParse parse;
+  TPath relative_utf16;
+  TPath base_path;
+  TPtr8 full_utf8(reinterpret_cast<unsigned char*>(full), full_len);
 
-  TEntry entry;
-  TFileName dir_name_utf16;
-  
-  if (UTF8ToUTF16(dir_name, &dir_name_utf16) != KErrNone)
+  g_fs_session.PrivatePath(base_path);
+
+  if (UTF8ToUTF16(relative, &relative_utf16) != KErrNone) {
     return SQLITE_ERROR;
-
-  if (KErrNone == CCoeEnv::Static()->FsSession().Entry(dir_name_utf16, entry))
-    return entry.IsDir() && !entry.IsReadOnly();
-
-  return SQLITE_ERROR;
-}
-
-int sqlite3SymbianSyncDirectory(const char * /*dir_name*/) {
-  // noop on Symbian
-  return SQLITE_OK;
-}
-
-int sqlite3SymbianTempFileName(char *buffer) {
-  const char kChars[] =
-    "abcdefghijklmnopqrstuvwxyz"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "0123456789";
-  _LIT(kSqliteTempFilePrefix, "etilqs_");
-
-  assert(buffer);
-  TInt64 seed = User::TickCount();
-  TUint8 c;
-  TPtr8 buffer_des((unsigned char*) buffer, KMaxPath);
-  TFileName private_path;
-  TBuf8<KMaxPath> private_path_utf8;
-
-  if (CCoeEnv::Static()->FsSession().PrivatePath(private_path) != KErrNone)
-    return SQLITE_ERROR;
-
-  if (UTF16ToUTF8(private_path, &private_path_utf8) != KErrNone)
-    return SQLITE_ERROR;
-
-  buffer_des.Zero();
-  buffer_des.Append(CCoeEnv::Static()->FsSession().GetSystemDriveChar());
-  buffer_des.Append(KDriveDelimiter);
-  buffer_des.Append(private_path_utf8);
-  buffer_des.Append(kSqliteTempFilePrefix);
-
-  for (TInt i = 0; i < 20; i++) {
-    c = kChars[Math::Rand(seed) % (sizeof(kChars)-1)];
-    buffer_des.Append(c);
   }
-  buffer_des.PtrZ();
 
+  if (parse.Set(relative_utf16, &base_path, NULL) != KErrNone) {
+    return SQLITE_ERROR;
+  }
+
+  TDesC full_utf16(parse.FullName());
+  if (UTF16ToUTF8(relative_utf16, &full_utf8) != KErrNone) {
+    return SQLITE_ERROR;
+  }
+
+  full_utf8.PtrZ();
   return SQLITE_OK;
 }
 
-// Get information to seed the random number generator.  The seed
-// is written into the buffer[256].  The calling function must
-// supply a sufficiently large buffer.
-int sqlite3SymbianRandomSeed(char *buffer) {
+static int SymbianRandomness(sqlite3_vfs */*vfs*/, int buf_len, char *buffer) {
   assert(buffer);
-
   TInt64 seed = User::TickCount();
-  for (TInt i = 0; i < 256; i++) {
+  for (TInt i = 0; i < buf_len; i++) {
     buffer[i] = Math::Rand(seed) % 255;
   }
   return SQLITE_OK;
 }
 
-int sqlite3SymbianSleep(int ms) {
-  assert(ms >= 0);
-  User::After(TTimeIntervalMicroSeconds32(ms*1000));
+static int SymbianSleep(sqlite3_vfs */*vfs*/, int microsec) {
+  User::After(microsec);
   return SQLITE_OK;
 }
 
-// returns the Julian Date
-// = (number of seconds from 1-1-4713 BC) / (seconds per day)
-int sqlite3SymbianCurrentTime(double *now) {
+int SymbianCurrentTime(sqlite3_vfs */*vfs*/, double *now) {
   _LIT(kEpoch, "19700101:000000.000000");
   assert(now);
   TTime time;
@@ -436,41 +516,64 @@ int sqlite3SymbianCurrentTime(double *now) {
   // Julian date @ 1-1-1970 = 2440587.5
   // seconds per day = 86400.0
   *now = interval.Int()/86400.0 + 2440587.5;
+  return SQLITE_OK;
+}
+
+static int SymbianGetLastError(sqlite3_vfs */*vfs*/,
+                               int /*buf_len*/,
+                               char */*buf*/) {
+  assert(buf[0] == '\0');
   return 0;
 }
 
-// ========================================================
-// TODO(marcogelmi): implement the following functions
-// ========================================================
-static int g_in_mutex = 0;
-void sqlite3SymbianEnterMutex() {
-  g_in_mutex++;
-  return;
+// Interfaces for opening a shared library, finding entry points
+// within the shared library, and closing the shared library.
+// TODO(marcogelmi): implement.
+#define SymbianDlOpen  0
+#define SymbianDlError 0
+#define SymbianDlSym   0
+#define SymbianDlClose 0
+
+// Initialize and deinitialize the operating system interface.
+int sqlite3_os_init(void) {
+  static sqlite3_vfs symbian_vfs = {
+    1,                     // iVersion
+    sizeof(SymbianFile),   // szOsFile
+    KMaxPath,              // mxPathname
+    0,                     // pNext
+    "symbian",             // name
+    0,                     // pAppData
+
+    SymbianOpen,           // xOpen
+    SymbianDelete,         // xDelete
+    SymbianAccess,         // xAccess
+    SymbianFullPathname,   // xFullPathname
+    SymbianDlOpen,         // xDlOpen
+    SymbianDlError,        // xDlError
+    SymbianDlSym,          // xDlSym
+    SymbianDlClose,        // xDlClose
+    SymbianRandomness,     // xRandomness
+    SymbianSleep,          // xSleep
+    SymbianCurrentTime,    // xCurrentTime
+    SymbianGetLastError    // xGetLastError
+  };
+
+  if (g_fs_session.Connect() != KErrNone) {
+    return SQLITE_ERROR;
+  }
+
+  if (g_fs_session.ShareAuto() != KErrNone) {
+    g_fs_session.Close();
+    return SQLITE_ERROR;
+  }
+
+  sqlite3_vfs_register(&symbian_vfs, 1);
+  return SQLITE_OK;
 }
 
-void sqlite3SymbianLeaveMutex() {
-  g_in_mutex--;
-  return;
-}
-
-int sqlite3SymbianInMutex(int this_thread_only) {
-  return g_in_mutex;
-}
-
-ThreadData *sqlite3SymbianThreadSpecificData(int allocate_flag) {
-  return NULL;
-}
-
-void *sqlite3SymbianDlopen(const char *file_name) {
-  return NULL;
-}
-
-void *sqlite3SymbianDlsym(void *pHandle, const char *zSymbol) {
-  return NULL;
-}
-
-int sqlite3SymbianDlclose(void *pHandle) {
-  return 0;
+int sqlite3_os_end(void) {
+  g_fs_session.Close();
+  return SQLITE_OK;
 }
 
 #endif /* OS_SYMBIAN*/
