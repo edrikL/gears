@@ -355,6 +355,8 @@ ifeq ($(BROWSER),SF)
 # paths here.
 CPPFLAGS += -DBROWSER_NPAPI -DBROWSER_WEBKIT -DBROWSER_SAFARI
 else
+# TODO(nigeltao): Should we instead have a UNIX flag, rather than calling
+# Mac OS X a "flavor of Linux"??
 CPPFLAGS += -DLINUX
 endif
 

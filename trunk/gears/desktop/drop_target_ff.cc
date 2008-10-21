@@ -34,6 +34,7 @@
 #include <gecko_sdk/include/nsIDOMEvent.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_sdk/include/nsILocalFile.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
 #include "gears/base/common/leak_counter.h"
@@ -157,6 +158,7 @@ bool DropTarget::GetDroppedFiles(
     nsIDragSession *drag_session,
     JsArray *files_out,
     std::string16 *error_out) {
+#if defined(LINUX) && !defined(OS_MACOSX)
   // Note to future maintainers: the nsIIOService docs say that it may only be
   // used from the main thread. On the other hand, all we're using it for is
   // converting a string like "file:///blah" into a nsIFileURL, rather than
@@ -164,6 +166,23 @@ bool DropTarget::GetDroppedFiles(
   nsCOMPtr<nsIIOService> io_service =
       do_GetService("@mozilla.org/network/io-service;1");
   if (!io_service) { return false; }
+
+  // Although Firefox's underlying XPCOM widget library aims to present a
+  // consistent cross-platform interface, there are still significant
+  // differences in drag-and-drop. In particular, different OSes support
+  // different "data flavors". On Windows and on Mac, we can specify the
+  // kFileMime flavor to get a nsIFile object off the clipboard, but on
+  // Linux, that doesn't work, and we have to specify kURLMime instead to
+  // get the "file:///home/user/foo.txt" string to convert to a filename.
+  // For implementation details, look at Firefox's source code, particularly
+  // nsClipboard.cpp and nsDragService.cpp in widget/src/{gtk2,mac,windows}.
+  // On platforms, such as Windows, where both kURLMime and kFileMime are
+  // supported, then the latter is preferred because it allows us to follow
+  // links (e.g. .lnk files on Windows, and alias files on Mac).
+  const char *flavor = kURLMime;
+#else
+  const char *flavor = kFileMime;
+#endif
 
   PRUint32 num_drop_items;
   nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
@@ -173,19 +192,20 @@ bool DropTarget::GetDroppedFiles(
   for (int i = 0; i < static_cast<int>(num_drop_items); i++) {
     nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &nr);
-    if (NS_FAILED(nr)) {
-      return false;
-    }
-    transferable->AddDataFlavor("text/x-moz-url");
+    if (NS_FAILED(nr)) { return false; }
+    transferable->AddDataFlavor(flavor);
     drag_session->GetData(transferable, i);
 
     nsCOMPtr<nsISupports> data;
-    PRUint32 data_length;
-    nr = transferable->GetTransferData(
-        "text/x-moz-url", getter_AddRefs(data), &data_length);
-    if (NS_FAILED(nr)) {
-      return false;
-    }
+    PRUint32 data_len;
+    nr = transferable->GetTransferData(flavor, getter_AddRefs(data), &data_len);
+    if (NS_FAILED(nr)) { return false; }
+
+    // Here the code diverges depending on the platform. On Linux, we
+    // crack a nsIURI out of the transferable and convert the string
+    // to a file path. On Windows and Mac, we get a nsIFile out of the
+    // transferable and query it directly for its file path.
+#if defined(LINUX) && !defined(OS_MACOSX)
     nsCOMPtr<nsISupportsString> data_as_xpcom_string = do_QueryInterface(data);
     nsString data_as_string;
     data_as_xpcom_string->GetData(data_as_string);
@@ -205,7 +225,33 @@ bool DropTarget::GetDroppedFiles(
     nsString filename;
     nr = file->GetPath(filename);
     if (NS_FAILED(nr)) { return false; }
-    
+#else
+    nsCOMPtr<nsIFile> file(do_QueryInterface(data));
+    if (!file) { return false; }
+    nsString path;
+    nr = file->GetPath(path);
+    if (NS_FAILED(nr)) { return false; }
+
+    nsCOMPtr<nsILocalFile> local_file =
+        do_CreateInstance("@mozilla.org/file/local;1", &nr);
+    if (NS_FAILED(nr)) { return false; }
+    nr = local_file->SetFollowLinks(PR_TRUE);
+    if (NS_FAILED(nr)) { return false; }
+    nr = local_file->InitWithPath(path);
+    if (NS_FAILED(nr)) { return false; }
+
+    nsString filename;
+    PRBool bool_result;
+    if (NS_SUCCEEDED(file->IsSymlink(&bool_result)) && bool_result) {
+      nr = local_file->GetTarget(filename);
+    } else if (NS_SUCCEEDED(file->IsFile(&bool_result)) && bool_result) {
+      nr = local_file->GetPath(filename);
+    } else {
+      nr = NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(nr)) { return false; }
+#endif
+
     filenames.push_back(std::string16(filename.get()));
   }
 
