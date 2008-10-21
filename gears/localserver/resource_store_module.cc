@@ -434,10 +434,6 @@ void GearsResourceStore::Copy(JsCallContext *context) {
 // CaptureBlob
 //------------------------------------------------------------------------------
 void GearsResourceStore::CaptureBlob(JsCallContext *context) {
-#ifdef OS_WINCE
-  context->SetException(STRING16(L"captureBlob is not implemented."));
-#else
-
   ModuleImplBaseClass *other_module = NULL;
   std::string16 url;
   JsArgument argv[] = {
@@ -469,7 +465,6 @@ void GearsResourceStore::CaptureBlob(JsCallContext *context) {
     context->SetException(STRING16(L"The blob could not be captured."));
     return;
   }
-#endif
 }
 
 //------------------------------------------------------------------------------
