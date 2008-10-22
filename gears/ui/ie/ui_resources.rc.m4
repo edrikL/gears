@@ -60,6 +60,8 @@ local_data.png.end           HTML  {"\0END\0"}
 location_data.png            HTML  "ui/common/location_data.png"
 location_data.png.end        HTML  {"\0END\0"}
 
+alert_dialog.html            HTML "genfiles/alert_dialog.html"
+alert_dialog.html.end        HTML {"\0END\0"}
 permissions_dialog.html      HTML "genfiles/permissions_dialog.html"
 permissions_dialog.html.end  HTML {"\0END\0"}
 settings_dialog.html         HTML "genfiles/settings_dialog.html"

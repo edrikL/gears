@@ -102,6 +102,8 @@ function loadI18nStrings(locale) {
       }
     }
   }
+
+  return strings;
 }
 """
 

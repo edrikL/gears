@@ -335,6 +335,30 @@ void HtmlDialogHost::UpdateCaption() {
   SetWindowText(caption);
 }
 
+static bool GetCenterOnBounds(HWND hwnd, CRect *bounds) {
+  // Typically we center on the parent window.
+  if (hwnd && ::GetWindowRect(hwnd, bounds)) {
+    return true;
+  }
+  // In some cases there is no parent, so we center on the foreground window
+  // provided its from our process.
+  hwnd = ::GetForegroundWindow();
+  if (hwnd) {
+    DWORD process_id;
+    ::GetWindowThreadProcessId(hwnd, &process_id);
+    if (process_id == ::GetCurrentProcessId()) {
+      if (hwnd && ::GetWindowRect(hwnd, bounds)) {
+        return true;
+      }
+    }
+  }
+  // If all else fails, the desktop window will do.
+  hwnd = ::GetDesktopWindow();
+  if (hwnd && ::GetWindowRect(hwnd, bounds)) {
+    return true;
+  }
+  return false;
+}
 
 void HtmlDialogHost::SetDialogPosition() {
   // Only set the position once.
@@ -343,20 +367,19 @@ void HtmlDialogHost::SetDialogPosition() {
 
   KillTimer(kNavigationErrorTimer);
 
-  // Get the parent information
-  bool has_parent(false);
-  HWND parent = GetParent();
-  CRect parent_bounds;
-  CPoint parent_center(0, 0);
+  // Get the bounds of the window we will center over.
+  CRect center_bounds;
+  bool has_center = GetCenterOnBounds(GetParent(), &center_bounds);
+
+  CPoint center(0, 0);
   CPoint window_location(0, 0);
-  if (parent != NULL && ::GetWindowRect(parent, &parent_bounds)) {
-    has_parent = true;
+  if (has_center) {
     // Figure out the center of the parent
-    parent_center.x = parent_bounds.left + parent_bounds.Width() / 2;
-    parent_center.y = parent_bounds.top + parent_bounds.Height() / 2;
+    center.x = center_bounds.left + center_bounds.Width() / 2;
+    center.y = center_bounds.top + center_bounds.Height() / 2;
     // Put in an initial dialog location estimate
-    window_location.x = parent_center.x - desired_size_.cx / 2;
-    window_location.y = parent_center.y - desired_size_.cy / 2;
+    window_location.x = center.x - desired_size_.cx / 2;
+    window_location.y = center.y - desired_size_.cy / 2;
   }
 
   // Move the window to the initial location - shouldn't even flicker, but
@@ -369,9 +392,9 @@ void HtmlDialogHost::SetDialogPosition() {
                     2 * desired_size_.cy - client_rect.Height());
 
   // Figure out the final location
-  if (has_parent) {
-    window_location.x = parent_center.x - window_size.cx / 2;
-    window_location.y = parent_center.y - window_size.cy / 2;
+  if (has_center) {
+    window_location.x = center.x - window_size.cx / 2;
+    window_location.y = center.y - window_size.cy / 2;
   }
 
   // Move the windows to their final locations

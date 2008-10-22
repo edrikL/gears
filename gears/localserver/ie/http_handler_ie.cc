@@ -32,6 +32,8 @@
 #include <vector>
 
 #include "gears/localserver/ie/http_handler_ie.h"
+
+#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #ifdef OS_WINCE
@@ -39,8 +41,10 @@
 #endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/ie_version.h"
+#include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/ie/urlmon_utils.h"
+#include "gears/ui/common/alert_dialog.h"
 
 #ifdef OS_WINCE
 // On WinCE, when a request is made for a network resource, the device first
@@ -85,6 +89,7 @@ static CComPtr<IClassFactory> factory_http;
 static CComPtr<IClassFactory> factory_https;
 static CComQIPtr<IInternetProtocolInfo> factory_protocol_info;
 static bool bypass_cache = false;
+static int started_count = 0;
 
 // {B320A625-02E1-4cc8-A864-04E825297A20}
 const GUID HttpHandler::SID_QueryBypassCache =
@@ -208,6 +213,10 @@ static HRESULT UnregisterNoLock() {
   return S_OK;
 }
 
+// static
+int HttpHandler::GetStartedCount() {
+  return AtomicIncrement(&started_count, 0);
+}
 
 // static
 void HttpHandler::SetBypassCache() {
@@ -827,6 +836,8 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     return E_INVALIDARG;
   }
 
+  AtomicIncrement(&started_count, 1);
+
   g_active_handlers.Add(this);
 
   protocol_sink_ = protocol_sink;
@@ -1415,4 +1426,93 @@ STDMETHODIMP HttpHandlerFactory::QueryInfo(LPCWSTR pwzUrl,
 
   return ReturnBoolean(result, pBuffer, cbBuffer, pcbBuf);
 }
+
+
+#ifdef OS_WINCE
+// These are a noop on windows mobile
+void HttpHandlerCheck::StartCheck(const char16 *url) {
+}
+void HttpHandlerCheck::FinishCheck() {
+}
+#else
+
+class WarningTask : public AsyncTask {
+ public:
+  static bool HasWarned() {
+    return has_warned_;
+  }
+
+  static void WarnIfNeeded() {
+    MutexLock lock(&has_warned_mutex_);
+    if (!has_warned_) {
+      has_warned_ = true;
+      WarningTask *task = new WarningTask();
+      task->StartIt();
+      task->DeleteWhenDone();
+    }
+  }
+
+ private:
+  WarningTask() : AsyncTask(NULL) {
+  }
+
+  void StartIt() {
+    Init();
+    Start();
+  }
+
+  virtual void Run() {
+    AlertDialog::ShowModal(kAlertIncompatibilityDetected);
+  }
+
+  static bool has_warned_;
+  static Mutex has_warned_mutex_;
+};
+
+bool WarningTask::has_warned_ = false;
+Mutex WarningTask::has_warned_mutex_;
+
+void HttpHandlerCheck::StartCheck(const char16 *url) {
+  assert(url);
+  assert(!is_checking_);
+  is_checking_ = true;
+  origin_.InitFromUrl(url);
+  handler_started_count_ = HttpHandler::GetStartedCount();
+}
+
+void HttpHandlerCheck::FinishCheck() {
+  assert(is_checking_);
+  is_checking_ = false;
+
+  if (WarningTask::HasWarned()) {
+    return;  // Only warn one time
+  }
+  if (!origin_.initialized()) {
+    return;  // Not a supported url scheme
+  }
+  if (handler_started_count_ != HttpHandler::GetStartedCount()) {
+    return;  // We intercepted something
+  }
+  if (origin_.scheme() != HttpConstants::kHttpScheme &&
+      origin_.scheme() != HttpConstants::kHttpsScheme) {
+    return;  // We only expect to intercept http and https
+  }
+
+  WebCacheDB *db = WebCacheDB::GetDB();
+  if (!db) {
+    return;  // An indication of a corrupt database
+    // TODO(michaeln): also warn for this type of error?
+  }
+
+  // We defer warning until requests into origins that are
+  // represented in the localserver are observed.
+  std::vector<WebCacheDB::ServerInfo> servers;
+  db->FindServersForOrigin(origin_, &servers);
+  if (servers.empty()) {
+    return;  // No resources captured for this origin
+  }
+
+  WarningTask::WarnIfNeeded();
+}
+#endif  // OS_WINCE
 
