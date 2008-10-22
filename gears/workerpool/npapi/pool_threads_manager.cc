@@ -31,11 +31,18 @@
 
 #include "gears/workerpool/npapi/pool_threads_manager.h"
 
+#ifdef OS_ANDROID
+#include "gears/base/android/webview_manager.h"
+#endif
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/event.h"
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/mutex.h"
+#ifdef WIN32
+#include "gears/base/common/scoped_win32_handles.h"
+#endif
 #include "gears/base/common/url_utils.h"
+#include "gears/base/npapi/browser_utils.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
 #include "gears/factory/factory_impl.h"
@@ -43,13 +50,6 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 #include "gears/workerpool/workerpool.h"
-
-#ifdef WIN32
-#include "gears/base/common/scoped_win32_handles.h"
-#endif
-#ifdef OS_ANDROID
-#include "gears/base/android/java_jni.h"
-#endif
 
 #ifdef OS_MACOSX
 const CFTimeInterval kRunLoopWakeupTimeout = 0.2; // 0.2 seconds.
@@ -199,6 +199,13 @@ PoolThreadsManager::PoolThreadsManager(
 
   owner_permissions_manager_.ImportPermissions(
       *owner->GetPermissionsManager());
+
+#ifdef OS_ANDROID
+  jobject webview;
+  bool result = WebViewManager::GetWebView(&webview);
+  assert(result);
+  webview_.Reset(webview);
+#endif
 }
 
 
@@ -630,6 +637,12 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
       if (SetupJsRunner(js_runner.get(), wi)) {
         // Add JS code to engine.  Any script errors trigger HandleError().
         wi->js_runner->Start(wi->script_text);
+#ifdef OS_ANDROID
+        // the JsRunner has been setup, so we have the appropriate NPP
+        // instance. We can register it with the parent's webview.
+        WebViewManager::RegisterWebView(wi->js_runner->GetContext(),
+                                        wi->threads_manager->webview_.Get());
+#endif
       }
     }
 
@@ -667,6 +680,10 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // belong to.
   wi->onmessage_handler.reset(NULL);
   wi->onerror_handler.reset(NULL);
+
+#ifdef OS_ANDROID
+  WebViewManager::UnregisterWebView(wi->js_runner->GetContext());
+#endif
 
   // Reset on creation thread for consistency with Firefox implementation.
   wi->factory_ref.reset(NULL);
