@@ -2325,6 +2325,19 @@ $(BROWSER)_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# installer/common
+
+ifeq ($(OS),wince)
+$(BROWSER)_VPATH	+= \
+		installer/common \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		download_task.cc \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # installer/iemobile
 
 ifeq ($(OS),wince)
