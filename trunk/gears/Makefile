@@ -1046,6 +1046,7 @@ IE_CPPSRCS	+= \
 		$(NULL)
 ifeq ($(OS),win32)
 IE_CPPSRCS	+= \
+		browser_listener.cc \
 		file_win32.cc \
 		html_event_monitor_ie.cc \
 		ie_version.cc \
@@ -1808,6 +1809,7 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_HTML_M4SRCS += \
+		alert_dialog.html_m4 \
 		permissions_dialog.html_m4 \
 		settings_dialog.html_m4 \
 		shortcuts_dialog.html_m4 \
@@ -1860,6 +1862,7 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
+		alert_dialog.cc \
 		html_dialog.cc \
 		i18n_strings.cc \
 		permissions_dialog.cc \
@@ -1868,6 +1871,7 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 $(BROWSER)_STABSRCS += \
+		alert_dialog.js.stab \
 		permissions_dialog.js.stab \
 		settings_dialog.js.stab \
 		shortcuts_dialog.js.stab \

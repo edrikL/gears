@@ -39,7 +39,6 @@
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"
-#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/progress_input_stream.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
@@ -287,6 +286,9 @@ bool IEHttpRequest::Send(BlobInterface *blob) {
   if (FAILED(hr)) {
     return false;
   }
+
+  handler_check_.StartCheck(url_.c_str());
+
   CComPtr<IStream> stream;
   hr = url_moniker_->BindToStorage(bind_ctx_, 0,
                                    __uuidof(IStream),
@@ -737,6 +739,9 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
                                        LPCWSTR request_headers,
                                        LPWSTR *additional_request_headers) {
   LOG16((L"IEHttpRequest::OnResponse (%d)\n", status_code));
+
+  handler_check_.FinishCheck();
+
   // Be careful not to overwrite a redirect response synthesized in OnRedirect
   if (has_synthesized_response_payload_) {
     return E_ABORT;

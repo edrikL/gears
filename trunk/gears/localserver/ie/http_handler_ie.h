@@ -50,6 +50,7 @@
 #ifndef GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
 #define GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
 
+#include "gears/base/common/security_model.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "third_party/passthru_app/ProtocolCF.h"
@@ -104,6 +105,10 @@ class HttpHandler
   // Registers and unregisters our handler in the http/https namespace.
   static HRESULT Register();
   static HRESULT Unregister();
+
+  // Returns the number of times the Start or StartEx method has been called
+  // since system startup.
+  static int GetStartedCount();
 
   // HttpHandler supports a mechanism to bypass the cache on a
   // per request basis which is used when capturing resources during
@@ -376,6 +381,22 @@ class HttpHandlerFactory
       DWORD cbBuffer,
       DWORD *pcbBuf,
       DWORD reserved);
+};
+
+//------------------------------------------------------------------------------
+// HttpHandlerCheck
+//  Class used to detect when our HttpHandler is not being called by the,
+//  system and to inform the user if not.
+//------------------------------------------------------------------------------
+class HttpHandlerCheck {
+ public:
+  HttpHandlerCheck() : is_checking_(false), handler_started_count_(0) {}
+  void StartCheck(const char16 *url);
+  void FinishCheck();
+ private:
+  bool is_checking_;
+  int handler_started_count_;
+  SecurityOrigin origin_;
 };
 
 #endif  // GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__

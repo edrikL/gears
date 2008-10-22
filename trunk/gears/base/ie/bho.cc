@@ -22,26 +22,59 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+//------------------------------------------------------------------------------
+// The WinCE BHO implementation is considerably different from the
+// implementation for windows desktop. We keep them segregated.
+//------------------------------------------------------------------------------
 #ifdef OS_WINCE
+#include "gears/base/ie/bho.h"
+#include "gears/base/common/detect_version_collision.h"
 #include "gears/base/ie/activex_utils.h"
-#endif
+#include "gears/installer/iemobile/cab_updater.h"
+
+HWND BrowserHelperObject::browser_window_ = NULL;
+
+// static
+HWND BrowserHelperObject::GetBrowserWindow() {
+  return browser_window_;
+}
+
+STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
+  if (DetectedVersionCollision())
+    return S_OK;
+
+  if (pUnkSite == NULL) {
+    // We never get here on WinCE so we cannot know when we are
+    // uninitialized. SetSite should be called with pUnkSite = NULL
+    // when the BHO is unitialized. It seems that this call 
+    // is not made on WinCE.
+    LOG16((L"SetSite(): pUnkSite is NULL\n"));
+  } else {
+    HttpHandler::Register();
+
+    static CabUpdater updater;
+    CComQIPtr<IWebBrowser2> site = pUnkSite;
+    ASSERT(site);
+    updater.SetSiteAndStart(site);   
+    assert(NULL == browser_window_);
+    site->get_HWND(reinterpret_cast<long*>(&browser_window_));
+  }
+  return S_OK;
+}
+
+//------------------------------------------------------------------------------
+// Win32 Desktop BHO implementation
+//------------------------------------------------------------------------------
+#else
+#include "gears/base/ie/bho.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/base/common/user_config.h"
-#include "gears/base/ie/bho.h"
-#include "gears/factory/factory_utils.h"
-#ifdef OS_WINCE
-#include "gears/installer/iemobile/cab_updater.h"
-#endif
-#include "gears/localserver/ie/http_handler_ie.h"
-
-#ifdef OS_WINCE
-HWND BrowserHelperObject::browser_window_ = NULL;
-#endif
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
-#if defined(WIN32) && !defined(OS_WINCE)
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
@@ -57,34 +90,30 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #endif  // DEBUG
   }
 #endif  // OFFICIAL_BUILD
-#endif  // WIN32 && !OS_WINCE
 
   if (DetectedVersionCollision())
     return S_OK;
 
   if (pUnkSite == NULL) {
-    // We never get here on WinCE so we cannot know when we are
-    // uninitialized. SetSite should be called with pUnkSite = NULL
-    // when the BHO is unitialized. It seems that this call 
-    // is not made on WinCE.
     LOG16((L"SetSite(): pUnkSite is NULL\n"));
+    BrowserListener::Teardown();
   } else {
     HttpHandler::Register();
-#ifdef OS_WINCE
-    static CabUpdater updater;
-    CComQIPtr<IWebBrowser2> site = pUnkSite;
-    ASSERT(site);
-    updater.SetSiteAndStart(site);   
-    assert(NULL == browser_window_);
-    site->get_HWND(reinterpret_cast<long*>(&browser_window_));
-#endif
+    CComQIPtr<IWebBrowser2> browser2 = pUnkSite;
+    if (browser2) {
+      BrowserListener::Init(browser2);
+    }
   }
   return S_OK;
 }
 
-#ifdef OS_WINCE
-// static
-HWND BrowserHelperObject::GetBrowserWindow() {
-  return browser_window_;
+
+void BrowserHelperObject::OnPageDownloadBegin(const CString &url) {
+  handler_check_.StartCheck(url.GetString());
 }
-#endif
+
+void BrowserHelperObject::OnPageDownloadComplete() {
+  handler_check_.FinishCheck();
+}
+
+#endif  // OS_WINCE

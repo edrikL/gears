@@ -1,0 +1,129 @@
+﻿m4_changequote(`~',`~')m4_dnl
+<!DOCTYPE html>
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+  <style type="text/css">
+m4_include(ui/common/html_dialog.css)
+    #head {
+      padding: 0.5em;
+    }
+    #icon {
+      margin: 0.5em;
+    }
+    #close-link-row {
+      padding: 0.75em;
+    }
+  </style>
+</head>
+<body>
+  <div id="head"></div>
+  <div id="content">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td valign="top">
+          <img id="icon" src="icon_32x32.png" width="32" height="32">
+        </td>
+        <td width="100%" valign="top">
+          <div id="message"></span>
+        </td>
+      </tr>
+      <tr>
+        <td id="close-link-row" colspan="2" align="right">
+          <a id="close-link" href='#' onclick="saveAndClose({})">
+            <span id="string-close"></span>
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="foot"></div>
+
+<!--
+Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
+browser flags available here.
+-->
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>~)
+
+</body>
+<!--
+We include all files through m4 as the HTML dialog implementation on
+PocketIE does not support callbacks for loading external JavaScript files.
+TODO: find a better way to include scripts for PIE
+-->
+<script>
+m4_include(../third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/base.js)
+m4_include(ui/common/dom.js)
+m4_include(ui/common/html_dialog.js)
+m4_include(genfiles/alert_dialog.js)
+</script>
+
+<script>
+  var debug = false;
+  if (debug) {
+    // Handy for debugging layout:
+    if (browser.ie_mobile) {
+      window.pie_dialog = new Object();
+      window.pie_dialog.IsSmartPhone = function() { return false; };
+      window.pie_dialog.SetCancelButton = function() {};
+      window.pie_dialog.SetButton = function() {};
+      window.pie_dialog.SetButtonEnabled = function() {};
+      window.pie_dialog.SetScriptContext = function() {};
+      window.pie_dialog.ResizeDialog = function() {};
+    }
+  }
+
+  initDialog();
+  initAlert();
+
+  function initAlert() {
+    var args;
+    if (debug) {
+      // Handy for debugging layout:
+      args = {
+        locale: "en-US",
+        messageId: "string-incompatibility-error"
+      };
+    } else {
+      args = getArguments();
+    }
+    var i18nStrings = loadI18nStrings(args.locale);
+    var message = i18nStrings[args.messageId];
+    if (message) {
+      var element = dom.getElementById("message");
+      element.innerHTML = message;
+    }
+    resizeDialogToFitContent();
+  }
+</script>
+</html>
