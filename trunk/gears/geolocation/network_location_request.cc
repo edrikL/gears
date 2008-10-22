@@ -74,11 +74,17 @@ static void AddRadioData(const RadioData &radio_data, Json::Value *body_object);
 static void AddWifiData(const WifiData &wifi_data, Json::Value *body_object);
 
 // static
-NetworkLocationRequest* NetworkLocationRequest::Create(
+NetworkLocationRequest *NetworkLocationRequest::Create(
     const std::string16 &url,
     const std::string16 &host_name,
     ListenerInterface *listener) {
-  return new NetworkLocationRequest(url, host_name, listener);
+  scoped_ptr<NetworkLocationRequest> request(
+      new NetworkLocationRequest(url, host_name, listener));
+  assert(request.get());
+  if (!request.get() || !request->Init() || !request->Start()) {
+    return NULL;
+  }
+  return request.release();
 }
 
 NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
@@ -87,10 +93,8 @@ NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
     : AsyncTask(NULL),
       listener_(listener),
       url_(url),
-      host_name_(host_name) {
-  if (!Init()) {
-    assert(false);
-  }
+      host_name_(host_name),
+      is_shutting_down_(false) {
 }
 
 bool NetworkLocationRequest::MakeRequest(const std::string16 &access_token,
@@ -110,12 +114,23 @@ bool NetworkLocationRequest::MakeRequest(const std::string16 &access_token,
     return false;
   }
   timestamp_ = timestamp;
-  // This will fail if there's a request currently in progress.
-  return Start();
+
+  thread_event_.Signal();
+  return true;
 }
 
 // AsyncTask implementation.
 void NetworkLocationRequest::Run() {
+  while (true) {
+    thread_event_.Wait();
+    if (is_shutting_down_) {
+      break;
+    }
+    MakeRequestImpl();
+  }
+}
+
+void NetworkLocationRequest::MakeRequestImpl() {
   WebCacheDB::PayloadInfo payload;
   // TODO(andreip): remove this once WebCacheDB::PayloadInfo.data is a Blob.
   scoped_refptr<BlobInterface> payload_data;
@@ -276,6 +291,8 @@ void NetworkLocationRequest::StopThreadAndDelete() {
   // we must return to the OS before the call to Abort() will take effect. In
   // particular, we can't call Abort() then block here waiting for HttpPost to
   // return.
+  is_shutting_down_ = true;
+  thread_event_.Signal();
   is_processing_response_mutex_.Lock();
   Abort();
   is_processing_response_mutex_.Unlock();
