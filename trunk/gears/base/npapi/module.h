@@ -32,10 +32,6 @@
 
 extern const ThreadLocals::Slot kNPNFuncsKey;
 
-#ifdef OS_ANDROID
-extern const ThreadLocals::Slot kNPPInstance;
-#endif
-
 void AllowNPInit(bool allow);
 
 // Called when the given instance is being destroyed.  Implemented in

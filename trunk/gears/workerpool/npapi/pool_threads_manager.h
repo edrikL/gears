@@ -28,6 +28,9 @@
 
 #include <vector>
 
+#ifdef OS_ANDROID
+#include "gears/base/android/java_global_ref.h"
+#endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/browsing_context.h"
 #include "gears/base/common/js_marshal.h"
@@ -121,6 +124,10 @@ class PoolThreadsManager
 
   // BrowsingContext of the owning workerpool, propagated to created workers.
   scoped_refptr<BrowsingContext> browsing_context_;
+
+#ifdef OS_ANDROID
+  JavaGlobalRef<jobject> webview_;
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
 };

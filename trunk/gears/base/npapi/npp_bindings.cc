@@ -40,6 +40,9 @@
 // browser calls to talk to the plugin. Most are just empty stubs for this
 // particular plugin.
 //
+#ifdef OS_ANDROID
+#include "gears/base/android/webview_manager.h"
+#endif
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/npapi/module.h"
@@ -63,10 +66,6 @@ class NpapiLeakCounter {
 } npapi_leak_counter_global_instance;
 #endif
 
-#ifdef OS_ANDROID
-const ThreadLocals::Slot kNPPInstance = ThreadLocals::Alloc();
-#endif
-
 // here the plugin creates an instance of our NPObject object which 
 // will be associated with this newly created plugin instance and 
 // will do all the neccessary job
@@ -82,7 +81,11 @@ NPError NPP_New(NPMIMEType pluginType,
     return NPERR_INVALID_INSTANCE_ERROR;
 
 #ifdef OS_ANDROID
-  ThreadLocals::SetValue(kNPPInstance, instance, NULL);
+  jobject webview;
+  NPError err = NPN_GetValue(instance, NPNVnetscapeWindow, &webview);
+  if (err == NPERR_NO_ERROR) {
+    WebViewManager::RegisterWebView(instance, webview);
+  }
 #endif
   NPObject* obj = CreateGearsFactoryWrapper(instance);
   instance->pdata = obj;
@@ -107,15 +110,15 @@ NPError NPP_Destroy(NPP instance, NPSavedData** save)
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
+#ifdef OS_ANDROID
+  WebViewManager::UnregisterWebView(instance);
+#endif
+
   NotifyNPInstanceDestroyed(instance);
 
   NPObject* obj = static_cast<NPObject*>(instance->pdata);
   if (obj)
     NPN_ReleaseObject(obj);
-
-#ifdef OS_ANDROID
-  ThreadLocals::DestroyValue(kNPPInstance);
-#endif
 
   return NPERR_NO_ERROR;
 }
