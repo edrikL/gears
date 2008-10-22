@@ -23,8 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
 #include "gears/ui/common/alert_dialog.h"
+
+#include <assert.h>
+#include <windows.h>
 #include "gears/ui/common/html_dialog.h"
 
 // The dialog will resize vertically to fit the message text
