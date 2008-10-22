@@ -185,7 +185,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~,~
           <td width="100%" valign="middle">
 ~)
-            <a href="#" onclick="denyAccessPermanently(); return false;" id="deny-permanently-link"></a>
+            <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
 
 
