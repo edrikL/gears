@@ -26,6 +26,7 @@
 #ifndef GEARS_GEOLOCATION_NETWORK_LOCATION_REQUEST_H__
 #define GEARS_GEOLOCATION_NETWORK_LOCATION_REQUEST_H__
 
+#include <vector>
 #include "gears/base/common/basictypes.h"  // For int64
 #include "gears/base/common/common.h"
 #include "gears/base/common/event.h"
@@ -33,13 +34,14 @@
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/localserver/common/async_task.h"
-#include <vector>
 
 // An implementation of an AsyncTask that takes a set of device data and sends
 // it to a server to get a position fix. It performs formatting of the request
 // and interpretation of the response.
 class NetworkLocationRequest : public AsyncTask {
  public:
+  friend class scoped_ptr<NetworkLocationRequest>;  // For use in Create().
+
   // Interface for receiving callbacks from a NetworkLocationRequest object.
   class ListenerInterface {
    public:
@@ -51,6 +53,8 @@ class NetworkLocationRequest : public AsyncTask {
         const std::string16 &access_token) = 0;
   };
 
+  // Creates the object and starts its worker thread running. Returns NULL if
+  // creation or initialisation fails.
   static NetworkLocationRequest* Create(const std::string16 &url,
                                         const std::string16 &host_name,
                                         ListenerInterface *listener);
@@ -76,6 +80,8 @@ class NetworkLocationRequest : public AsyncTask {
                          const std::string16 &host_name,
                          ListenerInterface *listener);
   virtual ~NetworkLocationRequest() {}
+
+  void MakeRequestImpl();
 
   // AsyncTask implementation.
   virtual void Run();
@@ -109,6 +115,9 @@ class NetworkLocationRequest : public AsyncTask {
   Mutex is_processing_response_mutex_;
 
   bool is_reverse_geocode_;
+
+  Event thread_event_;
+  bool is_shutting_down_;
 
 #ifdef USING_CCTESTS
   // Uses FormRequestBody for testing.
