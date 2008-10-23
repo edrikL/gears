@@ -54,7 +54,8 @@ const nsString DropTarget::kDragDropAsString(STRING16(L"dragdrop"));
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
 
 
-DropTarget::DropTarget() {
+DropTarget::DropTarget()
+    : unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
@@ -66,7 +67,7 @@ DropTarget::~DropTarget() {
 
 void DropTarget::AddSelfAsEventListeners(nsIDOMEventTarget *event_target) {
   event_target_ = event_target;
-  AddRef();  // Balanced by a Release() call during RemoveSelfAsEventListeners.
+  AddRef();  // Balanced by a Release() call during UnregisterSelf.
 
   if (on_drag_enter_.get()) {
     event_target_->AddEventListener(kDragEnterAsString, this, false);
@@ -83,7 +84,12 @@ void DropTarget::AddSelfAsEventListeners(nsIDOMEventTarget *event_target) {
 }
 
 
-void DropTarget::RemoveSelfAsEventListeners() {
+void DropTarget::UnregisterSelf() {
+  if (unregister_self_has_been_called_) {
+    return;
+  }
+  unregister_self_has_been_called_ = true;
+
   if (on_drag_enter_.get()) {
     event_target_->RemoveEventListener(kDragEnterAsString, this, false);
   }
@@ -274,7 +280,17 @@ bool DropTarget::GetDroppedFiles(
 // A DropTarget instance automatically de-registers itself, on page unload.
 void DropTarget::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
-  DragAndDropRegistry::UnregisterDropTarget(this);
+  UnregisterSelf();
+}
+
+
+void DropTarget::Ref() {
+  AddRef();
+}
+
+
+void DropTarget::Unref() {
+  Release();
 }
 
 

@@ -46,6 +46,7 @@
 #endif
 #include "gears/blob/blob_interface.h"
 #include "gears/desktop/drag_and_drop_registry.h"
+#include "gears/desktop/drop_target_registration.h"
 #include "gears/desktop/file_dialog.h"
 #include "gears/desktop/notification_message_orderer.h"
 #include "gears/notifier/notification.h"
@@ -77,11 +78,13 @@ void Dispatcher<GearsDesktop>::Init() {
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Safari and Android.
+#if defined(BROWSER_CHROME) ||  defined(BROWSER_WEBKIT) || \
+    defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
+  // PocketIE, and Android.
 #else
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
-#endif  // defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
+#endif
 #endif  // OFFICIAL_BUILD
 }
 
@@ -1022,8 +1025,10 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Safari and Android.
+#if defined(BROWSER_CHROME) || defined(BROWSER_WEBKIT) || \
+    defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
+  // PocketIE, and Android.
 #else
 void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   if (EnvIsWorker()) {
@@ -1041,14 +1046,23 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
+  scoped_refptr<GearsDropTargetRegistration> registration;
+  if (!CreateModule<GearsDropTargetRegistration>(module_environment_.get(),
+                                                 context, &registration)) {
+    return;
+  }
+
   std::string16 error;
-  if (!DragAndDropRegistry::RegisterDropTarget(this,
-                                               dom_element,
-                                               drag_drop_options.get(),
-                                               &error)) {
+  scoped_refptr<DropTarget> drop_target(
+      DragAndDropRegistry::RegisterDropTarget(
+          this, dom_element, drag_drop_options.get(), &error));
+  if (!drop_target.get()) {
     context->SetException(error);
     return;
   }
+
+  registration->SetDropTarget(drop_target.get());
+  context->SetReturnValue(JSPARAM_MODULE, registration.get());
 }
-#endif  // defined(BROWSER_WEBKIT) || defined(OS_ANDROID)
+#endif  // BROWSER_CHROME, BROWSER_WEBKIT, OS_WINCE, OS_ANDROID
 #endif  // OFFICIAL_BUILD

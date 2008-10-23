@@ -29,6 +29,10 @@
 #include "gears/desktop/drag_and_drop_registry.h"
 
 
+// TODO(nigeltao): Delete this file, since it's just a thin middleman, and move
+// any useful code to either drop_target_registration, or drop_target_{ff,ie}.
+
+
 #if BROWSER_FF
 #include <gecko_sdk/include/nsIDOMHTMLElement.h>
 #include <gecko_sdk/include/nsIDOMEvent.h>
@@ -133,11 +137,4 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
 }
 
 
-void DragAndDropRegistry::UnregisterDropTarget(DropTarget *drop_target) {
-#if BROWSER_FF
-  drop_target->RemoveSelfAsEventListeners();
-#elif BROWSER_IE && !defined(OS_WINCE)
-  delete drop_target;
-#endif
-}
 #endif  // OFFICIAL_BUILD

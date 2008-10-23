@@ -42,17 +42,16 @@
 _ATL_FUNC_INFO DropTarget::atl_func_info_ =
     { CC_STDCALL, VT_I4, 1, { VT_EMPTY } };
 
-  
-DropTarget::DropTarget() {
+
+DropTarget::DropTarget()
+    : unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
+  Ref();  // Balanced by a Unref() call during UnregisterSelf.
 }
 
 
 DropTarget::~DropTarget() {
   LEAK_COUNTER_DECREMENT(DropTarget);
-  if (event_source_) {
-    DispEventUnadvise(event_source_, &DIID_HTMLElementEvents2);
-  }
 }
 
 
@@ -257,10 +256,23 @@ HRESULT DropTarget::HandleOnDragDrop()
 }
 
 
+void DropTarget::UnregisterSelf() {
+  if (unregister_self_has_been_called_) {
+    return;
+  }
+  unregister_self_has_been_called_ = true;
+
+  if (event_source_) {
+    DispEventUnadvise(event_source_, &DIID_HTMLElementEvents2);
+  }
+  Unref();  // Balanced by an Ref() call during the constructor.
+}
+
+
 // A DropTarget instance automatically de-registers itself, on page unload.
 void DropTarget::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
-  DragAndDropRegistry::UnregisterDropTarget(this);
+  UnregisterSelf();
 }
 
 

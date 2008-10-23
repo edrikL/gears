@@ -23,31 +23,47 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
-#define GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
 #ifdef OFFICIAL_BUILD
-// The Drag-and-Drop API has not been finalized for official builds.
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+#if defined(BROWSER_CHROME) || defined(BROWSER_WEBKIT) || \
+    defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
+  // PocketIE, and Android.
 #else
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_types.h"
+#include "gears/desktop/drop_target_registration.h"
 
-// A DropTarget is an opaque, platform-specific class that represents a DOM
-// element that handles drag and drop events, for example of files dragged
-// from the Desktop to the browser.
-class DropTarget;
-class JsDomElement;
 
-class DragAndDropRegistry {
- public:
-  static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
-                                        JsDomElement &dom_element,
-                                        JsObject *js_callbacks,
-                                        std::string16 *error_out);
+DECLARE_DISPATCHER(GearsDropTargetRegistration);
 
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(DragAndDropRegistry);
-};
+template<>
+void Dispatcher<GearsDropTargetRegistration>::Init() {
+  RegisterMethod("unregisterDropTarget",
+                 &GearsDropTargetRegistration::UnregisterDropTarget);
+}
 
+const std::string GearsDropTargetRegistration::kModuleName(
+    "GearsDropTargetRegistration");
+
+GearsDropTargetRegistration::GearsDropTargetRegistration()
+    : ModuleImplBaseClass(kModuleName) {}
+
+void GearsDropTargetRegistration::SetDropTarget(DropTarget *drop_target) {
+  assert(drop_target_.get() == NULL);
+  drop_target_ = drop_target;
+}
+
+void GearsDropTargetRegistration::UnregisterDropTarget(JsCallContext *context) {
+  if (drop_target_.get()) {
+    drop_target_->UnregisterSelf();
+    drop_target_ = NULL;
+  } else {
+    context->SetException(
+        STRING16(L"unregisterDropTarget was called multiple times."));
+  }
+}
+
+
+#endif  // BROWSER_CHROME, BROWSER_WEBKIT, OS_WINCE, OS_ANDROID
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__

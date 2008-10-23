@@ -23,31 +23,44 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
-#define GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#ifndef GEARS_DESKTOP_DROP_TARGET_REGISTRATION_H__
+#define GEARS_DESKTOP_DROP_TARGET_REGISTRATION_H__
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
+#else
+#if defined(BROWSER_CHROME) || defined(BROWSER_WEBKIT) || \
+    defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
+  // PocketIE, and Android.
 #else
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_types.h"
 
-// A DropTarget is an opaque, platform-specific class that represents a DOM
-// element that handles drag and drop events, for example of files dragged
-// from the Desktop to the browser.
-class DropTarget;
-class JsDomElement;
+#if BROWSER_FF
+#include "gears/desktop/drop_target_ff.h"
+#elif BROWSER_IE && !defined(OS_WINCE)
+#include "gears/desktop/drop_target_ie.h"
+#endif
 
-class DragAndDropRegistry {
+class GearsDropTargetRegistration : public ModuleImplBaseClass {
  public:
-  static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
-                                        JsDomElement &dom_element,
-                                        JsObject *js_callbacks,
-                                        std::string16 *error_out);
+  static const std::string kModuleName;
+
+  GearsDropTargetRegistration();
+
+  // IN: void
+  // OUT: void
+  void UnregisterDropTarget(JsCallContext *context);
+
+  void SetDropTarget(DropTarget *drop_target);
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(DragAndDropRegistry);
+  scoped_refptr<DropTarget> drop_target_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsDropTargetRegistration);
 };
 
+#endif  // BROWSER_CHROME, BROWSER_WEBKIT, OS_WINCE, OS_ANDROID
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#endif  // GEARS_DESKTOP_DROP_TARGET_REGISTRATION_H__
