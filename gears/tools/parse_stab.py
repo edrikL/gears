@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2008, Google Inc.  All Rights Reserved
+# Copyright 2008 Google Inc.  All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -25,10 +25,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__author__ = 'zork@google.com (Zach Kuznia)'
 """.stab to .js converter.
 
-usage: %s [-Dxx=yy][-DOFFICIAL_BUILD=1] -DI18N_LANGUAGES=(locales) target source.stab translation_dir
+usage: ./parse_stab [-Dxx=yy][-DOFFICIAL_BUILD=1] -DI18N_LANGUAGES=(locales)
+                    target source.stab translation_dir
 
     -Dxx=yy             : Replace instances of xx in strings with yy
     -DI18N_LANGUAGES=(locales)
@@ -42,11 +42,15 @@ usage: %s [-Dxx=yy][-DOFFICIAL_BUILD=1] -DI18N_LANGUAGES=(locales) target source
                           lives in a subdirectory named by its locale.
 
 Example:
-    parse_stab.py -DI18N_LANGUAGES=(en-US,ja) ../bin-dbg/win32-i386/ff2/genfiles/permissions_dialog.js ../ui/common/permissions_dialog.stab ../ui/generated
+    ./parse_stab.py -DI18N_LANGUAGES=(en-US,ja)
+                    ../bin-dbg/win32-i386/ff2/genfiles/permissions_dialog.js
+                    ../ui/common/permissions_dialog.stab ../ui/generated
 
 This takes in a set of string table files, and produces a .js file that can be
 included in our html dialogs.
 """
+
+__author__ = 'zork@google.com (Zach Kuznia)'
 
 import codecs
 import os
@@ -123,7 +127,7 @@ RC_TEMPLATE = u"""
 
 
 # This is the set of languages and the LANGIDs associated with each.
-language_ids = {'ar': ['0401', '0x01', '0x01'],
+LANGUAGE_IDS = {'ar': ['0401', '0x01', '0x01'],
                 'bg': ['0402', '0x02', '0x01'],
                 'ca': ['0403', '0x03', '0x01'],
                 'cs': ['0405', '0x05', '0x01'],
@@ -168,19 +172,28 @@ language_ids = {'ar': ['0401', '0x01', '0x01'],
                 'vi': ['042a', '0x2a', '0x01'],
                 'zh-CN': ['0804', '0x04', '0x02'],
                 'zh-TW': ['0404', '0x04', '0x01'],
-                'ml': ['044c', '0x4c','0x01'],
-                'te': ['044a', '0x4a','0x01'],
-                'kn': ['044b', '0x4b','0x01'],
-                'gu': ['0447', '0x47','0x01'],
-                'or': ['0448', '0x48','0x01'],
-                'bn': ['0445', '0x45','0x01'],
-                'ta': ['0449', '0x49','0x01'],
-                'mr': ['044e', '0x4e','0x01']}
+                'ml': ['044c', '0x4c', '0x01'],
+                'te': ['044a', '0x4a', '0x01'],
+                'kn': ['044b', '0x4b', '0x01'],
+                'gu': ['0447', '0x47', '0x01'],
+                'or': ['0448', '0x48', '0x01'],
+                'bn': ['0445', '0x45', '0x01'],
+                'ta': ['0449', '0x49', '0x01'],
+                'mr': ['044e', '0x4e', '0x01'],
+                }
 
 
-def getStrings(filename):
+def GetStrings(filename):
   """Read in the strings from the filename, and store them in a dictionary.
-  An empty file is considered a valid input.
+
+  An empty file is considered a valid input.  Otherwise, a set of lines that
+  look like: '<string id="STRING_ID">STRING_TEXT</string> is expected.
+
+  Args:
+    filename: Name of the file to open.
+
+  Returns:
+    A dict mapping string ids to strings.
   """
   contents = open(filename, 'r').read()
 
@@ -191,8 +204,9 @@ def getStrings(filename):
   # matches to our regex, then check that no non-whitespace characters remain.
   string_extra = string_regex.sub('', contents)
   if re.search(r'\S', string_extra):
-    print "Error: Extraneous characters: %s" % string_extra
-    sys.exit(1)
+    print >>sys.stderr, ('Error: Extraneous characters in %s: %s' %
+                         (filename, string_extra))
+    return None
 
   string_matches = string_regex.findall(contents)
 
@@ -201,9 +215,10 @@ def getStrings(filename):
     string_name = match[0]
     string_text = match[1]
 
-    if strings.has_key(string_name):
-      print "Error: Duplicate string id encountered: %s" % string_name
-      sys.exit(1)
+    if string_name in strings:
+      print >>sys.stderr, ('Error: Duplicate string id encountered: %s' %
+                           string_name)
+      return None
 
     # Canonicalize the strings.
     strings[string_name] = re.sub(r'</?TRANS_BLOCK(?: desc="[^"]*")?>', '',
@@ -212,132 +227,158 @@ def getStrings(filename):
 
   return strings
 
-def createJavaScriptFromStrings(target_file, localized_strings):
-  """Generate .js code containing the strings.  It'll look like:
 
-var localized_strings = {
-  "en-US": {
-    "string-pie": "pie is delicious"
-  },
-  "ja": {
-    "string-pie": "pai ga oishii desu"
+def CreateJavaScriptFromStrings(target_file, localized_strings):
+  """Generate .js code containing the strings.
+
+  The Javascript will look like:
+
+  var localized_strings = {
+    "en-US": {
+      "string-pie": "pie is delicious"
+    },
+    "ja": {
+      "string-pie": "pai ga oishii desu"
+    }
   }
-}
+
+  Args:
+    target_file: Name of the file to write to.
+    localized_strings: Dict of the localized strings to write to the file.
+
+  Returns:
+    True on success, False on failure.
   """
-  output = 'var localized_strings = {'
+  output = ['var localized_strings = {']
   first_locale = True
 
   for locale, strings in localized_strings.items():
     if first_locale:
       first_locale = False
     else:
-      output += ','
-    output += '\n  "%s": {' % (locale)
+      output.append(',')
+    output.append('\n  "%s": {' % (locale))
 
     first_string = True
-    for id, string in strings.items():
+    for string_id, cur_string in strings.items():
       if first_string:
         first_string = False
       else:
-        output += ','
+        output.append(',')
 
-      string = string.replace('"', '\\"')
-      output += '\n    "%s": "%s"' % (id, string)
+      cur_string = cur_string.replace('"', '\\"')
+      output.append('\n    "%s": "%s"' % (string_id, cur_string))
 
-    output += '\n  }'
+    output.append('\n  }')
 
-  output += '\n};\n'
+  output.append('\n};\n')
 
   # Append the function that loads the strings into the dialog.
-  output += JAVASCRIPT_TEMPLATE
+  output.append(JAVASCRIPT_TEMPLATE)
 
   try:
     output_file = open(target_file, 'w')
   except IOError, err:
-    print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
-    sys.exit(3)
+    print >>sys.stderr, ('Could not open %s for writing: %s\n' %
+                         (target_file, err.strerror))
+    return False
 
-  print >> output_file, output
+  output_file.write(''.join(output))
 
   output_file.close()
 
+  return True
 
-def createRCFromStrings(target_file, localized_strings):
-  """Generate .rc script containing the strings.  It'll look like:
 
-LANGUAGE 0x09, 0x01
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_LOCALE "en-US"
-  IDS_STRING_PIE "pie is delicious"
-END
+def CreateRCFromStrings(target_file, localized_strings):
+  """Generate .rc script containing the strings.
 
-LANGUAGE 0x11, 0x01
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_LOCALE "ja"
-  IDS_STRING_PIE "pai ga oishii desu"
-END
+  The output will look like:
+
+  LANGUAGE 0x09, 0x01
+  STRINGTABLE DISCARDABLE
+  BEGIN
+    IDS_LOCALE "en-US"
+    IDS_STRING_PIE "pie is delicious"
+  END
+
+  LANGUAGE 0x11, 0x01
+  STRINGTABLE DISCARDABLE
+  BEGIN
+    IDS_LOCALE "ja"
+    IDS_STRING_PIE "pai ga oishii desu"
+  END
+
+  Args:
+    target_file: Name of the file to write to.
+    localized_strings: Dict of the localized strings to write to the file.
+
+  Returns:
+    True on success, False on failure.
   """
   # Start with the .rc boilerplate.
-  output = RC_TEMPLATE
+  output = [RC_TEMPLATE]
 
   for locale, strings in localized_strings.items():
-    if not language_ids.has_key(locale):
+    if locale not in LANGUAGE_IDS:
       print 'Unknown locale: %s' % locale
-      sys.exit(1)
+    return False
 
-    lang_id = unicode(language_ids[locale][1])
-    sublang_id = unicode(language_ids[locale][2])
-    output += u"""
-LANGUAGE %s, %s
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_LOCALE "%s"
-""" % (lang_id, sublang_id, locale)
+    lang_id = unicode(LANGUAGE_IDS[locale][1])
+    sublang_id = unicode(LANGUAGE_IDS[locale][2])
+    outputi.append((u'\n'
+                    u'LANGUAGE %s, %s'
+                    u'STRINGTABLE DISCARDABLE'
+                    u'BEGIN'
+                    u'  IDS_LOCALE "%s"\n') % (lang_id, sublang_id, locale))
 
-    for id, string in strings.items():
+    for string_id, string in strings.items():
       string = string.replace('"', r'""')
       string = string.replace('\\n', r'\012')
       string = string.replace('\n', r'\012')
-      output += u'  %s "%s"\n' % (unicode(id, 'utf_8'),
-                                  unicode(string, 'utf_8'))
+      output.append(u'  %s "%s"\n' % (unicode(string_id, 'utf_8'),
+                                      unicode(string, 'utf_8')))
 
-    output += u'END\n'
+    output.append(u'END\n')
 
   try:
     output_file = codecs.open(target_file, 'w', 'utf-16')
   except IOError, err:
-    print "Could not open %s for writing: %s\n" % (target_file, err.strerror)
-    sys.exit(3)
+    print >>sys.stderr, ('Could not open %s for writing: %s\n' %
+                         (target_file, err.strerror))
+    return False
 
-  print >> output_file, output
+  output_file.write(''.join(output))
 
   output_file.close()
 
+  return True
 
 
-def getDefines(argv):
+def GetDefines(argv):
   """Extract any defines from the arg list, and put them in a dictionary.
 
   Args:
-    argv - list of arguments to extract defines from.
+    argv: List of arguments to extract defines from.
+
+  Returns:
+    A dict mapping define names to their values.
   """
   defines = {}
 
   for arg in argv[1:]:
     if arg.startswith('-D'):
       # Check for any arguments of the format -Dxx=yy or -Dxx="yy"
-      match = re.search(r'-D([^=]*)="?(.*?)"?$', arg)
+      match = re.match(r'-D([^=]*)="?(.*?)"?$', arg)
       if not match:
         print 'Bad argument: %s' % arg
-        sys.exit(1)
+        return None
 
       define_name = match.group(1)
       define_value = match.group(2)
-      if define_name == '' or define_value == '':
+      if not define_name or not define_value:
         print 'Bad argument: %s' % arg
-        sys.exit(1)
+        return None
 
       defines[define_name] = define_value
 
@@ -346,21 +387,23 @@ def getDefines(argv):
 
 def main(argv):
   if len(argv) < 4:
-    print __doc__ % argv[0]
-    sys.exit(1)
+    print __doc__
+    sys.exit(2)
 
   locales = []
 
-  translation_dir = argv.pop(-1)
-  source_file = argv.pop(-1)
-  target_file = argv.pop(-1)
-  defines = getDefines(argv)
+  translation_dir = argv[-1]
+  source_file = argv[-2]
+  target_file = argv[-3]
+  defines = GetDefines(argv)
+  if not defines:
+    sys.exit(2)
 
   # If this is an official build, warnings are treated as errors.
-  treat_warnings_as_errors = defines.get('OFFICIAL_BUILD') != None
+  treat_warnings_as_errors = 'OFFICIAL_BUILD' in defines
 
   # Languages are specified via a define.
-  if defines.has_key('I18N_LANGUAGES'):
+  if 'I18N_LANGUAGES' in defines:
     raw_locales = re.sub(r'[()]', '', defines['I18N_LANGUAGES'])
     locales = re.split(r',', raw_locales)
 
@@ -369,47 +412,49 @@ def main(argv):
   # The file specified as the source is considered the most up to date set of
   # strings.  The translated files are compared to this to determine if the
   # localized strings match.
-  source_strings = getStrings(source_file)
+  source_strings = GetStrings(source_file)
+
+  if not source_strings:
+    sys.exit(1)
 
   strings = {}
   for locale in locales:
     localized_strings = {}
     try:
-      localized_strings = getStrings(os.path.join(translation_dir, locale,
+      localized_strings = GetStrings(os.path.join(translation_dir, locale,
                                                   filename))
-    except:
-      print "Warning: %s missing for locale %s" % (filename, locale)
+    except IOError:
+      print 'Warning: %s missing for locale %s' % (filename, locale)
       if treat_warnings_as_errors:
-        sys.exit(2)
+        sys.exit(1)
 
     # This block simply checks if the localized strings are out of date.
-    if locale == "en-US":
+    if locale == 'en-US':
       if len(localized_strings) > len(source_strings):
-        print "Warning: Strings are out of date, build is not localized."
+        print 'Warning: Strings are out of date, build is not localized.'
         if treat_warnings_as_errors:
-          sys.exit(2)
+          sys.exit(1)
       else:
-        for string_id, string in source_strings.items():
+        for string_id, source_string in source_strings.items():
           # If the english string is missing or different from the source, the
           # string is out of date.
-          if ((not localized_strings.has_key(string_id))
-              or localized_strings[string_id] != source_strings[string_id]):
-            print "Warning: Strings are out of date, build is not localized."
+          if localized_strings.get(string_id) != source_string:
+            print 'Warning: Strings are out of date, build is not localized.'
             if treat_warnings_as_errors:
-              sys.exit(2)
+              sys.exit(1)
             break
 
     strings[locale] = {}
 
-    for id in source_strings.keys():
+    for string_id, source_string in source_strings.items():
       # If there is no localized string, substitute the string from the source.
-      string = localized_strings.get(id, source_strings[id])
+      cur_string = localized_strings.get(string_id, source_string)
 
       # Replace any macros as specified on the commandline
       for define, value in defines.items():
-        string = string.replace(define, value)
+        cur_string = cur_string.replace(define, value)
 
-      strings[locale][id] = string
+      strings[locale][string_id] = cur_string
 
   # Extract the file extension from the target filename.
   match = re.search(r'\.(.*?)$', target_file)
@@ -418,14 +463,15 @@ def main(argv):
     sys.exit(1)
   file_type = match.group(1)
 
-  parse_funcs = {'js': createJavaScriptFromStrings,
-                 'rc': createRCFromStrings}
+  parse_funcs = {'js': CreateJavaScriptFromStrings,
+                 'rc': CreateRCFromStrings}
 
-  if parse_funcs.has_key(file_type):
-    parse_funcs[file_type](target_file, strings)
+  if file_type in parse_funcs:
+    if not parse_funcs[file_type](target_file, strings):
+      sys.exit(1)
   else:
-    print "Unknown output file type: %s\n" % (file_type)
-    sys.exit(3)
+    print 'Unknown output file type: %s\n' % (file_type)
+    sys.exit(1)
 
 
 if __name__ == '__main__':
