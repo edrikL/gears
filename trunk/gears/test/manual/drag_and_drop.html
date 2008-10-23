@@ -7,6 +7,8 @@
 <li>???</li>
 <li>Profit!</li>
 </ol>
+<button onclick="toggleEnabledDisabled()">Toggle Enabled / Disabled</button>
+<div id="enabledDisabled" style="color:red; font-weight:bold">&nbsp;</div>
 </div>
 <div id="dragEnterOutput">&nbsp;</div>
 <div id="dragOverOutput">&nbsp;</div>
@@ -23,41 +25,54 @@ var eventCount = 0;
 
 var dropZone = document.getElementById('dropZone');
 var desktop = google.gears.factory.create('beta.desktop');
-desktop.registerDropTarget(dropZone, {
-  'ondragenter': function(context) {
-    dragEnterCount++;
-    eventCount++;
-    document.getElementById('dragEnterOutput').innerHTML =
-        'Got <b>dragenter</b>: ' + dragEnterCount +
-            ' times, most recent sequence number is ' + eventCount;
-  },
-  'ondragover': function(context) {
-    dragOverCount++;
-    eventCount++;
-    document.getElementById('dragOverOutput').innerHTML =
-        'Got <b>dragover</b>: ' + dragOverCount +
-            ' times, most recent sequence number is ' +  eventCount;
-  },
-  'ondragleave': function(context) {
-    dragLeaveCount++;
-    eventCount++;
-    document.getElementById('dragLeaveOutput').innerHTML =
-        'Got <b>dragleave</b>: ' + dragLeaveCount +
-            ' times, most recent sequence number is ' +  eventCount;
-  },
-  'ondrop': function(context) {
-    dropCount++;
-    eventCount++;
-    var s = 'Got <b>drop</b>: ' + dropCount +
-        ' times, most recent sequence number is ' +  eventCount + '<hr/>';
-    for (i = 0; i < context.files.length; i++) {
-      var file = context.files[i];
-      s += '<b>' + file.name + '</b> has length <b>' +
-          file.blob.length + '</b>.<br/>';
-    }
-    document.getElementById('dropOutput').innerHTML = s;
+var dropTargetRegistration = null;
+
+function toggleEnabledDisabled() {
+  if (dropTargetRegistration) {
+    document.getElementById('enabledDisabled').innerHTML =
+        'Drag and Drop is disabled.';
+    dropTargetRegistration.unregisterDropTarget();
+    dropTargetRegistration = null;
+  } else {
+    document.getElementById('enabledDisabled').innerHTML = '&nbsp;';
+    dropTargetRegistration = desktop.registerDropTarget(dropZone, {
+      'ondragenter': function(context) {
+        dragEnterCount++;
+        eventCount++;
+        document.getElementById('dragEnterOutput').innerHTML =
+            'Got <b>dragenter</b>: ' + dragEnterCount +
+                ' times, most recent sequence number is ' + eventCount;
+      },
+      'ondragover': function(context) {
+        dragOverCount++;
+        eventCount++;
+        document.getElementById('dragOverOutput').innerHTML =
+            'Got <b>dragover</b>: ' + dragOverCount +
+                ' times, most recent sequence number is ' +  eventCount;
+      },
+      'ondragleave': function(context) {
+        dragLeaveCount++;
+        eventCount++;
+        document.getElementById('dragLeaveOutput').innerHTML =
+            'Got <b>dragleave</b>: ' + dragLeaveCount +
+                ' times, most recent sequence number is ' +  eventCount;
+      },
+      'ondrop': function(context) {
+        dropCount++;
+        eventCount++;
+        var s = 'Got <b>drop</b>: ' + dropCount +
+            ' times, most recent sequence number is ' +  eventCount + '<hr/>';
+        for (i = 0; i < context.files.length; i++) {
+          var file = context.files[i];
+          s += '<b>' + file.name + '</b> has length <b>' +
+              file.blob.length + '</b>.<br/>';
+        }
+        document.getElementById('dropOutput').innerHTML = s;
+      }
+    });
   }
-});
+}
+toggleEnabledDisabled();
 
 // TODO(nigeltao): Move this into a unit test (as opposed to a manual test).
 var dropZoneIdIsGood = false;

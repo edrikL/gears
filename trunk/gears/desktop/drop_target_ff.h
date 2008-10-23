@@ -55,7 +55,7 @@ class DropTarget
   virtual ~DropTarget();
 
   void AddSelfAsEventListeners(nsIDOMEventTarget *event_target);
-  void RemoveSelfAsEventListeners();
+  void UnregisterSelf();
 
   // This is the JsEventHandlerInterface callback, not the
   // nsIDOMEventListener one. The latter is declared by the
@@ -66,6 +66,9 @@ class DropTarget
                        JsArray *files_out,
                        std::string16 *error_out);
 
+  void Ref();
+  void Unref();
+
  private:
   static const nsString kDragEnterAsString;
   static const nsString kDragOverAsString;
@@ -73,6 +76,7 @@ class DropTarget
   static const nsString kDragDropAsString;
 
   nsCOMPtr<nsIDOMEventTarget> event_target_;
+  bool unregister_self_has_been_called_;
 
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };

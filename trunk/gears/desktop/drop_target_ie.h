@@ -54,9 +54,17 @@
 // interfered with the IDispatch of the DOM element, and the DOM element lost
 // its scripted properties (and therefore things like document.getElementById
 // failed).
+//
+// Note that we subclass RefCounted even though IDispEventSimpleImpl
+// nominally implements AddRef and Release, because IDispEventSimpleImpl's
+// actual implementation is merely { return 1; } without actually doing
+// real ref-counting. See Visual C++ 2008's atlcom.h near line 4123.
+// Thus, for DropTarget's ref-counting, we use RefCounted from
+// base/common/scoped_refptr.h.
 class DropTarget
     : public IDispEventSimpleImpl<1, DropTarget, &DIID_HTMLElementEvents2>,
-      public JsEventHandlerInterface {
+      public JsEventHandlerInterface,
+      public RefCounted {
  public:
   BEGIN_SINK_MAP(DropTarget)
     SINK_ENTRY_INFO(1, DIID_HTMLElementEvents2,
@@ -99,12 +107,15 @@ class DropTarget
   STDMETHOD(HandleOnDragLeave)();
   STDMETHOD(HandleOnDragDrop)();
 
+  void UnregisterSelf();
+
   virtual void HandleEvent(JsEventType event_type);
 
  private:
-  DropTarget();
-
+  bool unregister_self_has_been_called_;
   CComPtr<IDispatch> event_source_;
+
+  DropTarget();
 
   static _ATL_FUNC_INFO atl_func_info_;
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
