@@ -100,6 +100,8 @@ void AppendBuildInfo(std::string16 *s) {
 #else
   s->append(STRING16(L";win32"));
 #endif
+#elif defined(OS_ANDROID)
+  s->append(STRING16(L";android"));
 #else
   s->append(STRING16(L";unknown_os"));
 #endif
