@@ -32,31 +32,51 @@
 // The Drag-and-Drop API is not implemented on Windows CE.
 #else
 
+#include <mshtmdid.h>
 #include <windows.h>
+
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-class ATL_NO_VTABLE DropTarget
-    : public CComObjectRootEx<CComMultiThreadModel>,
-      public CComCoClass<DropTarget>,
-      public IDispatchImpl<IDispatch>,
-      public IElementBehavior,
-      public IElementBehaviorFactory,
+// The 1 in the IDispEventSimpleImpl line is just an arbitrary positive
+// integer, as says the IDispEventSimpleImpl documentation at
+// http://msdn.microsoft.com/en-us/library/fwy24613(VS.80).aspx
+// This 1 is the same nID as used in the SINK_ENTRY_INFO calls below.
+//
+// We subclass IDispEventSimpleImpl in order to intercept drag enter, drag
+// over, drag leave, and drop events. A previous approach implemented
+// IDispatchImpl instead of IDispEventSimpleImpl, and attached to the DOM
+// element via an IElementBehavior, but it turned out that this approach
+// interfered with the IDispatch of the DOM element, and the DOM element lost
+// its scripted properties (and therefore things like document.getElementById
+// failed).
+class DropTarget
+    : public IDispEventSimpleImpl<1, DropTarget, &DIID_HTMLElementEvents2>,
       public JsEventHandlerInterface {
  public:
-  DECLARE_NOT_AGGREGATABLE(DropTarget)
-  DECLARE_PROTECT_FINAL_CONSTRUCT()
+  BEGIN_SINK_MAP(DropTarget)
+    SINK_ENTRY_INFO(1, DIID_HTMLElementEvents2,
+                    DISPID_HTMLELEMENTEVENTS_ONDRAGENTER,
+                    &HandleOnDragEnter,
+                    &atl_func_info_)
+    SINK_ENTRY_INFO(1, DIID_HTMLElementEvents2,
+                    DISPID_HTMLELEMENTEVENTS_ONDRAGOVER,
+                    &HandleOnDragOver,
+                    &atl_func_info_)
+    SINK_ENTRY_INFO(1, DIID_HTMLElementEvents2,
+                    DISPID_HTMLELEMENTEVENTS_ONDRAGLEAVE,
+                    &HandleOnDragLeave,
+                    &atl_func_info_)
+    SINK_ENTRY_INFO(1, DIID_HTMLElementEvents2,
+                    DISPID_HTMLELEMENTEVENTS_ONDROP,
+                    &HandleOnDragDrop,
+                    &atl_func_info_)
+  END_SINK_MAP()
 
-  BEGIN_COM_MAP(DropTarget)
-    COM_INTERFACE_ENTRY(IDispatch)
-    COM_INTERFACE_ENTRY(IElementBehavior)
-    COM_INTERFACE_ENTRY(IElementBehaviorFactory)
-  END_COM_MAP()
-
-  CComPtr<IElementBehaviorSite> element_behavior_site_;
   CComPtr<IHTMLWindow2> html_window_2_;
 
   scoped_refptr<ModuleEnvironment> module_environment_;
@@ -66,36 +86,27 @@ class ATL_NO_VTABLE DropTarget
   scoped_ptr<JsRootedCallback> on_drag_leave_;
   scoped_ptr<JsRootedCallback> on_drop_;
 
-  DropTarget() {}
-
-  // IDispatch interface.
-  STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid,
-    LCID lcid, WORD wFlags, DISPPARAMS *pdispparams, VARIANT *pvarResult,
-    EXCEPINFO *pexcepinfo, UINT *puArgErr);
-
-  // IElementBehavior interface.
-  STDMETHOD(Detach)(void);
-  STDMETHOD(Init)(IElementBehaviorSite *pElementBehaviorSite);
-  STDMETHOD(Notify)(long lEvent, VARIANT *pVar);
-
-  // IElementBehaviorFactory interface.
-  STDMETHOD(FindBehavior)(BSTR name, BSTR url,
-                          IElementBehaviorSite *behavior_site,
-                          IElementBehavior **behavior_out);
+  virtual ~DropTarget();
+  static DropTarget *CreateDropTarget(JsDomElement &dom_element);
 
   HRESULT GetHtmlDataTransfer(CComPtr<IHTMLEventObj> &html_event_obj,
                               CComPtr<IHTMLDataTransfer> &html_data_transfer);
   HRESULT CancelEventBubble(CComPtr<IHTMLEventObj> &html_event_obj,
                             CComPtr<IHTMLDataTransfer> &html_data_transfer);
 
-  HRESULT HandleOnDragEnter();
-  HRESULT HandleOnDragOver();
-  HRESULT HandleOnDragLeave();
-  HRESULT HandleOnDragDrop();
+  STDMETHOD(HandleOnDragEnter)();
+  STDMETHOD(HandleOnDragOver)();
+  STDMETHOD(HandleOnDragLeave)();
+  STDMETHOD(HandleOnDragDrop)();
 
   virtual void HandleEvent(JsEventType event_type);
 
  private:
+  DropTarget();
+
+  CComPtr<IDispatch> event_source_;
+
+  static _ATL_FUNC_INFO atl_func_info_;
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };
 

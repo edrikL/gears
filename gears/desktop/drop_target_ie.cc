@@ -32,76 +32,49 @@
 #else
 #include "gears/desktop/drop_target_ie.h"
 
-#include <mshtmdid.h>
+#include "gears/base/common/leak_counter.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
 
 
-HRESULT DropTarget::Detach(void) {
-  return S_OK;
-}
+_ATL_FUNC_INFO DropTarget::atl_func_info_ =
+    { CC_STDCALL, VT_I4, 1, { VT_EMPTY } };
 
-
-HRESULT DropTarget::Init(IElementBehaviorSite *element_behavior_site) {
-  element_behavior_site_ = element_behavior_site;
-  return S_OK;
-}
-
-
-HRESULT DropTarget::Notify(long lEvent, VARIANT *var) {
-  HRESULT hr;
-  if (lEvent != BEHAVIOREVENT_CONTENTREADY) {
-    return S_OK;
-  }
-  CComPtr<IHTMLElement> html_element;
-  hr = element_behavior_site_->GetElement(&html_element);
-  if (FAILED(hr)) return hr;
-
-  // TODO(nigeltao): Keep the cookie somewhere, and Unadvise (i.e. detach
-  // the behavior from the element) at an appropriate time.
-  DWORD ignored_cookie;
-  hr = AtlAdvise(html_element, reinterpret_cast<IUnknown*>(this),
-     DIID_HTMLElementEvents2, &ignored_cookie);
-  if (FAILED(hr)) return hr;
   
-  return S_OK;
+DropTarget::DropTarget() {
+  LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
 
-HRESULT DropTarget::FindBehavior(
-    BSTR name,
-    BSTR url,
-    IElementBehaviorSite *behavior_site,
-    IElementBehavior **behavior_out) {
-  if (!name || (_wcsicmp(name, L"DropTarget") != 0)) {
-    return E_FAIL;
+DropTarget::~DropTarget() {
+  LEAK_COUNTER_DECREMENT(DropTarget);
+  if (event_source_) {
+    DispEventUnadvise(event_source_, &DIID_HTMLElementEvents2);
   }
-  return QueryInterface(__uuidof(IElementBehavior),
-      reinterpret_cast<void**>(behavior_out));
 }
 
 
-HRESULT DropTarget::Invoke(DISPID dispidMember, REFIID riid,
-    LCID lcid, WORD wFlags, DISPPARAMS *pdispparams, VARIANT *pvarResult,
-    EXCEPINFO *pexcepinfo, UINT *puArgErr)
-{
-  switch (dispidMember) {
-    case DISPID_HTMLELEMENTEVENTS_ONDRAGENTER:
-      return HandleOnDragEnter();
-    case DISPID_HTMLELEMENTEVENTS_ONDRAGOVER:
-      return HandleOnDragOver();
-    case DISPID_HTMLELEMENTEVENTS_ONDRAGLEAVE:
-      return HandleOnDragLeave();
-    case DISPID_HTMLELEMENTEVENTS_ONDROP:
-      return HandleOnDragDrop();
-    default:
-      // Do nothing;
-      break;
-  }
-  return IDispatchImpl<IDispatch>::Invoke(dispidMember, riid, lcid, wFlags,
-      pdispparams, pvarResult, pexcepinfo, puArgErr);
+DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
+  HRESULT hr;
+  IDispatch *dom_element_dispatch = dom_element.dispatch();
+  scoped_ptr<DropTarget> drop_target(new DropTarget);
+
+  hr = drop_target->DispEventAdvise(dom_element_dispatch,
+                                    &DIID_HTMLElementEvents2);
+  if (FAILED(hr)) { return NULL; }
+  drop_target->event_source_ = dom_element_dispatch;
+  CComQIPtr<IHTMLElement> html_element(dom_element_dispatch);
+  if (!html_element) { return NULL; }
+  CComPtr<IDispatch> document_dispatch;
+  hr = html_element->get_document(&document_dispatch);
+  if (FAILED(hr)) { return NULL; }
+  CComQIPtr<IHTMLDocument2> html_document_2(document_dispatch);
+  if (!html_document_2) { return NULL; }
+  hr = html_document_2->get_parentWindow(&drop_target->html_window_2_);
+  if (FAILED(hr)) { return NULL; }
+  return drop_target.release();
 }
 
 
@@ -110,18 +83,6 @@ HRESULT DropTarget::GetHtmlDataTransfer(
     CComPtr<IHTMLDataTransfer> &html_data_transfer)
 {
   HRESULT hr;
-  if (!html_window_2_) {
-    CComPtr<IHTMLElement> html_element;
-    hr = element_behavior_site_->GetElement(&html_element);
-    if (FAILED(hr)) return hr;
-    CComPtr<IDispatch> dispatch;
-    hr = html_element->get_document(&dispatch);
-    if (FAILED(hr)) return hr;
-    CComQIPtr<IHTMLDocument2> html_document_2(dispatch);
-    if (!html_document_2) return E_FAIL;
-    hr = html_document_2->get_parentWindow(&html_window_2_);
-    if (FAILED(hr)) return hr;
-  }
   hr = html_window_2_->get_event(&html_event_obj);
   if (FAILED(hr)) return hr;
   CComQIPtr<IHTMLEventObj2> html_event_obj_2(html_event_obj);
@@ -151,7 +112,6 @@ HRESULT DropTarget::HandleOnDragEnter()
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
   if (FAILED(hr)) return hr;
-
 
   CComPtr<IServiceProvider> service_provider;
   hr = html_data_transfer->QueryInterface(&service_provider);
