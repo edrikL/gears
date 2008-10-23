@@ -9,6 +9,6 @@
 <string id="string-location-data">Speicherort</string>
 <string id="string-gears-settings">Gears-Einstellungen</string>
 <string id="string-permissions-description">Die untenstehende Tabelle zeigt die Berechtigungen an, die Sie jeder Site gewährt haben, die versucht hat, Gears zu verwenden.</string>
-<string id="string-version">Gears-Version PRODUKT_VERSION</string>
+<string id="string-version">Gears-Version PRODUCT_VERSION</string>
 <string id="string-html-title">Gears-Einstellungen</string>
 <string id="string-remove">Entfernen</string>
