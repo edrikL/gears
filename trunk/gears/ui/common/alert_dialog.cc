@@ -23,10 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/ui/common/alert_dialog.h"
+#if defined(BROWSER_IE) && !defined(OS_WINCE)
 
 #include <assert.h>
 #include <windows.h>
+#include "gears/ui/common/alert_dialog.h"
 #include "gears/ui/common/html_dialog.h"
 
 // The dialog will resize vertically to fit the message text
@@ -56,3 +57,5 @@ void AlertDialog::ShowModal(AlertMessageId id) {
   dialog.arguments["messageId"] = Json::Value(GetMessageIdString(id));
   dialog.DoModal(STRING16(L"alert_dialog.html"), kDialogWidth, kDialogHeight);
 }
+
+#endif  // defined(BROWSER_IE) && !defined(OS_WINCE)
