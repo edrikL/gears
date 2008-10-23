@@ -105,6 +105,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
   if (!InitializeDropTarget(
           sibling_module, js_callbacks, drop_target, error_out)) {
     delete drop_target;
+    *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return NULL;
   }
 
@@ -112,39 +113,18 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
   return drop_target;
 
 #elif BROWSER_IE && !defined(OS_WINCE)
-  CComQIPtr<IHTMLElement2> html_element_2(dom_element.dispatch());
-  if (!html_element_2) return NULL;
-  CComBSTR behavior_url(L"#Google" PRODUCT_SHORT_NAME L"#DropTarget");
-
-  CComObject<DropTarget> *drop_target;
-  if (FAILED(CComObject<DropTarget>::CreateInstance(&drop_target))) {
+  scoped_ptr<DropTarget> drop_target(DropTarget::CreateDropTarget(dom_element));
+  if (!drop_target.get()) {
+    *error_out = STRING16(L"Could not create a DropTarget.");
+    *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return NULL;
   }
-  CComPtr<CComObject<DropTarget> >
-      reference_adder_drop_target(drop_target);
   if (!InitializeDropTarget(
-          sibling_module, js_callbacks, drop_target, error_out)) {
+          sibling_module, js_callbacks, drop_target.get(), error_out)) {
+    *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return NULL;
   }
-
-  // DropTarget overrides IDispatch::Invoke to react to drag and drop events.
-  // To intercept those events, we have to attach an IElementBehavior (which
-  // also happens to be the same DropTarget object) to the html_element_2, and
-  // to do that, we have to introduce that html_element_2 to an
-  // IElementBehaviorFactory (which also happens to be the same DropTarget).
-  // Conceptually, the IDispatch, IElementBehavior and IElementBehaviorFactory
-  // could be separate instances of separate classes, but for convenience, all
-  // three roles are played by the one instance of DropTarget.
-  CComQIPtr<IElementBehaviorFactory> factory(drop_target);
-  if (!factory) return NULL;
-  CComVariant factory_as_variant(static_cast<IUnknown*>(factory));
-  LONG ignored_cookie = 0;
-  if (FAILED(html_element_2->addBehavior(behavior_url,
-                                         &factory_as_variant,
-                                         &ignored_cookie))) {
-    return NULL;
-  }
-  return drop_target;
+  return drop_target.release();
 
 #else
   *error_out = STRING16(L"Desktop.registerDropTarget is not implemented.");
@@ -157,10 +137,7 @@ void DragAndDropRegistry::UnregisterDropTarget(DropTarget *drop_target) {
 #if BROWSER_FF
   drop_target->RemoveSelfAsEventListeners();
 #elif BROWSER_IE && !defined(OS_WINCE)
-  // On IE, DropTarget is a COM object, which is ref-counted, so it should
-  // automatically delete itself when no longer referred to.
-  // In the future, if we allow explicit unregistration of a DropTarget, then
-  // we might need to AddRef it during RegisterDropTarget, and Unref it here.
+  delete drop_target;
 #endif
 }
 #endif  // OFFICIAL_BUILD
