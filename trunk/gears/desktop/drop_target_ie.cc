@@ -175,8 +175,14 @@ HRESULT DropTarget::HandleOnDragEnter()
   if (!in_file_drop) return E_FAIL;
 
   if (on_drag_enter_.get()) {
+    scoped_ptr<JsObject> context_object(
+        module_environment_->js_runner_->NewObject());
+    const int argc = 1;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_OBJECT, context_object.get() }
+    };
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_enter_.get(), 0, NULL, NULL);
+        on_drag_enter_.get(), argc, argv, NULL);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -193,8 +199,14 @@ HRESULT DropTarget::HandleOnDragOver()
   if (FAILED(hr)) return hr;
 
   if (on_drag_over_.get()) {
+    scoped_ptr<JsObject> context_object(
+        module_environment_->js_runner_->NewObject());
+    const int argc = 1;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_OBJECT, context_object.get() }
+    };
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_over_.get(), 0, NULL, NULL);
+        on_drag_over_.get(), argc, argv, NULL);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -211,8 +223,14 @@ HRESULT DropTarget::HandleOnDragLeave()
   if (FAILED(hr)) return hr;
 
   if (on_drag_leave_.get()) {
+    scoped_ptr<JsObject> context_object(
+        module_environment_->js_runner_->NewObject());
+    const int argc = 1;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_OBJECT, context_object.get() }
+    };
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_leave_.get(), 0, NULL, NULL);
+        on_drag_leave_.get(), argc, argv, NULL);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -254,16 +272,20 @@ HRESULT DropTarget::HandleOnDragDrop()
     ::ReleaseStgMedium(&stg_medium);
 
     std::string16 error;
-    scoped_ptr<JsArray> file_objects(
+    scoped_ptr<JsArray> file_array(
         module_environment_->js_runner_->NewArray());
     if (!FileDialog::FilesToJsObjectArray(
-            filenames, module_environment_.get(), file_objects.get(), &error)) {
+            filenames, module_environment_.get(), file_array.get(), &error)) {
       return E_FAIL;
     }
 
+    scoped_ptr<JsObject> context_object(
+        module_environment_->js_runner_->NewObject());
+    context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+
     const int argc = 1;
     JsParamToSend argv[argc] = {
-      { JSPARAM_ARRAY, file_objects.get() }
+      { JSPARAM_OBJECT, context_object.get() }
     };
     module_environment_->js_runner_->InvokeCallback(
         on_drop_.get(), argc, argv, NULL);
