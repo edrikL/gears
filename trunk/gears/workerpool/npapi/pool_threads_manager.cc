@@ -607,6 +607,7 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 #endif
 #ifdef OS_ANDROID
   ScopedJniAttachCurrentThread scoped_jni_attach_current_thread;
+  bool registered_webview = false;
 #endif
   
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
@@ -635,14 +636,15 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
     if (wi->script_ok) {
       if (SetupJsRunner(js_runner.get(), wi)) {
-        // Add JS code to engine.  Any script errors trigger HandleError().
-        wi->js_runner->Start(wi->script_text);
 #ifdef OS_ANDROID
         // the JsRunner has been setup, so we have the appropriate NPP
         // instance. We can register it with the parent's webview.
         WebViewManager::RegisterWebView(wi->js_runner->GetContext(),
                                         wi->threads_manager->webview_.Get());
+        registered_webview = true;
 #endif
+        // Add JS code to engine.  Any script errors trigger HandleError().
+        wi->js_runner->Start(wi->script_text);
       }
     }
 
@@ -682,7 +684,9 @@ void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->onerror_handler.reset(NULL);
 
 #ifdef OS_ANDROID
-  WebViewManager::UnregisterWebView(wi->js_runner->GetContext());
+  if (registered_webview) {
+    WebViewManager::UnregisterWebView(wi->js_runner->GetContext());
+  }
 #endif
 
   // Reset on creation thread for consistency with Firefox implementation.
