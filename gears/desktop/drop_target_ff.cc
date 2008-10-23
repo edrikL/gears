@@ -116,9 +116,9 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
 
   if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
     std::string16 error;
-    scoped_ptr<JsArray> file_objects(
+    scoped_ptr<JsArray> file_array(
         module_environment_->js_runner_->NewArray());
-    if (!GetDroppedFiles(drag_session.get(), file_objects.get(), &error)) {
+    if (!GetDroppedFiles(drag_session.get(), file_array.get(), &error)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -130,9 +130,13 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     // that, but that doesn't seem to work, whilst StopPropagation() does.
     event->StopPropagation();
 
+    scoped_ptr<JsObject> context_object(
+        module_environment_->js_runner_->NewObject());
+    context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+
     const int argc = 1;
     JsParamToSend argv[argc] = {
-      { JSPARAM_ARRAY, file_objects.get() }
+      { JSPARAM_OBJECT, context_object.get() }
     };
     module_environment_->js_runner_->InvokeCallback(
         on_drop_.get(), argc, argv, NULL);
@@ -147,7 +151,14 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
       callback = on_drag_leave_.get();
     }
     if (callback) {
-      module_environment_->js_runner_->InvokeCallback(callback, 0, NULL, NULL);
+      scoped_ptr<JsObject> context_object(
+          module_environment_->js_runner_->NewObject());
+      const int argc = 1;
+      JsParamToSend argv[argc] = {
+        { JSPARAM_OBJECT, context_object.get() }
+      };
+      module_environment_->js_runner_->InvokeCallback(
+          callback, argc, argv, NULL);
     }
   }
   return NS_OK;

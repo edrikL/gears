@@ -22,34 +22,34 @@ var dropCount = 0;
 var eventCount = 0;
 var desktop = google.gears.factory.create('beta.desktop');
 desktop.registerDropTarget(document.getElementById('dropZone'), {
-  'ondragenter': function() {
+  'ondragenter': function(context) {
     dragEnterCount++;
     eventCount++;
     document.getElementById('dragEnterOutput').innerHTML =
         'Got <b>dragenter</b>: ' + dragEnterCount +
             ' times, most recent sequence number is ' + eventCount;
   },
-  'ondragover': function() {
+  'ondragover': function(context) {
     dragOverCount++;
     eventCount++;
     document.getElementById('dragOverOutput').innerHTML =
         'Got <b>dragover</b>: ' + dragOverCount +
             ' times, most recent sequence number is ' +  eventCount;
   },
-  'ondragleave': function() {
+  'ondragleave': function(context) {
     dragLeaveCount++;
     eventCount++;
     document.getElementById('dragLeaveOutput').innerHTML =
         'Got <b>dragleave</b>: ' + dragLeaveCount +
             ' times, most recent sequence number is ' +  eventCount;
   },
-  'ondrop': function(files) {
+  'ondrop': function(context) {
     dropCount++;
     eventCount++;
     var s = 'Got <b>drop</b>: ' + dropCount +
         ' times, most recent sequence number is ' +  eventCount + '<hr/>';
-    for (i = 0; i < files.length; i++) {
-      var file = files[i];
+    for (i = 0; i < context.files.length; i++) {
+      var file = context.files[i];
       s += '<b>' + file.name + '</b> has length <b>' +
           file.blob.length + '</b>.<br/>';
     }
