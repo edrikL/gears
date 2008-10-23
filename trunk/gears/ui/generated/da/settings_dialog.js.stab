@@ -9,6 +9,6 @@
 <string id="string-location-data">Placering</string>
 <string id="string-gears-settings">Indstillinger til Gears</string>
 <string id="string-permissions-description">Nedenstående tabel indeholder en oversigt over de tilladelser, du har givet til de websteder, der har forsøgt at få adgang til at bruge Gears.</string>
-<string id="string-version">Gears-version PRODUKT_VERSION</string>
+<string id="string-version">Gears-version PRODUCT_VERSION</string>
 <string id="string-html-title">Indstillinger til Gears</string>
 <string id="string-remove">Fjern</string>
