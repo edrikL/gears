@@ -322,15 +322,15 @@ def CreateRCFromStrings(target_file, localized_strings):
   for locale, strings in localized_strings.items():
     if locale not in LANGUAGE_IDS:
       print 'Unknown locale: %s' % locale
-    return False
+      return False
 
     lang_id = unicode(LANGUAGE_IDS[locale][1])
     sublang_id = unicode(LANGUAGE_IDS[locale][2])
-    outputi.append((u'\n'
-                    u'LANGUAGE %s, %s'
-                    u'STRINGTABLE DISCARDABLE'
-                    u'BEGIN'
-                    u'  IDS_LOCALE "%s"\n') % (lang_id, sublang_id, locale))
+    output.append((u'\n'
+                   u'LANGUAGE %s, %s\n'
+                   u'STRINGTABLE DISCARDABLE\n'
+                   u'BEGIN\n'
+                   u'  IDS_LOCALE "%s"\n') % (lang_id, sublang_id, locale))
 
     for string_id, string in strings.items():
       string = string.replace('"', r'""')
