@@ -457,7 +457,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
                      info->request_address,
                      STRING16(L""),  // info->address_language,
                      this);
-  // This only succeeds in builds with CCTESTS.
+  // This only succeeds in builds with CCTESTS when
+  // ConfigureGeolocationMockLocationProviderForTest has been called.
   if (mock_provider) {
     info->providers.push_back(mock_provider);
   }
@@ -476,8 +477,10 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
                        info->request_address && !reverse_geocoder_url.empty(),
                        info->address_language,
                        this);
-    assert(gps_provider);
-    info->providers.push_back(gps_provider);
+    // GPS is not available on all platforms.
+    if (gps_provider) {
+      info->providers.push_back(gps_provider);
+    }
   }
 
   // Network providers
@@ -489,6 +492,7 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
                        info->request_address,
                        info->address_language,
                        this);
+    // Network providers should always be available.
     assert(network_provider);
     info->providers.push_back(network_provider);
   }
