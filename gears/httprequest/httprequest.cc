@@ -51,40 +51,6 @@ static const char16 *kNotInteractiveError =
 static const char16 *kURLNotFromSameOriginError =
                          STRING16(L"URL is not from the same origin.");
 
-// Determines if a string is a valid token, as defined by
-// "token" in section 2.2 of RFC 2616.
-static bool IsValidToken(const std::string16 &token) {
-  if (token.empty()) {
-    return false;
-  }
-  size_t length = token.length();
-  for (size_t i = 0; i < length; ++i) {
-    char16 c = token[i];
-    if (c >= 127 || c <= 32) {
-      return false;
-    }
-    if (c == '(' || c == ')' || c == '<' || c == '>' || c == '@' ||
-        c == ',' || c == ';' || c == ':' || c == '\\' || c == '\"' ||
-        c == '/' || c == '[' || c == ']' || c == '?' || c == '=' ||
-        c == '{' || c == '}') {
-      return false;
-    }
-  }
-  return true;
-}
-
-static const char kInvalidHeaderValueChars[] = { '\r', '\n' };
-
-static bool IsValidHeaderValue(const std::string16 &value) {
-  // TODO(michaeln): Should validate more thoroughly per RFC 2616, section 4
-  // For now, just checking for line breaks to defeat header splitting
-  // security attacks.
-  std::string utf8 = String16ToUTF8(value);
-  return utf8.find_first_of(kInvalidHeaderValueChars, 0,
-                            ARRAYSIZE(kInvalidHeaderValueChars)) ==
-         std::string16::npos;
-}
-
 // Header prefixes that are disallowed
 static const std::string16 kDisallowedHeaderPrefixes[] = {
       std::string16(STRING16(L"Proxy-")),
@@ -115,7 +81,7 @@ static const char16* kDisallowedMethods[] = {
       STRING16(L"TRACK") };
 
 static bool IsValidHeader(const std::string16 &header) {
-  if (!IsValidToken(header)) {
+  if (!IsValidHttpToken(header)) {
     return false;
   }
   for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaderPrefixes));
@@ -133,7 +99,7 @@ static bool IsValidHeader(const std::string16 &header) {
 }
 
 static bool IsValidMethod(const std::string16 &method) {
-  if (!IsValidToken(method)) {
+  if (!IsValidHttpToken(method)) {
     return false;
   }
   for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedMethods)); ++i) {
@@ -266,7 +232,7 @@ void GearsHttpRequest::SetRequestHeader(JsCallContext *context) {
     context->SetException(STRING16(L"This header may not be set."));
     return;
   }
-  if (!IsValidHeaderValue(value)) {
+  if (!IsValidHttpHeaderValue(value)) {
     context->SetException(STRING16(L"This header value may not be set."));
     return;
   }

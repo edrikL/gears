@@ -328,9 +328,20 @@ function testCaptureBlob() {
     var store = getFreshStore();
     var captureUrl = '/captured.txt';
     var responseBlob = request.responseBlob;
+
     store.captureBlob(responseBlob, captureUrl);
+    assertBlobProbablyEqual(store.getAsBlob(captureUrl), responseBlob);
+    assertEqual('application/octet-stream',
+                store.getHeader(captureUrl, 'Content-Type'));
+
+    var contentType = request.getResponseHeader('Content-Type');
+    store.captureBlob(responseBlob, captureUrl, contentType);
+    assertBlobProbablyEqual(store.getAsBlob(captureUrl), responseBlob);
+    assertEqual(contentType, store.getHeader(captureUrl, 'Content-Type'));
+
     httpGetAsRequest(captureUrl, function(request2) {
       assertBlobProbablyEqual(responseBlob, request2.responseBlob);
+      assertEqual(contentType, request2.getResponseHeader('Content-Type'));
       completeAsync();
     });
   });

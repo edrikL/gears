@@ -103,7 +103,13 @@ class GearsResourceStore
   // OUT: string
   void GetAllHeaders(JsCallContext *context);
 
-  // IN: GearsBlob blob, string url
+  // IN: string url
+  // OUT: GearsBlob
+  void GetAsBlob(JsCallContext *context);
+
+  // IN: GearsBlob blob,
+  //     string url,
+  //     string opt_contentType,
   // OUT: -
   void CaptureBlob(JsCallContext *context);
 

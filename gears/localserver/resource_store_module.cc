@@ -33,7 +33,9 @@
 #include "gears/base/common/mime_detect.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
+#include "gears/blob/buffer_blob.h"
 #include "gears/blob/file_blob.h"
+#include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/file_submitter.h"
 
 
@@ -135,6 +137,7 @@ void Dispatcher<GearsResourceStore>::Init() {
   RegisterMethod("copy", &GearsResourceStore::Copy);
   RegisterMethod("getHeader", &GearsResourceStore::GetHeader);
   RegisterMethod("getAllHeaders", &GearsResourceStore::GetAllHeaders);
+  RegisterMethod("getAsBlob", &GearsResourceStore::GetAsBlob);
   RegisterMethod("captureBlob", &GearsResourceStore::CaptureBlob);
   RegisterMethod("captureFile", &GearsResourceStore::CaptureFile);
   RegisterMethod("getCapturedFileName",
@@ -431,13 +434,11 @@ void GearsResourceStore::Copy(JsCallContext *context) {
 }
 
 //------------------------------------------------------------------------------
-// CaptureBlob
+// GetAsBlob
 //------------------------------------------------------------------------------
-void GearsResourceStore::CaptureBlob(JsCallContext *context) {
-  ModuleImplBaseClass *other_module = NULL;
+void GearsResourceStore::GetAsBlob(JsCallContext *context) {
   std::string16 url;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url }
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
@@ -447,6 +448,48 @@ void GearsResourceStore::CaptureBlob(JsCallContext *context) {
   std::string16 full_url;
   if (!ResolveUrl(url.c_str(), &full_url)) {
     context->SetException(STRING16(L"Failed to resolve url."));
+    return;
+  }
+
+  ResourceStore::Item item;
+  if (!store_.GetItem(full_url.c_str(), &item)) {
+    context->SetException(STRING16(L"Failed to get blob."));
+    return;
+  }
+  assert(item.payload.data.get());
+
+  scoped_refptr<GearsBlob> blob_object;
+  if (!CreateModule<GearsBlob>(module_environment_.get(),
+                               context, &blob_object)) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+  blob_object->Reset(new BufferBlob(item.payload.data.get()));
+  context->SetReturnValue(JSPARAM_MODULE, blob_object.get());
+}
+
+//------------------------------------------------------------------------------
+// CaptureBlob
+//------------------------------------------------------------------------------
+void GearsResourceStore::CaptureBlob(JsCallContext *context) {
+  ModuleImplBaseClass *other_module = NULL;
+  std::string16 url, content_type;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &content_type }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::string16 full_url;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    context->SetException(STRING16(L"Failed to resolve url."));
+    return;
+  }
+  if (!content_type.empty() && !IsValidHttpHeaderValue(content_type)) {
+    context->SetException(STRING16(L"Invalid content type."));
     return;
   }
 
@@ -460,7 +503,8 @@ void GearsResourceStore::CaptureBlob(JsCallContext *context) {
 
   ResourceStore::Item item;
   if (!ResourceStore::BlobToItem(blob.get(), full_url.c_str(),
-                                 NULL, NULL, &item) ||
+                                 content_type.c_str(),
+                                 NULL, &item) ||
       !store_.PutItem(&item)) {
     context->SetException(STRING16(L"The blob could not be captured."));
     return;
@@ -686,8 +730,7 @@ void GearsResourceStore::AbortAllRequests() {
 //------------------------------------------------------------------------------
 // StartCaptureTaskIfNeeded
 //------------------------------------------------------------------------------
-bool
-GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
+bool GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   if (page_is_unloaded_) {
     // We silently fail for this particular error condition to prevent callers
     // from detecting errors and making noises after the page has been unloaded

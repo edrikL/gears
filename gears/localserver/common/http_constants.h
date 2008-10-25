@@ -107,4 +107,11 @@ bool IsValidResponseCode(int code);
 // The scheme should be either "http", "https", or "file", all lower case.
 bool IsDefaultPort(const std::string16 &scheme, int port);
 
+// Returns true if the string is a valid token, as defined by
+// "token" in section 2.2 of RFC 2616.
+bool IsValidHttpToken(const std::string16 &token);
+
+// Returns true if the string is a valid header value.
+bool IsValidHttpHeaderValue(const std::string16 &value);
+
 #endif  // GEARS_LOCALSERVER_COMMON_HTTP_CONSTANTS_H__
