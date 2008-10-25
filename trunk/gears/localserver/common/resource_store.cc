@@ -85,7 +85,7 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
     return false;
   }
   int data_len = static_cast<int>(file_size);
-  if (optional_content_type == NULL) {
+  if (optional_content_type == NULL || optional_content_type[0] == 0) {
     optional_content_type = STRING16(L"application/octet-stream");
   }
 
@@ -111,7 +111,7 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
                data_len_str.c_str());
   AppendHeader(headers, HttpConstants::kContentTypeHeader,
                optional_content_type);
-  if (optional_x_captured_filename) {
+  if (optional_x_captured_filename && optional_x_captured_filename[0]) {
     AppendHeader(headers, HttpConstants::kXCapturedFilenameHeader,
                  optional_x_captured_filename);
   }

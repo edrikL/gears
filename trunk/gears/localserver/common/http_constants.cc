@@ -160,3 +160,35 @@ bool IsDefaultPort(const std::string16 &scheme, int port) {
          ((scheme == HttpConstants::kFileScheme) &&
           (port == HttpConstants::kFileDefaultPort));
 }
+
+// Determines if a string is a valid token, as defined by
+// "token" in section 2.2 of RFC 2616.
+bool IsValidHttpToken(const std::string16 &token) {
+  if (token.empty()) {
+    return false;
+  }
+  size_t length = token.length();
+  for (size_t i = 0; i < length; ++i) {
+    char16 c = token[i];
+    if (c >= 127 || c <= 32) {
+      return false;
+    }
+    if (c == '(' || c == ')' || c == '<' || c == '>' || c == '@' ||
+        c == ',' || c == ';' || c == ':' || c == '\\' || c == '\"' ||
+        c == '/' || c == '[' || c == ']' || c == '?' || c == '=' ||
+        c == '{' || c == '}') {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool IsValidHttpHeaderValue(const std::string16 &value) {
+  // TODO(michaeln): Should validate more thoroughly per RFC 2616, section 4
+  // For now, just checking for line breaks to defeat header splitting
+  // security attacks.
+  const char kInvalidChars[] = { '\r', '\n' };
+  std::string utf8 = String16ToUTF8(value);
+  return utf8.find_first_of(kInvalidChars, 0, ARRAYSIZE(kInvalidChars)) ==
+         std::string16::npos;
+}
