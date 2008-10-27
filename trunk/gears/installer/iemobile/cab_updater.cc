@@ -25,9 +25,10 @@
 
 #include "gears/installer/iemobile/cab_updater.h"
 
+#include "gears/base/common/file.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/thread_locals.h"
-#include "gears/base/ie/bho.h"
+#include "gears/installer/common/installer_utils.h"
 #include "gears/installer/iemobile/resource.h"
 
 // TODO(andreip): When updating the Gears 'guid' field, consider switching
@@ -40,6 +41,8 @@ const char16* kTopic = STRING16(L"Cab Update Event");
 // The key for ThreadLocals.
 const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
+const char16 *kGearsCabName = L"gears-wince-opt.cab";
+
 // The delay before the first update.
 const int32 kFirstUpdatePeriod = (1000 * 60 * 2);  // 2 minutes
 // The time interval between the rest of the update checks.
@@ -50,17 +53,22 @@ const int32 kGracePeriod = (1000 * 30);  // 30 seconds
 
 CabUpdater::CabUpdater()
     : checker_(PeriodicChecker::CreateChecker()),
-      is_showing_update_dialog_(false) {
+      is_showing_update_dialog_(false),
+      download_task_(NULL) {
 }
 
 CabUpdater::~CabUpdater() {
-  ASSERT(checker_);
+  assert(checker_);
   delete checker_;
+  if (download_task_) {
+    download_task_->StopThreadAndDelete();
+  }
 }
 
-void CabUpdater::SetSiteAndStart(IWebBrowser2* browser) {
-  ASSERT(checker_);
-  browser_ = browser;
+void CabUpdater::Start(HWND browser_window) {
+  browser_window_ = browser_window;
+  assert(browser_window_);
+  assert(checker_);
   if (checker_->Init(kFirstUpdatePeriod, kUpdatePeriod, kGracePeriod,
                      kApplicationId, this)) {
     MessageService::GetInstance()->AddObserver(this, kTopic);
@@ -73,31 +81,31 @@ void CabUpdater::SetSiteAndStart(IWebBrowser2* browser) {
 void CabUpdater::OnNotify(MessageService *service,
                           const char16 *topic,
                           const NotificationData *data) {
+  assert(wcscmp(topic, kTopic) == 0);
+  assert(data == NULL);
   // The user is already looking at the update dialog. Can only happen
   // in rare circumstances, when an update was found, the browser is running
   // but the user hasn't looked at it in the last 24 hours.
   if (is_showing_update_dialog_) return;
 
-  is_showing_update_dialog_ = true;
-  // Get the event in the right format.
-  const SerializableString16* update_event =
-      static_cast<const SerializableString16*>(data);
-  // Check if the browser is busy.
-  VARIANT_BOOL is_busy;
-  browser_->get_Busy(&is_busy);
-  // Detect the browser state.
-  READYSTATE state;
-  browser_->get_ReadyState(&state);
-  // Only show the update dialog if the browser isn't in the middle of a
-  // download or showing some other notification to the user.
-  if (!is_busy && state == READYSTATE_COMPLETE) {
-    HWND browser_window = BrowserHelperObject::GetBrowserWindow();
-    if (browser_window && ShowUpdateDialog(browser_window)) {
-        // Convert the URL to the format expected by the browser object.
-        CComBSTR url(update_event->string_.c_str());
-        browser_->Navigate(url, NULL, NULL, NULL, NULL);
+  // The cab installation process handles restarting the browser.
+  bool need_to_delete_cab = true;
+  if (ShowUpdateAvailableDialog()) {
+    if (InstallCab(temp_file_path_.c_str())) {
+      // The installation process was started, so leave it to the installer to
+      // delete the CAB when it's done.
+      need_to_delete_cab = false;
+    } else {
+      // We failed to start the installation process. Note that we can't detect
+      // failure of the installation process itself, but this is unlikely.
+      ShowInstallationFailedDialog();
     }
   }
+
+  if (need_to_delete_cab) {
+    File::Delete(temp_file_path_.c_str());
+  }
+
   is_showing_update_dialog_ = false;
 }
 
@@ -105,7 +113,7 @@ void CabUpdater::OnNotify(MessageService *service,
 
 // static
 void CabUpdater::Stop(void* self) {
-  ASSERT(self);
+  assert(self);
   CabUpdater* updater = reinterpret_cast<CabUpdater*>(self);
   // Stop the periodic checker, without waiting for it to clean up. In general
   // this is dangerous, because the periodic checker's worker thread may attempt
@@ -119,31 +127,70 @@ void CabUpdater::Stop(void* self) {
   MessageService::GetInstance()->RemoveObserver(updater, kTopic);
 }
 
-bool CabUpdater::ShowUpdateDialog(HWND browser_window) {
+bool CabUpdater::ShowUpdateAvailableDialog() {
   HMODULE module = GetModuleHandle(PRODUCT_SHORT_NAME);
   if (!module) return false;
   // Load the dialog strings
   LPCTSTR message = reinterpret_cast<LPCTSTR>(
       LoadString(module,
-                 IDS_UPGRADE_MESSAGE,
+                 IDS_UPGRADE_AVAILABLE_MESSAGE,
                  NULL,
                  0));
   LPCTSTR title = reinterpret_cast<LPCTSTR>(
       LoadString(module,
-                 IDS_UPGRADE_DIALOG_TITLE,
+                 IDS_UPGRADE_AVAILABLE_DIALOG_TITLE,
                  NULL,
                  0));
   // Can't communicate with the user. Something is terribly wrong. Abort.
   if (!message || !title) return false;
 
-  return (IDYES == MessageBox(browser_window,
+  return (IDYES == MessageBox(browser_window_,
                               message,
                               title,
                               MB_YESNO | MB_ICONQUESTION));
 }
 
+bool CabUpdater::ShowInstallationFailedDialog() {
+  HMODULE module = GetModuleHandle(PRODUCT_SHORT_NAME);
+  if (!module) return false;
+  // Load the dialog strings
+  LPCTSTR message = reinterpret_cast<LPCTSTR>(
+      LoadString(module,
+                 IDS_INSTALL_FAILURE_MESSAGE,
+                 NULL,
+                 0));
+  LPCTSTR title = reinterpret_cast<LPCTSTR>(
+      LoadString(module,
+                 IDS_INSTALLING_DIALOG_TITLE,
+                 NULL,
+                 0));
+  // Can't communicate with the user. Something is terribly wrong. Abort.
+  if (!message || !title) return false;
+
+  MessageBox(browser_window_, message, title, MB_OK);
+  return true;
+}
+
+// PeriodicChecker::ListenerInterface implementation
 void CabUpdater::UpdateUrlAvailable(const std::string16 &url) {
+  // Start the download task
+  MutexLock lock(&download_task_mutex_);
+  if (download_task_ == NULL) {
+    // Cache the temp file we use for the download and start the download.
+
+    if (File::GetBaseTemporaryDirectory(&temp_file_path_)) {
+      temp_file_path_ += kGearsCabName;
+      download_task_ =
+          DownloadTask::Create(url.c_str(), temp_file_path_.c_str(), this);
+    }
+  }
+}
+
+// DownloadTask::ListenerInterface implementation
+void CabUpdater::DownloadComplete() {
   // Marshall the callback to the browser thread so that we can show the dialog.
-  SerializableString16* update_event = new SerializableString16(url.c_str());
-  MessageService::GetInstance()->NotifyObservers(kTopic, update_event);
+  MessageService::GetInstance()->NotifyObservers(kTopic, NULL);
+  MutexLock lock(&download_task_mutex_);
+  download_task_->StopThreadAndDelete();
+  download_task_ = NULL;
 }

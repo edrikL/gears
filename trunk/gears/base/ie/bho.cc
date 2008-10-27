@@ -56,12 +56,13 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   } else {
     HttpHandler::Register();
 
-    static CabUpdater updater;
     CComQIPtr<IWebBrowser2> site = pUnkSite;
     ASSERT(site);
-    updater.SetSiteAndStart(site);   
     assert(NULL == browser_window_);
     site->get_HWND(reinterpret_cast<long*>(&browser_window_));
+
+    static CabUpdater updater;
+    updater.Start(browser_window_);   
   }
   return S_OK;
 }

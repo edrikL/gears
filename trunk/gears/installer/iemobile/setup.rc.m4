@@ -34,9 +34,11 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_RESTART_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ - Installing"
+    IDS_UPGRADE_AVAILABLE_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ"
+    IDS_UPGRADE_AVAILABLE_MESSAGE "A new version of PRODUCT_FRIENDLY_NAME_UQ for Internet Explorer is available. Installation requires Internet Explorer to be restarted. Would you like to install it now?"
+
+    IDS_INSTALLING_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ - Installing"
+    IDS_INSTALL_FAILURE_MESSAGE "Installation of the new version of PRODUCT_FRIENDLY_NAME_UQ failed. PRODUCT_FRIENDLY_NAME_UQ will try again later."
     IDS_REBOOT_MESSAGE "For PRODUCT_FRIENDLY_NAME_UQ to function correctly, you must restart your device once this installation is complete."
     IDS_START_FAILURE_MESSAGE "PRODUCT_FRIENDLY_NAME_UQ failed to start Internet Explorer. Please start it manually."
-    IDS_UPGRADE_MESSAGE "A new version of PRODUCT_FRIENDLY_NAME_UQ is available. Would you like to install it?"
-    IDS_UPGRADE_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ"
 END

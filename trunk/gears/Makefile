@@ -2339,6 +2339,8 @@ $(BROWSER)_VPATH	+= \
 
 $(BROWSER)_CPPSRCS	+= \
 		download_task.cc \
+		installer_utils.cc \
+		process_restarter.cc \
 		$(NULL)
 endif
 

@@ -125,7 +125,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
     // This leaves Gears in an inconsistent state until IE is restarted.
     LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
-        IDS_RESTART_DIALOG_TITLE,
+        IDS_INSTALLING_DIALOG_TITLE,
         NULL,
         0));
     LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
@@ -142,7 +142,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
       // Unfortunately we failed, so inform the user.
       LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
           module_instance,
-          IDS_RESTART_DIALOG_TITLE,
+          IDS_INSTALLING_DIALOG_TITLE,
           NULL,
           0));
       LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
