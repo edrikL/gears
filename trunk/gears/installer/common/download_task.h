@@ -38,7 +38,7 @@ class DownloadTask : public AsyncTask {
 
   class ListenerInterface {
    public:
-    virtual void DownloadComplete() = 0;
+    virtual void DownloadComplete(bool success) = 0;
   };
 
   static DownloadTask *Create(const char16 *url,

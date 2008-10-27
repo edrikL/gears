@@ -76,7 +76,7 @@ class CabUpdater
   virtual void UpdateUrlAvailable(const std::string16 &url);
 
   // DownloadTask::ListenerInterface implementation
-  virtual void DownloadComplete();
+  virtual void DownloadComplete(bool success);
 
   // The periodic update checker. Owned.
   PeriodicChecker* checker_;

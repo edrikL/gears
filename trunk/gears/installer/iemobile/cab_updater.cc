@@ -187,9 +187,12 @@ void CabUpdater::UpdateUrlAvailable(const std::string16 &url) {
 }
 
 // DownloadTask::ListenerInterface implementation
-void CabUpdater::DownloadComplete() {
-  // Marshall the callback to the browser thread so that we can show the dialog.
-  MessageService::GetInstance()->NotifyObservers(kTopic, NULL);
+void CabUpdater::DownloadComplete(bool success) {
+  if (success) {
+    // Marshall the callback to the browser thread so that we can show the
+    // dialog.
+    MessageService::GetInstance()->NotifyObservers(kTopic, NULL);
+  }
   MutexLock lock(&download_task_mutex_);
   download_task_->StopThreadAndDelete();
   download_task_ = NULL;
