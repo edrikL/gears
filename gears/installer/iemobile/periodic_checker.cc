@@ -30,6 +30,7 @@
 #include "gears/blob/blob_utils.h"
 #include "gears/installer/iemobile/resource.h"
 #include "gears/localserver/common/async_task.h"
+#include "gears/localserver/common/http_constants.h"
 #include "genfiles/product_constants.h"
 
 const char16* kUpgradeUrl = L"http://tools.google.com/service/update2/ff?"
@@ -355,6 +356,11 @@ void VersionFetchTask::Run() {
     if (payload_data->Length() &&
         BlobToString16(payload_data.get(), charset, &xml) &&
         ExtractVersionAndDownloadUrl(xml)) {
+      // If the URL uses HTTPS, switch the scheme to HTTP, because some WinCE
+      // devices complain about certificate permissions when using HTTPS.
+      if (url_.find(HttpConstants::kHttpsScheme) == 0) {
+        url_.replace(0, 5, HttpConstants::kHttpScheme);
+      }
       success = true;
     }
   }

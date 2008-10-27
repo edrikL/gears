@@ -83,7 +83,7 @@ void DownloadTask::Run() {
       success = true;
     }
   }
-  listener_->DownloadComplete();
+  listener_->DownloadComplete(success);
 }
 
 bool DownloadTask::SaveToFile(BlobInterface *data) {
