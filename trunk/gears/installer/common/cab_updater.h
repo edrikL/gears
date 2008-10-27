@@ -23,18 +23,17 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// This file defines the CabUpdater class, which uses the PeriodicChecker to
-// handle automitic updating.
+// This file defines the CabUpdater class, which uses the PeriodicChecker and
+// DownloadTask to handle automitic updating.
 //
-// 1. When the Gears BHO is loaded, the CabUpdater is started immediately after
-// the HTTP handler is registered. The PeriodicChecker is configured to check 
-// for an update after two minutes and every 24 hours thereafter. The
-// PeriodicChecker is started.
-// 2. If the PeriodicChecker reports a new version, we present the user with a
-// dialog, asking if they would like to upgrade.
-// 3. If the user agrees, the CabUpdater uses the IWebBrowser2 pointer to make
-// the browser download the new CAB.
-// 4. The CabUpdater waits for a new update from the PeriodicChecker and
+// 1. The PeriodicChecker is configured to check for an update after two minutes
+// and every 24 hours thereafter.
+// 2. If the PeriodicChecker reports a new version, we use the DownloadTask to
+// download the new CAB.
+// 3. If this succeeds, we present the user with a dialog, asking if they would
+// like to install the new version.
+// 4. If the user agrees, we invoke wceload to install the CAB.
+// 5. The CabUpdater waits for a new update from the PeriodicChecker and
 // continues from step 2.
 
 #ifndef GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
@@ -43,7 +42,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/message_service.h"
 #include "gears/installer/common/download_task.h"
-#include "gears/installer/iemobile/periodic_checker.h"
+#include "gears/installer/common/periodic_checker.h"
 
 class CabUpdater
     : public MessageObserverInterface,

@@ -33,7 +33,7 @@
 #include <piedocvw.h>
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/installer/iemobile/cab_updater.h"
+#include "gears/installer/common/cab_updater.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 
 HWND BrowserHelperObject::browser_window_ = NULL;

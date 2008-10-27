@@ -23,16 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/installer/iemobile/cab_updater.h"
+#include "gears/installer/common/cab_updater.h"
 
 #include "gears/base/common/file.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/installer/common/installer_utils.h"
-#include "gears/installer/iemobile/resource.h"
+#include "gears/installer/common/resource.h"
 
 // TODO(andreip): When updating the Gears 'guid' field, consider switching
-// 'application' to a GUID that means Pocket IE (to match Firefox pings).
+// 'application' to a GUID that identifies the browser (to match Firefox pings).
 // Also remind cprince to update the stats logic when 'guid' changes.
 const char16* kApplicationId = L"%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D";
 

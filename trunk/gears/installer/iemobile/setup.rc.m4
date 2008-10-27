@@ -22,9 +22,13 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// These strings are specific to the IE version of the cab_installer for WinCE,
+// but we share the string IDs in installer/common/resource.h with the versions
+// for other browsers.
 
 #include "afxres.h"
-#include "installer/iemobile/resource.h"
+#include "installer/common/resource.h"
 
 //-----------------------------------------------------------------------------
 // Strings for the setup dialog

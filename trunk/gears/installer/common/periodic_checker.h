@@ -36,6 +36,7 @@
 #include <atlsync.h>  // For CEvent
 #include <gears/base/common/string16.h>
 #include "gears/base/common/wince_compatibility.h"
+// TODO(steveblock): Separate out browser-independent parts of this include.
 #include "gears/base/ie/atl_headers.h"
 
 // An implemnentation detail of PeriodicChecker.

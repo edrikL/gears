@@ -27,8 +27,8 @@
 
 #include <windows.h>  // must be first
 #include <winioctl.h>
-#include "gears/installer/iemobile/process_restarter.h"
-#include "gears/installer/iemobile/resource.h"  // for restart dialog strings
+#include "gears/installer/common/process_restarter.h"
+#include "gears/installer/common/resource.h"  // for restart dialog strings
 
 static const char16* kInternetExplorerExe = L"iexplore.exe";
 // Note that this string does not appear to be localized by Microsoft.

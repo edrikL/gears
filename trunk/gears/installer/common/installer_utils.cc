@@ -25,9 +25,7 @@
 
 #include "gears/installer/common/installer_utils.h"
 
-// TODO(steveblock): Move ProcessRestarter (and CabUpdater and PeriodicChecker)
-// to installer/common.
-#include "gears/installer/iemobile/process_restarter.h"
+#include "gears/installer/common/process_restarter.h"
 
 static const char16 *kWceloadExe = L"wceload.exe";
 static const char16 *kWceloadWindowName = L"Installation";
