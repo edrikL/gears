@@ -23,12 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/installer/iemobile/periodic_checker.h"
+#include "gears/installer/common/periodic_checker.h"
 
 #include "gears/base/ie/activex_utils.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
-#include "gears/installer/iemobile/resource.h"
+#include "gears/installer/common/resource.h"
 #include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/http_constants.h"
 #include "genfiles/product_constants.h"
@@ -261,6 +261,8 @@ LRESULT PeriodicChecker::OnComplete(UINT message,
     // If it appears that we don't have a connection, wait for one to appear.
     // Otherwise, the error must have been on the network, so we'll try again
     // when the timer next expires.
+    // TODO(steveblock): Use a browser-independent method to get connection
+    // state.
     if (!ActiveXUtils::IsOnline()) {
       ConnMgrRegisterForStatusChangeNotification(TRUE, window_);
     }
@@ -277,6 +279,7 @@ LRESULT PeriodicChecker::OnComplete(UINT message,
 void PeriodicChecker::OnConnectionStatusChanged() {
   // Unregister from connection events. We'll register again
   // if the update check fails.
+  // TODO(steveblock): Use a browser-independent method to get connection state.
   if (ActiveXUtils::IsOnline()) {
     ConnMgrRegisterForStatusChangeNotification(FALSE, window_);
     // Schedule a check after the grace period.
@@ -338,6 +341,7 @@ void VersionFetchTask::Run() {
   scoped_refptr<BlobInterface> payload_data;
   bool success = false;
   std::string16 url = kUpgradeUrl + application_id_;
+  // TODO(steveblock): Use a browser-independent method to get connection state.
   if (ActiveXUtils::IsOnline() &&
       AsyncTask::HttpGet(url.c_str(),
                          true,

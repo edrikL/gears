@@ -2338,8 +2338,10 @@ $(BROWSER)_VPATH	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
+		cab_updater.cc \
 		download_task.cc \
 		installer_utils.cc \
+		periodic_checker.cc \
 		process_restarter.cc \
 		$(NULL)
 endif
@@ -2350,6 +2352,7 @@ endif
 ifeq ($(OS),wince)
 ifeq ($(BROWSER),IE)
 IE_VPATH	+= \
+		installer/common \
 		installer/iemobile \
 		$(NULL)
 
@@ -2365,16 +2368,6 @@ IE_WINCESETUP_LINK_EXTRAS += \
 # List these setup-related items in IE_FOO just so they get built before used.
 IE_M4SRCS	+= \
 		setup.rc.m4 \
-		$(NULL)
-
-IE_LINK_EXTRAS += \
-		$(IE_OUTDIR)/setup.res \
-		$(NULL)
-
-# TODO(cprince): move this to another source path; IE_MODULE_DLL links it.
-IE_CPPSRCS += \
-		cab_updater.cc \
-		periodic_checker.cc \
 		$(NULL)
 endif # IE
 endif # wince
