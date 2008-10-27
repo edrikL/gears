@@ -40,20 +40,20 @@
 #ifndef GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
 #define GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
 
-#include <piedocvw.h>
-
 #include "gears/base/common/common.h"
 #include "gears/base/common/message_service.h"
+#include "gears/installer/common/download_task.h"
 #include "gears/installer/iemobile/periodic_checker.h"
 
 class CabUpdater
     : public MessageObserverInterface,
-      public PeriodicChecker::ListenerInterface {
+      public PeriodicChecker::ListenerInterface,
+      public DownloadTask::ListenerInterface {
  public:
   CabUpdater();
   virtual ~CabUpdater();
   // Starts the updater.
-  void SetSiteAndStart(IWebBrowser2* browser);
+  void Start(HWND browser_window);
 
   // MessageObserverInterface
 
@@ -67,17 +67,31 @@ class CabUpdater
  private:
   // Stop method called when the DLL unloads.
   static void Stop(void* self);
-  // Shows the update dialog to the user.
-  bool ShowUpdateDialog(HWND browser_window);
+  // Shows the dialog saying that an update is available.
+  bool ShowUpdateAvailableDialog();
+  // Shows the dialog saying that installation failed.
+  bool ShowInstallationFailedDialog();
+
   // PeriodicChecker::ListenerInterface implementation
   virtual void UpdateUrlAvailable(const std::string16 &url);
 
-  // We drive the browser through this IWebBrowser2 pointer. Not owned.
-  IWebBrowser2* browser_;
+  // DownloadTask::ListenerInterface implementation
+  virtual void DownloadComplete();
+
   // The periodic update checker. Owned.
   PeriodicChecker* checker_;
   // Is the update dialog showing?
   bool is_showing_update_dialog_;
+
+  // The task to download the new CAB.
+  DownloadTask *download_task_;
+  Mutex download_task_mutex_;
+
+  // The window that will be used as the parent of the dialogs.
+  HWND browser_window_;
+
+  // The temporary file that will be used for the downloaded CAB.
+  std::string16 temp_file_path_;
 
   DISALLOW_EVIL_CONSTRUCTORS(CabUpdater);
 };

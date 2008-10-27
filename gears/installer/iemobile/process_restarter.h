@@ -51,11 +51,11 @@ class ProcessRestarter {
                    const char16* window_name);
   virtual ~ProcessRestarter();
 
-  // Go through process list try to find the required one to kill,
-  // trying three methods to kill, from easiest and cleanest to a
-  // harsh one.  S_OK if no process by the right name was found, or if it was
-  // found and was killed.  E_FAIL otherwise.  was_found returns true if
-  // process was found. Kills all instances of a process.
+  // Go through process list try to find the required one to kill, trying three
+  // methods to kill, from easiest and cleanest to a harsh one. Returns S_FALSE
+  // if no process by the right name was found, or S_OK if it was found and was
+  // killed. Returns E_FAIL otherwise. was_found is set to true if the process
+  // was found. Kills all instances of a process.
   HRESULT KillTheProcess(int timeout_msec, uint32 method_mask, 
                          bool* was_found_out);
 
