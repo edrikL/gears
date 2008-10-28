@@ -107,6 +107,63 @@ void DropTarget::UnregisterSelf() {
 }
 
 
+void DropTarget::AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event) {
+  if (!xp_connect_) {
+    nsresult nr = NS_OK;
+    xp_connect_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
+    if (NS_FAILED(nr) || !xp_connect_) {
+      return;
+    }
+  }
+
+  JSContext *js_context = module_environment_->js_runner_->GetContext();
+#if BROWSER_FF2
+  // All we want to do, inside this #if BROWSER_FF2 block, is to call
+  //   JSObject *scope = JS_GetScopeChain(js_context);
+  // However, Mozilla bug 390160 says that JS_GetScopeChain sometimes returns
+  // NULL, resulting in a "Nothing active on context" JavaScript error.
+  // This bug was fixed for Gecko 1.9 (i.e. Firefox 3), but we have to
+  // backport the JS_GetScopeChain patch for Firefox2. The patch is at
+  // https://bugzilla.mozilla.org/attachment.cgi?id=274863
+  // and the original bug report is at
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=390160
+  JSObject *global_object = JS_GetGlobalObject(js_context);
+  JSObject *scope = global_object;
+  if (scope) {
+    // The remainder of the backported patch is to call
+    //   OBJ_TO_INNER_OBJECT(js_context, scope);
+    // but we don't have access to the OBJ_TO_INNER_OBJECT macro (it is
+    // defined inside mozilla/js/src/jsobj.h), so we just do it manually.
+    JSClass *global_object_class = JS_GetClass(js_context, global_object);
+    if (global_object_class->flags & JSCLASS_IS_EXTENDED) {
+      JSExtendedClass *extended_class = (JSExtendedClass*) global_object_class;
+      if (extended_class->innerObject) {
+        scope = extended_class->innerObject(js_context, scope);
+      }
+    }
+  }
+#else
+  JSObject *scope = JS_GetScopeChain(js_context);
+#endif
+
+  // For more on XPConnect and its various wrapper objects, see
+  // http://wiki.mozilla.org/XPConnect_object_wrapping
+  static const nsIID isupports_iid = NS_GET_IID(nsISupports);
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  if (NS_FAILED(xp_connect_->WrapNative(js_context, scope, event,
+                                        isupports_iid,
+                                        getter_AddRefs(holder)))) {
+    return;
+  }
+
+  JSObject *object = NULL;
+  if (NS_FAILED(holder->GetJSObject(&object))) {
+    return;
+  }
+  js_object->SetProperty(STRING16(L"event"), OBJECT_TO_JSVAL(object));
+}
+
+
 NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsCOMPtr<nsIDragService> drag_service =
       do_GetService("@mozilla.org/widget/dragservice;1");
@@ -139,6 +196,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
     context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+    AddEventToJsObject(context_object.get(), event);
 
     const int argc = 1;
     JsParamToSend argv[argc] = {
@@ -159,6 +217,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     if (callback) {
       scoped_ptr<JsObject> context_object(
           module_environment_->js_runner_->NewObject());
+      AddEventToJsObject(context_object.get(), event);
       const int argc = 1;
       JsParamToSend argv[argc] = {
         { JSPARAM_OBJECT, context_object.get() }

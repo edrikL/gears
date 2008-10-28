@@ -9,6 +9,7 @@
 </ol>
 <button onclick="toggleEnabledDisabled()">Toggle Enabled / Disabled</button>
 <div id="enabledDisabled" style="color:red; font-weight:bold">&nbsp;</div>
+<div id="eventOutput">&nbsp;</div>
 </div>
 <div id="dragEnterOutput">&nbsp;</div>
 <div id="dragOverOutput">&nbsp;</div>
@@ -27,6 +28,11 @@ var dropZone = document.getElementById('dropZone');
 var desktop = google.gears.factory.create('beta.desktop');
 var dropTargetRegistration = null;
 
+function updateEventOutput(event) {
+  document.getElementById('eventOutput').innerHTML =
+      'clientX: ' + event.clientX + ', ' + 'clientY: ' + event.clientY;
+}
+
 function toggleEnabledDisabled() {
   if (dropTargetRegistration) {
     document.getElementById('enabledDisabled').innerHTML =
@@ -39,6 +45,7 @@ function toggleEnabledDisabled() {
       'ondragenter': function(context) {
         dragEnterCount++;
         eventCount++;
+        updateEventOutput(context.event);
         document.getElementById('dragEnterOutput').innerHTML =
             'Got <b>dragenter</b>: ' + dragEnterCount +
                 ' times, most recent sequence number is ' + eventCount;
@@ -46,6 +53,7 @@ function toggleEnabledDisabled() {
       'ondragover': function(context) {
         dragOverCount++;
         eventCount++;
+        updateEventOutput(context.event);
         document.getElementById('dragOverOutput').innerHTML =
             'Got <b>dragover</b>: ' + dragOverCount +
                 ' times, most recent sequence number is ' +  eventCount;
@@ -53,6 +61,7 @@ function toggleEnabledDisabled() {
       'ondragleave': function(context) {
         dragLeaveCount++;
         eventCount++;
+        updateEventOutput(context.event);
         document.getElementById('dragLeaveOutput').innerHTML =
             'Got <b>dragleave</b>: ' + dragLeaveCount +
                 ' times, most recent sequence number is ' +  eventCount;
@@ -60,6 +69,7 @@ function toggleEnabledDisabled() {
       'ondrop': function(context) {
         dropCount++;
         eventCount++;
+        updateEventOutput(context.event);
         var s = 'Got <b>drop</b>: ' + dropCount +
             ' times, most recent sequence number is ' +  eventCount + '<hr/>';
         for (i = 0; i < context.files.length; i++) {
