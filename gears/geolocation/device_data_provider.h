@@ -262,6 +262,10 @@ class DeviceDataProvider {
     factory_function_ = factory_function_in;
   }
 
+  static void ResetFactory() {
+    factory_function_ = DefaultFactoryFunction;
+  }
+
   // Adds a listener, which will be called back with DeviceDataUpdateAvailable
   // whenever new data is available. Returns the singleton instance.
   static DeviceDataProvider *Register(ListenerInterface *listener) {

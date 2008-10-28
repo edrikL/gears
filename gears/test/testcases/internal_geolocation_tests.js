@@ -428,3 +428,18 @@ function testMockProvider() {
                                    {gearsLocationProviderUrls: []});
   }
 }
+
+function testRadioDataProvider() {
+  // This test only works on the Android emulator.
+  // On WinCE, we cannot test the RIL library while
+  // desktop platforms do not use radio data.
+  if (isUsingCCTests && isAndroid) {
+    function callback(carrier) {
+      assertEqual('Android', carrier);
+      completeAsync();
+    }
+    startAsync();
+    internalTests.removeMockRadioDataProvider();
+    internalTests.testRadioDataProvider(callback);
+  }
+}

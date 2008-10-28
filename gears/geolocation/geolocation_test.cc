@@ -38,6 +38,9 @@
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/network_location_request.h"
+#ifdef OS_ANDROID
+#include "gears/geolocation/radio_data_provider_test_android.h"
+#endif
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 // TODO(steveblock): Many of the string constants for network request and
@@ -402,6 +405,25 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   context->SetReturnValue(JSPARAM_OBJECT, return_object.get());
 }
 
+#ifdef OS_ANDROID
+void TestRadioDataProvider(JsRunnerInterface *js_runner,
+                           JsCallContext *context) {
+  JsRootedCallback *callback;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+  };
+
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
+  // The AndroidRadioDataProviderTest deletes itself
+  // when the test completes.
+  AndroidRadioDataProviderTest *test_object =
+      AndroidRadioDataProviderTest::Create(js_runner, callback);
+}
+#endif
+
 void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
   assert(context);
 
@@ -476,6 +498,10 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
 
   MockDeviceDataProviderImpl<RadioData>::SetData(radio_data);
   RadioDataProvider::SetFactory(MockDeviceDataProviderImpl<RadioData>::Create);
+}
+
+void RemoveMockRadioDataProvider() {
+  RadioDataProvider::ResetFactory();
 }
 
 void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {

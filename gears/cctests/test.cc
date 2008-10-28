@@ -81,12 +81,17 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestGeolocationGetLocationFromResponse);
   RegisterMethod("configureGeolocationRadioDataProviderForTest",
                  &GearsTest::ConfigureGeolocationRadioDataProviderForTest);
+  RegisterMethod("removeMockRadioDataProvider",
+                 &GearsTest::RemoveMockRadioDataProvider);
   RegisterMethod("configureGeolocationWifiDataProviderForTest",
                  &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
   RegisterMethod("configureGeolocationMockLocationProviderForTest",
                  &GearsTest::ConfigureGeolocationMockLocationProviderForTest);
   RegisterMethod("removeGeolocationMockLocationProvider",
                  &GearsTest::RemoveGeolocationMockLocationProvider);
+#ifdef OS_ANDROID
+  RegisterMethod("testRadioDataProvider", &GearsTest::TestRadioDataProvider);
+#endif
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
 #else
@@ -2131,6 +2136,10 @@ void GearsTest::ConfigureGeolocationRadioDataProviderForTest(
   ::ConfigureGeolocationRadioDataProviderForTest(context);
 }
 
+void GearsTest::RemoveMockRadioDataProvider(JsCallContext* /* context */) {
+  ::RemoveMockRadioDataProvider();
+}
+
 void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationWifiDataProviderForTest(context);
@@ -2145,6 +2154,12 @@ void GearsTest::RemoveGeolocationMockLocationProvider(
     JsCallContext * /* context */) {
   ::RemoveGeolocationMockLocationProvider();
 }
+
+#ifdef OS_ANDROID
+void GearsTest::TestRadioDataProvider(JsCallContext *context) {
+  ::TestRadioDataProvider(GetJsRunner(), context);
+}
+#endif
 
 #ifdef OFFICIAL_BUILD
 // The Audio API has not been finalized for official builds.

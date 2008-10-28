@@ -44,6 +44,13 @@ void TestGeolocationFormRequestBody(JsCallContext *context);
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
                                             JsRunnerInterface *js_runner);
 
+#ifdef OS_ANDROID
+  // IN: function callback
+  // OUT: nothing
+  void TestRadioDataProvider(JsRunnerInterface *js_runner,
+                             JsCallContext *context);
+#endif
+
 // Configures the radio data provider factory to use a mock radio device data
 // provider and sets the data that the mock provider will provide. Note that
 // we only support data for one cell. Fields are cell_id, location_area_code,
@@ -54,6 +61,13 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
 // OUT: nothing
 void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
 
+  // Removes the mock radio data provider. After this call, the radio data
+  // provider factory will be creating 'real' radio data provider instances
+  // again.
+  // IN: nothing
+  // OUT: nothing
+  void RemoveMockRadioDataProvider();
+
 // Configures the wifi data provider factory to use a mock wifi device data
 // provider and sets the that the mock provider will provide. Note that
 // we only support data for one access_point. Fields are mac_address,
@@ -61,6 +75,8 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
 // IN: object wifi_data
 // OUT: nothing
 void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
+
+// TODO(andreip): add RemoveMockWifiDataProvider for WiFi.
 
 // Configures the location provider pool to use a mock location provider. Sets
 // the position that the mock provider will provide. Properties are latitude,
