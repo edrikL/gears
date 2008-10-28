@@ -27,7 +27,15 @@
 
 #include "gears/localserver/npapi/update_task_np.h"
 
+#ifdef OS_WINCE
+#include "gears/base/common/wince_compatibility.h"  // For CMutexWince
+#endif
+
+#ifdef OS_WINCE
+typedef CMutexWince CATLMutex;
+#else
 typedef CMutex CATLMutex;
+#endif
 
 inline void GetUpdateTaskMutexName(int64 store_server_id,
                                    CStringW *mutex_name) {
