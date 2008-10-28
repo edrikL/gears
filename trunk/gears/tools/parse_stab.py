@@ -400,7 +400,9 @@ def main(argv):
     sys.exit(2)
 
   # If this is an official build, warnings are treated as errors.
-  treat_warnings_as_errors = 'OFFICIAL_BUILD' in defines
+  # TODO(aa): Reenable this when we have all our localizations
+  # treat_warnings_as_errors = 'OFFICIAL_BUILD' in defines
+  treat_warnings_as_errors = False
 
   # Languages are specified via a define.
   if 'I18N_LANGUAGES' in defines:
