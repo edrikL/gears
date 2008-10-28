@@ -168,10 +168,12 @@ store.checkForUpdate();
    void          <b>rename</b>(string srcUrl, string destUrl)
    void          <b>copy</b>(string srcUrl, string destUrl)
    boolean       <b>isCaptured</b>(string url)
+   void          <b>captureBlob</b>(Blob blob, string url, string optContentType)
    void          <b>captureFile</b>(fileInputElement, url)
    string        <b>getCapturedFileName</b>(url)
    string        <b>getHeader</b>(string url, string name)
    string        <b>getAllHeaders</b>(string url)
+   Blob          <b>getAsBlob</b>(string url)
    FileSubmitter <b>createFileSubmitter</b>()</code></pre>
 
   <pre><code><a href="api_localserver.html#FileSubmitter">FileSubmitter class</a>
@@ -852,6 +854,32 @@ that this class provides.</p>
   </table>
   <table>
     <tr class="odd">
+      <th colspan="2" width="100%"><div align="left"><code><strong>captureBlob(Blob blob, string url, string optContentType)</strong></code></div></th>
+    </tr>
+    <tr class="odd">
+      <td width="113">Return Value </td>
+      <td width="489" >void</td>
+    </tr>
+    <tr class="odd">
+      <td>Parameters</td>
+      <td><code>blob</code><br/>
+          <code>url</code><br>
+          <code>optContentType</code></td>
+    </tr>
+    <tr class="odd">
+      <td>Exceptions</td>
+      <td class="" >Throws an exception if the URL is not from the same
+      origin as the current page.</td>
+    </tr>
+    <tr class="odd">
+      <td>Description</td>
+      <td class="odd">Captures the contents of the blob as the response body for
+         the given URL. If optContentType is provided, the 'Content-Type' header
+         is set to this value.</td>
+    </tr>
+  </table>
+  <table>
+    <tr class="odd">
       <th colspan="2" width="100%"><div align="left"><code><strong>captureFile(HtmlElement fileInputElement, string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
@@ -877,8 +905,8 @@ that this class provides.</p>
         argument must be a reference to an<code> &lt;input type=file&gt;</code>
         HTML element.
         <br />
-        <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox 2.
-        A future version of Gears may support mapping Blobs to URLs.</td>
+        <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox.
+       </td>
     </tr>
   </table>
   <table>
@@ -904,8 +932,7 @@ that this class provides.</p>
       calling <code>captureFile</code>. Note that if <code>url</code> was captured by a method other than calling
       <code>captureFile</code> then an empty string will be returned and no exception will be thrown.
       <br />
-      <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox 2.
-      A future version of Gears may support mapping Blobs to URLs.</td>
+      <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox.</td>
     </tr>
   </table>
   <table>
@@ -955,6 +982,28 @@ that this class provides.</p>
   </table>
   <table>
     <tr class="odd">
+      <th colspan="2" width="100%"><div align="left"><code><strong>getAsBlob(string url)</strong></code></div></th>
+    </tr>
+    <tr class="odd">
+      <td width="113">Return Value </td>
+      <td width="489" >Blob</td>
+    </tr>
+    <tr class="odd">
+      <td>Parameters</td>
+      <td><code>url</code></td>
+    </tr>
+    <tr class="odd">
+      <td>Exceptions</td>
+      <td class="" >Throws an exception if the URL is not from the same
+      origin as the current page or if there is no entry for the URL.</td>
+    </tr>
+    <tr class="odd">
+      <td>Description</td>
+      <td class="odd">Returns the body of the captured resource as a blob.</td>
+    </tr>
+  </table>
+  <table>
+    <tr class="odd">
       <th colspan="2" width="100%"><div align="left"><code><strong>createFileSubmitter()</strong></code></div></th>
     </tr>
     <tr class="odd">
@@ -975,7 +1024,7 @@ that this class provides.</p>
 <a name="FileSubmitter"></a>
 <h2>FileSubmitter class </h2>
 
-<p><b>DEPRECATED.</b> <code>FileSubmitter</code> is currently only implemented in IE & Firefox 2.
+<p><b>DEPRECATED.</b> <code>FileSubmitter</code> is currently only implemented in IE & Firefox.
 Whenever possible, prefer the Blob support provided by <code><a
 href="api_desktop.html">desktop.openFiles()</a></code> and the <code><a
 href="api_httprequest.html">HttpRequest</a></code> module.</p>
@@ -1022,7 +1071,7 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
         <li> Internet Explorer: The <code>htmlElement</code> must NOT be a reference to an &lt;input&gt;
           of any type. </li>
       </ul>
-      <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox 2.
+      <b>DEPRECATED.</b> This is currently only implemented in IE & Firefox.
       Whenever possible, prefer the Blob support provided by <code><a
       href="api_desktop.html">desktop.openFiles()</a></code> and the <code><a
       href="api_httprequest.html">HttpRequest</a></code> module.</td>
