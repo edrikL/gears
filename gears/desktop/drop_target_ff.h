@@ -30,6 +30,7 @@
 #else
 
 #include <gecko_internal/nsIDragService.h>
+#include <gecko_internal/nsIXPConnect.h>
 #include <gecko_sdk/include/nsIDOMEventListener.h>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
@@ -76,7 +77,10 @@ class DropTarget
   static const nsString kDragDropAsString;
 
   nsCOMPtr<nsIDOMEventTarget> event_target_;
+  nsCOMPtr<nsIXPConnect> xp_connect_;
   bool unregister_self_has_been_called_;
+
+  void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
 
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };

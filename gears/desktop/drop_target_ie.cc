@@ -77,6 +77,15 @@ DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
 }
 
 
+void DropTarget::AddEventToJsObject(JsObject *js_object) {
+  CComPtr<IHTMLEventObj> html_event_obj;
+  HRESULT hr = html_window_2_->get_event(&html_event_obj);
+  if (FAILED(hr)) { return; }
+  js_object->SetProperty(STRING16(L"event"),
+                         CComVariant(static_cast<IDispatch*>(html_event_obj)));
+}
+
+
 HRESULT DropTarget::GetHtmlDataTransfer(
     CComPtr<IHTMLEventObj> &html_event_obj,
     CComPtr<IHTMLDataTransfer> &html_data_transfer)
@@ -136,6 +145,7 @@ HRESULT DropTarget::HandleOnDragEnter()
   if (on_drag_enter_.get()) {
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
+    AddEventToJsObject(context_object.get());
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -160,6 +170,7 @@ HRESULT DropTarget::HandleOnDragOver()
   if (on_drag_over_.get()) {
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
+    AddEventToJsObject(context_object.get());
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -184,6 +195,7 @@ HRESULT DropTarget::HandleOnDragLeave()
   if (on_drag_leave_.get()) {
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
+    AddEventToJsObject(context_object.get());
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -241,6 +253,7 @@ HRESULT DropTarget::HandleOnDragDrop()
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
     context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+    AddEventToJsObject(context_object.get());
 
     const int argc = 1;
     JsParamToSend argv[argc] = {

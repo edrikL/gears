@@ -117,6 +117,8 @@ class DropTarget
 
   DropTarget();
 
+  void AddEventToJsObject(JsObject *js_object);
+
   static _ATL_FUNC_INFO atl_func_info_;
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };
