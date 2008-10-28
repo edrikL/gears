@@ -54,8 +54,11 @@ const nsString DropTarget::kDragDropAsString(STRING16(L"dragdrop"));
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
 
 
-DropTarget::DropTarget()
-    : unregister_self_has_been_called_(false) {
+DropTarget::DropTarget() :
+#ifdef DEBUG
+    is_debugging_(false),
+#endif
+    unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
@@ -65,21 +68,51 @@ DropTarget::~DropTarget() {
 }
 
 
+void DropTarget::ProvideDebugVisualFeedback(bool is_drag_enter) {
+#ifdef DEBUG
+  if (!is_debugging_) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(html_element_));
+  if (element) {
+    static const nsString kEnterStyle(STRING16(L"border:green 3px solid;"));
+    static const nsString kOtherStyle(STRING16(L"border:black 3px solid;"));
+    static const nsString kStyle(STRING16(L"style"));
+    nsString current_style;
+    element->GetAttribute(kStyle, current_style);
+    current_style.Append(is_drag_enter ? kEnterStyle : kOtherStyle);
+    element->SetAttribute(kStyle, current_style);
+  }
+#endif
+}
+
+
+void DropTarget::SetDomElement(JsDomElement &dom_element) {
+  html_element_ = dom_element.dom_html_element();
+  nsCOMPtr<nsIDOMEventTarget> event_target(do_QueryInterface(html_element_));
+  AddSelfAsEventListeners(event_target);
+  ProvideDebugVisualFeedback(false);
+}
+
+
 void DropTarget::AddSelfAsEventListeners(nsIDOMEventTarget *event_target) {
   event_target_ = event_target;
   AddRef();  // Balanced by a Release() call during UnregisterSelf.
 
-  if (on_drag_enter_.get()) {
-    event_target_->AddEventListener(kDragEnterAsString, this, false);
-  }
-  if (on_drag_over_.get()) {
-    event_target_->AddEventListener(kDragOverAsString, this, false);
-  }
-  if (on_drag_leave_.get()) {
-    event_target_->AddEventListener(kDragExitAsString, this, false);
-  }
-  if (on_drop_.get()) {
-    event_target_->AddEventListener(kDragDropAsString, this, false);
+  if (event_target_) {
+    if (on_drag_enter_.get()) {
+      event_target_->AddEventListener(kDragEnterAsString, this, false);
+    }
+    if (on_drag_over_.get()) {
+      event_target_->AddEventListener(kDragOverAsString, this, false);
+    }
+    if (on_drag_leave_.get()) {
+      event_target_->AddEventListener(kDragExitAsString, this, false);
+    }
+    if (on_drop_.get()) {
+      event_target_->AddEventListener(kDragDropAsString, this, false);
+    }
   }
 }
 
@@ -90,17 +123,19 @@ void DropTarget::UnregisterSelf() {
   }
   unregister_self_has_been_called_ = true;
 
-  if (on_drag_enter_.get()) {
-    event_target_->RemoveEventListener(kDragEnterAsString, this, false);
-  }
-  if (on_drag_over_.get()) {
-    event_target_->RemoveEventListener(kDragOverAsString, this, false);
-  }
-  if (on_drag_leave_.get()) {
-    event_target_->RemoveEventListener(kDragExitAsString, this, false);
-  }
-  if (on_drop_.get()) {
-    event_target_->RemoveEventListener(kDragDropAsString, this, false);
+  if (event_target_) {
+    if (on_drag_enter_.get()) {
+      event_target_->RemoveEventListener(kDragEnterAsString, this, false);
+    }
+    if (on_drag_over_.get()) {
+      event_target_->RemoveEventListener(kDragOverAsString, this, false);
+    }
+    if (on_drag_leave_.get()) {
+      event_target_->RemoveEventListener(kDragExitAsString, this, false);
+    }
+    if (on_drop_.get()) {
+      event_target_->RemoveEventListener(kDragDropAsString, this, false);
+    }
   }
 
   Release();  // Balanced by an AddRef() call during AddSelfAsEventListeners.
@@ -178,6 +213,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   event->GetType(event_type);
 
   if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
+    ProvideDebugVisualFeedback(false);
     std::string16 error;
     scoped_ptr<JsArray> file_array(
         module_environment_->js_runner_->NewArray());
@@ -208,10 +244,12 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   } else {
     JsRootedCallback *callback = NULL;
     if (on_drag_enter_.get() && event_type.Equals(kDragEnterAsString)) {
+      ProvideDebugVisualFeedback(true);
       callback = on_drag_enter_.get();
     } else if (on_drag_over_.get() && event_type.Equals(kDragOverAsString)) {
       callback = on_drag_over_.get();
     } else if (on_drag_leave_.get() && event_type.Equals(kDragExitAsString)) {
+      ProvideDebugVisualFeedback(false);
       callback = on_drag_leave_.get();
     }
     if (callback) {
@@ -282,7 +320,7 @@ bool DropTarget::GetDroppedFiles(
     // to a file path. On Windows and Mac, we get a nsIFile out of the
     // transferable and query it directly for its file path.
 #if defined(LINUX) && !defined(OS_MACOSX)
-    nsCOMPtr<nsISupportsString> data_as_xpcom_string = do_QueryInterface(data);
+    nsCOMPtr<nsISupportsString> data_as_xpcom_string(do_QueryInterface(data));
     nsString data_as_string;
     data_as_xpcom_string->GetData(data_as_string);
 
@@ -293,7 +331,7 @@ bool DropTarget::GetDroppedFiles(
     nr = io_service->NewURI(data_as_cstring, NULL, NULL, getter_AddRefs(uri));
     if (NS_FAILED(nr)) { return false; }
 
-    nsCOMPtr<nsIFileURL> file_url = do_QueryInterface(uri);
+    nsCOMPtr<nsIFileURL> file_url(do_QueryInterface(uri));
     if (!file_url) { return false; }
     nsCOMPtr<nsIFile> file;
     nr = file_url->GetFile(getter_AddRefs(file));

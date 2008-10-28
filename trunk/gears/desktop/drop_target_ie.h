@@ -94,6 +94,10 @@ class DropTarget
   scoped_ptr<JsRootedCallback> on_drag_leave_;
   scoped_ptr<JsRootedCallback> on_drop_;
 
+#ifdef DEBUG
+  bool is_debugging_;
+#endif
+
   virtual ~DropTarget();
   static DropTarget *CreateDropTarget(JsDomElement &dom_element);
 
@@ -115,9 +119,14 @@ class DropTarget
   bool unregister_self_has_been_called_;
   CComPtr<IDispatch> event_source_;
 
+#ifdef DEBUG
+  CComPtr<IHTMLStyle> html_style_;
+#endif
+
   DropTarget();
 
   void AddEventToJsObject(JsObject *js_object);
+  void ProvideDebugVisualFeedback(bool is_drag_enter);
 
   static _ATL_FUNC_INFO atl_func_info_;
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
