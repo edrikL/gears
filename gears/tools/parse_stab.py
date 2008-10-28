@@ -113,12 +113,14 @@ function loadI18nStrings(locale) {
 
 
 # Template for the header of .rc files.  This is basically just the standard
-# include files.
+# include files. The 'installer/common/resource.h' and ui/ie/string_table.h
+# should be included conditionally. This requires some refactoring, though.
 RC_TEMPLATE = u"""
 #ifdef OS_WINCE
   #include "aygshell.h"
   #include "afxres.h"
   #include "genfiles/product_constants.h"
+  #include "installer/common/resource.h"
 #else
   #include "WinResrc.h"
 #endif
