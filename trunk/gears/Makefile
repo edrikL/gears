@@ -2366,8 +2366,8 @@ IE_WINCESETUP_LINK_EXTRAS += \
 		$(NULL)
 
 # List these setup-related items in IE_FOO just so they get built before used.
-IE_M4SRCS	+= \
-		setup.rc.m4 \
+IE_STABSRCS += \
+		setup.rc.stab \
 		$(NULL)
 endif # IE
 endif # wince
