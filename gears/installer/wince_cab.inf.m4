@@ -1,40 +1,48 @@
+m4_changequote(`^',`^')m4_dnl
+
 [Version]
 Signature="$Windows NT$"
 Provider="Google"  ;[naming]
 CESignature="$Windows CE$"
-
-[CEStrings]
-AppName="Gears"  ;[naming]
-InstallDir="%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
-
-[Strings]
-Manufacturer="Google"  ;[naming]
 
 [CEDevice]
 VersionMin=4.0
 VersionMax=6.99
 BuildMax=0xE0000000
 
-[DefaultInstall]
-CopyFiles=Files.Common1
-CESelfRegister=PRODUCT_SHORT_NAME_UQ.dll
-CESetupDLL=setup.dll
-
-[SourceDisksNames]
-m4_changequote(`^',`^')m4_dnl
+; String aliases for convenience
+[Strings]
 m4_ifelse(DEBUG,^1^,^m4_dnl
-1=,"Common1",,"bin-dbg\wince-arm\ie\"
+BuildOutputDirectory="bin-dbg\wince-arm\ie"
 ^,^1^,^1^,^m4_dnl
-1=,"Common1",,"bin-opt\wince-arm\ie\"
+BuildOutputDirectory="bin-opt\wince-arm\ie"
 ^)
+SetupDll="setup.dll"
+GearsDll="PRODUCT_SHORT_NAME_UQ.dll"
 
+[CEStrings]
+AppName="Gears"  ;[naming]
+InstallDir="%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
+
+; The source directories for the files that will be in in the CAB
+[SourceDisksNames]
+1=,"DllSourceDirectory",,%BuildOutputDirectory%
+
+; The files that will be in the CAB
 [SourceDisksFiles]
-"PRODUCT_SHORT_NAME_UQ.dll"=1
-"setup.dll"=1
+%GearsDll%=1  ; In DllSourceDirectory
+%SetupDll%=1  ; In DllSourceDirectory
 
+; The destination directories for the files that will be in the CAB
 [DestinationDirs]
-Shortcuts=0,%CE2%\Start Menu
-Files.Common1=0,"%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
+DllDestinationDirectory=0,%InstallDir%
 
-[Files.Common1]
-"PRODUCT_SHORT_NAME_UQ.dll","PRODUCT_SHORT_NAME_UQ.dll",,0
+; The files to go in the DLL destination directory
+[DllDestinationDirectory]
+%GearsDll%,%GearsDll%,,0
+
+; The action to take during installation
+[DefaultInstall]
+CopyFiles=DllDestinationDirectory
+CESelfRegister=%GearsDll%
+CESetupDLL=%SetupDll%  ; The DLL that gets run during installation
