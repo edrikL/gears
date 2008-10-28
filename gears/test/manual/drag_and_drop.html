@@ -42,6 +42,7 @@ function toggleEnabledDisabled() {
   } else {
     document.getElementById('enabledDisabled').innerHTML = '&nbsp;';
     dropTargetRegistration = desktop.registerDropTarget(dropZone, {
+      'debug': true,
       'ondragenter': function(context) {
         dragEnterCount++;
         eventCount++;

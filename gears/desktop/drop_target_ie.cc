@@ -43,8 +43,11 @@ _ATL_FUNC_INFO DropTarget::atl_func_info_ =
     { CC_STDCALL, VT_I4, 1, { VT_EMPTY } };
 
 
-DropTarget::DropTarget()
-    : unregister_self_has_been_called_(false) {
+DropTarget::DropTarget() :
+#ifdef DEBUG
+    is_debugging_(false),
+#endif
+    unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
   Ref();  // Balanced by a Unref() call during UnregisterSelf.
 }
@@ -55,6 +58,17 @@ DropTarget::~DropTarget() {
 }
 
 
+void DropTarget::ProvideDebugVisualFeedback(bool is_drag_enter) {
+#ifdef DEBUG
+  if (!is_debugging_) {
+    return;
+  }
+  html_style_->put_border(CComBSTR(
+      is_drag_enter ? L"green 3px solid" : L"black 3px solid"));
+#endif
+}
+
+  
 DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
   HRESULT hr;
   IDispatch *dom_element_dispatch = dom_element.dispatch();
@@ -66,6 +80,10 @@ DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
   drop_target->event_source_ = dom_element_dispatch;
   CComQIPtr<IHTMLElement> html_element(dom_element_dispatch);
   if (!html_element) { return NULL; }
+#ifdef DEBUG
+  hr = html_element->get_style(&drop_target->html_style_);
+  if (FAILED(hr)) { return NULL; }
+#endif
   CComPtr<IDispatch> document_dispatch;
   hr = html_element->get_document(&document_dispatch);
   if (FAILED(hr)) { return NULL; }
@@ -74,6 +92,7 @@ DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
   hr = html_document_2->get_parentWindow(&drop_target->html_window_2_);
   if (FAILED(hr)) { return NULL; }
   return drop_target.release();
+  drop_target->ProvideDebugVisualFeedback(false);
 }
 
 
@@ -116,6 +135,7 @@ HRESULT DropTarget::CancelEventBubble(
 
 HRESULT DropTarget::HandleOnDragEnter()
 {
+  ProvideDebugVisualFeedback(true);
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
@@ -187,6 +207,7 @@ HRESULT DropTarget::HandleOnDragOver()
 
 HRESULT DropTarget::HandleOnDragLeave()
 {
+  ProvideDebugVisualFeedback(false);
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
@@ -212,6 +233,7 @@ HRESULT DropTarget::HandleOnDragLeave()
 
 HRESULT DropTarget::HandleOnDragDrop()
 {
+  ProvideDebugVisualFeedback(false);
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);

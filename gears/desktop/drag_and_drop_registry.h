@@ -42,7 +42,7 @@ class DragAndDropRegistry {
  public:
   static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
                                         JsDomElement &dom_element,
-                                        JsObject *js_callbacks,
+                                        JsObject *options,
                                         std::string16 *error_out);
 
  private:

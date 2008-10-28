@@ -52,10 +52,10 @@
 
 #if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE))
 static bool InitializeCallback(const std::string16 name,
-                               JsObject *js_callbacks,
+                               JsObject *options,
                                scoped_ptr<JsRootedCallback> *scoped_callback,
                                std::string16 *error_out) {
-  JsParamType property_type = js_callbacks->GetPropertyType(name);
+  JsParamType property_type = options->GetPropertyType(name);
   if (property_type != JSPARAM_UNDEFINED &&
       property_type != JSPARAM_FUNCTION) {
     *error_out = STRING16(L"options.");
@@ -64,7 +64,7 @@ static bool InitializeCallback(const std::string16 name,
     return false;
   }
   JsRootedCallback *callback;
-  if (js_callbacks->GetPropertyAsFunction(name, &callback)) {
+  if (options->GetPropertyAsFunction(name, &callback)) {
     scoped_callback->reset(callback);
   }
   return true;
@@ -72,21 +72,27 @@ static bool InitializeCallback(const std::string16 name,
 
 
 static bool InitializeDropTarget(ModuleImplBaseClass *sibling_module,
-                                 JsObject *js_callbacks,
+                                 JsObject *options,
                                  DropTarget *drop_target,
                                  std::string16 *error_out) {
   sibling_module->GetModuleEnvironment(&drop_target->module_environment_);
+#ifdef DEBUG
+  if (!options->GetPropertyAsBool(STRING16(L"debug"),
+                                  &drop_target->is_debugging_)) {
+    drop_target->is_debugging_ = false;
+  }
+#endif
   drop_target->unload_monitor_.reset(
       new JsEventMonitor(sibling_module->GetJsRunner(),
                          JSEVENT_UNLOAD,
                          drop_target));
-  return InitializeCallback(STRING16(L"ondragenter"), js_callbacks,
+  return InitializeCallback(STRING16(L"ondragenter"), options,
                             &drop_target->on_drag_enter_, error_out) &&
-         InitializeCallback(STRING16(L"ondragover"), js_callbacks,
+         InitializeCallback(STRING16(L"ondragover"), options,
                             &drop_target->on_drag_over_, error_out) &&
-         InitializeCallback(STRING16(L"ondragleave"), js_callbacks,
+         InitializeCallback(STRING16(L"ondragleave"), options,
                             &drop_target->on_drag_leave_, error_out) &&
-         InitializeCallback(STRING16(L"ondrop"), js_callbacks,
+         InitializeCallback(STRING16(L"ondrop"), options,
                             &drop_target->on_drop_, error_out);
 }
 #endif
@@ -95,25 +101,17 @@ static bool InitializeDropTarget(ModuleImplBaseClass *sibling_module,
 DropTarget *DragAndDropRegistry::RegisterDropTarget(
     ModuleImplBaseClass *sibling_module,
     JsDomElement &dom_element,
-    JsObject *js_callbacks,
+    JsObject *options,
     std::string16 *error_out) {
 #if BROWSER_FF
-  nsCOMPtr<nsIDOMEventTarget> event_target =
-      do_QueryInterface(dom_element.dom_html_element());
-  if (!event_target) {
-    *error_out = STRING16(L"Argument must be a DOMEventTarget.");
-    return NULL;
-  }
-
   DropTarget *drop_target = new DropTarget;
-  if (!InitializeDropTarget(
-          sibling_module, js_callbacks, drop_target, error_out)) {
+  if (!InitializeDropTarget(sibling_module, options, drop_target, error_out)) {
     delete drop_target;
     *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return NULL;
   }
 
-  drop_target->AddSelfAsEventListeners(event_target);
+  drop_target->SetDomElement(dom_element);
   return drop_target;
 
 #elif BROWSER_IE && !defined(OS_WINCE)
@@ -124,7 +122,7 @@ DropTarget *DragAndDropRegistry::RegisterDropTarget(
     return NULL;
   }
   if (!InitializeDropTarget(
-          sibling_module, js_callbacks, drop_target.get(), error_out)) {
+          sibling_module, options, drop_target.get(), error_out)) {
     *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return NULL;
   }

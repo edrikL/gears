@@ -33,6 +33,7 @@
 #include <gecko_internal/nsIXPConnect.h>
 #include <gecko_sdk/include/nsIDOMEventListener.h>
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_refptr.h"
@@ -52,9 +53,14 @@ class DropTarget
   scoped_ptr<JsRootedCallback> on_drag_leave_;
   scoped_ptr<JsRootedCallback> on_drop_;
 
+#ifdef DEBUG
+  bool is_debugging_;
+#endif
+
   DropTarget();
   virtual ~DropTarget();
 
+  void SetDomElement(JsDomElement &dom_element);
   void AddSelfAsEventListeners(nsIDOMEventTarget *event_target);
   void UnregisterSelf();
 
@@ -76,11 +82,13 @@ class DropTarget
   static const nsString kDragExitAsString;
   static const nsString kDragDropAsString;
 
+  nsCOMPtr<nsIDOMHTMLElement> html_element_;
   nsCOMPtr<nsIDOMEventTarget> event_target_;
   nsCOMPtr<nsIXPConnect> xp_connect_;
   bool unregister_self_has_been_called_;
 
   void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
+  void ProvideDebugVisualFeedback(bool is_drag_enter);
 
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
 };
