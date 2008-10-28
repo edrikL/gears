@@ -447,7 +447,7 @@ void GearsResourceStore::GetAsBlob(JsCallContext *context) {
   }
   std::string16 full_url;
   if (!ResolveUrl(url.c_str(), &full_url)) {
-    context->SetException(STRING16(L"Failed to resolve url."));
+    context->SetException(exception_message_.c_str());
     return;
   }
 
@@ -470,6 +470,8 @@ void GearsResourceStore::GetAsBlob(JsCallContext *context) {
 
 //------------------------------------------------------------------------------
 // CaptureBlob
+// TODO(michaeln): provide a means of setting the Content-Disposition header
+// to indicate the blob should be treated as an attachment.
 //------------------------------------------------------------------------------
 void GearsResourceStore::CaptureBlob(JsCallContext *context) {
   ModuleImplBaseClass *other_module = NULL;
@@ -485,7 +487,7 @@ void GearsResourceStore::CaptureBlob(JsCallContext *context) {
   }
   std::string16 full_url;
   if (!ResolveUrl(url.c_str(), &full_url)) {
-    context->SetException(STRING16(L"Failed to resolve url."));
+    context->SetException(exception_message_.c_str());
     return;
   }
   if (!content_type.empty() && !IsValidHttpHeaderValue(content_type)) {
