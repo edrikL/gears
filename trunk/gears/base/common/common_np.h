@@ -85,19 +85,40 @@ class CurrentThreadID {
 #else  // !ANDROID
 
 //-----------------------------------------------------------------------------
-// For the NPAPI on Win32 build target
+// For the NPAPI on Win32 and WinCE build targets
 //-----------------------------------------------------------------------------
 #include <windows.h>  // for DWORD
-#include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
+#ifdef OS_WINCE
+#include "gears/base/common/wince_compatibility.h"  // For GearsTrace
+#endif
+// TODO(cprince): change ATLASSERT to DCHECK
+// TODO(steveblock): Factor out browser-independent parts of this include.
+#include "gears/base/ie/atl_headers.h"
 
+#ifdef OS_WINCE
+// Use of ATLTRACE (which is used by LOG and LOG16) may cause a stack fault on
+// WinCE. See http://code.google.com/p/google-gears/issues/detail?id=342 for
+// details. So we disable logging by default on WinCE.
+#else
 #define ENABLE_LOGGING
+#endif
+
 #if defined(DEBUG) && defined(ENABLE_LOGGING)
+
+#if defined(OS_WINCE)
+#define LOG(args) GearsTrace(__FILE__, __LINE__) args
+#define LOG16(args) ATLTRACE args
+#else  // defined(OS_WINCE)
 // ATLTRACE for Win32 can take either a wide or narrow string.
 #define LOG(args) ATLTRACE args
 #define LOG16(args) ATLTRACE args
+#endif  // defined(OS_WINCE)
+
 #else  // defined(DEBUG) && defined(ENABLE_LOGGING)
+
 #define LOG(args) __noop
 #define LOG16(args) __noop
+
 #endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
 
 

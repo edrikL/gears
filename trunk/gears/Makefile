@@ -900,6 +900,7 @@ $(BROWSER)_CPPSRCS	+= \
 		byte_store.cc \
 		byte_store_test.cc \
 		circular_buffer_test.cc \
+		common_win32.cc \
 		database_name_table.cc \
 		event.cc \
 		event_test.cc \
@@ -956,6 +957,7 @@ $(BROWSER)_CPPSRCS	+= \
 		url_utils_test.cc \
 		user_config.cc \
 		vista_utils.cc \
+		wince_compatibility.cc \
 		$(NULL)
 
 ifeq ($(OS),osx)
@@ -1054,10 +1056,8 @@ IE_CPPSRCS	+= \
 endif
 ifeq ($(OS),wince)
 IE_CPPSRCS	+= \
-		common_ie.cc \
 		file_wince.cc \
 		html_event_monitor_iemobile.cc \
-		wince_compatibility.cc \
 		$(NULL)
 endif
 

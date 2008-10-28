@@ -29,7 +29,11 @@
 #include <windows.h>  // for DWORD
 #include <assert.h>
 #include <stdio.h>
+#ifdef OS_WINCE
+#include "gears/base/common/wince_compatibility.h"  // For GearsTrace
+#endif
 // TODO(cprince): change ATLASSERT to DCHECK
+// TODO(steveblock): Factor out browser-independent parts of this include.
 #include "gears/base/ie/atl_headers.h"
 
 
@@ -42,72 +46,8 @@
 #endif
 
 #if defined(DEBUG) && defined(ENABLE_LOGGING)
-#if defined(OS_WINCE)
-// ATLTRACE for WinCE takes a wide string, so we can not call it directly.
-// Instead we convert the message and call ATL::CTrace so that we can pass the
-// the file name and line number from the call site.
-//
-// TODO(cprince): Remove this class as part of LOG() refactoring.
-// Also note that LOG() calls should take string16, so the string conversion
-// done below can go away at that time.
-class GearsTrace {
- public:
-  GearsTrace(const char* file_name, int line_no)
-      : file_name_(file_name), line_no_(line_no) {}
 
-  void operator() (const char* format, ...) const {
-    // Print the message as a narrow string.
-    //
-    // The Windows implementation of (v)sn(w)printf() returns -1 if the output
-    // is truncated. More sensible implementations return the number of
-    // characters that would have been written, so the buffer can be
-    // re-allocated to the correct size. Also, Windows does not provide
-    // asnprintf(). The simplest option is to use (v)sn(w)printf() with a fixed
-    // buffer size.
-    //
-    // (v)sn(w)printf() only null-terminates the string if there is space (ie
-    // the string length is strictly less than the given buffer size). If the
-    // string length is equal to the given buffer size, (v)sn(w)printf() will
-    // not return a truncation error but the string will not be null-terminated.
-    //
-    // If the message is truncated we print it anyway. We can't distinguish
-    // between truncation and other errors from (v)sn(w)printf() because WinCE
-    // does not support errno, so we initialise the message buffer with an error
-    // message.
-    const int buffer_length = 256;
-    char message_narrow[buffer_length];
-    int error_len = _snprintf(message_narrow, buffer_length,
-                              "Failed to print LOG message\n");
-    assert(error_len > 0);
-    va_list args;
-    va_start(args, format);
-    int narrow_len = _vsnprintf(message_narrow, buffer_length - 1, format,
-                                args);
-    va_end(args);
-    // Null-terminate the string if it was truncated or if there was no space
-    // for a terminator.
-    if (-1 == narrow_len || buffer_length - 1 == narrow_len) {
-      message_narrow[buffer_length - 1] = '\0';
-    }
-    // Convert to a wide string.
-    int wide_len = MultiByteToWideChar(CP_UTF8, 0, message_narrow, narrow_len,
-                                       NULL, 0);
-    if (wide_len > 0) {
-      wchar_t* message_wide = new wchar_t[wide_len + 1];
-      wide_len = MultiByteToWideChar(CP_UTF8, 0, message_narrow, narrow_len,
-                                     message_wide, wide_len);
-      if (wide_len > 0) {
-        ATL::CTrace::s_trace.TraceV(file_name_, line_no_, atlTraceGeneral, 0,
-                                    message_wide, NULL);
-      }
-      delete [] message_wide;
-    }
-  }
- private:
-  GearsTrace& operator=(const GearsTrace& other);
-  const char *const file_name_;
-  const int line_no_;
-};
+#if defined(OS_WINCE)
 #define LOG(args) GearsTrace(__FILE__, __LINE__) args
 #define LOG16(args) ATLTRACE args
 #else  // defined(OS_WINCE)
@@ -115,9 +55,12 @@ class GearsTrace {
 #define LOG(args) ATLTRACE args
 #define LOG16(args) ATLTRACE args
 #endif  // defined(OS_WINCE)
+
 #else  // defined(DEBUG) && defined(ENABLE_LOGGING)
+
 #define LOG(args) __noop
 #define LOG16(args) __noop
+
 #endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
 
 // Debug only code to help us assert that class methods are restricted to a
@@ -146,10 +89,6 @@ class CurrentThreadID {
 #else
 #define DECL_SINGLE_THREAD
 #define ASSERT_SINGLE_THREAD()
-#endif
-
-#ifdef DEBUG
-std::string16 GetLastErrorString();
 #endif
 
 #endif  // GEARS_BASE_COMMON_COMMON_IE_H__

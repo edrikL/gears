@@ -52,4 +52,8 @@ const HWND  kMessageOnlyWindowParent = HWND_MESSAGE;
 const DWORD kMessageOnlyWindowStyle  = NULL;
 #endif
 
+#ifdef DEBUG
+std::string16 GetLastErrorString();
+#endif
+
 #endif  // GEARS_BASE_COMMON_COMMON_WIN32_H__
