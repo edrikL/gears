@@ -150,6 +150,13 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: nothing
   void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
 
+  // Removes the mock radio data provider. After this call, the radio data
+  // provider factory will be creating 'real' radio data provider instances
+  // again.
+  // IN: nothing
+  // OUT: nothing
+  void RemoveMockRadioDataProvider(JsCallContext *context);
+
   // Configures the wifi data provider factory to use a mock wifi device data
   // provider and sets the that the mock provider will provide. Note that
   // we only support data for one access_point. Fields are mac_address,
@@ -170,6 +177,12 @@ class GearsTest : public ModuleImplBaseClass {
   // Configures the location provider pool to not use the mock location
   // provider.
   void RemoveGeolocationMockLocationProvider(JsCallContext *context);
+
+#ifdef OS_ANDROID
+  // IN: function callback
+  // OUT: nothing
+  void TestRadioDataProvider(JsCallContext *context);
+#endif
 
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
