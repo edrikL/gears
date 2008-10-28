@@ -29,7 +29,6 @@
 
 #include <windows.h>
 #include <shlobj.h>
-#include <shlwapi.h>
 #include <tchar.h>
 
 #include "gears/desktop/desktop.h"

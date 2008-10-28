@@ -66,6 +66,8 @@ static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url);
 static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info);
 #endif  // BROWSER_IE
 
+int _charmax = 255;
+
 // There seem to be no way to implement this properly on Windows Mobile
 // since the algorithm for path shortening isn't fully specified, according
 // to http://en.wikipedia.org/wiki/8.3_filename. Using FindFirstFileA isn't
@@ -575,5 +577,60 @@ bool GetCurrentSystemLocale(std::string16 *locale) {
   }
   return GetLocaleFromLcid(locale_id, locale);
 }
+
+#ifdef DEBUG
+// GearsTrace
+GearsTrace::GearsTrace(const char* file_name, int line_no)
+    : file_name_(file_name), line_no_(line_no) {}
+
+void GearsTrace::operator() (const char* format, ...) const {
+  // Print the message as a narrow string.
+  //
+  // The Windows implementation of (v)sn(w)printf() returns -1 if the output
+  // is truncated. More sensible implementations return the number of
+  // characters that would have been written, so the buffer can be
+  // re-allocated to the correct size. Also, Windows does not provide
+  // asnprintf(). The simplest option is to use (v)sn(w)printf() with a fixed
+  // buffer size.
+  //
+  // (v)sn(w)printf() only null-terminates the string if there is space (ie
+  // the string length is strictly less than the given buffer size). If the
+  // string length is equal to the given buffer size, (v)sn(w)printf() will
+  // not return a truncation error but the string will not be null-terminated.
+  //
+  // If the message is truncated we print it anyway. We can't distinguish
+  // between truncation and other errors from (v)sn(w)printf() because WinCE
+  // does not support errno, so we initialise the message buffer with an error
+  // message.
+  const int buffer_length = 256;
+  char message_narrow[buffer_length];
+  int error_len = _snprintf(message_narrow, buffer_length,
+                            "Failed to print LOG message\n");
+  assert(error_len > 0);
+  va_list args;
+  va_start(args, format);
+  int narrow_len = _vsnprintf(message_narrow, buffer_length - 1, format,
+                              args);
+  va_end(args);
+  // Null-terminate the string if it was truncated or if there was no space
+  // for a terminator.
+  if (-1 == narrow_len || buffer_length - 1 == narrow_len) {
+    message_narrow[buffer_length - 1] = '\0';
+  }
+  // Convert to a wide string.
+  int wide_len = MultiByteToWideChar(CP_UTF8, 0, message_narrow, narrow_len,
+                                     NULL, 0);
+  if (wide_len > 0) {
+    wchar_t* message_wide = new wchar_t[wide_len + 1];
+    wide_len = MultiByteToWideChar(CP_UTF8, 0, message_narrow, narrow_len,
+                                   message_wide, wide_len);
+    if (wide_len > 0) {
+      ATL::CTrace::s_trace.TraceV(file_name_, line_no_, atlTraceGeneral, 0,
+                                  message_wide, NULL);
+    }
+    delete [] message_wide;
+  }
+}
+#endif
 
 #endif  // OS_WINCE

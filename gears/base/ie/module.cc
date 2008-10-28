@@ -51,9 +51,6 @@ class DllModule : public CAtlDllModuleT< DllModule > {
 };
 
 DllModule atl_module;
-#ifdef OS_WINCE
-int _charmax = 255;
-#endif
 
 inline BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {

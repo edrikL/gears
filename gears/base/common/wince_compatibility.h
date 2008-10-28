@@ -156,5 +156,26 @@ class UnloadEventSource {
 // to the selected system locale (which is a good thing).
 bool GetCurrentSystemLocale(std::string16 *locale);
 
+#ifdef DEBUG
+// ATLTRACE for WinCE takes a wide string, so we can not call it directly.
+// Instead we convert the message and call ATL::CTrace so that we can pass the
+// the file name and line number from the call site.
+//
+// TODO(cprince): Remove this class as part of LOG() refactoring.
+// Also note that LOG() calls should take string16, so the string conversion
+// done by this class can go away at that time.
+class GearsTrace {
+ public:
+  GearsTrace(const char* file_name, int line_no);
+
+  void operator() (const char* format, ...) const;
+
+ private:
+  GearsTrace& operator=(const GearsTrace& other);
+  const char *const file_name_;
+  const int line_no_;
+};
+#endif
+
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // OS_WINCE
