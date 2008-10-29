@@ -285,8 +285,6 @@ HRESULT DropTarget::HandleOnDragDrop()
         on_drop_.get(), argc, argv, NULL);
   }
 
-  hr = CancelEventBubble(html_event_obj, html_data_transfer);
-  if (FAILED(hr)) return hr;
   return S_OK;
 }
 
