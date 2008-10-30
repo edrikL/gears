@@ -174,6 +174,11 @@ class GearsGeolocation
   // OUT: nothing
   void ClearWatch(JsCallContext *context);
 
+  // Getter for location permissions.
+  // IN: nothing
+  // OUT: boolean location_permission_state
+  void GetHasPermission(JsCallContext *context);
+
   // Triggers the geolocation-specific permissions dialog.
   // IN:  string siteName, string imageUrl, string extraMessage
   // OUT: boolean permission
