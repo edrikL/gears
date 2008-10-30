@@ -182,6 +182,7 @@ DECLARE_DISPATCHER(GearsGeolocation);
 template<>
 void Dispatcher<GearsGeolocation>::Init() {
   RegisterProperty("lastPosition", &GearsGeolocation::GetLastPosition, NULL);
+  RegisterProperty("hasPermission", &GearsGeolocation::GetHasPermission, NULL);
   RegisterMethod("getCurrentPosition", &GearsGeolocation::GetCurrentPosition);
   RegisterMethod("watchPosition", &GearsGeolocation::WatchPosition);
   RegisterMethod("clearWatch", &GearsGeolocation::ClearWatch);
@@ -312,6 +313,12 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
                           IntegerToString16(id) +
                           STRING16(L"."));
   }
+}
+
+void GearsGeolocation::GetHasPermission(JsCallContext *context) {
+  bool has_permission = GetPermissionsManager()->HasPermission(
+      PermissionsDB::PERMISSION_LOCATION_DATA);
+  context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
 void GearsGeolocation::GetPermission(JsCallContext *context) {

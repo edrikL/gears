@@ -110,6 +110,7 @@ geo.getCurrentPosition(updatePosition, handleError);
 
 <pre><code><a href="#geolocation">Geolocation class</a> 
   readonly attribute Position lastPosition
+  readonly attribute boolean hasPermission
   void getCurrentPosition(successCallback, [errorCallback], [options])
   int  watchPosition(successCallback, [errorCallback], [options])
   void clearWatch(int watchId)
@@ -277,11 +278,17 @@ show those that are specified.    </td>
   <th width="432">Description</th>
 </tr>
 <tr class="odd">
-  <td><strong><code><a name="lastPosition" id="lastPosition"></a></code>lastPosition</strong></td>
+  <td><strong><a name="lastPosition" id="lastPosition"></a>lastPosition</strong></td>
   <td class="odd">readonly  Position</td>
   <td class="odd">The last known position, or null if there is no last known
   position. This does not actively trigger obtaining a new position fix,
   so it is quick and does not consume power or computational resources.</td>
+</tr>
+<tr class="odd">
+  <td><strong>hasPermission</strong></td>
+  <td class="odd">readonly boolean</td>
+  <td class="odd">Returns true if the site already has permission to access the
+  user's location through Gears.</td>
 </tr>
 </table>
 
