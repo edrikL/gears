@@ -35,7 +35,6 @@
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/ie/atl_headers.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"

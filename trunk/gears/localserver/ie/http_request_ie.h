@@ -30,7 +30,7 @@
 #include <vector>
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/scoped_refptr.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/progress_event.h"

@@ -35,7 +35,7 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/common/atl_headers_win32.h"
 #if !BROWSER_NONE
 #include "gears/factory/factory_utils.h"  // for AppendBuildInfo
 #endif

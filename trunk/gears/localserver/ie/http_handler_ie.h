@@ -51,7 +51,7 @@
 #define GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
 
 #include "gears/base/common/security_model.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "third_party/passthru_app/ProtocolCF.h"
 #include "third_party/passthru_app/ProtocolImpl.h"

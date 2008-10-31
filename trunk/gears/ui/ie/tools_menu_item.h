@@ -27,7 +27,7 @@
 #define GEARS_UI_IE_TOOLS_MENU_ITEM_H__
 
 #include "genfiles/interfaces.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 
 // This class is used to add a menu items to the tools menu in Internet

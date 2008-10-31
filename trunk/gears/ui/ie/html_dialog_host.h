@@ -44,7 +44,7 @@
 #include <mshtmhst.h>  // for IHTMLOMWindowServices
 
 #include "gears/base/common/common.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/ui/ie/ui_resources.h"
 #include "genfiles/interfaces.h"
 

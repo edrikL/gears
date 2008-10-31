@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
 #include "gears/base/common/async_router.h"
-#include "gears/base/common/message_queue.h"
+
+#include <assert.h>
 
 // static
 AsyncRouter *AsyncRouter::GetInstance() {

@@ -88,12 +88,11 @@ class CurrentThreadID {
 // For the NPAPI on Win32 and WinCE build targets
 //-----------------------------------------------------------------------------
 #include <windows.h>  // for DWORD
+#include "gears/base/common/atl_headers_win32.h"
 #ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"  // For GearsTrace
 #endif
 // TODO(cprince): change ATLASSERT to DCHECK
-// TODO(steveblock): Factor out browser-independent parts of this include.
-#include "gears/base/ie/atl_headers.h"
 
 #ifdef OS_WINCE
 // Use of ATLTRACE (which is used by LOG and LOG16) may cause a stack fault on

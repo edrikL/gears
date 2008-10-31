@@ -29,9 +29,8 @@
 #ifndef GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
-#include <atlbase.h>
-#include <atlsync.h>
-#include <connmgr.h>
+#include "gears/base/common/atl_headers_win32.h"
+#include <connmgr.h>  // Must be inlcuded after ATL includes
 #include <connmgr_status.h>
 #include <crtdefs.h>
 #include <windows.h>

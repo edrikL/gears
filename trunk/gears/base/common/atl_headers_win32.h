@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_IE_ATL_HEADERS_H__
-#define GEARS_BASE_IE_ATL_HEADERS_H__
+#ifndef GEARS_BASE_COMMON_ATL_HEADERS_WIN32_H__
+#define GEARS_BASE_COMMON_ATL_HEADERS_WIN32_H__
 
 #ifndef _ATL_NO_EXCEPTIONS  // may be defined via command-line flags
 #define _ATL_NO_EXCEPTIONS
@@ -43,12 +43,8 @@
 //#endif
 
 #include <atlbase.h>
-#include <atlcom.h>
-#include <atlconv.h>
-#include <atlctl.h>
-#include <atlhost.h>
-#include <atlstr.h>
-#include <atltypes.h>
-#include <atlwin.h>
+#include <atlsync.h>  // For ATL::CMutex etc
+#include <atlstr.h>  // For ATL::CStringW etc
+#include <atlwin.h>  // For ATL::CWindowImpl etc
 
-#endif  // GEARS_BASE_IE_ATL_HEADERS_H__
+#endif  // GEARS_BASE_COMMON_ATL_HEADERS_WIN32_H__

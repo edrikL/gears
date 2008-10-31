@@ -26,7 +26,7 @@
 #ifndef GEARS_BASE_IE_BROWSER_LISTENER_H__
 #define GEARS_BASE_IE_BROWSER_LISTENER_H__
 
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 
 // Use this calss to capture all the IDispatch invokes.
 template<class T>

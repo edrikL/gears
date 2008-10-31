@@ -30,7 +30,8 @@
 #include <vector>
 #include "gears/base/common/browsing_context.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
+// Include this before other ATL headers
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"

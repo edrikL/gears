@@ -31,8 +31,7 @@
 #include "gears/base/common/basictypes.h"
 
 #ifdef WIN32
-#include <atlsync.h>
-#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
+#include "gears/base/common/atl_headers_win32.h"
 #elif defined(OS_ANDROID)
 #include <pthread.h>
 #endif

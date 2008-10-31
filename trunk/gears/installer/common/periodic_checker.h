@@ -33,11 +33,9 @@
 #ifndef GEARS_INSTALLER_IEMOBILE_PERIODIC_CHECKER_H__
 #define GEARS_INSTALLER_IEMOBILE_PERIODIC_CHECKER_H__
 
-#include <atlsync.h>  // For CEvent
+#include "gears/base/common/atl_headers_win32.h"
 #include <gears/base/common/string16.h>
 #include "gears/base/common/wince_compatibility.h"
-// TODO(steveblock): Separate out browser-independent parts of this include.
-#include "gears/base/ie/atl_headers.h"
 
 // An implemnentation detail of PeriodicChecker.
 class VersionFetchTask;
