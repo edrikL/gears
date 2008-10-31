@@ -32,9 +32,8 @@
 #ifdef OS_WINCE
 #include "gears/base/common/wince_compatibility.h"  // For GearsTrace
 #endif
+#include "gears/base/ie/atl_browser_headers.h"
 // TODO(cprince): change ATLASSERT to DCHECK
-// TODO(steveblock): Factor out browser-independent parts of this include.
-#include "gears/base/ie/atl_headers.h"
 
 
 #ifdef OS_WINCE

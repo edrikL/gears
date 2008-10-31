@@ -36,7 +36,7 @@
 #include <webvw.h>
 #else
 #include <mshtml.h>
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #endif
 #endif
 

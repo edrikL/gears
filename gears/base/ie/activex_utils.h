@@ -31,7 +31,7 @@
 #include <vector>
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 
 struct IHTMLElement;
 class BrowsingContext;

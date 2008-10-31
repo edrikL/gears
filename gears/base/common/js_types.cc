@@ -39,7 +39,7 @@
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/base/ie/module_wrapper.h"
 #include "genfiles/interfaces.h"
 #elif BROWSER_NPAPI

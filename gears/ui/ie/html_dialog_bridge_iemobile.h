@@ -33,7 +33,7 @@
 
 #include "genfiles/interfaces.h"
 #include "gears/base/common/common.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/ui/ie/ui_resources.h"
 
 #include "gears/factory/factory_utils.h"

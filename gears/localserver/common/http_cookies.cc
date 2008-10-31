@@ -162,7 +162,7 @@ static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
 #if BROWSER_IE
 #include <windows.h>
 #include <wininet.h>
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 
 bool GetCookieString(const char16 *url, BrowsingContext *context,
                      std::string16 *cookies_out) {

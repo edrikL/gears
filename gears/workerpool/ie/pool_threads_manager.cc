@@ -56,7 +56,7 @@
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
 #include "gears/factory/factory_impl.h"

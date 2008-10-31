@@ -26,7 +26,7 @@
 #ifndef GEARS_BASE_IE_BHO_H__
 #define GEARS_BASE_IE_BHO_H__
 
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 #include "genfiles/interfaces.h"
 

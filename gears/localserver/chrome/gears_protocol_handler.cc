@@ -35,7 +35,7 @@
 
 // TODO(mpcomplete): maybe this resource fetching should be generalized?
 #ifdef WIN32
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/common/atl_headers_win32.h"
 #define HTML MAKEINTRESOURCE(23)
 
 static LANGID LocaleCodeToLANGID(const std::string16 &locale) {

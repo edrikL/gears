@@ -51,7 +51,7 @@
 #include "gears/base/common/wince_compatibility.h"  // For CallWindowOnerror()
 #endif
 #include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 #include "gears/base/ie/module_wrapper.h"
 #include "third_party/AtlActiveScriptSite.h"
 

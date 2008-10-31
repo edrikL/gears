@@ -27,7 +27,7 @@
 #define GEARS_LOCALSERVER_IE_PROGRESS_INPUT_STREAM_H__
 
 #include "gears/base/common/scoped_refptr.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/atl_browser_headers.h"
 
 class IEHttpRequest;
 
