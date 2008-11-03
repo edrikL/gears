@@ -1,0 +1,199 @@
+html {
+overflow-y: hidden;
+}
+
+body {
+ margin: 0;
+ padding: 0;
+ background: url(images/background.png);
+}
+
+.menu {
+ position: fixed;
+ top: 0;
+ width: 100%;
+ margin: 0;
+ padding: 0;
+ background: url(images/button-background.png);
+ border-bottom: 1px solid black;
+ border-top: 1px solid black;
+}
+
+.main-menu {
+ position: fixed;
+ bottom: 0;
+ width: 100%;
+ margin: 0;
+ padding: 0;
+ background: url(images/button-background.png);
+ border-bottom: 1px solid black;
+ border-top: 1px solid black;
+}
+
+.content {
+  margin-top: 48px;
+}
+
+.rowA {
+  width: 100%;
+  background: white;
+  display: table-row;
+}
+
+.rowB {
+  width: 100%;
+  background: #ccddf1;
+  display: table-row;
+}
+
+.rowDesc {
+  width: 100%;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.rowImg {
+  width: 48px;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+#timeTitle {
+  padding-top: 1em;
+  font-size: 24pt;
+}
+
+#timeDisplay {
+  font-size: 30pt;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+input {
+  font-size:24pt;
+  padding: 6pt;
+}
+
+.button-left {
+  width: 32px;
+  height: 32px;
+  background: url(images/left.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+.button-right {
+  width: 32px;
+  height: 32px;
+  background: url(images/right.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+.button-up {
+  width: 32px;
+  height: 32px;
+  background: url(images/up.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+.button-down {
+  width: 32px;
+  height: 32px;
+  background: url(images/down.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+.button-zoomin {
+  width: 32px;
+  height: 32px;
+  background: url(images/zoomIn.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+.button-zoomout {
+  width: 32px;
+  height: 32px;
+  background: url(images/zoomOut.png);
+  background-repeat: no-repeat;
+  display:table-cell;
+}
+
+#map-buttons {
+ position: fixed;
+ bottom: 0;
+ width: 100%;
+ height: 32px;
+ margin: 0;
+ padding: 0;
+ background: url(images/button-background.png);
+ border-bottom: 1px solid black;
+ border-top: 1px solid black;
+ display:table;
+}
+
+
+.back-button {
+  font-size: 30pt;
+  padding-left: 1.5em;
+  background: url(images/back-arrow.png);
+  background-repeat: no-repeat;
+}
+
+.go-button {
+  height: 48px;
+  font-size: 30pt;
+  padding-right: 1.5em;
+  background: url(images/go-arrow.png);
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+.go-button:hover {
+  background-color: white;
+}
+
+.back-button:hover {
+  background-color: white;
+}
+
+#title {
+  font-family: Times, Serif;
+  font-size: 24pt;
+  padding-top: 2em;
+  padding-bottom: 3em;
+}
+
+#subtitle {
+  font-family: Helvetica, Sans-Serif;
+  font-size: 13pt;
+}
+
+
+#mainScreen {
+  display: block;
+}
+
+#watch {
+  display: none;
+}
+
+#journeys {
+  display: none;
+}
+
+#location {
+  display: none;
+}
+
+#preferences {
+  display: none;
+}
+
+#locations {
+}

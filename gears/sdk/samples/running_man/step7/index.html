@@ -1,0 +1,59 @@
+<html>
+<head>
+  <title>RunningMan</title>
+  <link rel="stylesheet" type="text/css" href="../run.css" />
+  <script type="text/javascript" src="../../gears_init.js"></script
+  <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAsZ2C8blcRF_NO1nRClSs4xT7_rQBWrRQBxIxHmD38f4UhmkYzRT_oAn4JlE-tnpyS2NUN4Zh0L5PgQ" type="text/javascript"></script>
+  <script type="text/javascript" src="model.js"></script>
+  <meta name="viewport" content="width=320; user-scalable=false">
+</head>
+<body onload="main()" onunload="GUnload()">
+  <div id="mainScreen" align="center">
+    <div id="title">
+      <img src="../images/icon.png" width="48" height="48">
+      <br>RunningMan<div id="subtitle">A simple Gears Stopwatch</div>
+    </div>
+    <div class="main-menu" align="right">
+      <div class="go-button" onclick="go('watch')">Stopwatch</div>
+      <div class="go-button" onclick="go('journeys')">Journeys</div>
+    </div>
+  </div>
+  <div id="watch" align="center">
+    <div class="content">
+      <div id="timeTitle">Time</div>
+      <div id="timeDisplay"></div>
+      <input type="button" onclick="startRun()" value="Start"></input>
+      <input type="button" onclick="stopRun()" value="Stop"></input>
+      <input type="button" onclick="resetRun()" value="Reset"></input>
+    </div>
+    <div class="menu" align="left">
+      <div class="back-button" onclick="go('mainScreen')">Back</div>
+    </div>
+  </div>
+  <div id="journeys">
+    <div class="content">
+      <div id="journeysContent"><h2>No Journeys Yet!</h2></div>
+    </div>
+    <div class="menu" align="left">
+      <div class="back-button" onclick="go('mainScreen')">Back</div>
+    </div>
+  </div>
+  <div id="location" align="center">
+    <div class="content">
+      <div id="mapLabel">Map</div>
+      <div id="map" style="width: 300px; height: 300px"></div>
+    </div>
+    <div class="menu" align="left">
+      <div class="back-button" onclick="go('mainScreen')">Back</div>
+    </div>
+    <div id="map-buttons" align="left">
+      <div class="button-left" onclick="mapLeft()"></div>
+      <div class="button-right" onclick="mapRight()"></div>
+      <div class="button-up" onclick="mapUp()"></div>
+      <div class="button-down" onclick="mapDown()"></div>
+      <div class="button-zoomin" onclick="mapZoomIn()"></div>
+      <div class="button-zoomout" onclick="mapZoomOut()"></div>
+    </div>
+  </div>
+</body>
+</html>
