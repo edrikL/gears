@@ -1,0 +1,600 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+  Copyright 2007, Google Inc.
+
+  Redistribution and use in source and binary forms, with or without 
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice, 
+  this list of conditions and the following disclaimer.
+  2. Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+  3. Neither the name of Google Inc. nor the names of its contributors may be
+  used to endorse or promote products derived from this software without
+  specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<head>
+  <title>Gears on Android: RunningMan</title>
+  <link rel="stylesheet" type="text/css" href="../gears.css" />
+<style type="text/css">
+<!--
+.style1 {color: #FF0000}
+-->
+</style>
+</head>
+
+<body>
+  <h1>Gears on Android: A Simple Gears Stopwatch</h1>
+
+<div id="pagecontent"> 
+<div class="calloutBox">
+<p>Create a simple JavaScript stopwatch application
+that uses the Gears APIs  on Android!</p>
+
+<table width="90%" border="1" cellspacing="5" cellpadding="0">
+<tr>
+<td>
+<div align="center"><img src="images/running_man1.png" style="WIDTH:316px; HEIGHT:425px"></div>
+</td>
+<td>
+<div align="center"><img src="images/running_man2.png" style="WIDTH:315px; HEIGHT:425px"></div>
+</td>
+</tr>
+</table>
+</div>
+<h2>Contents</h2>
+<ul>
+  <li><a href="#introduction" target="_self">Introduction</a> 
+  <ul>
+    <li><a href="#get_the_source_code" target="_self">Get the source code</a></li>
+    <li><a href="#Sign_up_for_a_Google_Maps_API_" target="_self">Sign up for a Google Maps API key</a> </li>
+  </ul>
+  </li>
+  <li><a href="#step_1" target="_self">Step 1 Basic application</a> 
+    <ul>
+      <li><a href="#step_1a" target="_self">Step 1a - HTML organization</a></li>
+      <li><a href="#step_1b" target="_self">Step 1b - Writing a stopwatch</a></li>
+    </ul>
+  </li>
+  <li><a href="#step_2" target="_self">Step 2 Adding a Shortcut</a></li>
+  <li><a href="#step_3" target="_self">Step 3 Saving Information</a>
+    <ul>
+    <li><a href="#step_3a" target="_self">Creating a preferences table</a></li>
+    <li><a href="#step_3b" target="_self">Using the database</a></li>
+    </ul>
+  </li>
+  <li><a href="#step_4" target="_self">Step 4 Saving run times &amp; showing journeys</a> 
+  <ul>
+    <li><a href="#step_4a" target="_self">Saving run times</a> </li>
+    <li><a href="#step_4b" target="_self">Displaying journeys</a></li>
+    <li><a href="#step_4c" target="_self">Removing records</a></li>
+  </ul>
+  </li>
+  <li><a href="#step_5" target="_self">Step 5 Saving geolocation information</a></li>
+  <li><a href="#step_6" target="_self">Step 6 Improve the summary information</a></li>
+  <li><a href="#step_7" target="_self">Step 7 Using the Maps API</a></li>
+  <li><a href="#step_8" target="_self">Step 8 Offline mode</a></li>
+  <li><a href="#more_information" target="_self">More information</a> 
+  <ul>
+    <li><a href="#gears" target="_self">Gears APIs</a></li>
+    <li><a href="#android" target="_self">Android</a> </li>
+  </ul>
+  </li>
+</ul>
+<a name="introduction"></a>
+<h2>Introduction</h2>
+<p>This tutorial describes how to create a simple JavaScript application that uses the APIs provided by Gears on Android.&nbsp;The sample application, called RunningMan, is a location-aware stopwatch that measures both the time and route taken for a journey, showing the journey on a map.</p>
+
+<p>Though written specifically for Android, RunningMan can also be used on the other platforms that Gears supports as the APIs are the same. However, you may need to modify the HTML and CSS as Document Object Model support varies widely between browsers. </p>
+
+<p>We recommend you first work through this tutorial using a desktop browser with good debugging capabilities. When you are happy with your application, test it using the Android emulator and finally try it out on a real Android device. Information about the Android emulator is available from <a href="http://code.google.com/android/reference/emulator.html">http://code.google.com/android/reference/emulator.html</a></p>
+
+<h3><a id="get_the_source_code" name="get_the_source_code"></a>Get the source code</h3>
+<p>You can download the HTML and JavaScript source used in this tutorial
+from the <a href="http://code.google.com/apis/gears/tools.html">Gears Resources
+and Tools page</a>. Scroll down the page to the <em>Resources</em>, <em>Samples
+and Tools download</em> section
+then click Download Samples and Tools. </p>
+
+<p>If you want to follow the tutorial step-by-step by rewriting the code yourself, which you are encouraged to do, you will probably want to still use the CSS file provided, along with the images. Note that the CSS file needs to be in a parent directory and the images to be in a parent images directory.</p>
+
+<h3><a id="Sign_up_for_a_Google_Maps_API_" name="Sign_up_for_a_Google_Maps_API_"></a>Sign up for a Google Maps API key</h3>
+<p>To complete this tutorial you will need to sign up for a <a href="http://code.google.com/apis/maps/signup.html">Google
+Maps API development key</a>. You will need a Google account to do this.
+Though your key should be delivered to you immediately, you may want to
+get it before starting this tutorial.</p>
+<h2><a name="step_1" id="step_1"></a>Step 1: Basic application</h2>
+<p>This section covers the basic HTML organization in RunningMan, and
+describes how to write a JavaScript stopwatch. </p>
+
+<h3><a name="step_1a" id="step_1a"></a>Step 1a - HTML organization </h3>
+<p>In terms of user interface, RunningMan appears as a front page with
+buttons leading to other pages. In terms of HTML, those other pages are
+hidden divisions in a single HTML page. JavaScript is held in a <code>model.js</code>
+file. </p>
+<p>The following HTML provides the basic skeleton for RunningMan. You
+can type this, or copy and paste it into your favorite editor then save
+the file. Alternatively, open the index.html file in the <code>step1a</code> directory
+of the <a href="#get_the_source_code">zip download</a>. Subsequent sections of this tutorial add to this file.</p>
+
+<pre>&lt;html&gt;<br />&lt;head&gt;<br />  &lt;title&gt;RunningMan&lt;/title&gt;<br />  &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;../run.css&quot; /&gt;<br />  &lt;script type=&quot;text/JavaScript&quot; src=&quot;model.js&quot;&gt;&lt;/script&gt;<br />  &lt;meta name=&quot;viewport&quot; content=&quot;width=320; user-scalable=false&quot;&gt;<br />&lt;/head&gt;<br />&lt;body&gt;<br />  &lt;div id=&quot;mainScreen&quot; align=&quot;center&quot;&gt;<br />    &lt;div id=&quot;title&quot;&gt;<br />      &lt;img src=&quot;../images/icon.png&quot; width=&quot;48&quot; height=&quot;48&quot;&gt;<br />      &lt;br&gt;RunningMan&lt;div id=&quot;subtitle&quot;&gt;A simple Gears Stopwatch&lt;/div&gt;<br />    &lt;/div&gt;<br />    &lt;div class=&quot;main-menu&quot; align=&quot;right&quot;&gt;<br />      &lt;div class=&quot;go-button&quot; onclick=&quot;go('watch')&quot;&gt;Stopwatch&lt;/div&gt;<br />      &lt;div class=&quot;go-button&quot; onclick=&quot;go('journeys')&quot;&gt;Journeys&lt;/div&gt;<br />    &lt;/div&gt;<br />  &lt;/div&gt;<br />  &lt;div id=&quot;watch&quot; align=&quot;center&quot;&gt;<br />    &lt;div class=&quot;content&quot;&gt;<br />       The stopwatch will be placed here<br />    &lt;/div&gt;<br />    &lt;div class=&quot;menu&quot; align=&quot;left&quot;&gt;<br />      &lt;div class=&quot;back-button&quot; onclick=&quot;go('mainScreen')&quot;&gt;Back&lt;/div&gt;<br />    &lt;/div&gt;<br />  &lt;/div&gt;<br />  &lt;div id=&quot;journeys&quot;&gt;<br />    &lt;div class=&quot;content&quot;&gt;<br />       Journeys will be placed here<br />    &lt;/div&gt;<br />    &lt;div class=&quot;menu&quot; align=&quot;left&quot;&gt;<br />      &lt;div class=&quot;back-button&quot; onclick=&quot;go('mainScreen')&quot;&gt;Back&lt;/div&gt;<br />    &lt;/div&gt;<br />  &lt;/div&gt;<br />&lt;/body&gt;<br />&lt;/html&gt;</pre>
+<p>The <code>model.js</code> file contains all the JavaScript code for RunningMan. The
+following functions define the simple navigation mechanisms used:</p>
+<pre>/*<br />&nbsp;* Navigation functions<br />&nbsp;*/<br /> <br /> function go(name) {<br /> &nbsp; hideAllScreens();<br /> &nbsp; var functionName = &quot;on_&quot; + name;<br /> &nbsp; showDiv(name);<br /> &nbsp; if (window[functionName] != null) {<br /> &nbsp;&nbsp;&nbsp; window[functionName]();<br /> &nbsp; }<br /> }<br /> <br /> function showDiv(name) {<br /> &nbsp; var elem = document.getElementById(name);<br /> &nbsp; if (elem) {<br /> &nbsp;&nbsp;&nbsp; elem.style.display=&quot;block&quot;;<br /> &nbsp; }<br /> }<br /> <br /> function hideDiv(name) {<br /> &nbsp; var elem = document.getElementById(name);<br /> &nbsp; if (elem) {<br /> &nbsp;&nbsp;&nbsp; elem.style.display=&quot;none&quot;;<br /> &nbsp; }<br /> }<br /> <br /> function hideAllScreens() {<br /> &nbsp; hideDiv('mainScreen');<br /> &nbsp; hideDiv('watch');<br /> &nbsp; hideDiv('journeys');<br /> }</pre>
+<p> Again, you can type this code, or copy and paste it into your favorite
+editor then save the file. Alternatively, open the <code>model.js</code> file in the
+<code>step1a</code> directory of the <a href="#get_the_source_code">zip download</a>.</p>
+
+<p>By default, only the mainScreen division is shown, using CSS. When
+the user clicks a button, the <code>go()</code> function is called passing the parameter
+associated with the button that was clicked (<code>watch</code>, <code>journeys</code> or <code>mainscreen</code>).
+The <code>go()</code> function hides all divisions then shows the user-selected division. </p>
+<p>
+If a function with the same name as the division, but prefixed by <code>on_</code> exists,
+then that function is called. This makes it easier to write functions handling
+the behavior of the different screens and is described later in this tutorial.
+<p>Load
+either your own HTML file or the index.html file from the <code>step1a</code> directory
+of the <a href="#get_the_source_code">zip
+download</a> in a browser. You will see the main screen (image on the left
+below). Click on the Stopwatch link to go to a blank screen (image on the
+left below). Click on the Back button to return to the main screen. 
+<table width="90%" border="1" cellspacing="5" cellpadding="0">
+<tr>
+<td>
+<div align="center"><img src="images/running_man3.png" style="WIDTH:160px; HEIGHT:215.19px"></div>
+</td>
+<td>
+<div align="center"><img src="images/running_man4.png" style="WIDTH:160px; HEIGHT:219.164px"></div>
+</td>
+</tr>
+</table>
+<h2><a name="step_1b" id="step_1b"></a>Step 1b: Writing a stopwatch</h2>
+
+<p>The next step is to add a basic timer page to enable the user to start,
+stop, and reset the stopwatch and to display the elapsed time: </p>
+<p align="center"><img src="images/running_man5.png" style="WIDTH:312px; HEIGHT:429px"></p>
+<p>First declare a global object in <code>model.js</code>:</p>
+<pre>  var global = new Object();</pre>
+<p>Modify the HTML to call the <code>main()</code> function when the page is loaded:</p>
+<pre>  &lt;body onload=&quot;main()&quot;&gt;</pre>
+<p>Add the <code>main()</code> function to <code>model.js</code>:</p>
+<pre>/*
+ * Main function
+ */
+ function main() {
+   global.startTime = null;
+   updateTime();
+ }</pre>
+<p>The <code>global.startTime</code> object contains the starting time of the stopwatch,
+while the <code>updateTime()</code> function displays the elapsed time.</p>
+<p>Now modify the <code>watch</code> division to add the HTML to call the <code>startRun()</code>,
+<code>stopRun()</code>, and <code>resetRun()</code> functions when the user clicks the corresponding
+buttons:</p>
+<pre>&lt;div id=&quot;watch&quot; align=&quot;center&quot;&gt;<br />  &lt;div class=&quot;content&quot;&gt;<br />    &lt;div id=&quot;timeTitle&quot;&gt;Time&lt;/div&gt;<br />    &lt;div id=&quot;timeDisplay&quot;&gt;&lt;/div&gt;<br />    &lt;input type=&quot;button&quot; onclick=&quot;startRun()&quot; value=&quot;Start&quot;&gt;&lt;/input&gt;<br />    &lt;input type=&quot;button&quot; onclick=&quot;stopRun()&quot; value=&quot;Stop&quot;&gt;&lt;/input&gt;<br />    &lt;input type=&quot;button&quot; onclick=&quot;resetRun()&quot; value=&quot;Reset&quot;&gt;&lt;/input&gt;<br />  &lt;/div&gt;<br />  &lt;div class=&quot;menu&quot; align=&quot;left&quot;&gt;<br />    &lt;div class=&quot;back-button&quot; onclick=&quot;go('mainScreen')&quot;&gt;Back&lt;/div&gt;<br />  &lt;/div&gt;<br />&lt;/div&gt;</pre>
+<p>Add the <code>startRun()</code>, <code>stopRun()</code> and <code>resetRun()</code> functions to <code>model.js</code>:</p>
+<pre>/*<br />&nbsp;* Timer functions<br />&nbsp;*/<br /> <br /> function startRun() {<br /> &nbsp; global.updateInterval = setInterval(&quot;updateTime()&quot;, 1000);<br /> &nbsp; global.startTime = new Date();<br /> }<br /> <br /> function stopRun() {<br /> &nbsp; clearInterval(global.updateInterval);<br /> }<br /> <br /> function resetRun() {<br /> &nbsp; stopRun();<br /> &nbsp; global.startTime = null;<br /> &nbsp; updateTime();<br /> } </pre>
+<p>When the user clicks the Start button, the <code>startRun()</code> function saves
+the current time in the global object (<code>global.startTime</code>), and updates the
+elapsed time every second through the <code>updateTime()</code> function; the <code>stopRun()</code>
+function clears the timer object.</p>
+<p>The <code>updateTime()</code> function calls a <code>formatTime()</code> function. Add both to
+<code>model.js</code>:</p>
+<pre>/*<br /> * Display stopwatch time value<br />&nbsp;*/<br /> function updateTime() {<br /> &nbsp; var time = 0;<br /> &nbsp; if (global.startTime != null) {<br /> &nbsp;&nbsp;&nbsp; time = (new Date()).getTime() - global.startTime;<br /> &nbsp;&nbsp;&nbsp; time = (time/1000)|0;<br /> &nbsp; }<br /> &nbsp; var timeDiv = document.getElementById(&quot;timeDisplay&quot;);<br /> &nbsp; timeDiv.innerHTML = formatTime(time);<br /> }<br /> <br />/*<br />&nbsp;* Format a time value given in seconds<br />&nbsp;*/<br /> function formatTime(aTime) {<br /> &nbsp; var seconds = aTime % 60;<br /> &nbsp; var minutes = ((aTime / 60) |0) % 60;<br /> &nbsp; var hours = (aTime / 3600) |0;<br /> &nbsp; var time = &quot;0&quot;;<br /> &nbsp; if (seconds &gt; 0) {<br /> &nbsp;&nbsp;&nbsp; time = seconds + &quot; s&quot;;<br /> &nbsp; }<br /> &nbsp; if (minutes &gt; 0) {<br /> &nbsp;&nbsp;&nbsp; time = minutes + &quot; min &quot; + time;<br /> &nbsp; }<br /> &nbsp; if (hours &gt; 0) {<br /> &nbsp;&nbsp;&nbsp; time = hours + &quot; h &quot; + time;<br /> &nbsp; }<br /> &nbsp; return time;<br /> }
+</pre>
+<p>Load either your own HTML file or the index.html file from the <code>step1b</code>
+directory of the zip download in a browser to see this in action.</p>
+<h2><a name="step_2" id="step_2"></a>Step 2: Adding a Shortcut</h2>
+<p>It's now time to add Gears to our sample RunningMan application!</p>
+<p>At the moment, the only way to launch the application is to either type
+the whole URL in a browser, or save it in the browser's bookmarks. Gears
+lets us create an icon on the Android desktop.</p>
+<p>The first step is to import <code>gears_init</code> in the HTML file (red text):</p>
+<pre>&lt;head&gt;<br /> &nbsp; &lt;title&gt;RunningMan&lt;/title&gt;<br /> &nbsp; &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;../run.css&quot; /&gt;<br /> &nbsp; <span class="style1">&lt;script type=&quot;text/JavaScript&quot; src=&quot;gears_init.js&quot;&gt;&lt;/script&gt;</span><br /> &nbsp; &lt;script type=&quot;text/JavaScript&quot; src=&quot;model.js&quot;&gt;&lt;/script&gt;<br /> &nbsp; &lt;meta name=&quot;viewport&quot; content=&quot;width=320; user-scalable=false&quot;&gt;<br />&lt;/head&gt;</pre>
+<p> Now, modify the <code>main()</code> function by adding the red text
+below to
+<code>model.js</code>, replacing <span class="style1">YOUR_URL</span> with
+the URL for your files:</p>
+<pre>/*<br />&nbsp;* Main function<br />&nbsp;*/<br /> function main() {<br /> &nbsp; global.startTime = null;<br /> &nbsp; updateTime();<br /> &nbsp; <span class="style1">global.siteUrl = &quot;http://YOUR_URL/index.html&quot;;<br /> &nbsp; installShortcut();</span><br /> }</pre>
+<p> Finally, define the <code>installShortcut()</code> function in <code>model.js</code>, this function
+uses the <a id="sqav" title="Gears desktop API" href="http://code.google.com/apis/gears/upcoming/api_desktop.html" target="_blank">Gears
+Desktop API</a> to install a shortcut icon on the Android desktop:</p>
+<pre>/*<br /> * Install shortcut<br />&nbsp;*/<br /> function installShortcut() {<br /> &nbsp; var desktop = google.gears.factory.create('beta.desktop');<br /> &nbsp; desktop.createShortcut(&quot;RunningMan&quot;, global.siteUrl,<br /> &nbsp;&nbsp;&nbsp; { &quot;48x48&quot; : &quot;../images/icon.png&quot; }, &quot;RunningMan application&quot;);<br /> }</pre>
+<p> Refresh your page, or load either your own HTML file or the index.html
+file from the <code>step2</code> directory of the <a href="zip download">zip download</a> in a browser. You should be greeted by a shortcut dialog:</p>
+<p align="center"><img src="images/running_man6.png" style="WIDTH:312px; HEIGHT:280px"></p>
+<p>Click Yes to accept the shortcut, then go back to the home
+screen, and you should see your icon. The following is an example from
+an Android device:</p>
+<p align="center"><img src="images/running_man7.png" style="WIDTH:319px; HEIGHT:480px"></p>
+<p>Clicking on the icon opens RunningMan in the browser. You can manipulate
+this shortcut in the same way as any other shortcut, move it to a different
+screen, put it in a folder, and so on.</p>
+<h2><a name="step_3" id="step_3"></a>Step 3: Saving Information</h2>
+<p>With any application it is generally helpful to be able to save settings
+or preferences. In it's current state, the RunningMan application asks
+the user if they would like to create a shortcut icon every time it is
+opened. It would be a much better experience for the user if RunningMan
+did not repeatedly prompt them once the icon has been created.<br />
+<br />
+To store this information, we will use the Gears <a href="http://code.google.com/apis/gears/api_database.html" target="_blank">Database
+API</a>. This API gives us access to a SQLite database, saved locally on
+the device.</p>
+<h3><a name="step_3a" id="step_3a"></a>Creating a preferences table </h3>
+<p>RunningMan needs to use a table to store preferences:</p>
+<p align="center"><img src="images/running_man8.png" style="WIDTH:162px; HEIGHT:131px"></p>
+<p>The first step is to add the following function to <code>model.js</code>. This function
+creates a <code>beta</code> database and <code>Preferences</code> table within that database:</p>
+<pre>/*<br /> * Initialize the Database<br /> */<br /> function initDB() {<br /> &nbsp; global.db = google.gears.factory.create('beta.database');<br /> &nbsp; global.db.open('stopwatch');<br /> &nbsp; global.db.execute('CREATE TABLE IF NOT EXISTS Preferences ' +<br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '(Name text, Value int)');<br /> }</pre>
+<p> Now add the following two utility functions to <code>model.js</code>. These functions
+set and get the value of a preference:</p>
+<pre>function getPreference(name) {<br />  var result = false;<br />  var rs = global.db.execute('SELECT Value FROM Preferences WHERE Name = (?)', [name]);<br /> <br />  if (rs.isValidRow()) {<br /> &nbsp;  result = rs.field(0);<br />  }<br />  rs.close();<br />  return result;<br />}<br /> <br />function setPreference(name, value) {<br />  global.db.execute('INSERT INTO Preferences VALUES (?, ?)', [name, value])
+} </pre>
+<h3><a name="step_3b" id="step_3b"></a>Using the database</h3>
+<p>Modify the <code>installShortcut()</code> function to call the <code>getPreference</code> and <code>setPreference</code>
+functions in <code>model.js</code>:</p>
+<pre>function installShortcut() {<br />  <span class="style1">if (getPreference('Shortcut') == false) {</span><br />    var desktop = google.gears.factory.create('beta.desktop');<br />    desktop.createShortcut(&quot;RunningMan&quot;, global.siteUrl,<br />      { &quot;48x48&quot; : &quot;../images/icon.png&quot; }, &quot;RunningMan application&quot;);<br />    <span class="style1">setPreference('Shortcut', true);<br />  }</span><br />}</pre>
+<p> Finally, modify the <code>main()</code> function to call <code>initDB()</code>:</p>
+<pre>function main() {<br />  global.startTime = null;<br />  updateTime();<br />  global.siteUrl = &quot;http://YOURURL/index.html&quot;;<br />  <span class="style1">initDB();</span><br />  installShortcut();<br />}</pre>
+<p> RunningMan now only prompts the user once regarding installation of
+the shortcut icon.</p>
+<h2><a name="step_4" id="step_4"></a>Step 4: Saving times and showing journeys</h2>
+<p>The RunningMan application, for the moment, is still a very simple stopwatch.
+Wouldn't it be great if we could save each measured time?</p>
+<h3><a name="step_4a" id="step_4a"></a>Saving run times</h3>
+<p> This section adds the ability to save information in the following
+table:</p>
+<p align="center"><img src="images/running_man9.png" style="WIDTH:162px; HEIGHT:148px"></p>
+<p> First create a new <code>Times</code> table to hold this information in <code>initDB()</code> in <code>model.js</code>:</p>
+<pre>function initDB() {<br />  global.db = google.gears.factory.create('beta.database');<br />  global.db.open('stopwatch');<br />  global.db.execute('CREATE TABLE IF NOT EXISTS Preferences ' +<br />             '(Name text, Value int)');<br />  <span class="style1">global.db.execute('CREATE TABLE IF NOT EXISTS Times ' +<br />             '(StartDate int, StopDate int, Description text)');</span><br />}</pre>
+<p> Now modify the <code>startRun()</code> and <code>stopRun()</code> functions to save the date
+and time information:</p>
+<pre>function startRun() {<br /> &nbsp; global.updateInterval = setInterval(&quot;updateTime()&quot;, 1000);<br /> &nbsp; global.startTime = new Date();<br /> &nbsp; <span class="style1">var time = global.startTime.getTime();<br /> &nbsp; global.db.execute('INSERT INTO Times (StartDate) VALUES (?)',<br /> &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; [time]);</span><br /> }<br /> <br /> function stopRun() {<br /> &nbsp; clearInterval(global.updateInterval);<br /> &nbsp; <span class="style1">var stopDate = new Date();<br /> &nbsp; var time = stopDate.getTime();<br /> &nbsp; global.db.execute('UPDATE Times SET StopDate = (?) ' +<br /> &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'WHERE ROWID = (?)', [time,<br /> &nbsp; global.db.lastInsertRowId]);</span><br /> }</pre>
+<h3><a name="step_4b" id="step_4b"></a>Displaying journeys</h3>
+<p>Now that date and time information is saved, we can display it in the
+Journeys screen. First, modify the HTML: </p>
+<pre>&lt;div id=&quot;journeys&quot;&gt;
+  &lt;div class=&quot;content&quot;&gt;
+    <span class="style1">&lt;div id=&quot;journeysContent&quot;&gt;&lt;h2&gt;No journeys yet!&lt;/h2&gt;&lt;/div&gt;</span>
+  &lt;/div&gt;
+  &lt;div class=&quot;menu&quot; align=&quot;left&quot;&gt;
+    &lt;div class=&quot;back-button&quot; onclick=&quot;go('mainScreen')&quot;&gt;Back&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+<p>Now add the <code>on_journeys()</code> function to <code>model.js</code>. This is called when
+the user switches to the Journeys screen:</p>
+<pre>/*<br /> * Show journeys<br /> */<br /> function on_journeys() {<br /> &nbsp; var rows = 0;<br /> &nbsp; var html = &quot;&quot;;<br /> <br /> &nbsp; var rs = global.db.execute('SELECT ROWID, Description FROM<br /> &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Times');<br /> <br /> &nbsp; while (rs.isValidRow()) {<br /> &nbsp;&nbsp;&nbsp; var rowID = rs.field(0);<br /> &nbsp;&nbsp;&nbsp; var description = rs.field(1);<br /> <br /> &nbsp;&nbsp;&nbsp; if (description == null) {<br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; description = createDescription(rowID);<br /> &nbsp;&nbsp;&nbsp; }<br /> <br /> &nbsp;&nbsp;&nbsp; var rowType;<br /> &nbsp;&nbsp;&nbsp; if (rows % 2 == 0) {<br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rowType = &quot;rowA&quot;;<br /> &nbsp;&nbsp;&nbsp; } else {<br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rowType = &quot;rowB&quot;;<br /> &nbsp;&nbsp;&nbsp; }<br /> &nbsp;&nbsp;&nbsp; rows++;<br /> <br /> &nbsp;&nbsp;&nbsp; html += &quot;&lt;div class='&quot; + rowType + &quot;'&gt;&quot;;<br /> &nbsp;&nbsp;&nbsp; html += &quot;&lt;div class='rowDesc'&gt;&quot; + description + &quot;&lt;/div&gt;&quot;;<br /> &nbsp;&nbsp;&nbsp; html += &quot;&lt;/div&gt;&quot;;<br /> <br /> &nbsp;&nbsp;&nbsp; rs.next();<br /> &nbsp; }<br /> <br /> &nbsp; if (html != &quot;&quot;) {<br /> &nbsp;&nbsp;&nbsp; var elem = document.getElementById('journeysContent');<br /> &nbsp;&nbsp;&nbsp; elem.innerHTML = html;<br /> &nbsp; }<br /> } </pre>
+<p>The <code>on_journeys()</code> function iterates through the saved journeys. The function first gets the description (if this is not in the database it is created by calling the <code>createDescription()</code>). The <code>on_journeys()</code> function then displays the description in a division using a CSS class of either <code>rowA</code> or <code>rowB</code> which are displayed in alternating colors. </p>
+<p>Add the <code>createDescription()</code> function to <code>model.js</code>:</p>
+<pre> /*<br /> &nbsp;* Create the text displayed in the Journeys pane for one record<br /> &nbsp;*/<br /> function createDescription(rowID) {<br /> &nbsp; var description = &quot;&quot;;<br /> &nbsp; var rs = global.db.execute('SELECT StartDate, StopDate FROM Times<br /> &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ' +&nbsp;'WHERE ROWID = (?)', [rowID]);<br /> <br /> &nbsp; if (rs.isValidRow()) {<br /> &nbsp;&nbsp;&nbsp; var sDate = rs.field(0);<br /> &nbsp;&nbsp;&nbsp; var eDate = rs.field(1);<br /> <br /> &nbsp;&nbsp;&nbsp; var time = (((eDate - sDate)/1000)|0); // elapsed seconds<br /> &nbsp;&nbsp;&nbsp; var startDate = new Date();<br /> &nbsp;&nbsp;&nbsp; startDate.setTime(sDate);<br /> <br /> &nbsp;&nbsp;&nbsp; description = startDate.toLocaleDateString() + &quot; -- &quot;;<br /> &nbsp;&nbsp;&nbsp; description += formatTime(time);&nbsp;&nbsp;&nbsp;<br /> &nbsp;&nbsp;&nbsp; global.db.execute('UPDATE Times SET Description = (?) ' +<br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'WHERE ROWID = (?)', [description, rowID]);<br /> &nbsp; }<br /> <br /> &nbsp; return description;<br /> } </pre>
+<p> Times are now automatically recorded, and going to the Journeys pane
+displays them:</p>
+<p align="center"><img src="images/running_man10.png" style="WIDTH:312px; HEIGHT:181px"></p>
+
+<h3><a name="step_4c" id="step_4c"></a>Removing records </h3>
+<p>
+Now that the application displays recorded times, it would be useful to
+be able to delete them.&nbsp; </p>
+<p>Add a delete button by modifying the <code>on_journeys</code> function:</p>
+<pre>html += &quot;&lt;div class='&quot; + rowType + &quot;'&gt;&quot;;<br />html += &quot;&lt;div class='rowDesc'&gt;&quot; + description + &quot;&lt;/div&gt;&quot;;<br /><span class="style1">html += &quot;&lt;div class='rowImg' onclick='deleteRecord(&quot; + rowID + &quot;)'&gt;&quot;;<br />html += &quot;&lt;img src='delete.png'&gt;&lt;/div&quot;;</span><br />html += &quot;&lt;/div&gt;&quot;; </pre>
+
+<p>Add the <code>deleteRecord()</code> function to <code>model.js</code>:</p>
+<pre>/*<br /> * Delete a recorded time<br /> */<br />function deleteRecord(rowID) {<br />  var answer = confirm(&quot;Delete this run?&quot;);<br />  if (answer) {<br />    global.db.execute('DELETE FROM Times WHERE ROWID = (?)',<br />               [rowID]);<br />    go('journeys');<br />  }<br />} </pre>
+
+<p>Refresh your page, or load either your own HTML file or the index.html
+file from the <code>step4</code> directory of the <a href="#get_the_source_code">zip
+download</a> in a browser. The Journeys pane now looks like this:</p>
+<p align="center"><img src="images/running_man11.png" style="WIDTH:313px; HEIGHT:238px"></p>
+<h2><a name="step_5" id="step_5"></a>Step 5: Saving geolocation information</h2>
+<p>RunningMan can now record times in the database, show the saved times,
+and remove them. Let's introduce a new API, Geolocation.</p>
+<p>The Geolocation API enables RunningMan to record the position of the
+device on which it is running when the timer starts, save any intermediate
+positions, and save the position when the timer is stopped. Let's create
+a new database table to hold this information:</p>
+<p>Add the following red text, to create a <code>Positions</code> table, to <code>model.js</code>: </p>
+<pre>function initDB() {<br />  global.db = google.gears.factory.create('beta.database');<br />  global.db.open('stopwatch');<br />  global.db.execute('CREATE TABLE IF NOT EXISTS Preferences ' +<br />             '(Name text, Value int)');<br />  global.db.execute('CREATE TABLE IF NOT EXISTS Times ' +<br />             '(StartDate int, StopDate int, Description text)');<br />  <span class="style1">global.db.execute('CREATE TABLE IF NOT EXISTS Positions ' +<br />             '(TimeID int, Date int, Latitude float, ' +<br />             ' Longitude float, Accuracy float, Altitude float, ' +<br />             ' AltitudeAccuracy float)');</span><br />}</pre>
+<p> Now create a geolocation object using the <code>main()</code> function, in <code>model.js</code>:</p>
+<pre>function main() {<br />global.startTime = null;<br /><span class="style1">global.geo = google.gears.factory.create('beta.geolocation');</span><br />  updateTime();<br />  global.siteUrl = &quot;http://YOURURL/index.html&quot;;<br />  initDB();<br />  installShortcut();<br />}</pre>
+<p>When the timer starts&nbsp;RunningMan&nbsp;also needs to start a geolocation
+watcher to receive a notification when the position changes and to save
+the new position in the database. To do this, add the following red text
+to <code>model.js</code>:</p>
+
+
+<pre>function startRun() {<br />  global.updateInterval = setInterval(&quot;updateTime()&quot;, 1000);<br />  global.startTime = new Date();<br />  var time = global.startTime.getTime();<br />  global.db.execute('INSERT INTO Times (StartDate) VALUES (?)', [time]);<br />  <span class="style1">global.currentTimeID = global.db.lastInsertRowId;<br />  global.currentGeoWatcher = global.geo.watchPosition(function<br />                             (position) {<br />    global.db.execute('INSERT INTO Positions (TimeID, Date,<br />               Latitude, ' +<br />               'Longitude, Accuracy, Altitude, AltitudeAccuracy) ' +<br />               'VALUES (?, ?, ?, ?, ?, ?, ?)',<br />               [global.currentTimeID, position.timestamp.getTime(),<br />               position.latitude, position.longitude,<br />               position.accuracy,<br />               position.altitude, position.altitudeAccuracy]);<br />    }, null, { &quot;enableHighAccuracy&quot; : true});</span><br />}</pre>
+<p> Note that this does not deal with errors (it only passes a null parameter):
+errors are simply discarded; the <code>enableHighAccuracy</code> argument
+forces the application to use the best available function, which is likely
+to be the GPS on an Android G1 device. </p>
+<p>
+Now modify the <code>stopRun()</code> function to remove the geolocation watcher:</p>
+<pre>function stopRun() {<br />  clearInterval(global.updateInterval);<br />  var stopDate = new Date();<br />  var time = stopDate.getTime();<br />  global.db.execute('UPDATE Times SET StopDate = (?) ' +<br />                 'WHERE ROWID = (?)', [time, <span class="style1">global.currentTimeID]);<br />  if (global.currentGeoWatcher != null) {<br />    global.geo.clearWatch(global.currentGeoWatcher);<br />    global.currentGeoWatcher = null;<br />  }</span><br />}</pre>
+
+<p> RunningMan also needs to modify the database update to use the <code>global.currentTimeID</code>
+instead of the previous <code>global.db.lastInsertRowId</code>, as many new inserts
+could potentially have happened.</p>
+<p> Finally, the additional information also needs to be deleted when a
+timing has been removed:</p>
+<pre>function deleteRecord(rowID) {<br />  var answer = confirm(&quot;Delete this run?&quot;);<br />  if (answer) {<br />   <span class="style1">global.db.execute('DELETE FROM Positions WHERE TimeID = (?)',<br />              [rowID]);</span><br />   global.db.execute('DELETE FROM Times WHERE ROWID = (?)',<br />              [rowID]);<br />   go('journeys');<br />  }<br />}</pre>
+<h2><a name="step_6" id="step_6"></a>Step 6:&nbsp;Improve the summary information </h2>
+<p>Now that RunningMan saves position information, the description displayed
+in the Journeys screen can be improved to give, for example, the number
+of positions saved, the distance travelled, and the average speed.</p>
+<p>
+Modify the <code>createDescription()</code> function to call a <code>positionInformation()</code>
+function in <code>model.js</code>:</p>
+<pre>
+description = startDate.toLocaleDateString() + &quot; -- &quot;;
+description += formatTime(time);
+<span class="style1">description += positionInformation(rowID);</span></pre>
+<p> The <code>positionInformation()</code> function iterates through the associated
+positions, and returns the additional information. Add the <code>positionInformation()</code>
+function to <code>model.js</code>:</p>
+<pre>/*<br /> * For a given row, returns distance traveled, average speed, <br /> * and number of positions saved<br /> * /<br />function positionInformation(rowID) {<br />  var distance = 0;<br />  var prevLat = null;<br />  var prevLon = null;<br />  var firstTime = 0;<br />  var lastTime = 0;<br />  var nbPositions = 0;<br />  var rs = global.db.execute('SELECT Latitude, Longitude, Date ' +<br />                             'FROM Positions WHERE TimeID = (?) ' +<br />                             'ORDER BY Date', [rowID]);
+
+  while (rs.isValidRow()) {
+    nbPositions++;
+    var lat = rs.field(0);
+    var lon = rs.field(1);
+    var date = rs.field(2);
+    if (firstTime != 0) {
+      distance += haversineDistance(prevLat, prevLon, lat, lon);
+    } else {
+      firstTime = date;
+    }
+    prevLat = lat;
+    prevLon = lon;
+    lastTime = date;
+    rs.next();
+  }
+  
+  var secTime = (lastTime - firstTime) / 1000;
+  var averageSpeed = ((distance * 3600) / secTime);
+  var roundedDistance = (((distance*1000)|0)/1000);
+  var roundedSpeed = ((averageSpeed*1000)|0)/1000;
+          
+  var description = &quot; (&quot; + roundedDistance + &quot; km)&quot;;
+  description += &quot;&lt;br&gt;Average speed: &quot; + roundedSpeed + &quot; km/h&quot;;
+  description += &quot;&lt;br&gt;&quot; + nbPositions + &quot; positions saved&quot;;
+  return description;
+}</pre>
+<p>To compute the distance between the coordinates, RunningMan uses the following functions, add these to <code>model.js</code>:</p>
+<pre>/*
+ * Utility function to compute the distance between
+ * two coordinates
+ */
+Number.prototype.toRad = function() { // convert degrees to radians
+  return this * Math.PI / 180;
+}
+
+function haversineDistance(lat1, long1, lat2, long2) {
+  // from http://www.movable-type.co.uk/scripts/latlong.html
+  var R = 6371; // km
+  var dLat = (lat2-lat1).toRad();
+  var dLon = (long2-long1).toRad();
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  var d = R * c;
+  return d;
+}</pre>
+
+<p> For more information on calculating distance and bearing between
+two points see <a href="http://www.movable-type.co.uk/scripts/latlong.html">http://www.movable-type.co.uk/scripts/latlong.html</a>.</p>
+<p>Refresh your page, or load either your own HTML file or the index.html
+file from the <code>step6</code> directory of the <a href="#get_the_source_code">zip
+download</a> in a browser. Going back to the Journeys screen, you should
+now see the new information, for example:<br />
+</p>
+<p align="center"><img src="images/running_man12.png" style="WIDTH:312px; HEIGHT:190px"></p>
+<h2><a name="step_7" id="step_7"></a>Step 7&nbsp;Using the Maps API</h2>
+<p>This section covers using the <a href="http://code.google.com/apis/maps/documentation/">Google Maps API</a> to plot movement on a map.</p>
+<p>If you haven't already done so, you need to sign up for a <a href="http://code.google.com/apis/maps/signup.html">Google
+Maps API development key</a>. When you have your key, add the following
+red text to your HTML file, replacing <span class="style1">YOURKEY</span> with
+your actual Maps API key:</p>
+<pre>&lt;script type=&quot;text/JavaScript&quot; src=&quot;gears_init.js&quot;&gt;&lt;/script&gt;<br /><span class="style1">&lt;script src=&quot;http://maps.google.com/maps?file=api&amp;amp;v=2&amp;amp;key=YOURKEY&quot;<br />
+            type=&quot;text/JavaScript&quot;&gt;&lt;/script&gt;</span><br />
+&lt;script type=&quot;text/JavaScript&quot; src=&quot;model.js&quot;&gt;&lt;/script&gt;</pre>
+<p><strong>Note</strong>: Google Maps API keys are dependent on the server's
+URL.
+<p>Now
+add a call to the unload function:
+<pre>&lt;body onload=&quot;main()&quot; <span class="style1">onunload=&quot;GUnload()&quot;</span>&gt;</pre>
+<p> RunningMan can now use the JavaScript functions of the Maps API!</p>
+<p>The
+next step is to add a new division section to the end of the HTML file.
+This displays the map, plus a row of buttons used for navigation:</p>
+<pre>  <span class="style1">&lt;div id=&quot;location&quot; align=&quot;center&quot;&gt;<br />     &lt;div class=&quot;content&quot;&gt;<br />       &lt;div id=&quot;mapLabel&quot;&gt;Map&lt;/div&gt;<br />       &lt;div id=&quot;map&quot; style=&quot;width: 300px; height: 300px&quot;&gt;&lt;/div&gt;<br />     &lt;/div&gt;<br />     &lt;div class=&quot;menu&quot; align=&quot;left&quot;&gt;<br />       &lt;div class=&quot;back-button&quot;<br />            onclick=&quot;go('mainScreen')&quot;&gt;Back&lt;/div&gt;<br />     &lt;/div&gt;<br />     &lt;div id=&quot;map-buttons&quot; align=&quot;left&quot;&gt;<br />       &lt;div class=&quot;button-left&quot; onclick=&quot;mapLeft()&quot;&gt;&lt;/div&gt;<br />       &lt;div class=&quot;button-right&quot; onclick=&quot;mapRight()&quot;&gt;&lt;/div&gt;<br />       &lt;div class=&quot;button-up&quot; onclick=&quot;mapUp()&quot;&gt;&lt;/div&gt;<br />       &lt;div class=&quot;button-down&quot; onclick=&quot;mapDown()&quot;&gt;&lt;/div&gt;<br />       &lt;div class=&quot;button-zoomin&quot; onclick=&quot;mapZoomIn()&quot;&gt;&lt;/div&gt;<br />       &lt;div class=&quot;button-zoomout&quot; onclick=&quot;mapZoomOut()&quot;&gt;&lt;/div&gt;<br />     &lt;/div&gt;<br />  &lt;/div&gt;</span><br />&lt;/body&gt;<br />&lt;/html&gt;</pre>
+<p> Add this division to the <code>hideAllScreens()</code> function in <code>model.js</code>:</p>
+
+<pre>function hideAllScreens() {<br />  hideDiv('mainScreen');<br />  hideDiv('watch');<br />  hideDiv('journeys');<br />  <span class="style1">hideDiv('location');</span><br />}</pre>
+<p> Now modify the <code>main()</code> function in <code>model.js</code> to set the
+default <code>mapZoom</code> value:</p>
+<pre>function main() {<br />  global.startTime = null;<br />  global.geo = google.gears.factory.create('beta.geolocation');<br />  <span class="style1">global.mapZoom = 15;</span><br />  updateTime();<br />  global.siteUrl = &quot;http://YOURURL/index.html&quot;;<br />  initDB();<br />  installShortcut();<br />}</pre>
+<p> Add the following functions, that provide navigation, to <code>model.js</code>:</p>
+<pre>/*
+ * Map navigation functions
+ */
+function mapLeft() {
+  global.map.panDirection(1, 0);
+}
+function mapRight() {
+  global.map.panDirection(-1, 0);
+}
+function mapUp() {
+  global.map.panDirection(0, 1);
+}
+function mapDown() {
+  global.map.panDirection(0, -1);
+}
+function mapZoomIn() {
+  global.map.zoomIn();
+}
+function mapZoomOut() {
+  global.map.zoomOut();
+}</pre>
+<p> Now, add a <code>showMap()</code> function to <code>model.js</code>. This function:</p>
+<ul>
+<li>shows the hidden location division </li>
+<li>creates a map object using the Google Maps API </li>
+<li>iterates on the positions </li>
+<li>extracts the latitude and longitude and constructs an array of points based on those positions</li>
+<li>centers the map on the last point </li>
+<li>plots points as a polyline and the last point as a marker</li>
+</ul>
+
+<pre>/*
+ * Extract position information and plot
+ *
+ */
+function showMap(rowID) {
+  hideAllScreens();
+  showDiv('location');
+  var lastPoint = null;
+  global.map = new GMap2(document.getElementById(&quot;map&quot;));
+  var locations = new Array();
+  var rs = global.db.execute('SELECT Latitude, Longitude ' +
+                             'FROM Positions WHERE TimeID = (?) ' +
+                             'ORDER BY Date', [rowID]);
+  while (rs.isValidRow()) {
+    var lat = rs.field(0);
+    var lon = rs.field(1);
+    var point = new GLatLng(lat, lon);
+    locations[locations.length] = point;
+    lastPoint = point;
+    rs.next();
+  }
+  
+  if (lastPoint != null) {
+    global.map.setCenter(lastPoint, global.mapZoom);
+    var polyline = new GPolyline(locations, '#ff0000', 8);
+    global.map.addOverlay(polyline);
+    global.map.addOverlay(new GMarker(point));
+  }
+}</pre>
+<p>The final step is to call the <code>showMap()</code> function by modifying the <code>on_journeys()</code> function in <code>model.js</code>:</p>
+<pre>html += &quot;&lt;div class='&quot; + rowType + &quot;'&gt;&quot;;<br />html += &quot;&lt;div class='rowDesc' <span class="style1">onclick='showMap(&quot; + rowID + &quot;)'</span>&gt;&quot;;<br />html += description + &quot;&lt;/div&gt;&quot;;<br />html += &quot;&lt;div class='rowImg' onclick='deleteRecord(&quot; + rowID + &quot;)'&gt;&quot;;<br />html += &quot;&lt;img src='../images/delete.png'&gt;&lt;/div&quot;;<br />html += &quot;&lt;/div&gt;&quot;;</pre>
+<p> Refresh your page, or load either your own HTML file or the index.html file from the <code>step7</code> directory of the <a href="#get_the_source_code">zip download</a> in a browser. As long as you have previously made some timing recordings, if you go to the Journeys page and click on one item, you should see a map of your location. </p>
+<p>The following is an example of starting the stopwatch on an Android device on Buckingham Palace Road in London then stopping it having moved along Lower Belgrave street:</p>
+<p align="center"><img src="images/running_man13.png" style="WIDTH:315px; HEIGHT:425px"></p>
+<h2><a name="step_8" id="step_8"></a>Step 8 Offline mode</h2>
+<p>The Gears LocalServer API enables a web application to save its resources
+locally. This reduces latency (as there is no need to fetch resources from
+the network) and allows the application to work without a network connection.
+ RunningMan uses a network connection only to obtain 
+maps through the Google Maps API, aside from this, it could work completely
+disconnected by relying only on the GPS functionality to detect
+location.</p>
+<p>There is also a further complication: the Maps API JavaScript
+loads directly into the HTML header, if the linked file is not in the browser's
+cache, the page will block. This file cannot be stored locally as  it
+is from a different location than our application, and Gears enforces a
+same-location security policy. In addition, the Maps' JavaScript issues
+requests to other files it needs and is not entirely contained in this
+single file. The workaround is to load the Google Maps API lazily, so that
+RunningMan can asynchronously load the JavaScript, and fail gracefully
+if the API cannot be loaded.</p>
+<p>To use the managed store functionalities to save resources locally,
+an application needs a manifest file that lists all the files to be saved
+and served, transparently, by Gears. For RunningMan, this file is named
+manifest.json the contents of which are provided below:</p>
+<pre>{
+  // version of the manifest file format
+  &quot;betaManifestVersion&quot;: 1,
+  
+  // version of the set of resources described in this manifest file
+  &quot;version&quot;: &quot;version 1.0&quot;,
+  
+  // URLs to be cached (URLs are given relative to the
+  // manifest URL)
+  &quot;entries&quot;: [
+    { &quot;url&quot;: &quot;index.html&quot; },
+    { &quot;url&quot;: &quot;gears_init.js&quot; },
+    { &quot;url&quot;: &quot;model.js&quot; },
+    { &quot;url&quot;: &quot;../run.css&quot; },
+    { &quot;url&quot;: &quot;../images/icon.png&quot; },
+    { &quot;url&quot;: &quot;../images/button-background.png&quot; },
+    { &quot;url&quot;: &quot;../images/background.png&quot; },
+    { &quot;url&quot;: &quot;../images/back-arrow.png&quot; },
+    { &quot;url&quot;: &quot;../images/go-arrow.png&quot; },
+    { &quot;url&quot;: &quot;../images/delete.png&quot; },
+    { &quot;url&quot;: &quot;../images/left.png&quot; },
+    { &quot;url&quot;: &quot;../images/right.png&quot; },
+    { &quot;url&quot;: &quot;../images/down.png&quot; },
+    { &quot;url&quot;: &quot;../images/up.png&quot; },
+    { &quot;url&quot;: &quot;../images/zoomIn.png&quot; },
+    { &quot;url&quot;: &quot;../images/zoomOut.png&quot; }
+  ]
+}</pre>
+<p>RunningMan&nbsp;needs to call the <code>checkForUpdate()</code> function for
+Gears to automatically download the files and keep them up-to-date. Add
+the following function to <code>model.js</code>:</p>
+<pre>/*<br /> * Capture resources for offline mode<br /> */<br />function captureOffline() {<br />  global.localserver = google.gears.factory.create(&quot;beta.localserver&quot;);<br />  global.store = global.localserver.createManagedStore(&quot;Stopwatch&quot;);<br />  global.store.manifestUrl = &quot;manifest.json&quot;;<br />  global.store.checkForUpdate();<br />}</pre>
+<p> To load the Google Maps API asynchronously, you need to add the following
+function to <code>model.js</code> (don't forget to replace <span class="style1">YOURKEY</span> with
+the corresponding Google Maps API key for your server):</p>
+<pre>/*
+ * Loads the Google Maps API asynchronously
+ */
+function loadMapsAPI() {
+  var script = document.createElement("script");
+  var key = '<span class="style1">YOURKEY</span>';
+  script.type = "text/javascript";
+  script.src = "http://maps.google.com/maps?file=api&v=2&async=2&key=" + key;
+  document.body.appendChild(script);
+}
+</pre>
+<p>Now add a call to <code>captureOffline()</code> in the <code>main()</code> function in <code>model.js</code>, the last two lines enable RunningMan to load maps asynchronously:</p>
+<pre> initDB();<br /> installShortcut();<br /><span class="style1"> captureOffline();<br /> loadMapsAPI();</span></pre>
+<p>So that RunningMan will  bail out gracefully if the Maps API is not
+loaded, add
+a check to the the <code>showMap()</code> function
+in <code>model.js</code>:</p>
+<pre>function showMap(rowID) {<br />  hideAllScreens();<br />  showDiv('location');<br />  <span class="style1">if (window[&quot;GMap2&quot;] == null) {<br />    alert('No Map object!');<br />    return;<br />  }</span></pre>
+<p>Finally, <em>remove</em> the following line, which was added in Step
+7, from the header in <code>index.html</code>:</p>
+<pre>&lt;script src=&quot;http://maps.google.com/maps?file=api&amp;amp;v=2&amp;amp;key=YOURKEY&quot;<br />
+            type=&quot;text/JavaScript&quot;&gt;&lt;/script&gt;</pre>
+<p>The  header in <code>index.html</code> now looks like this:</p>
+<pre>&lt;head id=&quot;head&quot;&gt;<br />  &lt;title&gt;RunningMan&lt;/title&gt;<br />  &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;../run.css&quot; /&gt;<br />  &lt;script type=&quot;text/javascript&quot; src=&quot;gears_init.js&quot;&gt;&lt;/script&gt;<br />  &lt;script type=&quot;text/javascript&quot; src=&quot;model.js&quot;&gt;&lt;/script&gt;<br />  &lt;meta name=&quot;viewport&quot; content=&quot;width=320; user-scalable=false&quot;&gt;<br />&lt;/head&gt;</pre>
+<p>That's it! You can either refresh your page, or load either your own
+HTML file or the index.html file from the <code>step8</code> directory of the <a href="#get_the_source_code">zip
+download</a> in a browser.</p>
+<h2><a name="more_information" id="more_information"></a>More information </h2>
+<h3><a name="gears" id="gears"></a>Gears APIs </h3>
+<p>For information on each of the Gears APIs used in RunningMan follow
+the links below:</p>
+<ul>
+<li><a href="http://code.google.com/apis/gears/api_database.html">Database</a> </li>
+<li><a href="http://code.google.com/apis/gears/upcoming/api_desktop.html">Desktop shortcuts</a></li>
+<li><a href="http://code.google.com/apis/gears/api_geolocation.html">Geolocation</a></li>
+<li><a href="http://code.google.com/apis/gears/api_localserver.html">LocalServer</a></li>
+</ul>
+<h3><a name="android" id="android"></a>Android </h3>
+<p>For information on:</p>
+
+<ul>
+<li>Android see <a href="http://code.google.com/android/">http://code.google.com/android/</a> </li>
+<li>The Android emulator see <a href="http://code.google.com/android/reference/emulator.html">http://code.google.com/android/reference/emulator.html</a> </li>
+</ul>
+<p>&nbsp;</p>
+</body>
+</html>
