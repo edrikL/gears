@@ -33,6 +33,7 @@ SQLITE_EXTENSION_INIT1
 #include "fts2_hash.h"
 #include "fts2_tokenizer.h"
 #include <assert.h>
+#include <stddef.h>
 
 /*
 ** Implementation of the SQL scalar function for accessing the underlying 

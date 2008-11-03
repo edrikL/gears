@@ -46,7 +46,8 @@ class UTF8ToUTF16Reader : public BlobInterface::Reader {
   // NOTE: this will update source_start to skip over bytes that it used to
   // complete the partial read.  It will also update target_start_.
   bool ReadPartial(const UTF8 **source_start, const UTF8 *source_end) {
-    int length(std::min(4, partial_pos_ + (source_end - *source_start)));
+    int length(std::min(4, static_cast<int>(
+        partial_pos_ + (source_end - *source_start))));
     memcpy(partial_ + partial_pos_, *source_start, length - partial_pos_);
     const UTF8 *start(partial_);
     const UTF8 *end(partial_ + length);
