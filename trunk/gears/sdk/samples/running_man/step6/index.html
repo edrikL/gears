@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>RunningMan</title>
+  <link rel="stylesheet" type="text/css" href="../run.css" />
+  <script type="text/javascript" src="../../gears_init.js"></script>
+  <script type="text/javascript" src="model.js"></script>
+  <meta name="viewport" content="width=320; user-scalable=false">
+</head>
+<body onload="main()">
+  <div id="mainScreen" align="center">
+    <div id="title">
+      <img src="../images/icon.png" width="48" height="48">
+      <br>RunningMan<div id="subtitle">A simple Gears Stopwatch</div>
+    </div>
+    <div class="main-menu" align="right">
+      <div class="go-button" onclick="go('watch')">Stopwatch</div>
+      <div class="go-button" onclick="go('journeys')">Journeys</div>
+    </div>
+  </div>
+  <div id="watch" align="center">
+    <div class="content">
+      <div id="timeTitle">Time</div>
+      <div id="timeDisplay"></div>
+      <input type="button" onclick="startRun()" value="Start"></input>
+      <input type="button" onclick="stopRun()" value="Stop"></input>
+      <input type="button" onclick="resetRun()" value="Reset"></input>
+    </div>
+    <div class="menu" align="left">
+      <div class="back-button" onclick="go('mainScreen')">Back</div>
+    </div>
+  </div>
+  <div id="journeys">
+    <div class="content">
+      <div id="journeysContent"><h2>No Journeys Yet!</h2></div>
+    </div>
+    <div class="menu" align="left">
+      <div class="back-button" onclick="go('mainScreen')">Back</div>
+    </div>
+  </div>
+</body>
+</html>

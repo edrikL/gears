@@ -1,0 +1,28 @@
+{
+  // version of the manifest file format
+  "betaManifestVersion": 1,
+
+  // version of the set of resources described in this manifest file
+  "version": "version 1.0",
+
+  // URLs to be cached (URLs are given relative to the
+  // manifest URL)
+  "entries": [
+    { "url": "index.html" },
+    { "url": "gears_init.js" },
+    { "url": "model.js" },
+    { "url": "../run.css" },
+    { "url": "../images/icon.png" },
+    { "url": "../images/button-background.png" },
+    { "url": "../images/background.png" },
+    { "url": "../images/back-arrow.png" },
+    { "url": "../images/go-arrow.png" },
+    { "url": "../images/delete.png" },
+    { "url": "../images/left.png" },
+    { "url": "../images/right.png" },
+    { "url": "../images/down.png" },
+    { "url": "../images/up.png" },
+    { "url": "../images/zoomIn.png" },
+    { "url": "../images/zoomOut.png" }
+  ]
+}
