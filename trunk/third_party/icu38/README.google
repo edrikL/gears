@@ -18,3 +18,5 @@ Some minor changes were required for it to build:
     linux machine via:
       "runConfigureICU Linux"
   - in plinux.h and pmac.h, we change #if 1 to #if 0 around the definition of U_EXPORT
+  - Also added psymbian.h, based on pwin32.h, to build for Symbian.
+  

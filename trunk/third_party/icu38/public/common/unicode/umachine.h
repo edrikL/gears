@@ -49,6 +49,8 @@
 #   include "unicode/pmac.h"
 #elif defined(LINUX)
 #   include "unicode/plinux.h"
+#elif defined(__SYMBIAN32__)
+#   include "unicode/psymbian.h"
 #else
 #   include "unicode/platform.h"
 #endif
