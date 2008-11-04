@@ -26,13 +26,15 @@
 #include "gears/base/common/string_utils.h"
 #include "third_party/convert_utf/ConvertUTF.h"
 
-#ifdef ANDROID
+#if defined(OS_ANDROID)
 // Android is missing wcslen. This is just a wide character strlen.
-#include <unicode/ustring.h>
 size_t wcslen(const char16 *str) {
-  return u_strlen(reinterpret_cast<const UChar*>(str));
+  size_t len;
+  for (len = 0; str[len] != 0; ++len)
+    ;
+  return len;
 }
-#endif  // ANDROID
+#endif  // OS_ANDROID
 
 //------------------------------------------------------------------------------
 // Class templates that provides a case sensitive and insensitive memmatch
