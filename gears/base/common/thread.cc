@@ -65,7 +65,13 @@ ThreadId Thread::Start() {
 
 void Thread::Join() {
   if (thread_id_ != 0) {
+#ifdef BROWSER_NONE
+#else
     // Wait for the child thread to terminate, and free its resources.
+    // Cannot be called by the child thread as this would deadlock.
+    assert(ThreadMessageQueue::GetInstance()->GetCurrentThreadId()
+           != thread_id_);
+#endif
     internal_->Join();
     thread_id_ = 0;
   }

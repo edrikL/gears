@@ -52,7 +52,9 @@ class Thread {
 
   // Waits for the Run method to complete, freeing any OS-specific
   // thread handle resources associated with the child thread. Must be
-  // called before destruction if a thread was started successfully.
+  // called before destruction if a thread was started
+  // successfully. Cannot be called by the child thread as this would
+  // deadlock.
   void Join();
   // Returns true if the child thread is running.
   bool IsRunning() const { return is_running_; }
