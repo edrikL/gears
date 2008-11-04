@@ -4,7 +4,7 @@
   <TRANS_BLOCK desc="Error message shown when an incompatibility with Gears is detected.">
     Gears has detected an incompatibility with another program.  Your web
     applications may not work correctly until you resolve it.<br><br>
-    Visit <a href="http://gears.google.com/support/?incompatibility" target="_blank">
+    Visit <a href="http://gears.google.com/support/?ctx=incompatibility" target="_blank">
     this Google Support page</a> to learn how to resolve this problem.
   </TRANS_BLOCK>
 </string>
