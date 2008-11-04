@@ -1,0 +1,478 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+
+
+
+<html>
+  <head>
+    <title>Intermediate Tutorial</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+    <style type="text/css" media="screen">
+      #part2, #part3, #prevButton {
+        display: none;
+      }
+
+      #root.showPrevious .nextButton, #root.showNext .prevButton {
+        display: none;
+      }
+
+      #root.showNext .nextButton, #root.showPrevious .prevButton,
+      #root.showBoth .nextButton, #root.showBoth .prevButton {
+        display: inline;
+      }
+
+      #sectionTitle {
+        float: left;
+      }
+
+    </style>
+  </head>
+
+<body>
+
+<h1>Intermediate Tutorial</h1>
+<div id="pagecontent">
+<div id="root">
+<h4>Table of Contents</h4>
+<ul>
+  <li><a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/stock_tutorial.zip">The Code</a></li>
+  <li><a href="javascript:showPart(0);">Introduction</a></li>
+  <li><a href="javascript:showPart(1);">Part 1: Store Application Files Offline</a></li>
+  <li><a href="javascript:showPart(2);">Part 2: Implement HTTPRequest &amp; Database</a></li>
+  <li><a href="javascript:showPart(3);">Part 3: Add WorkerPool With Timers</a></li>
+</ul>
+  <h1>
+    <div id="sectionTitle"></div>
+      <div align="right">
+        <input type="button" value="&larr; previous" class="prevButton" onclick="showPart(currentPage - 1); return false;" />
+        <input type="button" value="next &rarr;" class="nextButton" onclick="showPart(currentPage + 1); return false;" />
+      </div>
+  </h1>
+
+
+
+<!--
+  ****************
+  * Introduction *
+  ****************
+ -->
+
+  <div id="part0">
+    <h4>Goal</h4>
+    <p>This tutorial is designed to show how to use multiple Gears APIs in conjunction.  It shows how to create an offline application that performs operations in the background with WorkerPool and utilizes the client-side database.  The actual application that is created is a simple stock monitor that allows the user to specify stock tickers (e.g. &quot;goog&quot;) to be viewed in realtime or offline.</p>
+    <p>
+      This tutorial will cover these Gears APIs:
+      <ul>
+        <li><a href="api_localserver.html#ManagedResourceStore">ManagedResourceStore</a></li>
+        <li><a href="api_httprequest.html">HTTPRequest</a></li>
+        <li><a href="api_database.html">Database</a></li>
+        <li><a href="api_workerpool.html">WorkerPool</a></li>
+        <li><a href="api_timer.html">Timer</a></li>
+        <li><a href="api_desktop.html">Desktop</a></li>
+      </ul>
+    </p>
+    <h4>You will need:</h4>
+    <ul>
+      <li>Ability to edit basic JavaScript </li>
+      <li>Ability to publish files to the HTTP server that hosts your files</li>
+      <li>PHP on your HTTP server <em>or</em> a server-side proxy of your choice</li>
+      <li>For a list of supported browsers and platforms, see <a href="http://gears.google.com/">gears.google.com</a>.  </li>
+      <li><em>(optional)</em> <a href="http://code.google.com/apis/ajaxsearch/articles/firebug.html">Firebug for Firefox</a> to see debug messages</li>
+    </ul>
+    <h4>Files for this tutorial: </h4>
+    <ul><li><a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/stock_tutorial.zip">Code</a> for Parts 1, 2 &amp; 3</li>
+      <!-- <li><a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/screencast_full.mov">Screencast</a> of tutorial (and in <a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/screencast_full.m4v">m4v</a> format)</li> -->
+    </ul>
+  </div>
+
+
+<!--
+  **********
+  * PART 1 *
+  **********
+ -->
+<div id="part1">
+  <p>
+    This section will cover how to cache application files offline.  After this step is complete you will have a page whose HTML, JavaScript &amp; CSS can be accessed offline.
+  </p>
+
+  <h3>Include gears_init.js, Set onLoad</h3>
+  <p>
+    The first step is including <code>gears_init.js</code> in <code>stock_tutorial.html</code>.  This initializes the <code>google.gears.factory</code> object into the browser's DOM and enables Gears functionality (if the user has Gears installed).  Next, we set the body <code>onLoad</code> event to call <code>init()</code> which is in <code>stock_ticker.js</code>.
+  </p>
+  <h3>Check for Gears, Initialize LocalServer</h3>
+  <p>
+    We will put our JavaScript code in <code>stock_ticker.js</code>.  The first step is to create an <code>init</code> function that will check if the user has Gears installed on their browser.  If they don't, then the code will redirect the user to the gears.google.com page to ask them if they would like to install Gears.  Notice that in the URL there are CGI arguments which enable the developer to have a custom message appear on the install page as well as a redirect-upon-install URL.  These arguments are <code>message</code> and <code>return</code>.  If the user does have Gears installed then the code will create an instance of the <code>LocalServer</code> class -- the container of <code>ManagedResourceStore</code> and <code>ResourceStore</code>.  You can learn more about the CGI args <a href="/apis/gears/design.html#detecting">here</a>.
+<pre class="prettyprint">function init() {
+  if(!window.google || !google.gears) {
+    location.href = "http://gears.google.com/?action=install&message=" +
+                    "Stock ticker requires Google Gears to be installed." +
+                    "&return=" + location.href;
+    return;
+  } else {
+    localServer = google.gears.factory.create("beta.localserver");
+  }
+
+  createManagedStore();
+}</pre>
+  </p>
+
+  <h3>Initialize ManagedResourceStore, Capture Resources</h3>
+  <p>
+    This function creates an instance of <code>ManagedResourceStore</code>, specifies a manifest file whose contents will be cached, sets a callback function that will refresh the page when the contents are captured, and then initiates the capture.
+<pre class="prettyprint">function createManagedStore() {
+  managedStore = localServer.createManagedStore(MANAGED_STORE_NAME);
+  managedStore.manifestUrl = MANIFEST_FILENAME;
+
+  managedStore.oncomplete = function(details) {
+    if (details.newVersion != '') {
+      location.href = location.href;
+    }
+  }
+
+  managedStore.checkForUpdate();
+}</pre>
+    If you want to go a step further and be clued in on the status of the capture, try using the <code>ManagedResourceStore</code> <a href="/apis/gears/api_localserver.html#ManagedResourceStore">callback methods</a>.  They allow you to set functions to be called when certain events fire during the capture.  Try adding this code before <code>checkForUpdate()</code>:
+<pre class="prettyprint">managedStore.onerror = function(error) {
+  alert("Error: " + error.message);
+}
+
+managedStore.onprogress = function(details) {
+  alert('Have downloaded ' + details.filesComplete + '/' + details.filesTotal + ' files.');
+}</pre>
+  </p>
+
+
+  <h3>Setup Manifest File</h3>
+  <p>
+    The <code>ManagedResourceStore</code> will download all files we specify in the manifest file.  Take a look at <code>stock_ticker_manifest.json</code> and you will see the JSON (JavaScript Object Notation) that specifies the version and list of files that should be cached on users' machines.  For more information on creating a manifest file please read this <a href="api_localserver.html#manifest_file">reference page</a>.
+<pre class="prettyprint">{
+  "betaManifestVersion": 1,
+  "version": "version 1",
+  "entries": [
+      { "url": ".", "src": "stock_ticker.html"},
+      { "url": "stock_ticker.html"},
+      { "url": "stock_ticker.css"},
+      { "url": "stock_ticker.js"},
+      { "url": "gears_init.js"}
+    ]
+}
+</pre>
+  </p>
+
+  <h3>Run Code</h3>
+  <p>
+    Now try running the code (you can find step1 code <a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/stock_tutorial.zip">here</a>).  After visiting <code>stock_ticker.html</code> once you should have the resources stored (and if you used the callbacks you will know when they are done downloading).  Try putting your browser in 'offline' mode or disabling your internet connection, clear you browser cache and then reload <code>stock_ticker.html</code>.  It should now work offline.
+  </p>
+</div>
+
+
+<!--
+  **********
+  * PART 2 *
+  **********
+ -->
+<div id="part2">
+  <p>
+    In this section we will use Gears' <code>HTTPRequest</code> &amp; <code>Database</code> APIs to make the application grab stock quotes and store them in the database to be viewable offline.
+  </p>
+  <h3>Create Database</h3>
+  <p>The first step is to create a database where we can store our information for offline access.  The steps are simple - create an instance of the <code>Database</code> class, open a database with <code>database.open(<em>name</em>)</code> (Gears creates one if it doesn't exist) and then execute a table creation on the database.  There are only 3 fields per entry in the database - symbol, price and change.  To make things straightforward they are all TEXT types, though any type that SQLite allows can be used.  Now we are ready to insert/update/select/delete.
+<pre class="prettyprint">function createDatabase() {
+  database = google.gears.factory.create("beta.database");
+  database.open(DATABASE_NAME);
+  database.execute('create table if not exists ' + DB_TABLE_NAME +
+                   ' (symbol TEXT, price TEXT, change TEXT)');
+}</pre>
+  </p>
+
+  <h3>Draw Stock Table From Database</h3>
+  <p>To display the stocks when the application is loaded we will select all entries from the database.  That code is located in <code>init()</code>.  It uses a function <code>selectAllStocks</code> which runs a database query to grab all of the entries in the database:
+<pre class="prettyprint">database.execute('SELECT * FROM ' + DB_TABLE_NAME);</pre>
+Then it loops through the results and adds each entry to the HTML.
+<pre class="prettyprint">var rs = selectAllStocks();
+while(rs.isValidRow()) {
+  var stock = {
+    symbol : rs.field(0),
+    price : rs.field(1),
+    change : rs.field(2)
+  }
+  updateHTMLTable(stock);
+  rs.next();
+}
+rs.close()</pre>
+  </p>
+
+  <h3>Add Stocks</h3>
+  <p>Create an HTML input element in <code>stock_ticker.html</code> that has an <code>onkeydown</code> listener.  Whenever a user hits &quot;enter&quot; in the input box <code>getStock</code> will be called.  The <code>getStock</code> function will create a Gears HTTPRequest and send a query to a Yahoo service for stock quotes.  When the results are received they will be inserted into the database and the HTML table.</p>
+  <p>There are a few things to note about the request made in <code>getStock</code>:
+    <ol>
+      <li>Due to security restrictions, browsers do not allow JavaScript to make a request to a cross-domain resource.  However, PHP and other server-side scripts are not bound by this restriction.  This is the reason why the request is sent to <code>yahoo_ticker_proxy.php</code>.  If you aren't familiar with a proxy like this, the basic idea of it is that we are going to make an XMLHttpRequest to the PHP script which will make a request to Yahoo for the stock ticker.</li>
+      <li>In the request URL there is an extra CGI argument, <code>random</code>.  It is set to a random number between 0 and 1,000,000.  This is done because browsers cache requests that are made but the stock ticker needs fresh stock quotes.  By adding in a random number (using <code>(new Date()).getTime()</code> is also common) the browser will never serve requests from cache.</li>
+      <li>The <code>onreadystatechange</code> method is the callback method that is triggered when the request changes states.  One of these state changes, state 4, signifies that the request has completed.</li>
+    </ol>
+    Take a look at <code>getStock</code>:
+<pre class="prettyprint">function getStock(ticker) {
+  var request = google.gears.factory.create('beta.httprequest');
+
+  // This will keep the browser from cacheing our requests to Yahoo Finance
+  var dontCacheRequest = '&amp;random=' + Math.floor(Math.random()*1000000);
+  request.open('GET', 'yahoo_ticker_proxy.php?q=http://download.finance' +
+               '.yahoo.com/d/quotes.csv?s=' + ticker +
+               '&amp;f=sl1d1t1c1ohgv&amp;e=.csv' + dontCacheRequest);
+
+  request.onreadystatechange = function() {
+    if (request.readyState == 4) {
+      var stockArray = request.responseText.split(',');
+      var stock = {
+        symbol : ticker,
+        value : stockArray[1],
+        change : stockArray[4]
+      }
+      insertIntoDatabase(stock);
+      updateHTMLTable(stock);
+    }
+  };
+  request.send();
+}</pre>
+  </p>
+
+  <h3>Update Manifest File, Run</h3>
+  <p>
+    Upload the new <a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/stock_tutorial.zip">code</a> and update the version string in the manifest file so that the new files will be cached by Gears.
+  </p>
+</div>
+
+<!--
+  **********
+  * PART 3 *
+  **********
+ -->
+<div id="part3">
+  <p>
+    This section will cover how to use the Gears <code>WorkerPool</code> in order to complete tasks in the background.
+  </p>
+  <p>
+    Currently the application only grabs stock values upon loading.  With <code>WorkerPool</code> we can have the quotes updated frequently in the background.  Think of <code>WorkerPool</code> as threading for JavaScript.  Gears' <code>Timer</code> module will be needed because workers do not have access to the window object which has the traditional methods for timers, <code>setTimeout()</code> and <code>setInterval()</code>.
+  </p>
+  <p>
+    The strategy will be to spawn a single <code>WorkerPool</code> worker that will monitor all stock quotes for us.  This will also serve as our database manager process.  It is good practice to use a single <code>WorkerPool</code> worker to be the only interaction point with a database -- it is more performant and it eliminates database access concurrency issues.
+  </p>
+
+  <h3>Create a WorkerPool</h3>
+  <p>Think of a <code>WorkerPool</code> instance as the parent thread and all created workers as the child threads.  The <code>WorkerPool</code> will tell the workers what they need to do, the workers will complete the tasks and then report back the result.  To communicate, the <code>WorkerPool</code> and workers send messages to each other.  Sending messages is handled by <code>sendMessage()</code> and received messages are handled by the <code>onmessage()</code> callback.</p>
+  <p>
+    In this code, the <code>createWorkerPool()</code> function handles the creation of the application's WorkerPool.  It also sets the <code>onmessage()</code> handler to be a function that will receive a stock ticker, price and %change which will write those values to the HTML.  As you can see, the <code>onmessage()</code> handler will be passed a <code>messageObject</code>.  This object consists of a message and a sender ID.  The message can be a JavaScript object, a string, etc.  Check out the <a href="api_workerpool.html#workerpool_class">reference</a> for the <code>messageObject</code>.
+<pre class="prettyprint">function createWorkerPool() {
+  workerPool = google.gears.factory.create('beta.workerpool');
+  workerPool.onmessage = function(a, b, messageObject) {
+
+    if (messageObject.body.operation == 'removedTicker') {
+      removeFromHTMLTable(messageObject.body.symbol);
+    }
+
+    if (messageObject.body.operation == 'addedTicker') {
+      var stock = {
+        'symbol' : messageObject.body.symbol,
+        'price' : messageObject.body.price,
+        'change' : messageObject.body.change
+      };
+      updateHTMLTable(stock);
+    }
+  };
+}</pre>
+  </p>
+
+  <h3>Create the Worker to Monitor Stocks</h3>
+  <p>The application will now create a single worker to monitor all stock tickers efficiently.</p>
+
+  <p>
+    In this application, the <code>createWorker</code> function handles creating a new worker.  This function calls the Gears method <code>WorkerPool.createWorkerFromUrl()</code> to initialize a worker.  However, the worker won't do anything until a message is sent to it.  We call <code>addStocks</code> to send a message to the worker to start monitoring new stocks.  In this function <code>workerPool.sendMessage</code> is used to send that message.  The first parameter sent is the JSON message, the second parameter is the child worker's ID which is how the message is sent to the correct worker.  This message gets received by <code>worker.js</code> in the <code>onmessage</code> callback function.
+<pre class="prettyprint">function createWorker(symbols) {
+  workerId = workerPool.createWorkerFromUrl('worker.js');
+  addStocks(symbols);
+}
+
+function addStocks(symbols) {
+  var message = {
+    'operation' : 'addTickers',
+    'symbols' : symbols
+  }
+  workerPool.sendMessage(message, workerId);
+}</pre>
+    </p>
+
+  <h3>Worker Message Handling</h3>
+  <p>
+    When the worker is initialized it will run until the application is exited.  It has an array that keeps track of all stocks it should be monitoring and it checks every 3 seconds to see if there are stocks to update.  If there are it will do a request for their values and return the results to the parent <code>WorkerPool</code>.
+  </p>
+  <p>
+    The stocks that the worker monitors can be changed by the <code>WorkerPool</code> in <code>stock_ticker.js</code>.  The worker receives a message in the <code>onmessage</code> handler and it switches on the <code>operation</code> property to decide whether to add or remove a stock from its monitoring list.
+  </p>
+  <p>
+    There are three scenarios:
+    <ol>
+      <li>The application just loaded and the worker needs to initialize the database and begin the monitoring process</li>
+      <li>The user has entered a new stock</li>
+      <li>The user is removing a stock</li>
+    </ol>
+    In situations 2 and 3 all that needs to happen is a simple push/splice (remove) from the global <code>tickers</code> array since there is a timer that automatically checks the <code>tickers</code> array every 3 seconds.
+  </p>
+<pre class="prettyprint">wp.onmessage = function(a, b, messageObject) {
+  var operation = messageObject.body.operation;
+  if (operation == 'addTickers') {
+    var stockSymbols = messageObject.body.symbols;
+    parent = messageObject.sender;
+    // If the worker was just created for the first time
+    if (database == null) {
+      createDatabase();
+      tickers = stockSymbols;
+      timer.setTimeout(getStocks, 10);
+    } else {
+      // If the worker exists and we are adding new symbols
+      for (var i=0; i &lt; stockSymbols.length; i++) {
+        tickers.push(stockSymbols[i]);
+      }
+    }
+  }
+
+  if (operation == 'removeTicker') {
+    var symbolToRemove = messageObject.body.symbol;
+    removeStock(symbolToRemove);
+    for (var j=0; j < tickers.length; j++) {
+      var curTicker = tickers[j];
+      if (symbolToRemove == curTicker) {
+        // When we cut it out of the array it won't get polled next time the
+        // HTTPRequest is made for stocks
+        tickers.splice(j, 1);
+      }
+    }
+  }
+};</pre>
+    <p>
+      Now take a peek at the code that monitors the stocks in the background -- <code>getStocks</code>.  It is fairly straightforward since it is only a slightly modified version of Part 2's <code>getStock</code> function.  The only difference is that this one uses <code>wp.sendMessage(stock, parent)</code> to report stock values back to the parent <code>WorkerPool</code> and then uses <code>timer.setTimeout(getStocks, 3000)</code> (a 3 second timer) to schedule the next stock quote grab.
+
+<pre class="prettyprint">function getStocks() {
+ // Gotta have stocks to monitor!
+ if (tickers.length > 0) {
+   var request = google.gears.factory.create('beta.httprequest');
+
+   // Let's keep the requests returning fresh results.
+   var randomNum = Math.floor(Math.random()*1000000);
+   var tickersReq = tickers.join('%7C'); // %7C is the up and down | symbol
+
+   // One url request for multiple stocks
+   var url = 'yahoo_ticker_proxy.php?q=http://download.finance.yahoo.com/d/quotes.csv?s='+tickersReq+'&f=sl1d1t1c1ohgv&e=.csv&random=' + randomNum;
+   request.open('GET', url);
+   request.onreadystatechange = function() {
+     if (request.readyState == 4) {
+       // Split the stocks
+       var stockResults = request.responseText.split('\n');
+       // Forget the last newline, it doesn't have a stock in it
+       stockResults.splice(stockResults.length - 1, 1);
+       for (var i=0; i < stockResults.length; i++) {
+         // Split up the details of this stock
+         var stockDetails = stockResults[i].split(',');
+         var stock = {
+           'operation' : 'addedTicker',
+           'symbol' : stockDetails[0].replace(/"/g, ''),
+           'price' : stockDetails[1],
+           'change' : stockDetails[4]
+         };
+         insertIntoDatabase(stock);
+         if (typeof stock.price != 'undefined' && typeof stock.change != 'undefined') {
+           wp.sendMessage(stock, parent);
+         }
+       }
+     }
+   };
+   request.send();
+ }
+
+ timer.setTimeout(getStocks, 3000);
+}</pre>
+    </p>
+
+    <h3>Run it</h3>
+    <p>Congratulations, you now have the know-how to implement 5 of the Gears modules!  Upload your <a href="http://gears-examples.googlecode.com/svn/trunk/stock_tutorial/stock_tutorial.zip">code</a>, increment the manifest file's version number and go play around with it!</p>
+</div>
+
+<div align="right">
+  <input type="button" value="&larr; previous" class="prevButton" onclick="showPart(currentPage - 1); return false;"/>
+<input type="button" value="next &rarr;" class="nextButton" onclick="showPart(currentPage + 1); return false;">
+</div>
+</div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+var currentPage;
+var sectionTitles = [
+  'Introduction',
+  'Part 1: Store Application Files Offline',
+  'Part 2: Implement HTTPRequest &amp; Database',
+  'Part 3: Add WorkerPool With Timers'
+]
+function showPart(number) {
+  var root = document.getElementById('root');
+  if (number == 3) {
+    root.className = 'showPrevious';
+  }
+
+  if (number == 0) {
+    root.className = 'showNext';
+  }
+
+  if (number == 2) {
+    root.className = 'showBoth';
+  }
+
+  if (number == 1) {
+    root.className = 'showBoth';
+  }
+
+  document.getElementById('sectionTitle').innerHTML = sectionTitles[number];
+
+  var id = 'part';
+  currentPage = number;
+  for (var i = 0; i < 4; i++) {
+    var el = document.getElementById(id + i);
+    if (i == number) {
+      el.style.display = 'inline';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+}
+showPart(0);
+</script>
+
+</body>
+</html>
