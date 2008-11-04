@@ -47,7 +47,7 @@
 #   include "unicode/pwin32.h"
 #elif defined(__APPLE__)
 #   include "unicode/pmac.h"
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(OS_ANDROID)
 #   include "unicode/plinux.h"
 #elif defined(__SYMBIAN32__)
 #   include "unicode/psymbian.h"
