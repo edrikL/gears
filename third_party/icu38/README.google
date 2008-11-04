@@ -12,7 +12,7 @@ Some minor changes were required for it to build:
   - In public/common/unicode/utf.h:
       "#define U_SENTINEL (-1)" is changed to "#define U_SENTINEL (~0)"
   - In public/common/unicode/umachine.h we add:
-      #elif defined(LINUX)
+      #elif defined(LINUX) || defined(OS_ANDROID)
       #   include "unicode/plinux.h"
   - We add public/common/unicode/plinux.h  It is generated as platform.h on a
     linux machine via:
