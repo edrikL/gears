@@ -507,7 +507,7 @@ bool UpdateTask::DownloadVersion(std::string16 *completed_version) {
   WebCacheDB::VersionInfo version;
   if (!store_.GetVersion(WebCacheDB::VERSION_DOWNLOADING, &version)) {
     LOG(("UpdateTask::DownloadVersion - nothing to download\n"));
-    return true;
+    return false;
   }
 
   // Find entries that have not yet been filled (downloaded)
