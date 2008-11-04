@@ -62,27 +62,26 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   void Stop(bool wait_for_cleanup);
   ~PeriodicChecker();
 
-  static const int kVersionFetchTaskMessageId = 0;
-
- private:
   // TODO(andreip): aggregate all Gears WM_USER messages in the same
   // header to avoid overlap.
-  static const int kUpdateTaskMessageBase = WM_USER;
+  static const int kVersionFetchTaskMessageId = 0;
   static const int WM_FETCH_TASK_COMPLETE =
-      kUpdateTaskMessageBase + kVersionFetchTaskMessageId;
+      WM_USER + kVersionFetchTaskMessageId;
 
+ private:
   // CWindowImpl
   BEGIN_MSG_MAP(PeriodicChecker)
     MESSAGE_HANDLER(WM_TIMER, OnTimer)
-    MESSAGE_HANDLER(WM_FETCH_TASK_COMPLETE, OnComplete)
+    MESSAGE_HANDLER(WM_FETCH_TASK_COMPLETE, OnFetchTaskComplete)
   END_MSG_MAP()
 
   // Internal
   PeriodicChecker();
 
   // Message handlers.
-  LRESULT OnTimer(UINT message, WPARAM w, LPARAM l, BOOL& handled);
-  LRESULT OnComplete(UINT message, WPARAM success, LPARAM task, BOOL& handled);
+  LRESULT OnTimer(UINT message, WPARAM unused1, LPARAM unused2, BOOL &handled);
+  LRESULT OnFetchTaskComplete(UINT message, WPARAM success, LPARAM unused,
+                              BOOL &handled);
 
   // This message handler is different because it needs to be registered at
   // runtime with RegisterWindowMessage (it's comming from the connection

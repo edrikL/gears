@@ -25,7 +25,8 @@
 
 #include "gears/installer/common/periodic_checker.h"
 
-#include "gears/base/ie/activex_utils.h"
+#include "gears/base/common/mutex.h"
+#include "gears/base/common/wince_compatibility.h"  // For IsNetworkAlive
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
 #include "gears/installer/common/resource.h"
@@ -63,6 +64,10 @@ const char16* kVersionQuery = STRING16(L"//em:version[1]");
 const char16* kUpdateLinkQuery = STRING16(L"//em:updateLink[1]");
 
 
+// Local function to determine if we're online
+static bool IsOnline();
+
+
 // An implementation of AsyncTaks that makes a request to the upgrade URL and
 // parses the response to extract the latest version number and download URL.
 // Note that redirects are not followed.
@@ -70,8 +75,7 @@ class VersionFetchTask : public AsyncTask {
  public:
   // Factory method
   static VersionFetchTask *Create(const std::string16 &application_id,
-                                  HWND listener_window,
-                                  int listener_message_base);
+                                  HWND listener_window);
 
   // Signals the worker thread to stop and asynchronously deletes the object.
   // No further messages will be sent to the listener once a call to this method
@@ -83,7 +87,7 @@ class VersionFetchTask : public AsyncTask {
 
  private:
   // Use Create to create a new instance and StopThreadAndDelete to destroy.
-  VersionFetchTask(const std::string16 &application_id);
+  VersionFetchTask(const std::string16 &application_id, HWND listener_window);
   virtual ~VersionFetchTask() {}
 
   // AsyncTask implementation
@@ -96,6 +100,9 @@ class VersionFetchTask : public AsyncTask {
   std::string16 latest_version_;
 
   std::string16 application_id_;
+  HWND listener_window_;
+
+  Mutex is_processing_response_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(VersionFetchTask);
 };
@@ -223,10 +230,10 @@ void PeriodicChecker::RunMessageLoop() {
   thread_complete_event_.Set();
 }
 
-LRESULT PeriodicChecker::OnTimer(UINT message,
-                                 WPARAM w,
-                                 LPARAM l,
-                                 BOOL& handled) {
+LRESULT PeriodicChecker::OnTimer(UINT /* message */,
+                                 WPARAM /* unused1 */,
+                                 LPARAM /* unused2 */,
+                                 BOOL &handled) {
   if (!normal_timer_event_) {
     normal_timer_event_ = true;
     ResetTimer(normal_period_);
@@ -234,18 +241,16 @@ LRESULT PeriodicChecker::OnTimer(UINT message,
   // Depending on how the periodic checker is configured, this can fire
   // while a task is running. We ignore such events.
   if (!task_) {
-    task_ = VersionFetchTask::Create(application_id_,
-                                     window_,
-                                     kUpdateTaskMessageBase);
+    task_ = VersionFetchTask::Create(application_id_, window_);
   }
   handled = TRUE;
   return TRUE;
 }
 
-LRESULT PeriodicChecker::OnComplete(UINT message,
-                                    WPARAM success,
-                                    LPARAM task,
-                                    BOOL& handled) {
+LRESULT PeriodicChecker::OnFetchTaskComplete(UINT /* message */,
+                                             WPARAM success,
+                                             LPARAM /* unused */,
+                                             BOOL &handled) {
   assert(task_);
   if (success) {
     // We check for differences between the version strings. If there is a
@@ -261,9 +266,7 @@ LRESULT PeriodicChecker::OnComplete(UINT message,
     // If it appears that we don't have a connection, wait for one to appear.
     // Otherwise, the error must have been on the network, so we'll try again
     // when the timer next expires.
-    // TODO(steveblock): Use a browser-independent method to get connection
-    // state.
-    if (!ActiveXUtils::IsOnline()) {
+    if (!IsOnline()) {
       ConnMgrRegisterForStatusChangeNotification(TRUE, window_);
     }
   }
@@ -279,8 +282,7 @@ LRESULT PeriodicChecker::OnComplete(UINT message,
 void PeriodicChecker::OnConnectionStatusChanged() {
   // Unregister from connection events. We'll register again
   // if the update check fails.
-  // TODO(steveblock): Use a browser-independent method to get connection state.
-  if (ActiveXUtils::IsOnline()) {
+  if (IsOnline()) {
     ConnMgrRegisterForStatusChangeNotification(FALSE, window_);
     // Schedule a check after the grace period.
     normal_timer_event_ = false;
@@ -299,12 +301,10 @@ void PeriodicChecker::ResetTimer(int32 period) {
 // VersionFetchTask
 
 // static
-VersionFetchTask *VersionFetchTask::Create(
-    const std::string16 &application_id,
-    HWND listener_window,
-    int listener_message_base) {
-  VersionFetchTask *task = new VersionFetchTask(application_id);
-  task->SetListenerWindow(listener_window, listener_message_base);
+VersionFetchTask *VersionFetchTask::Create(const std::string16 &application_id,
+                                           HWND listener_window) {
+  VersionFetchTask *task =
+      new VersionFetchTask(application_id, listener_window);
   if (!task) {
     assert(false);
     return NULL;
@@ -316,14 +316,18 @@ VersionFetchTask *VersionFetchTask::Create(
   return task;
 }
 
-VersionFetchTask::VersionFetchTask(const std::string16 &application_id)
+VersionFetchTask::VersionFetchTask(const std::string16 &application_id,
+                                   HWND listener_window)
     : AsyncTask(NULL),
-      application_id_(application_id) {
+      application_id_(application_id),
+      listener_window_(listener_window) {
+  assert(listener_window_);
 }
 
 void VersionFetchTask::StopThreadAndDelete() {
-  SetListenerWindow(NULL, 0);
+  is_processing_response_mutex_.Lock();
   Abort();
+  is_processing_response_mutex_.Unlock();
   DeleteWhenDone();
 }
 
@@ -339,20 +343,29 @@ const char16* VersionFetchTask::Url() const {
 void VersionFetchTask::Run() {
   WebCacheDB::PayloadInfo payload;
   scoped_refptr<BlobInterface> payload_data;
-  bool success = false;
   std::string16 url = kUpgradeUrl + application_id_;
-  // TODO(steveblock): Use a browser-independent method to get connection state.
-  if (ActiveXUtils::IsOnline() &&
-      AsyncTask::HttpGet(url.c_str(),
-                         true,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &payload,
-                         &payload_data,
-                         NULL,  // was_redirected
-                         NULL,  // full_redirect_url
-                         NULL)) {  // error_msg
+  bool result = false;
+  if (IsOnline()) {
+    result = HttpGet(url.c_str(),
+                     true,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &payload,
+                     &payload_data,
+                     NULL,  // was_redirected
+                     NULL,  // full_redirect_url
+                     NULL);  // error_msg
+  }
+
+  MutexLock lock(&is_processing_response_mutex_);
+  // is_aborted_ may be true even if HttpPost succeeded.
+  if (is_aborted_) {
+    return;
+  }
+
+  bool success = false;
+  if (result) {
     std::string16 xml;
     const std::string16 charset;
     // payload.data can be empty in case of a 30x response.
@@ -368,7 +381,8 @@ void VersionFetchTask::Run() {
       success = true;
     }
   }
-  NotifyListener(PeriodicChecker::kVersionFetchTaskMessageId, success);
+  ::PostMessage(listener_window_, PeriodicChecker::WM_FETCH_TASK_COMPLETE,
+                success, NULL);
 }
 
 // Internal
@@ -442,4 +456,10 @@ bool VersionFetchTask::ExtractVersionAndDownloadUrl(const std::string16& xml) {
   }
   url_ = update_link;
   return true;
+}
+
+// static
+bool IsOnline() {
+  DWORD network_alive_flags_out = 0;
+  return IsNetworkAlive(&network_alive_flags_out) == TRUE;
 }
