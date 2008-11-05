@@ -2423,7 +2423,8 @@ $(BROWSER)_CPPSRCS	+= \
 		geolocation_db.cc \
 		geolocation_db_test.cc \
 		geolocation_test.cc \
-		gps_location_provider_wince.cc \
+		gps_device_wince.cc \
+		gps_location_provider.cc \
 		location_provider.cc \
 		location_provider_pool.cc \
 		network_location_provider.cc \
