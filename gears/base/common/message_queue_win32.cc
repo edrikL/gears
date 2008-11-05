@@ -46,9 +46,12 @@ class ThreadMessageWindow;
 // thread termination and destroy the window. A reference to the window is
 // also placed into a global map for use by the Send method to lookup the
 // destination window by thread id.
-class IEThreadMessageQueue : public ThreadMessageQueue {
+//
+// This implementation is specific to Win32/WinCE, but not to any particular
+// browser. It is currently used by IE on Win32 and all browsers on WinCE.
+class Win32ThreadMessageQueue : public ThreadMessageQueue {
  public:
-  IEThreadMessageQueue() : thread_map_(NULL) {}
+  Win32ThreadMessageQueue() : thread_map_(NULL) {}
 
   virtual bool InitThreadMessageQueue();
   virtual ThreadId GetCurrentThreadId();
@@ -113,7 +116,7 @@ class ThreadMessageWindow : public CWindowImpl<ThreadMessageWindow> {
 };
 
 
-static IEThreadMessageQueue g_instance;
+static Win32ThreadMessageQueue g_instance;
 
 // static
 ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
@@ -121,7 +124,7 @@ ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
 }
 
 
-bool IEThreadMessageQueue::InitThreadMessageQueue() {
+bool Win32ThreadMessageQueue::InitThreadMessageQueue() {
   if (ThreadLocals::HasValue(kTlsKey)) {
     return true;  // already initialized
   }
@@ -146,7 +149,7 @@ bool IEThreadMessageQueue::InitThreadMessageQueue() {
 
 
 // static
-void IEThreadMessageQueue::ThreadEndHook(void* value) {
+void Win32ThreadMessageQueue::ThreadEndHook(void* value) {
   TlsData *data = reinterpret_cast<TlsData*>(value);
   if (data) {
     // Scoped to release the lock prior to window deletion
@@ -161,13 +164,13 @@ void IEThreadMessageQueue::ThreadEndHook(void* value) {
 }
 
 
-ThreadId IEThreadMessageQueue::GetCurrentThreadId() {
+ThreadId Win32ThreadMessageQueue::GetCurrentThreadId() {
   return ::GetCurrentThreadId();
 }
 
-bool IEThreadMessageQueue::Send(ThreadId thread_id,
-                                int message_type,
-                                MessageData *message_data) {
+bool Win32ThreadMessageQueue::Send(ThreadId thread_id,
+                                   int message_type,
+                                   MessageData *message_data) {
   scoped_ptr<MessageData> scoped_message_data(message_data);
   MutexLock lock(&thread_map_mutex_);
   if (!thread_map_) {
@@ -182,8 +185,8 @@ bool IEThreadMessageQueue::Send(ThreadId thread_id,
   return true;
 }
 
-void IEThreadMessageQueue::HandleThreadMessage(int message_type,
-                                               MessageData *message_data) {
+void Win32ThreadMessageQueue::HandleThreadMessage(int message_type,
+                                                  MessageData *message_data) {
   RegisteredHandler handler;
   if (GetRegisteredHandler(message_type, &handler)) {
     handler.Invoke(message_type, message_data);

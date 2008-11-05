@@ -1040,7 +1040,7 @@ IE_CPPSRCS	+= \
 		ipc_message_queue_test_win32.cc \
 		ipc_message_queue_win32.cc \
 		js_runner_ie.cc \
-		message_queue_ie.cc \
+		message_queue_win32.cc \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
