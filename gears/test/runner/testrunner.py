@@ -111,6 +111,7 @@ if __name__ == '__main__':
   web_servers = []
   web_servers.append(TestWebserver(server_root_dir(), port=8001))
   web_servers.append(TestWebserver(server_root_dir(), port=8002))
+  web_servers.append(TestWebserver(server_root_dir(), port=8003))
 
   installers = []
 
