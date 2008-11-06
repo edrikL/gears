@@ -176,9 +176,10 @@ def main():
       installers.append(installer.Firefox2LinuxInstaller('gears-ff2'))
       installers.append(installer.Firefox3LinuxInstaller('gears-ff3'))
 
-  # Adding second webserver for cross domain tests.
+  # Adding second and third webservers for cross domain tests.
   test_servers.append(TestWebserver(serverRootDir(), port=8001))
   test_servers.append(TestWebserver(serverRootDir(), port=8002))
+  test_servers.append(TestWebserver(serverRootDir(), port=8003))
 
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)

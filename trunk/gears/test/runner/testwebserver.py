@@ -530,6 +530,7 @@ if __name__ == '__main__':
   else:
     port_number = 8001
 
-  # Instantiating second server for cross domain tests.
+  # Instantiating second and third servers for cross domain tests.
   TestWebserver(server_root_dir(), port=port_number)
   TestWebserver(server_root_dir(), port=(port_number + 1)).startServing()
+  TestWebserver(server_root_dir(), port=(port_number + 2)).startServing()

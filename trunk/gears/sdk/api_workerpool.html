@@ -348,6 +348,14 @@ up to the parent.</td>
       &bull; <code>google.gears.workerPool</code> - Gives access to the WorkerPool that created the worker.
       <br><br>
       Worker IDs are guaranteed to be unique values that are never reused within the same WorkerPool.
+      <br><br>
+      If the origin of the worker URL is different from that of the calling
+      script, the worker will inherit permissions from the calling
+      script. Permissions are not inherited, however, if the worker URL involves
+      a cross-origin redirect. Despite inheriting permissions in this way, all
+      methods on <code>google.gears.factory</code> will fail in the worker until
+      it calls <code>allowCrossOrigin()</code>.
+      <br><br>
     </td>
   </tr>
 </table>

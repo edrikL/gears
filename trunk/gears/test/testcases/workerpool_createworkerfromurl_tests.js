@@ -34,7 +34,7 @@ var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
 var currentPort = currentUrl.substring(currentUrl.lastIndexOf(':') + 1, 
                                        currentUrl.length);
 currentPort = currentPort.substring(0, currentPort.indexOf('/'));
-crossOriginPort = parseInt(currentPort) + 1;
+var crossOriginPort = parseInt(currentPort) + 1;
 
 var crossOriginPath = 
   currentUrl.substring(0, 1 + currentUrl.lastIndexOf(':')) +
@@ -160,20 +160,30 @@ var redirect = 'cgi/server_redirect.py?location=';
 
 function testRedirectToCrossOrigin() {
   // Tests loading a worker where the URL results in a cross-origin redirect.
-  if (isSafari) {
-    // TODO(steveblock): Work out why this fails on Safari.
-  } else {
-    var wp = google.gears.factory.create('beta.workerpool');
-    wp.onmessage = function(text, sender, m) {
-      completeAsync();
-    };
-    var workerUrl = crossOriginPath + crossOriginWorkerFile;
-    var redirectUrl = localPath + redirect;
-    var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
-
-    startAsync();
-    wp.sendMessage('cross origin ping', childId);
+  // Gears will not grant permission to the redirected origin, so the worker
+  // will throw an exception when it tries to create a new Gears object. This
+  // test relies on the redirected origin not already having local storage
+  // permissions.
+  var wp = google.gears.factory.create('beta.workerpool');
+  window.onerror = function(message) {
+    assertEqual(
+        'Error in worker 1 at line 21. Page does not have permission to use ' +
+        'Google Gears.',
+        message,
+        'Worker from cross-origin redirect should not inherit permissions.');
+    completeAsync();
   }
+  var crossOriginPort2 = parseInt(currentPort) + 2;
+  var crossOriginPath2 =
+      currentUrl.substring(0, 1 + currentUrl.lastIndexOf(':')) +
+      crossOriginPort2 +
+      '/testcases/';
+  var workerUrl = crossOriginPath2 + crossOriginWorkerFile;
+  var redirectUrl = localPath + redirect;
+  var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
+
+  startAsync();
+  wp.sendMessage('cross origin ping', childId);
 }
 
 function testCrossOriginToRedirect() {
