@@ -37,7 +37,7 @@
 
 #if defined(OS_MACOSX)
 #include "gears/base/common/atomic_ops_osx.h"
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(OS_ANDROID)
 #include "gears/base/common/atomic_ops_linux.h"
 #elif defined(WIN32)
 #include "gears/base/common/atomic_ops_win32.h"
