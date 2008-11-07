@@ -100,6 +100,13 @@ if (!isOfficial) {
   suites.push(database2Suite);
 }
 
+if (!isOfficial && !isWince && (isIE || isFirefox)) {
+  var desktopSuite = new TestSuite('Desktop');
+  desktopSuite.addFile('../testcases/desktop_tests.js',
+                       {useWorker: true, useIFrame: true});
+  suites.push(desktopSuite);
+}
+
 if (!isOfficial) {
   var dummySuite = new TestSuite('Dummy');
   dummySuite.addFile('../testcases/dummy_tests.js',

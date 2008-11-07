@@ -84,18 +84,6 @@ function toggleEnabledDisabled() {
   }
 }
 toggleEnabledDisabled();
-
-// TODO(nigeltao): Move this into a unit test (as opposed to a manual test).
-var dropZoneIdIsGood = false;
-try {
-  if (dropZone.id == 'dropZone') {
-    dropZoneIdIsGood = true;
-  }
-} catch (ex) {
-}
-if (!dropZoneIdIsGood) {
-  alert('dropZone.id is broken.');
-}
 </script>
 </body>
 </html>
