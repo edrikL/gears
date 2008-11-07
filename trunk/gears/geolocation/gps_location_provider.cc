@@ -119,9 +119,10 @@ void GpsLocationProvider::UnregisterListener(
   // First try removing the listener from the set of new listeners waiting for
   // an address. Otherwise, try the regular listeners.
   MutexLock lock(&address_mutex_);
-  ListenerVector::iterator iter = find(new_listeners_requiring_address_.begin(),
-                                       new_listeners_requiring_address_.end(),
-                                       listener);
+  ListenerVector::iterator iter =
+      std::find(new_listeners_requiring_address_.begin(),
+                new_listeners_requiring_address_.end(),
+                listener);
   if (iter != new_listeners_requiring_address_.end()) {
     new_listeners_requiring_address_.erase(iter);
   } else {
