@@ -61,10 +61,10 @@
 #define _STLP_NO_VENDOR_MATH_L 1
 
 // Define how to include our native headers.
-#define _STLP_NATIVE_HEADER(header) <../system/libstdc++/include/header>
+#define _STLP_NATIVE_HEADER(header) <libstdc++/include/header>
 #define _STLP_NATIVE_C_HEADER(header) <../include/header>
-#define _STLP_NATIVE_CPP_C_HEADER(header) <../system/libstdc++/include/header>
-#define _STLP_NATIVE_OLD_STREAMS_HEADER(header) <../system/libstdc++/include/header>
-#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../system/libstdc++/include/header>
+#define _STLP_NATIVE_CPP_C_HEADER(header) <libstdc++/include/header>
+#define _STLP_NATIVE_OLD_STREAMS_HEADER(header) <libstdc++/include/header>
+#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <libstdc++/include/header>
 
 #endif /* __stl_config__android_h */
