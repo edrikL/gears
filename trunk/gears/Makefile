@@ -2432,7 +2432,6 @@ $(BROWSER)_CPPSRCS	+= \
 		radio_data_provider_wince.cc \
 		reverse_geocoder.cc \
 		timed_callback.cc \
-		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
 		wifi_data_provider_linux.cc \
 		wifi_data_provider_osx.cc \
