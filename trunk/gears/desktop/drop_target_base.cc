@@ -61,15 +61,15 @@ static bool InitializeCallback(const std::string16 name,
 DropTargetBase::DropTargetBase(ModuleEnvironment *module_environment,
                                JsObject *options,
                                std::string16 *error_out)
-    : module_environment_(module_environment),
-      unload_monitor_(new JsEventMonitor(
-          module_environment->js_runner_, JSEVENT_UNLOAD, this))
+    : module_environment_(module_environment)
 {
 #ifdef DEBUG
   if (!options->GetPropertyAsBool(STRING16(L"debug"), &is_debugging_)) {
     is_debugging_ = false;
   }
 #endif
+  unload_monitor_.reset(new JsEventMonitor(
+      module_environment->js_runner_, JSEVENT_UNLOAD, this));
   InitializeCallback(STRING16(L"ondragenter"), options,
                      &on_drag_enter_, error_out);
   InitializeCallback(STRING16(L"ondragover"), options,
