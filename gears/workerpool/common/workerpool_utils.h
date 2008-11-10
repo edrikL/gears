@@ -28,6 +28,7 @@
 
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
+#include "gears/localserver/common/http_request.h"
 
 extern const char16 *kWorkerInsertedFactoryName;
 extern const char16 *kWorkerInsertedWorkerPoolName;
@@ -48,5 +49,11 @@ extern const int kInvalidWorkerId;
 void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
                                   int src_worker_id,
                                   std::string16 *message);
+
+// Check whether an HTTP response has the special content-type identifying it as
+// a Gears worker. This is a security feature for cross-origin workers. It is
+// possible for attackers to place files on some web servers. This content-type
+// requires that webmasters specifically opt-in to hosting cross-origin workers.
+bool HasGearsWorkerContentType(HttpRequest *request);
 
 #endif  // GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__

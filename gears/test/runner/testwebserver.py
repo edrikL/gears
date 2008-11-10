@@ -369,11 +369,21 @@ class RequestHandler(asynchat.async_chat,
                       self.headers.get('user-agent', '')))
 
 
+  def guess_type(self, path):
+    """ We special-case files that end in '.worker.js' and serve them as the
+    content-type Gears requires for cross-origin workers.
+    """
+    if (path.endswith('.worker.js')):
+      return 'application/x-gears-worker'
+    else:
+      return SimpleHTTPServer.SimpleHTTPRequestHandler.guess_type(self, path)
+
+
   def __has_empty_outgoing_buffer(self):  
     if len(self.outgoing):
       return False
     else:
-      return True     
+      return True
 
 
 class TestWebserver(asyncore.dispatcher):

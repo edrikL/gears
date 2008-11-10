@@ -449,23 +449,10 @@ class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
       int status_code;
       scoped_refptr<BlobInterface> body;
       std::string16 final_url;
-      if (source->GetStatus(&status_code) &&
-          status_code == HttpConstants::HTTP_OK &&
-          source->GetResponseBody(&body) &&
-          source->GetFinalUrl(&final_url)) {
-        // These are purposely set before locking mutex, because they are still
-        // owned by the parent thread at this point.
-        wi_->script_ok = true;
-        std::string16 text;
-        bool result = BlobToString16(body.get(), source->GetResponseCharset(),
-                                     &text);
-        if (!result) {
-          assert(result);  // TODO(bgarcia): throw error on failure.
-        }
-        wi_->script_text += text;
-        // Must use security origin of final url, in case there were redirects.
-        wi_->script_origin.InitFromUrl(final_url.c_str());
-      } else {
+      if (!source->GetStatus(&status_code) ||
+          status_code != HttpConstants::HTTP_OK ||
+          !source->GetResponseBody(&body) ||
+          !source->GetFinalUrl(&final_url)) {
         // Throw an error, but don't return!  Continue and signal script_event
         // so the worker doesn't wait forever in Event::Wait().
         std::string16 message(STRING16(L"Failed to load script."));
@@ -481,12 +468,37 @@ class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
         }
         JsErrorInfo error_info = { 0, message };  // line, message
         wi_->threads_manager->HandleError(error_info);
+      } else if (IsCrossOrigin(source, final_url) &&
+                 !HasGearsWorkerContentType(source)) {
+        JsErrorInfo error_info = {
+          0,
+          STRING16(L"Cross-origin worker has invalid content-type header.")
+        };
+        wi_->threads_manager->HandleError(error_info);
+      } else {
+        // These are purposely set before locking mutex, because they are still
+        // owned by the parent thread at this point.
+        wi_->script_ok = true;
+        std::string16 text;
+        bool result = BlobToString16(body.get(), source->GetResponseCharset(),
+                                     &text);
+        if (!result) {
+          assert(result);  // TODO(bgarcia): throw error on failure.
+        }
+        wi_->script_text += text;
+        // Must use security origin of final url, in case there were redirects.
+        wi_->script_origin.InitFromUrl(final_url.c_str());
       }
 
       wi_->script_event.Signal();
     }
   }
  private:
+  bool IsCrossOrigin(HttpRequest *source, const std::string16 &worker_url) {
+    return !wi_->threads_manager->page_security_origin().IsSameOriginAsUrl(
+                worker_url.c_str());
+  }
+
   JavaScriptWorkerInfo *wi_;
 };
 

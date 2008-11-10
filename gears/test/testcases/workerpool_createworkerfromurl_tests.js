@@ -23,24 +23,31 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var currentUrl = location.href;
+// NOTE: This assumes that we are running on port 8001!
+if (location.port != 8001) {
+  throw new Error("Test must be run from port 8001");
+}
 
-var sameOriginPath =
-  currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
-var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
+var currentOrigin = location.protocol + '//' + location.hostname + ':8001';
+var differentOrigin = location.protocol + '//' + location.hostname + ':8002';
 
-// The cross origin path has the same host as currentUrl 
-// with the port number incremented.
-var currentPort = currentUrl.substring(currentUrl.lastIndexOf(':') + 1, 
-                                       currentUrl.length);
-currentPort = currentPort.substring(0, currentPort.indexOf('/'));
-var crossOriginPort = parseInt(currentPort) + 1;
+// This origin is never granted access to Gears by the unit tests.
+var differentOrigin2 = location.protocol + '//' + location.hostname + ':8003';
 
-var crossOriginPath = 
-  currentUrl.substring(0, 1 + currentUrl.lastIndexOf(':')) +
-  crossOriginPort + '/testcases/';
-var crossOriginWorkerFile = 'workerpool_cross_origin.js';
-var crossOriginWorkerFileNoPerms = 'workerpool_same_origin.js';
+// This worker expects to be run in-origin, and does not call
+// allowCrossOrigin().
+var sameOriginWorkerPath = '/testcases/test_worker_same_origin.worker.js';
+
+// This worker expects to be run out-of-origin, and calls allowCrossOrigin().
+var crossOriginWorkerPath = '/testcases/test_worker_cross_origin.worker.js';
+
+// This worker gets served with the wrong content type for cross-origin access
+// since it doesn't end in '.worker.js'. It gets rejected by Gears before even
+// being executed.
+var crossOriginWorkerBadContentType =
+    '/testcases/test_worker_bad_content_type.js';
+
+var redirectPath = '/testcases/cgi/server_redirect.py?location=';
 
 function testCreateWorkerFromUrl1() {
   startAsync();
@@ -49,7 +56,7 @@ function testCreateWorkerFromUrl1() {
   wp.onmessage = function(text, sender, m) {
     completeAsync();
   }
-  var childId = wp.createWorkerFromUrl(sameOriginWorkerFile);
+  var childId = wp.createWorkerFromUrl(sameOriginWorkerPath);
   wp.sendMessage('PING1', childId);
 }
 
@@ -76,7 +83,7 @@ function testCreateWorkerFromUrl2() {
     completeAsync();
   };
 
-  var childId = wp.createWorkerFromUrl(sameOriginPath + sameOriginWorkerFile);
+  var childId = wp.createWorkerFromUrl(currentOrigin + sameOriginWorkerPath);
   wp.sendMessage('PING2', childId);
 }
 
@@ -106,11 +113,10 @@ function testCreateWorkerFromUrl3() {
   // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
   // so callers can simulate a different origin without being online.
   //if (!gIsDebugBuild) {
-  var childId = wp.createWorkerFromUrl(crossOriginPath + crossOriginWorkerFile);
+  var childId = wp.createWorkerFromUrl(differentOrigin + crossOriginWorkerPath);
   //} else {
-  //  var childId = wp.createWorkerFromUrl(sameOriginPath +
-  //                                            crossOriginWorkerFile,
-  //                                        crossOriginPath);
+  //  var childId = wp.createWorkerFromUrl(
+  //      currentOrigin + crossOriginWorkerPath, differentOrigin);
   //}
   wp.sendMessage('PING3', childId);
 }
@@ -138,8 +144,7 @@ function testCreateWorkerFromUrl5() {
 
   waitForGlobalErrors([expectedError]);
 
-  var childId = wp.createWorkerFromUrl(
-    crossOriginPath + crossOriginWorkerFileNoPerms);
+  var childId = wp.createWorkerFromUrl(differentOrigin + sameOriginWorkerPath);
   // TODO(cprince): Could add debug-only origin override here too.
   wp.sendMessage('PING5', childId);
 }
@@ -150,14 +155,11 @@ function testOneShotWorkerFromUrl() {
   // where the HttpRequest used to load from url was getting destroyed from a
   // different thread than it was created on.
   var wp = google.gears.factory.create('beta.workerpool');
-  wp.createWorkerFromUrl(sameOriginWorkerFile);
+  wp.createWorkerFromUrl(sameOriginWorkerPath);
 }
 
 // The following two tests test redirects for HttpRequest/AsyncTask where the
 // redirect behaviour is FOLLOW_ALL.
-var localPath = '/testcases/';
-var redirect = 'cgi/server_redirect.py?location=';
-
 function testRedirectToCrossOrigin() {
   // Tests loading a worker where the URL results in a cross-origin redirect.
   // Gears will not grant permission to the redirected origin, so the worker
@@ -165,25 +167,14 @@ function testRedirectToCrossOrigin() {
   // test relies on the redirected origin not already having local storage
   // permissions.
   var wp = google.gears.factory.create('beta.workerpool');
-  window.onerror = function(message) {
-    assertEqual(
-        'Error in worker 1 at line 21. Page does not have permission to use ' +
-        'Google Gears.',
-        message,
-        'Worker from cross-origin redirect should not inherit permissions.');
-    completeAsync();
-  }
-  var crossOriginPort2 = parseInt(currentPort) + 2;
-  var crossOriginPath2 =
-      currentUrl.substring(0, 1 + currentUrl.lastIndexOf(':')) +
-      crossOriginPort2 +
-      '/testcases/';
-  var workerUrl = crossOriginPath2 + crossOriginWorkerFile;
-  var redirectUrl = localPath + redirect;
-  var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
+  var expectedError = 'Error in worker 1 at line 21. Page does not have ' +
+      'permission to use Google Gears.';
 
-  startAsync();
+  var workerUrl = differentOrigin2 + crossOriginWorkerPath;
+  var childId = wp.createWorkerFromUrl(redirectPath + workerUrl);
+
   wp.sendMessage('cross origin ping', childId);
+  waitForGlobalErrors([expectedError]);
 }
 
 function testCrossOriginToRedirect() {
@@ -193,10 +184,19 @@ function testCrossOriginToRedirect() {
   wp.onmessage = function(text, sender, m) {
     completeAsync();
   };
-  var workerUrl = localPath + crossOriginWorkerFile;
-  var redirectUrl = crossOriginPath + redirect;
-  var childId = wp.createWorkerFromUrl(redirectUrl + workerUrl);
+  var redirectUrl = differentOrigin + redirectPath;
+  var childId = wp.createWorkerFromUrl(redirectUrl + crossOriginWorkerPath);
 
   startAsync();
   wp.sendMessage('cross origin ping', childId);
+}
+
+// Test that cross-domain workers will not load unless served with the correct
+// content-type.
+function testCrossOriginWorkerWithBadContentType() {
+  var expectedError = "Error in worker 0. Cross-origin worker has invalid " +
+                      "content-type header.";
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.createWorkerFromUrl(differentOrigin + crossOriginWorkerBadContentType);
+  waitForGlobalErrors([expectedError]);
 }
