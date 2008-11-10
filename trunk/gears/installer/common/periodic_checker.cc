@@ -35,17 +35,15 @@
 #include "genfiles/product_constants.h"
 
 const char16* kUpgradeUrl = L"http://tools.google.com/service/update2/ff?"
-                            L"guid=%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D"
-                            L"&version=" PRODUCT_VERSION_STRING
+                            L"version=" PRODUCT_VERSION_STRING
                             L"&appversion=1.0"
                             L"&os=wince"
-                            L"&dist=google"
 #ifdef OFFICIAL_BUILD
                             // Only pass 'dev=1' for non-official builds.
 #else
                             L"&dev=1"
 #endif
-                            L"&application=";
+                            L"&dist=google";
 
 // String constants for XML parsing
 // Query language
@@ -74,7 +72,7 @@ static bool IsOnline();
 class VersionFetchTask : public AsyncTask {
  public:
   // Factory method
-  static VersionFetchTask *Create(const std::string16 &application_id,
+  static VersionFetchTask *Create(const std::string16 &guid,
                                   HWND listener_window);
 
   // Signals the worker thread to stop and asynchronously deletes the object.
@@ -87,7 +85,7 @@ class VersionFetchTask : public AsyncTask {
 
  private:
   // Use Create to create a new instance and StopThreadAndDelete to destroy.
-  VersionFetchTask(const std::string16 &application_id, HWND listener_window);
+  VersionFetchTask(const std::string16 &guid, HWND listener_window);
   virtual ~VersionFetchTask() {}
 
   // AsyncTask implementation
@@ -99,7 +97,7 @@ class VersionFetchTask : public AsyncTask {
   std::string16 url_;
   std::string16 latest_version_;
 
-  std::string16 application_id_;
+  std::string16 guid_;
   HWND listener_window_;
 
   Mutex is_processing_response_mutex_;
@@ -116,12 +114,12 @@ PeriodicChecker* PeriodicChecker::CreateChecker() {
 bool PeriodicChecker::Init(int32 first_period,
                            int32 normal_period,
                            int32 grace_period,
-                           const std::string16 &application_id,
+                           const std::string16 &guid,
                            ListenerInterface *listener) {
   first_period_ = first_period;
   normal_period_ = normal_period;
   grace_period_ = grace_period;
-  application_id_ = application_id;
+  guid_ = guid;
   listener_ = listener;
   return (TRUE == stop_event_.Create(NULL, FALSE, FALSE, NULL)) &&
       (TRUE == thread_complete_event_.Create(NULL, FALSE, FALSE, NULL));
@@ -241,7 +239,7 @@ LRESULT PeriodicChecker::OnTimer(UINT /* message */,
   // Depending on how the periodic checker is configured, this can fire
   // while a task is running. We ignore such events.
   if (!task_) {
-    task_ = VersionFetchTask::Create(application_id_, window_);
+    task_ = VersionFetchTask::Create(guid_, window_);
   }
   handled = TRUE;
   return TRUE;
@@ -301,10 +299,10 @@ void PeriodicChecker::ResetTimer(int32 period) {
 // VersionFetchTask
 
 // static
-VersionFetchTask *VersionFetchTask::Create(const std::string16 &application_id,
+VersionFetchTask *VersionFetchTask::Create(const std::string16 &guid,
                                            HWND listener_window) {
   VersionFetchTask *task =
-      new VersionFetchTask(application_id, listener_window);
+      new VersionFetchTask(guid, listener_window);
   if (!task) {
     assert(false);
     return NULL;
@@ -316,10 +314,10 @@ VersionFetchTask *VersionFetchTask::Create(const std::string16 &application_id,
   return task;
 }
 
-VersionFetchTask::VersionFetchTask(const std::string16 &application_id,
+VersionFetchTask::VersionFetchTask(const std::string16 &guid,
                                    HWND listener_window)
     : AsyncTask(NULL),
-      application_id_(application_id),
+      guid_(guid),
       listener_window_(listener_window) {
   assert(listener_window_);
 }
@@ -343,7 +341,17 @@ const char16* VersionFetchTask::Url() const {
 void VersionFetchTask::Run() {
   WebCacheDB::PayloadInfo payload;
   scoped_refptr<BlobInterface> payload_data;
-  std::string16 url = kUpgradeUrl + application_id_;
+
+  // We use the guid for both the guid and the application. Note that Omaha does
+  // not use the application when forming its response.
+  //
+  // TODO(andreip): When updating the Gears 'guid' field, consider switching
+  // 'application' to a GUID that identifies the browser (to match Firefox
+  // pings). Also remind cprince to update the stats logic when 'guid' changes.
+  std::string16 url = kUpgradeUrl;
+  url += L"&guid=" + guid_;
+  url += L"&application=" + guid_;
+
   bool result = false;
   if (IsOnline()) {
     result = HttpGet(url.c_str(),

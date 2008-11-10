@@ -36,6 +36,9 @@
 #include "gears/installer/common/cab_updater.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 
+// TODO(steveblock): Fix this GUID. See bug 406.
+const char16* kGuid = L"%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D";
+
 HWND BrowserHelperObject::browser_window_ = NULL;
 
 // static
@@ -62,7 +65,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     site->get_HWND(reinterpret_cast<long*>(&browser_window_));
 
     static CabUpdater updater;
-    updater.Start(browser_window_);   
+    updater.Start(browser_window_, kGuid);
   }
   return S_OK;
 }
