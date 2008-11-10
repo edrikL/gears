@@ -92,6 +92,8 @@ void Dispatcher<GearsTest>::Init() {
 #ifdef OS_ANDROID
   RegisterMethod("testRadioDataProvider", &GearsTest::TestRadioDataProvider);
 #endif
+  RegisterMethod("configureGeolocationMockGpsDeviceForTest",
+                 &GearsTest::ConfigureGeolocationMockGpsDeviceForTest);
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
 #else
@@ -2160,6 +2162,11 @@ void GearsTest::TestRadioDataProvider(JsCallContext *context) {
   ::TestRadioDataProvider(GetJsRunner(), context);
 }
 #endif
+
+void GearsTest::ConfigureGeolocationMockGpsDeviceForTest(
+    JsCallContext *context) {
+  ::ConfigureGeolocationMockGpsDeviceForTest(context);
+}
 
 #ifdef OFFICIAL_BUILD
 // The Audio API has not been finalized for official builds.

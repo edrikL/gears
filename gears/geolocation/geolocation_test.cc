@@ -36,6 +36,7 @@
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "gears/geolocation/gps_location_provider.h"
 #include "gears/geolocation/location_provider_pool.h"
 #include "gears/geolocation/network_location_request.h"
 #ifdef OS_ANDROID
@@ -546,8 +547,10 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
   WifiDataProvider::SetFactory(MockDeviceDataProviderImpl<WifiData>::Create);
 }
 
-void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
+void GetPositionFromJavaScriptParameter(JsCallContext *context,
+                                        Position *position) {
   assert(context);
+  assert(position);
 
   // Get the arguments provided from JavaScript. 
   scoped_ptr<JsObject> object;
@@ -559,25 +562,30 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
     return;
   }
   
-  Position position;
   GetDoublePropertyIfDefined(context, object.get(), STRING16(L"latitude"),
-                             &position.latitude);
-  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"longitude"),
-                             &position.longitude);
-  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"altitude"),
-                             &position.altitude);
-  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"accuracy"),
-                             &position.accuracy);
-  GetDoublePropertyIfDefined(context, object.get(),
-                             STRING16(L"altitudeAccuracy"),
-                             &position.altitude_accuracy);
-  GetIntegerPropertyIfDefined(context, object.get(), STRING16(L"errorCode"),
-                             &position.error_code);
-  GetStringPropertyIfDefined(context, object.get(), STRING16(L"errorMessage"),
-                             &position.error_message);
-
   // The GetXXXPropertyIfDefined functions set an exception if the property has
   // the wrong type.
+                             &position->latitude);
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"longitude"),
+                             &position->longitude);
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"altitude"),
+                             &position->altitude);
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"accuracy"),
+                             &position->accuracy);
+  GetDoublePropertyIfDefined(context, object.get(),
+                             STRING16(L"altitudeAccuracy"),
+                             &position->altitude_accuracy);
+  GetIntegerPropertyIfDefined(context, object.get(), STRING16(L"errorCode"),
+                             &position->error_code);
+  GetStringPropertyIfDefined(context, object.get(), STRING16(L"errorMessage"),
+                             &position->error_message);
+}
+
+void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
+  assert(context);
+
+  Position position;
+  GetPositionFromJavaScriptParameter(context, &position);
   if (context->is_exception_set()) {
     return;
   }
@@ -597,6 +605,92 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
 
 void RemoveGeolocationMockLocationProvider() {
   LocationProviderPool::GetInstance()->UseMockLocationProvider(false);
+}
+
+// GPS is available only on WinCE and Android
+#if defined(OS_WINCE) || defined(OS_ANDROID)
+
+class MockGpsDevice
+    : public GpsDeviceBase,
+      public Thread {
+ public:
+  // Factory method for use with GpsLocationProvider::SetGpsDeviceFactory().
+  static GpsDeviceBase *Create(GpsDeviceBase::ListenerInterface *listener) {
+    return new MockGpsDevice(listener);
+  }
+
+  MockGpsDevice(GpsDeviceBase::ListenerInterface *listener)
+      : GpsDeviceBase(listener),
+        is_shutting_down_(false) {
+    assert(listener_);
+    Start();
+  }
+
+  virtual ~MockGpsDevice() {
+    is_shutting_down_ = true;
+    event_.Signal();
+    Join();
+  }
+
+  static void SetPosition(const Position &position) {
+    MutexLock lock(&position_mutex_);
+    position_ = position;
+    event_.Signal();
+  }
+
+ private:
+  // Thread implementation.
+  virtual void Run() {
+    while (!is_shutting_down_) {
+      event_.Wait();
+      if (!is_shutting_down_) {
+        MutexLock lock(&position_mutex_);
+        listener_->GpsPositionUpdateAvailable(position_);
+      }
+    }
+  }
+
+  static Event event_;
+  bool is_shutting_down_;
+
+  static Position position_;
+  static Mutex position_mutex_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(MockGpsDevice);
+};
+
+// static
+Event MockGpsDevice::event_;
+// static
+Position MockGpsDevice::position_;
+// static
+Mutex MockGpsDevice::position_mutex_;
+
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
+
+void ConfigureGeolocationMockGpsDeviceForTest(JsCallContext *context) {
+  assert(context);
+#if defined(OS_WINCE) || defined(OS_ANDROID)
+  Position position;
+  GetPositionFromJavaScriptParameter(context, &position);
+  if (context->is_exception_set()) {
+    return;
+  }
+
+  position.timestamp = GetCurrentTimeMillis();
+  if (!position.IsInitialized()) {
+    context->SetException(STRING16(L"Specified position is not valid.\n"));
+    return;
+  }
+
+  // Set the position used by the mock GPS device.
+  MockGpsDevice::SetPosition(position);
+
+  // Configure the gps location provider to use the mock GPS device.
+  GpsLocationProvider::SetGpsDeviceFactoryFunction(MockGpsDevice::Create);
+#else
+  context->SetException(STRING16(L"This platform does not use GPS.\n"));
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
 }
 
 // Local functions

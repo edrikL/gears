@@ -90,4 +90,13 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
 // Configures the location provider pool to not use the mock location provider.
 void RemoveGeolocationMockLocationProvider();
 
+// Configures the GPS location provider to use a mock GPS device and sets the
+// position that the mock device will provide. Properties are latitude,
+// longitude, altitude, accuracy, altitudeAccuracy, errorCode and errorMessage.
+// Note that this a combination of some of the properties available on the
+// Position and PositionError objects returned by the Geolocation module.
+// IN: object position.
+// OUT: nothing
+void ConfigureGeolocationMockGpsDeviceForTest(JsCallContext *context);
+
 #endif  // GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
