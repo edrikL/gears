@@ -443,3 +443,58 @@ function testRadioDataProvider() {
     internalTests.testRadioDataProvider(callback);
   }
 }
+
+function testMockGpsDevice() {
+  if (isUsingCCTests) {
+    // TODO(steveblock): Add tests that cover reverse geocoding.
+
+    var geolocation = google.gears.factory.create('beta.geolocation');
+    var options = {
+      enableHighAccuracy: true,
+      gearsLocationProviderUrls: null
+    };
+
+    // GPS is available only on WinCE and Android.
+    if (isWince || isAndroid) {
+      var mockPositionOne = {
+        latitude: -33.0,
+        longitude: 137.0,
+        accuracy: 100.0
+      };
+      function setPositionOne() {
+        internalTests.configureGeolocationMockGpsDeviceForTest(mockPositionOne);
+        geolocation.getCurrentPosition(callbackOne, null, options);
+      }
+      function callbackOne(position) {
+        position.timestamp = undefined;
+        assertObjectEqual(mockPositionOne, position);
+        setPositionTwo();
+      }
+
+      var mockPositionTwo = {
+        latitude: 45.0,
+        longitude: -100.0,
+        accuracy: 100.0
+      };
+      function setPositionTwo() {
+        internalTests.configureGeolocationMockGpsDeviceForTest(mockPositionTwo);
+        geolocation.getCurrentPosition(callbackTwo, null, options);
+      }
+      function callbackTwo(position) {
+        position.timestamp = undefined;
+        assertObjectEqual(mockPositionTwo, position);
+        completeAsync();
+      }
+
+      // Start the tests.
+      startAsync();
+      setPositionOne();
+    } else {
+      // On desktop platforms, these options mean that no location providers
+      // are specified, so we expect an exception.
+      assertError(
+          function() {geolocation.watchPosition(function() {}, null, options);},
+          'Fix request has no location providers.');
+    }
+  }
+}

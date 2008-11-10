@@ -167,9 +167,10 @@ class GearsTest : public ModuleImplBaseClass {
 
   // Configures the location provider pool to use a mock location provider. Sets
   // the position that the mock provider will provide. Fields are latitude,
-  // longitude, altitude, horizontalAccuracy, verticalAccuracy and error. Note
-  // that this a subset of the properties available on the Position object
-  // returned by the Geolocation module.
+  // longitude, altitude, accuracy, altitudeAccuracy, errorCode and
+  // errorMessage. Note that this a combination of some of the properties
+  // available on the Position and PositionError objects returned by the
+  // Geolocation module.
   // IN: object position.
   // OUT: nothing
   void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
@@ -183,6 +184,16 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: nothing
   void TestRadioDataProvider(JsCallContext *context);
 #endif
+
+  // Configures the GPS location provider to use a mock GPS device and sets the
+  // position that the mock device will provide. Properties are latitude,
+  // longitude, altitude, accuracy, altitudeAccuracy, errorCode and
+  // errorMessage. Note that this a combination of some of the properties
+  // available on the Position and PositionError objects returned by the
+  // Geolocation module.
+  // IN: object position.
+  // OUT: nothing
+  void ConfigureGeolocationMockGpsDeviceForTest(JsCallContext *context);
 
 #ifdef OFFICIAL_BUILD
   // The Audio API has not been finalized for official builds.
