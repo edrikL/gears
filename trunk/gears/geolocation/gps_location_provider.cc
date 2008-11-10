@@ -70,6 +70,8 @@ GpsLocationProvider::GpsLocationProvider(
       earliest_reverse_geocode_time_(0),
       is_address_requested_(false),
       gps_device_(NULL) {
+  // Open the device
+  gps_device_.reset((*gps_device_factory_function_)(this));
   // Start the worker thread.
   Start();
 }
@@ -159,8 +161,6 @@ void GpsLocationProvider::SetGpsDeviceFactoryFunction(
 
 // Thread implementation
 void GpsLocationProvider::Run() {
-  // Open the device
-  gps_device_.reset((*gps_device_factory_function_)(this));
 
   int reverse_geocode_wait_time;
   bool is_reverse_geocode_complete = true;
@@ -171,9 +171,13 @@ void GpsLocationProvider::Run() {
   while (true) {
     // Update the minimum wait time for a reverse geocode request.
     earliest_reverse_geocode_time_mutex_.Lock();
-    reverse_geocode_wait_time =
-        static_cast<int>(earliest_reverse_geocode_time_ -
-        GetCurrentTimeMillis());
+    if (earliest_reverse_geocode_time_ == 0) {
+      reverse_geocode_wait_time = 0;
+    } else {
+      reverse_geocode_wait_time =
+          static_cast<int>(earliest_reverse_geocode_time_ -
+                           GetCurrentTimeMillis());
+    }
     earliest_reverse_geocode_time_mutex_.Unlock();
 
     // Wait for an event.
@@ -208,13 +212,28 @@ void GpsLocationProvider::Run() {
       // geocode completes.
       MutexLock lock(&position_mutex_);
       if (position_.IsGoodFix()) {
+        // The position is good.
         if (new_listeners_require_address && !position_.IncludesAddress()) {
+          // The new listener requires an address but the current
+          // position doesn't have one.
           if (is_reverse_geocode_complete) {
+            // There isn't a reverse geocode in progress, so start a
+            // new one.
             is_reverse_geocode_required = true;
           }
+          // There is a reverse geocode in progress, so do nothing
+          // (i.e. wait for it to finish. The new listener will be
+          // updated at that point).
         } else {
+          // The new listener does not require an address or it
+          // does require an address and the current position includes
+          // one. In such a case, we call back immmediately.
           is_listener_callback_required = true;
         }
+      } else if (position_.IsInitialized()) {
+        // The position denotes an error (it is initialized but it is
+        // not good). We therefore call back immediately.
+        is_listener_callback_required = true;
       }
     }
 
@@ -223,8 +242,14 @@ void GpsLocationProvider::Run() {
       is_new_position_available_ = false;
       MutexLock postion_lock(&position_mutex_);
       MutexLock address_lock(&address_mutex_);
-      if (PositionsDifferSiginificantly(position_, new_position_) &&
-          is_address_requested_) {
+      assert(new_position_.IsInitialized());
+      if (!new_position_.IsGoodFix()) {
+        // The new position represents an error. We call back to let
+        // the listener know about this.
+        position_ = new_position_;
+        is_listener_callback_required = true;
+      } else if (PositionsDifferSiginificantly(position_, new_position_) &&
+                 is_address_requested_) {
         // The positions differ significantly and an address was requested, so
         // we need a new reverse geocode. Don't update position_ because we
         // don't want it to change if a reverse geocode is currently in
@@ -312,7 +337,6 @@ void GpsLocationProvider::GpsFatalError(int code,
   position_mutex_.Unlock();
 
   is_new_position_available_ = true;
-  is_shutting_down_ = true;
   worker_event_.Signal();
 }
 
