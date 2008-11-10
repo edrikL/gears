@@ -2487,12 +2487,8 @@ NPAPI_DLLFLAGS += $(CHROME_DLLFLAGS)
 
 # Remove some files that we don't want to compile for Chrome.
 NPAPI_CPPSRCS := $(subst http_cookies.cc,,$(NPAPI_CPPSRCS))
-NPAPI_CPPSRCS := $(subst http_request_ie.cc,,$(NPAPI_CPPSRCS))
-NPAPI_CPPSRCS := $(subst http_handler_ie.cc,,$(NPAPI_CPPSRCS))
 NPAPI_CPPSRCS := $(subst js_runner_np.cc,,$(NPAPI_CPPSRCS))
-NPAPI_CPPSRCS := $(subst urlmon_utils.cc,,$(NPAPI_CPPSRCS))
 NPAPI_CPPSRCS := $(subst update_task_np.cc,,$(NPAPI_CPPSRCS))
-NPAPI_CPPSRCS := $(subst paths_np.cc,,$(NPAPI_CPPSRCS))
 NPAPI_CPPSRCS := $(subst settings_dialog.cc,,$(NPAPI_CPPSRCS))
 endif
 endif
