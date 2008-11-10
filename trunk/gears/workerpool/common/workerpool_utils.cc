@@ -45,6 +45,9 @@ const char16 *kWorkerInsertedPreamble = STRING16(
 const int kOwningWorkerId = 0;
 const int kInvalidWorkerId = -1;
 
+static const char16 *kGearsWorkerContentType = STRING16(
+    L"application/x-gears-worker");
+
 void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
                                   int src_worker_id,
                                   std::string16 *message) {
@@ -58,4 +61,11 @@ void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
 
   *message += STRING16(L". ");
   *message += error_info.message;
+}
+
+bool HasGearsWorkerContentType(HttpRequest *request) {
+  std::string16 content_type;
+  request->GetResponseHeader(HttpConstants::kContentTypeHeader, &content_type);
+  LowerString(content_type);
+  return content_type == kGearsWorkerContentType;
 }
