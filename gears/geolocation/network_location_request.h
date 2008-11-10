@@ -55,7 +55,8 @@ class NetworkLocationRequest : public AsyncTask {
 
   // Creates the object and starts its worker thread running. Returns NULL if
   // creation or initialisation fails.
-  static NetworkLocationRequest* Create(const std::string16 &url,
+  static NetworkLocationRequest* Create(BrowsingContext *browsing_context,
+                                        const std::string16 &url,
                                         const std::string16 &host_name,
                                         ListenerInterface *listener);
   bool MakeRequest(const std::string16 &access_token,
@@ -76,7 +77,8 @@ class NetworkLocationRequest : public AsyncTask {
  private:
   // Private constructor and destructor. Callers should use Create() and
   // StopThreadAndDelete().
-  NetworkLocationRequest(const std::string16 &url,
+  NetworkLocationRequest(BrowsingContext *browsing_context,
+                         const std::string16 &url,
                          const std::string16 &host_name,
                          ListenerInterface *listener);
   virtual ~NetworkLocationRequest() {}

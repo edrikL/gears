@@ -35,6 +35,7 @@
 #define GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
 
 #include <map>
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 
@@ -95,8 +96,10 @@ LocationProviderBase *NewGpsLocationProvider(
     const std::string16 &reverse_geocode_url,
     const std::string16 &host_name,
     const std::string16 &address_language);
-LocationProviderBase *NewNetworkLocationProvider(const std::string16 &url,
-                                                 const std::string16 &host_name,
-                                                 const std::string16 &language);
+LocationProviderBase *NewNetworkLocationProvider(
+    BrowsingContext *browsing_context,
+    const std::string16 &url,
+    const std::string16 &host_name,
+    const std::string16 &language);
 
 #endif  // GEARS_GEOLOCATION_LOCATION_PROVIDER_H__

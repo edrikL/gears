@@ -458,7 +458,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
 
   // Mock provider
   LocationProviderBase *mock_provider =
-      pool->Register(STRING16(L"MOCK"),
+      pool->Register(EnvPageBrowsingContext(),
+                     STRING16(L"MOCK"),
                      STRING16(L""),  // url
                      STRING16(L""),  // host_name,
                      info->request_address,
@@ -478,7 +479,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
                                          STRING16(L"") :
                                          resolved_urls[0];
     LocationProviderBase *gps_provider =
-        pool->Register(STRING16(L"GPS"),
+        pool->Register(EnvPageBrowsingContext(),
+                       STRING16(L"GPS"),
                        reverse_geocoder_url,
                        host_name,
                        info->request_address && !reverse_geocoder_url.empty(),
@@ -493,7 +495,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   // Network providers
   for (int i = 0; i < static_cast<int>(resolved_urls.size()); ++i) {
     LocationProviderBase *network_provider =
-        pool->Register(STRING16(L"NETWORK"),
+        pool->Register(EnvPageBrowsingContext(),
+                       STRING16(L"NETWORK"),
                        resolved_urls[i],
                        host_name,
                        info->request_address,

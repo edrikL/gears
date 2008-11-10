@@ -59,18 +59,20 @@ LocationProviderPool *LocationProviderPool::GetInstance() {
 }
 
 LocationProviderBase *LocationProviderPool::Register(
-      const std::string16 &type,
-      const std::string16 &url,
-      const std::string16 &host,
-      bool request_address,
-      const std::string16 &language,
-      LocationProviderBase::ListenerInterface *listener) {
+    BrowsingContext *browsing_context,
+    const std::string16 &type,
+    const std::string16 &url,
+    const std::string16 &host,
+    bool request_address,
+    const std::string16 &language,
+    LocationProviderBase::ListenerInterface *listener) {
   assert(listener);
   MutexLock lock(&providers_mutex_);
   std::string16 key = MakeKey(type, url, host, language);
   ProviderMap::iterator iter = providers_.find(key);
   if (iter == providers_.end()) {
-    LocationProviderBase *provider = NewProvider(type, url, host, language);
+    LocationProviderBase *provider = NewProvider(browsing_context, type, url,
+                                                 host, language);
     if (!provider) {
       return NULL;
     }
@@ -121,6 +123,7 @@ void LocationProviderPool::UseMockLocationProvider(
 }
 
 LocationProviderBase *LocationProviderPool::NewProvider(
+    BrowsingContext *browsing_context,
     const std::string16 &type,
     const std::string16 &url,
     const std::string16 &host,
@@ -140,7 +143,7 @@ LocationProviderBase *LocationProviderPool::NewProvider(
   } else if (type == kGpsString) {
     return NewGpsLocationProvider(url, host, language);
   } else if (type == kNetworkString) {
-    return NewNetworkLocationProvider(url, host, language);
+    return NewNetworkLocationProvider(browsing_context, url, host, language);
   }
   assert(false);
   return NULL;
