@@ -51,8 +51,9 @@ class CabUpdater
  public:
   CabUpdater();
   virtual ~CabUpdater();
-  // Starts the updater.
-  void Start(HWND browser_window);
+
+  // Starts the updater. guid is the GUID used in the request query parameters.
+  void Start(HWND browser_window, std::string16 guid);
 
   // MessageObserverInterface
 

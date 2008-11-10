@@ -31,10 +31,6 @@
 #include "gears/installer/common/installer_utils.h"
 #include "gears/installer/common/resource.h"
 
-// TODO(andreip): When updating the Gears 'guid' field, consider switching
-// 'application' to a GUID that identifies the browser (to match Firefox pings).
-// Also remind cprince to update the stats logic when 'guid' changes.
-const char16* kApplicationId = L"%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D";
 
 // The topic for the message system.
 const char16* kTopic = STRING16(L"Cab Update Event");
@@ -65,12 +61,12 @@ CabUpdater::~CabUpdater() {
   }
 }
 
-void CabUpdater::Start(HWND browser_window) {
+void CabUpdater::Start(HWND browser_window, std::string16 guid) {
   browser_window_ = browser_window;
   assert(browser_window_);
   assert(checker_);
-  if (checker_->Init(kFirstUpdatePeriod, kUpdatePeriod, kGracePeriod,
-                     kApplicationId, this)) {
+  if (checker_->Init(kFirstUpdatePeriod, kUpdatePeriod, kGracePeriod, guid,
+                     this)) {
     MessageService::GetInstance()->AddObserver(this, kTopic);
     // We get stopped when the DLL unloads.
     ThreadLocals::SetValue(kThreadLocalKey, this, &Stop);

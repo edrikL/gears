@@ -53,7 +53,7 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   // Also sets the application ID sent to the server for update checks and the
   // listener for callbacks.
   bool Init(int first_period, int normal_period, int grace_period,
-            const std::string16 &application_id, ListenerInterface *listener);
+            const std::string16 &guid, ListenerInterface *listener);
   // Starts the checker thread.
   void Start();
   // Stops the checker thread. Parmeter specifies whether this call should block
@@ -100,8 +100,8 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   int normal_period_;
   // The time interval to wait after a connection up event.
   int grace_period_;
-  // The application ID to include in the server URL.
-  std::string16 application_id_;
+  // The GUID to include in the request query parameters.
+  std::string16 guid_;
   // The listener for callbacks
   ListenerInterface *listener_;
   // Events used for shutting down.
