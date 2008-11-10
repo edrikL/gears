@@ -41,7 +41,8 @@ class NetworkLocationProvider
       public NetworkLocationRequest::ListenerInterface,
       public Thread {
  public:
-  NetworkLocationProvider(const std::string16 &url,
+  NetworkLocationProvider(BrowsingContext *browsing_context,
+                          const std::string16 &url,
                           const std::string16 &host_name,
                           const std::string16 &language);
   virtual ~NetworkLocationProvider();
@@ -123,6 +124,8 @@ class NetworkLocationProvider
   // The earliest timestamp at which the next request can be made, in
   // milliseconds.
   int64 earliest_next_request_time_;
+
+  BrowsingContext *browsing_context_;
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };

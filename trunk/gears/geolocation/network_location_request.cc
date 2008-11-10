@@ -75,11 +75,12 @@ static void AddWifiData(const WifiData &wifi_data, Json::Value *body_object);
 
 // static
 NetworkLocationRequest *NetworkLocationRequest::Create(
+    BrowsingContext *browsing_context,
     const std::string16 &url,
     const std::string16 &host_name,
     ListenerInterface *listener) {
   scoped_ptr<NetworkLocationRequest> request(
-      new NetworkLocationRequest(url, host_name, listener));
+      new NetworkLocationRequest(browsing_context, url, host_name, listener));
   assert(request.get());
   if (!request.get() || !request->Init() || !request->Start()) {
     return NULL;
@@ -87,10 +88,12 @@ NetworkLocationRequest *NetworkLocationRequest::Create(
   return request.release();
 }
 
-NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
-                                               const std::string16 &host_name,
-                                               ListenerInterface *listener)
-    : AsyncTask(NULL),
+NetworkLocationRequest::NetworkLocationRequest(
+    BrowsingContext *browsing_context,
+    const std::string16 &url,
+    const std::string16 &host_name,
+    ListenerInterface *listener)
+    : AsyncTask(browsing_context),
       listener_(listener),
       url_(url),
       host_name_(host_name),

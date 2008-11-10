@@ -45,7 +45,7 @@ class ReverseGeocoder : public NetworkLocationRequest::ListenerInterface {
                   ReverseGeocoderListenerInterface *listener);
   virtual ~ReverseGeocoder();
 
-  bool MakeRequest(const Position &position);
+  bool MakeRequest(BrowsingContext *browsing_context, const Position &position);
 
  private:
   // NetworkLocationRequest::ListenerInterface implementation.

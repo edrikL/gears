@@ -25,6 +25,7 @@
 
 #include "gears/geolocation/network_location_provider.h"
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
 #include "gears/geolocation/access_token_manager.h"
 #include "gears/geolocation/backoff_manager.h"
@@ -35,16 +36,20 @@ static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
 
 
 LocationProviderBase *NewNetworkLocationProvider(
+    BrowsingContext *browsing_context,
     const std::string16 &url,
     const std::string16 &host_name,
     const std::string16 &language) {
-  return new NetworkLocationProvider(url, host_name, language);
+  return new NetworkLocationProvider(browsing_context, url, host_name,
+                                     language);
 }
 
 
-NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
-                                                 const std::string16 &host_name,
-                                                 const std::string16 &language)
+NetworkLocationProvider::NetworkLocationProvider(
+    BrowsingContext *browsing_context,
+    const std::string16 &url,
+    const std::string16 &host_name,
+    const std::string16 &language)
     : url_(url),
       host_name_(host_name),
       request_address_(false),
@@ -52,7 +57,8 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
       address_language_(language),
       is_shutting_down_(false),
       is_new_data_available_(false),
-      is_new_listener_waiting_(false) {
+      is_new_listener_waiting_(false),
+      browsing_context_(browsing_context) {
   // TODO(steveblock): Consider allowing multiple values for "address_language"
   // in the network protocol to allow better sharing of network location
   // providers.
@@ -200,7 +206,8 @@ void NetworkLocationProvider::LocationResponseAvailable(
 void NetworkLocationProvider::Run() {
   // Create the network request object. We must do this on the same thread from
   // which we'll call Start().
-  request_ = NetworkLocationRequest::Create(url_, host_name_, this);
+  request_ = NetworkLocationRequest::Create(browsing_context_, url_,
+                                            host_name_, this);
   if (!request_) {
     LOG(("Failed to create NetworkLocationRequest object.\n"));
     assert(false);

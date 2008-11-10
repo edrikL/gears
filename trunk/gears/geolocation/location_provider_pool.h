@@ -44,6 +44,7 @@ class LocationProviderPool {
   // provider if the pool does not alrerady contain an instance of that
   // provider. Returns the provider, or NULL if it cannot be created.
   LocationProviderBase *Register(
+      BrowsingContext *browsing_context,
       const std::string16 &type,
       const std::string16 &url,
       const std::string16 &host,
@@ -61,7 +62,8 @@ class LocationProviderPool {
   // This method is used only by the Gears test object.
   void UseMockLocationProvider(bool use_mock_location_provider);
 
-  LocationProviderBase *NewProvider(const std::string16 &type,
+  LocationProviderBase *NewProvider(BrowsingContext *browsing_context,
+                                    const std::string16 &type,
                                     const std::string16 &url,
                                     const std::string16 &host,
                                     const std::string16 &language);

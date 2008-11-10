@@ -52,11 +52,13 @@ ReverseGeocoder::~ReverseGeocoder() {
   AccessTokenManager::GetInstance()->Unregister();
 }
 
-bool ReverseGeocoder::MakeRequest(const Position &position) {
+bool ReverseGeocoder::MakeRequest(BrowsingContext *browsing_context,
+                                  const Position &position) {
   // Lazily create the network request object. We must do this on the same
   // thread from which we'll call MakeRequest().
   if (request_ == NULL) {
-    request_ = NetworkLocationRequest::Create(url_, host_name_, this);
+    request_ = NetworkLocationRequest::Create(browsing_context, url_,
+                                              host_name_, this);
   }
   assert(request_);
 
