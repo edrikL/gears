@@ -35,25 +35,12 @@
 #include <mshtmdid.h>
 #include <windows.h>
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_dom_element.h"
-#include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_types.h"
-#include "gears/base/common/scoped_refptr.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/desktop/drop_target_base.h"
 
 // The 1 in the IDispEventSimpleImpl line is just an arbitrary positive
 // integer, as says the IDispEventSimpleImpl documentation at
 // http://msdn.microsoft.com/en-us/library/fwy24613(VS.80).aspx
 // This 1 is the same nID as used in the SINK_ENTRY_INFO calls below.
-//
-// We subclass IDispEventSimpleImpl in order to intercept drag enter, drag
-// over, drag leave, and drop events. A previous approach implemented
-// IDispatchImpl instead of IDispEventSimpleImpl, and attached to the DOM
-// element via an IElementBehavior, but it turned out that this approach
-// interfered with the IDispatch of the DOM element, and the DOM element lost
-// its scripted properties (and therefore things like document.getElementById
-// failed).
 //
 // Note that we subclass RefCounted even though IDispEventSimpleImpl
 // nominally implements AddRef and Release, because IDispEventSimpleImpl's
@@ -62,8 +49,8 @@
 // Thus, for DropTarget's ref-counting, we use RefCounted from
 // base/common/scoped_refptr.h.
 class DropTarget
-    : public IDispEventSimpleImpl<1, DropTarget, &DIID_HTMLElementEvents2>,
-      public JsEventHandlerInterface,
+    : public DropTargetBase,
+      public IDispEventSimpleImpl<1, DropTarget, &DIID_HTMLElementEvents2>,
       public RefCounted {
  public:
   BEGIN_SINK_MAP(DropTarget)
@@ -85,21 +72,13 @@ class DropTarget
                     &atl_func_info_)
   END_SINK_MAP()
 
-  CComPtr<IHTMLWindow2> html_window_2_;
-
-  scoped_refptr<ModuleEnvironment> module_environment_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
-  scoped_ptr<JsRootedCallback> on_drag_enter_;
-  scoped_ptr<JsRootedCallback> on_drag_over_;
-  scoped_ptr<JsRootedCallback> on_drag_leave_;
-  scoped_ptr<JsRootedCallback> on_drop_;
-
-#ifdef DEBUG
-  bool is_debugging_;
-#endif
-
   virtual ~DropTarget();
-  static DropTarget *CreateDropTarget(JsDomElement &dom_element);
+
+  // The result should be held within a scoped_refptr.
+  static DropTarget *CreateDropTarget(ModuleEnvironment *module_environment,
+                                      JsDomElement &dom_element,
+                                      JsObject *options,
+                                      std::string16 *error_out);
 
   HRESULT GetHtmlDataTransfer(CComPtr<IHTMLEventObj> &html_event_obj,
                               CComPtr<IHTMLDataTransfer> &html_data_transfer);
@@ -118,12 +97,15 @@ class DropTarget
  private:
   bool unregister_self_has_been_called_;
   CComPtr<IDispatch> event_source_;
+  CComPtr<IHTMLWindow2> html_window_2_;
 
 #ifdef DEBUG
   CComPtr<IHTMLStyle> html_style_;
 #endif
 
-  DropTarget();
+  DropTarget(ModuleEnvironment *module_environment,
+             JsObject *options,
+             std::string16 *error_out);
 
   void AddEventToJsObject(JsObject *js_object);
   void ProvideDebugVisualFeedback(bool is_drag_enter);

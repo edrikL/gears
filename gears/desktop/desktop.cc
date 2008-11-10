@@ -45,7 +45,6 @@
 #include "gears/base/safari/curl_downloader.h"
 #endif
 #include "gears/blob/blob_interface.h"
-#include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/drop_target_registration.h"
 #include "gears/desktop/file_dialog.h"
 #include "gears/desktop/notification_message_orderer.h"
@@ -78,11 +77,7 @@ void Dispatcher<GearsDesktop>::Init() {
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_CHROME) ||  defined(BROWSER_WEBKIT) || \
-    defined(OS_WINCE) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
-  // PocketIE, and Android.
-#else
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
 #endif
 #endif  // OFFICIAL_BUILD
@@ -1025,15 +1020,11 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_CHROME) || defined(BROWSER_WEBKIT) || \
-    defined(OS_WINCE) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
-  // PocketIE, and Android.
-#else
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   if (EnvIsWorker()) {
     context->SetException(
-                 STRING16(L"registerDropTarget is not supported in workers."));
+        STRING16(L"registerDropTarget is not supported in workers."));
     return;
   }
 
@@ -1053,9 +1044,8 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   }
 
   std::string16 error;
-  scoped_refptr<DropTarget> drop_target(
-      DragAndDropRegistry::RegisterDropTarget(
-          this, dom_element, drag_drop_options.get(), &error));
+  scoped_refptr<DropTarget> drop_target(DropTarget::CreateDropTarget(
+      module_environment_.get(), dom_element, drag_drop_options.get(), &error));
   if (!drop_target.get()) {
     context->SetException(error);
     return;
@@ -1064,5 +1054,5 @@ void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   registration->SetDropTarget(drop_target.get());
   context->SetReturnValue(JSPARAM_MODULE, registration.get());
 }
-#endif  // BROWSER_CHROME, BROWSER_WEBKIT, OS_WINCE, OS_ANDROID
+#endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #endif  // OFFICIAL_BUILD

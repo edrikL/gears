@@ -32,36 +32,24 @@
 #include <gecko_internal/nsIDragService.h>
 #include <gecko_internal/nsIXPConnect.h>
 #include <gecko_sdk/include/nsIDOMEventListener.h>
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_dom_element.h"
-#include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_types.h"
-#include "gears/base/common/scoped_refptr.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+
+#include "gears/desktop/drop_target_base.h"
 
 class DropTarget
-    : public nsIDOMEventListener,
-      public JsEventHandlerInterface {
+    : public DropTargetBase,
+      public nsIDOMEventListener {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  scoped_refptr<ModuleEnvironment> module_environment_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
-  scoped_ptr<JsRootedCallback> on_drag_enter_;
-  scoped_ptr<JsRootedCallback> on_drag_over_;
-  scoped_ptr<JsRootedCallback> on_drag_leave_;
-  scoped_ptr<JsRootedCallback> on_drop_;
-
-#ifdef DEBUG
-  bool is_debugging_;
-#endif
-
-  DropTarget();
   virtual ~DropTarget();
 
-  void SetDomElement(JsDomElement &dom_element);
-  void AddSelfAsEventListeners(nsIDOMEventTarget *event_target);
+  // The result should be held within a scoped_refptr.
+  static DropTarget *CreateDropTarget(ModuleEnvironment *module_environment,
+                                      JsDomElement &dom_element,
+                                      JsObject *options,
+                                      std::string16 *error_out);
+
   void UnregisterSelf();
 
   // This is the JsEventHandlerInterface callback, not the
@@ -86,6 +74,10 @@ class DropTarget
   nsCOMPtr<nsIDOMEventTarget> event_target_;
   nsCOMPtr<nsIXPConnect> xp_connect_;
   bool unregister_self_has_been_called_;
+
+  DropTarget(ModuleEnvironment *module_environment,
+             JsObject *options,
+             std::string16 *error_out);
 
   void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
   void ProvideDebugVisualFeedback(bool is_drag_enter);

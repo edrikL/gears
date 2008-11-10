@@ -23,31 +23,49 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
-#define GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#ifndef GEARS_DESKTOP_DROP_TARGET_BASE_H__
+#define GEARS_DESKTOP_DROP_TARGET_BASE_H__
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
 
+#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE))
+
+// TODO(nigeltao): Before Drag and Drop is made an official Gears API, we have
+// to (1) implement DnD on Chrome and Safari, and (2) decide what to do about
+// mobile platforms like Android and WinCE.
+#define GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM 1
+
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_dom_element.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
-// A DropTarget is an opaque, platform-specific class that represents a DOM
-// element that handles drag and drop events, for example of files dragged
-// from the Desktop to the browser.
-class DropTarget;
-class JsDomElement;
+class DropTargetBase
+    : public JsEventHandlerInterface {
+ protected:
+  scoped_refptr<ModuleEnvironment> module_environment_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+  scoped_ptr<JsRootedCallback> on_drag_enter_;
+  scoped_ptr<JsRootedCallback> on_drag_over_;
+  scoped_ptr<JsRootedCallback> on_drag_leave_;
+  scoped_ptr<JsRootedCallback> on_drop_;
 
-class DragAndDropRegistry {
- public:
-  static DropTarget *RegisterDropTarget(ModuleImplBaseClass *sibling_module,
-                                        JsDomElement &dom_element,
-                                        JsObject *options,
-                                        std::string16 *error_out);
+#ifdef DEBUG
+  bool is_debugging_;
+#endif
+
+  DropTargetBase(ModuleEnvironment *module_environment,
+                 JsObject *options,
+                 std::string16 *error_out);
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(DragAndDropRegistry);
+  DISALLOW_EVIL_CONSTRUCTORS(DropTargetBase);
 };
 
+#endif
+
 #endif  // OFFICIAL_BUILD
-#endif  // GEARS_DESKTOP_DRAG_AND_DROP_REGISTRY_H__
+#endif  // GEARS_DESKTOP_DROP_TARGET_BASE_H__
