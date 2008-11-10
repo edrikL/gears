@@ -102,11 +102,11 @@ bool PositionTable::SetPosition(const std::string16 &name,
     return false;
   }
   if (SQLITE_OK != statement.bind_double(4, position.accuracy)) {
-    LOG_BIND_ERROR("horizontal accuracy");
+    LOG_BIND_ERROR("accuracy");
     return false;
   }
   if (SQLITE_OK != statement.bind_double(5, position.altitude_accuracy)) {
-    LOG_BIND_ERROR("vertical accuracy");
+    LOG_BIND_ERROR("altitude accuracy");
     return false;
   }
   if (SQLITE_OK != statement.bind_int64(6, position.timestamp)) {
