@@ -35,7 +35,6 @@
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -43,13 +42,12 @@ _ATL_FUNC_INFO DropTarget::atl_func_info_ =
     { CC_STDCALL, VT_I4, 1, { VT_EMPTY } };
 
 
-DropTarget::DropTarget() :
-#ifdef DEBUG
-    is_debugging_(false),
-#endif
-    unregister_self_has_been_called_(false) {
+DropTarget::DropTarget(ModuleEnvironment *module_environment,
+                       JsObject *options,
+                       std::string16 *error_out)
+    : DropTargetBase(module_environment, options, error_out),
+      unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
-  Ref();  // Balanced by a Unref() call during UnregisterSelf.
 }
 
 
@@ -69,10 +67,18 @@ void DropTarget::ProvideDebugVisualFeedback(bool is_drag_enter) {
 }
 
   
-DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
+DropTarget *DropTarget::CreateDropTarget(ModuleEnvironment *module_environment,
+                                         JsDomElement &dom_element,
+                                         JsObject *options,
+                                         std::string16 *error_out) {
   HRESULT hr;
   IDispatch *dom_element_dispatch = dom_element.dispatch();
-  scoped_ptr<DropTarget> drop_target(new DropTarget);
+
+  scoped_refptr<DropTarget> drop_target(new DropTarget(
+      module_environment, options, error_out));
+  if (!error_out->empty()) {
+    return NULL;
+  }
 
   hr = drop_target->DispEventAdvise(dom_element_dispatch,
                                     &DIID_HTMLElementEvents2);
@@ -91,8 +97,9 @@ DropTarget *DropTarget::CreateDropTarget(JsDomElement &dom_element) {
   if (!html_document_2) { return NULL; }
   hr = html_document_2->get_parentWindow(&drop_target->html_window_2_);
   if (FAILED(hr)) { return NULL; }
-  return drop_target.release();
+  drop_target->Ref();  // Balanced by a Unref() call during UnregisterSelf.
   drop_target->ProvideDebugVisualFeedback(false);
+  return drop_target.get();
 }
 
 
@@ -298,7 +305,7 @@ void DropTarget::UnregisterSelf() {
   if (event_source_) {
     DispEventUnadvise(event_source_, &DIID_HTMLElementEvents2);
   }
-  Unref();  // Balanced by an Ref() call during the constructor.
+  Unref();  // Balanced by an Ref() call during CreateDropTarget.
 }
 
 

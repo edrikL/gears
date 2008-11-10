@@ -1389,7 +1389,7 @@ $(BROWSER)_CPPSRCS += \
 		desktop_test.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
-		drag_and_drop_registry.cc \
+		drop_target_base.cc \
 		drop_target_registration.cc \
 		notification_message_orderer.cc \
 		shortcut_utils_win32.cc \

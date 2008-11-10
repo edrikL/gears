@@ -38,7 +38,6 @@
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
 #include "gears/base/common/leak_counter.h"
-#include "gears/desktop/drag_and_drop_registry.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -54,11 +53,11 @@ const nsString DropTarget::kDragDropAsString(STRING16(L"dragdrop"));
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
 
 
-DropTarget::DropTarget() :
-#ifdef DEBUG
-    is_debugging_(false),
-#endif
-    unregister_self_has_been_called_(false) {
+DropTarget::DropTarget(ModuleEnvironment *module_environment,
+                       JsObject *options,
+                       std::string16 *error_out)
+    : DropTargetBase(module_environment, options, error_out),
+      unregister_self_has_been_called_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
@@ -88,32 +87,44 @@ void DropTarget::ProvideDebugVisualFeedback(bool is_drag_enter) {
 }
 
 
-void DropTarget::SetDomElement(JsDomElement &dom_element) {
-  html_element_ = dom_element.dom_html_element();
-  nsCOMPtr<nsIDOMEventTarget> event_target(do_QueryInterface(html_element_));
-  AddSelfAsEventListeners(event_target);
-  ProvideDebugVisualFeedback(false);
-}
-
-
-void DropTarget::AddSelfAsEventListeners(nsIDOMEventTarget *event_target) {
-  event_target_ = event_target;
-  AddRef();  // Balanced by a Release() call during UnregisterSelf.
-
-  if (event_target_) {
-    if (on_drag_enter_.get()) {
-      event_target_->AddEventListener(kDragEnterAsString, this, false);
-    }
-    if (on_drag_over_.get()) {
-      event_target_->AddEventListener(kDragOverAsString, this, false);
-    }
-    if (on_drag_leave_.get()) {
-      event_target_->AddEventListener(kDragExitAsString, this, false);
-    }
-    if (on_drop_.get()) {
-      event_target_->AddEventListener(kDragDropAsString, this, false);
-    }
+DropTarget *DropTarget::CreateDropTarget(ModuleEnvironment *module_environment,
+                                         JsDomElement &dom_element,
+                                         JsObject *options,
+                                         std::string16 *error_out) {
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+      do_QueryInterface(dom_element.dom_html_element());
+  if (!event_target) {
+    return NULL;
   }
+
+  scoped_refptr<DropTarget> drop_target(new DropTarget(
+      module_environment, options, error_out));
+  if (!error_out->empty()) {
+    return NULL;
+  }
+  drop_target->event_target_ = event_target;
+  drop_target->html_element_ = dom_element.dom_html_element();
+  drop_target->AddRef();  // Balanced by a Release() call during UnregisterSelf.
+
+  if (drop_target->on_drag_enter_.get()) {
+    event_target->AddEventListener(kDragEnterAsString,
+                                   drop_target.get(), false);
+  }
+  if (drop_target->on_drag_over_.get()) {
+    event_target->AddEventListener(kDragOverAsString,
+                                   drop_target.get(), false);
+  }
+  if (drop_target->on_drag_leave_.get()) {
+    event_target->AddEventListener(kDragExitAsString,
+                                   drop_target.get(), false);
+  }
+  if (drop_target->on_drop_.get()) {
+    event_target->AddEventListener(kDragDropAsString,
+                                   drop_target.get(), false);
+  }
+
+  drop_target->ProvideDebugVisualFeedback(false);
+  return drop_target.get();
 }
 
 
@@ -138,7 +149,7 @@ void DropTarget::UnregisterSelf() {
     }
   }
 
-  Release();  // Balanced by an AddRef() call during AddSelfAsEventListeners.
+  Release();  // Balanced by an AddRef() call during CreateDropTarget.
 }
 
 
