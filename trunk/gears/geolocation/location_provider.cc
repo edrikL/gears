@@ -86,6 +86,7 @@ Mutex *LocationProviderBase::GetListenersMutex() {
     defined(OS_MACOSX)
 
 LocationProviderBase *NewGpsLocationProvider(
+    BrowsingContext *browsing_context,
     const std::string16 &reverse_geocode_url,
     const std::string16 &host_name,
     const std::string16 &address_language) {

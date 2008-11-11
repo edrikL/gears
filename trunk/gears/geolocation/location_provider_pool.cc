@@ -141,7 +141,7 @@ LocationProviderBase *LocationProviderPool::NewProvider(
     return NULL;
 #endif  // USING_CCTESTS
   } else if (type == kGpsString) {
-    return NewGpsLocationProvider(url, host, language);
+    return NewGpsLocationProvider(browsing_context, url, host, language);
   } else if (type == kNetworkString) {
     return NewNetworkLocationProvider(browsing_context, url, host, language);
   }

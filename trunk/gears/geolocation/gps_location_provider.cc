@@ -46,16 +46,19 @@ GpsLocationProvider::GpsDeviceFactoryFunction
     GpsLocationProvider::NewGpsDevice;
 
 LocationProviderBase *NewGpsLocationProvider(
+    BrowsingContext *browsing_context,
     const std::string16 &reverse_geocode_url,
     const std::string16 &host_name,
     const std::string16 &address_language) {
-  return new GpsLocationProvider(reverse_geocode_url,
+  return new GpsLocationProvider(browsing_context,
+                                 reverse_geocode_url,
                                  host_name,
                                  address_language);
 }
 
 
 GpsLocationProvider::GpsLocationProvider(
+    BrowsingContext *browsing_context,
     const std::string16 &reverse_geocode_url,
     const std::string16 &host_name,
     const std::string16 &address_language)
@@ -69,7 +72,8 @@ GpsLocationProvider::GpsLocationProvider(
       reverse_geocoder_(NULL),
       earliest_reverse_geocode_time_(0),
       is_address_requested_(false),
-      gps_device_(NULL) {
+      gps_device_(NULL),
+      browsing_context_(browsing_context) {
   // Open the device
   gps_device_.reset((*gps_device_factory_function_)(this));
   // Start the worker thread.
@@ -362,7 +366,7 @@ void GpsLocationProvider::MakeReverseGeocodeRequest() {
   // We must make all requests from the same thread - the run loop.
   // Note that this will fail if a request is already in progress.
   assert(reverse_geocoder_.get());
-  if (!reverse_geocoder_->MakeRequest(position_)) {
+  if (!reverse_geocoder_->MakeRequest(browsing_context_, position_)) {
     assert(false);
   }
 }

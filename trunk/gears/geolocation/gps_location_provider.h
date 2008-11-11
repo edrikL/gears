@@ -69,7 +69,8 @@ class GpsLocationProvider
       public ReverseGeocoder::ReverseGeocoderListenerInterface,
       public GpsDeviceBase::ListenerInterface {
  public:
-   GpsLocationProvider(const std::string16 &reverse_geocode_url,
+   GpsLocationProvider(BrowsingContext *browsing_context,
+                       const std::string16 &reverse_geocode_url,
                        const std::string16 &host_name,
                        const std::string16 &address_language);
   virtual ~GpsLocationProvider();
@@ -138,6 +139,7 @@ class GpsLocationProvider
   ListenerVector new_listeners_requiring_address_;
   bool is_address_requested_;
   Mutex address_mutex_;
+  BrowsingContext *browsing_context_;
 
   // The GPS device itself.
   scoped_ptr<GpsDeviceBase> gps_device_;
