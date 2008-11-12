@@ -61,6 +61,9 @@ class DropTargetBase
                  JsObject *options,
                  std::string16 *error_out);
 
+  virtual void HandleEvent(JsEventType event_type);
+  virtual void UnregisterSelf() = 0;
+
  private:
   DISALLOW_EVIL_CONSTRUCTORS(DropTargetBase);
 };

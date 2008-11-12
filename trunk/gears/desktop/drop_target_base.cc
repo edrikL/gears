@@ -31,12 +31,6 @@
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 
-#if BROWSER_FF
-#include "gears/desktop/drop_target_ff.h"
-#elif BROWSER_IE && !defined(OS_WINCE)
-#include "gears/desktop/drop_target_ie.h"
-#endif
-
 
 static bool InitializeCallback(const std::string16 name,
                                JsObject *options,
@@ -78,6 +72,12 @@ DropTargetBase::DropTargetBase(ModuleEnvironment *module_environment,
                      &on_drag_leave_, error_out);
   InitializeCallback(STRING16(L"ondrop"), options,
                      &on_drop_, error_out);
+}
+
+
+void DropTargetBase::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+  UnregisterSelf();
 }
 
 

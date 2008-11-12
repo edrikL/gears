@@ -329,12 +329,5 @@ void DropTarget::UnregisterSelf() {
 }
 
 
-// A DropTarget instance automatically de-registers itself, on page unload.
-void DropTarget::HandleEvent(JsEventType event_type) {
-  assert(event_type == JSEVENT_UNLOAD);
-  UnregisterSelf();
-}
-
-
 #endif  // OS_WINCE
 #endif  // OFFICIAL_BUILD

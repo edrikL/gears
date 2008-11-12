@@ -389,13 +389,6 @@ bool DropTarget::GetDroppedFiles(
 }
 
 
-// A DropTarget instance automatically de-registers itself, on page unload.
-void DropTarget::HandleEvent(JsEventType event_type) {
-  assert(event_type == JSEVENT_UNLOAD);
-  UnregisterSelf();
-}
-
-
 void DropTarget::Ref() {
   AddRef();
 }

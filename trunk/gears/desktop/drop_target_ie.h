@@ -90,9 +90,7 @@ class DropTarget
   STDMETHOD(HandleOnDragLeave)();
   STDMETHOD(HandleOnDragDrop)();
 
-  void UnregisterSelf();
-
-  virtual void HandleEvent(JsEventType event_type);
+  virtual void UnregisterSelf();
 
  private:
   CComPtr<IDispatch> event_source_;

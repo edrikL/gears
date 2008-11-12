@@ -51,9 +51,7 @@ class DropTarget
                                       JsObject *options,
                                       std::string16 *error_out);
 
-  void UnregisterSelf();
-
-  virtual void HandleEvent(JsEventType event_type);
+  virtual void UnregisterSelf();
 
   enum HtmlEventType {
     HTML_EVENT_TYPE_DRAG_ENTER,

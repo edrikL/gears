@@ -50,16 +50,7 @@ class DropTarget
                                       JsObject *options,
                                       std::string16 *error_out);
 
-  void UnregisterSelf();
-
-  // This is the JsEventHandlerInterface callback, not the
-  // nsIDOMEventListener one. The latter is declared by the
-  // NS_DECL_NSIDOMEVENTLISTENER above.
-  virtual void HandleEvent(JsEventType event_type);
-
-  bool GetDroppedFiles(nsIDragSession *drag_session,
-                       JsArray *files_out,
-                       std::string16 *error_out);
+  virtual void UnregisterSelf();
 
   void Ref();
   void Unref();
@@ -76,6 +67,9 @@ class DropTarget
              std::string16 *error_out);
 
   void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
+  bool GetDroppedFiles(nsIDragSession *drag_session,
+                       JsArray *files_out,
+                       std::string16 *error_out);
   void ProvideDebugVisualFeedback(bool is_drag_enter);
 
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
