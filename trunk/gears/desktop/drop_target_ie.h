@@ -95,9 +95,10 @@ class DropTarget
   virtual void HandleEvent(JsEventType event_type);
 
  private:
-  bool unregister_self_has_been_called_;
   CComPtr<IDispatch> event_source_;
   CComPtr<IHTMLWindow2> html_window_2_;
+  bool unregister_self_has_been_called_;
+  bool will_accept_drop_;
 
 #ifdef DEBUG
   CComPtr<IHTMLStyle> html_style_;

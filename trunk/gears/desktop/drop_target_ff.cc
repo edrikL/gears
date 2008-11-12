@@ -44,10 +44,10 @@
 // Note that some Mozilla event names differ from the HTML5 standard event
 // names - the latter being the one we expose in the Gears API. Specifically,
 // Mozilla's "dragexit" is HTML5's "dragleave", and "dragdrop" is "drop".
-const nsString DropTarget::kDragEnterAsString(STRING16(L"dragenter"));
-const nsString DropTarget::kDragOverAsString(STRING16(L"dragover"));
-const nsString DropTarget::kDragExitAsString(STRING16(L"dragexit"));
-const nsString DropTarget::kDragDropAsString(STRING16(L"dragdrop"));
+static const nsString kDragEnterAsString(STRING16(L"dragenter"));
+static const nsString kDragOverAsString(STRING16(L"dragover"));
+static const nsString kDragExitAsString(STRING16(L"dragexit"));
+static const nsString kDragDropAsString(STRING16(L"dragdrop"));
 
 
 NS_IMPL_ISUPPORTS1(DropTarget, nsIDOMEventListener)
@@ -57,7 +57,8 @@ DropTarget::DropTarget(ModuleEnvironment *module_environment,
                        JsObject *options,
                        std::string16 *error_out)
     : DropTargetBase(module_environment, options, error_out),
-      unregister_self_has_been_called_(false) {
+      unregister_self_has_been_called_(false),
+      will_accept_drop_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
@@ -213,46 +214,46 @@ void DropTarget::AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event) {
 NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsCOMPtr<nsIDragService> drag_service =
       do_GetService("@mozilla.org/widget/dragservice;1");
-  if (!drag_service) { return false; }
+  if (!drag_service) { return NS_ERROR_FAILURE; }
   nsCOMPtr<nsIDragSession> drag_session;
   nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
-  if (NS_FAILED(nr) || !drag_session.get()) { return false; }
-  nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
-  if (NS_FAILED(nr)) { return false; }
+  if (NS_FAILED(nr) || !drag_session.get()) { return NS_ERROR_FAILURE; }
 
   nsString event_type;
   event->GetType(event_type);
 
   if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
     ProvideDebugVisualFeedback(false);
-    std::string16 error;
-    scoped_ptr<JsArray> file_array(
-        module_environment_->js_runner_->NewArray());
-    if (!GetDroppedFiles(drag_session.get(), file_array.get(), &error)) {
-      return NS_ERROR_FAILURE;
+    if (will_accept_drop_) {
+      will_accept_drop_ = false;
+      std::string16 error;
+      scoped_ptr<JsArray> file_array(
+          module_environment_->js_runner_->NewArray());
+      if (!GetDroppedFiles(drag_session.get(), file_array.get(), &error)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Prevent the default browser behavior of navigating away from the
+      // current page to the file being dropped.
+      event->StopPropagation();
+
+      scoped_ptr<JsObject> context_object(
+          module_environment_->js_runner_->NewObject());
+      context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+      AddEventToJsObject(context_object.get(), event);
+
+      const int argc = 1;
+      JsParamToSend argv[argc] = {
+        { JSPARAM_OBJECT, context_object.get() }
+      };
+      module_environment_->js_runner_->InvokeCallback(
+          on_drop_.get(), argc, argv, NULL);
+      nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
+      if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
     }
 
-    // If we've got this far, then the drag-and-dropped data was indeed one or
-    // more files, so we will notify our callback.  We also stop the event
-    // propagation, to avoid the browser doing the default action, which is to
-    // load that file (and navigate away from the current page). I (nigeltao)
-    // would have thought that event->PreventDefault() would be the way to do
-    // that, but that doesn't seem to work, whilst StopPropagation() does.
-    event->StopPropagation();
-
-    scoped_ptr<JsObject> context_object(
-        module_environment_->js_runner_->NewObject());
-    context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
-    AddEventToJsObject(context_object.get(), event);
-
-    const int argc = 1;
-    JsParamToSend argv[argc] = {
-      { JSPARAM_OBJECT, context_object.get() }
-    };
-    module_environment_->js_runner_->InvokeCallback(
-        on_drop_.get(), argc, argv, NULL);
-
   } else {
+    bool is_drag_exit = false;
     JsRootedCallback *callback = NULL;
     if (on_drag_enter_.get() && event_type.Equals(kDragEnterAsString)) {
       ProvideDebugVisualFeedback(true);
@@ -262,6 +263,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     } else if (on_drag_leave_.get() && event_type.Equals(kDragExitAsString)) {
       ProvideDebugVisualFeedback(false);
       callback = on_drag_leave_.get();
+      is_drag_exit = true;
     }
     if (callback) {
       scoped_ptr<JsObject> context_object(
@@ -271,8 +273,27 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
       JsParamToSend argv[argc] = {
         { JSPARAM_OBJECT, context_object.get() }
       };
-      module_environment_->js_runner_->InvokeCallback(
-          callback, argc, argv, NULL);
+      if (is_drag_exit) {
+        module_environment_->js_runner_->InvokeCallback(
+            callback, argc, argv, NULL);
+        will_accept_drop_ = false;
+      } else {
+        scoped_ptr<JsRootedToken> return_value;
+        module_environment_->js_runner_->InvokeCallback(
+            callback, argc, argv, as_out_parameter(return_value));
+        // The HTML5 specification (section 5.4.5) says that an event handler
+        // returning *false* means that we should not perform the default
+        // action (i.e. the web-app wants Gears' file drop behavior, and not
+        // the default browser behavior of navigating away from the current
+        // page to the file being dropped).
+        will_accept_drop_ = return_value.get() &&
+            JSVAL_IS_BOOLEAN(return_value->token()) &&
+            JSVAL_TO_BOOLEAN(return_value->token()) == false;
+        nr = drag_session->SetDragAction(will_accept_drop_
+            ? static_cast<int>(nsIDragService::DRAGDROP_ACTION_COPY)
+            : static_cast<int>(nsIDragService::DRAGDROP_ACTION_NONE));
+        if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
+      }
     }
   }
   return NS_OK;

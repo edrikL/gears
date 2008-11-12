@@ -46,7 +46,8 @@ DropTarget::DropTarget(ModuleEnvironment *module_environment,
                        JsObject *options,
                        std::string16 *error_out)
     : DropTargetBase(module_environment, options, error_out),
-      unregister_self_has_been_called_(false) {
+      unregister_self_has_been_called_(false),
+      will_accept_drop_(false) {
   LEAK_COUNTER_INCREMENT(DropTarget);
 }
 
@@ -130,6 +131,7 @@ HRESULT DropTarget::CancelEventBubble(
     CComPtr<IHTMLEventObj> &html_event_obj,
     CComPtr<IHTMLDataTransfer> &html_data_transfer)
 {
+  if (!will_accept_drop_) return S_OK;
   HRESULT hr;
   hr = html_data_transfer->put_dropEffect(L"copy");
   if (FAILED(hr)) return hr;
@@ -142,6 +144,7 @@ HRESULT DropTarget::CancelEventBubble(
 
 HRESULT DropTarget::HandleOnDragEnter()
 {
+  will_accept_drop_ = false;
   ProvideDebugVisualFeedback(true);
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
@@ -177,8 +180,17 @@ HRESULT DropTarget::HandleOnDragEnter()
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
     };
+    scoped_ptr<JsRootedToken> return_value;
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_enter_.get(), argc, argv, NULL);
+        on_drag_enter_.get(), argc, argv, as_out_parameter(return_value));
+    // The HTML5 specification (section 5.4.5) says that an event handler
+    // returning *false* means that we should not perform the default action
+    // (i.e. the web-app wants Gears' file drop behavior, and not the default
+    // browser behavior of navigating away from the current page to the file
+    // being dropped).
+    will_accept_drop_ = return_value.get() &&
+        V_VT(&return_value->token()) == VT_BOOL &&
+        V_BOOL(&return_value->token()) == false;
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -189,6 +201,7 @@ HRESULT DropTarget::HandleOnDragEnter()
 
 HRESULT DropTarget::HandleOnDragOver()
 {
+  will_accept_drop_ = false;
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
@@ -202,8 +215,12 @@ HRESULT DropTarget::HandleOnDragOver()
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
     };
+    scoped_ptr<JsRootedToken> return_value;
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_over_.get(), argc, argv, NULL);
+        on_drag_over_.get(), argc, argv, as_out_parameter(return_value));
+    will_accept_drop_ = return_value.get() &&
+        V_VT(&return_value->token()) == VT_BOOL &&
+        V_BOOL(&return_value->token()) == false;
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -215,6 +232,7 @@ HRESULT DropTarget::HandleOnDragOver()
 HRESULT DropTarget::HandleOnDragLeave()
 {
   ProvideDebugVisualFeedback(false);
+  will_accept_drop_ = false;
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
@@ -241,6 +259,8 @@ HRESULT DropTarget::HandleOnDragLeave()
 HRESULT DropTarget::HandleOnDragDrop()
 {
   ProvideDebugVisualFeedback(false);
+  if (!will_accept_drop_) return S_OK;
+  will_accept_drop_ = false;
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
   HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);

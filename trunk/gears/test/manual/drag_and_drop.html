@@ -1,6 +1,6 @@
 <html><head><title>Gears Drag and Drop</title></head>
 <body>
-<div id="dropZone" style="background-color: yellow; width:20em; height:15em">
+<div id="dropZone" style="background-color:yellow; width:20em; height:15em">
 <ol>
 <li>Drag some files from the desktop.</li>
 <li>Drop them on this DIV.</li>
@@ -10,11 +10,16 @@
 <button onclick="toggleEnabledDisabled()">Toggle Enabled / Disabled</button>
 <div id="enabledDisabled" style="color:red; font-weight:bold">&nbsp;</div>
 <div id="eventOutput">&nbsp;</div>
+<div id="rejectOutput">&nbsp;</div>
 </div>
 <div id="dragEnterOutput">&nbsp;</div>
 <div id="dragOverOutput">&nbsp;</div>
 <div id="dragLeaveOutput">&nbsp;</div>
 <div id="dropOutput">&nbsp;</div>
+
+<div style="position:absolute; left:200px; top:13em;">
+  |&larr;&nbsp;Drop to the left of this mark</div>
+
 
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
@@ -29,8 +34,20 @@ var desktop = google.gears.factory.create('beta.desktop');
 var dropTargetRegistration = null;
 
 function updateEventOutput(event) {
+  if (!event) {
+    return;
+  }
   document.getElementById('eventOutput').innerHTML =
-      'clientX: ' + event.clientX + ', ' + 'clientY: ' + event.clientY;
+      'clientX: <b>' + event.clientX + '</b>, ' +
+      'clientY: <b>' + event.clientY + '</b>, ' +
+      'shiftKey: <b>' + event.shiftKey + '</b>';
+}
+
+function willReject(context) {
+  var result = context.event.clientX >= 200;
+  document.getElementById('rejectOutput').innerHTML =
+      result ? 'Drop <b>REJECTED</b>.' : 'Drop <b>OK</b>.';
+  return result;
 }
 
 function toggleEnabledDisabled() {
@@ -50,6 +67,7 @@ function toggleEnabledDisabled() {
         document.getElementById('dragEnterOutput').innerHTML =
             'Got <b>dragenter</b>: ' + dragEnterCount +
                 ' times, most recent sequence number is ' + eventCount;
+        return willReject(context);
       },
       'ondragover': function(context) {
         dragOverCount++;
@@ -58,6 +76,7 @@ function toggleEnabledDisabled() {
         document.getElementById('dragOverOutput').innerHTML =
             'Got <b>dragover</b>: ' + dragOverCount +
                 ' times, most recent sequence number is ' +  eventCount;
+        return willReject(context);
       },
       'ondragleave': function(context) {
         dragLeaveCount++;
@@ -66,6 +85,7 @@ function toggleEnabledDisabled() {
         document.getElementById('dragLeaveOutput').innerHTML =
             'Got <b>dragleave</b>: ' + dragLeaveCount +
                 ' times, most recent sequence number is ' +  eventCount;
+        document.getElementById('rejectOutput').innerHTML = '&nbsp;';
       },
       'ondrop': function(context) {
         dropCount++;
@@ -73,12 +93,15 @@ function toggleEnabledDisabled() {
         updateEventOutput(context.event);
         var s = 'Got <b>drop</b>: ' + dropCount +
             ' times, most recent sequence number is ' +  eventCount + '<hr/>';
-        for (i = 0; i < context.files.length; i++) {
-          var file = context.files[i];
-          s += '<b>' + file.name + '</b> has length <b>' +
-              file.blob.length + '</b>.<br/>';
+        if (context.files) {
+          for (i = 0; i < context.files.length; i++) {
+            var file = context.files[i];
+            s += '<b>' + file.name + '</b> has length <b>' +
+                file.blob.length + '</b>.<br/>';
+          }
         }
         document.getElementById('dropOutput').innerHTML = s;
+        document.getElementById('rejectOutput').innerHTML = '&nbsp;';
       }
     });
   }
