@@ -29,10 +29,10 @@
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
 
-#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE))
+#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_SAFARI
 
 // TODO(nigeltao): Before Drag and Drop is made an official Gears API, we have
-// to (1) implement DnD on Chrome and Safari, and (2) decide what to do about
+// to (1) implement DnD on Chrome, and (2) decide what to do about
 // mobile platforms like Android and WinCE.
 #define GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM 1
 

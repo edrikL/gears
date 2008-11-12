@@ -23,12 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#import "gears/base/safari/browser_load_hook.h"
+
 #import "gears/base/common/common.h"
 #import "gears/base/common/detect_version_collision.h"
 #import "gears/base/common/exception_handler.h"
 #import "gears/base/common/message_queue.h"
-#import "gears/base/safari/browser_load_hook.h"
 #import "gears/base/safari/safari_workarounds.h"
+#import "gears/desktop/drag_and_drop_utils_osx.h"
 #import "gears/localserver/safari/http_handler.h"
 #import "gears/localserver/safari/ui_thread.h"
 #import "gears/ui/safari/settings_menu.h"
@@ -107,6 +109,13 @@ static ExceptionManager exception_manager(true);
   } else {
     LOG(("Gears: notification hook already installed"));
   }
+
+  NSLog(@"Gears: Swizzling WebView methods");
+  if (!SwizzleWebViewMethods()) {
+    NSLog(@"Gears: Swizzling WebView methods failed");
+    return NO;
+  }
+  NSLog(@"Gears: Swizzling WebView methods succeeded");
   
   // If we got here then we loaded OK
   LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));

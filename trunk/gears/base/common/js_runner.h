@@ -170,6 +170,10 @@ class JsRunnerInterface {
   virtual bool StringToJsToken(const char16 *value, JsScopedToken *out) = 0;
   virtual bool NullToJsToken(JsScopedToken *out) = 0;
   virtual bool UndefinedToJsToken(JsScopedToken *out) = 0;
+
+#if BROWSER_NPAPI
+  virtual NPObject *GetGlobalObject() = 0;
+#endif
 };
 
 // Wraps the calls for adding and removing event handlers.  This is designed to
