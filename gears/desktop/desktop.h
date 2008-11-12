@@ -205,7 +205,7 @@ class GearsDesktop : public ModuleImplBaseClass {
 #if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-  // IN: DomElement div, object callbacks
+  // IN: DomElement div, object options
   // OUT: -
   void RegisterDropTarget(JsCallContext *context);
 #endif

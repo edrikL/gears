@@ -28,9 +28,8 @@
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_CHROME) || defined(BROWSER_WEBKIT) || \
-    defined(OS_WINCE) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Chrome, Safari,
+#if defined(BROWSER_CHROME) ||  defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Drag-and-Drop API has not been implemented for Chrome,
   // PocketIE, and Android.
 #else
 
@@ -41,6 +40,8 @@
 #include "gears/desktop/drop_target_ff.h"
 #elif BROWSER_IE && !defined(OS_WINCE)
 #include "gears/desktop/drop_target_ie.h"
+#elif BROWSER_SAFARI
+#include "gears/desktop/drop_target_sf.h"
 #endif
 
 class GearsDropTargetRegistration : public ModuleImplBaseClass {
@@ -61,6 +62,6 @@ class GearsDropTargetRegistration : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsDropTargetRegistration);
 };
 
-#endif  // BROWSER_CHROME, BROWSER_WEBKIT, OS_WINCE, OS_ANDROID
+#endif  // BROWSER_CHROME, OS_WINCE, OS_ANDROID
 #endif  // OFFICIAL_BUILD
 #endif  // GEARS_DESKTOP_DROP_TARGET_REGISTRATION_H__

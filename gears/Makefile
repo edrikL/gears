@@ -1429,6 +1429,11 @@ CHROME_CPPSRCS	+= \
 		desktop_cr.cc \
 		$(NULL)
 
+SF_CPPSRCS += \
+		drag_and_drop_utils_osx.mm \
+		drop_target_sf.cc \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # gtest
 
