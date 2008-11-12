@@ -33,11 +33,11 @@
 #include <gecko_sdk/include/nsIDOMHTMLElement.h>
 #include <gecko_sdk/include/nsIDOMEvent.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
-#include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_sdk/include/nsILocalFile.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
 #include "gears/base/common/leak_counter.h"
+#include "gears/base/firefox/ns_file_utils.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -284,14 +284,6 @@ bool DropTarget::GetDroppedFiles(
     JsArray *files_out,
     std::string16 *error_out) {
 #if defined(LINUX) && !defined(OS_MACOSX)
-  // Note to future maintainers: the nsIIOService docs say that it may only be
-  // used from the main thread. On the other hand, all we're using it for is
-  // converting a string like "file:///blah" into a nsIFileURL, rather than
-  // doing any actual I/O, so it's probably safe, regardless.
-  nsCOMPtr<nsIIOService> io_service =
-      do_GetService("@mozilla.org/network/io-service;1");
-  if (!io_service) { return false; }
-
   // Although Firefox's underlying XPCOM widget library aims to present a
   // consistent cross-platform interface, there are still significant
   // differences in drag-and-drop. In particular, different OSes support
@@ -333,19 +325,10 @@ bool DropTarget::GetDroppedFiles(
 #if defined(LINUX) && !defined(OS_MACOSX)
     nsCOMPtr<nsISupportsString> data_as_xpcom_string(do_QueryInterface(data));
     nsString data_as_string;
-    data_as_xpcom_string->GetData(data_as_string);
-
-    nsCString data_as_cstring;
-    nr = NS_UTF16ToCString(
-        data_as_string, NS_CSTRING_ENCODING_UTF8, data_as_cstring);
-    nsCOMPtr<nsIURI> uri;
-    nr = io_service->NewURI(data_as_cstring, NULL, NULL, getter_AddRefs(uri));
+    nr = data_as_xpcom_string->GetData(data_as_string);
     if (NS_FAILED(nr)) { return false; }
-
-    nsCOMPtr<nsIFileURL> file_url(do_QueryInterface(uri));
-    if (!file_url) { return false; }
     nsCOMPtr<nsIFile> file;
-    nr = file_url->GetFile(getter_AddRefs(file));
+    nr = NSFileUtils::GetFileFromURLSpec(data_as_string, getter_AddRefs(file));
     if (NS_FAILED(nr)) { return false; }
     nsString filename;
     nr = file->GetPath(filename);
