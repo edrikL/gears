@@ -215,6 +215,9 @@ void ByteStore::AddDataDirectFinishAsync(int64 length) {
 bool ByteStore::AddDataToFile(const void *data, int64 length) {
   if (!file_.get()) {
     file_.reset(File::CreateNewTempFile());
+    if (!file_.get()) {
+      return false;
+    }
     if (!data_.Empty()) {
       int64 result = file_->Write(data_.Data(0), data_.Size());
       if (result != data_.Size()) {

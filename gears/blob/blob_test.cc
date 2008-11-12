@@ -146,6 +146,7 @@ static bool TestFileBlob(std::string16 *error) {
   uint8 buffer[64];
   const uint8 vec_contents[] = "abcdef";
   scoped_ptr<File> file(File::CreateNewTempFile());
+  TEST_ASSERT(file.get());
   file->Write(vec_contents, sizeof(vec_contents) - 1);
   file->Flush();
 
