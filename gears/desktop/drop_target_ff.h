@@ -65,15 +65,11 @@ class DropTarget
   void Unref();
 
  private:
-  static const nsString kDragEnterAsString;
-  static const nsString kDragOverAsString;
-  static const nsString kDragExitAsString;
-  static const nsString kDragDropAsString;
-
   nsCOMPtr<nsIDOMHTMLElement> html_element_;
   nsCOMPtr<nsIDOMEventTarget> event_target_;
   nsCOMPtr<nsIXPConnect> xp_connect_;
   bool unregister_self_has_been_called_;
+  bool will_accept_drop_;
 
   DropTarget(ModuleEnvironment *module_environment,
              JsObject *options,
