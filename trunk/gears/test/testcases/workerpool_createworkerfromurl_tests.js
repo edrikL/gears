@@ -167,8 +167,7 @@ function testRedirectToCrossOrigin() {
   // test relies on the redirected origin not already having local storage
   // permissions.
   var wp = google.gears.factory.create('beta.workerpool');
-  var expectedError = 'Error in worker 1 at line 21. Page does not have ' +
-      'permission to use Google Gears.';
+  var expectedError = 'Page does not have permission to use Google Gears.';
 
   var workerUrl = differentOrigin2 + crossOriginWorkerPath;
   var childId = wp.createWorkerFromUrl(redirectPath + workerUrl);
