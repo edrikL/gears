@@ -23,21 +23,27 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(OS_WINCE) || defined(OS_ANDROID)
+#include "gears/base/common/js_standalone_engine.h"
 
-#include "gears/base/common/ipc_message_queue.h"
+#include <assert.h>
 
-// An ipc message facility may or may not be needed depending on the browser's
-// process and threading model. For browser architectures that don't
-// require it, we use this file.
 
 // static
-IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-  return NULL;
+bool JSStandaloneEngine::InitEngine(JsRunner *js_runner, _NPP *np_instance) {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
 }
 
-IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  return NULL;
+// static
+void JSStandaloneEngine::GetNPNEntryPoints(_NPNetscapeFuncs *browser_funcs) {
+  // TODO(steveblock): Implement me.
+  assert(false);
 }
 
-#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
+// static
+bool JSStandaloneEngine::TerminateEngine() {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
+}

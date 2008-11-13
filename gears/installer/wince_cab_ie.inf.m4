@@ -21,6 +21,8 @@ SetupDll="setup.dll"
 GearsDll="PRODUCT_SHORT_NAME_UQ.dll"
 
 [CEStrings]
+; Should be 'Gears for Internet Explorer', but is left as-is for
+; backwards-compatibility
 AppName="Gears"  ;[naming]
 InstallDir="%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
 

@@ -49,6 +49,7 @@ FF3_OUTDIR                 = $(OUTDIR)/$(OS)-$(ARCH)/ff3
 IE_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/ie
 NONE_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/none
 NPAPI_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/npapi
+OPERA_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/opera
 SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
 IPC_TEST_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/ipc_test
@@ -109,6 +110,7 @@ LIBSPEEX_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBSPEEX_OUTDIR), $(L
 LIBTREMOR_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBTREMOR_OUTDIR), $(LIBTREMOR_CSRCS))
 PERF_TOOL_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(PERF_TOOL_CPPSRCS))
 IE_WINCESETUP_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(IE_OUTDIR), $(IE_WINCESETUP_CPPSRCS))
+OPERA_WINCESETUP_OBJS    = $(call SUBSTITUTE_OBJ_SUFFIX, $(OPERA_OUTDIR), $(OPERA_WINCESETUP_CPPSRCS))
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
 VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS) $(VISTA_BROKER_CSRCS))
 
@@ -217,11 +219,13 @@ FF2_MODULE_DLL    = $(FF2_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 FF3_MODULE_DLL    = $(FF3_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 IE_MODULE_DLL     = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 NPAPI_MODULE_DLL  = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+OPERA_MODULE_DLL  = $(OPERA_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 SF_MODULE_DLL     = $(SF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
-FF3_MODULE_TYPELIB  = $(FF3_OUTDIR)/$(MODULE).xpt
-IE_WINCESETUP_DLL   = $(IE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
-SF_INPUTMANAGER_EXE = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
+FF3_MODULE_TYPELIB   = $(FF3_OUTDIR)/$(MODULE).xpt
+IE_WINCESETUP_DLL    = $(IE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
+OPERA_WINCESETUP_DLL = $(OPERA_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
+SF_INPUTMANAGER_EXE  = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 
 # Note: crash_sender.exe name needs to stay in sync with name used in
 # exception_handler_win32.cc and exception_handler_osx/google_breakpad.mm.
@@ -261,9 +265,13 @@ NPAPI_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)-chrome.msi
 
 WIN32_INSTALLER_MSI    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 
-WINCE_INSTALLER_CAB    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
+# TODO(steveblock): Should update CAB name for WINCE IE
+IE_WINCE_INSTALLER_CAB    = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
+OPERA_WINCE_INSTALLER_CAB = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)-opera.cab
+
 INFSRC_BASE_NAME = wince_cab
-INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
+IE_INFSRC    = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_ie.inf
+OPERA_INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_op.inf
 
 SYMBIAN_INSTALLER_SISX = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).sisx
 
@@ -329,6 +337,10 @@ else
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
+
+	$(MAKE) prereqs    BROWSER=OPERA
+	$(MAKE) genheaders BROWSER=OPERA
+	$(MAKE) modules    BROWSER=OPERA
 
 	$(MAKE) installers
 
@@ -408,6 +420,15 @@ ifeq ($(BROWSER),NPAPI)
 modules:: $(NPAPI_MODULE_DLL)
 endif
 
+ifeq ($(BROWSER),OPERA)
+ifeq ($(OS),wince)
+# Add dependency on OPERA_MODULE_DLL for Win32 once we have Gears for Opera on
+# desktop.
+modules:: $(OPERA_MODULE_DLL)
+modules:: $(OPERA_WINCESETUP_DLL)
+endif
+endif
+
 ifeq ($(USING_MOZJS),1)
 prereqs:: $(MOZJS_OUTDIR)
 endif
@@ -471,7 +492,7 @@ ifeq ($(OS),win32)
 installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI) $(NPAPI_INSTALLER_MSI)
 else
 ifeq ($(OS),wince)
-installers:: $(WINCE_INSTALLER_CAB)
+installers:: $(IE_WINCE_INSTALLER_CAB) $(OPERA_WINCE_INSTALLER_CAB)
 else
 ifeq ($(OS),symbian)
 ifeq ($(ARCH),arm)
@@ -494,7 +515,7 @@ else
 endif
 
 help::
-	$(ECHO) "Usage: make [MODE=dbg|opt] [BROWSER=FF|IE|NPAPI] [OS=wince]"
+	$(ECHO) "Usage: make [MODE=dbg|opt] [BROWSER=FF|IE|NPAPI|OPERA] [OS=wince]"
 	$(ECHO)
 	$(ECHO) "  If you omit MODE, the default is dbg."
 	$(ECHO) "  If you omit BROWSER, all browsers available on the current OS are built."
@@ -706,6 +727,9 @@ $(FF3_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
 
+$(OPERA_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+	$(RC) $(RCFLAGS) /DBROWSER_OPERA=1 $<
+
 $(COMMON_OUTDIR)/%.res: %.rc $(NOTIFIER_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
@@ -893,8 +917,29 @@ $(NPAPI_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(SKIA_LIB) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
+
+OPERA_OBJS1 = $(wordlist 1, 100, $(OPERA_OBJS))
+OPERA_OBJS2 = $(wordlist 101, 999, $(OPERA_OBJS))
+$(OPERA_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $(OPERA_OBJS) $(OPERA_LINK_EXTRAS)
+	$(ECHO) $(OPERA_CPPSRCS) > tmp
+	$(ECHO) $(OPERA_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $(OPERA_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(BREAKPAD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(PORTAUDIO_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBSPEEX_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBTREMOR_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(SKIA_LIB) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
 endif
 endif
+
+# Note the use of DLLFLAGS_NOPDB instead of DLLFLAGS here.
+$(OPERA_WINCESETUP_DLL): $(OPERA_WINCESETUP_OBJS) $(OPERA_WINCESETUP_LINK_EXTRAS)
+	$(MKDLL) $(DLLFLAGS_NOPDB) $(OPERA_WINCESETUP_LINK_EXTRAS) $(OPERA_LIBS) $(OPERA_WINCESETUP_OBJS)
 
 $(SF_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(PORTAUDIO_OBJS) $(LIBSPEEX_OBJS) $(LIBTREMOR_OBJS) $(THIRD_PARTY_OBJS) $(SKIA_LIB) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
 	$(ECHO) $($(BROWSER)_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
@@ -1092,7 +1137,7 @@ $(SF_INSTALLER_PLUGIN_BUNDLE): $(SF_INSTALLER_PLUGIN_EXE)
 	cp "$(SF_INSTALLER_PLUGIN_EXE)" "$@/Contents/MacOS/InstallerPlugin"
 # Copy nib file
 	cp base/safari/advanced_stats_sheet.nib/* $@/Contents/Resources/AdvancedStatsSheet.nib/
-		
+
 $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 # --- Gears.plugin ---
 # Create fresh copies of the Gears.plugin directories.
@@ -1188,9 +1233,13 @@ WIN32_INSTALLER_WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
 $(WIN32_INSTALLER_MSI): $(WIN32_INSTALLER_WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_INSTALLER_XPI)
 	light.exe -out $@ $(WIN32_INSTALLER_WIXOBJ)
 
-$(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
-	cabwiz.exe $(INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
-	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $@
+$(IE_WINCE_INSTALLER_CAB): $(IE_INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
+	cabwiz.exe $(IE_INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
+	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_ie.cab $@
+
+$(OPERA_WINCE_INSTALLER_CAB): $(OPERA_INFSRC) $(OPERA_MODULE_DLL) $(OPERA_WINCESETUP_DLL)
+	cabwiz.exe $(OPERA_INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
+	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_op.cab $@
 
 NPAPI_INSTALLER_WIXOBJ = $(COMMON_OUTDIR)/npapi_msi.wxiobj
 # We must disable certain WiX integrity check errors ("ICE") to successfully

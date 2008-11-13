@@ -65,8 +65,9 @@ ifeq ($(USING_ZLIB),)
   USING_ZLIB = 1
 endif
 
-# Make-ish way of saying: if (browser == SF || browser == NPAPI)
-ifneq ($(findstring $(BROWSER), SF|NPAPI),)
+# Make-ish way of saying:
+# if (browser == SF || browser == NPAPI || browser == OPERA)
+ifneq ($(findstring $(BROWSER), SF|NPAPI|OPERA),)
   USING_NPAPI = 1
 endif
 
@@ -211,6 +212,9 @@ CHROME_CPPFLAGS += -I../third_party/v8/bindings_local
 # the code, we just export those specifically marked, this reduces the output size.
 SF_CPPFLAGS += -fvisibility=hidden
 SF_CXXFLAGS += -fvisibility-inlines-hidden
+
+# These flags are Opera specific
+OPERA_CPPFLAGS += -DBROWSER_NPAPI
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -715,14 +719,24 @@ EXT_LINKER_CMD_FLAG = @
 
 GECKO_SDK = $(GECKO_BASE)/win32
 
+# These are platform libraries for WinCE. They are used by both IE and Opera on
+# WinCE.
+WINCE_LIBS = wininet.lib ceshell.lib corelibc.lib cellcore.lib toolhelp.lib iphlpapi.lib gpsapi.lib
+
 FF2_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 FF3_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 ifeq ($(OS),win32)
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 else # wince
-IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib iphlpapi.lib gpsapi.lib
+IE_LIBS = $(WINCE_LIBS) coredll.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib htmlview.lib imaging.lib aygshell.lib 
 endif
+ifeq ($(OS),wince)
+# We don't want to use these NPAPI libraries on WinCE
+else #wince
 NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
+endif
+OPERA_LIBS = $(WINCE_LIBS)
+
 NOTIFIER_SHELL_LIBS = advapi32.lib shell32.lib shlwapi.lib
 
 # Other tools specific to win32/wince builds.

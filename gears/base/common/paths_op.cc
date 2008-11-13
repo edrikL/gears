@@ -23,21 +23,29 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(OS_WINCE) || defined(OS_ANDROID)
+#include "gears/base/common/paths.h"
 
-#include "gears/base/common/ipc_message_queue.h"
 
-// An ipc message facility may or may not be needed depending on the browser's
-// process and threading model. For browser architectures that don't
-// require it, we use this file.
-
-// static
-IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-  return NULL;
+bool GetInstallDirectory(std::string16 *path) {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
 }
 
-IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  return NULL;
+bool GetComponentDirectory(std::string16 *path) {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
 }
 
-#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
+}
+
+bool GetBaseDataDirectory(std::string16 *path) {
+  // TODO(steveblock): Implement me.
+  assert(false);
+  return false;
+}
