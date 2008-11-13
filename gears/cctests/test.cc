@@ -83,6 +83,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::ConfigureGeolocationRadioDataProviderForTest);
   RegisterMethod("removeMockRadioDataProvider",
                  &GearsTest::RemoveMockRadioDataProvider);
+  RegisterMethod("removeMockWifiDataProvider",
+                 &GearsTest::RemoveMockWifiDataProvider);
   RegisterMethod("configureGeolocationWifiDataProviderForTest",
                  &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
   RegisterMethod("configureGeolocationMockLocationProviderForTest",
@@ -91,6 +93,7 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::RemoveGeolocationMockLocationProvider);
 #ifdef OS_ANDROID
   RegisterMethod("testRadioDataProvider", &GearsTest::TestRadioDataProvider);
+  RegisterMethod("testWifiDataProvider", &GearsTest::TestWifiDataProvider);
 #endif
   RegisterMethod("configureGeolocationMockGpsDeviceForTest",
                  &GearsTest::ConfigureGeolocationMockGpsDeviceForTest);
@@ -143,6 +146,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/database/database_utils_test.h"
+#include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/geolocation_db_test.h"
 #include "gears/geolocation/geolocation_test.h"
 #ifdef OFFICIAL_BUILD
@@ -2142,6 +2146,10 @@ void GearsTest::RemoveMockRadioDataProvider(JsCallContext* /* context */) {
   ::RemoveMockRadioDataProvider();
 }
 
+void GearsTest::RemoveMockWifiDataProvider(JsCallContext* /* context */) {
+  ::RemoveMockWifiDataProvider();
+}
+
 void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationWifiDataProviderForTest(context);
@@ -2159,7 +2167,11 @@ void GearsTest::RemoveGeolocationMockLocationProvider(
 
 #ifdef OS_ANDROID
 void GearsTest::TestRadioDataProvider(JsCallContext *context) {
-  ::TestRadioDataProvider(GetJsRunner(), context);
+  TestDataProvider<RadioDataProvider>(GetJsRunner(), context);
+}
+
+void GearsTest::TestWifiDataProvider(JsCallContext *context) {
+  TestDataProvider<WifiDataProvider>(GetJsRunner(), context);
 }
 #endif
 
