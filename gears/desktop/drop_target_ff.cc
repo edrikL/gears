@@ -361,6 +361,11 @@ bool DropTarget::GetDroppedFiles(
     nr = file->GetPath(path);
     if (NS_FAILED(nr)) { return false; }
 
+    PRBool bool_result = false;
+    if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
+      continue;
+    }
+
     nsCOMPtr<nsILocalFile> local_file =
         do_CreateInstance("@mozilla.org/file/local;1", &nr);
     if (NS_FAILED(nr)) { return false; }
@@ -369,14 +374,12 @@ bool DropTarget::GetDroppedFiles(
     nr = local_file->InitWithPath(path);
     if (NS_FAILED(nr)) { return false; }
 
+    nr = NS_ERROR_FAILURE;
     nsString filename;
-    PRBool bool_result;
     if (NS_SUCCEEDED(file->IsSymlink(&bool_result)) && bool_result) {
       nr = local_file->GetTarget(filename);
     } else if (NS_SUCCEEDED(file->IsFile(&bool_result)) && bool_result) {
       nr = local_file->GetPath(filename);
-    } else {
-      nr = NS_ERROR_FAILURE;
     }
     if (NS_FAILED(nr)) { return false; }
 #endif
