@@ -825,11 +825,36 @@ class BindInfoReleaser {
   BINDINFO *info_;
 };
 
+#ifdef DEBUG
+static std::string16 kDisableUrl(L"http://gears_intercept_disable/");
+static std::string16 kEnableUrl(L"http://gears_intercept_enable/");
+static std::string16 kResetWarningUrl(L"http://gears_intercept_reset_warning/");
+static bool g_intercept_enabled = true;
+#endif
+
 HRESULT HttpHandler::StartImpl(LPCWSTR url,
                                IInternetProtocolSink *protocol_sink,
                                IInternetBindInfo *bind_info,
                                DWORD flags,  // PI_FLAGS
                                HANDLE_PTR reserved) {
+#ifdef DEBUG
+  if (kEnableUrl == url) {
+    g_intercept_enabled = true;
+    return E_FAIL;
+  }
+  if (kDisableUrl == url) {
+    g_intercept_enabled = false;
+    return E_FAIL;
+  }
+  if (kResetWarningUrl == url) {
+    HttpHandlerCheck::ResetHasWarned();
+    return E_FAIL;
+  }
+  if (!g_intercept_enabled) {
+    LOG16((L"  intercept disabled - using default handler\n"));
+    return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
+  }
+#endif
   if (!protocol_sink || !bind_info) {
     ATLASSERT(protocol_sink);
     ATLASSERT(bind_info);
@@ -1434,13 +1459,23 @@ void HttpHandlerCheck::StartCheck(const char16 *url) {
 }
 void HttpHandlerCheck::FinishCheck() {
 }
-#else
+#ifdef DEBUG
+void HttpHandlerCheck::ResetHasWarned() {
+}
+#endif
+#else  // OS_WINCE
 
 class WarningTask : public AsyncTask {
  public:
   static bool HasWarned() {
     return has_warned_;
   }
+
+#ifdef DEBUG
+  static void ResetHasWarned() {
+    has_warned_ = false;
+  }
+#endif
 
   static void WarnIfNeeded() {
     MutexLock lock(&has_warned_mutex_);
@@ -1514,5 +1549,12 @@ void HttpHandlerCheck::FinishCheck() {
 
   WarningTask::WarnIfNeeded();
 }
+
+#ifdef DEBUG
+// static
+void HttpHandlerCheck::ResetHasWarned() {
+  WarningTask::ResetHasWarned();
+}
+#endif
 #endif  // OS_WINCE
 

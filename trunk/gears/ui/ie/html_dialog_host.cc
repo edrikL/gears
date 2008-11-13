@@ -340,14 +340,20 @@ static bool GetCenterOnBounds(HWND hwnd, CRect *bounds) {
     return true;
   }
   // In some cases there is no parent, so we center on the foreground window
-  // provided its from our process.
+  // provided its from our process and is visible/non-minimized and actually
+  // on a monitor.
   hwnd = ::GetForegroundWindow();
   if (hwnd) {
     DWORD process_id;
     ::GetWindowThreadProcessId(hwnd, &process_id);
     if (process_id == ::GetCurrentProcessId()) {
-      if (hwnd && ::GetWindowRect(hwnd, bounds)) {
-        return true;
+      DWORD style = ::GetWindowLong(hwnd, GWL_STYLE);
+      if((style & WS_VISIBLE) && !(style & WS_MINIMIZE)) {
+        if (::GetWindowRect(hwnd, bounds)) {
+          if (::MonitorFromRect(bounds, MONITOR_DEFAULTTONULL) != NULL) {
+            return true;
+          }
+        }
       }
     }
   }
