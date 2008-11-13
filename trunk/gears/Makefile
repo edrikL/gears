@@ -662,7 +662,7 @@ CHROME_CPPSRCS	+= \
 		v8_helpers.cc \
 		v8_np_utils.cc \
 		v8_npobject.cc \
- 		$(NULL)
+		$(NULL)
 
 V8_DIR = ../third_party/v8/bin-$(MODE)
 CHROME_LINK_EXTRAS += $(V8_DIR)/libv8core.lib $(V8_DIR)/libjscre.lib $(V8_DIR)/no_snapshotv8.lib 
@@ -866,7 +866,8 @@ COMMON_M4SRCS	+= \
 		npapi_msi.wxs.m4 \
 		product_constants.h.m4 \
 		win32_msi.wxs.m4 \
-		wince_cab.inf.m4 \
+		wince_cab_ie.inf.m4 \
+		wince_cab_op.inf.m4 \
 		$(NULL)
 
 COMMON_CPPSRCS	+= \
@@ -905,7 +906,10 @@ $(BROWSER)_CPPSRCS	+= \
 		event.cc \
 		event_test.cc \
 		file.cc \
+		file_posix.cc \
 		file_test.cc \
+		file_win32.cc \
+		file_wince.cc \
 		html_event_monitor.cc \
 		http_utils.cc \
 		js_dom_element.cc \
@@ -953,6 +957,7 @@ $(BROWSER)_CPPSRCS	+= \
 		thread_win32.cc \
 		timed_call.cc \
 		timed_call_test.cc \
+		time_utils_win32.cc \
 		url_utils.cc \
 		url_utils_test.cc \
 		user_config.cc \
@@ -987,8 +992,6 @@ FF3_IDLSRCS	+= \
 
 FF3_CPPSRCS	+= \
 		dom_utils.cc \
-		file_posix.cc \
-		file_win32.cc \
 		html_event_monitor_ff.cc \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
@@ -1002,7 +1005,6 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
-		time_utils_win32.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -1044,19 +1046,16 @@ IE_CPPSRCS	+= \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
-		time_utils_win32.cc \
 		$(NULL)
 ifeq ($(OS),win32)
 IE_CPPSRCS	+= \
 		browser_listener.cc \
-		file_win32.cc \
 		html_event_monitor_ie.cc \
 		ie_version.cc \
 		$(NULL)
 endif
 ifeq ($(OS),wince)
 IE_CPPSRCS	+= \
-		file_wince.cc \
 		html_event_monitor_iemobile.cc \
 		$(NULL)
 endif
@@ -1110,15 +1109,13 @@ CHROME_CPPSRCS	+= \
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
 		detect_version_collision_win32.cc \
-		file_win32.cc \
 		ie_version.cc \
 		message_queue_cr.cc \
-		time_utils_win32.cc \
 		$(NULL)
 # TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
-                $(NPAPI_OUTDIR)/module.res \
-                $(NULL)
+		$(NPAPI_OUTDIR)/module.res \
+		$(NULL)
 else
 ifeq ($(OS),symbian)
 NPAPI_M4SRCS	+= \
@@ -1132,12 +1129,22 @@ NPAPI_CPPSRCS	+= \
 		plugin_symbian.cc \
 		uid_symbian.cc \
 		$(NULL)
-else
-NPAPI_CPPSRCS	+= \
-		file_posix.cc \
-		$(NULL)
 endif # SYMBIAN
 endif # WIN32
+
+#-----------------------------------------------------------------------------
+# base/opera
+
+OPERA_VPATH	+= \
+		base/opera \
+		$(NULL)
+
+OPERA_CPPSRCS	+= \
+		detect_version_collision_win32.cc \
+		message_queue_win32.cc \
+		js_standalone_engine_op.cc \
+		paths_op.cc \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # base/safari
@@ -1155,7 +1162,6 @@ SF_CPPSRCS	+= \
 		common_sf.mm \
 		curl_downloader.mm \
 		detect_version_collision_osx.mm \
-		file_posix.cc \
 		html_event_monitor_np.cc \
 		http_handler.mm \
 		ipc_message_queue_linux.cc \
@@ -1519,7 +1525,7 @@ NOTIFIER_CPPSRCS += \
 		notifier_linux.cc \
 		notifier_win32.cc \
 		$(NULL)
-		
+
 ifeq ($(OS),win32)		
 NOTIFIER_CPPSRCS += \
 		exception_handler_win32.cc \
@@ -1987,6 +1993,16 @@ CHROME_CPPSRCS	+= \
 		html_dialog_cr.cc \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
+# ui/opera
+
+OPERA_VPATH	+= \
+		ui/opera \
+		$(NULL)
+
+OPERA_CPPSRCS	+= \
+		html_dialog_op.cc \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # ui/safari
@@ -2150,6 +2166,18 @@ CHROME_CPPSRCS	+= \
 		http_request_cr.cc \
 		safe_http_request.cc \
 		update_task_cr.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# localserver/opera
+
+OPERA_VPATH	+= \
+		localserver/opera \
+		$(NULL)
+
+OPERA_CPPSRCS	+= \
+		http_request_op.cc \
+		safe_http_request.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -2378,6 +2406,32 @@ endif # IE
 endif # wince
 
 #-----------------------------------------------------------------------------
+# installer/opera
+
+ifeq ($(OS),wince)
+ifeq ($(BROWSER),OPERA)
+OPERA_VPATH	+= \
+		installer/common \
+		installer/opera \
+		$(NULL)
+
+OPERA_WINCESETUP_CPPSRCS += \
+		process_restarter.cc \
+		setup.cc \
+		$(NULL)
+
+OPERA_WINCESETUP_LINK_EXTRAS += \
+		$(OPERA_OUTDIR)/setup.res \
+		$(NULL)
+
+# List these setup-related items in IE_FOO just so they get built before used.
+OPERA_STABSRCS += \
+		setup.rc.stab \
+		$(NULL)
+endif # OPERA
+endif # wince
+
+#-----------------------------------------------------------------------------
 # installer/safari
 
 SF_VPATH	+= \
@@ -2479,7 +2533,7 @@ FF2_IDLSRCS += $(FF3_IDLSRCS)
 FF2_CPPSRCS += $(FF3_CPPSRCS)
 
 
-# Chrome-specific hackery.  NPAPI+win32 == Chrome.
+# Chrome-specific hackery. Chrome is built with BROWSER=NPAPI and OS=win32.
 ifeq ($(BROWSER),NPAPI)
 ifeq ($(OS),win32)
 
@@ -2498,6 +2552,22 @@ NPAPI_CPPSRCS := $(subst settings_dialog.cc,,$(NPAPI_CPPSRCS))
 endif
 endif
 
+
+# Opera-specific. Opera is built with BROWSER=OPERA and OS=wince.
+ifeq ($(BROWSER),OPERA)
+ifeq ($(OS),wince)
+
+# Opera uses the NPAPI base plus some Opera specific things.
+OPERA_CPPSRCS += $(NPAPI_CPPSRCS)
+OPERA_CPPFLAGS += $(NPAPI_CPPFLAGS)
+OPERA_VPATH += $(NPAPI_VPATH)
+OPERA_DLLFLAGS += $(NPAPI_DLLFLAGS)
+OPERA_M4SRCS += $(NPAPI_M4SRCS)
+OPERA_IDLSRCS += $(NPAPI_IDLSRCS)
+OPERA_HTML_M4SRCS += $(NPAPI_HTML_M4SRCS)
+OPERA_LIBS += $(NPAPI_LIBS)
+endif
+endif
 
 #-----------------------------------------------------------------------------
 # Include site-specific build rules, evaluated before our built-in build rules.

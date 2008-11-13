@@ -82,15 +82,25 @@ static bool OneTimeDetectVersionCollision() {
   // When Gears lives in a subdirectory of the browser, multiple versions do not
   // collide unless they are in the same browser directory.
   // Note: GetModuleFileName() doesn't normalize path (see MSDN).
+#ifdef OS_WINCE
+  // _(w)pgmptr is not available on WinCE. For now, we simply append use the
+  // name of the browser, as it's very unlikely that any app other than the
+  // intended browser will load Gears on WinCE.
+  // TODO(steveblock): See if there's some way to get the exe path on WinCE.
+#ifdef BROWSER_OPERA
+  std::wstring browser_path(L"opera");
+#endif
+#else  // OS_WINCE
   assert(_pgmptr && strlen(_pgmptr) > 0);  // may need _wpgmptr if flags change
   std::wstring browser_path;
   UTF8ToString16(_pgmptr, &browser_path);
+#endif  // OS_WINCE
   // Replace bad mutex name chars.
   EnsureStringValidPathComponent(browser_path, true);
 
   running_name += L"-";
   running_name += browser_path;
-#endif
+#endif  // BROWSER_NPAPI
   // Detect if an instance of any version is running
   if (!running_mutex.Create(NULL, FALSE, running_name.c_str())) {
     assert(false);

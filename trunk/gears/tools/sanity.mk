@@ -51,8 +51,10 @@ ifdef CMD_LINE_BROWSER
   else
   ifeq ($(OS),wince)
     ifneq ($(BROWSER),IE)
+    ifneq ($(BROWSER),OPERA)
     ifneq ($(BROWSER),NONE)
-      $(error On WinCE, BROWSER can only be one of: IE | NONE)
+      $(error On WinCE, BROWSER can only be one of: IE | OPERA | NONE)
+    endif
     endif
     endif
   else
