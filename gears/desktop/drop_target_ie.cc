@@ -30,6 +30,8 @@
 #ifdef OS_WINCE
 // The Drag-and-Drop API is not implemented on Windows CE.
 #else
+#include <shlobj.h>
+
 #include "gears/desktop/drop_target_ie.h"
 
 #include "gears/base/common/leak_counter.h"
@@ -135,7 +137,7 @@ HRESULT DropTarget::CancelEventBubble(
   HRESULT hr;
   hr = html_data_transfer->put_dropEffect(L"copy");
   if (FAILED(hr)) return hr;
-  hr = html_event_obj->put_returnValue(CComVariant(VARIANT_FALSE));
+  hr = html_event_obj->put_returnValue(CComVariant(false));
   if (FAILED(hr)) return hr;
   hr = html_event_obj->put_cancelBubble(VARIANT_TRUE);
   return hr;
@@ -256,6 +258,32 @@ HRESULT DropTarget::HandleOnDragLeave()
 }
 
 
+// This function overwrites buffer in-place.
+static HRESULT ResolveShortcut(TCHAR *buffer) {
+  static CComPtr<IShellLink> link;
+  if (!link && FAILED(link.CoCreateInstance(CLSID_ShellLink))) {
+    return E_FAIL;
+  }
+
+  CComQIPtr<IPersistFile> file(link);
+  if (!file) return E_FAIL;
+
+  // Open the shortcut file, load its content.
+  HRESULT hr = file->Load(buffer, STGM_READ);
+  if (FAILED(hr)) return hr;
+
+  // Resolve the target of the shortcut.
+  hr = link->Resolve(NULL, SLR_NO_UI);
+  if (FAILED(hr)) return hr;
+
+  // Read the target path.
+  hr = link->GetPath(buffer, MAX_PATH, 0, SLGP_UNCPRIORITY);
+  if (FAILED(hr)) return hr;
+
+  return S_OK;
+}
+
+
 HRESULT DropTarget::HandleOnDragDrop()
 {
   ProvideDebugVisualFeedback(false);
@@ -281,15 +309,33 @@ HRESULT DropTarget::HandleOnDragDrop()
     hr = data_object->GetData(&desired_format_etc, &stg_medium);
     if (FAILED(hr)) return hr;
 
+    HDROP hdrop = static_cast<HDROP>(GlobalLock(stg_medium.hGlobal));
+    if (hdrop == NULL) {
+      ReleaseStgMedium(&stg_medium);
+      return E_FAIL;
+    }
+
     std::vector<std::string16> filenames;
-    UINT num_files = DragQueryFile((HDROP)stg_medium.hGlobal, -1, 0, 0);
+    UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
     TCHAR buffer[MAX_PATH + 1];
     for (UINT i = 0; i < num_files; i++) {
-      int filename_length =
-          DragQueryFile((HDROP)stg_medium.hGlobal, i, buffer, sizeof(buffer));
+      DragQueryFile(hdrop, i, buffer, sizeof(buffer));
+      SHFILEINFO sh_file_info;
+      if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
+                         SHGFI_ATTRIBUTES) ||
+          !(sh_file_info.dwAttributes & SFGAO_FILESYSTEM) ||
+          (sh_file_info.dwAttributes & SFGAO_FOLDER)) {
+        continue;
+      }
+      if ((sh_file_info.dwAttributes & SFGAO_LINK) &&
+          FAILED(ResolveShortcut(buffer))) {
+        continue;
+      }
       filenames.push_back(std::string16(buffer));
     }
-    ::ReleaseStgMedium(&stg_medium);
+
+    GlobalUnlock(stg_medium.hGlobal);
+    ReleaseStgMedium(&stg_medium);
 
     std::string16 error;
     scoped_ptr<JsArray> file_array(
