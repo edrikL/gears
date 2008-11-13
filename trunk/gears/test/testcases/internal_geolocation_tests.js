@@ -434,13 +434,18 @@ function testRadioDataProvider() {
   // On WinCE, we cannot test the RIL library while
   // desktop platforms do not use radio data.
   if (isUsingCCTests && isAndroid) {
-    function callback(carrier) {
-      assertEqual('Android', carrier);
-      completeAsync();
-    }
     startAsync();
     internalTests.removeMockRadioDataProvider();
-    internalTests.testRadioDataProvider(callback);
+    internalTests.testRadioDataProvider(completeAsync);
+  }
+}
+
+function testWifiDataProvider() {
+  // This test only works on the Android emulator.
+  if (isUsingCCTests && isAndroid) {
+    startAsync();
+    internalTests.removeMockWifiDataProvider();
+    internalTests.testWifiDataProvider(completeAsync);
   }
 }
 

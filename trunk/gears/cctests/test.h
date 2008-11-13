@@ -157,6 +157,13 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: nothing
   void RemoveMockRadioDataProvider(JsCallContext *context);
 
+  // Removes the mock wifi data provider. After this call, the wifi data
+  // provider factory will be creating 'real' wifi data provider instances
+  // again.
+  // IN: nothing
+  // OUT: nothing
+  void RemoveMockWifiDataProvider(JsCallContext *context);
+
   // Configures the wifi data provider factory to use a mock wifi device data
   // provider and sets the that the mock provider will provide. Note that
   // we only support data for one access_point. Fields are mac_address,
@@ -183,6 +190,9 @@ class GearsTest : public ModuleImplBaseClass {
   // IN: function callback
   // OUT: nothing
   void TestRadioDataProvider(JsCallContext *context);
+  // IN: function callback
+  // OUT: nothing
+  void TestWifiDataProvider(JsCallContext *context);
 #endif
 
   // Configures the GPS location provider to use a mock GPS device and sets the

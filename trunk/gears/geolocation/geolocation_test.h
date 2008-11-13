@@ -26,6 +26,10 @@
 #ifndef GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
 #define GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
 
+#ifdef OS_ANDROID
+#include "gears/geolocation/data_provider_test_android.h"
+#endif
+
 class JsCallContext;
 class JsRunnerInterface;
 
@@ -47,8 +51,22 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
 #ifdef OS_ANDROID
   // IN: function callback
   // OUT: nothing
-  void TestRadioDataProvider(JsRunnerInterface *js_runner,
-                             JsCallContext *context);
+  template <class DataProvider>
+  void TestDataProvider(JsRunnerInterface *js_runner,
+                        JsCallContext *context) {
+    JsRootedCallback *callback;
+    JsArgument argv[] = {
+      { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+    };
+
+    if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+      assert(context->is_exception_set());
+      return;
+    }
+    // The AndroidDataProviderTest deletes itself
+    // when the test completes.
+    AndroidDataProviderTest<DataProvider>::Create(js_runner, callback);
+  };
 #endif
 
 // Configures the radio data provider factory to use a mock radio device data
@@ -76,7 +94,12 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context);
 // OUT: nothing
 void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 
-// TODO(andreip): add RemoveMockWifiDataProvider for WiFi.
+  // Removes the mock wifi data provider. After this call, the wifi data
+  // provider factory will be creating 'real' wifi data provider instances
+  // again.
+  // IN: nothing
+  // OUT: nothing
+  void RemoveMockWifiDataProvider();
 
 // Configures the location provider pool to use a mock location provider. Sets
 // the position that the mock provider will provide. Properties are latitude,
