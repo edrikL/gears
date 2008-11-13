@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>Manual Incompatibility Warning Test Page for IE</title>
+<script type="text/javascript" src="../../sdk/gears_init.js"></script>
+<script type="text/javascript">
+
+var isDebug = google.gears.factory.getBuildInfo().indexOf('dbg') > -1;
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
+var kDebugIEMessage =
+        'This function is only supported in a debug build of Gears for IE.';
+
+function createResourceStore() {
+  var localServer = google.gears.factory.create("beta.localserver");
+  var name = 'incompatibility-warning-test-store';
+  localServer.createStore(name );
+  alert('Created store named ' + name);
+}
+
+function doPopup1(url) {
+  var wnd = window.open(url);
+}
+
+function doPopup2() {
+  var wnd = window.open('');
+  wnd.document.write('hello');
+}
+
+function navigateIFrame() {
+  var frm = document.getElementById('iframeId');
+  frm.src = 'blah2.html';
+}
+
+function enableIntercepts() {
+  if (!isDebug || !isIE) {
+    alert(kDebugIEMessage);
+    return;
+  }
+  var frm = document.getElementById('hiddenFrameId');
+  frm.src = 'http://gears_intercept_enable/';
+}
+
+function disableIntercepts() {
+  if (!isDebug || !isIE) {
+    alert(kDebugIEMessage);
+    return;
+  }
+  var frm = document.getElementById('hiddenFrameId');
+  frm.src = 'http://gears_intercept_disable/';
+}
+
+function resetHasWarned() {
+  if (!isDebug || !isIE) {
+    alert(kDebugIEMessage);
+    return;
+  }
+  var frm = document.getElementById('hiddenFrameId');
+  frm.src = 'http://gears_intercept_reset_warning/';
+}
+
+</script>
+</head>
+<body>
+<p>
+Gears for IE should display an alert when its network interception layer is not
+working and the user browses into an origin containing resource stores. This 
+page can be used to emulate these conditions and to initiate a variety of
+navigations. Generally the alert only comes up once per session, this page also
+lets you reset that flag.
+</p>
+<p>
+<a href="javascript:createResourceStore()">
+  create a resource store for this origin
+</a><br>
+<a href="javascript:enableIntercepts()">
+  enable network interception for IE
+</a><br>
+<a href="javascript:disableIntercepts()">
+  disable network interception for IE
+</a><br>
+<a href="javascript:resetHasWarned()">
+  reset has warned for IE
+</a><br>
+<a href="javascript:doPopup1('http://www.google.com/')">
+  window.open('http://www.google.com/')
+</a><br>
+<a href="javascript:doPopup1('blah.html')">
+  window.open('blah.html')
+</a><br>
+<a href="javascript:doPopup2()">
+  window.open();wnd.document.write('hello')
+</a><br>
+<a href="javascript:navigateIFrame()">
+  iframe.src = blah2.html
+</a><br>
+<a href="#anchor">link to anchor</a><br>
+<a href="blah.html">link to blah.html</a><br>
+<a href="blah.html" target="_blank">link to blah.html target = _blank</a><br>
+<br>
+<iframe id='iframeId' src='blah.html'></iframe><br>
+<br>
+<a name="anchor">anchor</a>
+<iframe id='hiddenFrameId' width=0 height=0></iframe>
+</p>
+</body>
+</html>

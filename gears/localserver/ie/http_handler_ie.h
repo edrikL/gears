@@ -393,6 +393,11 @@ class HttpHandlerCheck {
   HttpHandlerCheck() : is_checking_(false), handler_started_count_(0) {}
   void StartCheck(const char16 *url);
   void FinishCheck();
+  void CancelCheck() { is_checking_ = false; }
+  bool IsChecking() const { return is_checking_; }
+#ifdef DEBUG
+  static void ResetHasWarned();
+#endif
  private:
   bool is_checking_;
   int handler_started_count_;

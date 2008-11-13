@@ -63,8 +63,11 @@ class ATL_NO_VTABLE BrowserHelperObject
 #else
  private:
   // BrowserListener overrides
-  virtual void OnPageDownloadBegin(const CString &url);
-  virtual void OnPageDownloadComplete();
+  // We don't use the synthesized OnPageDownloadBegin and OnPageDownloadComplete
+  // callbacks because they are not reliable enough for our use case.
+  virtual void OnBeforeNavigate2(IWebBrowser2 *window, const CString &url,
+                                 bool *cancel);
+  virtual void OnDocumentComplete(IWebBrowser2 *window, const CString &url);
   HttpHandlerCheck handler_check_;
 #endif
 };

@@ -47,6 +47,7 @@ HWND BrowserHelperObject::GetBrowserWindow() {
 }
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
+  LOG16((L"BHO::SetSite() %p, %p\n", this, pUnkSite));
   if (DetectedVersionCollision())
     return S_OK;
 
@@ -55,7 +56,6 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     // uninitialized. SetSite should be called with pUnkSite = NULL
     // when the BHO is unitialized. It seems that this call 
     // is not made on WinCE.
-    LOG16((L"SetSite(): pUnkSite is NULL\n"));
   } else {
     HttpHandler::Register();
 
@@ -79,6 +79,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/base/common/user_config.h"
+#include "third_party/googleurl/src/gurl.h"
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
@@ -97,11 +98,11 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   }
 #endif  // OFFICIAL_BUILD
 
+  LOG16((L"BHO::SetSite() %p, %p\n", this, pUnkSite));
   if (DetectedVersionCollision())
     return S_OK;
 
   if (pUnkSite == NULL) {
-    LOG16((L"SetSite(): pUnkSite is NULL\n"));
     BrowserListener::Teardown();
   } else {
     HttpHandler::Register();
@@ -113,13 +114,61 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   return S_OK;
 }
 
+static void StripFragment(GURL *url) {
+  if (url->has_ref()) {
+    GURL::Replacements strip_fragment;
+    strip_fragment.SetRef("", url_parse::Component());
+    *url = url->ReplaceComponents(strip_fragment);
+  }
+}
 
-void BrowserHelperObject::OnPageDownloadBegin(const CString &url) {
+void BrowserHelperObject::OnBeforeNavigate2(IWebBrowser2 *window,
+                                            const CString &url,
+                                            bool *cancel) {
+  LOG16((L"BHO::OnBeforeNavigate2() %p %p %d %s\n",
+         this, window, BrowserBusy(), url.GetString()));
+
+  if (window != BrowserListener::browser()) {
+    // Skip subframe navigations.
+    return;
+  }
+  if (handler_check_.IsChecking()) {
+    // Sometimes BrowserListener doesn't deliver the completion event.
+    handler_check_.CancelCheck();
+  }
+
+  CComBSTR location;
+  if (FAILED(window->get_LocationURL(&location))) {
+    return;
+  }
+  if (location.m_str && location.m_str[0]) {
+    GURL current_url(location.m_str);
+    GURL new_url(url.GetString());
+    if (!current_url.is_valid() || !new_url.is_valid()) {
+      return;
+    }
+    StripFragment(&current_url);
+    StripFragment(&new_url);
+    if (current_url == new_url) {
+      // Skip navigations between anchors within the same document.
+      return;
+    }
+  }
+
   handler_check_.StartCheck(url.GetString());
 }
 
-void BrowserHelperObject::OnPageDownloadComplete() {
-  handler_check_.FinishCheck();
+void BrowserHelperObject::OnDocumentComplete(IWebBrowser2 *window,
+                                             const CString &url) {
+  LOG16((L"BHO::OnDocumentComplete() %p %p %d %s\n",
+         this, window, BrowserBusy(), url.GetString()));
+  if (window != BrowserListener::browser() || BrowserListener::BrowserBusy()) {
+    // Skip subframe navigations and ignore spurious calls that can happen
+    // prior to actual completion.
+    return;
+  }
+  if (handler_check_.IsChecking()) {
+    handler_check_.FinishCheck();
+  }
 }
-
 #endif  // OS_WINCE
