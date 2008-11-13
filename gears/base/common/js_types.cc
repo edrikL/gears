@@ -781,6 +781,7 @@ bool JsObjectImpl::GetPropertyNames(std::vector<std::string16> *out) const {
     return false;
   }
 
+  bool success = true;
   for (unsigned int i = 0; i < count; ++i) {
     if (!NPN_IdentifierIsString(identifiers[i])) {
       out->push_back(IntegerToString16(NPN_IntFromIdentifier(identifiers[i])));
@@ -789,16 +790,19 @@ bool JsObjectImpl::GetPropertyNames(std::vector<std::string16> *out) const {
     NPUTF8 *utf8_name = NPN_UTF8FromIdentifier(identifiers[i]);
     std::string16 name;
 
-    bool success = UTF8ToString16(utf8_name, &name);
+    if (UTF8ToString16(utf8_name, &name)) {
+      out->push_back(name);
+    } else {
+      // If this fails, we still need to free the rest of the array.
+      success = false;
+    }
 
     NPN_MemFree(utf8_name);
-
-    if (!success) {
-      return false;
-    }
-    out->push_back(name);
   }
-  return true;
+  if (count) {
+    NPN_MemFree(identifiers);
+  }
+  return success;
 }
 
 bool JsObjectImpl::GetProperty(const std::string16 &name,
