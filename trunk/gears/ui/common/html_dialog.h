@@ -29,6 +29,8 @@
 #include "gears/base/common/string16.h"
 #include "third_party/jsoncpp/json.h"
 
+class BrowsingContext;
+
 // Return values for showing dialogs. If the dialog returns SUPRESSED, it means
 // that the SupressDialog preference in PermissionsDB is enabled for automated
 // testing.
@@ -55,12 +57,10 @@ class HtmlDialog {
                                               void *closure);
  public:
   // Constructor.
-  HtmlDialog()
-      : arguments(Json::objectValue), result(Json::nullValue),
-        platform_data_(NULL) {}
-  HtmlDialog(void *platform_data)
-      : arguments(Json::objectValue), result(Json::nullValue),
-        platform_data_(platform_data) {}
+  HtmlDialog(BrowsingContext *browsing_context)
+      : arguments(Json::objectValue),
+        result(Json::nullValue),
+        browsing_context_(browsing_context) {}
 
   // Open the dialog.
   HtmlDialogReturnValue DoModal(const char16 *html_filename, int width,
@@ -94,8 +94,7 @@ class HtmlDialog {
   // GetLocale() is in the browser-specific HtmlDialog code.
   bool GetLocale(std::string16 *locale);
 
-  // Platform-specific data.
-  void *platform_data_;
+  BrowsingContext *browsing_context_;
 };
 
 #endif  // GEARS_UI_COMMON_HTML_DIALOG_H__

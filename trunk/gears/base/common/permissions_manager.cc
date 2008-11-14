@@ -50,7 +50,8 @@ bool PermissionsManager::AcquirePermission(
     // Could not find a prior decision. Ask the user.
     permission_state_[type] = PermissionsDialog::Prompt(security_origin_,
                                                         type,
-                                                        custom);
+                                                        custom,
+                                                        NULL);
   }
 
   // Return the boolean decision.
