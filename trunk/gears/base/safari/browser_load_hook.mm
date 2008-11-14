@@ -110,12 +110,16 @@ static ExceptionManager exception_manager(true);
     LOG(("Gears: notification hook already installed"));
   }
 
-  NSLog(@"Gears: Swizzling WebView methods");
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+  LOG(("Gears: Swizzling WebView methods"));
   if (!SwizzleWebViewMethods()) {
     NSLog(@"Gears: Swizzling WebView methods failed");
     return NO;
   }
-  NSLog(@"Gears: Swizzling WebView methods succeeded");
+  LOG(("Gears: Swizzling WebView methods succeeded"));
+#endif
   
   // If we got here then we loaded OK
   LOG(("Loaded Gears version: " PRODUCT_VERSION_STRING_ASCII "\n" ));
