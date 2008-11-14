@@ -1089,7 +1089,6 @@ NPAPI_CPPSRCS	+= \
 		ipc_message_queue_test_win32.cc \
 		ipc_message_queue_win32.cc \
 		js_runner_np.cc \
-		module.cc \
 		np_utils.cc \
 		npn_bindings.cc \
 		npp_bindings.cc \
@@ -1105,6 +1104,17 @@ CHROME_CPPSRCS	+= \
 		module_cr.cc \
 		paths_cr.cc \
 		$(NULL)
+
+ifeq ($(OS),android)
+# Android has an alternative module initialization.
+NPAPI_CPPSRCS	+= \
+		module_android.cc \
+		$(NULL)
+else
+NPAPI_CPPSRCS	+= \
+		module.cc \
+		$(NULL)
+endif # ANDROID
 
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
@@ -1970,9 +1980,13 @@ NPAPI_VPATH	+= \
 		ui/ie \
 		$(NULL)
 
+ifeq ($(OS),android)
+# UI resources are done in a different way on Android.
+else
 NPAPI_M4SRCS	+= \
 		ui_resources.rc.m4 \
 		$(NULL)
+endif
 
 NPAPI_IDLSRCS	+= \
 		$(NULL)
@@ -1980,9 +1994,13 @@ NPAPI_IDLSRCS	+= \
 NPAPI_CPPSRCS	+= \
 		$(NULL)
 
+ifeq ($(OS),android)
+# UI resources are done in a different way on Android.
+else
 NPAPI_LINK_EXTRAS += \
 		$(NPAPI_OUTDIR)/ui_resources.res \
 		$(NULL)
+endif
 
 CHROME_VPATH	+= \
 		ui/chrome \
@@ -2152,8 +2170,15 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		async_task_np.cc \
+		$(NULL)
+
+ifeq ($(OS),android)
+# Android uses update_task_single_process.cc instead of update_task_np.cc
+else
+NPAPI_CPPSRCS	+= \
 		update_task_np.cc \
 		$(NULL)
+endif # ANDROID
 
 CHROME_VPATH	+= \
 		localserver/chrome \
@@ -2517,10 +2542,16 @@ $(BROWSER)_CPPSRCS += \
 		media.cc \
 		media_data.cc \
 		mock_audio_recorder.cc \
-		pa_audio_recorder.cc \
 		time_ranges.cc \
 		$(NULL)
 
+ifeq ($(OS),android)
+# PortAudio not ported for Android.
+else
+$(BROWSER)_CPPSRCS += \
+		pa_audio_recorder.cc \
+		$(NULL)
+endif
 endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
