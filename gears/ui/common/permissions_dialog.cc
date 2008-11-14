@@ -52,11 +52,12 @@ static const char16* DialogTypeForPermission(
 PermissionState PermissionsDialog::Prompt(
     const SecurityOrigin &origin,
     PermissionsDB::PermissionType type,
-    const CustomContent *custom_content) {
+    const CustomContent *custom_content,
+    BrowsingContext *browsing_context) {
   // Note: Arguments and results are coupled to the values that
   // permissions_dialog.html.m4 is expecting.
   const char16* dialog_type = DialogTypeForPermission(type);
-  HtmlDialog dialog;
+  HtmlDialog dialog(browsing_context);
   const char16 *custom_icon = NULL;
   const char16 *custom_name = NULL;
   const char16 *custom_message = NULL;

@@ -28,6 +28,7 @@
 
 #include "gears/base/common/security_model.h"
 
+class BrowsingContext;
 enum PermissionState;
 class JsCallContext;
 
@@ -58,7 +59,8 @@ class PermissionsDialog {
   // message will be shown.
   static PermissionState Prompt(const SecurityOrigin &origin,
                                 PermissionsDB::PermissionType type,
-                                const CustomContent *custom_content);
+                                const CustomContent *custom_content,
+                                BrowsingContext *browsing_context);
  private:
   // Private constructor. Use static Prompt() methods instead.
   PermissionsDialog() {}

@@ -29,12 +29,14 @@
 #include "gears/base/common/permissions_db.h"
 #include "third_party/jsoncpp/json.h"
 
+class BrowsingContext;
+
 // For now this is very simple and only gives a way to revoke decisions made
 // with the "remember me" checkbox on the capabilities prompt.
 class SettingsDialog {
  public:
   // Show the settings dialog and apply any changes the user makes.
-  static void Run(void *platform_data);
+  static void Run(BrowsingContext *browsing_context);
 
   static bool IsVisible() { return visible_; }
 

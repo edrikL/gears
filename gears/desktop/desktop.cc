@@ -362,7 +362,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   const int kShortcutsDialogWidth = 360;
   const int kShortcutsDialogHeight = 320;
 
-  HtmlDialog shortcuts_dialog;
+  HtmlDialog shortcuts_dialog(NULL);
   if (desktop.InitializeDialog(&shortcut_info, &shortcuts_dialog,
                                Desktop::DIALOG_STYLE_STANDARD)) {
     HtmlDialogReturnValue dialog_result = shortcuts_dialog.DoModal(

@@ -77,16 +77,17 @@ bool HtmlDialog::DoModelessImpl(
   if (!String16ToUTF8(arguments_string, &arguments_utf8))
     return false;
 
-  scoped_refptr<CRBrowsingContext> browsing_context(
-      static_cast<CRBrowsingContext*>(platform_data_));
-  platform_data_ = NULL;  // browsing_context may be deleted at end of scope
+  scoped_refptr<CRBrowsingContext> scoped_browsing_context(
+      static_cast<CRBrowsingContext*>(browsing_context_));
+  // scoped_browsing_context may be deleted at end of scope
+  browsing_context_ = NULL;
 
   // Note: we pass a callback object as the plugin_context.  When the dialog
   // closes, we get a notification with a pointer to that plugin_context, which
   // we use to handle the results.
   void *plugin_context = new HtmlDialogCallback(this, callback, closure);
   bool rv = g_cpbrowser_funcs.show_html_dialog(
-      g_cpid, browsing_context->context, url_utf8.c_str(), width, height,
+      g_cpid, scoped_browsing_context->context, url_utf8.c_str(), width, height,
       arguments_utf8.c_str(), plugin_context) == CPERR_SUCCESS;
   return rv;
 }

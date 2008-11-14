@@ -54,8 +54,8 @@ void ProcessResultsCallback(Json::Value *result, void *closure) {
 }
 #endif
 
-void SettingsDialog::Run(void *platform_data) {
-  scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog(platform_data));
+void SettingsDialog::Run(BrowsingContext *browsing_context) {
+  scoped_ptr<HtmlDialog> settings_dialog(new HtmlDialog(browsing_context));
 
   // Populate the arguments property.
   settings_dialog->arguments[kPermissionsString] =

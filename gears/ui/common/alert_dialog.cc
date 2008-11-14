@@ -52,7 +52,7 @@ static void AlertBeep() {
 
 // static
 void AlertDialog::ShowModal(AlertMessageId id) {
-  HtmlDialog dialog;
+  HtmlDialog dialog(NULL);
   AlertBeep();
   dialog.arguments["messageId"] = Json::Value(GetMessageIdString(id));
   dialog.DoModal(STRING16(L"alert_dialog.html"), kDialogWidth, kDialogHeight);
