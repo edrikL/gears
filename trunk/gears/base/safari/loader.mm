@@ -64,38 +64,44 @@
 
 //------------------------------------------------------------------------------
 + (NSString *)gearsBundlePath {
+  // There are a couple of interesting twists here surrounding case-sensitive/
+  // insensitive file systems.
+  // The HFS+ file system used on Macs has traditionally been case insensitive
+  // however there is now an option to format HFS+ disks to be case sensitive.
+  // (http://support.apple.com/kb/TA21400?viewlocale=en_US).
+  // Now for the fun part:
+  // * On case insensitive HFS+ volumes we need to be careful to load the Gears
+  // plugin using exactly the same case as that used on the disk.  If we don't
+  // we run into a bizarre bug by which DYLD can load the bundle twice into our
+  // process, since it can't disambiguate 'gears.plugin' and 'Gears.plugin'.
+  // This causes all kinds of mayhem, e.g. pthread_once will fire twice...
+  // * On case sensitive HFS+ volumes, if we don't specify the correct case
+  // the plugin won't load since the file won't be found.
   NSArray *paths = 
     NSSearchPathForDirectoriesInDomains(
         NSLibraryDirectory, 
         (NSSearchPathDomainMask)(NSUserDomainMask | NSLocalDomainMask),
         YES);
   
+  // This must match the case of the Gears.plugin name exactly!  See above.
+  NSString *gears_plugin_basename = @"Gears.plugin"; // [naming]
+
   // Find the first one that exists
   unsigned int i, count = [paths count];
   NSFileManager *fileManager = [NSFileManager defaultManager];
   for (i = 0; i < count; ++i) {
     NSString *path = [paths objectAtIndex:i];
     NSString *internetPlugins = @"Internet Plug-Ins";
-    
+
     path = [path stringByAppendingPathComponent:internetPlugins];
-    
+
     BOOL isDir;
-    NSString *ident = [NSString stringWithFormat:@"%s.plugin",
-      PRODUCT_SHORT_NAME_ASCII];
-    NSString *tmp_path = [path stringByAppendingPathComponent:ident];
-    if (![fileManager fileExistsAtPath:tmp_path isDirectory:&isDir] || !isDir)
+    NSString *tmp_path = [path stringByAppendingPathComponent:
+                                   gears_plugin_basename];
+    if (![fileManager fileExistsAtPath:tmp_path isDirectory:&isDir] || !isDir) {
       continue;
-      
-    // Work around a really bizarre bug where if the case of a filename
-    // is different, DYLD will load the bundle twice into a process.
-    // This causes all kinds of mayhem, e.g. pthread_once will fire twice...
-    NSArray *plugin_dir_contents = [fileManager directoryContentsAtPath:path];
-    NSEnumerator *contents = [plugin_dir_contents objectEnumerator];
-    while (id filename = [contents nextObject]) {
-      if ([ident caseInsensitiveCompare:filename] == NSOrderedSame) {
-        path = [path stringByAppendingPathComponent:filename];
-        return path;
-      }
+    } else {
+      return tmp_path;
     }
   }
   
