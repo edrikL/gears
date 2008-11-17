@@ -461,7 +461,7 @@ void ConfigureGeolocationRadioDataProviderForTest(JsCallContext *context) {
       radio_data.radio_type = RADIO_TYPE_WCDMA;
       break;
     default:
-      LOG(("ConfigureGeolocationRadioDataProviderForTest() : Ignoring value %s "
+      LOG(("ConfigureGeolocationRadioDataProviderForTest() : Ignoring value %d "
            "for radio_type.\n", radio_type));
   }
   GetStringPropertyIfDefined(context, object.get(), kCarrierString,
