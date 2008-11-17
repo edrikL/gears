@@ -69,6 +69,47 @@ class Dispatcher : public DispatcherInterface {
   // Callback function used for property and method invocations.
   typedef void (ImplClass::*ImplCallback)(JsCallContext *);
 
+  // A pointer-to-member cannot be compared to NULL if the target
+  // architecture does not represent them as simple function
+  // pointers. For example, ARM EABI uses a second word to indicate
+  // whether the first is a function pointer (0) or a vtable offset
+  // (1). If the vtable offset is 0, then the pointer-to-member
+  // implicit casts to false, and also compares equal to NULL. A
+  // workaround is to compare the raw binary value to zero, using a
+  // union. For architectures where pointer-to-member is a plain
+  // function pointer using thunks (e.g x86) this is just a comparison
+  // to NULL with no extra expense.
+  static bool IsImplCallbackValid(ImplCallback callback) {
+    if (sizeof (ImplCallback) == sizeof (void *)) {
+      // If this is an architecture where pointer-to-member is a plain
+      // function pointer to thunks, then this is just a comparison to
+      // NULL and this function inlines away.
+      return callback != NULL;
+    } else {
+      // Otherwise, we need to compare the raw binary value with zero
+      // using a union.
+      const int words =
+          (sizeof (ImplCallback) + sizeof (int) - 1) / sizeof (int);
+      union {
+        ImplCallback value;
+        int data[words];
+      } combined;
+      // Initialize the union to zero.
+      for (int i = 0; i < words; ++i) {
+        combined.data[i] = 0;
+      }
+      // Set the ImplCallback.
+      combined.value = callback;
+      // Check if the union is now non-zero.
+      for (int i = 0; i < words; ++i) {
+        if (combined.data[i] != 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
   Dispatcher(ImplClass *impl);
   virtual ~Dispatcher() {}
 
@@ -202,6 +243,7 @@ bool Dispatcher<T>::CallMethod(DispatchId method_id, JsCallContext *context) {
     return false;
   ImplCallback callback = method->second;
 
+  assert(IsImplCallbackValid(callback));
   (impl_->*callback)(context);
   return true;
 }
@@ -215,6 +257,7 @@ bool Dispatcher<T>::GetProperty(DispatchId property_id,
     return false;
   ImplCallback callback = property->second;
 
+  assert(IsImplCallbackValid(callback));
   (impl_->*callback)(context);
   return true;
 }
@@ -228,7 +271,7 @@ bool Dispatcher<T>::SetProperty(DispatchId property_id,
     return false;
   }
   ImplCallback callback = property->second;
-  if (callback == NULL) { // Read only property.
+  if (!IsImplCallbackValid(callback)) {  // Read only property.
     context->SetException(
                  STRING16(L"Cannot assign value to a read only property."));
     return true;
@@ -258,7 +301,7 @@ DispatchId Dispatcher<T>::GetDispatchId(const std::string &member_name) {
 template<class T>
 void Dispatcher<T>::RegisterProperty(const char *name,
                                      ImplCallback getter, ImplCallback setter) {
-  assert(getter);
+  assert(IsImplCallbackValid(getter));
   DispatchId id = GetStringIdentifier(name);
   GetPropertyGetterList()[id] = getter;
   GetPropertySetterList()[id] = setter;
