@@ -72,8 +72,8 @@ GpsLocationProvider::GpsLocationProvider(
       reverse_geocoder_(NULL),
       earliest_reverse_geocode_time_(0),
       is_address_requested_(false),
-      gps_device_(NULL),
-      browsing_context_(browsing_context) {
+      browsing_context_(browsing_context),
+      gps_device_(NULL) {
   // Open the device
   gps_device_.reset((*gps_device_factory_function_)(this));
   // Start the worker thread.
