@@ -51,6 +51,8 @@ enum SupportedAndroidRadioTypes {
   SUPPORTED_ANDROID_RADIO_TYPES_UNKNOWN = 0,
   SUPPORTED_ANDROID_RADIO_TYPES_GSM,
   SUPPORTED_ANDROID_RADIO_TYPES_WCDMA,
+  SUPPORTED_ANDROID_RADIO_TYPES_CDMA,
+  SUPPORTED_ANDROID_RADIO_TYPES_EVDO,
 };
 
 JNINativeMethod AndroidRadioDataProvider::native_methods_[] = {
@@ -282,6 +284,14 @@ static bool InitFromJavaRadioData(JNIEnv* env,
       break;
     case SUPPORTED_ANDROID_RADIO_TYPES_WCDMA:
       new_radio_data_out->radio_type = RADIO_TYPE_WCDMA;
+      break;
+    case SUPPORTED_ANDROID_RADIO_TYPES_CDMA:
+      new_radio_data_out->radio_type = RADIO_TYPE_CDMA;
+      break;
+    // EVDO is some sort of CDMA.
+    // See http://en.wikipedia.org/wiki/Evolution-Data_Optimized
+    case SUPPORTED_ANDROID_RADIO_TYPES_EVDO:
+      new_radio_data_out->radio_type = RADIO_TYPE_CDMA;
       break;
     case SUPPORTED_ANDROID_RADIO_TYPES_UNKNOWN:
       new_radio_data_out->radio_type = RADIO_TYPE_UNKNOWN;
