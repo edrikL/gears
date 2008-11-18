@@ -26,6 +26,8 @@
 // Out-of-line helper function to log including a file and line number.
 // This avoids polluting the namespace with Android defines.
 
+#ifdef OS_ANDROID
+
 #include "gears/base/common/common_np.h"
 // LOG unfortunately namespace clashes with the Android logging system.
 #undef LOG_INNER
@@ -70,3 +72,5 @@ void android_log_helper(const char *tag,
   }
   va_end(ap);
 }
+
+#endif  // OS_ANDROID

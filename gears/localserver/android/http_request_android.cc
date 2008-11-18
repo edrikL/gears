@@ -27,6 +27,8 @@
 // This uses a small Java class to perform the IO operations.
 //------------------------------------------------------------------------------
 
+#ifdef OS_ANDROID
+
 #include <assert.h>
 
 #include "gears/localserver/android/http_request_android.h"
@@ -1410,3 +1412,5 @@ bool HttpRequestAndroid::InitJni() {
 #endif
   return true;
 }
+
+#endif  // OS_ANDROID

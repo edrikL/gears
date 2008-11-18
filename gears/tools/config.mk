@@ -31,6 +31,12 @@ ifeq ($(wildcard $(PWD)/Makefile),)
 PWD = $(shell pwd)
 endif
 
+ifeq ($(OS),android)
+# Initialize Android build system paths and settings from the
+# environment.
+include tools/env_android.mk
+endif
+
 # Enable these libraries unless indicated otherwise.
 ifeq ($(USING_ICU),)
   USING_ICU = 1
@@ -139,6 +145,27 @@ endif
 ifeq ($(BROWSER),NONE)
   USING_BREAKPAD_OSX = 1
 endif
+endif
+
+# Enable SpiderMonkey on Safari
+ifeq ($(BROWSER),SF)
+  USING_MOZJS = 1
+endif
+
+# Enable/disable various features on Android
+ifeq ($(OS),android)
+# Use system icu38.
+  USING_ICU=0
+# Use system SQLite.
+  USING_SQLITE=0
+# Use system zlib.
+  USING_ZLIB=0
+# Do not use portaudio at all.
+  USING_PORTAUDIO=0
+# Use system-packaged Java classes instead of runtime loading.
+  USING_CLASS_LOADER=0
+# Use SpiderMonkey.
+  USING_MOZJS=1
 endif
 
 MAKEFLAGS += --no-print-directory
@@ -253,6 +280,230 @@ GTEST_CPPFLAGS += -I../third_party/gtest/include -I../third_party/gtest
 
 # Common items, like notifier, is not related to any browser.
 COMMON_CPPFLAGS += -DBROWSER_NONE=1
+
+######################################################################
+# OS == android
+######################################################################
+ifeq ($(OS),android)
+# Include base/android to allow overriding assert.h
+CPPFLAGS	+= \
+		-Ibase/android \
+		$(NULL)
+
+# Include Android system headers, searching several variant places
+# they have lived in through various versions.
+ANDROID_MAYBE_EXIST_INCLUDES	:= \
+		include \
+		include/nativehelper \
+		system \
+		system/bionic/include \
+		system/bionic/arch-arm/include \
+		system/kernel_headers \
+		system/bionic/kernel/arch-arm \
+		system/bionic/kernel/common \
+		system/libm/include  \
+		bionic \
+		bionic/libc/include \
+		bionic/libc/arch-arm \
+		bionic/libc/arch-arm/include \
+		bionic/libc/kernel/arch-arm \
+		bionic/libc/kernel/common \
+		bionic/libm/include \
+		dalvik/libnativehelper/include \
+		extlibs \
+		extlibs/icu4c-3.8/common \
+		extlibs/icu4c-3.8/i18n \
+		extlibs/jpeg-6b \
+		extlibs/sqlite \
+		extlibs/zlib-1.2.3 \
+		external \
+		external/icu4c/common \
+		external/icu4c/i18n \
+		external/jpeg \
+		external/sqlite/dist \
+		external/zlib \
+		frameworks/base/include \
+		system/core/include \
+		$(NULL)
+
+# Filter out the include paths which don't exist.
+ANDROID_EXIST_INCLUDES	:= \
+		$(realpath $(addprefix $(ANDROID_BUILD_TOP)/,$(ANDROID_MAYBE_EXIST_INCLUDES))) \
+		$(NULL)
+
+# Add a -I flag for each include which exists.
+CPPFLAGS	+= \
+		$(addprefix -I,$(ANDROID_EXIST_INCLUDES)) \
+		$(NULL)
+
+# Include a generated symlink from asm -> kernel/include/asm-arm
+CPPFLAGS	+= \
+		-I$($(BROWSER)_OUTDIR)/symlinks \
+		$(NULL)
+
+# Include STLport headers
+CPPFLAGS	+= \
+		-I../third_party/stlport/stlport \
+		-I../third_party/stlport/stlport/stl \
+		-I../third_party/stlport/stlport/stl/config \
+		$(NULL)
+
+# Prevent the use of a built-in Android system header that gets in the
+# way of STLport. Do this by defining its header guard.
+CPPFLAGS	+= \
+		-D__SGI_STL_INTERNAL_PAIR_H \
+		-D_CPP_UTILITY \
+		$(NULL)
+
+# Define the build type
+CPPFLAGS	+= \
+		-DOS_ANDROID \
+		-DANDROID \
+		-DTARGET_OS=android \
+		-DBUILD_OSNAME=android \
+		-DOSNAME=android \
+		-DCOMPILER_NAME=gcc \
+		$(NULL)
+
+# Define whether to build-in Java classes or not.
+CPPFLAGS       += -DUSING_CLASS_LOADER=$(USING_CLASS_LOADER)
+
+ifeq ($(USING_MOZJS),1)
+CPPFLAGS	+= \
+		-I ../third_party/spidermonkey/nspr/pr/include \
+		-D_LITTLE_ENDIAN=1234 \
+		-D_BIG_ENDIAN=4321 \
+		-D_PDP_ENDIAN=3412 \
+		-D_BYTE_ORDER=_LITTLE_ENDIAN \
+		$(NULL)
+
+# JS_THREADSAFE *MUST* be kept in sync with $(BROWSER)_CPPFLAGS.
+MOZJS_CFLAGS	+= \
+		-DJS_THREADSAFE \
+		-DXP_UNIX \
+                -DHAVE_STRERROR -DFORCE_PR_LOG -D_PR_PTHREADS \
+                -DUHAVE_CVAR_BUILT_ON_SEM -D_NSPR_BUILD_ \
+                -DOSARCH=Android -DSTATIC_JS_API -DJS_USE_SAFE_ARENA \
+                -DTRIMMED -DJS_HAS_EXPORT_IMPORT \
+                -I ../third_party/spidermonkey/nspr/pr/include/private \
+                -I ../third_party/spidermonkey/nspr/pr/include \
+                -I ../third_party/spidermonkey/nspr/pr/include/obsolete \
+		$(NULL)
+endif
+
+ANDROID_JAVA_OUT = $(ANDROID_BUILD_TOP)/out/target/common/obj/JAVA_LIBRARIES
+# Gears jar (contains the Java part of the Gears plugin)
+$(BROWSER)_JAR	= $(NPAPI_OUTDIR)/gears-android.jar
+
+JAVAC		= javac
+JAVA_PACKAGE_NAME = com/google/android/$(SHORT_NAME)
+JAVA_PACKAGE_NAME_DOTS = $(shell echo $(JAVA_PACKAGE_NAME) | sed 's/\//\./g')
+BROWSER_JAVA_PACKAGE_NAME_DOTS = com.android.browser
+
+JAVAFLAGS 	+= \
+		-J-Xmx256m \
+		-target 1.5 \
+		-Xmaxerrs 9999999 \
+		-encoding ascii \
+		-bootclasspath $(ANDROID_JAVA_OUT)/core_intermediates/classes.jar \
+		-classpath $(ANDROID_JAVA_OUT)/core_intermediates/classes.jar:$(ANDROID_JAVA_OUT)/framework_intermediates/classes.jar:$(NPAPI_OUTDIR)/$(JAVA_PACKAGE_NAME) \
+		-g \
+		-extdirs "" \
+		-Xlint:unchecked \
+		$(NULL)
+
+DEX		= dx
+ifeq ($(VERBOSE),1)
+CC		= $(CROSS_PREFIX)gcc
+CXX		= $(CROSS_PREFIX)g++
+else
+CC		= @echo " CC  $(notdir $<)"; $(CROSS_PREFIX)gcc
+CXX		= @echo " C++ $(notdir $<)"; $(CROSS_PREFIX)g++
+endif
+NM		= $(CROSS_PREFIX)nm
+OBJ_SUFFIX	= .o
+CLASS_SUFFIX	= .class
+DEX_SUFFIX	= .dex
+MKDEP		= \
+		$(CROSS_PREFIX)gcc \
+		-M -MF $(@D)/$*.pp -MT \
+		$@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+
+JS_COMPRESSION_TOOL = tools/js-compress.sh
+LIST_SYMBOLS	= tools/list_symbols.sh
+HTML_LOCALE	= en-US
+
+COMPILE_FLAGS_dbg += \
+		-g -O \
+		-march=armv5te -mtune=xscale -mthumb-interwork \
+		-funwind-tables -mapcs-frame \
+		-ffunction-sections -fdata-sections \
+		$(NULL)
+
+COMPILE_FLAGS_opt += \
+		-O2 \
+		-march=armv5te -mtune=xscale -mthumb-interwork -mthumb \
+		-fomit-frame-pointer \
+		-ffunction-sections -fdata-sections \
+		$(NULL)
+
+COMPILE_FLAGS	+= \
+		-g -c -o $@ \
+		-fPIC -fmessage-length=0 -Wall \
+		-fvisibility=hidden \
+		$(COMPILE_FLAGS_$(MODE)) \
+		$(NULL)
+
+# NS_LITERAL_STRING does not work properly without this compiler option
+COMPILE_FLAGS	+= \
+		-fshort-wchar \
+		-funsigned-char \
+		$(NULL)
+
+CFLAGS		+= $(COMPILE_FLAGS)
+
+CXXFLAGS	+= \
+		$(COMPILE_FLAGS) \
+		-fno-exceptions -fno-rtti \
+		-fvisibility-inlines-hidden \
+		-Wno-non-virtual-dtor -Wno-ctor-dtor-privacy \
+		$(NULL)
+
+NPAPI_CPPFLAGS	+= \
+		-DBROWSER_NPAPI=1 \
+		$(NULL)
+
+DLL_PREFIX	= lib
+DLL_SUFFIX	= .so
+MKDLL		= $(CROSS_PREFIX)g++
+
+COMMON_LINKFLAGS += \
+		-g -o $@ \
+		-fPIC \
+		-Bsymbolic \
+		$(NULL)
+
+DLLFLAGS	+= \
+		$(COMMON_LINKFLAGS) \
+		-shared \
+		-Wl,--gc-sections \
+		-L$(ANDROID_PRODUCT_OUT)/system/lib \
+		$(NULL)
+
+# Workaround for the Android C library not implementing
+# __aeabi_atexit, which is used to destruct static C++ objects.  This
+# causes all calls to be rewritten by the linker to
+# __wrap___aeabi_atexit, which we then implement.
+DLLFLAGS	+= \
+		-Wl,--wrap,__aeabi_atexit \
+		$(NULL)
+
+# Installer
+ADB_INSTALL	= tools/adb_install.sh
+ANDROID_INSTALLER_ZIP_PACKAGE = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).zip
+ANDROID_INSTALLER_OUTDIR = $(INSTALLERS_OUTDIR)/gears-$(VERSION)
+ANDROID_INSTALLER_DLL = $(ANDROID_INSTALLER_OUTDIR)/gears.so
+endif  # android
 
 ######################################################################
 # OS == linux

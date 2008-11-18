@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OS_ANDROID
+
 #include "gears/ui/common/settings_dialog.h"
 #include "gears/ui/android/settings_dialog_android.h"
 
@@ -97,3 +99,5 @@ bool InitializeSettingsDialogClickHandler(jobject plugin) {
       methods[0].id, plugin));
   return true;
 }
+
+#endif  // OS_ANDROID

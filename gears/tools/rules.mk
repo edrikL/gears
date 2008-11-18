@@ -381,6 +381,13 @@ else
 	$(MAKE) modules    BROWSER=NPAPI
 	$(MAKE) installers
   endif
+  else
+  ifeq ($(OS),android)
+	$(MAKE) prereqs    BROWSER=NPAPI
+	$(MAKE) genheaders BROWSER=NPAPI
+	$(MAKE) modules    BROWSER=NPAPI
+	$(MAKE) installers
+  endif
   endif
   endif
   endif
@@ -505,6 +512,44 @@ endif
 endif
 endif
 endif
+
+ifeq ($(OS),android)
+# Rule to ensure classes_to_load.inc is generated and class files are
+# compiled before module.inc.
+$($(BROWSER)_OUTDIR)/module$(OBJ_SUFFIX): \
+		$($(BROWSER)_OUTDIR)/genfiles/classes_to_load.inc
+
+# Generate a symlink from asm -> kernel/include/asm-arm. This is
+# required because the Linux headers refer to "asm", and the SDK does
+# not provide the link.
+$($(BROWSER)_OUTDIR)/symlinks:
+	mkdir -p $@
+
+$($(BROWSER)_OUTDIR)/symlinks/asm: $($(BROWSER)_OUTDIR)/symlinks
+	ln -sf $(ANDROID_BUILD_TOP)/kernel/include/asm-arm $@
+
+prereqs:: $($(BROWSER)_OUTDIR)/symlinks/asm
+
+# Compress the HTML files
+modules:: $(patsubst %.html,$($(BROWSER)_OUTDIR)/genfiles/%.html.compress,$($(BROWSER)_HTML_COMPRESSED_FILES))
+
+$($(BROWSER)_OUTDIR)/genfiles/%.html.compress: \
+		$($(BROWSER)_OUTDIR)/genfiles/%.html
+	$(JS_COMPRESSION_TOOL) $< $(HTML_LOCALE) $($(BROWSER)_OUTDIR)/genfiles
+
+# Installer (build the zip)
+installers:: $(ANDROID_INSTALLER_ZIP_PACKAGE)
+
+# Rule to invoke the install.sh script with the detected environment
+# variables and MODE set. This install Gears directly into a live
+# emulator.
+.PHONY:	adb-install
+adb-install:
+	ANDROID_BUILD_TOP=$(ANDROID_BUILD_TOP) \
+		ANDROID_PRODUCT_OUT=$(ANDROID_PRODUCT_OUT) \
+		ANDROID_TOOLCHAIN=$(ANDROID_TOOLCHAIN) \
+		$(ADB_INSTALL) $(MODE)
+endif # android
 
 clean::
 ifdef CMD_LINE_MODE  # If MODE is specified on command line.
@@ -713,6 +758,38 @@ $(LIBSPEEX_OUTDIR)/%$(OBJ_SUFFIX): %.c
 $(LIBTREMOR_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(CC) $(LIBTREMOR_CFLAGS) $(LIBOGG_CFLAGS) $(CPPFLAGS) $(CFLAGS) $<
 
+# Java TARGETS (Android only)
+ifeq ($(OS),android)
+ifeq ($($(BROWSER)_JAVASRCS),)
+$($(BROWSER)_OUTDIR)/genfiles/classes_to_load.inc:
+	@echo " No Java sources, creating stub class list."
+	@rm -f $@
+	@echo "static const char *s_classes_to_load[0];" >$@
+else
+$($(BROWSER)_OUTDIR)/$(JAVA_PACKAGE_NAME)/%.java: %.aidl
+	@echo " Compiling AIDL sources $(notdir $^)"
+	@mkdir -p $($(BROWSER)_OUTDIR)/$(JAVA_PACKAGE_NAME)
+	@cp $< $($(BROWSER)_OUTDIR)/$(JAVA_PACKAGE_NAME)/
+	@(cd $($(BROWSER)_OUTDIR) && \
+	  aidl $(JAVA_PACKAGE_NAME)/$(notdir $<))
+	@sed -i 's/DESCRIPTOR = "$(JAVA_PACKAGE_NAME_DOTS)/DESCRIPTOR = "$(BROWSER_JAVA_PACKAGE_NAME_DOTS)/' $@
+
+$($(BROWSER)_JAR): $(patsubst %.aidl,$($(BROWSER)_OUTDIR)/$(JAVA_PACKAGE_NAME)/%.java,$($(BROWSER)_JAVASRCS))
+	@echo " Compiling Java sources $(notdir $^)"
+	@rm -f $($(BROWSER)_OUTDIR)/$(JAVA_PACKAGE_NAME)/*.class
+	@$(JAVAC) $(JAVAFLAGS) -d $($(BROWSER)_OUTDIR) $(filter %.java, $^)
+	@(cd $($(BROWSER)_OUTDIR) && \
+          $(DEX) --dex --output=classes.dex $(JAVA_PACKAGE_NAME)/*.class)
+	@rm -f $@
+	@zip -qj $@ $($(BROWSER)_OUTDIR)/classes.dex
+
+$($(BROWSER)_OUTDIR)/genfiles/classes_to_load.inc: $($(BROWSER)_JAR)
+	@echo "static const char *s_classes_to_load[] = {" >$@
+	@dexdump $($(BROWSER)_OUTDIR)/classes.dex | grep 'Class descriptor' | sed 's/.*'\''L\(.*\);.*/  "\1",/' >>$@
+	@echo "};" >>$@
+endif # $(BROWSER)_JAVASRCS
+endif # android
+
 # RESOURCE TARGETS
 
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
@@ -899,7 +976,43 @@ $(IE_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $
 $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 	$(MKDLL) $(DLLFLAGS_NOPDB) $(IE_WINCESETUP_LINK_EXTRAS) $(IE_LIBS) $(IE_WINCESETUP_OBJS)
 
-ifneq ($(OS),android)
+ifeq ($(OS),android)
+$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(PORTAUDIO_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
+	@echo " Linking $(notdir $@)"
+	@$(MKDLL) $(DLLFLAGS) $(NPAPI_DLLFLAGS) $(COMMON_OBJS) \
+		$(SQLITE_OBJS) $(LIBGD_OBJS) \
+		$(MOZJS_OBJS) $(PORTAUDIO_OBJS) \
+		$(THIRD_PARTY_OBJS) \
+		$(NPAPI_LINK_EXTRAS) \
+		$(NPAPI_LIBS) $(NPAPI_OBJS) -nostdlib
+	@ls -l $@
+	@$(CROSS_PREFIX)size $@
+	@$(LIST_SYMBOLS) \
+		$(CROSS_PREFIX) \
+		defined \
+		$(wildcard $(ANDROID_PRODUCT_OUT)/system/lib/*.so) \
+		> $(NPAPI_OUTDIR)/android_symbols
+	@$(LIST_SYMBOLS) \
+		$(CROSS_PREFIX) \
+		undefined \
+		$@ \
+		> $@.extern
+	@diff -u $(NPAPI_OUTDIR)/android_symbols $@.extern \
+		| grep '^\+[^+]' \
+		| sed 's/^\+//' \
+		| $(CROSS_PREFIX)c++filt \
+		> $@.unresolved
+	@(if [ -s $@.unresolved ]; \
+	  then \
+		echo "****************************************"; \
+		echo "*** Unresolved symbols not found in  ***"; \
+		echo "*** system libraries. List follows.  ***"; \
+		echo "****************************************"; \
+		cat $@.unresolved; \
+		rm -f $@; \
+		false; \
+	  fi)
+else # !android
 ifneq ($(OS),symbian)
 # Split the list of OBJS to avoid "input line is too long" errors.
 NPAPI_OBJS1 = $(wordlist 1, 100, $(NPAPI_OBJS))
@@ -934,8 +1047,8 @@ $(OPERA_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS
 	$(ECHO) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(SKIA_LIB) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
-endif
-endif
+endif # !symbian
+endif # !android
 
 # Note the use of DLLFLAGS_NOPDB instead of DLLFLAGS here.
 $(OPERA_WINCESETUP_DLL): $(OPERA_WINCESETUP_OBJS) $(OPERA_WINCESETUP_LINK_EXTRAS)
@@ -1060,6 +1173,29 @@ $(SF_INSTALLER_PKG):
   Safari version manually by running tools/osx/install_gears.sh script)
 endif
 endif
+
+ifeq ($(OS),android)
+# Installer which packages up relevant Android Gears files into a .zip
+$(ANDROID_INSTALLER_OUTDIR):
+	@echo "Create $@"
+	@mkdir -p $@
+
+$(ANDROID_INSTALLER_DLL): $(NPAPI_MODULE_DLL)
+	@echo "Copy $<"
+	@cp $< $@
+	@echo "Strip $<"
+	@arm-eabi-strip $@
+
+$(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html.compress
+	@echo "Copy `basename $@`"
+	@cp $< $@
+
+$(ANDROID_INSTALLER_ZIP_PACKAGE): $(ANDROID_INSTALLER_OUTDIR) $(patsubst %.html,$(ANDROID_INSTALLER_OUTDIR)/%.html,$(NPAPI_HTML_COMPRESSED_FILES)) $(ANDROID_INSTALLER_DLL)
+	@echo "Build Android package"
+	@(cd $(INSTALLERS_OUTDIR) && zip -r $(INSTALLER_BASE_NAME).zip `basename $(ANDROID_INSTALLER_OUTDIR)`)
+	@echo "Clean files"
+	@rm -rf $(ANDROID_INSTALLER_OUTDIR)
+endif # android
 
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(IPC_TEST_EXE) $(OSX_LAUNCHURL_EXE)
