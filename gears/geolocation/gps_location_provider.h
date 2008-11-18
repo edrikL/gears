@@ -46,7 +46,8 @@ class GpsDeviceBase {
    public:
      // Implmentations should call this method when a fatal error occurs, such
      // that no further location updates will be possible.
-     virtual void GpsFatalError(int code, const std::string16 &message) = 0;
+     virtual void GpsFatalError(const Position::ErrorCode &code,
+                                const std::string16 &message) = 0;
      // Implementations should call this method when good position is first
      // available, and again whenever an updated position is available.
      virtual void GpsPositionUpdateAvailable(const Position &position) = 0;
@@ -104,7 +105,8 @@ class GpsLocationProvider
                                        bool server_error);
 
   // GpsDeviceBase::ListenerInterface implementation
-  virtual void GpsFatalError(int code, const std::string16 &message);
+  virtual void GpsFatalError(const Position::ErrorCode &code,
+                             const std::string16 &message);
   virtual void GpsPositionUpdateAvailable(const Position &position);
 
   void MakeReverseGeocodeRequest();
@@ -114,10 +116,10 @@ class GpsLocationProvider
   std::string16 host_name_;
   std::string16 address_language_;
 
-  // The current best position estimate and its mutex.
+  // The current best position estimate, the latest position to be reverse
+  // geocoded and their mutex.
   Position position_;
   Position new_position_;
-  Address new_address_;
   Mutex position_mutex_;
 
   // Event used to signal to the worker thread.

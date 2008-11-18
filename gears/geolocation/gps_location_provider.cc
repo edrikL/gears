@@ -319,7 +319,7 @@ void GpsLocationProvider::ReverseGeocodeAvailable(const Position &position,
   // Copy only the address, so as to preserve the position if an update has been
   // made since the reverse geocode started.
   position_mutex_.Lock();
-  position_.address = new_address_;
+  position_.address = position.address;
   position_mutex_.Unlock();
 
   is_new_reverse_geocode_available_ = true;
@@ -327,7 +327,7 @@ void GpsLocationProvider::ReverseGeocodeAvailable(const Position &position,
 }
 
 // GpsDeviceBase::ListenerInterface implementation
-void GpsLocationProvider::GpsFatalError(int code,
+void GpsLocationProvider::GpsFatalError(const Position::ErrorCode &code,
                                         const std::string16 &message) {
   assert(code > 0);
 

@@ -451,8 +451,6 @@ function testWifiDataProvider() {
 
 function testMockGpsDevice() {
   if (isUsingCCTests) {
-    // TODO(steveblock): Add tests that cover reverse geocoding.
-
     var geolocation = google.gears.factory.create('beta.geolocation');
     var options = {
       enableHighAccuracy: true,
@@ -500,6 +498,60 @@ function testMockGpsDevice() {
       assertError(
           function() {geolocation.watchPosition(function() {}, null, options);},
           'Fix request has no location providers.');
+    }
+  }
+}
+
+function testReverseGeocoding() {
+  if (isUsingCCTests) {
+    // GPS is available only on WinCE and Android.
+    if (isWince || isAndroid) {
+      var geolocation = google.gears.factory.create('beta.geolocation');
+
+      // This network location provider will always fail to provide a position
+      // for all location requests. For all reverse-geocoding requests, it
+      // returns a fixed address.
+      var reverseGeocoder = '/testcases/cgi/reverse_geocoder.py';
+
+      var options = {
+        enableHighAccuracy: true,
+        gearsRequestAddress: true,
+        gearsLocationProviderUrls: [reverseGeocoder]
+      };
+
+      var mockGpsPosition = {
+        latitude: 0.1,
+        longitude: 2.3,
+        altitude: 4,
+        accuracy: 5,
+        altitudeAccuracy: 6
+      };
+
+      function successCallback(position) {
+        var correctPosition = mockGpsPosition;
+        // This is hard-coded in reverse_geocoder.py.
+        correctPosition.gearsAddress = {
+          streetNumber: "76",
+          street: "Buckingham Palace Road",
+          postalCode: "SW1W 9TQ",
+          city: "London",
+          county: "London",
+          region: "London",
+          country: "United Kingdom",
+          countryCode: "uk"
+        };
+        position.timestamp = undefined;
+        assertObjectEqual(correctPosition, position);
+        completeAsync();
+      }
+
+      function errorCallback(error) {
+        assert(false, 'testReverseGeocoding failed: ' + error);
+      }
+
+      internalTests.configureGeolocationMockGpsDeviceForTest(mockGpsPosition);
+      startAsync();
+      geolocation.getCurrentPosition(successCallback, errorCallback, options);
     }
   }
 }
