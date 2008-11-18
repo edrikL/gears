@@ -327,7 +327,7 @@ void GpsLocationProvider::ReverseGeocodeAvailable(const Position &position,
 }
 
 // GpsDeviceBase::ListenerInterface implementation
-void GpsLocationProvider::GpsFatalError(const Position::ErrorCode &code,
+void GpsLocationProvider::GpsFatalError(int code,
                                         const std::string16 &message) {
   assert(code > 0);
 
