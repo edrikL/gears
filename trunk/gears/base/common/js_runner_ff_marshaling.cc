@@ -532,7 +532,24 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
 
   JsWrapperDataForInstance *instance_data =
       static_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx, instance_obj));
-  assert(instance_data);
+  if (!instance_data) {
+    // We can get here in the case of a Gears method being invoked via
+    // a reference, as in the example below:
+    // someModule = google.gears.factory.create('beta.someModule');
+    // var reference = someModule.someMethod;
+    // reference();
+    JSRuntime *runtime = JS_GetRuntime(cx);
+    assert(runtime);
+    // Creating a new JsRunner just for the purpose of creating a new Error
+    // object may seem somewhat wasteful, but this is a relatively exotic
+    // situation so, in practice, it will make little difference.
+    scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner(runtime));
+    assert(js_runner.get());
+    JsCallContext call_context(cx, js_runner.get(), argc, argv, js_retval);
+    call_context.SetException(
+        STRING16(L"Member function called without a Gears object."));
+    return JS_FALSE;
+  }
   assert(instance_data->header.type == INSTANCE_JSOBJECT);
   assert(instance_data->module);
   assert(function_data->dispatch_id);

@@ -325,6 +325,19 @@ function testAsyncTaskPostCookies() {
   }
 }
 
+function testCallByReferenceThrowsException() {
+  if (isFirefox) {
+    assertError(
+        function() {
+            var timer = google.gears.factory.create('beta.timer');
+            var reference = timer.setTimeout;
+            reference(function() {}, 0);
+        },
+        'Member function called without a Gears object.',
+        'Call by reference should throw.');
+  }
+}
+
 // Helper functions
 
 function createTestArray(length) {
