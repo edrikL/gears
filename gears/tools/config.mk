@@ -730,7 +730,7 @@ LIBFLAGS = -static -o $@
 MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
-DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices -framework Cocoa
+DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices -framework Cocoa -framework SystemConfiguration
 ifeq ($(BROWSER),SF)
 DLLFLAGS += -mmacosx-version-min=10.4 -framework WebKit -lcurl
 DLLFLAGS += -Ltools/osx -lleopard_support
