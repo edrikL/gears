@@ -1223,6 +1223,7 @@ SF_CPPSRCS	+= \
 		ipc_message_queue_linux.cc \
 		ipc_message_queue_test.cc \
 		ipc_message_queue_test_osx.mm \
+		proxy_resolver_mac.cc \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
 		messagebox.mm \
