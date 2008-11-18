@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OS_ANDROID
+
 #include "url_intercept_android.h"
 
 #include <assert.h>
@@ -441,3 +443,5 @@ jobject UrlInterceptAndroid::Service(jobject service_request) {
     return frame.pop(response);
   }
 }
+
+#endif  // OS_ANDROID

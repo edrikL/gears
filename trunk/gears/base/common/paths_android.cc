@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OS_ANDROID
+
 #include "gears/base/common/common_np.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/mutex.h"
@@ -95,3 +97,5 @@ bool GetInstallDirectory(std::string16 *path) {
   *path = android_gears_install_dir;
   return true;
 }
+
+#endif  // OS_ANDROID

@@ -452,7 +452,7 @@ THIRD_PARTY_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # third_party/spidermonkey
 
-ifeq ($(BROWSER),SF)
+ifeq ($(USING_MOZJS),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/spidermonkey/js/src \
 		../third_party/spidermonkey/nspr/pr/src/io \
@@ -468,7 +468,6 @@ THIRD_PARTY_VPATH	+= \
 		$(NULL)
 
 MOZJS_CSRCS	+= \
-		darwin.c \
 		jsapi.c \
 		jsarena.c \
 		jsarray.c \
@@ -543,9 +542,24 @@ MOZJS_CSRCS	+= \
 		unix.c \
 		unix_errors.c \
 		uxproces.c \
+		$(NULL)
+
+# Safari-specific SpiderMonkey files.
+ifeq ($(BROWSER),SF)
+MOZJS_CSRCS	+= \
+		darwin.c \
 		os_Darwin_ppc.s \
 		os_Darwin_x86.s \
 		$(NULL)
+endif
+
+# Files needed for Android builds.
+ifeq ($(OS),android)
+MOZJS_CSRCS	+= \
+		linux.c \
+		prlog2.c \
+		$(NULL)
+endif
 
 $(BROWSER)_VPATH	+= \
 		../third_party/spidermonkey/gears_npapi_bindings \
@@ -854,6 +868,29 @@ LIBTREMOR_CSRCS	+= \
 endif # not wince
 endif # not OFFICIAL_BUILD
 endif # USING_LIBTREMOR
+
+#-----------------------------------------------------------------------------
+# base/android
+#
+# Android platform support files.
+
+ifeq ($(OS),android)
+$(BROWSER)_VPATH	+= \
+		base/android \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		atexit.cc \
+		java_class.cc \
+		java_class_loader.cc \
+		java_class_test.cc \
+		java_exception_scope.cc \
+		java_jni.cc \
+		java_string.cc \
+		webview_manager.cc \
+		$(NULL)
+endif
+
 #-----------------------------------------------------------------------------
 # base/common
 
@@ -901,6 +938,7 @@ $(BROWSER)_CPPSRCS	+= \
 		byte_store.cc \
 		byte_store_test.cc \
 		circular_buffer_test.cc \
+		common_np_android.cc \
 		common_win32.cc \
 		database_name_table.cc \
 		event.cc \
@@ -920,6 +958,7 @@ $(BROWSER)_CPPSRCS	+= \
 		memory_buffer.cc \
 		memory_buffer_test.cc \
 		message_queue.cc \
+		message_queue_android.cc \
 		message_service.cc \
 		message_service_test.cc \
 		mime_detect.cc \
@@ -930,6 +969,7 @@ $(BROWSER)_CPPSRCS	+= \
 		name_value_table.cc \
 		name_value_table_test.cc \
 		paths.cc \
+		paths_android.cc \
 		permissions_db.cc \
 		permissions_db_test.cc \
 		permissions_manager.cc \
@@ -1110,11 +1150,17 @@ ifeq ($(OS),android)
 NPAPI_CPPSRCS	+= \
 		module_android.cc \
 		$(NULL)
+ifeq ($(USING_MOZJS),1)
+# Android using SpiderMonkey requires this bindings implementation.
+NPAPI_CPPSRCS	+= \
+		js_standalone_engine_mozjs.cc \
+		$(NULL)
+endif  # USING_MOZJS
 else
 NPAPI_CPPSRCS	+= \
 		module.cc \
 		$(NULL)
-endif # ANDROID
+endif  # ANDROID
 
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
@@ -1400,6 +1446,7 @@ $(BROWSER)_VPATH += \
 
 $(BROWSER)_CPPSRCS += \
 		desktop.cc \
+		desktop_android.cc \
 		desktop_linux.cc \
 		desktop_osx.cc \
 		desktop_test.cc \
@@ -1453,6 +1500,10 @@ SF_CPPSRCS += \
 		drop_target_sf.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
+
+NPAPI_JAVASRCS	+= \
+		DesktopAndroid.java \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # gtest
@@ -1854,10 +1905,10 @@ NPAPI_VPATH	+= \
 
 ifeq ($(OS),android)
 NPAPI_BASE64SRCS += \
-	local_data.png.base64 \
-	location_data.png.base64 \
-	icon_32x32.png.base64 \
-	$(NULL)
+		local_data.png.base64 \
+		location_data.png.base64 \
+		icon_32x32.png.base64 \
+		$(NULL)
 endif
 
 # Some files should be omitted on Mac and Linux...
@@ -1901,6 +1952,31 @@ $(BROWSER)_STABSRCS += \
 		permissions_dialog.js.stab \
 		settings_dialog.js.stab \
 		shortcuts_dialog.js.stab \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# ui/android
+
+$(BROWSER)_VPATH	+= \
+		ui/android \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		html_dialog_android.cc \
+		settings_dialog_android.cc \
+		$(NULL)
+
+$(BROWSER)_JAVASRCS	+= \
+		GearsPluginSettings.java \
+		HtmlDialogAndroid.java \
+		IGearsDialogService.aidl \
+		$(NULL)
+
+# HTML files for the dialogs to compress
+NPAPI_HTML_COMPRESSED_FILES += \
+		permissions_dialog.html \
+		settings_dialog.html \
+		shortcuts_dialog.html \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -2129,6 +2205,24 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# localserver/android
+
+NPAPI_VPATH	+= \
+		localserver/android \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		http_request_android.cc \
+		safe_http_request.cc \
+		url_intercept_android.cc \
+		$(NULL)
+
+NPAPI_JAVASRCS	+= \
+		HttpRequestAndroid.java \
+		UrlInterceptHandlerGears.java \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # localserver/firefox
 
 FF3_VPATH	+= \
@@ -2206,7 +2300,6 @@ OPERA_VPATH	+= \
 
 OPERA_CPPSRCS	+= \
 		http_request_op.cc \
-		safe_http_request.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -2511,21 +2604,30 @@ $(BROWSER)_CPPSRCS	+= \
 		geolocation_db.cc \
 		geolocation_db_test.cc \
 		geolocation_test.cc \
+		gps_device_android.cc \
 		gps_device_wince.cc \
 		gps_location_provider.cc \
 		location_provider.cc \
 		location_provider_pool.cc \
+		looper_thread_android.cc \
 		network_location_provider.cc \
 		network_location_request.cc \
+		radio_data_provider_android.cc \
 		radio_data_provider_wince.cc \
 		reverse_geocoder.cc \
 		timed_callback.cc \
+		wifi_data_provider_android.cc \
 		wifi_data_provider_common.cc \
 		wifi_data_provider_linux.cc \
 		wifi_data_provider_osx.cc \
 		wifi_data_provider_win32.cc \
 		wifi_data_provider_wince.cc \
 		wifi_data_provider_windows_common.cc \
+		$(NULL)
+
+$(BROWSER)_JAVASRCS	+= \
+		AndroidGpsLocationProvider.java \
+		AndroidRadioDataProvider.java \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -2601,6 +2703,15 @@ OPERA_M4SRCS += $(NPAPI_M4SRCS)
 OPERA_IDLSRCS += $(NPAPI_IDLSRCS)
 OPERA_HTML_M4SRCS += $(NPAPI_HTML_M4SRCS)
 OPERA_LIBS += $(NPAPI_LIBS)
+endif
+endif
+
+#-----------------------------------------------------------------------------
+# On Android, remove all Java sources if we're not using a runtime
+# class loader. This will use the system packaged versions instead.
+ifeq ($(OS),android)
+ifeq ($(USING_CLASS_LOADER),0)
+NPAPI_JAVASRCS =
 endif
 endif
 

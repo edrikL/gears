@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OS_ANDROID
+
 #include "gears/ui/common/html_dialog.h"
 #include "gears/ui/android/settings_dialog_android.h"
 
@@ -169,3 +171,5 @@ bool HtmlDialog::GetLocale(std::string16* p) {
   // TODO: returns the correct locale
   return false;
 }
+
+#endif  // OS_ANDROID

@@ -25,6 +25,8 @@
 //
 // Android-specific implementation of desktop shortcut creation.
 
+#ifdef OS_ANDROID
+
 #include <errno.h>
 
 #include "gears/desktop/desktop.h"
@@ -152,3 +154,5 @@ bool Desktop::CreateShortcutPlatformImpl(
   AddShortcutAndroid(shortcut, icon_path);
   return true;
 }
+
+#endif  // defined(OS_ANDROID)
