@@ -2201,6 +2201,7 @@ $(BROWSER)_CPPSRCS += \
 		manifest.cc \
 		resource_store.cc \
 		resource_store_module.cc \
+		safe_http_request.cc \
 		update_task.cc \
 		update_task_single_process.cc \
 		$(NULL)
@@ -2214,7 +2215,6 @@ NPAPI_VPATH	+= \
 
 NPAPI_CPPSRCS	+= \
 		http_request_android.cc \
-		safe_http_request.cc \
 		url_intercept_android.cc \
 		$(NULL)
 
@@ -2288,7 +2288,6 @@ CHROME_CPPSRCS	+= \
 		network_intercept_cr.cc \
 		http_cookies_cr.cc \
 		http_request_cr.cc \
-		safe_http_request.cc \
 		update_task_cr.cc \
 		$(NULL)
 
