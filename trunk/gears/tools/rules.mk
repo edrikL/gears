@@ -1184,7 +1184,7 @@ $(ANDROID_INSTALLER_DLL): $(NPAPI_MODULE_DLL)
 	@echo "Copy $<"
 	@cp $< $@
 	@echo "Strip $<"
-	@arm-eabi-strip $@
+	@$(CROSS_PREFIX)strip $@
 
 $(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html.compress
 	@echo "Copy `basename $@`"
