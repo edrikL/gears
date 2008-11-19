@@ -85,14 +85,33 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 - (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo {
   g_dragging_pasteboard_filenames_.clear();
 
-  NSPasteboard *pboard = [draggingInfo draggingPasteboard];
-  if ([[pboard types] containsObject:NSFilenamesPboardType]) {
-    NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
-    NSEnumerator *enumerator = [files objectEnumerator];
-    while (NSString *ns_string = [enumerator nextObject]) {
-      std::string16 std_string;
-      [ns_string string16:&std_string];
-      g_dragging_pasteboard_filenames_.push_back(std_string);
+  // In Safari, arbitrary web pages can put on the pasteboard during an ondrag
+  // event, simply by calling window.event.dataTransfer.setData('URL',
+  // 'file:///some/file'). If we did not distinguish such drag sources, then
+  // a malicious web page could access the local file system, with the help of
+  // Gears drag and drop, by tricking a user to drag one image on the page and
+  // dropping it on another image on the same page.
+  // To prevent this, we require that the source of the drag be from a
+  // separate application (i.e. it is in a separate process' address
+  // space), and hence [draggingInfo draggingSource] will return nil rather
+  // than a pointer to something in the address space of this Safari process
+  // (or more specifically, a pointer to something caused by a web page viewed
+  // in Safari). If Safari ever went to a multi-process architecture, then we
+  // would have to revisit this guard.
+  BOOL is_drag_from_another_application =
+      ([draggingInfo draggingSource] == nil);
+
+  if (is_drag_from_another_application) {
+    NSPasteboard *pboard = [draggingInfo draggingPasteboard];
+    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
+      NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
+      NSEnumerator *enumerator = [files objectEnumerator];
+      NSString *ns_string;
+      while ((ns_string = [enumerator nextObject])) {
+        std::string16 std_string;
+        [ns_string string16:&std_string];
+        g_dragging_pasteboard_filenames_.push_back(std_string);
+      }
     }
   }
 
