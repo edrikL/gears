@@ -100,8 +100,13 @@ NPError NPP_New(NPMIMEType pluginType,
     UTF8ToString16(user_agent_utf8, &g_user_agent);
   }
 
-  // Make this a windowless plugin.
+#if BROWSER_CHROME
+  // TODO(nigeltao): Is it really necessary (in Chrome) to make this a
+  // windowless plugin?
   return NPN_SetValue(instance, NPPVpluginWindowBool, NULL);
+#else
+  return NPERR_NO_ERROR;
+#endif
 }
 
 // here is the place to clean up and destroy the NPObject object
