@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef BROWSER_NPAPI
+#if defined(BROWSER_NPAPI) || defined(BROWSER_FF)
 
 #include "gears/localserver/common/safe_http_request.h"
 
@@ -624,4 +624,4 @@ void SafeHttpRequest::RemoveNativeRequest() {
   }
 }
 
-#endif  // BROWSER_NPAPI
+#endif  // defined(BROWSER_NPAPI) || defined(BROWSER_FF)
