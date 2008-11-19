@@ -1,0 +1,55 @@
+<html><head><title>Gears Drag and Drop, setData(aFileUrl)</title></head>
+<body>
+<p>Instructions: drag the image and drop it into the black-bordered square.
+If you get an alert, then something is wrong (i.e. Gears drag and drop has
+a potential security hole).</p>
+
+<!-- TODO(nigeltao): the fundamental problem is that this page is creating
+a file reference (via dataTransfer.setData) to a file that it most likely
+should not have the rights to, especially if it is an arbitrary web page
+on a foreign server. If this web page is served by pointing the browser
+itself to a file:// URL (as opposed to an http:// URL) then since it is
+already on the local filesystem then presumably it may be trusted (it
+might be an Apple Dashboard widget, for example), and setData('URL',
+aFileUrl) might be a valid thing to do. Still, that might not necessarily
+be true - an untrusted .html file could live in ~/Downloads, for instance.
+Anyway, the fact that an arbitrary web page can put filenames onto the
+pasteboard, during ondrag, may or may not be a WebKit bug. The TODO is for
+me to discuss this upstream, with the WebKit people. -->
+
+<img src="icon_48x48.png" ondragstart="onImgDragStart()"/>
+
+<div id="dropZone" style="border:1px solid black; width:48px; height:48px">
+</div>
+
+<script type="text/javascript" src="../../sdk/gears_init.js"></script>
+<script type="text/javascript">
+
+var dropZone = document.getElementById('dropZone');
+var desktop = google.gears.factory.create('beta.desktop');
+desktop.registerDropTarget(dropZone, {
+  'ondragenter': function(context) {
+    return false;
+  },
+  'ondragover': function(context) {
+    return false;
+  },
+  'ondragleave': function(context) {
+  },
+  'ondrop': function(context) {
+    if (context.files && context.files.length > 0) {
+      alert('Gears drag and drop has a potential security hole.');
+    }
+  }
+});
+
+function onImgDragStart() {
+  var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
+  window.event.dataTransfer.setData('URL', isWin32
+      ? 'file:///C:\\WINDOWS\\notepad.exe'
+      : 'file:///etc/passwd');
+}
+
+</script>
+</body>
+</html>
