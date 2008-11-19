@@ -222,8 +222,17 @@ bool PositionTable::GetPosition(const std::string16 &name,
   position->address.country       = statement.column_text16_safe(13);
   position->address.country_code  = statement.column_text16_safe(14);
   position->address.postal_code   = statement.column_text16_safe(15);
-  position->error_code            = statement.column_int(16);
+  int error_code                  = statement.column_int(16);
   position->error_message         = statement.column_text16_safe(17);
+
+  switch (error_code) {
+    case Position::ERROR_CODE_POSITION_UNAVAILABLE:
+      position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
+    default:
+      // Note that in previous versions, error_code was set to kint32min to
+      // signify no error.
+      position->error_code = Position::ERROR_CODE_NONE;
+  }
 
   return true;
 }

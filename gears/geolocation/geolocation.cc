@@ -209,7 +209,13 @@ GearsGeolocation::GearsGeolocation()
   // Retrieve the cached last known position, if available.
   GeolocationDB *db = GeolocationDB::GetDB();
   if (db) {
-    db->RetrievePosition(kLastPositionName, &last_position_);
+    // Only update last_position if the stored position is good. This should
+    // always be the case.
+    Position stored_position;
+    if (db->RetrievePosition(kLastPositionName, &stored_position) &&
+        stored_position.IsGoodFix()) {
+      last_position_ = stored_position;
+    }
   }
 }
 

@@ -153,8 +153,8 @@ function testGetLocationFromResponse() {
     var position;
     var correctPosition;
 
-    var locationAcquisitionErrorCode = 2;
-    var locationNotFoundErrorCode = 3;
+    // Error code values. These values must match those in geolocation.h.
+    var ERROR_CODE_POSITION_UNAVAILABLE = 2;
 
     // Test good response with valid position.
     var responseBody = '{ ' +
@@ -241,7 +241,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = 'No response from network provider at ' +
                               dummy_server +
                               '.';
@@ -255,7 +255,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = 'Network provider at ' +
                               dummy_server +
                               ' returned error code 400.';
@@ -269,7 +269,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = malformedResponseError;
     assertObjectEqual(correctPosition, position);
 
@@ -281,7 +281,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = malformedResponseError;
     assertObjectEqual(correctPosition, position);
 
@@ -293,7 +293,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationAcquisitionErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = malformedResponseError;
     assertObjectEqual(correctPosition, position);
 
@@ -305,7 +305,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationNotFoundErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = noGoodFixError;
     assertObjectEqual(correctPosition, position);
 
@@ -317,7 +317,7 @@ function testGetLocationFromResponse() {
         0,      // timestamp
         dummy_server);
     correctPosition = new Object();
-    correctPosition.code = locationNotFoundErrorCode;
+    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
     correctPosition.message = noGoodFixError;
     assertObjectEqual(correctPosition, position);
   }

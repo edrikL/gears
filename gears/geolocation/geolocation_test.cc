@@ -557,10 +557,16 @@ void GetPositionFromJavaScriptParameter(JsCallContext *context,
   GetDoublePropertyIfDefined(context, object.get(),
                              STRING16(L"altitudeAccuracy"),
                              &position->altitude_accuracy);
+  int error_code = Position::ERROR_CODE_NONE;
   GetIntegerPropertyIfDefined(context, object.get(), STRING16(L"errorCode"),
-                             &position->error_code);
+                              &error_code);
   GetStringPropertyIfDefined(context, object.get(), STRING16(L"errorMessage"),
                              &position->error_message);
+
+  switch (error_code) {
+    case Position::ERROR_CODE_POSITION_UNAVAILABLE:
+      position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
+  }
 }
 
 void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {

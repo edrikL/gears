@@ -327,13 +327,12 @@ void GpsLocationProvider::ReverseGeocodeAvailable(const Position &position,
 }
 
 // GpsDeviceBase::ListenerInterface implementation
-void GpsLocationProvider::GpsFatalError(int code,
+void GpsLocationProvider::GpsFatalError(const Position::ErrorCode &code,
                                         const std::string16 &message) {
   assert(code > 0);
 
   // Update the listeners then terminate the worker thread.
   Position position;
-  // TODO(steveblock): Update error codes to keep in sync with W3C spec.
   position.error_code = code;
   position.error_message = message;
   position_mutex_.Lock();

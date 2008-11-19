@@ -123,7 +123,7 @@ void AndroidGpsDevice::BeforeLoop() {
   if (scope.Occurred()) {
     // Something went wrong when instantiating the Java object.
     LOG(("Could not instantiate the Java object.\n"));
-    position_.error_code = kGeolocationLocationAcquisitionErrorCode;
+    position_.error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
     position_.error_message = kGpsErrorMessage;
     // No need to call 'scope.Clear();', as the exception
     // will be cleared by the destructor of scope.
@@ -188,11 +188,11 @@ void AndroidGpsDevice::PositionChanged(const Position &new_position) {
 void AndroidGpsDevice::ProviderError(bool is_disabled) {
   if (is_disabled) {
     LOG(("GPS disabled, updating listener.\n"));
-    listener_->GpsFatalError(kGeolocationLocationAcquisitionErrorCode,
+    listener_->GpsFatalError(Position::ERROR_CODE_POSITION_UNAVAILABLE,
                              kGpsDisabledMessage);
   } else {
     LOG(("GPS error, updating listener.\n"));
-    listener_->GpsFatalError(kGeolocationLocationAcquisitionErrorCode,
+    listener_->GpsFatalError(Position::ERROR_CODE_POSITION_UNAVAILABLE,
                              kGpsErrorMessage);
   }
 }

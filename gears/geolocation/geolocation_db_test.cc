@@ -60,7 +60,7 @@ bool TestGeolocationDB(std::string16 *error) {
   position.address.country       = STRING16(L"country");
   position.address.country_code  = STRING16(L"country code");
   position.address.postal_code   = STRING16(L"postal code");
-  position.error_code            = 7;
+  position.error_code            = Position::ERROR_CODE_NONE;
   position.error_message         = STRING16(L"error");
 
   Position updated_position;
@@ -79,7 +79,8 @@ bool TestGeolocationDB(std::string16 *error) {
   updated_position.address.country       = STRING16(L"updated country");
   updated_position.address.country_code  = STRING16(L"updated country code");
   updated_position.address.postal_code   = STRING16(L"updated postal code");
-  updated_position.error_code            = 17;
+  updated_position.error_code =
+      Position::ERROR_CODE_POSITION_UNAVAILABLE;
   updated_position.error_message         = STRING16(L"updated error");
 
   Position retrieved_position;
