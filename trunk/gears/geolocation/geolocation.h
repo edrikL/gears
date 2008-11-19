@@ -50,10 +50,6 @@ static const int kBadAltitude = -1000;
 static const int kBadAccuracy = -1;  // Accuracy must be non-negative.
 
 
-// Error codes for returning to JavaScript.
-const int kGeolocationLocationAcquisitionErrorCode = 2;
-const int kGeolocationLocationNotFoundErrorCode = 3;
-
 // The internal representation of an address.
 struct Address {
  public:
@@ -84,6 +80,19 @@ struct Address {
 // types when passed to JavaScript.
 struct Position {
  public:
+  // Error codes for returning to JavaScript. These values are defined by the
+  // W3C spec. The following codes are not used by Gears.
+  //
+  // UNKNOWN_ERROR = 0
+  // PERMISSION_DENIED = 1 - Geolocation methods throw an exception if
+  //                         permission has not been granted.
+  enum ErrorCode {
+    ERROR_CODE_NONE = -1,  // Gears addition
+    ERROR_CODE_POSITION_UNAVAILABLE = 2,
+    // TODO(steveblock): Implement PositionOptions.timeout.
+    //ERROR_CODE_TIMEOUT = 3,
+  };
+
   Position()
       : latitude(kBadLatLng),
         longitude(kBadLatLng),
@@ -91,7 +100,7 @@ struct Position {
         accuracy(kBadAccuracy),
         altitude_accuracy(kBadAccuracy),
         timestamp(-1),
-        error_code(kint32min) {}
+        error_code(ERROR_CODE_NONE) {}
   bool IsGoodFix() const {
     // A good fix has a valid latitude, longitude, accuracy and timestamp.
     return latitude >= -90.0 && latitude <= 90.0 &&
@@ -100,7 +109,7 @@ struct Position {
            timestamp != -1;
   }
   bool IsInitialized() const {
-    return IsGoodFix() || error_code != kint32min;
+    return IsGoodFix() || error_code != ERROR_CODE_NONE;
   }
   bool IncludesAddress() const {
     return address.IsPopulated();
@@ -117,7 +126,7 @@ struct Position {
   Address address;
 
   // These properties are returned to JavaScript as a PositionError object.
-  int error_code;
+  ErrorCode error_code;
   std::string16 error_message;  // Human-readable error message
 };
 

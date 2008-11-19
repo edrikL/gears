@@ -64,7 +64,7 @@ static const char16 *kFailedToGetFixErrorMessage =
 // Local function
 // This assumes that position_2 is a good fix.
 static bool PositionsDiffer(const Position &position_1,
-                             const Position &position_2);
+                            const Position &position_2);
 
 
 // GpsLocationProvider factory method for platform-dependent GPS devices.
@@ -110,7 +110,7 @@ void WinceGpsDevice::Run() {
                               0);  // Reserved
   if (gps_handle_ == NULL) {
     LOG(("WinceGpsDevice::Run() : Failed to open handle to GPS device.\n"));
-    listener_->GpsFatalError(kGeolocationLocationAcquisitionErrorCode,
+    listener_->GpsFatalError(Position::ERROR_CODE_POSITION_UNAVAILABLE,
                              kFailedToConnectErrorMessage);
     return;
   }
@@ -169,11 +169,11 @@ void WinceGpsDevice::Run() {
         assert(wait_milliseconds != INFINITE);
         switch (state_) {
           case STATE_CONNECTING:
-            listener_->GpsFatalError(kGeolocationLocationAcquisitionErrorCode,
+            listener_->GpsFatalError(Position::ERROR_CODE_POSITION_UNAVAILABLE,
                                      kFailedToConnectErrorMessage);
             break;
           case STATE_ACQUIRING_FIX:
-            listener_->GpsFatalError(kGeolocationLocationNotFoundErrorCode,
+            listener_->GpsFatalError(Position::ERROR_CODE_POSITION_UNAVAILABLE,
                                      kFailedToGetFixErrorMessage);
             break;
           default:

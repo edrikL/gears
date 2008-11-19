@@ -247,7 +247,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
   if (!http_post_result) {
     LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost request "
          "failed.\n"));
-    position->error_code = kGeolocationLocationAcquisitionErrorCode;
+    position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
     position->error_message = STRING16(L"No response from network provider "
                                        L"at ");
     position->error_message += server_url.c_str();
@@ -260,7 +260,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
       // The response was successfully parsed, but it may not be a valid
       // position fix.
       if (!position->IsGoodFix()) {
-        position->error_code = kGeolocationLocationNotFoundErrorCode;
+        position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
         position->error_message = STRING16(L"Network provider at ");
         position->error_message += server_url.c_str();
         position->error_message += STRING16(L" did not provide a good position "
@@ -270,7 +270,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
       // We failed to parse the repsonse.
       LOG(("NetworkLocationRequest::GetLocationFromResponse() : Response "
            "malformed.\n"));
-      position->error_code = kGeolocationLocationAcquisitionErrorCode;
+      position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
       position->error_message = STRING16(L"Response from network provider at ");
       position->error_message += server_url.c_str();
       position->error_message += STRING16(L" was malformed.");
@@ -279,7 +279,7 @@ void NetworkLocationRequest::GetLocationFromResponse(
     // The response was bad.
     LOG(("NetworkLocationRequest::GetLocationFromResponse() : HttpPost "
          "response was bad.\n"));
-    position->error_code = kGeolocationLocationAcquisitionErrorCode;
+    position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
     position->error_message = STRING16(L"Network provider at ");
     position->error_message += server_url.c_str();
     position->error_message += STRING16(L" returned error code ");
