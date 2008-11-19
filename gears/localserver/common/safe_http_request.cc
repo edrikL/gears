@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef BROWSER_NPAPI
+
 #include "gears/localserver/common/safe_http_request.h"
 
 #include "gears/base/common/leak_counter.h"
@@ -621,3 +623,5 @@ void SafeHttpRequest::RemoveNativeRequest() {
     Unref();
   }
 }
+
+#endif  // BROWSER_NPAPI
