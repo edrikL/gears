@@ -42,35 +42,35 @@ function testPassArguments() {
       internalTests.testPassArguments(args[0], args[1], args[2], args[3],
                                       args[4]);
     }
-    
+
     var good_bool = true;
     var good_int = 42;
     var good_int64 = Math.pow(2, 42);
     var good_double = 88.8;
-    var good_string = "hotdog";
-    
+    var good_string = 'hotdog';
+
     var bad_bool = false;
     var bad_int = 43;
     var bad_int64 = Math.pow(2, 43);
     var bad_double = 88.9;
-    var bad_string = "hotdof";
-    
+    var bad_string = 'hotdof';
+
     // Test a good one
     var good_vals = [good_bool, good_int, good_int64, good_double, good_string];
     callTest(good_vals);
-    
+
     // Test passing wrong values
     var bad_vals = [bad_bool, bad_int, bad_int64, bad_double, bad_string];
     for (var i = 0; i < good_vals.length; i++) {
       var test_vals = [].concat(good_vals);
       test_vals[i] = bad_vals[i];
       assertError(function() { callTest(test_vals) },
-                  "Incorrect value for parameter " + (i + 1));
+                  'Incorrect value for parameter ' + (i + 1));
     }
 
     // Test passing null and undefined for required args
     var required_argument_error =
-        "Null or undefined passed for required argument 5.";
+        'Null or undefined passed for required argument 5.';
     assertError(function() {
       internalTests.testPassArguments(good_bool, good_int, good_int64,
                                       good_double, null); },
@@ -84,7 +84,7 @@ function testPassArguments() {
     assertError(function() {
       internalTests.testPassArguments(good_bool, good_int, good_int64,
                                       good_double); },
-      "Required argument 5 is missing");
+      'Required argument 5 is missing');
 
     // Test passing wrong type
     for (var i = 0; i < good_vals.length; i++) {
@@ -98,22 +98,22 @@ function testPassArguments() {
         if (good_vals[i] == good_int64 && good_vals[j] == good_int) {
           expect_conversion_allowed = false;
         }
-        
+
         // Same for converting int and int64 to double.
         if (good_vals[i] == good_double) {
           if (good_vals[j] == good_int || good_vals[j] == good_int64) {
             expect_conversion_allowed = false;
           }
         }
-        
+
         var test_vals = [].concat(good_vals);
         test_vals[i] = test_vals[j];
 
         var expected_error = expect_conversion_allowed ?
-            "Argument " + (i + 1) + " has invalid type or is outside allowed " +
-            "range" :
-            "Incorrect value for parameter " + (i + 1);
-        
+            'Argument ' + (i + 1) + ' has invalid type or is outside allowed ' +
+            'range' :
+            'Incorrect value for parameter ' + (i + 1);
+
         assertError(function() { callTest(test_vals); }, expected_error);
       }
     }
@@ -122,11 +122,11 @@ function testPassArguments() {
 
 function testPassArgumentsCallback() {
   function testPassArgumentCallbackFunction(arg1, arg2, arg3, arg4, arg5) {
-    assert(arg1 === true, "Bad value for argument 1");
-    assert(arg2 === 42, "Bad value for argument 2");
-    assert(arg3 === Math.pow(2, 42), "Bad value for argument 3");
-    assert(arg4 === 88.8, "Bad value for argument 4");
-    assert(arg5 === "hotdog", "Bad value for argument 5");
+    assert(arg1 === true, 'Bad value for argument 1');
+    assert(arg2 === 42, 'Bad value for argument 2');
+    assert(arg3 === Math.pow(2, 42), 'Bad value for argument 3');
+    assert(arg4 === 88.8, 'Bad value for argument 4');
+    assert(arg5 === 'hotdog', 'Bad value for argument 5');
   }
   if (isUsingCCTests) {
     internalTests.testPassArgumentsCallback(testPassArgumentCallbackFunction);
@@ -152,7 +152,7 @@ function testPassArgumentsOptional() {
     internalTests.testPassArgumentsOptional(42, null, 42);
 
     // Missing required argument.
-    var expectedError = "Required argument 3 is missing.";
+    var expectedError = 'Required argument 3 is missing.';
     assertError(
       function() { internalTests.testPassArgumentsOptional(42, 42); },
       expectedError);
@@ -162,16 +162,16 @@ function testPassArgumentsOptional() {
 
     // Incorrect type for optional argument.
     assertError(
-      function() { internalTests.testPassArgumentsOptional(42, 42, 42, "hi"); },
-      "Argument 4 has invalid type or is outside allowed range.");
+      function() { internalTests.testPassArgumentsOptional(42, 42, 42, 'hi'); },
+      'Argument 4 has invalid type or is outside allowed range.');
     assertError(
-      function() { internalTests.testPassArgumentsOptional(42, "hi"); },
-      "Argument 2 has invalid type or is outside allowed range.");
+      function() { internalTests.testPassArgumentsOptional(42, 'hi'); },
+      'Argument 2 has invalid type or is outside allowed range.');
 
     // Incorrect value for optional argument.
     assertError(
       function() { internalTests.testPassArgumentsOptional(42, 42, 42, 43); },
-      "Incorrect value for parameter 4.");
+      'Incorrect value for parameter 4.');
   }
 }
 
@@ -197,7 +197,7 @@ function testCreateObject() {
   if (isUsingCCTests) {
     // TODO(cdevries): Enable this test on FF in worker pools when
     //                 SetReturnValue() has been implemented.
-    var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
+    var isFirefox = google.gears.factory.getBuildInfo().indexOf('firefox') > -1;
     var isFirefoxWorker = isFirefox && google.gears.workerPool;
 
     if (!isFirefoxWorker) {
@@ -220,7 +220,7 @@ function testCreateError() {
   if (isUsingCCTests) {
     // TODO(cdevries): Enable this test on FF in worker pools when
     //                 SetReturnValue() has been implemented.
-    var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
+    var isFirefox = google.gears.factory.getBuildInfo().indexOf('firefox') > -1;
     var isFirefoxWorker = isFirefox && google.gears.workerPool;
 
     if (!isFirefoxWorker) {
@@ -278,9 +278,9 @@ function testNotifier() {
 function testAsyncTaskPostCookies() {
   // TODO(steveblock): Enable this test for Chrome when bug 1301226 is fixed.
   if (isUsingCCTests && !(isWin32 && isNPAPI)) {
-    var setCookieUrl = "/testcases/set_cookie.txt";
-    var serveIfCookiesPresentUrl = "/testcases/serve_if_cookies_present.txt";
-    var serveIfCookiesAbsentUrl = "/testcases/serve_if_cookies_absent.txt";
+    var setCookieUrl = '/testcases/set_cookie.txt';
+    var serveIfCookiesPresentUrl = '/testcases/serve_if_cookies_present.txt';
+    var serveIfCookiesAbsentUrl = '/testcases/serve_if_cookies_absent.txt';
     var testIndex = 0;
 
     function runNextTest(returnCode) {
@@ -308,7 +308,7 @@ function testAsyncTaskPostCookies() {
           assertEqual(
               404, returnCode, 'Expected 404 for request with cookies.');
           internalTests.testAsyncTaskPostCookies(
-              serveIfCookiesAbsentUrl,false, runNextTest);
+              serveIfCookiesAbsentUrl, false, runNextTest);
           break;
         case 4:
           assertEqual(
@@ -316,7 +316,7 @@ function testAsyncTaskPostCookies() {
           completeAsync();
           break;
         default:
-          throw new Error("Unexpected test index.");
+          throw new Error('Unexpected test index.');
       }
     }
 

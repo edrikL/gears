@@ -43,7 +43,7 @@ function testParseOptions() {
     assertEqual(false, parsedOptions.repeats);
     assertEqual(false, parsedOptions.enableHighAccuracy);
     assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertEqual('', parsedOptions.gearsAddressLanguage);
     assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
 
     // Empty options.
@@ -52,7 +52,7 @@ function testParseOptions() {
     assertEqual(false, parsedOptions.repeats);
     assertEqual(false, parsedOptions.enableHighAccuracy);
     assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertEqual('', parsedOptions.gearsAddressLanguage);
     assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
 
     // Empty provider URLs.
@@ -61,7 +61,7 @@ function testParseOptions() {
     assertEqual(false, parsedOptions.repeats);
     assertEqual(false, parsedOptions.enableHighAccuracy);
     assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertEqual('', parsedOptions.gearsAddressLanguage);
     assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
 
     // Null provider URLs.
@@ -70,7 +70,7 @@ function testParseOptions() {
     assertEqual(false, parsedOptions.repeats);
     assertEqual(false, parsedOptions.enableHighAccuracy);
     assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertEqual('', parsedOptions.gearsAddressLanguage);
     assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
 
     // All properties false, provider URLs set.
@@ -80,13 +80,13 @@ function testParseOptions() {
         {
           enableHighAccuracy: false,
           gearsRequestAddress: false,
-          gearsAddressLanguage: "",
+          gearsAddressLanguage: '',
           gearsLocationProviderUrls: urls
         });
     assertEqual(false, parsedOptions.repeats);
     assertEqual(false, parsedOptions.enableHighAccuracy);
     assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual("", parsedOptions.gearsAddressLanguage);
+    assertEqual('', parsedOptions.gearsAddressLanguage);
     assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
 
     // All properties true, provider URLs set.
@@ -96,13 +96,13 @@ function testParseOptions() {
       {
         enableHighAccuracy: true,
         gearsRequestAddress: true,
-        gearsAddressLanguage: "test",
+        gearsAddressLanguage: 'test',
         gearsLocationProviderUrls: urls
       });
     assertEqual(false, parsedOptions.repeats);
     assertEqual(true, parsedOptions.enableHighAccuracy);
     assertEqual(true, parsedOptions.gearsRequestAddress);
-    assertEqual("test", parsedOptions.gearsAddressLanguage);
+    assertEqual('test', parsedOptions.gearsAddressLanguage);
     assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
   }
 }
@@ -330,7 +330,7 @@ function testMockDeviceDataProvider() {
 
     function makeSuccessfulRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: "good_mac_address"});
+          {mac_address: 'good_mac_address'});
       geolocation.getCurrentPosition(
           successCallback,
           function() {
@@ -338,31 +338,31 @@ function testMockDeviceDataProvider() {
           },
           {
             gearsRequestAddress: true,
-            gearsLocationProviderUrls: [ mockNetworkLocationProvider ]
+            gearsLocationProviderUrls: [mockNetworkLocationProvider]
           });
     }
 
     function makeUnsuccessfulRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: "no_location_mac_address"});
+          {mac_address: 'no_location_mac_address'});
       geolocation.getCurrentPosition(
           function() {
             assert(false, 'makeUnsuccessfulRequest succeeded');
           },
           noPositionErrorCallback,
-          {gearsLocationProviderUrls: [ mockNetworkLocationProvider ]});
+          {gearsLocationProviderUrls: [mockNetworkLocationProvider]});
     }
 
     function makeMalformedRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: "00-00-00-00-00-00"});
+          {mac_address: '00-00-00-00-00-00'});
       internalTests.configureGeolocationRadioDataProviderForTest({cell_id: 88});
       geolocation.getCurrentPosition(
           function() {
             assert(false, 'makeMalformedRequest succeeded');
           },
           malformedRequestErrorCallback,
-          {gearsLocationProviderUrls: [ mockNetworkLocationProvider ]});
+          {gearsLocationProviderUrls: [mockNetworkLocationProvider]});
     }
 
     function successCallback(position) {
@@ -373,14 +373,14 @@ function testMockDeviceDataProvider() {
         accuracy: 1200,
         altitudeAccuracy: 10,
         gearsAddress: {
-          streetNumber: "76",
-          street: "Buckingham Palace Road",
-          postalCode: "SW1W 9TQ",
-          city: "London",
-          county: "London",
-          region: "London",
-          country: "United Kingdom",
-          countryCode: "uk"
+          streetNumber: '76',
+          street: 'Buckingham Palace Road',
+          postalCode: 'SW1W 9TQ',
+          city: 'London',
+          county: 'London',
+          region: 'London',
+          country: 'United Kingdom',
+          countryCode: 'uk'
         }
       };
       position.timestamp = undefined;
@@ -531,14 +531,14 @@ function testReverseGeocoding() {
         var correctPosition = mockGpsPosition;
         // This is hard-coded in reverse_geocoder.py.
         correctPosition.gearsAddress = {
-          streetNumber: "76",
-          street: "Buckingham Palace Road",
-          postalCode: "SW1W 9TQ",
-          city: "London",
-          county: "London",
-          region: "London",
-          country: "United Kingdom",
-          countryCode: "uk"
+          streetNumber: '76',
+          street: 'Buckingham Palace Road',
+          postalCode: 'SW1W 9TQ',
+          city: 'London',
+          county: 'London',
+          region: 'London',
+          country: 'United Kingdom',
+          countryCode: 'uk'
         };
         position.timestamp = undefined;
         assertObjectEqual(correctPosition, position);

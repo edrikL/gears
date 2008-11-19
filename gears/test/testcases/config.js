@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // This file contains information about all the Gears unit tests. It is used by
@@ -29,6 +29,8 @@
 /**
  * Represents a suite of tests that are logically related.
  * @constructor
+ * @param {string} name string The name of the test suite.
+
  */
 function TestSuite(name) {
   this.name = name;
@@ -38,8 +40,9 @@ function TestSuite(name) {
 /**
  * Adds an individual file to a test suite. Files can group related tests, or
  * can be used to separate tests with different configuration requirements.
- * @param relativePath The path of the file to add to the suite.
- * @param config An object containing flags to control how the test runs.
+ * @param {string} relativePath The path of the file to add to the suite.
+ * @param {object} config An object containing flags to control how the test
+ *     runs.
  * Currently, support useWorker and useIFrame.
  */
 TestSuite.prototype.addFile = function(relativePath, config) {
@@ -56,7 +59,7 @@ var suites = [];
 
 if (!isOfficial && !isSafari && !isWince) {
   var audioSuite = new TestSuite('Audio');
-  audioSuite.addFile('../testcases/audio_tests.js', 
+  audioSuite.addFile('../testcases/audio_tests.js',
                      {useWorker: true, useIFrame: true});
   audioSuite.addFile('../testcases/audio_recorder_tests.js',
                      {useWorker: true, useIFrame: true});
@@ -122,7 +125,7 @@ factorySuite.addFile('../testcases/factory_siting_tests.js',
 suites.push(factorySuite);
 
 var geolocationSuite = new TestSuite('Geolocation');
-geolocationSuite.addFile('../testcases/geolocation_tests.js', 
+geolocationSuite.addFile('../testcases/geolocation_tests.js',
                          {useWorker: true, useIFrame: true});
 suites.push(geolocationSuite);
 
@@ -134,7 +137,7 @@ suites.push(httpRequestSuite);
 var internalTestSuite = new TestSuite('Internal_Tests');
 internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
-internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
+internalTestSuite.addFile('../testcases/internal_coercion_tests.js',
                           {useWorker: true, useIFrame: true});
 if (!isOfficial && isUsingCCTests && !isWince) {
   internalTestSuite.addFile('../testcases/internal_audio_recorder_tests.js',
@@ -149,7 +152,7 @@ localServerSuite.addFile('../testcases/localserver_tests.js',
                          {useWorker: true, useIFrame: true});
 localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
-// ResourceStore's captureFile functionality is currently only supported 
+// ResourceStore's captureFile functionality is currently only supported
 // in IE and FireFox and may be deprected in the near future.
 if (isIE || isFirefox) {
   localServerSuite.addFile('../testcases/localserver_capturefile_tests.js',
@@ -165,7 +168,7 @@ if (!isOfficial && !isWince) {
 }
 
 var timerSuite = new TestSuite('Timer');
-timerSuite.addFile('../testcases/timer_tests.js', 
+timerSuite.addFile('../testcases/timer_tests.js',
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
