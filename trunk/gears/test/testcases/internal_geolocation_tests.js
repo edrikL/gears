@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Error code values. These values must match those in geolocation.h.
+var ERROR_CODE_POSITION_UNAVAILABLE = 2;
+
 if (isUsingCCTests) {
   var internalTests = google.gears.factory.create('beta.test');
 }
@@ -389,13 +392,13 @@ function testMockDeviceDataProvider() {
     };
 
     function noPositionErrorCallback(error) {
-      assertEqual(3, error.code);  // Location not found error code.
+      assertEqual(ERROR_CODE_POSITION_UNAVAILABLE, error.code);
       assert(error.message.search('did not provide a good position fix') > 0);
       makeMalformedRequest();
     };
 
     function malformedRequestErrorCallback(error) {
-      assertEqual(2, error.code);  // Location acquistion error code.
+      assertEqual(ERROR_CODE_POSITION_UNAVAILABLE, error.code);
       assert(error.message.search('returned error code 400') > 0);
       completeAsync();
     };
