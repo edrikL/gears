@@ -130,12 +130,30 @@ struct Position {
   std::string16 error_message;  // Human-readable error message
 };
 
+// A wrapper around TimedCallback that posts a message to the MessageService
+// when the timer expires.
+class TimedMessage : public TimedCallback::ListenerInterface {
+ public:
+  TimedMessage(int timeout_milliseconds,
+               const std::string16 &message_type,
+               NotificationData *notification_data);
+  virtual ~TimedMessage() {}
+
+  // TimedCallback::ListenerInterface implementation
+  virtual void OnTimeout(TimedCallback *caller, void *user_data);
+
+ private:
+  scoped_ptr<TimedCallback> timed_callback_;
+  std::string16 message_type_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(TimedMessage);
+};
+
 // The principal class of the Geolocation API.
 class GearsGeolocation
     : public ModuleImplBaseClass,
       public LocationProviderBase::ListenerInterface,
       public MessageObserverInterface,
-      public TimedCallback::ListenerInterface,
       public JsEventHandlerInterface {
  public:
 #ifdef USING_CCTESTS
@@ -212,7 +230,7 @@ class GearsGeolocation
     // since the epoch.
     int64 last_success_callback_time;
     // The timer used for a pending future success callback in a watch.
-    linked_ptr<TimedCallback> success_callback_timer;
+    linked_ptr<TimedMessage> success_callback_timer;
     // The position that will be used used for a pending future success callback
     // in a watch.
     Position pending_position;
@@ -226,9 +244,6 @@ class GearsGeolocation
   virtual void OnNotify(MessageService *service,
                         const char16 *topic,
                         const NotificationData *data);
-
-  // TimedCallback::ListenerInterface implementation.
-  virtual void OnTimeout(TimedCallback *caller, void *user_data);
 
   // JsEventHandlerInterface implementation used to handle the 'JSEVENT_UNLOAD'
   // event.

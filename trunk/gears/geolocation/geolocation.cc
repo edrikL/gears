@@ -75,6 +75,32 @@ static const char16 *kCallbackRequiredObserverTopic =
 static const int kLastRepeatingRequestId = kint32max;  // Repeating IDs positive
 static const int kLastSingleRequestId = kint32min;  // Single IDs negative
 
+
+TimedMessage::TimedMessage(int timeout_milliseconds,
+                           const std::string16 &message_type,
+                           NotificationData *notification_data)
+    : message_type_(message_type) {
+  assert(!message_type_.empty());
+  assert(notification_data);
+  timed_callback_.reset(
+      new TimedCallback(this, timeout_milliseconds, notification_data));
+}
+
+// TimedCallback::ListenerInterface implementation
+void TimedMessage::OnTimeout(TimedCallback *caller, void *user_data) {
+  assert(user_data);
+  assert(timed_callback_.get());
+
+  // We can't delete the TimedCallback here because we can't call Thread::Join()
+  // from the worker thread. Instead we delete the TimedCallback when this
+  // object is deleted in the message handler.
+  NotificationData *notification_data =
+      reinterpret_cast<NotificationData*>(user_data);
+  MessageService::GetInstance()->NotifyObservers(message_type_.c_str(),
+                                                 notification_data);
+}
+
+
 // Data classes for use with MessageService.
 class NotificationDataGeoBase : public NotificationData {
  public:
@@ -387,22 +413,12 @@ void GearsGeolocation::OnNotify(MessageService *service,
     const CallbackRequiredNotificationData *callback_required_data =
         reinterpret_cast<const CallbackRequiredNotificationData*>(data);
 
-    // Delete this callback timer.
+    // Delete this timer.
     FixRequestInfo *fix_info = callback_required_data->fix_info;
     assert(fix_info->success_callback_timer.get());
     fix_info->success_callback_timer.reset();
     MakeSuccessCallback(fix_info, fix_info->pending_position);
   }
-}
-
-// TimedCallback::ListenerInterface implementation.
-void GearsGeolocation::OnTimeout(TimedCallback *caller, void *user_data) {
-  assert(user_data);
-  // Send a message to the JavaScriptThread to make the callback.
-  FixRequestInfo *fix_info = reinterpret_cast<FixRequestInfo*>(user_data);
-  MessageService::GetInstance()->NotifyObservers(
-      kCallbackRequiredObserverTopic,
-      new CallbackRequiredNotificationData(this, fix_info));
 }
 
 // JsEventHandlerInterface implementation.
@@ -1175,8 +1191,10 @@ void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
   assert(!fix_info->success_callback_timer.get());
 
   fix_info->pending_position = position;
-  fix_info->success_callback_timer.reset(
-      new TimedCallback(this, timeout_milliseconds, fix_info));
+  fix_info->success_callback_timer.reset(new TimedMessage(
+      timeout_milliseconds,
+      kCallbackRequiredObserverTopic,
+      new CallbackRequiredNotificationData(this, fix_info)));
 }
 
 // Local functions
