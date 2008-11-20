@@ -137,6 +137,7 @@ class NotificationDataGeoBase : public NotificationData {
   DISALLOW_EVIL_CONSTRUCTORS(NotificationDataGeoBase);
 };
 
+// Used for messages of type kLocationAvailableObserverTopic.
 class LocationAvailableNotificationData : public NotificationDataGeoBase {
  public:
   LocationAvailableNotificationData(GearsGeolocation *object_in,
@@ -153,19 +154,19 @@ class LocationAvailableNotificationData : public NotificationDataGeoBase {
   DISALLOW_EVIL_CONSTRUCTORS(LocationAvailableNotificationData);
 };
 
+// Used for messages of type kCallbackRequiredObserverTopic.
 struct CallbackRequiredNotificationData : public NotificationDataGeoBase {
  public:
-  CallbackRequiredNotificationData(
-      GearsGeolocation *object_in,
-      GearsGeolocation::FixRequestInfo *fix_info_in)
+  CallbackRequiredNotificationData(GearsGeolocation *object_in,
+                                   int fix_request_id_in)
       : NotificationDataGeoBase(object_in),
-        fix_info(fix_info_in) {}
+        fix_request_id(fix_request_id_in) {}
   virtual ~CallbackRequiredNotificationData() {}
 
   friend class GearsGeolocation;
 
  private:
-  GearsGeolocation::FixRequestInfo *fix_info;
+  int fix_request_id;
 
   DISALLOW_EVIL_CONSTRUCTORS(CallbackRequiredNotificationData);
 };
@@ -399,25 +400,24 @@ void GearsGeolocation::OnNotify(MessageService *service,
     return;
   }
 
-  if (char16_wmemcmp(kLocationAvailableObserverTopic,
-                     topic,
-                     char16_wcslen(topic)) == 0) {
+  std::string16 topic_string(topic);
+  if (topic_string == kLocationAvailableObserverTopic) {
+    // A location provider reported a new position.
     const LocationAvailableNotificationData *location_available_data =
         reinterpret_cast<const LocationAvailableNotificationData*>(data);
-
-    // Invoke the implementation.
     LocationUpdateAvailableImpl(location_available_data->provider);
-  } else if (char16_wmemcmp(kCallbackRequiredObserverTopic,
-                            topic,
-                            char16_wcslen(topic)) == 0) {
+  } else if (topic_string == kCallbackRequiredObserverTopic) {
+    // The timeout for a watch callback expired.
     const CallbackRequiredNotificationData *callback_required_data =
         reinterpret_cast<const CallbackRequiredNotificationData*>(data);
-
-    // Delete this timer.
-    FixRequestInfo *fix_info = callback_required_data->fix_info;
-    assert(fix_info->success_callback_timer.get());
-    fix_info->success_callback_timer.reset();
-    MakeSuccessCallback(fix_info, fix_info->pending_position);
+    // Check that the fix request still exists
+    FixRequestInfo *fix_info =
+        MaybeGetFixRequest(callback_required_data->fix_request_id);
+    if (fix_info) {
+      assert(fix_info->success_callback_timer.get());
+      fix_info->success_callback_timer.reset();
+      MakeSuccessCallback(fix_info, fix_info->pending_position);
+    }
   }
 }
 
@@ -561,11 +561,10 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
 bool GearsGeolocation::CancelWatch(const int &watch_id) {
   ASSERT_SINGLE_THREAD();
 
-  FixRequestInfoMap::iterator watch_iter = fix_requests_.find(watch_id);
-  if (watch_iter == fix_requests_.end()) {
+  FixRequestInfo *info = MaybeGetFixRequest(watch_id);
+  if (info == NULL) {
     return false;
   }
-  FixRequestInfo *info = watch_iter->second;
   if (!info->repeats) {
     return false;
   }
@@ -618,9 +617,7 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
     } else {
       // Start an asynchronous timer which will post a message back to this
       // thread once the minimum time period has elapsed.
-      MakeFutureSuccessCallback(static_cast<int>(time_remaining),
-                                fix_info,
-                                position);
+      MakeFutureSuccessCallback(static_cast<int>(time_remaining), id, position);
     }
   }
 }
@@ -720,8 +717,7 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
     int id = ids.back();
     ids.pop_back();
     if (id < 0) {
-      FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
-      if (iter != fix_requests_.end()) {
+      if (MaybeGetFixRequest(id)) {
         HandleSingleRequestUpdate(provider, id, position);
       }
     }
@@ -745,8 +741,7 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
   while (!watch_ids.empty()) {
     int watch_id = watch_ids.back();
     watch_ids.pop_back();
-    FixRequestInfoMap::const_iterator iter = fix_requests_.find(watch_id);
-    if (iter != fix_requests_.end()) {
+    if (MaybeGetFixRequest(watch_id)) {
       HandleRepeatingRequestUpdate(watch_id, position);
     }
   }
@@ -1045,9 +1040,14 @@ bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
 }
 
 GearsGeolocation::FixRequestInfo *GearsGeolocation::GetFixRequest(int id) {
+  FixRequestInfo *fix_info = MaybeGetFixRequest(id);
+  assert(fix_info);
+  return fix_info;
+}
+
+GearsGeolocation::FixRequestInfo *GearsGeolocation::MaybeGetFixRequest(int id) {
   FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
-  assert(iter != fix_requests_.end());
-  return iter->second;
+  return iter == fix_requests_.end() ? NULL : iter->second;
 }
 
 bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
@@ -1184,17 +1184,19 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider, int id) {
 }
 
 void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
-                                                 FixRequestInfo *fix_info,
+                                                 int fix_request_id,
                                                  const Position &position) {
   ASSERT_SINGLE_THREAD();
+
   // Check that there isn't already a timer running for this request.
+  FixRequestInfo *fix_info = GetFixRequest(fix_request_id);
   assert(!fix_info->success_callback_timer.get());
 
   fix_info->pending_position = position;
   fix_info->success_callback_timer.reset(new TimedMessage(
       timeout_milliseconds,
       kCallbackRequiredObserverTopic,
-      new CallbackRequiredNotificationData(this, fix_info)));
+      new CallbackRequiredNotificationData(this, fix_request_id)));
 }
 
 // Local functions
