@@ -566,6 +566,7 @@ void GetPositionFromJavaScriptParameter(JsCallContext *context,
   switch (error_code) {
     case Position::ERROR_CODE_POSITION_UNAVAILABLE:
       position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
+      break;
   }
 }
 

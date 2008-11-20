@@ -115,7 +115,7 @@ bool TestGeolocationDB(std::string16 *error) {
     return false;
   }
   if (!ArePositionsEqual(retrieved_position, updated_position)) {
-    *error += STRING16(L"TestPositionTable(): Retrieved updated position does "
+    *error += STRING16(L"TestGeolocationDB(): Retrieved updated position does "
                        L"not match original. ");
     return false;
   }
