@@ -308,6 +308,8 @@ class GearsGeolocation
 
   // Gets the fix request for a given ID. The supplied ID must be valid.
   FixRequestInfo *GetFixRequest(int id);
+  // Gets the fix request for a given ID if valid.
+  FixRequestInfo *MaybeGetFixRequest(int id);
 
   // Takes a pointer to a new fix request and records it in our map. Returns
   // false if the maximum number of fix requests has been reached. Otherwise
@@ -328,7 +330,7 @@ class GearsGeolocation
   // Causes a callback to JavaScript to be made at the specified number of
   // milliseconds in the future.
   void MakeFutureSuccessCallback(int timeout_milliseconds,
-                                 FixRequestInfo *fix_info,
+                                 int fix_request_id,
                                  const Position &position);
 
   // TODO(steveblock): Refactor the logic used to maintain the fix request maps
