@@ -34,11 +34,11 @@ w '$1.js.sed.1'
 ' $1
 
 # Extract the locale from <html file>.js.sed.1
-# and save it in a <locale>.locale file
+# and save it in a <html file>.locale file
 
-sed -e '/"'$2'":/,/}/ w '$2'.locale.pre' $1.js.sed.1 2&>/dev/null
-sed -e '$ s/},/}/' $2.locale.pre > $2.locale
-rm $2.locale.pre
+sed -e '/"'$2'":/,/}/ w '$1'.locale.pre' $1.js.sed.1 2&>/dev/null
+sed -e '$ s/},/}/' $1.locale.pre > $1.locale
+rm $1.locale.pre
 
 # Remove all the localized strings in <html file>.js.sed.1
 # and replace them with a tag LOCALIZED_STRINGS and save
@@ -50,14 +50,14 @@ sed '
 ' $1.js.sed.1 > $1.js.sed.2
 
 # Replace LOCALIZED_STRINGS in <html file>.js.sed.2
-# with the content of the <locale>.locale file and
+# with the content of the <html file>.locale file and
 # write the result in the <html file>.js.sed.3 file.
 
 sed '
 /LOCALIZED_STRINGS/ {
   a\
 var localized_strings = {
-  r '$2'.locale
+  r '$1'.locale
   a\
 };
   d
@@ -184,4 +184,5 @@ sed '
 
 rm $1.css.*
 rm $1.js.*
+rm $1.locale
 rm $1.sed.*
