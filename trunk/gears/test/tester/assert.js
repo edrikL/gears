@@ -181,7 +181,7 @@ function assertArrayEqual(expected, actual, optDescription) {
   assert(expected.length == actual.length, function() {
     var message = 'Expected array length: %s actual length: %s'.subs(
         expected.length, actual.length);
-    formatErrorMessage(message, optDescription);
+    return formatErrorMessage(message, optDescription);
   });
 
   for (var i = 0; i < expected.length; ++expected) {
@@ -189,7 +189,7 @@ function assertArrayEqual(expected, actual, optDescription) {
       var message = 'Expected element in array at %s: %s (%s) actual: %s (%s)'
           .subs(i, expected[i], typeof expected[i], actual[i],
           typeof actual[i]);
-      formatErrorMessage(message, optDescription);
+      return formatErrorMessage(message, optDescription);
     });
   }
 }
