@@ -84,6 +84,10 @@ class BaseFirefoxWin32Launcher(BaseWin32Launcher):
   def killAllInstances(self):
     self._killInstancesByName('firefox.exe')
     self._killInstancesByName('crashreporter.exe')
+    # talkback.exe is a new crash reporter for firefox 3.0
+    self._killInstancesByName('talkback.exe')
+    # WerFault.exe is a crash handler for vista
+    self._killInstancesByName('WerFault.exe')
 
 
 class Firefox2Win32Launcher(BaseFirefoxWin32Launcher):
@@ -127,8 +131,10 @@ class IExploreWin32Launcher(BaseWin32Launcher):
     Must kill ie by name and not pid for ie7 compatibility.
     """
     self._killInstancesByName('iexplore.exe')
-    # Also kill ie's crash handler process
+    # ie's crash handler process
     self._killInstancesByName('iedw.exe')
+    # vista's crash handler process
+    self._killInstancesByName('WerFault.exe')
 
   def type(self):
     return 'IExploreWin32'
@@ -153,6 +159,8 @@ class ChromeWin32Launcher(BaseWin32Launcher):
 
   def killAllInstances(self):
     self._killInstancesByName('chrome.exe')
+    # vista's crash handler process
+    self._killInstancesByName('WerFault.exe')
 
   def type(self):
     return 'ChromeWin32'
