@@ -118,16 +118,20 @@ void LibUpdater::HandleEvent(int msg_code,
     } else if (source == download_task_.get()) {
       assert(ZipDownloadTask::DOWNLOAD_COMPLETE == msg_code);
       if (success) {
+        RELEASE_LOG(("Download succeeded"));
         // Unzip the file.
-        // TODO(andreip): check for free space first.
         if (Inflate(download_task_->Filename())) {
           // Move the files and update the symlink. This should not leave
           // any stale Gears directory behind if it fails.
-          if (!MoveFromTempAndUpdateSymlink(download_task_->Version())) {
-            LOG(("Failed to move files"));
+          if (MoveFromTempAndUpdateSymlink(download_task_->Version())) {
+            // Print a message even in release builds.
+            RELEASE_LOG(("Installed Gears %s",
+                         String16ToUTF8(download_task_->Version()).c_str()));
+          } else {
+            RELEASE_LOG(("Failed to move files"));
           }
         } else {
-          LOG(("Failed to unzip files"));
+          RELEASE_LOG(("Failed to unzip files"));
         }
         // Remove the temp directory.
         PostCleanup();
@@ -215,7 +219,9 @@ bool LibUpdater::StartDownloadTask() {
 
   // Set ourselves as the listener.
   download_task_->SetListener(this);
-  // Start the task.
+  // Start the task. Print a message even in release builds.
+  RELEASE_LOG(("Downloading Gears %s",
+               String16ToUTF8(version_check_task_->Version()).c_str()));
   return download_task_->Start();
 }
 
@@ -480,6 +486,14 @@ bool LibUpdater::PreCleanup() {
       i < dirs_to_delete.size();
       ++i) {
     result &= File::DeleteRecursively(dirs_to_delete[i].c_str());
+  }
+
+  if (!dirs_to_delete.empty()) {
+    // If we deleted any stale directories, we've just got initialized
+    // after an auto-update. Print this important fact even in release
+    // builds.
+    RELEASE_LOG(("New Gears running, version %s\n",
+                 PRODUCT_VERSION_STRING_ASCII));
   }
 
   return result;

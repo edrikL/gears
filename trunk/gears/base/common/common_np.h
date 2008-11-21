@@ -82,6 +82,10 @@ class CurrentThreadID {
 
 #endif
 
+// Logging even in release builds for rare and/or critical items.
+#define RELEASE_LOG(args) \
+    do { LOG_INNER args ; } while (0)
+
 #else  // !ANDROID
 
 //-----------------------------------------------------------------------------

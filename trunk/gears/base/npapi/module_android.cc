@@ -237,6 +237,11 @@ NPError NP_Initialize(NPNetscapeFuncs *npn_funcs,
 }
 
 NPError NP_Shutdown() {
+  // This shutdown function is not normally called as the Browser
+  // never exits unless killed. Auto-update is the only likely reason
+  // for this to be called, in which case we want to print a log
+  // message even in release builds.
+  RELEASE_LOG(("Gears shutting down\n"));
   // Stop the update checks.
   LibUpdater::StopUpdateChecks();
   // Shutdown URL interception.
