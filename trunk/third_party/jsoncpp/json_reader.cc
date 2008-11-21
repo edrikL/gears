@@ -76,6 +76,15 @@ Reader::parse( const char *beginDoc, const char *endDoc,
                Value &root,
                bool collectComments )
 {
+   // Advance over a UTF-8 BOM if present
+   const char kBOM[] = { 0xEF, 0xBB, 0xBF };
+   if (endDoc - beginDoc >= sizeof(kBOM)) {
+      if (beginDoc[0] == kBOM[0] &&
+          beginDoc[1] == kBOM[1] &&
+          beginDoc[2] == kBOM[2]) {
+         beginDoc += 3;
+      }
+   }
    begin_ = beginDoc;
    end_ = endDoc;
    collectComments_ = collectComments;
@@ -247,10 +256,11 @@ Reader::readToken( Token &token )
 void 
 Reader::skipSpaces()
 {
+   const Char kNBSP = 0xA0;  // unicode non-breaking whitespace
    while ( current_ != end_ )
    {
       Char c = *current_;
-      if ( c == ' '  ||  c == '\t'  ||  c == '\r'  ||  c == '\n' )
+      if (c == ' '  ||  c == '\t'  ||  c == '\r'  ||  c == '\n' || c == kNBSP)
          ++current_;
       else
          break;
