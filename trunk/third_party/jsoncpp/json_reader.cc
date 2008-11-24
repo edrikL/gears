@@ -78,7 +78,7 @@ Reader::parse( const char *beginDoc, const char *endDoc,
 {
    // Advance over a UTF-8 BOM if present
    const char kBOM[] = { 0xEF, 0xBB, 0xBF };
-   if (endDoc - beginDoc >= sizeof(kBOM)) {
+   if (endDoc - beginDoc >= static_cast<int>(sizeof(kBOM))) {
       if (beginDoc[0] == kBOM[0] &&
           beginDoc[1] == kBOM[1] &&
           beginDoc[2] == kBOM[2]) {
