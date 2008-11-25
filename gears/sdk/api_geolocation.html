@@ -133,6 +133,10 @@ geo.getCurrentPosition(updatePosition, handleError);
   readwrite attribute string[] gearsLocationProviderUrls</code></pre>
 
 <pre><code><a href="#positionerror">PositionError class</a>
+  readonly attribute int UNKNOWN_ERROR
+  readonly attribute int PERMISSION_DENIED
+  readonly attribute int POSITION_UNAVAILABLE
+  readonly attribute int TIMEOUT
   readonly attribute int code
   readonly attribute string message</code></pre>
 
@@ -418,22 +422,40 @@ show those that are specified.    </td>
   <th width="500">Description</th>
 </tr>
 <tr class="odd">
+  <td><strong>UNKNOWN_ERROR</strong></td>
+  <td class="odd">readonly int</td>
+  <td class="odd">W3C Geolocation API error code constant. Not used by Gears.
+  </td>
+</tr>
+<tr class="odd">
+  <td><strong>PERMISSION_DENIED</strong></td>
+  <td class="odd">readonly int</td>
+  <td class="odd">W3C Geolocation API error code constant. Not used by Gears
+  </td>
+</tr>
+<tr class="odd">
+  <td><strong>POSITION_UNAVAILABLE</strong></td>
+  <td class="odd">readonly int</td>
+  <td class="odd">W3C Geolocation API error code constant. No position fix could
+  be obtained.</td>
+</tr>
+<tr class="odd">
+  <td><strong>TIMEOUT</strong></td>
+  <td class="odd">readonly int</td>
+  <td class="odd">W3C Geolocation API error code constant. The specified maximum
+  time elapsed before a position could be obtained.</td>
+</tr>
+<tr class="odd">
   <td><strong>code</strong></td>
   <td class="odd">readonly int</td>
   <td class="odd">
     A code identifying the reason for the error. Possible values are listed
-    below.
-    <table class="noborders">
-      <tr>
-        <td><strong>2</strong></td>
-        <td>No position fix could be obtained.</td>
-      </tr>
-      <tr>
-        <td><strong>3</strong></td>
-        <td>The specified maximum time elapsed before a position could be
-        obtained.</td>
-      </tr>
-    </table>
+    below. Note that Gears does not use all of the W3C Geolocation API error
+    codes.
+    <ul>
+      <li>PositionError.POSITION_UNAVAILABLE
+      <li>PositionError.TIMEOUT
+    </ul>
   </td>
 </tr>
 <tr class="odd">

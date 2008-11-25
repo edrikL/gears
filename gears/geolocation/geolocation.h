@@ -81,13 +81,15 @@ struct Address {
 struct Position {
  public:
   // Error codes for returning to JavaScript. These values are defined by the
-  // W3C spec. The following codes are not used by Gears.
-  //
-  // UNKNOWN_ERROR = 0
-  // PERMISSION_DENIED = 1 - Geolocation methods throw an exception if
-  //                         permission has not been granted.
+  // W3C spec. Note that Gears does not use all of these codes, but we need
+  // values for all of them to allow us to provide the constants on the error
+  // object.
   enum ErrorCode {
-    ERROR_CODE_NONE = -1,  // Gears addition
+    ERROR_CODE_NONE = -1,              // Gears addition
+    ERROR_CODE_UNKNOWN_ERROR = 0,      // Not used by Gears
+    ERROR_CODE_PERMISSION_DENIED = 1,  // Not used by Gears - Geolocation
+                                       // methods throw an exception if
+                                       // permission has not been granted.
     ERROR_CODE_POSITION_UNAVAILABLE = 2,
     ERROR_CODE_TIMEOUT = 3,
   };
@@ -262,6 +264,8 @@ class GearsGeolocation
   void TimeoutExpiredImpl(int fix_request_id);
   void CallbackRequiredImpl(int fix_request_id);
 
+  bool IsCachedPositionSuitable(int maximum_age);
+
   // Internal method used by GetCurrentPosition and WatchPosition to get a
   // position fix.
   void GetPositionFix(JsCallContext *context, bool repeats);
@@ -315,9 +319,9 @@ class GearsGeolocation
   static bool CreateJavaScriptPositionObject(const Position &position,
                                              bool use_address,
                                              JsRunnerInterface *js_runner,
-                                             JsObject *js_object);
+                                             JsObject *position_object);
   static bool CreateJavaScriptPositionErrorObject(const Position &position,
-                                                  JsObject *js_object);
+                                                  JsObject *error);
 
   // Gets the fix request for a given ID. The supplied ID must be valid.
   FixRequestInfo *GetFixRequest(int id);

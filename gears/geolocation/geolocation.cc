@@ -1192,19 +1192,28 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
 // static
 bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
     const Position &position,
-    JsObject *error_object) {
-  assert(error_object);
+    JsObject *error) {
+  assert(error);
   assert(position.IsInitialized());
   assert(!position.IsGoodFix());
 
   bool result = true;
+  // We provide the values of all W3C error constants.
+  result &= error->SetPropertyInt(STRING16(L"UNKNOWN_ERROR"),
+                                  Position::ERROR_CODE_UNKNOWN_ERROR);
+  result &= error->SetPropertyInt(STRING16(L"PERMISSION_DENIED"),
+                                  Position::ERROR_CODE_PERMISSION_DENIED);
+  result &= error->SetPropertyInt(STRING16(L"POSITION_UNAVAILABLE"),
+                                  Position::ERROR_CODE_POSITION_UNAVAILABLE);
+  result &= error->SetPropertyInt(STRING16(L"TIMEOUT"),
+                                  Position::ERROR_CODE_TIMEOUT);
   // error_code should always be valid.
-  result &= error_object->SetPropertyInt(STRING16(L"code"),
-                                         position.error_code);
+  result &= error->SetPropertyInt(STRING16(L"code"),
+                                  position.error_code);
   // Other properties may not be valid.
   result &= SetObjectPropertyIfValidString(STRING16(L"message"),
                                            position.error_message,
-                                           error_object);
+                                           error);
   return result;
 }
 
