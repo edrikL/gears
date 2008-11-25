@@ -23,16 +23,28 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function testGeolocationArguments() {
-  var geolocation = google.gears.factory.create('beta.geolocation');
-  var dummyFunction = function() {};
+// Error code values. These values must match those in geolocation.h.
+var ERROR_CODE_TIMEOUT = 3;
 
+var geolocation = google.gears.factory.create('beta.geolocation');
+var dummyFunction = function() {};
+
+function testArguments() {
   // All good.
+  var goodOptions = {
+    enableHighAccuracy: false,
+    timeout: 0,
+    gearsRequestAddress: false,
+    gearsAddressLanguage: 'test',
+    gearsLocationProviderUrls: ['test']
+  };
   geolocation.getCurrentPosition(dummyFunction);
   geolocation.getCurrentPosition(dummyFunction, dummyFunction);
   geolocation.getCurrentPosition(dummyFunction, null);
   geolocation.getCurrentPosition(dummyFunction, null, {});
+  geolocation.getCurrentPosition(dummyFunction, null, goodOptions);
   geolocation.getCurrentPosition(dummyFunction, dummyFunction, {});
+  geolocation.getCurrentPosition(dummyFunction, dummyFunction, goodOptions);
 
   // Test correct types.
   // Missing success callback.
@@ -57,6 +69,22 @@ function testGeolocationArguments() {
                                    dummyFunction,
                                    {enableHighAccuracy: 42});
   }, 'options.enableHighAccuracy should be a boolean.');
+  // Wrong type for timeout.
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {timeout: 42.9});
+  }, 'options.timeout should be a non-negative 32 bit signed integer.');
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {timeout: -1});
+  }, 'options.timeout should be a non-negative 32 bit signed integer.');
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {timeout: 2147483648});  // 2^31
+  }, 'options.timeout should be a non-negative 32 bit signed integer.');
   // Wrong type for gearsRequestAddress.
   assertError(
       function() {
@@ -90,8 +118,9 @@ function testGeolocationArguments() {
       },
       'options.gearsLocationProviderUrls should be null or an array of ' +
       'strings');
+}
 
-  // No providers.
+function testNoProviders() {
   assertError(
       function() {
         geolocation.getCurrentPosition(
@@ -102,4 +131,17 @@ function testGeolocationArguments() {
       'Fix request has no location providers.',
       'Calling getCurrentPosition() should fail if no location providers are ' +
       'specified.');
+}
+
+function testZeroTimeout() {
+  // A request with a zero timeout should call the error callback immediately.
+  function errorCallback(error) {
+    assertEqual(
+        ERROR_CODE_TIMEOUT,
+        error.code,
+        'Error callback should be called with code ERROR_CODE_TIMEOUT (3).');
+    completeAsync();
+  }
+  startAsync();
+  geolocation.getCurrentPosition(dummyFunction, errorCallback, {timeout: 0});
 }

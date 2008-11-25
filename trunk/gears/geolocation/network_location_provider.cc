@@ -245,6 +245,10 @@ void NetworkLocationProvider::Run() {
     }
     // The event should be due to new device data or a new listener.
     assert(is_new_data_available_ || is_new_listener_waiting_);
+    // If we have new data available, inform listeners of movement.
+    if (is_new_data_available_) {
+      InformListenersOfMovement();
+    }
     // Lock the data mutex to test is_radio_data_complete_ and
     // is_wifi_data_complete_ on the next loop.
     data_mutex_.Lock();
@@ -320,6 +324,11 @@ void NetworkLocationProvider::Run() {
         is_last_request_complete_ &&
         remaining_time <= 0) {
       make_request = true;
+    }
+
+    // If we have new data available, inform listeners of movement.
+    if (is_new_data_available_) {
+      InformListenersOfMovement();
     }
 
     // TODO(steveblock): If the request does not complete within some maximum

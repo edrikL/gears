@@ -72,6 +72,15 @@ void LocationProviderBase::UpdateListeners() {
   }
 }
 
+void LocationProviderBase::InformListenersOfMovement() {
+  MutexLock lock(&listeners_mutex_);
+  for (ListenerMap::const_iterator iter = listeners_.begin();
+       iter != listeners_.end();
+       ++iter) {
+    iter->first->MovementDetected(this);
+  }
+}
+
 LocationProviderBase::ListenerMap *LocationProviderBase::GetListeners() {
   return &listeners_;
 }

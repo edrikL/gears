@@ -53,6 +53,7 @@ static const char16 *kDefaultLocationProviderUrl =
 
 // API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
+static const char16 *kTimeout = STRING16(L"timeout");
 static const char16 *kGearsRequestAddress = STRING16(L"gearsRequestAddress");
 static const char16 *kGearsAddressLanguage = STRING16(L"gearsAddressLanguage");
 static const char16 *kGearsLocationProviderUrls =
@@ -68,6 +69,10 @@ static const char16 *kLastPositionName = STRING16(L"LastPosition");
 // MessageService constants.
 static const char16 *kLocationAvailableObserverTopic =
     STRING16(L"location available");
+static const char16 *kMovementDetectedObserverTopic =
+    STRING16(L"movement detected");
+static const char16 *kTimeoutExpiredObserverTopic =
+    STRING16(L"timeout expired");
 static const char16 *kCallbackRequiredObserverTopic =
     STRING16(L"callback required");
 
@@ -84,12 +89,18 @@ TimedMessage::TimedMessage(int timeout_milliseconds,
   assert(notification_data);
   timed_callback_.reset(
       new TimedCallback(this, timeout_milliseconds, notification_data));
+  constructor_complete_event_.Signal();
 }
 
 // TimedCallback::ListenerInterface implementation
 void TimedMessage::OnTimeout(TimedCallback *caller, void *user_data) {
+  assert(caller);
   assert(user_data);
-  assert(timed_callback_.get());
+
+  // Wait for the constructor to complete so that we know that timed_callback_
+  // has been assigned.
+  constructor_complete_event_.Wait();
+  assert(caller == timed_callback_.get());
 
   // We can't delete the TimedCallback here because we can't call Thread::Join()
   // from the worker thread. Instead we delete the TimedCallback when this
@@ -137,38 +148,40 @@ class NotificationDataGeoBase : public NotificationData {
   DISALLOW_EVIL_CONSTRUCTORS(NotificationDataGeoBase);
 };
 
-// Used for messages of type kLocationAvailableObserverTopic.
-class LocationAvailableNotificationData : public NotificationDataGeoBase {
+// Used for messages of types kLocationAvailableObserverTopic and
+// kMovmementDetectedObserverTopic.
+class ProviderNotificationData : public NotificationDataGeoBase {
  public:
-  LocationAvailableNotificationData(GearsGeolocation *object_in,
-                                    LocationProviderBase *provider_in)
+  ProviderNotificationData(GearsGeolocation *object_in,
+                           LocationProviderBase *provider_in)
       : NotificationDataGeoBase(object_in),
         provider(provider_in) {}
-  virtual ~LocationAvailableNotificationData() {}
+  virtual ~ProviderNotificationData() {}
 
  friend class GearsGeolocation;
 
  private:
   LocationProviderBase *provider;
 
-  DISALLOW_EVIL_CONSTRUCTORS(LocationAvailableNotificationData);
+  DISALLOW_EVIL_CONSTRUCTORS(ProviderNotificationData);
 };
 
-// Used for messages of type kCallbackRequiredObserverTopic.
-struct CallbackRequiredNotificationData : public NotificationDataGeoBase {
+// Used for messages of types kTimeoutExpiredObserverTopic and
+// kCallbackRequiredObserverTopic.
+struct FixRequestIdNotificationData : public NotificationDataGeoBase {
  public:
-  CallbackRequiredNotificationData(GearsGeolocation *object_in,
-                                   int fix_request_id_in)
+  FixRequestIdNotificationData(GearsGeolocation *object_in,
+                               int fix_request_id_in)
       : NotificationDataGeoBase(object_in),
         fix_request_id(fix_request_id_in) {}
-  virtual ~CallbackRequiredNotificationData() {}
+  virtual ~FixRequestIdNotificationData() {}
 
   friend class GearsGeolocation;
 
  private:
   int fix_request_id;
 
-  DISALLOW_EVIL_CONSTRUCTORS(CallbackRequiredNotificationData);
+  DISALLOW_EVIL_CONSTRUCTORS(FixRequestIdNotificationData);
 };
 
 // Helper function that checks if the caller had the required permissions
@@ -228,10 +241,12 @@ GearsGeolocation::GearsGeolocation()
     return;
   }
 
-  MessageService::GetInstance()->AddObserver(this,
-                                             kLocationAvailableObserverTopic);
-  MessageService::GetInstance()->AddObserver(this,
-                                             kCallbackRequiredObserverTopic);
+  MessageService *message_service = MessageService::GetInstance();
+  assert(message_service);
+  message_service->AddObserver(this, kLocationAvailableObserverTopic);
+  message_service->AddObserver(this, kMovementDetectedObserverTopic);
+  message_service->AddObserver(this, kTimeoutExpiredObserverTopic);
+  message_service->AddObserver(this, kCallbackRequiredObserverTopic);
 
   // Retrieve the cached last known position, if available.
   GeolocationDB *db = GeolocationDB::GetDB();
@@ -258,12 +273,12 @@ GearsGeolocation::~GearsGeolocation() {
   assert(fix_requests_.empty());
 #endif  // defined(OS_WINCE) && defined(BROWSER_IE)
 
-  MessageService::GetInstance()->RemoveObserver(
-      this,
-      kLocationAvailableObserverTopic);
-  MessageService::GetInstance()->RemoveObserver(
-      this,
-      kCallbackRequiredObserverTopic);
+  MessageService *message_service = MessageService::GetInstance();
+  assert(message_service);
+  message_service->RemoveObserver(this, kLocationAvailableObserverTopic);
+  message_service->RemoveObserver(this, kMovementDetectedObserverTopic);
+  message_service->RemoveObserver(this, kTimeoutExpiredObserverTopic);
+  message_service->RemoveObserver(this, kCallbackRequiredObserverTopic);
 
   // Store the last known position.
   if (last_position_.IsGoodFix()) {
@@ -382,7 +397,23 @@ bool GearsGeolocation::LocationUpdateAvailable(LocationProviderBase *provider) {
   // from the JavaScript thread.
   MessageService::GetInstance()->NotifyObservers(
       kLocationAvailableObserverTopic,
-      new LocationAvailableNotificationData(this, provider));
+      new ProviderNotificationData(this, provider));
+  return true;
+}
+
+bool GearsGeolocation::MovementDetected(LocationProviderBase *provider) {
+  assert(provider);
+
+  // We check that the provider that invoked the callback is still in use, in
+  // MovementDetectedImpl. Checking here would require a mutex to guard
+  // providers_.
+
+  // We marshall this callback onto the JavaScript thread. This simplifies
+  // issuing new fix requests and calling back to JavaScript, which must be done
+  // from the JavaScript thread.
+  MessageService::GetInstance()->NotifyObservers(
+      kMovementDetectedObserverTopic,
+      new ProviderNotificationData(this, provider));
   return true;
 }
 
@@ -403,21 +434,24 @@ void GearsGeolocation::OnNotify(MessageService *service,
   std::string16 topic_string(topic);
   if (topic_string == kLocationAvailableObserverTopic) {
     // A location provider reported a new position.
-    const LocationAvailableNotificationData *location_available_data =
-        reinterpret_cast<const LocationAvailableNotificationData*>(data);
+    const ProviderNotificationData *location_available_data =
+        reinterpret_cast<const ProviderNotificationData*>(data);
     LocationUpdateAvailableImpl(location_available_data->provider);
+  } else if (topic_string == kMovementDetectedObserverTopic) {
+    // A location provider reported movement.
+    const ProviderNotificationData *location_available_data =
+        reinterpret_cast<const ProviderNotificationData*>(data);
+    MovementDetectedImpl(location_available_data->provider);
+  } else if (topic_string == kTimeoutExpiredObserverTopic) {
+    // The timeout for a new position being obtained expired.
+    const FixRequestIdNotificationData *timeout_expired_data =
+        reinterpret_cast<const FixRequestIdNotificationData*>(data);
+    TimeoutExpiredImpl(timeout_expired_data->fix_request_id);
   } else if (topic_string == kCallbackRequiredObserverTopic) {
     // The timeout for a watch callback expired.
-    const CallbackRequiredNotificationData *callback_required_data =
-        reinterpret_cast<const CallbackRequiredNotificationData*>(data);
-    // Check that the fix request still exists
-    FixRequestInfo *fix_info =
-        MaybeGetFixRequest(callback_required_data->fix_request_id);
-    if (fix_info) {
-      assert(fix_info->success_callback_timer.get());
-      fix_info->success_callback_timer.reset();
-      MakeSuccessCallback(fix_info, fix_info->pending_position);
-    }
+    const FixRequestIdNotificationData *callback_required_data =
+        reinterpret_cast<const FixRequestIdNotificationData*>(data);
+    CallbackRequiredImpl(callback_required_data->fix_request_id);
   }
 }
 
@@ -441,11 +475,7 @@ void GearsGeolocation::HandleEvent(JsEventType event_type) {
     fix_request_ids.push_back(iter->first);
   }
   for (int i = 0; i < static_cast<int>(fix_request_ids.size()); ++i) {
-    // Cache the pointer to the fix request because RemoveFixRequest will
-    // invalidate the iterator.
-    FixRequestInfo *fix_request = GetFixRequest(fix_request_ids[i]);
-    RemoveFixRequest(fix_request_ids[i]);
-    DeleteFixRequest(fix_request);
+    RemoveAndDeleteFixRequest(fix_request_ids[i]);
   }
 }
 
@@ -545,17 +575,26 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     }
   }
 
-  // Store and return the ID of this fix if it repeats.
-  if (info->repeats) {
-    context->SetReturnValue(JSPARAM_INT, &next_watch_id_);
-  }
-
   // Record this fix. This updates the map of providers and fix requests. The
-  // map takes ownership of the info structure.
-  if (!RecordNewFixRequest(info.release())) {
+  // map takes ownership of the info structure on success.
+  int fix_request_id = 0;
+  if (!RecordNewFixRequest(info.get(), &fix_request_id)) {
     context->SetException(STRING16(L"Exceeded maximum number of fix "
                                    L"requests."));
+    return;
   }
+  assert(fix_request_id != 0);
+
+  // Start the timeout timer for this fix request.
+  StartTimeoutTimer(fix_request_id);
+
+  // Set the return value if this fix repeats.
+  if (info->repeats) {
+    context->SetReturnValue(JSPARAM_INT, &fix_request_id);
+  }
+
+  // The map has ownership of this fix request.
+  info.release();
 }
 
 bool GearsGeolocation::CancelWatch(const int &watch_id) {
@@ -571,18 +610,17 @@ bool GearsGeolocation::CancelWatch(const int &watch_id) {
   assert(watch_id > 0);
 
   // Update the map of providers that this fix request has been deleted.
-  RemoveFixRequest(watch_id);
-  DeleteFixRequest(info);
+  RemoveAndDeleteFixRequest(watch_id);
 
   return true;
 }
 
-void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
+void GearsGeolocation::HandleRepeatingRequestUpdate(int fix_request_id,
                                                     const Position &position) {
   ASSERT_SINGLE_THREAD();
   assert(position.IsInitialized());
 
-  FixRequestInfo *fix_info = GetFixRequest(id);
+  FixRequestInfo *fix_info = GetFixRequest(fix_request_id);
   assert(fix_info->repeats);
 
   // If this is an error, make a callback.
@@ -591,7 +629,10 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
     return;
   }
 
-  // This is a position update.
+  // This is a position update. If there's currently a timer running for a
+  // movement timeout, stop it.
+  fix_info->timeout_timer.reset();
+
   if (IsNewPositionMovement(fix_info->last_position, position) ||
       IsNewPositionMoreAccurate(fix_info->last_position, position)) {
     // The position has changed significantly. See if there's currently a
@@ -617,33 +658,94 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(int id,
     } else {
       // Start an asynchronous timer which will post a message back to this
       // thread once the minimum time period has elapsed.
-      MakeFutureSuccessCallback(static_cast<int>(time_remaining), id, position);
+      MakeFutureSuccessCallback(static_cast<int>(time_remaining),
+                                fix_request_id,
+                                position);
     }
   }
 }
 
+void GearsGeolocation::StartTimeoutTimer(int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  // If this request already has a timer running, we don't update the timer
+  // because we still require a position fix within the timeout period from the
+  // first detection of movement.
+  FixRequestInfo *fix_request_info = GetFixRequest(fix_request_id);
+  if (fix_request_info->timeout_timer.get()) {
+    return;
+  }
+
+  // If this fix request has a timeout specified, set a timer for the specified
+  // interval.
+  if (fix_request_info->timeout >= 0) {
+    fix_request_info->timeout_timer.reset(new TimedMessage(
+        fix_request_info->timeout,
+        kTimeoutExpiredObserverTopic,
+        new FixRequestIdNotificationData(this, fix_request_id)));
+  }
+}
+
+void GearsGeolocation::MakeTimeoutExpiredCallback(int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  // Confirm that this request uses a timeout.
+  FixRequestInfo *fix_request_info = GetFixRequest(fix_request_id);
+  assert(fix_request_info->timeout >= 0);
+
+  // Ref this object to avoid it being deleted before this method completes, in
+  // the case where this callback removes our final reference.
+  Ref();
+
+  // Call back to JavaScript with an error.
+  Position position;
+  position.error_code = Position::ERROR_CODE_TIMEOUT;
+  position.error_message = STRING16(L"A position fix was not obtained within "
+                                    L"the specified time limit.");
+  if (!MakeErrorCallback(fix_request_info, position)) {
+    LOG(("GearsGeolocation::MakeTimeoutExpiredCallback() : JavaScript error "
+         "callback failed.\n"));
+  }
+
+#ifdef DEBUG
+  // Force garbage collection to check that ref counts work as intended.
+  GetJsRunner()->ForceGC();
+#endif
+
+  if (!fix_request_info->repeats) {
+    // If it's a non-repeating request, remove the fix request.
+    RemoveAndDeleteFixRequest(fix_request_id);
+  }
+
+  Unref();
+}
+
 void GearsGeolocation::HandleSingleRequestUpdate(LocationProviderBase *provider,
-                                                 int id,
+                                                 int fix_request_id,
                                                  const Position &position) {
   ASSERT_SINGLE_THREAD();
   assert(position.IsInitialized());
 
-  FixRequestInfo *fix_info = GetFixRequest(id);
+  FixRequestInfo *fix_info = GetFixRequest(fix_request_id);
   assert(!fix_info->repeats);
   assert(fix_info->last_success_callback_time == 0);
 
   // Remove this provider from the this fix so that future callbacks to this
   // Geolocation object don't trigger handling for this fix.
-  RemoveProvider(provider, id);
+  RemoveProvider(provider, fix_request_id);
   // We callback in two cases ...
   // - This response gives a good position and we haven't yet called back
   // - The fix has no remaining providers, so we'll never get a valid position
   // We then cancel any pending requests and delete the fix request.
   if (position.IsGoodFix() || fix_info->providers.empty()) {
+    // This is a good fix (or a failure from the last provider). If there's
+    // currently a timer running for a movement timeout, stop it.
+    fix_info->timeout_timer.reset();
+
     // Remove the fix request from our map, so that position updates which occur
     // while the callback to JavaScript is in process do not trigger handling
     // for this fix request.
-    RemoveFixRequest(id);
+    RemoveFixRequest(fix_request_id);
     if (position.IsGoodFix()) {
       if (!MakeSuccessCallback(fix_info, position)) {
         LOG(("GearsGeolocation::HandleSingleRequestUpdate() : JavaScript "
@@ -747,6 +849,59 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
   }
 
   Unref();
+}
+
+void GearsGeolocation::MovementDetectedImpl(LocationProviderBase *provider) {
+  ASSERT_SINGLE_THREAD();
+
+  // Check that we're still using this provider.
+  ProviderMap::iterator provider_iter = providers_.find(provider);
+  if (provider_iter == providers_.end()) {
+    return;
+  }
+
+  // This provider has detected movement so is in the process of obtaining a new
+  // fix. Go through all of the fix requests of which this provider is a part
+  // and register this fact. This is to allow the arbitrator to apply the
+  // timeout constraint.
+  //
+  // See comment in LocationUpdateAvailableImpl for why we take a copy of the
+  // fix request IDs.
+  IdList fix_request_ids = provider_iter->second;
+  while (!fix_request_ids.empty()) {
+    int id = fix_request_ids.back();
+    fix_request_ids.pop_back();
+    FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
+    if (iter != fix_requests_.end()) {
+      // Start the timeout timer for this fix request. We don't care which
+      // provider detected the movement.
+      StartTimeoutTimer(id);
+    }
+  }
+}
+
+void GearsGeolocation::TimeoutExpiredImpl(int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  // Check that the fix request still exists and that the timeout timer has not
+  // been cancelled.
+  FixRequestInfo *fix_info = MaybeGetFixRequest(fix_request_id);
+  if (fix_info && fix_info->timeout_timer.get()) {
+    fix_info->timeout_timer.reset();
+    MakeTimeoutExpiredCallback(fix_request_id);
+  }
+}
+
+void GearsGeolocation::CallbackRequiredImpl(int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  // Check that the fix request still exists
+  FixRequestInfo *fix_info = MaybeGetFixRequest(fix_request_id);
+  if (fix_info) {
+    assert(fix_info->success_callback_timer.get());
+    fix_info->success_callback_timer.reset();
+    MakeSuccessCallback(fix_info, fix_info->pending_position);
+  }
 }
 
 bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
@@ -864,6 +1019,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
 
   // Set default values for options.
   info->enable_high_accuracy = false;
+  info->timeout = -1;  // No limit is applied
   info->request_address = false;
   urls->clear();
   // We have to check that options is present because it's not valid to use an
@@ -896,6 +1052,19 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
     error += STRING16(L" should be a boolean.");
     context->SetException(error);
     return false;
+  }
+  if (options->GetPropertyType(kTimeout) != JSPARAM_UNDEFINED) {
+    int timeout = -1;
+    if (!options->GetPropertyAsInt(kTimeout, &timeout) ||
+        timeout < 0) {
+      std::string16 error = STRING16(L"options.");
+      error += kTimeout;
+      error += STRING16(L" should be a non-negative 32 bit signed integer.");
+      context->SetException(error);
+      return false;
+    }
+    info->timeout = timeout;
+    assert(info->timeout >= 0);
   }
   if (options->GetPropertyType(kGearsRequestAddress) != JSPARAM_UNDEFINED &&
       !options->GetPropertyAsBool(kGearsRequestAddress,
@@ -1040,32 +1209,37 @@ bool GearsGeolocation::CreateJavaScriptPositionErrorObject(
 }
 
 GearsGeolocation::FixRequestInfo *GearsGeolocation::GetFixRequest(int id) {
+  ASSERT_SINGLE_THREAD();
+
   FixRequestInfo *fix_info = MaybeGetFixRequest(id);
   assert(fix_info);
   return fix_info;
 }
 
 GearsGeolocation::FixRequestInfo *GearsGeolocation::MaybeGetFixRequest(int id) {
+  ASSERT_SINGLE_THREAD();
+
   FixRequestInfoMap::const_iterator iter = fix_requests_.find(id);
   return iter == fix_requests_.end() ? NULL : iter->second;
 }
 
-bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
+bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request,
+                                           int *fix_request_id) {
   ASSERT_SINGLE_THREAD();
+  assert(fix_request_id);
 
-  int id;
   if (fix_request->repeats) {
     if (next_watch_id_ == kLastRepeatingRequestId) {
       return false;
     }
-    id = next_watch_id_++;
+    *fix_request_id = next_watch_id_++;
   } else {
     if (next_watch_id_ == kLastSingleRequestId) {
       return false;
     }
-    id = next_single_request_id_--;
+    *fix_request_id = next_single_request_id_--;
   }
-  fix_requests_[id] = fix_request;
+  fix_requests_[*fix_request_id] = fix_request;
 
   // For each location provider used by this request, update the provider's
   // list of fix requests in the map.
@@ -1076,7 +1250,7 @@ bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
     LocationProviderBase *provider = *iter;
     // If providers_ does not yet have an entry for this provider, this will
     // create one.
-    providers_[provider].push_back(id);
+    providers_[provider].push_back(*fix_request_id);
   }
 
   // Increment our ref count to keep this object in scope until we make the
@@ -1093,11 +1267,11 @@ bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request) {
   return true;
 }
 
-void GearsGeolocation::RemoveFixRequest(int id) {
+void GearsGeolocation::RemoveFixRequest(int fix_request_id) {
   ASSERT_SINGLE_THREAD();
 
-  FixRequestInfo *fix_request = GetFixRequest(id);
-  fix_requests_.erase(id);
+  FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
+  fix_requests_.erase(fix_request_id);
 
   // For each location provider used by this request, update the provider's
   // list of fix requests in the map.
@@ -1113,7 +1287,8 @@ void GearsGeolocation::RemoveFixRequest(int id) {
 
     // Find this fix request in the list of fix requests for this provider.
     IdList *ids = &(provider_iter->second);
-    IdList::iterator id_iterator = std::find(ids->begin(), ids->end(), id);
+    IdList::iterator id_iterator =
+        std::find(ids->begin(), ids->end(), fix_request_id);
 
     // If we can't find this request the list, something has gone wrong.
     assert(id_iterator != ids->end());
@@ -1145,10 +1320,21 @@ void GearsGeolocation::DeleteFixRequest(FixRequestInfo *fix_request) {
   Unref();
 }
 
-void GearsGeolocation::RemoveProvider(LocationProviderBase *provider, int id) {
+void GearsGeolocation::RemoveAndDeleteFixRequest(int fix_request_id) {
   ASSERT_SINGLE_THREAD();
 
-  FixRequestInfo *fix_request = GetFixRequest(id);
+  // Cache the pointer to the fix request because RemoveFixRequest will
+  // invalidate the iterator.
+  FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
+  RemoveFixRequest(fix_request_id);
+  DeleteFixRequest(fix_request);
+}
+
+void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
+                                      int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
   assert(!fix_request->repeats);
 
   ProviderVector *member_providers = &fix_request->providers;
@@ -1165,7 +1351,8 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider, int id) {
   ProviderMap::iterator provider_iter = providers_.find(provider);
   assert(provider_iter != providers_.end());
   IdList *ids = &(provider_iter->second);
-  IdList::iterator id_iterator = std::find(ids->begin(), ids->end(), id);
+  IdList::iterator id_iterator =
+      std::find(ids->begin(), ids->end(), fix_request_id);
   assert(id_iterator != ids->end());
   ids->erase(id_iterator);
 
@@ -1196,7 +1383,7 @@ void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
   fix_info->success_callback_timer.reset(new TimedMessage(
       timeout_milliseconds,
       kCallbackRequiredObserverTopic,
-      new CallbackRequiredNotificationData(this, fix_request_id)));
+      new FixRequestIdNotificationData(this, fix_request_id)));
 }
 
 // Local functions

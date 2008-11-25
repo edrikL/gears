@@ -37,44 +37,37 @@ function testParseOptions() {
     var dummyFunction = function() {};
 
     // Test correct parsing.
-    var defaultUrlArray = ['http://www.google.com/loc/json'];
+    var correctOptions = {
+      repeats: false,
+      enableHighAccuracy: false,
+      timeout: -1,
+      gearsRequestAddress: false,
+      gearsAddressLanguage: '',
+      gearsLocationProviderUrls: ['http://www.google.com/loc/json']
+    };
+
     var urls = ['url1', 'url2'];
     var parsedOptions;
 
     // No options.
     parsedOptions = internalTests.testParseGeolocationOptions(dummyFunction);
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(false, parsedOptions.enableHighAccuracy);
-    assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual('', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
+    assertObjectEqual(correctOptions, parsedOptions);
 
     // Empty options.
     parsedOptions = internalTests.testParseGeolocationOptions(
         dummyFunction, dummyFunction, {});
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(false, parsedOptions.enableHighAccuracy);
-    assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual('', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual(defaultUrlArray, parsedOptions.gearsLocationProviderUrls);
+    assertObjectEqual(correctOptions, parsedOptions);
 
     // Empty provider URLs.
     parsedOptions = internalTests.testParseGeolocationOptions(
         dummyFunction, dummyFunction, {gearsLocationProviderUrls: []});
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(false, parsedOptions.enableHighAccuracy);
-    assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual('', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
+    correctOptions.gearsLocationProviderUrls = [];
+    assertObjectEqual(correctOptions, parsedOptions);
 
     // Null provider URLs.
     parsedOptions = internalTests.testParseGeolocationOptions(
         dummyFunction, dummyFunction, {gearsLocationProviderUrls: null});
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(false, parsedOptions.enableHighAccuracy);
-    assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual('', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual([], parsedOptions.gearsLocationProviderUrls);
+    assertObjectEqual(correctOptions, parsedOptions);
 
     // All properties false, provider URLs set.
     parsedOptions = internalTests.testParseGeolocationOptions(
@@ -86,11 +79,8 @@ function testParseOptions() {
           gearsAddressLanguage: '',
           gearsLocationProviderUrls: urls
         });
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(false, parsedOptions.enableHighAccuracy);
-    assertEqual(false, parsedOptions.gearsRequestAddress);
-    assertEqual('', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
+    correctOptions.gearsLocationProviderUrls = urls;
+    assertObjectEqual(correctOptions, parsedOptions);
 
     // All properties true, provider URLs set.
     parsedOptions = internalTests.testParseGeolocationOptions(
@@ -102,11 +92,11 @@ function testParseOptions() {
         gearsAddressLanguage: 'test',
         gearsLocationProviderUrls: urls
       });
-    assertEqual(false, parsedOptions.repeats);
-    assertEqual(true, parsedOptions.enableHighAccuracy);
-    assertEqual(true, parsedOptions.gearsRequestAddress);
-    assertEqual('test', parsedOptions.gearsAddressLanguage);
-    assertArrayEqual(urls, parsedOptions.gearsLocationProviderUrls);
+    correctOptions.enableHighAccuracy = true;
+    correctOptions.gearsRequestAddress = true;
+    correctOptions.gearsAddressLanguage = 'test';
+    correctOptions.gearsLocationProviderUrls = urls;
+    assertObjectEqual(correctOptions, parsedOptions);
   }
 }
 
@@ -556,5 +546,32 @@ function testReverseGeocoding() {
       startAsync();
       geolocation.getCurrentPosition(successCallback, errorCallback, options);
     }
+  }
+}
+
+function testTimeout() {
+  // A zero timeout is tested in testZeroTimeout() in geolocation_tests.js. Here
+  // we test that the success callback is invoked if a non-zero timeout is used.
+  // We use the mock location provider to do this.
+  if (isUsingCCTests) {
+    var options = {
+      timeout: 1000,  // Should be plenty of time for the mock provider to act.
+      gearsLocationProviderUrls: []
+    };
+    var mockPosition = {
+      latitude: 51.0,
+      longitude: -0.1,
+      accuracy: 100.1
+    };
+    internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
+    function locationAvailable(position) {
+      delete position.timestamp;
+      assertObjectEqual(mockPosition, position);
+      internalTests.removeGeolocationMockLocationProvider();
+      completeAsync();
+    };
+    var geolocation = google.gears.factory.create('beta.geolocation');
+    startAsync();
+    geolocation.getCurrentPosition(locationAvailable, null, options);
   }
 }
