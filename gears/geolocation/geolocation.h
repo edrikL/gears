@@ -89,8 +89,7 @@ struct Position {
   enum ErrorCode {
     ERROR_CODE_NONE = -1,  // Gears addition
     ERROR_CODE_POSITION_UNAVAILABLE = 2,
-    // TODO(steveblock): Implement PositionOptions.timeout.
-    //ERROR_CODE_TIMEOUT = 3,
+    ERROR_CODE_TIMEOUT = 3,
   };
 
   Position()
@@ -145,6 +144,7 @@ class TimedMessage : public TimedCallback::ListenerInterface {
  private:
   scoped_ptr<TimedCallback> timed_callback_;
   std::string16 message_type_;
+  Event constructor_complete_event_;
 
   DISALLOW_EVIL_CONSTRUCTORS(TimedMessage);
 };
@@ -217,6 +217,9 @@ class GearsGeolocation
     FixRequestInfo() : last_success_callback_time(0) {}
     ProviderVector providers;
     bool enable_high_accuracy;
+    // The maximum time period in which this request must obtain a fix. A value
+    // of -1 implies no limit is applied. Must be non-negative otherwise.
+    int timeout;
     bool request_address;
     std::string16 address_language;
     bool repeats;
@@ -234,11 +237,15 @@ class GearsGeolocation
     // The position that will be used used for a pending future success callback
     // in a watch.
     Position pending_position;
+    // The timer used for a enforcing the timeout in the case of movement
+    // reported by a provider.
+    linked_ptr<TimedMessage> timeout_timer;
   };
 
  private:
   // LocationProviderBase::ListenerInterface implementation.
   virtual bool LocationUpdateAvailable(LocationProviderBase *provider);
+  virtual bool MovementDetected(LocationProviderBase *provider);
 
   // MessageObserverInterface implementation.
   virtual void OnNotify(MessageService *service,
@@ -249,8 +256,11 @@ class GearsGeolocation
   // event.
   void HandleEvent(JsEventType event_type);
 
-  // Internal method used by OnNotify.
+  // Internal methods used by OnNotify.
   void LocationUpdateAvailableImpl(LocationProviderBase *provider);
+  void MovementDetectedImpl(LocationProviderBase *provider);
+  void TimeoutExpiredImpl(int fix_request_id);
+  void CallbackRequiredImpl(int fix_request_id);
 
   // Internal method used by GetCurrentPosition and WatchPosition to get a
   // position fix.
@@ -265,14 +275,17 @@ class GearsGeolocation
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // repeating fix request. 
-  void HandleRepeatingRequestUpdate(int id,
+  void HandleRepeatingRequestUpdate(int fix_request_id,
                                     const Position &position);
 
   // Internal method used by LocationUpdateAvailable to handle an update for a
   // non-repeating fix request.
   void HandleSingleRequestUpdate(LocationProviderBase *provider,
-                                 int id,
+                                 int fix_request_id,
                                  const Position &position);
+
+  void StartTimeoutTimer(int fix_request_id);
+  void MakeTimeoutExpiredCallback(int fix_request_id);
 
   // Internal method to make the callback to JavaScript once we have a postion
   // fix.
@@ -314,18 +327,19 @@ class GearsGeolocation
   // Takes a pointer to a new fix request and records it in our map. Returns
   // false if the maximum number of fix requests has been reached. Otherwise
   // return true.
-  bool RecordNewFixRequest(FixRequestInfo *fix_request);
+  bool RecordNewFixRequest(FixRequestInfo *fix_request, int *fix_request_id);
 
   // Removes a fix request. Cancels any pending requests to the location
   // providers it uses. Note that this does not delete the FixRequestInfo
   // object.
-  void RemoveFixRequest(int id);
+  void RemoveFixRequest(int fix_request_id);
 
   // Deletes a fix request and decrements our ref count.
   void DeleteFixRequest(FixRequestInfo *fix_request);
+  void RemoveAndDeleteFixRequest(int fix_request_id);
 
   // Removes a location provider from a fix request.
-  void RemoveProvider(LocationProviderBase *provider, int id);
+  void RemoveProvider(LocationProviderBase *provider, int fix_request_id);
 
   // Causes a callback to JavaScript to be made at the specified number of
   // milliseconds in the future.

@@ -229,6 +229,9 @@ bool PositionTable::GetPosition(const std::string16 &name,
     case Position::ERROR_CODE_POSITION_UNAVAILABLE:
       position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
       break;
+    case Position::ERROR_CODE_TIMEOUT:
+      position->error_code = Position::ERROR_CODE_TIMEOUT;
+      break;
     default:
       // Note that in previous versions, error_code was set to kint32min to
       // signify no error.

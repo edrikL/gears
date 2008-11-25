@@ -258,9 +258,12 @@ void TestParseGeolocationOptions(JsCallContext *context,
       return;
     }
   }
+  // TODO(steveblock): Consider sharing these string constants with those in
+  // geolocation.cc.
   if (!return_object->SetPropertyBool(STRING16(L"repeats"), info.repeats) ||
       !return_object->SetPropertyBool(STRING16(L"enableHighAccuracy"),
                                       info.enable_high_accuracy) ||
+      !return_object->SetPropertyInt(STRING16(L"timeout"), info.timeout) ||
       !return_object->SetPropertyBool(STRING16(L"gearsRequestAddress"),
                                       info.request_address) ||
       !return_object->SetPropertyString(STRING16(L"gearsAddressLanguage"),
@@ -566,6 +569,9 @@ void GetPositionFromJavaScriptParameter(JsCallContext *context,
   switch (error_code) {
     case Position::ERROR_CODE_POSITION_UNAVAILABLE:
       position->error_code = Position::ERROR_CODE_POSITION_UNAVAILABLE;
+      break;
+    case Position::ERROR_CODE_TIMEOUT:
+      position->error_code = Position::ERROR_CODE_TIMEOUT;
       break;
   }
 }
