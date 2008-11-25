@@ -186,6 +186,11 @@ class MockLocationProvider
     worker_event_.Signal();
   }
 
+  static void ReportMovement() {
+    is_movement_detected_ = true;
+    worker_event_.Signal();
+  }
+
  private:
   // LocationProviderBase implementation.
   virtual void GetPosition(Position *position) {
@@ -203,6 +208,9 @@ class MockLocationProvider
         UpdateListeners();
         is_new_position_available_ = false;
         is_new_listener_waiting_ = false;
+      } else if (is_movement_detected_) {
+        InformListenersOfMovement();
+        is_movement_detected_ = false;
       }
     }
   }
@@ -210,6 +218,7 @@ class MockLocationProvider
   static Position position_;
   static Mutex position_mutex_;
   static bool is_new_position_available_;
+  static bool is_movement_detected_;
   static Event worker_event_;
 
   bool is_shutting_down_;
@@ -228,6 +237,9 @@ Mutex MockLocationProvider::position_mutex_;
 
 // static
 bool MockLocationProvider::is_new_position_available_ = false;
+
+// static
+bool MockLocationProvider::is_movement_detected_ = false;
 
 // static
 Event MockLocationProvider::worker_event_;
@@ -596,6 +608,10 @@ void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context) {
 
   // Configure the location provider pool to use the mock location provider.
   LocationProviderPool::GetInstance()->UseMockLocationProvider(true);
+}
+
+void ReportMovementInMockLocationProvider(JsCallContext *context) {
+  MockLocationProvider::ReportMovement();
 }
 
 void RemoveGeolocationMockLocationProvider() {
