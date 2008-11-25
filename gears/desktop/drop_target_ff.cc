@@ -28,16 +28,17 @@
 #else
 #include "gears/desktop/drop_target_ff.h"
 
-#include <gecko_sdk/include/nsIFile.h>
-#include <gecko_sdk/include/nsIFileURL.h>
-#include <gecko_sdk/include/nsIDOMHTMLElement.h>
 #include <gecko_sdk/include/nsIDOMEvent.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
+#include <gecko_sdk/include/nsIDOMHTMLElement.h>
+#include <gecko_sdk/include/nsIFile.h>
+#include <gecko_sdk/include/nsIFileURL.h>
 #include <gecko_sdk/include/nsILocalFile.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIURI.h>
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/firefox/ns_file_utils.h"
+#include "gears/desktop/drag_and_drop_utils_ff.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -229,7 +230,8 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
       std::string16 error;
       scoped_ptr<JsArray> file_array(
           module_environment_->js_runner_->NewArray());
-      if (!GetDroppedFiles(drag_session.get(), file_array.get(), &error)) {
+      if (!GetDroppedFiles(module_environment_.get(), drag_session.get(),
+                           file_array.get(), &error)) {
         return NS_ERROR_FAILURE;
       }
 
@@ -297,98 +299,6 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     }
   }
   return NS_OK;
-}
-
-
-bool DropTarget::GetDroppedFiles(
-    nsIDragSession *drag_session,
-    JsArray *files_out,
-    std::string16 *error_out) {
-#if defined(LINUX) && !defined(OS_MACOSX)
-  // Although Firefox's underlying XPCOM widget library aims to present a
-  // consistent cross-platform interface, there are still significant
-  // differences in drag-and-drop. In particular, different OSes support
-  // different "data flavors". On Windows and on Mac, we can specify the
-  // kFileMime flavor to get a nsIFile object off the clipboard, but on
-  // Linux, that doesn't work, and we have to specify kURLMime instead to
-  // get the "file:///home/user/foo.txt" string to convert to a filename.
-  // For implementation details, look at Firefox's source code, particularly
-  // nsClipboard.cpp and nsDragService.cpp in widget/src/{gtk2,mac,windows}.
-  // On platforms, such as Windows, where both kURLMime and kFileMime are
-  // supported, then the latter is preferred because it allows us to follow
-  // links (e.g. .lnk files on Windows, and alias files on Mac).
-  const char *flavor = kURLMime;
-#else
-  const char *flavor = kFileMime;
-#endif
-
-  PRUint32 num_drop_items;
-  nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
-  if (NS_FAILED(nr) || num_drop_items <= 0) { return false; }
-
-  std::vector<std::string16> filenames;
-  for (int i = 0; i < static_cast<int>(num_drop_items); i++) {
-    nsCOMPtr<nsITransferable> transferable =
-      do_CreateInstance("@mozilla.org/widget/transferable;1", &nr);
-    if (NS_FAILED(nr)) { return false; }
-    transferable->AddDataFlavor(flavor);
-    drag_session->GetData(transferable, i);
-
-    nsCOMPtr<nsISupports> data;
-    PRUint32 data_len;
-    nr = transferable->GetTransferData(flavor, getter_AddRefs(data), &data_len);
-    if (NS_FAILED(nr)) { return false; }
-
-    // Here the code diverges depending on the platform. On Linux, we
-    // crack a nsIURI out of the transferable and convert the string
-    // to a file path. On Windows and Mac, we get a nsIFile out of the
-    // transferable and query it directly for its file path.
-#if defined(LINUX) && !defined(OS_MACOSX)
-    nsCOMPtr<nsISupportsString> data_as_xpcom_string(do_QueryInterface(data));
-    nsString data_as_string;
-    nr = data_as_xpcom_string->GetData(data_as_string);
-    if (NS_FAILED(nr)) { return false; }
-    nsCOMPtr<nsIFile> file;
-    nr = NSFileUtils::GetFileFromURLSpec(data_as_string, getter_AddRefs(file));
-    if (NS_FAILED(nr)) { return false; }
-    nsString filename;
-    nr = file->GetPath(filename);
-    if (NS_FAILED(nr)) { return false; }
-#else
-    nsCOMPtr<nsIFile> file(do_QueryInterface(data));
-    if (!file) { return false; }
-    nsString path;
-    nr = file->GetPath(path);
-    if (NS_FAILED(nr)) { return false; }
-
-    PRBool bool_result = false;
-    if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
-      continue;
-    }
-
-    nsCOMPtr<nsILocalFile> local_file =
-        do_CreateInstance("@mozilla.org/file/local;1", &nr);
-    if (NS_FAILED(nr)) { return false; }
-    nr = local_file->SetFollowLinks(PR_TRUE);
-    if (NS_FAILED(nr)) { return false; }
-    nr = local_file->InitWithPath(path);
-    if (NS_FAILED(nr)) { return false; }
-
-    nr = NS_ERROR_FAILURE;
-    nsString filename;
-    if (NS_SUCCEEDED(file->IsSymlink(&bool_result)) && bool_result) {
-      nr = local_file->GetTarget(filename);
-    } else if (NS_SUCCEEDED(file->IsFile(&bool_result)) && bool_result) {
-      nr = local_file->GetPath(filename);
-    }
-    if (NS_FAILED(nr)) { return false; }
-#endif
-
-    filenames.push_back(std::string16(filename.get()));
-  }
-
-  return FileDialog::FilesToJsObjectArray(
-      filenames, module_environment_.get(), files_out, error_out);
 }
 
 

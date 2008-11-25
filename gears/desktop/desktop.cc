@@ -55,6 +55,10 @@
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+#if BROWSER_FF
+#include "gears/desktop/drag_and_drop_utils_ff.h"
+#endif
+
 DECLARE_DISPATCHER(GearsDesktop);
 
 template<>
@@ -78,6 +82,7 @@ void Dispatcher<GearsDesktop>::Init() {
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+  RegisterMethod("getDragAndDropData", &GearsDesktop::GetDragAndDropData);
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
 #endif
 #endif  // OFFICIAL_BUILD
@@ -1021,6 +1026,49 @@ void GearsDesktop::RemoveNotification(JsCallContext *context) {
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+void GearsDesktop::GetDragAndDropData(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"getDragAndDropData is not supported in workers."));
+    return;
+  }
+
+  scoped_ptr<JsObject> event_as_js_object;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &event_as_js_object },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  std::string16 error;
+  scoped_ptr<JsObject> result(
+      module_environment_->js_runner_->NewObject());
+
+#if BROWSER_FF
+#if defined(WIN32) || defined(OS_MACOSX)
+  // TODO(nigeltao): test that the implementation is sound for Firefox/Windows
+  // and Firefox/Mac.
+  error = STRING16(L"getDragAndDropData is not supported for this platform.");
+#else
+  ::GetDragAndDropData(module_environment_.get(),
+                       event_as_js_object.get(),
+                       result.get(),
+                       &error);
+#endif
+#else
+  // TODO(nigeltao): implement on IE, Safari and Chromium.
+  error = STRING16(L"getDragAndDropData is not supported for this platform.");
+#endif
+
+  if (!error.empty()) {
+    context->SetException(error);
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_OBJECT, result.get());
+}
+
+
 void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
   if (EnvIsWorker()) {
     context->SetException(
