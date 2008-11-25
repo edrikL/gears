@@ -95,6 +95,7 @@ rs.close();
    void      <b>open</b>([name])
    ResultSet <b>execute</b>(sqlStatement, [argArray])
    void      <b>close</b>()
+   void      <b>remove</b>()
    readonly attribute int <b>lastInsertRowId</b>
    readonly attribute int <b>rowsAffected</b>
 </code></pre>
@@ -213,6 +214,19 @@ rs.close();
   instance. Calling Database.close() is not required.<br />
   <br />
   </td></tr>
+</table>
+<table>
+  <tr class="odd">
+    <th colspan="2"><a href="#Database-remove" name="Database-remove" class="code">remove()</a></th>
+    </tr>
+  <tr class="odd">
+    <td width="113">Return value: </td>
+    <td width="489" class="code">void</td>
+    </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">Completely deletes the currently opened database. Closes the database first if necessary.</td>
+    </tr>
 </table>
 <table>
   <tr class="odd">
