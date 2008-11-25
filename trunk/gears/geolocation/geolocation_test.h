@@ -110,7 +110,15 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 // OUT: nothing
 void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
 
+// Causes the mock location provider to report movement to the arbitrator. This
+// can be used to test the timeout parameter.
+// IN: nothing
+// OUT: nothing
+void ReportMovementInMockLocationProvider(JsCallContext *context);
+
 // Configures the location provider pool to not use the mock location provider.
+// IN: nothing
+// OUT: nothing
 void RemoveGeolocationMockLocationProvider();
 
 // Configures the GPS location provider to use a mock GPS device and sets the

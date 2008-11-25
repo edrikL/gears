@@ -182,8 +182,16 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: nothing
   void ConfigureGeolocationMockLocationProviderForTest(JsCallContext *context);
 
+  // Causes the mock location provider to report movement to the arbitrator.
+  // This can be used to test the timeout parameter.
+  // IN: nothing
+  // OUT: nothing
+  void ReportMovementInMockLocationProvider(JsCallContext *context);
+
   // Configures the location provider pool to not use the mock location
   // provider.
+  // IN: nothing
+  // OUT: nothing
   void RemoveGeolocationMockLocationProvider(JsCallContext *context);
 
 #ifdef OS_ANDROID

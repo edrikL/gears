@@ -89,6 +89,8 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::ConfigureGeolocationWifiDataProviderForTest);
   RegisterMethod("configureGeolocationMockLocationProviderForTest",
                  &GearsTest::ConfigureGeolocationMockLocationProviderForTest);
+  RegisterMethod("reportMovementInMockLocationProvider",
+                 &GearsTest::ReportMovementInMockLocationProvider);
   RegisterMethod("removeGeolocationMockLocationProvider",
                  &GearsTest::RemoveGeolocationMockLocationProvider);
 #ifdef OS_ANDROID
@@ -2158,6 +2160,10 @@ void GearsTest::ConfigureGeolocationWifiDataProviderForTest(
 void GearsTest::ConfigureGeolocationMockLocationProviderForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationMockLocationProviderForTest(context);
+}
+
+void GearsTest::ReportMovementInMockLocationProvider(JsCallContext *context) {
+  ::ReportMovementInMockLocationProvider(context);
 }
 
 void GearsTest::RemoveGeolocationMockLocationProvider(

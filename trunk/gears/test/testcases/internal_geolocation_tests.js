@@ -25,6 +25,7 @@
 
 // Error code values. These values must match those in geolocation.h.
 var ERROR_CODE_POSITION_UNAVAILABLE = 2;
+var ERROR_CODE_TIMEOUT = 3;
 
 if (isUsingCCTests) {
   var internalTests = google.gears.factory.create('beta.test');
@@ -573,5 +574,69 @@ function testTimeout() {
     var geolocation = google.gears.factory.create('beta.geolocation');
     startAsync();
     geolocation.getCurrentPosition(locationAvailable, null, options);
+  }
+}
+
+function testWatchTimeout() {
+  // Here we test that in the case of a watch, we get a success callback if a
+  // position fix is obtained within the timeout, and an error callback if it is
+  // not. We use the mock location provider to do this.
+  if (isUsingCCTests) {
+    var options = {
+      timeout: 200,
+      gearsLocationProviderUrls: []
+    };
+    var mockPosition1 = {
+      latitude: 51.0,
+      longitude: -0.1,
+      accuracy: 100.1
+    };
+    var mockPosition2 = {
+      latitude: 52.0,
+      longitude: -1.1,
+      accuracy: 101.1
+    };
+    var expectedError = {
+      code: ERROR_CODE_TIMEOUT,
+      message: 'A position fix was not obtained within the specified time ' +
+          'limit.'
+    }
+    var state = 0;
+    function successCallback(position) {
+      assert(state == 0 || state == 1,
+             'Success callback should be called first.');
+      delete position.timestamp;
+      if (state == 0) {
+        state = 1;
+        assertObjectEqual(mockPosition1, position);
+        // Report movement then schedule a position update within the timeout
+        // period.
+        internalTests.reportMovementInMockLocationProvider();
+        timer.setTimeout(function() {
+          internalTests.configureGeolocationMockLocationProviderForTest(
+              mockPosition2);
+        }, 100);
+      } else {
+        state = 2;
+        assertObjectEqual(mockPosition2, position);
+        // Report movement but do not follow with a position update.
+        internalTests.reportMovementInMockLocationProvider();
+      }
+    };
+    function errorCallback(error) {
+      assert(state == 2, 'Error callback should be called last.');
+      assertObjectEqual(expectedError, error);
+      geolocation.clearWatch(watchId);
+      internalTests.removeGeolocationMockLocationProvider();
+      completeAsync();
+    };
+    var geolocation = google.gears.factory.create('beta.geolocation');
+    var timer = google.gears.factory.create('beta.timer');
+    internalTests.configureGeolocationMockLocationProviderForTest(
+        mockPosition1);
+    startAsync();
+    var watchId = geolocation.watchPosition(successCallback,
+                                            errorCallback,
+                                            options);
   }
 }
