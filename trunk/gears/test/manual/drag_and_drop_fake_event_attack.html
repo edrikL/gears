@@ -1,0 +1,101 @@
+<html><head>
+<title>Gears Drag and Drop, getDragAndDropData(fakeEvent)</title></head>
+<body>
+<ol>
+<li>Drag some files from the desktop.</li>
+<li>Drop them on this DIV.</li>
+<li>???</li>
+<li>Profit!</li>
+</ol>
+<div>Also, click on these buttons below. If you get an alert (by clicking, or
+by dragging, or whatever else) then something is wrong (i.e. Gears drag and
+drop has a potential security hole).</div>
+<button onclick="tryGetDragAndDropData(event)">Click Me 1</button>
+<button onclick="tryDispatchEvent(invalidEvent)">Click Me 2</button>
+<button onclick="tryDispatchEvent(null)">Click Me 3</button>
+
+<div>Event type: <b><span id="eventTypeOutput">&nbsp;</span></b></div>
+<div>Dropped Files:</div>
+<div id="dropOutput">&nbsp;</div>
+
+<script type="text/javascript" src="../../sdk/gears_init.js"></script>
+<script type="text/javascript">
+
+var desktop = google.gears.factory.create('beta.desktop');
+
+// We initialize this global variable to a fake event, to try and spoof the
+// Gears API into letting us read drag-and-drops on other tabs, or other
+// browser windows, or even other apps entirely.
+var fakeEvent = {
+  'target': document,
+  'type': 'dragenter'
+};
+// To start with, every 2 seconds, we tryGetDragAndDropData with this fake
+// event. However, after the first time handler is called (i.e. after the
+// first genuine drag and drop event), invalidEvent is set to that event and
+// we tryGetDragAndDropData that event, every 2 seconds.
+var invalidEvent = fakeEvent;
+// TODO(nigeltao): check that, on IE, Safari and Chromium, calling
+// window.event = fakeEvent;
+// has no effect.
+
+function handler(isDrop) {
+  return function(evt) {
+    // We save the genuine nsIDOMEvent to a global variable, to again try and
+    // spoof the Gears API, this time with a genuine event after it has been
+    // dispatched.
+    invalidEvent = evt;
+    if (isDrop) {
+      var data = desktop.getDragAndDropData(evt);
+      var s = '';
+      if (data.files) {
+        for (i = 0; i < data.files.length; i++) {
+          var file = data.files[i];
+          s += '<b>' + file.name + '</b> has length <b>' +
+              file.blob.length + '</b>.<br/>';
+        }
+      }
+      document.getElementById('dropOutput').innerHTML = s;
+      evt.stopPropagation();
+    }
+  };
+}
+
+// TODO(nigeltao): addEventListener is Firefox-only. I should extend this
+// (manual) test case to also test IE, Safari and Chromium.
+document.addEventListener('dragenter', handler(false), false);
+document.addEventListener('dragover',  handler(false), false);
+document.addEventListener('dragleave', handler(false), false);
+document.addEventListener('dragdrop',  handler(true),  false);
+
+function tryGetDragAndDropData(evt) {
+  document.getElementById('eventTypeOutput').innerHTML = evt.type;
+  try {
+    desktop.getDragAndDropData(evt);
+    // The line above should always throw an exception.
+    alert('Gears drag and drop has a potential security hole.');
+  } catch (ex) {
+    if (window.console) {
+      window.console.debug(ex.message);
+    }
+  }
+}
+
+function tryDispatchEvent(evt) {
+  if (!evt) {
+    evt = document.createEvent('MouseEvent');
+    evt.initMouseEvent('mouseover', true, true, window,
+        0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  }
+  document.dispatchEvent(evt);
+}
+
+// This event listener will catch both natural mouseover events, and those
+// mouseover events dispatched by the tryDispatchEvent function above.
+document.addEventListener('mouseover', tryGetDragAndDropData, false);
+
+window.setInterval(function() { tryGetDragAndDropData(invalidEvent); }, 2000);
+
+</script>
+</body>
+</html>

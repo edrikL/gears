@@ -23,54 +23,21 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DROP_TARGET_FF_H__
-#define GEARS_DESKTOP_DROP_TARGET_FF_H__
-#ifdef OFFICIAL_BUILD
-// The Drag-and-Drop API has not been finalized for official builds.
-#else
+#ifndef GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__
+#define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__
 
-#include <gecko_internal/nsIDragService.h>
-#include <gecko_internal/nsIXPConnect.h>
-#include <gecko_sdk/include/nsIDOMEventListener.h>
+#include "gears/base/common/base_class.h"
 
-#include "gears/desktop/drop_target_base.h"
+class nsIDragSession;
 
-class DropTarget
-    : public DropTargetBase,
-      public nsIDOMEventListener {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
+bool GetDroppedFiles(ModuleEnvironment *module_environment,
+                     nsIDragSession *drag_session,
+                     JsArray *files_out,
+                     std::string16 *error_out);
 
-  virtual ~DropTarget();
+void GetDragAndDropData(ModuleEnvironment *module_environment,
+                        JsObject *event,
+                        JsObject *data_out,
+                        std::string16 *error_out);
 
-  // The result should be held within a scoped_refptr.
-  static DropTarget *CreateDropTarget(ModuleEnvironment *module_environment,
-                                      JsDomElement &dom_element,
-                                      JsObject *options,
-                                      std::string16 *error_out);
-
-  virtual void UnregisterSelf();
-
-  void Ref();
-  void Unref();
-
- private:
-  nsCOMPtr<nsIDOMHTMLElement> html_element_;
-  nsCOMPtr<nsIDOMEventTarget> event_target_;
-  nsCOMPtr<nsIXPConnect> xp_connect_;
-  bool unregister_self_has_been_called_;
-  bool will_accept_drop_;
-
-  DropTarget(ModuleEnvironment *module_environment,
-             JsObject *options,
-             std::string16 *error_out);
-
-  void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
-  void ProvideDebugVisualFeedback(bool is_drag_enter);
-
-  DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
-};
-
-#endif  // OFFICIAL_BUILD
-#endif  // GEARS_DESKTOP_DROP_TARGET_FF_H__
+#endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__

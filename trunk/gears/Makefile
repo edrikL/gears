@@ -1482,6 +1482,7 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 FF3_CPPSRCS += \
+		drag_and_drop_utils_ff.cc \
 		drop_target_ff.cc \
 		$(NULL)
 

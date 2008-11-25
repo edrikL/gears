@@ -53,6 +53,8 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
                      JsArray *files_out,
                      bool reset);
 
+// These two are mutually exclusive (although they may be both false) -
+// "in a drag" means dragenter, dragover or dragleave, but not drop.
 bool IsInADragOperation();
 bool IsInADropOperation();
 
