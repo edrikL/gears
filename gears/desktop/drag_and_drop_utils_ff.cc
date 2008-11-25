@@ -173,7 +173,7 @@ DragAndDropEventType GetDragAndDropEventType(nsISupports *event_as_supports) {
   // made, during nsEventDispatcher::Dispatch in
   // mozilla/content/events/src/nsEventDispatcher.cpp, and so this bit-check is
   // a meaningful test. The nsEventDispatcher class is new in Gecko 1.9.
-  if (ns_event->flags & NS_EVENT_FLAG_DISPATCHING == 0) {
+  if ((ns_event->flags & NS_EVENT_FLAG_DISPATCHING) == 0) {
     return DRAG_AND_DROP_EVENT_INVALID;
   }
 #endif
