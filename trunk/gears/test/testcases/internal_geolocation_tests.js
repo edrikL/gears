@@ -23,12 +23,21 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Error code values. These values must match those in geolocation.h.
-var ERROR_CODE_POSITION_UNAVAILABLE = 2;
-var ERROR_CODE_TIMEOUT = 3;
-
 if (isUsingCCTests) {
   var internalTests = google.gears.factory.create('beta.test');
+}
+
+// Helper function for testing that two error objects are equal.
+function assertErrorEqual(expectedCode, expectedMessage, error) {
+  assertEqual(0, error.UNKNOWN_ERROR, 'UKNOWN_ERROR has incorrect value.');
+  assertEqual(1, error.PERMISSION_DENIED,
+              'PERMISSION_DENIED has incorrect value.');
+  assertEqual(2, error.POSITION_UNAVAILABLE,
+              'POSITION_UNAVAILABLE has incorrect value.');
+  assertEqual(3, error.TIMEOUT, 'TIMEOUT has incorrect value.');
+  assertEqual(expectedCode, error.code, 'Error code has incorrect value.');
+  assertEqual(expectedMessage, error.message,
+              'Error message has incorrect value.');
 }
 
 // Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
@@ -146,9 +155,7 @@ function testGetLocationFromResponse() {
                          ' did not provide a good position fix.'
     var position;
     var correctPosition;
-
-    // Error code values. These values must match those in geolocation.h.
-    var ERROR_CODE_POSITION_UNAVAILABLE = 2;
+    var error;
 
     // Test good response with valid position.
     var responseBody = '{ ' +
@@ -228,92 +235,75 @@ function testGetLocationFromResponse() {
     assertObjectEqual(correctPosition, position);
 
     // Test no response.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         false,  // HttpPost result
         0,      // status code
         '',     // response body
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = 'No response from network provider at ' +
-                              dummy_server +
-                              '.';
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE,
+                     'No response from network provider at ' +
+                     dummy_server +
+                     '.',
+                     error);
 
     // Test bad response.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         400,    // status code
         '',     // response body
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = 'Network provider at ' +
-                              dummy_server +
-                              ' returned error code 400.';
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE,
+                     'Network provider at ' +
+                     dummy_server +
+                     ' returned error code 400.',
+                     error);
 
     // Test good response with malformed body.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
         'malformed response body',
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = malformedResponseError;
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE, malformedResponseError, error);
 
     // Test good response with empty body.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
         '',     // response body
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = malformedResponseError;
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE, malformedResponseError, error);
 
     // Test good response where body is not an object.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
         '"a string"',
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = malformedResponseError;
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE, malformedResponseError, error);
 
     // Test good response with unknown position.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
         '{}',   // response body
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = noGoodFixError;
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE, noGoodFixError, error);
 
     // Test good response with explicit unknown position.
-    position = internalTests.testGeolocationGetLocationFromResponse(
+    error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
         '{"position": null}',
         0,      // timestamp
         dummy_server);
-    correctPosition = new Object();
-    correctPosition.code = ERROR_CODE_POSITION_UNAVAILABLE;
-    correctPosition.message = noGoodFixError;
-    assertObjectEqual(correctPosition, position);
+    assertErrorEqual(error.POSITION_UNAVAILABLE, noGoodFixError, error);
   }
 }
 
@@ -383,13 +373,13 @@ function testMockDeviceDataProvider() {
     };
 
     function noPositionErrorCallback(error) {
-      assertEqual(ERROR_CODE_POSITION_UNAVAILABLE, error.code);
+      assertEqual(error.POSITION_UNAVAILABLE, error.code);
       assert(error.message.search('did not provide a good position fix') > 0);
       makeMalformedRequest();
     };
 
     function malformedRequestErrorCallback(error) {
-      assertEqual(ERROR_CODE_POSITION_UNAVAILABLE, error.code);
+      assertEqual(error.POSITION_UNAVAILABLE, error.code);
       assert(error.message.search('returned error code 400') > 0);
       completeAsync();
     };
@@ -596,11 +586,6 @@ function testWatchTimeout() {
       longitude: -1.1,
       accuracy: 101.1
     };
-    var expectedError = {
-      code: ERROR_CODE_TIMEOUT,
-      message: 'A position fix was not obtained within the specified time ' +
-          'limit.'
-    }
     var state = 0;
     function successCallback(position) {
       assert(state == 0 || state == 1,
@@ -625,7 +610,10 @@ function testWatchTimeout() {
     };
     function errorCallback(error) {
       assert(state == 2, 'Error callback should be called last.');
-      assertObjectEqual(expectedError, error);
+      assertErrorEqual(
+          error.TIMEOUT,
+          'A position fix was not obtained within the specified time limit.',
+          error);
       geolocation.clearWatch(watchId);
       internalTests.removeGeolocationMockLocationProvider();
       completeAsync();

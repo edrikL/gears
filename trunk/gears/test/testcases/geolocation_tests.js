@@ -23,9 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Error code values. These values must match those in geolocation.h.
-var ERROR_CODE_TIMEOUT = 3;
-
 var geolocation = google.gears.factory.create('beta.geolocation');
 var dummyFunction = function() {};
 
@@ -136,10 +133,8 @@ function testNoProviders() {
 function testZeroTimeout() {
   // A request with a zero timeout should call the error callback immediately.
   function errorCallback(error) {
-    assertEqual(
-        ERROR_CODE_TIMEOUT,
-        error.code,
-        'Error callback should be called with code ERROR_CODE_TIMEOUT (3).');
+    assertEqual(error.TIMEOUT, error.code,
+                'Error callback should be called with code TIMEOUT.');
     completeAsync();
   }
   startAsync();
