@@ -697,9 +697,18 @@ void GearsGeolocation::MakeTimeoutExpiredCallback(int fix_request_id) {
   // the case where this callback removes our final reference.
   Ref();
 
-  // Call back to JavaScript with an error.
   // See if we are a one-shot:
   bool is_one_shot = !fix_request_info->repeats;
+
+  // If this is a one-shot request, remove the fix request from our map, so that
+  // position updates which occur while the callback to JavaScript is in process
+  // do not trigger handling for this fix request.
+  if (is_one_shot) {
+    assert(fix_request_id < 0);
+    RemoveFixRequest(fix_request_id);
+  }
+
+  // Call back to JavaScript with an error.
   Position position;
   position.error_code = Position::ERROR_CODE_TIMEOUT;
   position.error_message = STRING16(L"A position fix was not obtained within "
@@ -719,7 +728,7 @@ void GearsGeolocation::MakeTimeoutExpiredCallback(int fix_request_id) {
     // that this one-shot fix request could not have been removed in
     // the callback since there is no explict API that would allow an
     // application to do so.
-    RemoveAndDeleteFixRequest(fix_request_id);
+    DeleteFixRequest(fix_request_info);
   }
 
   Unref();
@@ -1339,7 +1348,6 @@ void GearsGeolocation::RemoveAndDeleteFixRequest(int fix_request_id) {
 
   // Cache the pointer to the fix request because RemoveFixRequest will
   // invalidate the iterator.
-  LOG(("Now we crash"));
   FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
   RemoveFixRequest(fix_request_id);
   DeleteFixRequest(fix_request);
