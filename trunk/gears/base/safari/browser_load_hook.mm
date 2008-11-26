@@ -30,7 +30,7 @@
 #import "gears/base/common/exception_handler.h"
 #import "gears/base/common/message_queue.h"
 #import "gears/base/safari/safari_workarounds.h"
-#import "gears/desktop/drag_and_drop_utils_osx.h"
+#import "gears/desktop/drag_and_drop_utils_sf.h"
 #import "gears/localserver/safari/http_handler.h"
 #import "gears/localserver/safari/ui_thread.h"
 #import "gears/ui/safari/settings_menu.h"

@@ -1498,7 +1498,7 @@ ifeq ($(OFFICIAL_BUILD),1)
 # The Drag-and-Drop API has not been finalized for official builds.
 else
 SF_CPPSRCS += \
-		drag_and_drop_utils_osx.mm \
+		drag_and_drop_utils_sf.mm \
 		drop_target_sf.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
