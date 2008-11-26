@@ -29,7 +29,7 @@
 #import <objc/objc-class.h>
 #import <vector>
 
-#import "gears/desktop/drag_and_drop_utils_osx.h"
+#import "gears/desktop/drag_and_drop_utils_sf.h"
 
 #import "gears/base/common/common.h"
 #import "gears/base/safari/nsstring_utils.h"

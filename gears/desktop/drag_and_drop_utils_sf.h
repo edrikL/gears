@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DESKTOP_DRAG_AND_DROP_UTILS_OSX_H__
-#define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_OSX_H__
+#ifndef GEARS_DESKTOP_DRAG_AND_DROP_UTILS_SF_H__
+#define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_SF_H__
 
 #include "gears/base/common/base_class.h"
 
@@ -58,4 +58,4 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 bool IsInADragOperation();
 bool IsInADropOperation();
 
-#endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_OSX_H__
+#endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_SF_H__

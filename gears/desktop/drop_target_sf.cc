@@ -30,7 +30,7 @@
 
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
-#include "gears/desktop/drag_and_drop_utils_osx.h"
+#include "gears/desktop/drag_and_drop_utils_sf.h"
 #include "gears/desktop/file_dialog.h"
 
 
