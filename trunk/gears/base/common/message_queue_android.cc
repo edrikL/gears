@@ -410,7 +410,7 @@ class BackgroundMessageHandler
     LOG(("Got data %d", count_));
     if (count_ == 600) {
       // Tell the main thread we got all data.
-      LOG(("Sending to main thread"));
+      LOG(("Sending to parent thread"));
       message = new TestMessage(
           ThreadMessageQueue::GetInstance()->GetCurrentThreadId(), count_);
       ThreadMessageQueue::GetInstance()->Send(sender_,
@@ -446,12 +446,10 @@ class MainMessageHandler
 
 class TestThread : public Thread {
  public:
+  explicit TestThread(ThreadId parent_id) : parent_id_(parent_id) {}
   virtual void Run() {
-    AndroidThreadMessageQueue* queue = static_cast<AndroidThreadMessageQueue*>(
-        ThreadMessageQueue::GetInstance());
-
-    BackgroundMessageHandler handler1(queue->MainThreadId());
-    BackgroundMessageHandler handler2(queue->MainThreadId());
+    BackgroundMessageHandler handler1(parent_id_);
+    BackgroundMessageHandler handler2(parent_id_);
     ThreadMessageQueue::GetInstance()->RegisterHandler(
         kMessageType1, &handler1);
     ThreadMessageQueue::GetInstance()->RegisterHandler(
@@ -461,40 +459,45 @@ class TestThread : public Thread {
     AndroidMessageLoop::Start();
     LOG(("Test thread shutting down."));
   }
-};
 
-// Global message handler
-MainMessageHandler global_handler;
+ private:
+  ThreadId parent_id_;
+};
 
 bool TestThreadMessageQueue(std::string16* error) {
   AndroidThreadMessageQueue* queue = static_cast<AndroidThreadMessageQueue*>(
       ThreadMessageQueue::GetInstance());
 
-  // Init the message queue for the main thread
-  queue->InitThreadMessageQueue();
-  queue->RegisterHandler(kMessageType3, &global_handler);
+  // The message queue for this thread is already initialized:
+  // - if this is the main browser thread, the queue was initialized
+  //   in NP_Initialized.
+  // - if this is a worker, the queue was initialized in
+  //   Thread::ThreadMain().
+  // Our message handler
+  MainMessageHandler local_handler;
+  queue->RegisterHandler(kMessageType3, &local_handler);
 
   // Start the worker.
-  scoped_ptr<TestThread> thread(new TestThread);
+  ThreadId self_id = queue->GetCurrentThreadId();
+  scoped_ptr<TestThread> thread(new TestThread(self_id));
   ThreadId worker_thread_id = thread->Start();
 
   // Send three messages, sleep, send another three.
-  ThreadId main_thread_id = queue->MainThreadId();
-  TestMessage* message = new TestMessage(main_thread_id, 1);
+  TestMessage* message = new TestMessage(self_id, 1);
   queue->Send(worker_thread_id, kMessageType1, message);
-  message = new TestMessage(main_thread_id, 2);
+  message = new TestMessage(self_id, 2);
   queue->Send(worker_thread_id, kMessageType1, message);
-  message = new TestMessage(main_thread_id, 3);
+  message = new TestMessage(self_id, 3);
   queue->Send(worker_thread_id, kMessageType1, message);
   sleep(1);
-  message = new TestMessage(main_thread_id, 100);
+  message = new TestMessage(self_id, 100);
   queue->Send(worker_thread_id, kMessageType2, message);
-  message = new TestMessage(main_thread_id, 200);
+  message = new TestMessage(self_id, 200);
   queue->Send(worker_thread_id, kMessageType2, message);
-  message = new TestMessage(main_thread_id, 300);
+  message = new TestMessage(self_id, 300);
   queue->Send(worker_thread_id, kMessageType2, message);
 
-  while (!global_handler.IsDone()) {
+  while (!local_handler.IsDone()) {
     AndroidMessageLoop::RunOnce();
   }
   LOG(("Message from worker received."));
