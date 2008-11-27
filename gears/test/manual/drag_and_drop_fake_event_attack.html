@@ -21,6 +21,13 @@ drop has a potential security hole).</div>
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
 
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
+var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
+var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
+
+var isInManualDispatch = false;
+
 var desktop = google.gears.factory.create('beta.desktop');
 
 // We initialize this global variable to a fake event, to try and spoof the
@@ -35,9 +42,6 @@ var fakeEvent = {
 // first genuine drag and drop event), invalidEvent is set to that event and
 // we tryGetDragAndDropData that event, every 2 seconds.
 var invalidEvent = fakeEvent;
-// TODO(nigeltao): check that, on IE, Safari and Chromium, calling
-// window.event = fakeEvent;
-// has no effect.
 
 function handler(isDrop) {
   return function(evt) {
@@ -46,7 +50,22 @@ function handler(isDrop) {
     // dispatched.
     invalidEvent = evt;
     if (isDrop) {
-      var data = desktop.getDragAndDropData(evt);
+      try {
+        var data = desktop.getDragAndDropData(evt);
+        // The line above should always throw an exception, if we are in
+        // manual dispatch (as opposed to a genuine drag and drop event).
+        if (isInManualDispatch) {
+          alert('Gears drag and drop has a potential security hole.');
+        }
+      } catch (ex) {
+        if (!isInManualDispatch) {
+          alert('desktop.getDragAndDropData failed during genuine dispatch.');
+        } else {
+          // Getting an exception during manual dispatch is exactly what we
+          // expect.
+          return;
+        }
+      }
       var s = '';
       if (data.files) {
         for (i = 0; i < data.files.length; i++) {
@@ -56,17 +75,33 @@ function handler(isDrop) {
         }
       }
       document.getElementById('dropOutput').innerHTML = s;
-      evt.stopPropagation();
+      if (isFirefox) {
+        evt.stopPropagation();
+      }
+    }
+    if (!isFirefox) {
+      evt.preventDefault();
     }
   };
 }
 
-// TODO(nigeltao): addEventListener is Firefox-only. I should extend this
-// (manual) test case to also test IE, Safari and Chromium.
-document.addEventListener('dragenter', handler(false), false);
-document.addEventListener('dragover',  handler(false), false);
-document.addEventListener('dragleave', handler(false), false);
-document.addEventListener('dragdrop',  handler(true),  false);
+// For a discussion of various browser's event models, see
+// http://developer.apple.com/internet/webcontent/eventmodels.html
+if (isFirefox) {
+  // Firefox uses different event names than IE, WebKit, and HTML5.
+  // Specifically, dragexit instead of dragleave, and dragdrop for drop.
+  document.addEventListener('dragenter', handler(false), false);
+  document.addEventListener('dragover',  handler(false), false);
+  document.addEventListener('dragexit',  handler(false), false);
+  document.addEventListener('dragdrop',  handler(true),  false);
+} else if (isSafari) {
+  document.addEventListener('dragenter', handler(false), false);
+  document.addEventListener('dragover',  handler(false), false);
+  document.addEventListener('dragleave', handler(false), false);
+  document.addEventListener('drop',      handler(true),  false);
+} else {
+  // TODO(nigeltao): implement (and test) on IE and Chromium.
+}
 
 function tryGetDragAndDropData(evt) {
   document.getElementById('eventTypeOutput').innerHTML = evt.type;
@@ -76,7 +111,7 @@ function tryGetDragAndDropData(evt) {
     alert('Gears drag and drop has a potential security hole.');
   } catch (ex) {
     if (window.console) {
-      window.console.debug(ex.message);
+      window.console.info(ex.message);
     }
   }
 }
@@ -87,12 +122,20 @@ function tryDispatchEvent(evt) {
     evt.initMouseEvent('mouseover', true, true, window,
         0, 0, 0, 0, 0, false, false, false, false, 0, null);
   }
-  document.dispatchEvent(evt);
+  isInManualDispatch = true;
+  try {
+    document.dispatchEvent(evt);
+  } catch (ex) {
+    // Silently ignore exceptions.
+  }
+  isInManualDispatch = false;
 }
 
 // This event listener will catch both natural mouseover events, and those
 // mouseover events dispatched by the tryDispatchEvent function above.
-document.addEventListener('mouseover', tryGetDragAndDropData, false);
+if (isFirefox || isSafari) {
+  document.addEventListener('mouseover', tryGetDragAndDropData, false);
+}
 
 window.setInterval(function() { tryGetDragAndDropData(invalidEvent); }, 2000);
 
