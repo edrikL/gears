@@ -172,3 +172,32 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
   }
   return result;
 };
+
+void GetDragAndDropData(ModuleEnvironment *module_environment,
+                        JsObject *event_as_js_object,
+                        JsObject *data_out,
+                        std::string16 *error_out) {
+  // We ignore event_as_js_object, since Gears (being restricted to the NPAPI
+  // interface) cannot distinguish between a drag and drop event genuinely
+  // inside dispatch, and an event that has had dispatchEvent called on,
+  // outside of a user drag and drop action.
+  // Instead, we rely on our IsInAXxxxOperation tests to tell whether or not
+  // we are called during a user drag and drop action.
+  if (!IsInADragOperation() && !IsInADropOperation()) {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+
+  if (IsInADropOperation()) {
+    scoped_ptr<JsArray> file_array(
+        module_environment->js_runner_->NewArray());
+    if (!GetDroppedFiles(module_environment, file_array.get(), error_out)) {
+      return;
+    }
+    data_out->SetPropertyArray(STRING16(L"files"), file_array.get());
+  }
+
+  // TODO(nigeltao): For all DnD events (including the non-drop events
+  // dragenter and dragover), we still should provide (1) MIME types,
+  // (2) file extensions, (3) total file size, and (4) file count.
+}
