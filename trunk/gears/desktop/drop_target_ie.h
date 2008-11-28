@@ -80,8 +80,6 @@ class DropTarget
                                       JsObject *options,
                                       std::string16 *error_out);
 
-  HRESULT GetHtmlDataTransfer(CComPtr<IHTMLEventObj> &html_event_obj,
-                              CComPtr<IHTMLDataTransfer> &html_data_transfer);
   HRESULT CancelEventBubble(CComPtr<IHTMLEventObj> &html_event_obj,
                             CComPtr<IHTMLDataTransfer> &html_data_transfer);
 

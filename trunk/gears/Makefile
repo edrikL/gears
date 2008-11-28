@@ -1487,6 +1487,7 @@ FF3_CPPSRCS += \
 		$(NULL)
 
 IE_CPPSRCS += \
+		drag_and_drop_utils_ie.cc \
 		drop_target_ie.cc \
 		$(NULL)
 
