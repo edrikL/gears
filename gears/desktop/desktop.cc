@@ -57,6 +57,8 @@
 
 #if BROWSER_FF
 #include "gears/desktop/drag_and_drop_utils_ff.h"
+#elif BROWSER_IE
+#include "gears/desktop/drag_and_drop_utils_ie.h"
 #elif BROWSER_WEBKIT
 #include "gears/desktop/drag_and_drop_utils_sf.h"
 #endif
@@ -1057,13 +1059,13 @@ void GearsDesktop::GetDragAndDropData(JsCallContext *context) {
                        result.get(),
                        &error);
 #endif
-#elif BROWSER_WEBKIT
+#elif (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
   ::GetDragAndDropData(module_environment_.get(),
                        event_as_js_object.get(),
                        result.get(),
                        &error);
 #else
-  // TODO(nigeltao): implement on IE and Chromium.
+  // TODO(nigeltao): implement on Chromium.
   error = STRING16(L"getDragAndDropData is not supported for this platform.");
 #endif
 

@@ -37,6 +37,7 @@
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
+#include "gears/desktop/drag_and_drop_utils_ie.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -115,20 +116,6 @@ void DropTarget::AddEventToJsObject(JsObject *js_object) {
 }
 
 
-HRESULT DropTarget::GetHtmlDataTransfer(
-    CComPtr<IHTMLEventObj> &html_event_obj,
-    CComPtr<IHTMLDataTransfer> &html_data_transfer)
-{
-  HRESULT hr;
-  hr = html_window_2_->get_event(&html_event_obj);
-  if (FAILED(hr)) return hr;
-  CComQIPtr<IHTMLEventObj2> html_event_obj_2(html_event_obj);
-  if (!html_event_obj_2) return E_FAIL;
-  hr = html_event_obj_2->get_dataTransfer(&html_data_transfer);
-  return hr;
-}
-
-
 HRESULT DropTarget::CancelEventBubble(
     CComPtr<IHTMLEventObj> &html_event_obj,
     CComPtr<IHTMLDataTransfer> &html_data_transfer)
@@ -150,7 +137,8 @@ HRESULT DropTarget::HandleOnDragEnter()
   ProvideDebugVisualFeedback(true);
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
-  HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
+  HRESULT hr = GetHtmlDataTransfer(
+      html_window_2_, html_event_obj, html_data_transfer);
   if (FAILED(hr)) return hr;
 
   CComPtr<IServiceProvider> service_provider;
@@ -206,7 +194,8 @@ HRESULT DropTarget::HandleOnDragOver()
   will_accept_drop_ = false;
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
-  HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
+  HRESULT hr = GetHtmlDataTransfer(
+      html_window_2_, html_event_obj, html_data_transfer);
   if (FAILED(hr)) return hr;
 
   if (on_drag_over_.get()) {
@@ -237,7 +226,8 @@ HRESULT DropTarget::HandleOnDragLeave()
   will_accept_drop_ = false;
   CComPtr<IHTMLEventObj> html_event_obj;
   CComPtr<IHTMLDataTransfer> html_data_transfer;
-  HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
+  HRESULT hr = GetHtmlDataTransfer(
+      html_window_2_, html_event_obj, html_data_transfer);
   if (FAILED(hr)) return hr;
 
   if (on_drag_leave_.get()) {
@@ -258,90 +248,17 @@ HRESULT DropTarget::HandleOnDragLeave()
 }
 
 
-// This function overwrites buffer in-place.
-static HRESULT ResolveShortcut(TCHAR *buffer) {
-  static CComPtr<IShellLink> link;
-  if (!link && FAILED(link.CoCreateInstance(CLSID_ShellLink))) {
-    return E_FAIL;
-  }
-
-  CComQIPtr<IPersistFile> file(link);
-  if (!file) return E_FAIL;
-
-  // Open the shortcut file, load its content.
-  HRESULT hr = file->Load(buffer, STGM_READ);
-  if (FAILED(hr)) return hr;
-
-  // Resolve the target of the shortcut.
-  hr = link->Resolve(NULL, SLR_NO_UI);
-  if (FAILED(hr)) return hr;
-
-  // Read the target path.
-  hr = link->GetPath(buffer, MAX_PATH, 0, SLGP_UNCPRIORITY);
-  if (FAILED(hr)) return hr;
-
-  return S_OK;
-}
-
-
 HRESULT DropTarget::HandleOnDragDrop()
 {
   ProvideDebugVisualFeedback(false);
   if (!will_accept_drop_) return S_OK;
   will_accept_drop_ = false;
-  CComPtr<IHTMLEventObj> html_event_obj;
-  CComPtr<IHTMLDataTransfer> html_data_transfer;
-  HRESULT hr = GetHtmlDataTransfer(html_event_obj, html_data_transfer);
-  if (FAILED(hr)) return hr;
 
   if (on_drop_.get()) {
-    CComPtr<IServiceProvider> service_provider;
-    hr = html_data_transfer->QueryInterface(&service_provider);
-    if (FAILED(hr)) return hr;
-    CComPtr<IDataObject> data_object;
-    hr = service_provider->QueryService<IDataObject>(
-        IID_IDataObject, &data_object);
-    if (FAILED(hr)) return hr;
-
-    FORMATETC desired_format_etc =
-      { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    STGMEDIUM stg_medium;
-    hr = data_object->GetData(&desired_format_etc, &stg_medium);
-    if (FAILED(hr)) return hr;
-
-    HDROP hdrop = static_cast<HDROP>(GlobalLock(stg_medium.hGlobal));
-    if (hdrop == NULL) {
-      ReleaseStgMedium(&stg_medium);
-      return E_FAIL;
-    }
-
-    std::vector<std::string16> filenames;
-    UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
-    TCHAR buffer[MAX_PATH + 1];
-    for (UINT i = 0; i < num_files; i++) {
-      DragQueryFile(hdrop, i, buffer, sizeof(buffer));
-      SHFILEINFO sh_file_info;
-      if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
-                         SHGFI_ATTRIBUTES) ||
-          !(sh_file_info.dwAttributes & SFGAO_FILESYSTEM) ||
-          (sh_file_info.dwAttributes & SFGAO_FOLDER)) {
-        continue;
-      }
-      if ((sh_file_info.dwAttributes & SFGAO_LINK) &&
-          FAILED(ResolveShortcut(buffer))) {
-        continue;
-      }
-      filenames.push_back(std::string16(buffer));
-    }
-
-    GlobalUnlock(stg_medium.hGlobal);
-    ReleaseStgMedium(&stg_medium);
-
     std::string16 error;
     scoped_ptr<JsArray> file_array(
         module_environment_->js_runner_->NewArray());
-    if (!FileDialog::FilesToJsObjectArray(
-            filenames, module_environment_.get(), file_array.get(), &error)) {
+    if (!GetDroppedFiles(module_environment_.get(), file_array.get(), &error)) {
       return E_FAIL;
     }
 
