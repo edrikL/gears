@@ -158,9 +158,17 @@ bool HttpRequest::Create(scoped_refptr<HttpRequest> *request) {
 // marshals all calls through to the main thread to allow safe usage
 // from a backgroudn thread. SafeHttpRequest calls Create() to
 // construct a raw HttpRequestAndroid as required.
+// On Android, the SateHttpRequest is not meant to be used on the
+// main thread, so we must ensure that we create a raw HttpRequestAndroid
+// if CreateSafeRequest is invoked on the main thread.
 bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest> *request) {
-  request->reset(new SafeHttpRequest(HttpRequestAndroid::main_thread_id_));
-  return true;
+  if (HttpRequestAndroid::IsMainThread()) {
+    request->reset(new HttpRequestAndroid());
+    return true;
+  } else {
+    request->reset(new SafeHttpRequest(HttpRequestAndroid::main_thread_id_));
+    return true;
+  }
 }
 
 
@@ -180,6 +188,7 @@ HttpRequestAndroid::HttpRequestAndroid()
       listener_enable_data_available_(false),
       asynchronous_(true),
       was_aborted_(false),
+      was_aborted_mutex_(),
       response_body_(NULL),
       post_blob_(NULL),
       was_redirected_(false),
@@ -548,6 +557,8 @@ void HttpRequestAndroid::SwitchToMainThreadState(State state) {
                             state));
 }
 
+// The function below is only called by the state machine so the call
+// to SetState is valid.
 void HttpRequestAndroid::SwitchToChildThreadState(State state) {
   assert(IsMainThread());
   LOG(("Transferring to child thread with state %s\n", GetStateName(state)));
@@ -569,6 +580,30 @@ void HttpRequestAndroid::HandleStateMachine() {
        GetStateName(state_)));
   // Loop the state machine until the current thread is no longer in
   // control.
+  // Note that state transitions happen only in the following circumstances
+  // that denote the 'normal operation' of an HTTP request:
+  // MAIN_IDLE->MAIN_REQUEST in HttpRequestAndroid::Send()
+  // MAIN_REQUEST->MAIN_PARSE_HEADERS directly in HandleStateMachine()
+  // MAIN_PARSE_HEADERS->CHILD_CONNECT_TO_REMOTE via async functor
+  // CHILD_CONNECT_TO_REMOTE->MAIN_CONNECTED in via async functor
+  // MAIN_CONNECTED->CHILD_POST via async functor
+  // CHILD_POST->MAIN_PARSE_HEADERS via async functor
+  // MAIN_CONNECTED->MAIN_PARSE_HEADERS directly in HandleStateMachine()
+  // MAIN_PARSE_HEADERS->CHILD_RECEIVE via async functor
+  // MAIN_PARSE_HEADERS->MAIN_REQUEST directly in HandleStateMachine()
+  // CHILD_RECEIVE->MAIN_RECEIVED via async functor
+  // CHILD_RECEIVE->MAIN_COMPLETE via async functor
+  // MAIN_RECEIVED->MAIN_COMPLETE directly in HandleStateMachine()
+
+  // Aside from the 'normal operation', we can receive at any point
+  // an 'Abort()'. If that happens, we need to guarantee that
+  // 1. If the request is already complete, Abort() noops.
+  // 2. The background thread exits before Abort() returns.
+  // 3. The state is reset to MAIN_COMPLETE and then MAIN_IDLE
+  // 4. Any queued functors that are processed after abort need
+  // to be ignored since they would cause an invalid transition
+  // from MAIN_IDLE to some random state.
+
   for (;;) {
     switch (state_) {
       case STATE_MAIN_IDLE:
@@ -608,10 +643,6 @@ void HttpRequestAndroid::HandleStateMachine() {
 
       case STATE_MAIN_CONNECTED:
         assert(IsMainThread());
-        if (was_aborted_) {
-          SetState(STATE_MAIN_COMPLETE);
-          break;
-        }
         // Increment ready state visible by observers to SENT.
         SetReadyState(SENT);
         // Child thread successfully connected to the remote site. If
@@ -637,10 +668,6 @@ void HttpRequestAndroid::HandleStateMachine() {
 
       case STATE_MAIN_PARSE_HEADERS:
         assert(IsMainThread());
-        if (was_aborted_) {
-          SetState(STATE_MAIN_COMPLETE);
-          break;
-        }
         if (ParseHeaders()) {
           // Test for redirect.
           std::string16 redirect_url = GetRedirect();
@@ -700,10 +727,6 @@ void HttpRequestAndroid::HandleStateMachine() {
 
       case STATE_MAIN_RECEIVED: {
         assert(IsMainThread());
-        if (was_aborted_) {
-          SetState(STATE_MAIN_COMPLETE);
-          break;
-        }
         // Done, insert into cache if policy allows.
         if (served_locally_) {
           // Prevent re-saving something that either came out of cache
@@ -1281,37 +1304,28 @@ bool HttpRequestAndroid::GetResponseHeaderNoCheck(const char16* name,
 }
 
 bool HttpRequestAndroid::Abort() {
-  LOG(("Abort\n"));
+  LOG(("Aborting\n"));
   assert(IsMainThread());
-
-  // Signal the child thread that it should stop any long term
-  // blocking operations, e.g receiving or sending bulk data.
+  was_aborted_mutex_.Lock();
   was_aborted_ = true;
-  // Wait for the state machine to go idle.  Unfortunately, the
-  // java.net.* operations are not easy to atomically interrupt, so we
-  // need to resort to an ugly back-off-retry loop.
-  int sleep_period_ms = 10;
-  // state_ is only changed by the main thread, which gives us a good
-  // rendezvous point to know that the child has handed us back
-  // control.
-  while (state_ != STATE_MAIN_IDLE) {
-    LOG(("Waiting for idle\n"));
-    // Interrupt the Java-side in case it's stuck in one of the
-    // java.net.* methods.
+  if (state_ != STATE_MAIN_IDLE) {
+    // Signal the child thread that it should stop any long term
+    // blocking operations, e.g receiving or sending bulk data.
     LOG(("Calling interrupt()\n"));
     JniGetEnv()->CallVoidMethod(java_object_.Get(),
                                 GetMethod(JAVA_METHOD_INTERRUPT));
-    // Process the message queue.
-    while (AndroidMessageLoop::RunOnceWithTimeout(sleep_period_ms)) {
-      // No-op. Loop until out of messages and timed out, then resort
-      // to another interrupt.
-    }
-    // Double the sleep period up to a maximum of 1.28 seconds.
-    if (sleep_period_ms < 1280) {
-      sleep_period_ms *= 2;
-    }
+    SetState(STATE_MAIN_COMPLETE);
+    // Unlock before handling the state machine.
+    // If we do not unlock, the Join() in StopChild()
+    // will halt this thread waiting for the child
+    // to exit. But the child may be waiting already
+    // on was_aborted_mutex_ in HttpThreadFunctor::Run(),
+    // which would cause a nasty deadlock.
+    was_aborted_mutex_.Unlock();
+    HandleStateMachine();
+  } else {
+    was_aborted_mutex_.Unlock();
   }
-  SetReadyState(COMPLETE);
   LOG(("Abort complete\n"));
   return true;
 }

@@ -137,7 +137,7 @@ class HttpRequestAndroid : public HttpRequest {
    public:
     HttpThread(HttpRequestAndroid *instance) : instance_(instance) { }
    protected:
-    virtual void Run() { instance_->ThreadRun(); }
+    virtual void Run() { instance_->ThreadRun(); LOG(("Child exiting."));}
    private:
     HttpRequestAndroid *instance_;
   };
@@ -192,22 +192,41 @@ class HttpRequestAndroid : public HttpRequest {
     virtual void Run() {
       switch (target_) {
         case TARGET_THREAD_MAIN:
-          // Set the state now that we're in the main thread.
-          instance_->state_ = new_state_;
-          instance_->HandleStateMachine();
+          // If we are already aborted, any state transition set via a
+          // functor comes too late so we ignore it. Transitions out
+          // IDLE are only made directly on the main thread in Send().
+          if (!instance_->was_aborted_) {
+            // Set the state now that we're in the main thread.
+            instance_->state_ = new_state_;
+            instance_->HandleStateMachine();
+          } else {
+            assert(instance_->state_ == STATE_MAIN_IDLE);
+          }
           // Now potentially delete the instance, if this functor
           // invoked final processing.
           instance_->Unref();
           break;
         case TARGET_THREAD_CHILD:
-          // The main thread should have set the state before
-          // switching to the child thread's control.
-          assert(instance_->state_ == new_state_);
-          instance_->HandleStateMachine();
+          // Lock the mutex before looking at was_aborted_;
+          instance_->was_aborted_mutex_.Lock();
+          if (!instance_->was_aborted_) {
+            // The main thread should have set the state before
+            // switching to the child thread's control.
+            assert(instance_->state_ == new_state_);
+            instance_->was_aborted_mutex_.Unlock();
+            // Avoid holding a mutex while in the state machine.
+            // This thread never changes the state directly. Instead
+            // it will queue a state-changing-functor onto the main
+            // thread. That will run and get ignored if the was_aborted_
+            // flag was meanwhile set to true (see above).
+            instance_->HandleStateMachine();
+          } else {
+            instance_->was_aborted_mutex_.Unlock();
+          }
           break;
       }
     }
-    
+
    private:
     HttpRequestAndroid *instance_;
     TargetThread target_;
@@ -385,6 +404,7 @@ class HttpRequestAndroid : public HttpRequest {
   // True if Abort() was used on this instance at any point, false
   // otherwise.
   bool was_aborted_;
+  Mutex was_aborted_mutex_;
   // The response body for a completed request. This is a ByteStore so
   // it can be easily wrapped in a BlobInterface.
   scoped_refptr<ByteStore> response_body_;
