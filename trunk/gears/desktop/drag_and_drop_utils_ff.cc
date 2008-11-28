@@ -204,10 +204,20 @@ DragAndDropEventType GetDragAndDropEventType(nsISupports *event_as_supports) {
 }
 
 
-void GetDragAndDropData(ModuleEnvironment *module_environment,
-                        JsObject *event_as_js_object,
-                        JsObject *data_out,
-                        std::string16 *error_out) {
+void AcceptDrag(ModuleEnvironment *module_environment,
+                JsObject *event,
+                std::string16 *error_out) {
+  // TODO(nigeltao): port the following JavaScript to C++.
+  // if (isDrop) {
+  //   evt.stopPropagation();
+  // }
+}
+
+
+void GetDragData(ModuleEnvironment *module_environment,
+                 JsObject *event_as_js_object,
+                 JsObject *data_out,
+                 std::string16 *error_out) {
   nsCOMPtr<nsISupports> event_as_supports;
   if (!JsvalToISupports(
           module_environment->js_runner_->GetContext(),

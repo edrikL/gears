@@ -58,9 +58,13 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 bool IsInADragOperation();
 bool IsInADropOperation();
 
-void GetDragAndDropData(ModuleEnvironment *module_environment,
-                        JsObject *event,
-                        JsObject *data_out,
-                        std::string16 *error_out);
+void AcceptDrag(ModuleEnvironment *module_environment,
+                JsObject *event,
+                std::string16 *error_out);
+
+void GetDragData(ModuleEnvironment *module_environment,
+                 JsObject *event,
+                 JsObject *data_out,
+                 std::string16 *error_out);
 
 #endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_SF_H__
