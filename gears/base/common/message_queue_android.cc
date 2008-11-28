@@ -88,10 +88,6 @@ class ThreadSpecificQueue {
   // Waits for one or messages to arrive and dispatches them to the
   // appropriate handlers.
   void RunOnce();
-  // Process the message queue, waiting at most for the given number
-  // of milliseconds. Returns true if the queue was processed, or
-  // false if timed out.
-  bool RunOnceWithTimeout(int milliseconds);
   // Dispatches them to the appropriate handlers.
   void DispatchOnce();
 
@@ -256,15 +252,6 @@ void AndroidMessageLoop::RunOnce() {
 }
 
 // static
-bool AndroidMessageLoop::RunOnceWithTimeout(int milliseconds) {
-  // Run the loop once on the current thread.
-  ThreadId thread_id =
-      AndroidThreadMessageQueue::GetInstance()->GetCurrentThreadId();
-  ThreadSpecificQueue *queue = AndroidThreadMessageQueue::GetQueue(thread_id);
-  return queue->RunOnceWithTimeout(milliseconds);
-}
-
-// static
 void AndroidMessageLoop::Stop(ThreadId thread_id) {
   // Stop the target thread's loop.
   AndroidThreadMessageQueue::GetQueue(thread_id)->SendMessage(kAndroidLoop_Exit,
@@ -345,18 +332,6 @@ void ThreadSpecificQueue::GetAndDispatchMessages(int exit_type) {
 void ThreadSpecificQueue::RunOnce() {
   event_.Wait();
   DispatchOnce();
-}
-
-bool ThreadSpecificQueue::RunOnceWithTimeout(int milliseconds) {
-  // Wait at most the given number of milliseconds.
-  if (event_.WaitWithTimeout(milliseconds)) {
-    // Signalled, dispatch messages.
-    DispatchOnce();
-    return true;
-  } else {
-    // Timed out.
-    return false;
-  }
 }
 
 void ThreadSpecificQueue::DispatchOnce() {

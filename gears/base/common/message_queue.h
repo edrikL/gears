@@ -130,10 +130,6 @@ class AndroidMessageLoop {
   // Possible fix: Add Event::Clear() and call it
   // from AsyncCallback.
   static void RunOnce();
-  // As above, but wait at most a given number of
-  // milliseconds. Returns true if the queue was processed, or false
-  // if timed out.
-  static bool RunOnceWithTimeout(int milliseconds);
   // Stops the message loop for the given thread. The target thread
   // must be looping in Start().
   static void Stop(ThreadId thread_id);
