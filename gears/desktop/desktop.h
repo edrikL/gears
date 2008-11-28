@@ -206,12 +206,16 @@ class GearsDesktop : public ModuleImplBaseClass {
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
   // TODO(nigeltao): decide on exactly one model for the DnD API:
-  // * The "Web-app calls Gears" model (GetDragAndDropData), or
+  // * The "Web-app calls Gears" model (GetDragData followed by AcceptDrag), or
   // * The "Gears calls Web-app" model (RegisterDropTarget).
 
   // IN: Event event
+  // OUT: -
+  void AcceptDrag(JsCallContext *context);
+
+  // IN: Event event
   // OUT: object data
-  void GetDragAndDropData(JsCallContext *context);
+  void GetDragData(JsCallContext *context);
 
   // IN: DomElement div, object options
   // OUT: -

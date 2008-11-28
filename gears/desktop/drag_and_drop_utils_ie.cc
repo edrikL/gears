@@ -137,10 +137,21 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 }
 
 
-void GetDragAndDropData(ModuleEnvironment *module_environment,
-                        JsObject *event_as_js_object,
-                        JsObject *data_out,
-                        std::string16 *error_out) {
+void AcceptDrag(ModuleEnvironment *module_environment,
+                JsObject *event,
+                std::string16 *error_out) {
+  // TODO(nigeltao): port the following JavaScript to C++.
+  // if (isDragEnterOrDragOver) {
+  //   evt.returnValue = false;
+  //   evt.cancelBubble = true;
+  // }
+}
+
+
+void GetDragData(ModuleEnvironment *module_environment,
+                 JsObject *event_as_js_object,
+                 JsObject *data_out,
+                 std::string16 *error_out) {
   // We ignore event_as_js_object, since Gears can access the IHTMLWindow2
   // and its IHTMLEventObj directly, via COM, and that seems more trustworthy
   // than event_as_js_object, which is supplied by (potentially malicious)

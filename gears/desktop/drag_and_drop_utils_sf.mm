@@ -169,10 +169,17 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
       error_out);
 };
 
-void GetDragAndDropData(ModuleEnvironment *module_environment,
-                        JsObject *event_as_js_object,
-                        JsObject *data_out,
-                        std::string16 *error_out) {
+void AcceptDrag(ModuleEnvironment *module_environment,
+                JsObject *event,
+                std::string16 *error_out) {
+  // TODO(nigeltao): port the following JavaScript to Objective-C / NPAPI.
+  // evt.preventDefault();
+}
+
+void GetDragData(ModuleEnvironment *module_environment,
+                 JsObject *event_as_js_object,
+                 JsObject *data_out,
+                 std::string16 *error_out) {
   // We ignore event_as_js_object, since Gears (being restricted to the NPAPI
   // interface) cannot distinguish between a drag and drop event genuinely
   // inside dispatch, and an event that has had dispatchEvent called on,
