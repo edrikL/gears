@@ -44,6 +44,7 @@
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/localserver/common/safe_http_request.h"
@@ -57,6 +58,12 @@ static const char16 *const kDefaultMimeType = STRING16(L"text/plain");
 // Default encoding for a document which doesn't specify it. RFC-2616
 // states there is no default.
 static const char16 *const kDefaultEncoding = STRING16(L"");
+
+// Currently, HttpRequestAndroid::synthesizeHeadersFromCacheResult()
+// may insert a spurious string at the end of the contentType header.
+// We need to remove it if it's present.
+static const char16 *const kEncodingSillyBug = STRING16(L"; charset=");
+
 
 // Number of bytes to send or receive in one go.
 static const int kTransferSize = 4096;
@@ -1290,13 +1297,25 @@ bool HttpRequestAndroid::GetResponseHeaderNoCheck(const char16* name,
   // Get a single response header. This is implemented on the Java
   // side.
   assert(IsMainThread());
+  assert(name);
+  assert(value);
   JavaLocalFrame frame;
   jobject result = JniGetEnv()->CallObjectMethod(
       java_object_.Get(),
       GetMethod(JAVA_METHOD_GET_RESPONSE_HEADER),
       JavaString(name).Get());
   if (result != NULL) {
-    return JavaString(static_cast<jstring>(result)).ToString16(value);
+    std::string16 local_value;
+    JavaString(static_cast<jstring>(result)).ToString16(&local_value);
+    // Now check for the spurious '; charset=' string at the end.
+    // TODO(andreip): remove this once the bug is fixed on the Java side.
+    std::string16 content_type_name(HttpConstants::kContentTypeHeader);
+    if (content_type_name == name &&
+        EndsWithIgnoreCase(local_value, std::string16(kEncodingSillyBug))) {
+      local_value = local_value.substr(0, local_value.rfind(kEncodingSillyBug));
+    }
+    *value = local_value;
+    return true;
   } else {
     value->clear();
     return true;
