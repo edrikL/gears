@@ -35,16 +35,16 @@
 #import "gears/base/safari/nsstring_utils.h"
 #import "gears/desktop/file_dialog.h"
 
-static std::vector<std::string16> g_dragging_pasteboard_filenames_;
-static bool g_is_in_a_drag_operation_ = false;
-static bool g_is_in_a_drop_operation_ = false;
+static std::vector<std::string16> g_dragging_pasteboard_filenames;
+static bool g_is_in_a_drag_operation = false;
+static bool g_is_in_a_drop_operation = false;
 
 bool IsInADragOperation() {
-  return g_is_in_a_drag_operation_;
+  return g_is_in_a_drag_operation;
 }
 
 bool IsInADropOperation() {
-  return g_is_in_a_drop_operation_;
+  return g_is_in_a_drop_operation;
 }
 
 // We "swizzle" some Cocoa method implementations to insert a little code
@@ -83,7 +83,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 @implementation WebView (GearsSwizzledMethods)
 
 - (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo {
-  g_dragging_pasteboard_filenames_.clear();
+  assert(g_dragging_pasteboard_filenames.empty());
 
   // In Safari, arbitrary web pages can put on the pasteboard during an ondrag
   // event, simply by calling window.event.dataTransfer.setData('URL',
@@ -110,7 +110,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
       while ((ns_string = [enumerator nextObject])) {
         std::string16 std_string;
         [ns_string string16:&std_string];
-        g_dragging_pasteboard_filenames_.push_back(std_string);
+        g_dragging_pasteboard_filenames.push_back(std_string);
       }
     }
   }
@@ -119,21 +119,22 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 }
 
 - (NSDragOperation)swizzledDraggingUpdated:(id <NSDraggingInfo>)draggingInfo {
-  g_is_in_a_drag_operation_ = true;
+  g_is_in_a_drag_operation = true;
   NSDragOperation result = [self swizzledDraggingUpdated:draggingInfo];
-  g_is_in_a_drag_operation_ = false;
+  g_is_in_a_drag_operation = false;
   return result;
 }
 
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo {
-  g_dragging_pasteboard_filenames_.clear();
+  g_dragging_pasteboard_filenames.clear();
   return [self swizzledDraggingExited:draggingInfo];
 }
 
 - (BOOL)swizzledPerformDragOperation:(id <NSDraggingInfo>)draggingInfo {
-  g_is_in_a_drop_operation_ = true;
+  g_is_in_a_drop_operation = true;
   BOOL result = [self swizzledPerformDragOperation:draggingInfo];
-  g_is_in_a_drop_operation_ = false;
+  g_dragging_pasteboard_filenames.clear();
+  g_is_in_a_drop_operation = false;
   return result;
 }
 
@@ -160,17 +161,12 @@ bool SwizzleWebViewMethods() {
 
 bool GetDroppedFiles(ModuleEnvironment *module_environment,
                      JsArray *files_out,
-                     bool reset) {
-  std::string16 ignored;
-  bool result = FileDialog::FilesToJsObjectArray(
-      g_dragging_pasteboard_filenames_,
+                     std::string16 *error_out) {
+  return FileDialog::FilesToJsObjectArray(
+      g_dragging_pasteboard_filenames,
       module_environment,
       files_out,
-      &ignored);
-  if (reset) {
-    g_dragging_pasteboard_filenames_.clear();
-  }
-  return result;
+      error_out);
 };
 
 void GetDragAndDropData(ModuleEnvironment *module_environment,

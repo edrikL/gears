@@ -51,7 +51,7 @@ bool SwizzleWebViewMethods();
 
 bool GetDroppedFiles(ModuleEnvironment *module_environment,
                      JsArray *files_out,
-                     bool reset);
+                     std::string16 *error_out);
 
 // These two are mutually exclusive (although they may be both false) -
 // "in a drag" means dragenter, dragover or dragleave, but not drop.
