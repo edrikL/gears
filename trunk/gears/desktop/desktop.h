@@ -209,7 +209,7 @@ class GearsDesktop : public ModuleImplBaseClass {
   // * The "Web-app calls Gears" model (GetDragData followed by AcceptDrag), or
   // * The "Gears calls Web-app" model (RegisterDropTarget).
 
-  // IN: Event event
+  // IN: Event event, bool acceptance
   // OUT: -
   void AcceptDrag(JsCallContext *context);
 
