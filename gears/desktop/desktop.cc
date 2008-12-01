@@ -86,6 +86,7 @@ void Dispatcher<GearsDesktop>::Init() {
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+  // TODO(nigeltao): should acceptDrag be renamed finishDrag??
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
@@ -1039,14 +1040,21 @@ void GearsDesktop::AcceptDrag(JsCallContext *context) {
   }
 
   scoped_ptr<JsObject> event_as_js_object;
+  bool acceptance;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_OBJECT, &event_as_js_object },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &acceptance },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
   std::string16 error;
-#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
+#if BROWSER_FF
+  ::AcceptDrag(module_environment_.get(),
+               event_as_js_object.get(),
+               acceptance,
+               &error);
+#elif (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
   ::AcceptDrag(module_environment_.get(),
                event_as_js_object.get(),
                &error);

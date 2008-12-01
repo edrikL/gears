@@ -112,11 +112,22 @@ static const nsString kDragExitAsString(STRING16(L"dragexit"));
 static const nsString kDragDropAsString(STRING16(L"dragdrop"));
 
 
-// Given a DOMEvent (as an nsISupports), return what type of event we are in,
+// Given a DOMEvent (as a JsObject), return what type of event we are in,
 // also checking that we are in event dispatch (and not, for example, a
 // situation where the JS keeps a reference to a previously issued event
 // and passes that back to Gears outside of event dispatch).
-DragAndDropEventType GetDragAndDropEventType(nsISupports *event_as_supports) {
+DragAndDropEventType GetDragAndDropEventType(
+    ModuleEnvironment *module_environment,
+    JsObject *event_as_js_object,
+    nsCOMPtr<nsIDOMEvent> *dom_event_out) {
+  nsCOMPtr<nsISupports> event_as_supports;
+  if (!JsvalToISupports(
+          module_environment->js_runner_->GetContext(),
+          event_as_js_object->token(),
+          getter_AddRefs(event_as_supports))) {
+    return DRAG_AND_DROP_EVENT_INVALID;
+  }
+
   nsCOMPtr<nsIPrivateDOMEvent> private_dom_event(
       do_QueryInterface(event_as_supports));
   if (!private_dom_event) { return DRAG_AND_DROP_EVENT_INVALID; }
@@ -186,9 +197,9 @@ DragAndDropEventType GetDragAndDropEventType(nsISupports *event_as_supports) {
     return DRAG_AND_DROP_EVENT_INVALID;
   }
 
-  nsCOMPtr<nsIDOMEvent> dom_event(do_QueryInterface(event_as_supports));
+  *dom_event_out = do_QueryInterface(event_as_supports);
   nsString event_type;
-  nr = dom_event->GetType(event_type);
+  nr = (*dom_event_out)->GetType(event_type);
   if (NS_FAILED(nr)) { return DRAG_AND_DROP_EVENT_INVALID; }
 
   if (event_type.Equals(kDragOverAsString)) {
@@ -205,12 +216,43 @@ DragAndDropEventType GetDragAndDropEventType(nsISupports *event_as_supports) {
 
 
 void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event,
+                JsObject *event_as_js_object,
+                bool acceptance,
                 std::string16 *error_out) {
-  // TODO(nigeltao): port the following JavaScript to C++.
-  // if (isDrop) {
-  //   evt.stopPropagation();
-  // }
+  nsCOMPtr<nsIDOMEvent> dom_event;
+  DragAndDropEventType type = GetDragAndDropEventType(
+      module_environment, event_as_js_object, &dom_event);
+  if (type == DRAG_AND_DROP_EVENT_INVALID) {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+
+  if (type == DRAG_AND_DROP_EVENT_DROP) {
+    dom_event->StopPropagation();
+
+  } else if (type == DRAG_AND_DROP_EVENT_DRAGOVER) {
+    nsCOMPtr<nsIDragService> drag_service =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    if (!drag_service) {
+      *error_out = GET_INTERNAL_ERROR_MESSAGE();
+      return;
+    }
+
+    nsCOMPtr<nsIDragSession> drag_session;
+    nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
+    if (NS_FAILED(nr) || !drag_session.get()) {
+      *error_out = GET_INTERNAL_ERROR_MESSAGE();
+      return;
+    }
+
+    nr = drag_session->SetDragAction(acceptance
+        ? static_cast<int>(nsIDragService::DRAGDROP_ACTION_COPY)
+        : static_cast<int>(nsIDragService::DRAGDROP_ACTION_NONE));
+    if (NS_FAILED(nr)) {
+      *error_out = GET_INTERNAL_ERROR_MESSAGE();
+      return;
+    }
+  }
 }
 
 
@@ -218,16 +260,9 @@ void GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,
                  JsObject *data_out,
                  std::string16 *error_out) {
-  nsCOMPtr<nsISupports> event_as_supports;
-  if (!JsvalToISupports(
-          module_environment->js_runner_->GetContext(),
-          event_as_js_object->token(),
-          getter_AddRefs(event_as_supports))) {
-    *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
-  }
-
-  DragAndDropEventType type = GetDragAndDropEventType(event_as_supports.get());
+  nsCOMPtr<nsIDOMEvent> dom_event;
+  DragAndDropEventType type = GetDragAndDropEventType(
+      module_environment, event_as_js_object, &dom_event);
   if (type == DRAG_AND_DROP_EVENT_INVALID) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
@@ -236,14 +271,14 @@ void GetDragData(ModuleEnvironment *module_environment,
   nsCOMPtr<nsIDragService> drag_service =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!drag_service) {
-    *error_out = STRING16(L"Could not access the DragService.");
+    *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return;
   }
 
   nsCOMPtr<nsIDragSession> drag_session;
   nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
   if (NS_FAILED(nr) || !drag_session.get()) {
-    *error_out = STRING16(L"Could not access the DragSession.");
+    *error_out = GET_INTERNAL_ERROR_MESSAGE();
     return;
   }
 

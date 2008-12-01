@@ -71,17 +71,15 @@ function handler(isDrop, isDragEnterOrDragOver) {
         for (i = 0; i < data.files.length; i++) {
           var file = data.files[i];
           s += '<b>' + file.name + '</b> has length <b>' +
-              file.blob.length + '</b>.<br/>';
+              file.blob.length + '</b>.<br>';
         }
       }
       document.getElementById('dropOutput').innerHTML = s;
     }
     // TODO(nigeltao): replace all of these browser-specific quirks with
-    // desktop.acceptDrag(evt);
+    // desktop.acceptDrag(evt, true);
     if (isFirefox) {
-      if (isDrop) {
-        evt.stopPropagation();
-      }
+      desktop.acceptDrag(evt, true);
     } else if (isIE) {
       if (isDragEnterOrDragOver) {
         evt.returnValue = false;
