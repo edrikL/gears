@@ -23,6 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The Drag-and-Drop API has not been finalized for official builds.
+#else
+
+#include "gears/desktop/drop_target_base.h"
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+
 #include <mshtmdid.h>
 #include <shlobj.h>
 #include <windows.h>
@@ -207,3 +214,6 @@ void GetDragData(ModuleEnvironment *module_environment,
     return;
   }
 }
+
+#endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+#endif  // OFFICIAL_BUILD
