@@ -55,12 +55,14 @@
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #if BROWSER_FF
 #include "gears/desktop/drag_and_drop_utils_ff.h"
 #elif BROWSER_IE
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 #elif BROWSER_WEBKIT
 #include "gears/desktop/drag_and_drop_utils_sf.h"
+#endif
 #endif
 
 DECLARE_DISPATCHER(GearsDesktop);
