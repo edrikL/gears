@@ -296,4 +296,4 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 
 === Questions and Comments ===
 
-If you have any questions about the Geolocation API, be sure to check out the [http://code.google.com/apis/gears/api_geolocation.html official Geolocation documentation]. If you still have questions or comments, please use one of the mailing lists, rather than adding comments tt this document.
+If you have any questions about the Geolocation API, be sure to check out the [http://code.google.com/apis/gears/api_geolocation.html official Geolocation documentation]. If you still have questions or comments, please use one of the [http://code.google.com/p/gears/ Gears mailing lists], rather than adding comments to this document.
