@@ -307,7 +307,7 @@ The version history of the protocol is shown below.
 
 || *Version* || *Description* || *Gears Versions* ||
 || 1.0 || Initial version (note missing release component) || 0.4.15.0 ||
-|| 1.0.1 || altitude, horizontal_accuracy and vertical_accuracy response fields are now doubles. || None ||
+|| 1.0.1 || altitude, horizontal_accuracy and vertical_accuracy response fields are now doubles rather than integers. || None ||
 || 1.0.2 || Adds access_token to request and response. || None ||
 || 1.1.0 || Renames horizontal_accuracy and vertical_accuracy response fields to accuracy and altitude_accuracy respectively. || 0.4.24.0 onwards ||
 
