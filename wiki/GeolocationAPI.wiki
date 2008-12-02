@@ -264,8 +264,8 @@ The response format is also JSON. An example response is:
     "latitude": 51.0,
     "longitude": -0.1,
     "altitude": 30.1,
-    "horizontal_accuracy": 1200.1,
-    "vertical_accuracy": 10.1,
+    "accuracy": 1200.1,
+    "altitude_accuracy": 10.1,
     "address": {
       "street_number": "100",
       "street": "Amphibian Walkway",
@@ -290,6 +290,6 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || latitude || Latitude of the fix, in degrees (WGS84 datum). || Yes || double ||
 || longitude || Longitude of the fix, in degrees (WGS84 datum). || Yes || double ||
 || altitude || Altitude of the fix, in meters (WGS84 datum). || No || double ||
-|| horizontal_accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. || No || double ||
-|| vertical_accuracy || The vertical accuracy of the fix, in meters. || No || double ||
+|| accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. || No || double ||
+|| altitude_accuracy || The vertical accuracy of the fix, in meters. || No || double ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. Each field is an optional property of the object. || No || object ||
