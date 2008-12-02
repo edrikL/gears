@@ -294,6 +294,23 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || altitude_accuracy || The vertical accuracy of the fix, in meters. || No || double ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. Each field is an optional property of the object. || No || object ||
 
+=== JSON Protocol Versioning ===
+
+The version of the JSON protocol is expressed as a string with format <major>.<minor>.<release>. These fields are used as follows.
+
+|| *Field* || *Description* ||
+|| major ||  ||
+|| minor ||  ||
+|| release ||  ||
+
+The version history of the protocol is shown below.
+
+|| *Version* || *Description* || *Gears Versions* ||
+|| 1.0 || Initial version (note missing release component) || 0.4.15.0 ||
+|| 1.0.1 || altitude, horizontal_accuracy and vertical_accuracy response fields are now doubles. || None ||
+|| 1.0.2 || Adds access_token to request and response. || None ||
+|| 1.1.0 || Renames horizontal_accuracy and vertical_accuracy response fields to accuracy and altitude_accuracy respectively. || 0.4.24.0 onwards ||
+
 === Questions and Comments ===
 
 If you have any questions about the Geolocation API, be sure to check out the [http://code.google.com/apis/gears/api_geolocation.html official Geolocation documentation]. If you still have questions or comments, please use one of the [http://code.google.com/p/gears/ Gears mailing lists], rather than adding comments to this document.
