@@ -144,21 +144,9 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 }
 
 
-void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event,
-                std::string16 *error_out) {
-  // TODO(nigeltao): port the following JavaScript to C++.
-  // if (isDragEnterOrDragOver) {
-  //   evt.returnValue = false;
-  //   evt.cancelBubble = true;
-  // }
-}
-
-
-void GetDragData(ModuleEnvironment *module_environment,
-                 JsObject *event_as_js_object,
-                 JsObject *data_out,
-                 std::string16 *error_out) {
+bool GetWindowEvent(ModuleEnvironment *module_environment,
+                    CComPtr<IHTMLEventObj> &window_event,
+                    CComBSTR &type) {
   // We ignore event_as_js_object, since Gears can access the IHTMLWindow2
   // and its IHTMLEventObj directly, via COM, and that seems more trustworthy
   // than event_as_js_object, which is supplied by (potentially malicious)
@@ -167,28 +155,62 @@ void GetDragData(ModuleEnvironment *module_environment,
   // IHTMLWindow2::get_event (different in that, querying both for their
   // IUnknown's gives different pointers).
   CComPtr<IHTMLWindow2> window;
-  if (FAILED(ActiveXUtils::GetHtmlWindow2(
-          module_environment->iunknown_site_, &window))) {
-    *error_out = STRING16(L"Could not access the IHtmlWindow2.");
-    return;
-  }
+  return SUCCEEDED(ActiveXUtils::GetHtmlWindow2(
+          module_environment->iunknown_site_, &window)) &&
+      SUCCEEDED(window->get_event(&window_event)) &&
+      SUCCEEDED(window_event->get_type(&type));
+}
 
+
+void AcceptDrag(ModuleEnvironment *module_environment,
+                JsObject *event,
+                bool acceptance,
+                std::string16 *error_out) {
   CComPtr<IHTMLEventObj> window_event;
-  if (FAILED(window->get_event(&window_event))) {
-    *error_out = STRING16(L"Could not access the IHtmlEventObj.");
-    return;
-  }
-
-  if (!window_event) {
+  CComBSTR type;
+  if (!GetWindowEvent(module_environment, window_event, type)) {
     // If we get here, then there is no window.event, so we are not in
     // the browser's event dispatch.
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
 
+  if (type == CComBSTR(L"drop")) {
+    // Do nothing.
+    return;
+
+  } else if (type == CComBSTR(L"dragover") ||
+             type == CComBSTR(L"dragenter") ||
+             type == CComBSTR(L"dragleave")) {
+    CComQIPtr<IHTMLEventObj2> window_event2(window_event);
+    CComPtr<IHTMLDataTransfer> data_transfer;
+    if (!window_event2 ||
+        FAILED(window_event->put_returnValue(CComVariant(false))) ||
+        FAILED(window_event->put_cancelBubble(VARIANT_TRUE)) ||
+        FAILED(window_event2->get_dataTransfer(&data_transfer)) ||
+        FAILED(data_transfer->put_dropEffect(acceptance ? L"copy" : L"none"))) {
+      *error_out = GET_INTERNAL_ERROR_MESSAGE();
+      return;
+    }
+    return;
+
+  } else {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+}
+
+
+void GetDragData(ModuleEnvironment *module_environment,
+                 JsObject *event_as_js_object,
+                 JsObject *data_out,
+                 std::string16 *error_out) {
+  CComPtr<IHTMLEventObj> window_event;
   CComBSTR type;
-  if (FAILED(window_event->get_type(&type))) {
-    *error_out = STRING16(L"Could not access the event type.");
+  if (!GetWindowEvent(module_environment, window_event, type)) {
+    // If we get here, then there is no window.event, so we are not in
+    // the browser's event dispatch.
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
 
