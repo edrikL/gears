@@ -165,7 +165,7 @@ Client identification is not explicitly included in the protocol. Cookies can be
 
 {{{
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "host": "maps.google.com",
   "home_mobile_country_code": 310,
   "home_mobile_network_code": 410,
@@ -293,3 +293,7 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. || No || double ||
 || altitude_accuracy || The vertical accuracy of the fix, in meters. || No || double ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. Each field is an optional property of the object. || No || object ||
+
+=== Questions and Comments ===
+
+If you have any questions about the Geolocation API, be sure to check out the [http://code.google.com/apis/gears/api_geolocation.html official Geolocation documentation]. If you still have questions or comments, please use one of the mailing lists, rather than adding comments tt this document.
