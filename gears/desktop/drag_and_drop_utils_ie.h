@@ -39,6 +39,7 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
+                bool acceptance,
                 std::string16 *error_out);
 
 void GetDragData(ModuleEnvironment *module_environment,
