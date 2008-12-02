@@ -215,7 +215,7 @@ Client identification is not explicitly included in the protocol. Cookies can be
 === Request field details ===
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| version || The protocol version, as <major>.<minor>.<release>. Currently, this is "1.0.1". || Yes || string ||
+|| version || The protocol version, as <major>.<minor>.<release>. Currently, this is "1.1.0.". || Yes || string ||
 || host || The host of the web page that is requesting the location. || Yes || string ||
 || home_mobile_country_code || The mobile country code for the device's home network || No || int32 ||
 || home_mobile_network_code || The mobile network code for the device's home network || No || int32 ||
