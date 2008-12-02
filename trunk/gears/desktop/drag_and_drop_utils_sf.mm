@@ -47,6 +47,38 @@ bool IsInADropOperation() {
   return g_is_in_a_drop_operation;
 }
 
+// This function is based on http://developer.apple.com/documentation/Cocoa/
+//   Conceptual/LowLevelFileMgmt/Tasks/ResolvingAliases.html
+void ResolveAlias(NSString *path, std::string16 *resolved_path_out) {
+  NSString *resolved_path = path;
+  CFURLRef url = CFURLCreateWithFileSystemPath(
+      kCFAllocatorDefault, (CFStringRef)path, kCFURLPOSIXPathStyle, NO);
+  if (url != NULL){
+    FSRef fs_ref;
+    if (CFURLGetFSRef(url, &fs_ref)){
+      Boolean ignored, was_aliased;
+      OSErr err = FSResolveAliasFile(&fs_ref, true, &ignored, &was_aliased);
+      if ((err == noErr) && was_aliased) {
+        CFURLRef resolved_url =
+            CFURLCreateFromFSRef(kCFAllocatorDefault, &fs_ref);
+        if (resolved_url != NULL) {
+          resolved_path = (NSString*)
+              CFURLCopyFileSystemPath(resolved_url, kCFURLPOSIXPathStyle);
+          CFRelease(resolved_url);
+        }
+      }
+    }
+    CFRelease(url);
+  }
+  [resolved_path string16:resolved_path_out];
+  if (resolved_path != path) {
+    // If resolved_path is different, then it must have been set to the result
+    // of CFURLCopyFileSystemPath, and since it is a copy, we should release
+    // it when we're done with it.
+    CFRelease(resolved_path);
+  }
+}
+
 // We "swizzle" some Cocoa method implementations to insert a little code
 // before and after certain events get processed. For more, see
 // http://www.cocoadev.com/index.pl?MethodSwizzling
@@ -109,7 +141,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
       NSString *ns_string;
       while ((ns_string = [enumerator nextObject])) {
         std::string16 std_string;
-        [ns_string string16:&std_string];
+        ResolveAlias(ns_string, &std_string);
         g_dragging_pasteboard_filenames.push_back(std_string);
       }
     }
