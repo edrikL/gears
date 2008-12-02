@@ -1090,18 +1090,7 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   scoped_ptr<JsObject> result(
       module_environment_->js_runner_->NewObject());
 
-#if BROWSER_FF
-#if defined(WIN32) || defined(OS_MACOSX)
-  // TODO(nigeltao): test that the implementation is sound for Firefox/Windows
-  // and Firefox/Mac.
-  error = STRING16(L"getDragData is not supported for this platform.");
-#else
-  ::GetDragData(module_environment_.get(),
-                event_as_js_object.get(),
-                result.get(),
-                &error);
-#endif
-#elif (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
+#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
   ::GetDragData(module_environment_.get(),
                 event_as_js_object.get(),
                 result.get(),
