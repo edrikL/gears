@@ -215,6 +215,44 @@ DragAndDropEventType GetDragAndDropEventType(
   if (event_type.Equals(kDragOverAsString)) {
     return DRAG_AND_DROP_EVENT_DRAGOVER;
   } else if (event_type.Equals(kDragEnterAsString)) {
+#if BROWSER_FF2 && defined(LINUX) && !defined(OS_MACOSX)
+    // The intended Gecko drag and drop model is that (1) the DragService
+    // starts a DragSession (via StartDragSession()), and then (2) a
+    // NS_DRAGDROP_ENTER event is dispatched.
+    // The relevant source files (under mozilla/widget/src) where both
+    // StartDragSession is called and the NS_DRAGDROP_ENTER event is
+    // dispatched are
+    //   Linux: gtk2/nsWindow.cpp
+    //   Mac: cocoa/nsCocoaWindow.mm (Gecko 1.8), and
+    //        cocoa/nsChildView.mm (Gecko 1.9)
+    //   Windows: windows/nsNativeDragTarget.cpp
+    // Windows and Mac follow this model, on Firefox 2 and Firefox 3, and
+    // Linux does this for Firefox 3, but does not for Firefox 2. Instead,
+    // Firefox2/Linux will do these two things in reverse order, i.e. first
+    // dispatch the NS_DRAGDROP_ENTER event, and then StartDragSession. This
+    // is a Gecko bug in nsWindow::OnDragEnter that was fixed in CVS revision
+    // 1.149 of mozilla/widget/src/gtk2/nsWindow.cpp, according to
+    // http://bonsai.mozilla.org/cvslog.cgi?
+    //     file=mozilla/widget/src/gtk2/nsWindow.cpp&rev=1.149
+    //
+    // Gears, however, needs to access the DragSession when handling
+    // drag-enter, to discover file metadata like file count and total size,
+    // and hence we workaround this Firefox2/Linux bug by explicitly calling
+    // StartDragSession here.
+    //
+    // Note that nsBaseDragService::StartDragSession is idempotent, in that
+    // all it does is to set a private member variable (mDoingDrag) to true.
+    // This XPCOM method does return NS_ERROR_FAILURE rather than NS_OK on
+    // the second and subsequent invocations, but that has no practical
+    // significance because StartDragSession is called in only one place
+    // (apart from here in Gears code), namely during nsWindow::OnDragEnter,
+    // and in this case, the nsresult return value is ignored.
+    nsCOMPtr<nsIDragService> drag_service =
+        do_GetService("@mozilla.org/widget/dragservice;1");
+    if (drag_service) {
+      drag_service->StartDragSession();
+    }
+#endif
     return DRAG_AND_DROP_EVENT_DRAGENTER;
   } else if (event_type.Equals(kDragExitAsString)) {
     return DRAG_AND_DROP_EVENT_DRAGLEAVE;
@@ -240,7 +278,8 @@ void AcceptDrag(ModuleEnvironment *module_environment,
   if (type == DRAG_AND_DROP_EVENT_DROP) {
     dom_event->StopPropagation();
 
-  } else if (type == DRAG_AND_DROP_EVENT_DRAGOVER) {
+  } else if (type == DRAG_AND_DROP_EVENT_DRAGENTER ||
+             type == DRAG_AND_DROP_EVENT_DRAGOVER) {
     nsCOMPtr<nsIDragService> drag_service =
         do_GetService("@mozilla.org/widget/dragservice;1");
     if (!drag_service) {
