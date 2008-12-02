@@ -79,6 +79,7 @@ static bool JsvalToISupports(JSContext *context,
 static bool PointerIsOnTheStack(void *candidate,
                                 void *pointer1,
                                 void *pointer2) {
+#if defined(LINUX) && !defined(OS_MACOSX)
   int something_on_the_stack;
   if (!pointer1) {
     return PointerIsOnTheStack(candidate, &something_on_the_stack, NULL);
@@ -91,6 +92,15 @@ static bool PointerIsOnTheStack(void *candidate,
   size_t i2 = reinterpret_cast<size_t>(pointer2);
   // Check that the sequence (i0, i1, i2) is strictly monotonic.
   return (i0 > i1 && i1 > i2) || (i0 < i1 && i1 < i2);
+#else
+  // TODO(nigeltao): the above works for GCC (i.e. Firefox/Linux and
+  // Firefox/OSX), but does not for Visual C++ (i.e. Firefox/Windows).
+  // The TODO is to implement this. It isn't a deal-breaker that this doesn't
+  // work on Windows, since the if (!ns_mouse_event->widget) check during
+  // GetDragAndDropEventType should be sufficient, but still, it would be
+  // nice to have, as a second or third line of defence.
+  return true;
+#endif
 }
 
 
