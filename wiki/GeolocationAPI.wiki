@@ -296,12 +296,12 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 
 === JSON Protocol Versioning ===
 
-The version of the JSON protocol is expressed as a string with format <major>.<minor>.<release>. These fields are used as follows.
+The version of the JSON protocol is expressed as a string with format `<major>.<minor>.<release>`. These fields are updated as follows.
 
 || *Field* || *Description* ||
-|| major ||  ||
-|| minor ||  ||
-|| release ||  ||
+|| major || Fundamental protocol change. ||
+|| minor || Breaking change, eg addition of required field. ||
+|| release || Non-breaking change, eg addition of optional field. ||
 
 The version history of the protocol is shown below.
 
