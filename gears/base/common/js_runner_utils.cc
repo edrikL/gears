@@ -38,6 +38,8 @@ std::string16 EscapeMessage(const std::string16 &message) {
             std::string16(STRING16(L"\\r")));
   ReplaceAll(escaped_message, std::string16(STRING16(L"\n")),
             std::string16(STRING16(L"\\n")));
+  ReplaceAll(escaped_message, std::string16(STRING16(L"\"")),
+            std::string16(STRING16(L"\\\"")));
   return escaped_message;
 }
 
