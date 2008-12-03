@@ -5,9 +5,9 @@
   #for $browser, $browser_results in $data.items()
     #if $browser_results == "TIMED-OUT"
       #set $id = $id + 1
-      <testsuite errors="1" failures="0" id="$id" name="NONE" package="$browser" tests="0" time="0">
-        <testcase classname="placeholder" name="timedout-test-placeholder" time="0">
-          <error message="timeout" type="placeholder">Tests timed-out</error>
+      <testsuite errors="1" failures="0" id="$id" name="LIKELY_CRASH" package="$browser" tests="0" time="0">
+        <testcase classname="timeout" name="stub_result" time="0">
+          <error message="timeout" type="stub_result">No test results within timeout.  Browser may have hung or crashed.</error>
         </testcase>
       </testsuite>
     #else
