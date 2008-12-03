@@ -50,7 +50,8 @@ NetworkLocationProvider::NetworkLocationProvider(
     const std::string16 &url,
     const std::string16 &host_name,
     const std::string16 &language)
-    : url_(url),
+    : request_(NULL),
+      url_(url),
       host_name_(host_name),
       request_address_(false),
       request_address_from_last_request_(false),
@@ -71,7 +72,11 @@ NetworkLocationProvider::NetworkLocationProvider(
   AccessTokenManager::GetInstance()->Register(url_);
 
   // Start the worker thread
-  Start();
+  if (!Start()) {
+    // This should never happen.
+    LOG(("Could not start the NLR"));
+    assert(false);
+  }
 }
 
 NetworkLocationProvider::~NetworkLocationProvider() {
