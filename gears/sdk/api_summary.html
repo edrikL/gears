@@ -142,10 +142,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    string   <b>getAllResponseHeaders</b>()
    callback <b>onreadystatechange</b>
    readonly attribute int    <b>readyState</b>
+   readonly attribute Blob   <b>responseBlob</b>
    readonly attribute string <b>responseText</b>
    readonly attribute int    <b>status</b>
-   readonly attribute string <b>statusText</b></code></pre>
-
+   readonly attribute string <b>statusText</b>
+   readonly attribute HttpRequestUpload <b>upload</b></code></pre>
+<pre><code><a href="api_httprequest.html#HttpRequestUpload">HttpRequestUpload class</a>
+   callback <b>onprogress</b>(progressEvent)</code></pre>
+<pre><code><a href="api_httprequest.html#ProgressEvent">ProgressEvent class</a>
+   readonly attribute int <b>total</b>
+   readonly attribute int <b>loaded</b>
+   readonly attribute bool <b>lengthComputable</b></code></pre>
 
 <h3>LocalServer</h3>
 <p>Caches and serves your application's resources locally, making it possible to start a web application without a network connection. </p>
@@ -182,7 +189,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    void      <b>rename</b>(srcUrl, destUrl)
    void      <b>copy</b>(srcUrl, destUrl)
    boolean   <b>isCaptured</b>(url)
+   void      <b>captureBlob</b>(blob, url, [contentType])
    void      <b>captureFile</b>(fileInputElement, url)
+   Blob      <b>getAsBlob</b>(url)
    string    <b>getCapturedFileName</b>(url)
    string    <b>getHeader</b>(url, name)
    string    <b>getAllHeaders</b>(url)
