@@ -53,6 +53,7 @@ in the background, without blocking the main page's script execution.
     <li><a href="#isolation">Code and data isolation</a>
     <li><a href="#limitations">Limitations</a>
     <li><a href="#typical_use">Usage pattern</a>
+    <li><a href="#cross_origin">Cross-origin workers</a>
     </ol>
   <li><a href="#workerpool_class">WorkerPool class</a>
   </ol>
@@ -178,7 +179,29 @@ common ways:
 </ol>
 
 
+<h3 id="cross_origin">Cross-origin workers</h3>
 
+<p>Workers can be loaded across origins using the
+<code>createWorkerFromUrl()</code> method. Workers loaded across origins this
+way run in the security context of the origin they are loaded from. This can
+be used to allow controlled communication between pages in different origins.
+
+<p>In order for Gears to execute cross-origin workers, the following
+restrictions must be met:
+
+<ul>
+  <li>The worker must be served with the content type
+    <code>application/x-gears-worker</code>.
+  <li>The worker code must call
+    <code>google.gears.workerPool.allowCrossOrigin()</code>.
+</ul>
+
+<p>Once <code>allowCrossOrigin()</code> is called, cross-origin workers
+automatically inherit the permissions of the calling origin.
+
+<p><span style="color:red">Known Bug:</span> Cross-origin workers do not
+correctly inherit permissions when the worker URL redirects across
+origins.
 
 <h2 id="workerpool_class">WorkerPool class</h2>
 
@@ -334,10 +357,9 @@ up to the parent.</td>
   <tr class="odd">
     <td>Details:</td>
     <td class="odd">
-      <span style="color:red">Note:</span> If called from a worker,
-      <code>createWorkerFromUrl()</code> always fails today, due to a
-      technical issue that will be addressed in a future release.
-      <br><br>
+      <span style="color:red">Known Bug:</span>
+      <code>createWorkerFromUrl()</code> does not work when called from inside
+      workers.<br><br>
       Gears guarantees the URL will be fetched and the code returned will run
       once before any messages are delivered.  The code must set an
       <code>onmessage</code> handler during that initial execution,
@@ -349,12 +371,8 @@ up to the parent.</td>
       <br><br>
       Worker IDs are guaranteed to be unique values that are never reused within the same WorkerPool.
       <br><br>
-      If the origin of the worker URL is different from that of the calling
-      script, the worker will inherit permissions from the calling
-      script. Permissions are not inherited, however, if the worker URL involves
-      a cross-origin redirect. Despite inheriting permissions in this way, all
-      methods on <code>google.gears.factory</code> will fail in the worker until
-      it calls <code>allowCrossOrigin()</code>.
+      Cross-origin workers are allowed. See the <a href="#cross_origin">overview
+      section</a> for more details.
       <br><br>
     </td>
   </tr>
