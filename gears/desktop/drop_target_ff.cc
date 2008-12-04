@@ -227,22 +227,39 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     ProvideDebugVisualFeedback(false);
     if (will_accept_drop_) {
       will_accept_drop_ = false;
-      std::string16 error;
-      scoped_ptr<JsArray> file_array(
-          module_environment_->js_runner_->NewArray());
-      if (!GetDroppedFiles(module_environment_.get(), drag_session.get(),
-                           file_array.get(), &error)) {
+      std::vector<std::string16> filenames;
+      std::set<std::string16> file_extensions;
+      std::set<std::string16> file_mime_types;
+      int64 file_total_bytes;
+      // TODO(nigeltao): We should call GetDroppedFiles (and provide the
+      // aggregate file metadata) during dragenter, dragover and dragleave,
+      // not just during drop.
+      if (!GetDroppedFiles(module_environment_.get(),
+                           drag_session.get(),
+                           &filenames,
+                           &file_extensions,
+                           &file_mime_types,
+                           &file_total_bytes)) {
         return NS_ERROR_FAILURE;
       }
+
+      scoped_ptr<JsObject> context_object(
+          module_environment_->js_runner_->NewObject());
+      scoped_ptr<JsArray> file_array(
+          module_environment_->js_runner_->NewArray());
+      std::string16 ignored;
+      if (!FileDialog::FilesToJsObjectArray(filenames,
+                                            module_environment_.get(),
+                                            file_array.get(),
+                                            &ignored)) {
+        return NS_ERROR_FAILURE;
+      }
+      context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
+      AddEventToJsObject(context_object.get(), event);
 
       // Prevent the default browser behavior of navigating away from the
       // current page to the file being dropped.
       event->StopPropagation();
-
-      scoped_ptr<JsObject> context_object(
-          module_environment_->js_runner_->NewObject());
-      context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
-      AddEventToJsObject(context_object.get(), event);
 
       const int argc = 1;
       JsParamToSend argv[argc] = {
