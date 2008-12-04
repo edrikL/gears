@@ -364,13 +364,13 @@ void GetDragData(ModuleEnvironment *module_environment,
   std::vector<std::string16> filenames;
   std::set<std::string16> file_extensions;
   std::set<std::string16> file_mime_types;
-  int64 fileTotalBytes = 0;
+  int64 file_total_bytes = 0;
   if (!GetDroppedFiles(module_environment,
                        drag_session.get(),
                        &filenames,
                        &file_extensions,
                        &file_mime_types,
-                       &fileTotalBytes)) {
+                       &file_total_bytes)) {
     // If GetDroppedFiles fails, then GetDroppedFiles may have added partial
     // results to the filenames vector, and other accumulators, which we
     // should clear out.
@@ -379,11 +379,11 @@ void GetDragData(ModuleEnvironment *module_environment,
     filenames.clear();
     file_extensions.clear();
     file_mime_types.clear();
-    fileTotalBytes = 0;
+    file_total_bytes = 0;
   }
 
   data_out->SetPropertyInt(STRING16(L"fileCount"), filenames.size());
-  data_out->SetPropertyDouble(STRING16(L"fileTotalBytes"), fileTotalBytes);
+  data_out->SetPropertyDouble(STRING16(L"fileTotalBytes"), file_total_bytes);
   JsObjectSetPropertyStringArray(module_environment, data_out,
                                  STRING16(L"fileExtensions"), file_extensions);
   JsObjectSetPropertyStringArray(module_environment, data_out,
@@ -409,10 +409,10 @@ bool GetDroppedFiles(
     std::set<std::string16> *file_extensions_out,
     std::set<std::string16> *file_mime_types_out,
     int64 *file_total_bytes_out) {
-  filenames->clear();
-  file_extensions->clear();
-  file_mime_types->clear();
-  *fileTotalBytes = 0;
+  filenames_out->clear();
+  file_extensions_out->clear();
+  file_mime_types_out->clear();
+  *file_total_bytes_out = 0;
 #if defined(LINUX) && !defined(OS_MACOSX)
   // Although Firefox's underlying XPCOM widget library aims to present a
   // consistent cross-platform interface, there are still significant
