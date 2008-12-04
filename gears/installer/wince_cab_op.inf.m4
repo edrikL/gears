@@ -22,11 +22,11 @@ GearsDll="PRODUCT_SHORT_NAME_UQ.dll"
 PermissionsDialog="permissions_dialog.html"
 SettingsDialog="settings_dialog.html"
 ShortcutsDialog="shortcuts_dialog.html"
+InstallDir="\Application Data\Opera 9.5"
 
 [CEStrings]
 ; Must be different from that for Gears for IE to avoid conflicts.
 AppName="Gears for Opera Mobile"  ;[naming]
-InstallDir="\Application Data\Opera 9.5"
 
 ; The source directories for the files that will be in in the CAB
 [SourceDisksNames]
