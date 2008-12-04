@@ -238,8 +238,11 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   virtual bool InvokeCallback(const JsRootedCallback *callback,
-                              int argc, JsParamToSend *argv,
+                              JsObject *this_arg, int argc, JsParamToSend *argv,
                               JsRootedToken **optional_alloc_retval) {
+    // TODO(nigeltao): Implement respecting the this_arg parameter. Until
+    // then, we assert that this_arg is NULL.
+    assert(!this_arg);
     assert(callback && (!argc || argv));
     if (!NPVARIANT_IS_OBJECT(callback->token())) { return false; }
 

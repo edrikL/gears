@@ -949,7 +949,7 @@ bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
   // InvokeCallback returns false if the callback enounters an error. Once we've
   // made the callback, we can't rely on any of the fix request data, because it
   // could be removed by other calls to this object before the callback returns.
-  GetJsRunner()->InvokeCallback(fix_info->success_callback.get(),
+  GetJsRunner()->InvokeCallback(fix_info->success_callback.get(), NULL,
                                 ARRAYSIZE(argv), argv, NULL);
   return true;
 }
@@ -986,7 +986,7 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
   // InvokeCallback returns false if the callback enounters an error. Once we've
   // made the callback, we can't rely on any of the fix request data, because it
   // could be removed by other calls to this object before the callback returns.
-  GetJsRunner()->InvokeCallback(fix_info->error_callback.get(),
+  GetJsRunner()->InvokeCallback(fix_info->error_callback.get(), NULL,
                                 ARRAYSIZE(argv), argv, NULL);
   return true;
 }

@@ -683,7 +683,7 @@ void GearsHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
       JsParamToSend argv[] = {
         { JSPARAM_OBJECT, js_object.get() },
       };
-      runner->InvokeCallback(handler, ARRAYSIZE(argv), argv, NULL);
+      runner->InvokeCallback(handler, NULL, ARRAYSIZE(argv), argv, NULL);
     }
   }
 }
@@ -708,7 +708,7 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
     JsRunnerInterface *runner = GetJsRunner();
     assert(runner);
     if (runner) {
-      runner->InvokeCallback(handler, 0, NULL, NULL);
+      runner->InvokeCallback(handler, NULL, 0, NULL, NULL);
     }
     if (is_complete) {
       delete handler;

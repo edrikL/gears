@@ -75,7 +75,7 @@ class AndroidDataProviderTest
       // would recursively lock the RadioDataProvider::listener_mutex_.
       bool result = DataProvider::Unregister(test_object_);
       assert(result);
-      js_runner_->InvokeCallback(callback_.get(), 0, NULL, NULL);
+      js_runner_->InvokeCallback(callback_.get(), NULL, 0, NULL, NULL);
       delete test_object_;
     }
 

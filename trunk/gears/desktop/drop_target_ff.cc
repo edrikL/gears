@@ -266,7 +266,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
         { JSPARAM_OBJECT, context_object.get() }
       };
       module_environment_->js_runner_->InvokeCallback(
-          on_drop_.get(), argc, argv, NULL);
+          on_drop_.get(), NULL, argc, argv, NULL);
       nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
       if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
     }
@@ -294,12 +294,12 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
       };
       if (is_drag_exit) {
         module_environment_->js_runner_->InvokeCallback(
-            callback, argc, argv, NULL);
+            callback, NULL, argc, argv, NULL);
         will_accept_drop_ = false;
       } else {
         scoped_ptr<JsRootedToken> return_value;
         module_environment_->js_runner_->InvokeCallback(
-            callback, argc, argv, as_out_parameter(return_value));
+            callback, NULL, argc, argv, as_out_parameter(return_value));
         // The HTML5 specification (section 5.4.5) says that an event handler
         // returning *false* means that we should not perform the default
         // action (i.e. the web-app wants Gears' file drop behavior, and not

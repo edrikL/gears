@@ -462,7 +462,8 @@ void GearsTimer::HandleTimer(TimerInfo *timer_info) {
   // Invoke JavaScript timer handler.  *timer_info can become invalid here, if
   // the timer gets deleted in the handler.
   if (timer_info->callback.get()) {
-    GetJsRunner()->InvokeCallback(timer_info->callback.get(), 0, NULL, NULL);
+    GetJsRunner()->InvokeCallback(
+        timer_info->callback.get(), NULL, 0, NULL, NULL);
   } else {
     GetJsRunner()->Eval(timer_info->script);
   }

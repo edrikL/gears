@@ -844,8 +844,11 @@ class JsRunner : public JsRunnerBase {
     return com_obj_->SetErrorHandler(error_handler);
   }
   bool InvokeCallback(const JsRootedCallback *callback,
-                      int argc, JsParamToSend *argv,
+                      JsObject *this_arg, int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
+    // TODO(nigeltao): Implement respecting the this_arg parameter. Until
+    // then, we assert that this_arg is NULL.
+    assert(!this_arg);
     return InvokeCallbackImpl(callback, argc, argv, optional_alloc_retval,
                               NULL);
   }
@@ -1002,8 +1005,11 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
-                      int argc, JsParamToSend *argv,
+                      JsObject *this_arg, int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
+    // TODO(nigeltao): Implement respecting the this_arg parameter. Until
+    // then, we assert that this_arg is NULL.
+    assert(!this_arg);
 #ifdef OS_WINCE
     // On WinCE, exceptions do not get thrown from JavaScript code that is
     // invoked from C++ in the context of the main page. Therefore, to allow

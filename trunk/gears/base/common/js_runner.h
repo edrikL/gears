@@ -132,8 +132,11 @@ class JsRunnerInterface {
 
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.
+  // The this_arg parameter determines the value of the special JavaScript
+  // keyword 'this', when executing the callback. Almost always, the caller
+  // should just pass NULL, which means 'this' is just the global JS object.
   virtual bool InvokeCallback(const JsRootedCallback *callback,
-                              int argc, JsParamToSend *argv,
+                              JsObject *this_arg, int argc, JsParamToSend *argv,
                               JsRootedToken **optional_alloc_retval) = 0;
 
   virtual bool AddEventHandler(JsEventType event_type,

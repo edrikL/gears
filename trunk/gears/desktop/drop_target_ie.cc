@@ -172,7 +172,7 @@ HRESULT DropTarget::HandleOnDragEnter()
     };
     scoped_ptr<JsRootedToken> return_value;
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_enter_.get(), argc, argv, as_out_parameter(return_value));
+        on_drag_enter_.get(), NULL, argc, argv, as_out_parameter(return_value));
     // The HTML5 specification (section 5.4.5) says that an event handler
     // returning *false* means that we should not perform the default action
     // (i.e. the web-app wants Gears' file drop behavior, and not the default
@@ -208,7 +208,7 @@ HRESULT DropTarget::HandleOnDragOver()
     };
     scoped_ptr<JsRootedToken> return_value;
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_over_.get(), argc, argv, as_out_parameter(return_value));
+        on_drag_over_.get(), NULL, argc, argv, as_out_parameter(return_value));
     will_accept_drop_ = return_value.get() &&
         V_VT(&return_value->token()) == VT_BOOL &&
         V_BOOL(&return_value->token()) == false;
@@ -239,7 +239,7 @@ HRESULT DropTarget::HandleOnDragLeave()
       { JSPARAM_OBJECT, context_object.get() }
     };
     module_environment_->js_runner_->InvokeCallback(
-        on_drag_leave_.get(), argc, argv, NULL);
+        on_drag_leave_.get(), NULL, argc, argv, NULL);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -272,7 +272,7 @@ HRESULT DropTarget::HandleOnDragDrop()
       { JSPARAM_OBJECT, context_object.get() }
     };
     module_environment_->js_runner_->InvokeCallback(
-        on_drop_.get(), argc, argv, NULL);
+        on_drop_.get(), NULL, argc, argv, NULL);
   }
 
   return S_OK;
