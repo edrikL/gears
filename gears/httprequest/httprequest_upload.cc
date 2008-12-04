@@ -82,7 +82,7 @@ void GearsHttpRequestUpload::ReportProgress(int64 position, int64 total) {
       JsParamToSend argv[] = {
         { JSPARAM_OBJECT, js_object.get() },
       };
-      runner->InvokeCallback(handler, ARRAYSIZE(argv), argv, NULL);
+      runner->InvokeCallback(handler, NULL, ARRAYSIZE(argv), argv, NULL);
     }
   }
 }

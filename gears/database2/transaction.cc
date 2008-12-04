@@ -81,7 +81,7 @@ void GearsDatabase2Transaction::InvokeCallback() {
     { JSPARAM_MODULE, static_cast<ModuleImplBaseClass *>(this) }
   };
 
-  GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
+  GetJsRunner()->InvokeCallback(callback_.get(), NULL, ARRAYSIZE(send_argv),
                                 send_argv, NULL);
 }
 
@@ -185,8 +185,8 @@ void GearsDatabase2Transaction::InvokeErrorCallback() {
     { JSPARAM_OBJECT, error.get() },
   };
 
-  GetJsRunner()->InvokeCallback(error_callback_.get(), ARRAYSIZE(send_argv),
-                                send_argv, NULL);
+  GetJsRunner()->InvokeCallback(error_callback_.get(), NULL,
+                                ARRAYSIZE(send_argv), send_argv, NULL);
 }
 
 void GearsDatabase2Transaction::InvokeSuccessCallback() {
@@ -198,7 +198,7 @@ void GearsDatabase2Transaction::InvokeSuccessCallback() {
   if (interpreter_->async() && HasSuccessCallback()) {
     // TODO(dimitri.glazkov): investigate whether this is the right way to
     // invoke callback with no parameters
-    GetJsRunner()->InvokeCallback(success_callback_.get(), 0, NULL, NULL);
+    GetJsRunner()->InvokeCallback(success_callback_.get(), NULL, 0, NULL, NULL);
   }
 }
 

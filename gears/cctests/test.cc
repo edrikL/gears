@@ -453,7 +453,7 @@ void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
     {JSPARAM_STRING16, &string_value},
   };
 
-  GetJsRunner()->InvokeCallback(function.get(), ARRAYSIZE(out_argv),
+  GetJsRunner()->InvokeCallback(function.get(), NULL, ARRAYSIZE(out_argv),
                                 out_argv, NULL);
 }
 
@@ -1789,7 +1789,7 @@ void TestObjectArray(JsCallContext* context,
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   scoped_ptr<JsRootedToken> retval;
-  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(), 0, NULL,
+  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(), NULL, 0, NULL,
                                         as_out_parameter(retval)));
   std::string16 string_retval;
   TEST_ASSERT(retval->GetAsString(&string_retval));
@@ -1834,7 +1834,7 @@ void TestObjectFunction(JsCallContext* context,
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   scoped_ptr<JsRootedToken> retval;
-  TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL,
+  TEST_ASSERT(js_runner->InvokeCallback(function.get(), NULL, 0, NULL,
                                         as_out_parameter(retval)));
   TEST_ASSERT(retval.get());
   std::string16 string_retval;

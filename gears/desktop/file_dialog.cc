@@ -187,7 +187,7 @@ void FileDialog::CompleteSelection(const StringList& selected_files) {
   } else {
     // Make the file selection callback.
     JsParamToSend callback_argv[] = { JSPARAM_ARRAY, files_array.get() };
-    module_environment_->js_runner_->InvokeCallback(callback_.get(),
+    module_environment_->js_runner_->InvokeCallback(callback_.get(), NULL,
                                                     ARRAYSIZE(callback_argv),
                                                     callback_argv, NULL);
   }

@@ -33,8 +33,8 @@ void Database2Statement::InvokeCallback(GearsDatabase2Transaction *tx) {
   };
 
   if (HasCallback()) {
-    tx->GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
-                                      send_argv, NULL);
+    tx->GetJsRunner()->InvokeCallback(callback_.get(), NULL,
+                                      ARRAYSIZE(send_argv), send_argv, NULL);
   }
 }
 

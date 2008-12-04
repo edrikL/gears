@@ -299,7 +299,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   JsRootedToken *alloc_js_retval = NULL;
   bool js_retval = false;
 
-  if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
+  if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), NULL, argc, argv,
                                     &alloc_js_retval)) {
     // Coerce the return value to bool. We typically don't coerce interfaces,
     // but if the return type of a callback is the wrong type, there is no
@@ -834,7 +834,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       { JSPARAM_INT, &msg.sender_ },
       { JSPARAM_OBJECT, onmessage_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), NULL, argc, argv,
                                   NULL);
   } else {
     JsErrorInfo error_info = {

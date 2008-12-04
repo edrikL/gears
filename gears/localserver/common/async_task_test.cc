@@ -52,7 +52,8 @@ class CallbackFunctor : public AsyncFunctor {
     assert(callback_.get());
     assert(status_code_ > -1);
     JsParamToSend argv[] = { { JSPARAM_INT, &status_code_ } };
-    js_runner_->InvokeCallback(callback_.get(), ARRAYSIZE(argv), argv, NULL);
+    js_runner_->InvokeCallback(
+        callback_.get(), NULL, ARRAYSIZE(argv), argv, NULL);
   }
 
  private:

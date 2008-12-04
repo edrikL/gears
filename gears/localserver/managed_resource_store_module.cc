@@ -366,5 +366,5 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
   JsParamToSend argv[argc] = {
     { JSPARAM_OBJECT, param.get() }
   };
-  GetJsRunner()->InvokeCallback(handler, argc, argv, NULL);
+  GetJsRunner()->InvokeCallback(handler, NULL, argc, argv, NULL);
 }

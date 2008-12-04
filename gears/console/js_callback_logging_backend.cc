@@ -71,7 +71,7 @@ void JsCallbackLoggingBackend::OnNotify(MessageService *service,
   JsParamToSend argv[argc] = {
     { JSPARAM_OBJECT, callback_params.get() },
   };
-  js_runner_->InvokeCallback(callback_.get(), argc, argv, NULL);
+  js_runner_->InvokeCallback(callback_.get(), NULL, argc, argv, NULL);
 }
 
 JsRootedCallback *JsCallbackLoggingBackend::GetCallback() {

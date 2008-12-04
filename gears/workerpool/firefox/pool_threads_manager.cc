@@ -300,7 +300,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       { JSPARAM_INT, &msg.sender_ },
       { JSPARAM_OBJECT, onmessage_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), NULL, argc, argv,
                                   NULL);
   } else {
     JsErrorInfo error_info = {
@@ -496,7 +496,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   // so we clear the exception so that the JS engine is aware of this.
   JS_ClearPendingException(wi->js_runner->GetContext());
 
-  if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
+  if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), NULL, argc, argv,
                                     &alloc_js_retval)) {
     // Coerce the return value to bool. We typically don't coerce interfaces,
     // but if the return type of a callback is the wrong type, there is no
