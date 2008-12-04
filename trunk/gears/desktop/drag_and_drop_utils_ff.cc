@@ -383,7 +383,8 @@ void GetDragData(ModuleEnvironment *module_environment,
   }
 
   data_out->SetPropertyInt(STRING16(L"fileCount"), filenames.size());
-  data_out->SetPropertyDouble(STRING16(L"fileTotalBytes"), file_total_bytes);
+  data_out->SetPropertyDouble(STRING16(L"fileTotalBytes"),
+                              static_cast<double>(file_total_bytes));
   JsObjectSetPropertyStringArray(module_environment, data_out,
                                  STRING16(L"fileExtensions"), file_extensions);
   JsObjectSetPropertyStringArray(module_environment, data_out,
