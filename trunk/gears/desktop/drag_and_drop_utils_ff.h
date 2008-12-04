@@ -26,14 +26,19 @@
 #ifndef GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__
 #define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__
 
+#include <set>
+#include <vector>
+
 #include "gears/base/common/base_class.h"
 
 class nsIDragSession;
 
 bool GetDroppedFiles(ModuleEnvironment *module_environment,
                      nsIDragSession *drag_session,
-                     JsArray *files_out,
-                     std::string16 *error_out);
+                     std::vector<std::string16> *filenames_out,
+                     std::set<std::string16> *file_extensions_out,
+                     std::set<std::string16> *file_mime_types_out,
+                     int64 *file_total_bytes_out);
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
