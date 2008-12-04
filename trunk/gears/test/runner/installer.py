@@ -15,7 +15,7 @@ if os.name == 'nt':
 FULL_PERMISSION = int('777', 8)
 
 class BaseInstaller:
-  """ Handle extension installation and browser profile adjustments. """
+  """Handle extension installation and browser profile adjustments."""
 
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
   BUILDS = 'output/installers'
@@ -29,26 +29,26 @@ class BaseInstaller:
       target_path = profile[:profile.find('.')]
       if os.path.exists(target_path):
         os.chmod(target_path, FULL_PERMISSION)
-        shutil.rmtree(target_path, onerror=self._handleRmError)
+        self._deleteFolder(target_path)
       profile_zip = open(profile_path, 'rb')
       self._unzip(profile_zip, target_path)
       profile_zip.close()
 
   def _installExtension(self, build):
-    """ Locate the desired ff profile, overwrite it, and unzip build to it. 
+    """Locate the desired ff profile, overwrite it, and unzip build to it.
 
     Args:
       build: local filename for the build
     """
     if os.path.exists('xpi'):
-      shutil.rmtree('xpi', onerror=self._handleRmError)
+      self._deleteFolder('xpi')
     xpi = open(build, 'rb')
     self._unzip(xpi, 'xpi')
     xpi.close()
     self._copyProfileAndInstall('xpi')
 
   def _copyProfileAndInstall(self, extension):
-    """ Profile and extension placement for mac/linux.
+    """Profile and extension placement for mac/linux.
 
     Args:
       extension: path to folder containing extension to install
@@ -61,7 +61,7 @@ class BaseInstaller:
       print 'failed to find profile folder'
       return
 
-    shutil.rmtree(profile_folder, onerror=self._handleRmError)
+    self._deleteFolder(profile_folder)
     self._copyAndChmod(self.ffprofile, profile_folder)
     ext = os.path.join(profile_folder, 'extensions')
     if not os.path.exists(ext):
@@ -70,7 +70,7 @@ class BaseInstaller:
     self._copyAndChmod(extension, gears)
 
   def _findProfileFolderIn(self, path):
-    """ Find and return the right profile folder in directory at path.
+    """Find and return the right profile folder in directory at path.
     
     Args:
       path: path of the directory to search in
@@ -86,7 +86,7 @@ class BaseInstaller:
     return False
 
   def _findBuildPath(self, type, directory):
-    """ Find the path to the build of the given type.
+    """Find the path to the build of the given type.
   
     Args:
       type: os string eg 'win32' 'osx' or 'linux'
@@ -110,7 +110,7 @@ class BaseInstaller:
     shutil.copy(build_path, self.current_build)
 
   def _copyProfile(self, src, dst_folder, profile_name):
-    """ Copy profile to correct location. 
+    """Copy profile to correct location.
 
     Args:
       src: Location of profile to copy
@@ -122,7 +122,7 @@ class BaseInstaller:
       os.makedirs(dst_folder)
     if os.path.exists(dst_path):
       os.chmod(dst_path, FULL_PERMISSION)
-      shutil.rmtree(dst_path, onerror=self._handleRmError)
+      self._deleteFolder(dst_path)
     self._copyAndChmod(src, dst_path)
 
   def _copyAndChmod(self, src, targ):
@@ -130,7 +130,7 @@ class BaseInstaller:
     self._chmod(targ, FULL_PERMISSION)
 
   def _chmod(self, target, permission):
-    """ Recursively set permissions to target and children. 
+    """Recursively set permissions to target and children.
 
     We must set permissions recursively after unzipping and copying
     folders so that the contents will be executable.  This is necessary
@@ -147,27 +147,11 @@ class BaseInstaller:
         new_target = os.path.join(target, file)
         self._chmod(new_target, permission)
 
-  def _handleRmError(self, func, path, exc_info):
-    """ Handle errors removing files with long names on nt systems.
-
-    Args:
-      func: function call that caused exception
-      path: path to function call argument
-      exc_info: string info about the exception
-    """
-    # On nt, try using win32file to delete if os.remove fails
-    if os.name == 'nt':
-      # DeleteFileW can only operate on an absolute path
-      if not os.path.isabs(path):
-        path = os.path.join(os.getcwd(), path)
-      unicode_path = '\\\\?\\' + path
-      # Throws an exception on error
-      win32file.DeleteFileW(unicode_path)
-    else:
-      raise StandardError(exc_info)
+  def _deleteFolder(self, path):
+    shutil.rmtree(path)
 
   def _unzip(self, file, target):
-    """ Unzip file to target dir.
+    """Unzip file to target dir.
 
     Args: 
       file: file pointer to archive
@@ -206,13 +190,13 @@ class BaseInstaller:
 
 
 class BaseWin32Installer(BaseInstaller):
-  """ Installer for Win32 machines, extends Installer. """
+  """Installer for Win32 machines, extends Installer."""
 
   def __init__(self):
     self._prepareProfiles()
 
   def install(self):
-    """ Do installation.  """
+    """Do installation."""
     # First, uninstall current installed build, if any exists
     self._uninstallCurrentBuild()
 
@@ -230,7 +214,7 @@ class BaseWin32Installer(BaseInstaller):
     self._saveInstalledBuild(build_path)
 
   def _uninstallCurrentBuild(self):
-    """ If a known current build exists, uninstall it. """
+    """If a known current build exists, uninstall it."""
     if os.path.exists(self.current_build):
       # Supress exceptions if uninstall fails or no build present.
       try:
@@ -243,9 +227,42 @@ class BaseWin32Installer(BaseInstaller):
       except:
         print 'Uninstall failed or no installer found.'
   
+  def _deleteFolder(self, path):
+    """Override to handle win32 shell limitations."""
+    if not os.path.isabs(path):
+      path = os.path.join(os.getcwd(), path)
+    self._deleteFolderWin32(path)
+
+  def _deleteFolderWin32(self, full_path):
+    """A function like shutil.rmtree using win32api.
+
+    The win32file apis must be used for this task on win32 platform
+    because the win32 shell libs cannot handle file paths > 256 chars long.
+
+    Args:
+      full_path: Absolute path of the folder to recursively delete.
+    """
+    unicode_path = '\\\\?\\%s' % full_path
+    folder_iterator = win32file.FindFilesIterator(unicode_path + '\\*')
+
+    FILE_ATTRIBUTE = 0
+    FILE_NAME = 8
+    FILE_ATTRIBUTE_DIRECTORY_VISTA = 8208
+    for file_info in folder_iterator:
+      if file_info[FILE_NAME] == '.' or file_info[FILE_NAME] == '..':
+        continue
+      if (file_info[FILE_ATTRIBUTE] == win32file.FILE_ATTRIBUTE_DIRECTORY or
+          file_info[FILE_ATTRIBUTE] == FILE_ATTRIBUTE_DIRECTORY_VISTA):
+        self._deleteFolderWin32('%s\\%s' % (full_path, file_info[FILE_NAME]))
+        continue
+      else:
+        win32file.DeleteFileW('%s\\%s' % (unicode_path, file_info[FILE_NAME]))
+    del folder_iterator
+    win32file.RemoveDirectory(unicode_path)
+
 
 class WinXpInstaller(BaseWin32Installer):
-  """ Installer for WinXP, extends Win32Installer. """
+  """Installer for WinXP, extends Win32Installer."""
 
   def __init__(self):
     BaseWin32Installer.__init__(self)
@@ -259,7 +276,7 @@ class WinXpInstaller(BaseWin32Installer):
 
 
 class WinVistaInstaller(BaseWin32Installer):
-  """ Installer for Vista, extends Win32Installer. """
+  """Installer for Vista, extends Win32Installer."""
 
   def __init__(self):
     BaseWin32Installer.__init__(self)
@@ -273,7 +290,7 @@ class WinVistaInstaller(BaseWin32Installer):
 
 
 class ChromeWin32Installer(BaseWin32Installer):
-  """ Installer class for Win32 Google Chrome. """
+  """Installer class for Win32 Google Chrome."""
 
   CHROME_BIN_PATH = r'..\..\..\third_party\chrome\bin\chrome-win32.zip'
   CHROME_PROFILE_PATH = r'Google\Chrome\User Data\Default\Plugin Data'
@@ -298,7 +315,7 @@ class ChromeWin32Installer(BaseWin32Installer):
           ChromeWin32Installer.CHROME_PATH)
 
   def install(self):
-    """ Set up Google Chrome, run Gears installer, and set profile data. """
+    """Set up Google Chrome, run Gears installer, and set profile data."""
 
     # First, uninstall current installed Gears build, if any exists.
     self._uninstallCurrentBuild()
@@ -307,7 +324,7 @@ class ChromeWin32Installer(BaseWin32Installer):
       print 'Unpack and replace Chrome.'
       if os.path.exists(self.chrome_path):
         os.chmod(self.chrome_path, FULL_PERMISSION)
-        shutil.rmtree(self.chrome_path, onerror=self._handleRmError)
+        self._deleteFolder(self.chrome_path)
       chrome_zip = open(ChromeWin32Installer.CHROME_BIN_PATH, 'rb')
       self._unzip(chrome_zip, self.chrome_path)
       chrome_zip.close()
@@ -339,7 +356,7 @@ class ChromeWin32Installer(BaseWin32Installer):
 
 
 class WinCeInstaller(BaseInstaller):
-  """ Installer for WinCE, extends Installer. """
+  """Installer for WinCE, extends Installer."""
 
   def __init__(self, host):
     self._prepareProfiles()
@@ -359,7 +376,7 @@ class WinCeInstaller(BaseInstaller):
     return self._findBuildPath('cab', directory)
 
   def __installCab(self):
-    """ Copy installer to device and install.  """
+    """Copy installer to device and install."""
     build_path = self._buildPath(BaseInstaller.BUILDS)
 
     # Requires cecopy.exe in path.
@@ -383,7 +400,7 @@ class WinCeInstaller(BaseInstaller):
     p.wait()
 
   def __copyPermissions(self):
-    """ Modify permissions file to include host address and copy to device. """
+    """Modify permissions file to include host address and copy to device."""
     perm_path = os.path.join(self.ieprofile, 'permissions.db')
     perm_path.replace('/', '\\')
 
@@ -409,7 +426,7 @@ class WinCeInstaller(BaseInstaller):
 
 
 class BaseFirefoxMacInstaller(BaseInstaller):
-  """ Abstract base class for Mac firefox installers. """
+  """Abstract base class for Mac firefox installers."""
 
   def __init__(self, profile_name, firefox_bin, profile_loc):
     self.profile = profile_name
@@ -428,7 +445,7 @@ class BaseFirefoxMacInstaller(BaseInstaller):
     return self._findBuildPath('xpi', directory)
 
   def install(self):
-    """ Do installation. """
+    """Do installation."""
     print 'Creating test profile and inserting extension'
     build_path = self._buildPath(BaseInstaller.BUILDS)
     os.system('%s %s' % (self.firefox_bin, self.profile_arg))
@@ -437,7 +454,7 @@ class BaseFirefoxMacInstaller(BaseInstaller):
     self._saveInstalledBuild(build_path)
 
   def _copyProfileCacheMac(self):
-    """ Copy cache portion of profile on mac. """
+    """Copy cache portion of profile on mac."""
     profile_folder = self._findProfileFolderIn(self.ffcache_path)
 
     if profile_folder:
@@ -449,13 +466,13 @@ class BaseFirefoxMacInstaller(BaseInstaller):
     # Empty cache and replace only with gears folder
     gears_folder = os.path.join(profile_folder, 'Google Gears for Firefox')
     ffprofile_cache = 'ff2profile-mac/Google Gears for Firefox'
-    shutil.rmtree(profile_folder, onerror=self._handleRmError)
+    self._deleteFolder(profile_folder)
     os.mkdir(profile_folder)
     self._copyAndChmod(ffprofile_cache, gears_folder)
 
 
 class Firefox2MacInstaller(BaseFirefoxMacInstaller):
-  """ Firefox 2 installer for Mac OS X. """
+  """Firefox 2 installer for Mac OS X."""
 
   FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
 
@@ -466,7 +483,7 @@ class Firefox2MacInstaller(BaseFirefoxMacInstaller):
 
 
 class Firefox3MacInstaller(BaseFirefoxMacInstaller):
-  """ Firefox 3 installer for Mac OS X. """
+  """Firefox 3 installer for Mac OS X."""
 
   FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
 
@@ -477,7 +494,7 @@ class Firefox3MacInstaller(BaseFirefoxMacInstaller):
 
 
 class SafariMacInstaller(BaseInstaller):
-  """ Safari installer for Mac OS X. """
+  """Safari installer for Mac OS X."""
 
   def __init__(self, build_type):
     self._prepareProfiles()
@@ -492,7 +509,7 @@ class SafariMacInstaller(BaseInstaller):
     return self._findBuildPath('dmg', directory)
 
   def _GetRootPassword(self):
-    """ Read root password from file ~/.password. """
+    """Read root password from file ~/.password."""
     home = os.getenv('HOME')
     password_path = os.path.join(home, '.password')
     if os.path.exists(password_path):
@@ -518,7 +535,7 @@ class SafariMacInstaller(BaseInstaller):
       print 'Was not prompted for password within timeout'
 
   def install(self):
-    """ Copy extension and profile for Safari. """
+    """Copy extension and profile for Safari."""
     print 'Running Safari uninstall script'
     clean_command = os.path.abspath('../../tools/osx/clean_gears.sh')
     self._RunAsRoot(clean_command)
@@ -534,7 +551,7 @@ class SafariMacInstaller(BaseInstaller):
 
 
 class BaseFirefoxLinuxInstaller(BaseInstaller):
-  """ Abstract base class for Linux firefox installers. """
+  """Abstract base class for Linux firefox installers."""
 
   def __init__(self, profile_name):
     self.profile = profile_name
@@ -549,7 +566,7 @@ class BaseFirefoxLinuxInstaller(BaseInstaller):
     return self._findBuildPath('xpi', directory)
 
   def install(self):
-    """ Do installation. """
+    """Do installation."""
     print 'Creating test profile and inserting extension'
     build_path = self._buildPath(BaseInstaller.BUILDS)
     os.system('%s %s' % (self.firefox_bin, self.profile_arg))
@@ -558,7 +575,7 @@ class BaseFirefoxLinuxInstaller(BaseInstaller):
 
 
 class Firefox2LinuxInstaller(BaseFirefoxLinuxInstaller):
-  """ Firefox 2 installer for linux. """
+  """Firefox 2 installer for linux."""
 
   def __init__(self, profile_name):
     self.ffprofile = 'ff2profile-linux'
@@ -566,7 +583,7 @@ class Firefox2LinuxInstaller(BaseFirefoxLinuxInstaller):
 
 
 class Firefox3LinuxInstaller(BaseFirefoxLinuxInstaller):
-  """ Firefox 3 installer for linux. """
+  """Firefox 3 installer for linux."""
 
   def __init__(self, profile_name):
     self.ffprofile = 'ff3profile-linux'
