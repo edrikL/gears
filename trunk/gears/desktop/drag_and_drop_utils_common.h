@@ -46,7 +46,7 @@ class FileDragAndDropMetaData {
   std::vector<std::string16> filenames_;
   std::set<std::string16> extensions_;
   std::set<std::string16> mime_types_;
-  int total_bytes_;
+  int64 total_bytes_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDragAndDropMetaData);
 };
