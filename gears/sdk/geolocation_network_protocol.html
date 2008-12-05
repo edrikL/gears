@@ -405,7 +405,10 @@ null.</p>
   </tr>
   <tr>
     <td class="nameColumn">accuracy</td>
-    <td class="descriptionColumn">The horizontal accuracy of the fix, in meters at a 95% confidence level.</td>
+    <td class="descriptionColumn">
+      The horizontal accuracy of the fix, in meters at a 95% confidence level.
+      This is required unless the request specified a valid location object, i.e. a request for a reverse-geocode of a known position.
+    </td>
     <td class="requiredColumn">No</td>
     <td class="typeColumn">double</td>
   </tr>
