@@ -39,6 +39,8 @@
 #include "gears/desktop/file_dialog_osx.h"
 #elif defined(LINUX)
 #include "gears/desktop/file_dialog_gtk.h"
+#elif defined(OS_ANDROID)
+#include "gears/desktop/file_dialog_android.h"
 #endif
 
 namespace {
@@ -98,6 +100,8 @@ FileDialog* FileDialog::Create(ModuleEnvironment* module_environment) {
   FileDialog* dialog = new FileDialogCarbon;
 #elif defined(LINUX)
   FileDialog* dialog = new FileDialogGtk;
+#elif defined(OS_ANDROID)
+  FileDialog* dialog = new FileDialogAndroid;
 #else
   FileDialog* dialog = NULL;
 #endif

@@ -1464,6 +1464,7 @@ $(BROWSER)_CPPSRCS += \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_win32.cc \
+		file_dialog_android.cc \
 		$(NULL)
 
 # The browser module also needs these files, to communicate with the notifier.
