@@ -1481,6 +1481,17 @@ $(BROWSER)_CPPSRCS += \
 		notification.cc \
 		$(NULL)
 
+CHROME_CPPSRCS	+= \
+		desktop_cr.cc \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+# The Drag-and-Drop API has not been finalized for official builds.
+else
+$(BROWSER)_CPPSRCS += \
+		drag_and_drop_utils_common.cc \
+		$(NULL)
+
 FF3_CPPSRCS += \
 		drag_and_drop_utils_ff.cc \
 		drop_target_ff.cc \
@@ -1491,13 +1502,6 @@ IE_CPPSRCS += \
 		drop_target_ie.cc \
 		$(NULL)
 
-CHROME_CPPSRCS	+= \
-		desktop_cr.cc \
-		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-# The Drag-and-Drop API has not been finalized for official builds.
-else
 SF_CPPSRCS += \
 		drag_and_drop_utils_sf.mm \
 		drop_target_sf.cc \

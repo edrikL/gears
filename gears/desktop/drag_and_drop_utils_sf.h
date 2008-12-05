@@ -49,9 +49,9 @@
 // actually swizzle.
 bool SwizzleWebViewMethods();
 
-bool GetDroppedFiles(ModuleEnvironment *module_environment,
-                     JsArray *files_out,
-                     std::string16 *error_out);
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            JsObject *data_out,
+                            std::string16 *error_out);
 
 // These two are mutually exclusive (although they may be both false) -
 // "in a drag" means dragenter, dragover or dragleave, but not drop.
