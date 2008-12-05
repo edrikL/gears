@@ -95,6 +95,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>Provides a way to obtain a user's geographical position.</p>
 <pre><code><a href="api_geolocation.html#geolocation">Geolocation class</a> 
    readonly attribute Position <b>lastPosition</b>
+   readonly attribute boolean <b>hasPermission</b>
    void    <b>getCurrentPosition</b>(successCallback, [errorCallback], [options])
    int     <b>watchPosition</b>(successCallback, [errorCallback], [options])
    void    <b>clearWatch</b>(int watchId)
@@ -111,11 +112,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
    readwrite attribute bool     <b>enableHighAccuracy</b>
+   readwrite attribute int      <b>timeout</b>
    readwrite attribute bool     <b>gearsRequestAddress</b>
    readwrite attribute string   <b>gearsAddressLanguage</b>
    readwrite attribute string[] <b>gearsLocationProviderUrls</b></code></pre>
 
 <pre><code><a href="api_geolocation.html#positionerror">PositionError class</a>
+   readonly attribute int    <b>UNKNOWN_ERROR</b>
+   readonly attribute int    <b>PERMISSION_DENIED</b>
+   readonly attribute int    <b>POSITION_UNAVAILABLE</b>
+   readonly attribute int    <b>TIMEOUT</b>
    readonly attribute int    <b>code</b>
    readonly attribute string <b>message</b></code></pre>
 
