@@ -38,6 +38,12 @@
 static FileDragAndDropMetaData *g_file_drag_and_drop_meta_data = NULL;
 static bool g_is_in_a_drag_operation = false;
 static bool g_is_in_a_drop_operation = false;
+// The next two variables are for when the page's JavaScript explicitly
+// accepts or rejects the drag, via desktop.acceptDrag(..., bool).
+// In either case, g_drag_operation_has_been_set becomes true, and
+// g_drag_operation takes NSDragOperationCopy or NSDragOperationNone.
+static bool g_drag_operation_has_been_set = false;
+static NSDragOperation g_drag_operation = NSDragOperationNone;
 
 bool IsInADragOperation() {
   return g_is_in_a_drag_operation;
@@ -153,24 +159,27 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
   }
 
   g_is_in_a_drag_operation = true;
+  g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingEntered:draggingInfo];
   g_is_in_a_drag_operation = false;
-  return result;
+  return g_drag_operation_has_been_set ? g_drag_operation : result;
 }
 
 - (NSDragOperation)swizzledDraggingUpdated:(id <NSDraggingInfo>)draggingInfo {
   g_is_in_a_drag_operation = true;
+  g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingUpdated:draggingInfo];
   g_is_in_a_drag_operation = false;
-  return result;
+  return g_drag_operation_has_been_set ? g_drag_operation : result;
 }
 
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo {
   g_is_in_a_drag_operation = true;
+  g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingExited:draggingInfo];
   g_file_drag_and_drop_meta_data->Reset();
   g_is_in_a_drag_operation = false;
-  return result;
+  return g_drag_operation_has_been_set ? g_drag_operation : result;
 }
 
 - (BOOL)swizzledPerformDragOperation:(id <NSDraggingInfo>)draggingInfo {
@@ -220,8 +229,8 @@ void AcceptDrag(ModuleEnvironment *module_environment,
     return;
   }
   event->SetPropertyBool(STRING16(L"returnValue"), false);
-  // TODO(nigeltao): Set the cursor to copy or none, depending on the value
-  // of acceptance.
+  g_drag_operation_has_been_set = true;
+  g_drag_operation = acceptance ? NSDragOperationCopy : NSDragOperationNone;
 }
 
 void GetDragData(ModuleEnvironment *module_environment,
