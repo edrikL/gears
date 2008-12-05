@@ -147,7 +147,10 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
     }
   }
 
-  return [self swizzledDraggingEntered:draggingInfo];
+  g_is_in_a_drag_operation = true;
+  NSDragOperation result = [self swizzledDraggingEntered:draggingInfo];
+  g_is_in_a_drag_operation = false;
+  return result;
 }
 
 - (NSDragOperation)swizzledDraggingUpdated:(id <NSDraggingInfo>)draggingInfo {
@@ -158,8 +161,11 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 }
 
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo {
+  g_is_in_a_drag_operation = true;
+  NSDragOperation result = [self swizzledDraggingExited:draggingInfo];
   g_dragging_pasteboard_filenames.clear();
-  return [self swizzledDraggingExited:draggingInfo];
+  g_is_in_a_drag_operation = false;
+  return result;
 }
 
 - (BOOL)swizzledPerformDragOperation:(id <NSDraggingInfo>)draggingInfo {
@@ -203,9 +209,17 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
+                bool acceptance,
                 std::string16 *error_out) {
-  // TODO(nigeltao): port the following JavaScript to Objective-C / NPAPI.
-  // evt.preventDefault();
+  // As per GetDragData below, we rely on our IsInAXxxxOperation tests to tell
+  // whether or not we are called during a user drag and drop action.
+  if (!IsInADragOperation() && !IsInADropOperation()) {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+  event->SetPropertyBool(STRING16(L"returnValue"), false);
+  // TODO(nigeltao): Set the cursor to copy or none, depending on the value
+  // of acceptance.
 }
 
 void GetDragData(ModuleEnvironment *module_environment,

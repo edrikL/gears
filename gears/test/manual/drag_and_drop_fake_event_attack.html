@@ -76,13 +76,7 @@ function handler(isDrop, isDragEnterOrDragOver) {
       }
       document.getElementById('dropOutput').innerHTML = s;
     }
-    // TODO(nigeltao): replace all of these browser-specific quirks with
-    // desktop.acceptDrag(evt, true);
-    if (isFirefox || isIE) {
-      desktop.acceptDrag(evt, true);
-    } else if (isSafari) {
-      evt.preventDefault();
-    }
+    desktop.acceptDrag(evt, true);
   };
 }
 
