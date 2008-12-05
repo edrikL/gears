@@ -220,14 +220,10 @@ bool DropTarget::HandleDragAndDropEvent(JsObject *event,
   scoped_ptr<JsObject> context_object(
       module_environment_->js_runner_->NewObject());
   context_object->SetPropertyObject(STRING16(L"event"), event);
-  if (type == HTML_EVENT_TYPE_DROP) {
-    scoped_ptr<JsArray> file_array(
-        module_environment_->js_runner_->NewArray());
-    std::string16 ignored;
-    if (GetDroppedFiles(module_environment_.get(), file_array.get(),
-                        &ignored)) {
-      context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
-    }
+  std::string16 ignored;
+  if (!AddFileDragAndDropData(
+          module_environment_.get(), context_object.get(), &ignored)) {
+    return false;
   }
   InvokeCallback(callback, context_object.get());
   return true;

@@ -39,6 +39,10 @@
 #elif defined(WIN32) && !defined(OS_WINCE)
 #include <shlwapi.h>
 #include <windows.h>
+
+#elif defined(OS_MACOSX)
+#include "gears/base/common/string_utils_osx.h"
+#include "gears/base/safari/scoped_cf.h"
 #endif
 
 
@@ -92,6 +96,24 @@ std::string16 DetectMimeTypeOfFile(const std::string16 &filename) {
   std::string16 result(mime_type);
   CoTaskMemFree(mime_type);
   return result;
+
+#elif defined(OS_MACOSX)
+  const char16 *file_extension_ptr = File::GetFileExtension(filename.c_str());
+  if (*file_extension_ptr == static_cast<char16>(0)) {
+    return kDefaultMimeType;
+  }
+  // The +1 is to strip the leading ".", since the UTxxx API expects the
+  // extension to be something like "jpeg" instead of ".jpeg".
+  std::string16 file_extension(file_extension_ptr + 1);
+  scoped_cftype<CFStringRef> file_extension_cfstr(CFStringCreateWithString16(
+      file_extension.c_str()));
+  scoped_cftype<CFStringRef> uti(UTTypeCreatePreferredIdentifierForTag(
+      kUTTagClassFilenameExtension, file_extension_cfstr.get(), NULL));
+  scoped_cftype<CFStringRef> mime_cfstr(UTTypeCopyPreferredTagWithClass(
+      uti.get(), kUTTagClassMIMEType));
+  std::string16 result;
+  CFStringRefToString16(mime_cfstr.get(), &result);
+  return result.empty() ? kDefaultMimeType : result;
 
 #else
   return kDefaultMimeType;

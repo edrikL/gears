@@ -27,15 +27,15 @@
 #import <WebKit/DOM.h>
 #import <WebKit/WebView.h>
 #import <objc/objc-class.h>
-#import <vector>
 
 #import "gears/desktop/drag_and_drop_utils_sf.h"
 
 #import "gears/base/common/common.h"
 #import "gears/base/safari/nsstring_utils.h"
+#import "gears/desktop/drag_and_drop_utils_common.h"
 #import "gears/desktop/file_dialog.h"
 
-static std::vector<std::string16> g_dragging_pasteboard_filenames;
+static FileDragAndDropMetaData *g_file_drag_and_drop_meta_data = NULL;
 static bool g_is_in_a_drag_operation = false;
 static bool g_is_in_a_drop_operation = false;
 
@@ -115,7 +115,10 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 @implementation WebView (GearsSwizzledMethods)
 
 - (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo {
-  assert(g_dragging_pasteboard_filenames.empty());
+  if (!g_file_drag_and_drop_meta_data) {
+    g_file_drag_and_drop_meta_data = new FileDragAndDropMetaData;
+  }
+  assert(g_file_drag_and_drop_meta_data->IsEmpty());
 
   // In Safari, arbitrary web pages can put on the pasteboard during an ondrag
   // event, simply by calling window.event.dataTransfer.setData('URL',
@@ -134,6 +137,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
       ([draggingInfo draggingSource] == nil);
 
   if (is_drag_from_another_application) {
+    std::vector<std::string16> filenames;
     NSPasteboard *pboard = [draggingInfo draggingPasteboard];
     if ([[pboard types] containsObject:NSFilenamesPboardType]) {
       NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
@@ -142,9 +146,10 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
       while ((ns_string = [enumerator nextObject])) {
         std::string16 std_string;
         ResolveAlias(ns_string, &std_string);
-        g_dragging_pasteboard_filenames.push_back(std_string);
+        filenames.push_back(std_string);
       }
     }
+    g_file_drag_and_drop_meta_data->SetFilenames(filenames);
   }
 
   g_is_in_a_drag_operation = true;
@@ -163,7 +168,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo {
   g_is_in_a_drag_operation = true;
   NSDragOperation result = [self swizzledDraggingExited:draggingInfo];
-  g_dragging_pasteboard_filenames.clear();
+  g_file_drag_and_drop_meta_data->Reset();
   g_is_in_a_drag_operation = false;
   return result;
 }
@@ -171,7 +176,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 - (BOOL)swizzledPerformDragOperation:(id <NSDraggingInfo>)draggingInfo {
   g_is_in_a_drop_operation = true;
   BOOL result = [self swizzledPerformDragOperation:draggingInfo];
-  g_dragging_pasteboard_filenames.clear();
+  g_file_drag_and_drop_meta_data->Reset();
   g_is_in_a_drop_operation = false;
   return result;
 }
@@ -197,14 +202,11 @@ bool SwizzleWebViewMethods() {
   return true;
 }
 
-bool GetDroppedFiles(ModuleEnvironment *module_environment,
-                     JsArray *files_out,
-                     std::string16 *error_out) {
-  return FileDialog::FilesToJsObjectArray(
-      g_dragging_pasteboard_filenames,
-      module_environment,
-      files_out,
-      error_out);
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            JsObject *data_out,
+                            std::string16 *error_out) {
+  return g_file_drag_and_drop_meta_data->ToJsObject(
+      module_environment, IsInADropOperation(), data_out, error_out);
 };
 
 void AcceptDrag(ModuleEnvironment *module_environment,
@@ -236,17 +238,7 @@ void GetDragData(ModuleEnvironment *module_environment,
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
-
-  if (IsInADropOperation()) {
-    scoped_ptr<JsArray> file_array(
-        module_environment->js_runner_->NewArray());
-    if (!GetDroppedFiles(module_environment, file_array.get(), error_out)) {
-      return;
-    }
-    data_out->SetPropertyArray(STRING16(L"files"), file_array.get());
+  if (!AddFileDragAndDropData(module_environment, data_out, error_out)) {
+    assert(!error_out->empty());
   }
-
-  // TODO(nigeltao): For all DnD events (including the non-drop events
-  // dragenter and dragover), we still should provide (1) MIME types,
-  // (2) file extensions, (3) total file size, and (4) file count.
 }
