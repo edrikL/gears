@@ -299,23 +299,6 @@ void AcceptDrag(ModuleEnvironment *module_environment,
 }
 
 
-static void JsObjectSetPropertyStringArray(
-    ModuleEnvironment *module_environment,
-    JsObject *data_out,
-    const char16 *property_key,
-    std::set<std::string16> &strings) {
-  scoped_ptr<JsArray> array(module_environment->js_runner_->NewArray());
-  int i = 0;
-  for (std::set<std::string16>::iterator iter = strings.begin();
-       iter != strings.end();
-       ++iter) {
-    // TODO(nigeltao): Should we skip over empty string values?
-    array->SetElementString(i++, *iter);
-  }
-  data_out->SetPropertyArray(property_key, array.get());
-}
-
-
 void GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,
                  JsObject *data_out,
@@ -353,59 +336,40 @@ void GetDragData(ModuleEnvironment *module_environment,
   // drag session ends and a new one begins, which might not be trivial if
   // you get the same nsIDragSession pointer (since it's just the singleton
   // DragService that's been QueryInterface'd) for two separate sessions.
-  std::vector<std::string16> filenames;
-  std::set<std::string16> file_extensions;
-  std::set<std::string16> file_mime_types;
-  int64 file_total_bytes = 0;
-  if (!GetDroppedFiles(module_environment,
-                       drag_session.get(),
-                       &filenames,
-                       &file_extensions,
-                       &file_mime_types,
-                       &file_total_bytes)) {
-    // If GetDroppedFiles fails, then GetDroppedFiles may have added partial
-    // results to the filenames vector, and other accumulators, which we
-    // should clear out.
-    // TODO(nigeltao): Should we throw an error here, or just happily return
-    // empty? How should we behave if the user drags and drops Text or a URL?
-    filenames.clear();
-    file_extensions.clear();
-    file_mime_types.clear();
-    file_total_bytes = 0;
-  }
-
-  data_out->SetPropertyInt(STRING16(L"fileCount"), filenames.size());
-  data_out->SetPropertyDouble(STRING16(L"fileTotalBytes"),
-                              static_cast<double>(file_total_bytes));
-  JsObjectSetPropertyStringArray(module_environment, data_out,
-                                 STRING16(L"fileExtensions"), file_extensions);
-  JsObjectSetPropertyStringArray(module_environment, data_out,
-                                 STRING16(L"fileMimeTypes"), file_mime_types);
-
-  if (type == DRAG_AND_DROP_EVENT_DROP) {
-    scoped_ptr<JsArray> file_array(
-        module_environment->js_runner_->NewArray());
-    if (!FileDialog::FilesToJsObjectArray(filenames, module_environment,
-                                          file_array.get(), error_out)) {
-      // FilesToJsObjectArray will set error_out.
-      return;
-    }
-    data_out->SetPropertyArray(STRING16(L"files"), file_array.get());
+  if (!AddFileDragAndDropData(module_environment,
+                              drag_session.get(),
+                              type == DRAG_AND_DROP_EVENT_DROP,
+                              data_out,
+                              error_out)) {
+    assert(!error_out->empty());
   }
 }
 
 
-bool GetDroppedFiles(
-    ModuleEnvironment *module_environment,
-    nsIDragSession *drag_session,
-    std::vector<std::string16> *filenames_out,
-    std::set<std::string16> *file_extensions_out,
-    std::set<std::string16> *file_mime_types_out,
-    int64 *file_total_bytes_out) {
-  filenames_out->clear();
-  file_extensions_out->clear();
-  file_mime_types_out->clear();
-  *file_total_bytes_out = 0;
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            nsIDragSession *drag_session,
+                            bool is_in_a_drop,
+                            JsObject *data_out,
+                            std::string16 *error_out) {
+  if (!is_in_a_drop) {
+    // TODO(nigeltao): On Firefox2 / GTK / Linux, nsIDragSession->GetData
+    // is only valid during dragover and drop events, and not during dragenter
+    // dragleave events, since it is only during the first two events that
+    // Gecko calls dragSessionGTK->TargetSetLastContext with a valid GTK
+    // widget, in widget/src/gtk2/nsWindow.cpp.
+    //
+    // Thus, we return early, for non-drop events, to avoid a "Gtk-CRITICAL **:
+    // gtk_drag_get_data: assertion `GTK_IS_WIDGET (widget)' failed" error
+    // when calling nsIDragSession->GetNumDropItems.
+    //
+    // However, to be consistent with the other browsers / OSes, we should
+    // provide aggregate file drag and drop data during dragenter, which
+    // might mean that we (Gears) have to bypass Gecko's allegedly cross-
+    // platform nsIDragSession interface and go lower down into OS-level
+    // (e.g. Win32 or GTK) drag and drop APIs.
+    return true;
+  }
+
 #if defined(LINUX) && !defined(OS_MACOSX)
   // Although Firefox's underlying XPCOM widget library aims to present a
   // consistent cross-platform interface, there are still significant
@@ -428,6 +392,7 @@ bool GetDroppedFiles(
   nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
   if (NS_FAILED(nr) || num_drop_items <= 0) { return false; }
 
+  std::vector<std::string16> filenames;
   for (int i = 0; i < static_cast<int>(num_drop_items); i++) {
     nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &nr);
@@ -454,9 +419,6 @@ bool GetDroppedFiles(
     if (NS_FAILED(nr)) { return false; }
     nsString filename;
     nr = file->GetPath(filename);
-    if (NS_FAILED(nr)) { return false; }
-    PRInt64 file_size = 0;
-    nr = file->GetFileSize(&file_size);
     if (NS_FAILED(nr)) { return false; }
 #else
     nsCOMPtr<nsIFile> file(do_QueryInterface(data));
@@ -486,23 +448,12 @@ bool GetDroppedFiles(
       nr = local_file->GetPath(filename);
     }
     if (NS_FAILED(nr)) { return false; }
-    // TODO(nigeltao): Check that this gets the size of the link target,
-    // in the case of .lnk (Windows) or alias (OSX) files.
-    PRInt64 file_size = 0;
-    nr = local_file->GetFileSize(&file_size);
-    if (NS_FAILED(nr)) { return false; }
 #endif
 
-    filenames_out->push_back(std::string16(filename.get()));
-    // TODO(nigeltao): Decide whether we should insert ".txt" or "txt" -
-    // that is, does the file extension include the dot at the start.
-    file_extensions_out->insert(File::GetFileExtension(filename.get()));
-    // TODO(nigeltao): Should we also keep an array of per-file MIME types,
-    // not just the overall set of MIME types. If so, the mimeType should
-    // probably be a property of the file JavaScript object (i.e. the thing
-    // with a name and blob property), not a separate array to the files array.
-    file_mime_types_out->insert(DetectMimeTypeOfFile(filename.get()));
-    *file_total_bytes_out += file_size;
+    filenames.push_back(std::string16(filename.get()));
   }
-  return true;
+  FileDragAndDropMetaData file_drag_and_drop_meta_data;
+  file_drag_and_drop_meta_data.SetFilenames(filenames);
+  return file_drag_and_drop_meta_data.ToJsObject(
+      module_environment, is_in_a_drop, data_out, error_out);
 }
