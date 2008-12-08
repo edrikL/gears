@@ -232,7 +232,7 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   AddEventToJsObject(context_object.get(), event);
   if (!AddFileDragAndDropData(module_environment_.get(),
                               drag_session.get(),
-                              event_type.Equals(kDragDropAsString),
+                              event_type.Equals(kDragDropAsString) == PR_TRUE,
                               context_object.get(),
                               &ignored)) {
     return NS_ERROR_FAILURE;
