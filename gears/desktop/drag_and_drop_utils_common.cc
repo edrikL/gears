@@ -68,7 +68,14 @@ void FileDragAndDropMetaData::SetFilenames(
   for (std::vector<std::string16>::iterator i = filenames_.begin();
        i != filenames_.end(); ++i) {
     std::string16 &filename = *i;
+    // TODO(nigeltao): Should we also keep an array of per-file MIME types,
+    // not just the overall set of MIME types? If so, the mimeType should
+    // probably be a property of the file JavaScript object (i.e. the thing
+    // with a name and blob property), not a separate array to the files array.
     mime_types_.insert(DetectMimeTypeOfFile(filename));
+    // TODO(nigeltao): Decide whether we should insert ".txt" or "txt" -
+    // that is, does the file extension include the dot at the start.
+    // We should do whatever desktop.openFiles does.
     std::string16 extension(File::GetFileExtension(filename.c_str()));
     if (!extension.empty()) {
       extensions_.insert(extension);

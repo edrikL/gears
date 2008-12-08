@@ -216,6 +216,9 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsCOMPtr<nsIDragService> drag_service =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!drag_service) { return NS_ERROR_FAILURE; }
+  // TODO(nigeltao): Do we have to do the Firefox2/Linux workaround of
+  // explicitly calling drag_service->StartDragSession(), just like we do in
+  // drag_and_drop_utils_ff.cc's GetDragAndDropEventType.
   nsCOMPtr<nsIDragSession> drag_session;
   nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
   if (NS_FAILED(nr) || !drag_session.get()) { return NS_ERROR_FAILURE; }
@@ -223,40 +226,22 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsString event_type;
   event->GetType(event_type);
 
+  std::string16 ignored;
+  scoped_ptr<JsObject> context_object(
+      module_environment_->js_runner_->NewObject());
+  AddEventToJsObject(context_object.get(), event);
+  if (!AddFileDragAndDropData(module_environment_.get(),
+                              drag_session.get(),
+                              event_type.Equals(kDragDropAsString),
+                              context_object.get(),
+                              &ignored)) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
     ProvideDebugVisualFeedback(false);
     if (will_accept_drop_) {
       will_accept_drop_ = false;
-      std::vector<std::string16> filenames;
-      std::set<std::string16> file_extensions;
-      std::set<std::string16> file_mime_types;
-      int64 file_total_bytes;
-      // TODO(nigeltao): We should call GetDroppedFiles (and provide the
-      // aggregate file metadata) during dragenter, dragover and dragleave,
-      // not just during drop.
-      if (!GetDroppedFiles(module_environment_.get(),
-                           drag_session.get(),
-                           &filenames,
-                           &file_extensions,
-                           &file_mime_types,
-                           &file_total_bytes)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      scoped_ptr<JsObject> context_object(
-          module_environment_->js_runner_->NewObject());
-      scoped_ptr<JsArray> file_array(
-          module_environment_->js_runner_->NewArray());
-      std::string16 ignored;
-      if (!FileDialog::FilesToJsObjectArray(filenames,
-                                            module_environment_.get(),
-                                            file_array.get(),
-                                            &ignored)) {
-        return NS_ERROR_FAILURE;
-      }
-      context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
-      AddEventToJsObject(context_object.get(), event);
-
       // Prevent the default browser behavior of navigating away from the
       // current page to the file being dropped.
       event->StopPropagation();
@@ -285,9 +270,6 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
       is_drag_exit = true;
     }
     if (callback) {
-      scoped_ptr<JsObject> context_object(
-          module_environment_->js_runner_->NewObject());
-      AddEventToJsObject(context_object.get(), event);
       const int argc = 1;
       JsParamToSend argv[argc] = {
         { JSPARAM_OBJECT, context_object.get() }

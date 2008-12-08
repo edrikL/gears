@@ -33,12 +33,11 @@
 
 class nsIDragSession;
 
-bool GetDroppedFiles(ModuleEnvironment *module_environment,
-                     nsIDragSession *drag_session,
-                     std::vector<std::string16> *filenames_out,
-                     std::set<std::string16> *file_extensions_out,
-                     std::set<std::string16> *file_mime_types_out,
-                     int64 *file_total_bytes_out);
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            nsIDragSession *drag_session,
+                            bool is_in_a_drop,
+                            JsObject *data_out,
+                            std::string16 *error_out);
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
