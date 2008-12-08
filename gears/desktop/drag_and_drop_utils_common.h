@@ -30,6 +30,14 @@
 #include <vector>
 #include "gears/base/common/js_types.h"
 
+enum DragAndDropEventType {
+  DRAG_AND_DROP_EVENT_DRAGENTER,
+  DRAG_AND_DROP_EVENT_DRAGOVER,
+  DRAG_AND_DROP_EVENT_DRAGLEAVE,
+  DRAG_AND_DROP_EVENT_DROP,
+  DRAG_AND_DROP_EVENT_INVALID
+};
+
 class FileDragAndDropMetaData {
  public:
   FileDragAndDropMetaData();

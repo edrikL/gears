@@ -166,6 +166,12 @@ HRESULT DropTarget::HandleOnDragEnter()
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
+    std::string16 error;
+    AddFileDragAndDropData(module_environment_.get(), false,
+                           context_object.get(), &error);
+    if (!error.empty()) {
+      return E_FAIL;
+    }
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -202,6 +208,12 @@ HRESULT DropTarget::HandleOnDragOver()
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
+    std::string16 error;
+    AddFileDragAndDropData(module_environment_.get(), false,
+                           context_object.get(), &error);
+    if (!error.empty()) {
+      return E_FAIL;
+    }
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -234,6 +246,12 @@ HRESULT DropTarget::HandleOnDragLeave()
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
+    std::string16 error;
+    AddFileDragAndDropData(module_environment_.get(), false,
+                           context_object.get(), &error);
+    if (!error.empty()) {
+      return E_FAIL;
+    }
     const int argc = 1;
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT, context_object.get() }
@@ -255,17 +273,15 @@ HRESULT DropTarget::HandleOnDragDrop()
   will_accept_drop_ = false;
 
   if (on_drop_.get()) {
-    std::string16 error;
-    scoped_ptr<JsArray> file_array(
-        module_environment_->js_runner_->NewArray());
-    if (!GetDroppedFiles(module_environment_.get(), file_array.get(), &error)) {
-      return E_FAIL;
-    }
-
     scoped_ptr<JsObject> context_object(
         module_environment_->js_runner_->NewObject());
-    context_object->SetPropertyArray(STRING16(L"files"), file_array.get());
     AddEventToJsObject(context_object.get());
+    std::string16 error;
+    AddFileDragAndDropData(module_environment_.get(), true,
+                           context_object.get(), &error);
+    if (!error.empty()) {
+      return E_FAIL;
+    }
 
     const int argc = 1;
     JsParamToSend argv[argc] = {

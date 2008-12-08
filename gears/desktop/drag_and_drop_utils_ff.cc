@@ -41,6 +41,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/mime_detect.h"
 #include "gears/base/firefox/ns_file_utils.h"
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -104,15 +105,6 @@ static bool PointerIsOnTheStack(void *candidate,
   return true;
 #endif
 }
-
-
-enum DragAndDropEventType {
-  DRAG_AND_DROP_EVENT_DRAGENTER,
-  DRAG_AND_DROP_EVENT_DRAGOVER,
-  DRAG_AND_DROP_EVENT_DRAGLEAVE,
-  DRAG_AND_DROP_EVENT_DROP,
-  DRAG_AND_DROP_EVENT_INVALID
-};
 
 
 // Note that some Mozilla event names differ from the HTML5 standard event

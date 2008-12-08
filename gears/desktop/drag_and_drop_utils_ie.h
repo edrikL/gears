@@ -33,9 +33,10 @@ HRESULT GetHtmlDataTransfer(
     CComPtr<IHTMLEventObj> &html_event_obj,
     CComPtr<IHTMLDataTransfer> &html_data_transfer);
 
-bool GetDroppedFiles(ModuleEnvironment *module_environment,
-                     JsArray *files_out,
-                     std::string16 *error_out);
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            bool is_in_a_drop,
+                            JsObject *data_out,
+                            std::string16 *error_out);
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,

@@ -37,6 +37,7 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 
 #include "gears/base/ie/activex_utils.h"
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -81,9 +82,10 @@ HRESULT GetHtmlDataTransfer(
 }
 
 
-bool GetDroppedFiles(ModuleEnvironment *module_environment,
-                     JsArray *files_out,
-                     std::string16 *error_out) {
+bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
+                            bool is_in_a_drop,
+                            JsObject *data_out,
+                            std::string16 *error_out) {
   CComPtr<IHTMLWindow2> html_window_2;
   if (FAILED(ActiveXUtils::GetHtmlWindow2(
           module_environment->iunknown_site_, &html_window_2))) {
@@ -105,48 +107,49 @@ bool GetDroppedFiles(ModuleEnvironment *module_environment,
       IID_IDataObject, &data_object);
   if (FAILED(hr)) return false;
 
+  std::vector<std::string16> filenames;
   FORMATETC desired_format_etc =
     { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
   STGMEDIUM stg_medium;
   hr = data_object->GetData(&desired_format_etc, &stg_medium);
-  if (FAILED(hr)) return false;
+  if (SUCCEEDED(hr)) {
+    HDROP hdrop = static_cast<HDROP>(GlobalLock(stg_medium.hGlobal));
+    if (hdrop == NULL) {
+      ReleaseStgMedium(&stg_medium);
+      return false;
+    }
 
-  HDROP hdrop = static_cast<HDROP>(GlobalLock(stg_medium.hGlobal));
-  if (hdrop == NULL) {
+    UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
+    TCHAR buffer[MAX_PATH + 1];
+    for (UINT i = 0; i < num_files; i++) {
+      DragQueryFile(hdrop, i, buffer, sizeof(buffer));
+      SHFILEINFO sh_file_info;
+      if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
+                         SHGFI_ATTRIBUTES) ||
+          !(sh_file_info.dwAttributes & SFGAO_FILESYSTEM) ||
+          (sh_file_info.dwAttributes & SFGAO_FOLDER)) {
+        continue;
+      }
+      if ((sh_file_info.dwAttributes & SFGAO_LINK) &&
+          FAILED(ResolveShortcut(buffer))) {
+        continue;
+      }
+      filenames.push_back(std::string16(buffer));
+    }
+
+    GlobalUnlock(stg_medium.hGlobal);
     ReleaseStgMedium(&stg_medium);
-    return false;
   }
 
-  std::vector<std::string16> filenames;
-  UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
-  TCHAR buffer[MAX_PATH + 1];
-  for (UINT i = 0; i < num_files; i++) {
-    DragQueryFile(hdrop, i, buffer, sizeof(buffer));
-    SHFILEINFO sh_file_info;
-    if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
-                       SHGFI_ATTRIBUTES) ||
-        !(sh_file_info.dwAttributes & SFGAO_FILESYSTEM) ||
-        (sh_file_info.dwAttributes & SFGAO_FOLDER)) {
-      continue;
-    }
-    if ((sh_file_info.dwAttributes & SFGAO_LINK) &&
-        FAILED(ResolveShortcut(buffer))) {
-      continue;
-    }
-    filenames.push_back(std::string16(buffer));
-  }
-
-  GlobalUnlock(stg_medium.hGlobal);
-  ReleaseStgMedium(&stg_medium);
-
-  return FileDialog::FilesToJsObjectArray(
-      filenames, module_environment, files_out, error_out);
+  FileDragAndDropMetaData meta_data;
+  meta_data.SetFilenames(filenames);
+  return meta_data.ToJsObject(
+      module_environment, is_in_a_drop, data_out, error_out);
 }
 
 
-bool GetWindowEvent(ModuleEnvironment *module_environment,
-                    CComPtr<IHTMLEventObj> &window_event,
-                    CComBSTR &type) {
+DragAndDropEventType GetWindowEvent(ModuleEnvironment *module_environment,
+                                    CComPtr<IHTMLEventObj> &window_event) {
   // We ignore event_as_js_object, since Gears can access the IHTMLWindow2
   // and its IHTMLEventObj directly, via COM, and that seems more trustworthy
   // than event_as_js_object, which is supplied by (potentially malicious)
@@ -155,10 +158,28 @@ bool GetWindowEvent(ModuleEnvironment *module_environment,
   // IHTMLWindow2::get_event (different in that, querying both for their
   // IUnknown's gives different pointers).
   CComPtr<IHTMLWindow2> window;
-  return SUCCEEDED(ActiveXUtils::GetHtmlWindow2(
-          module_environment->iunknown_site_, &window)) &&
-      SUCCEEDED(window->get_event(&window_event)) &&
-      SUCCEEDED(window_event->get_type(&type));
+  CComBSTR type;
+  if (FAILED(ActiveXUtils::GetHtmlWindow2(
+          module_environment->iunknown_site_, &window)) ||
+      FAILED(window->get_event(&window_event)) ||
+      FAILED(window_event->get_type(&type))) {
+    // If we get here, then there is no window.event, so we are not in
+    // the browser's event dispatch.
+    return DRAG_AND_DROP_EVENT_INVALID;
+  }
+
+  if (type == CComBSTR(L"dragover")) {
+    return DRAG_AND_DROP_EVENT_DRAGOVER;
+  } else if (type == CComBSTR(L"dragenter")) {
+    return DRAG_AND_DROP_EVENT_DRAGENTER;
+  } else if (type == CComBSTR(L"dragleave")) {
+    return DRAG_AND_DROP_EVENT_DRAGLEAVE;
+  } else if (type == CComBSTR(L"drop")) {
+    return DRAG_AND_DROP_EVENT_DROP;
+  }
+  // If we get here, then we are in a non drag-and-drop event, such as a
+  // keypress event.
+  return DRAG_AND_DROP_EVENT_INVALID;
 }
 
 
@@ -167,21 +188,13 @@ void AcceptDrag(ModuleEnvironment *module_environment,
                 bool acceptance,
                 std::string16 *error_out) {
   CComPtr<IHTMLEventObj> window_event;
-  CComBSTR type;
-  if (!GetWindowEvent(module_environment, window_event, type)) {
-    // If we get here, then there is no window.event, so we are not in
-    // the browser's event dispatch.
+  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
+  if (type == DRAG_AND_DROP_EVENT_INVALID) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
 
-  if (type == CComBSTR(L"drop")) {
-    // Do nothing.
-    return;
-
-  } else if (type == CComBSTR(L"dragover") ||
-             type == CComBSTR(L"dragenter") ||
-             type == CComBSTR(L"dragleave")) {
+  if (type != DRAG_AND_DROP_EVENT_DROP) {
     CComQIPtr<IHTMLEventObj2> window_event2(window_event);
     CComPtr<IHTMLDataTransfer> data_transfer;
     if (!window_event2 ||
@@ -192,11 +205,6 @@ void AcceptDrag(ModuleEnvironment *module_environment,
       *error_out = GET_INTERNAL_ERROR_MESSAGE();
       return;
     }
-    return;
-
-  } else {
-    *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
   }
 }
 
@@ -206,34 +214,17 @@ void GetDragData(ModuleEnvironment *module_environment,
                  JsObject *data_out,
                  std::string16 *error_out) {
   CComPtr<IHTMLEventObj> window_event;
-  CComBSTR type;
-  if (!GetWindowEvent(module_environment, window_event, type)) {
-    // If we get here, then there is no window.event, so we are not in
-    // the browser's event dispatch.
+  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
+  if (type == DRAG_AND_DROP_EVENT_INVALID) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
 
-  if (type == CComBSTR(L"drop")) {
-    scoped_ptr<JsArray> file_array(
-        module_environment->js_runner_->NewArray());
-    if (!GetDroppedFiles(module_environment, file_array.get(), error_out)) {
-      return;
-    }
-    data_out->SetPropertyArray(STRING16(L"files"), file_array.get());
-    return;
-
-  } else if (type == CComBSTR(L"dragover") ||
-             type == CComBSTR(L"dragenter") ||
-             type == CComBSTR(L"dragleave")) {
-    // TODO(nigeltao): For all DnD events (including the non-drop events
-    // dragenter and dragover), we still should provide (1) MIME types,
-    // (2) file extensions, (3) total file size, and (4) file count.
-    return;
-
-  } else {
-    *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
+  if (!AddFileDragAndDropData(module_environment,
+                              type == DRAG_AND_DROP_EVENT_DROP,
+                              data_out,
+                              error_out)) {
+    assert(!error_out->empty());
   }
 }
 
