@@ -1,6 +1,6 @@
-// Copyright 2007, Google Inc.
-//
-// Redistribution and use in source and binary forms, with or without 
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 // modification, are permitted provided that the following conditions are met:
 //
 //  1. Redistributions of source code must retain the above copyright notice, 

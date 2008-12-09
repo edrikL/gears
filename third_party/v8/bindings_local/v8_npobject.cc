@@ -1,4 +1,31 @@
-// Copyright (2007) Google Inc. All Rights Reserved.
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Forked with few modifications from:
 // https://svn/chrome/trunk/webkit/port/bindings/v8/v8_npobject.cpp@16743
@@ -30,9 +57,14 @@ enum InvokeFunctionType {
 // Params: holder could be HTMLEmbedElement or NPObject
 static v8::Handle<v8::Value> NPObjectInvokeImpl(
     const v8::Arguments& args, InvokeFunctionType func_id) {
-   ASSERT(args.Holder()->InternalFieldCount() == 3);
+  if (args.Holder()->InternalFieldCount() != 3) {
+    V8Proxy::ThrowError(V8Proxy::REFERENCE_ERROR,
+                        "NPMethod called on non-NPObject");
+    return v8::Undefined();
+  }
   NPObject* npobject = V8Proxy::ToNativeObject<NPObject>(V8ClassIndex::NPOBJECT,
                                                          args.Holder());
+
   // Verify that our wrapper wasn't using a NPObject which
   // has already been deleted.
   if (!npobject || !_NPN_IsAlive(npobject)) {
@@ -93,13 +125,13 @@ v8::Handle<v8::Value> NPObjectInvokeDefaultHandler(const v8::Arguments& args) {
 }
 
 
-static void WeakTemplateCallback(v8::Persistent<v8::Object> obj, void* param);
+static void WeakTemplateCallback(v8::Persistent<v8::Value> obj, void* param);
 
 // NPIdentifier is PrivateIdentifier*.
 static WeakReferenceMap<PrivateIdentifier, v8::FunctionTemplate> \
     static_template_map(&WeakTemplateCallback);
 
-static void WeakTemplateCallback(v8::Persistent<v8::Object> obj,
+static void WeakTemplateCallback(v8::Persistent<v8::Value> obj,
                                  void* param) {
   PrivateIdentifier* iden = static_cast<PrivateIdentifier*>(param);
   ASSERT(iden != NULL);
@@ -175,8 +207,8 @@ v8::Handle<v8::Value> NPObjectIndexedPropertyGetter(
 static v8::Handle<v8::Value> NPObjectSetProperty(v8::Local<v8::Object> self,
                                                  NPIdentifier ident,
                                                  v8::Local<v8::Value> value) {
-  NPObject* npobject = V8Proxy::ToNativeObject<NPObject>(V8ClassIndex::NPOBJECT,
-                                                         self);
+  NPObject* npobject =
+    V8Proxy::ToNativeObject<NPObject>(V8ClassIndex::NPOBJECT, self);
 
   // Verify that our wrapper wasn't using a NPObject which
   // has already been deleted.
@@ -219,7 +251,7 @@ v8::Handle<v8::Value> NPObjectIndexedPropertySetter(
   return NPObjectSetProperty(info.Holder(), ident, value);
 }
 
-static void WeakNPObjectCallback(v8::Persistent<v8::Object> obj, void* param);
+static void WeakNPObjectCallback(v8::Persistent<v8::Value> obj, void* param);
 
 static DOMWrapperMap<NPObject> static_npobject_map(&WeakNPObjectCallback);
 
@@ -227,8 +259,8 @@ static DOMWrapperMap<NPObject> static_npobject_map(&WeakNPObjectCallback);
 // NPObject (see CreateV8ObjectForNPObject) is garbage collected.  It may be
 // called on any thread, so we should take special care to delete the NPObject
 // on the thread that created it.
-static void WeakNPObjectCallback(v8::Persistent<v8::Object> obj, void* param) {
-  v8::Locker::AssertIsLocked();
+static void WeakNPObjectCallback(v8::Persistent<v8::Value> obj, void* param) {
+  ASSERT(v8::Locker::IsLocked());
   NPObject* npobject = static_cast<NPObject*>(param);
   ASSERT(npobject != NULL);
   ASSERT(static_npobject_map.contains(npobject));
@@ -257,7 +289,8 @@ v8::Local<v8::Object> CreateV8ObjectForNPObject(NPObject* object,
                                                 NPObject* root) {
   static v8::Persistent<v8::FunctionTemplate> np_object_desc;
 
-  v8::Locker::AssertIsLocked();
+  ASSERT(v8::Locker::IsLocked());
+  ASSERT(v8::Locker::IsLocked());
   ASSERT(v8::Context::InContext());
 
   // If this is a v8 object, just return it.

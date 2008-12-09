@@ -1,10 +1,12 @@
-// Copyright (2007) Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_NPOBJECT_H__
 #define V8_NPOBJECT_H__
 
 #include <v8.h>
-#include "bindings/npruntime.h"
+#include "third_party/npapi/bindings/npruntime.h"
 
 // These functions can be replaced by normal JS operation.
 // Getters
@@ -50,3 +52,4 @@ v8::Local<v8::Object> CreateV8ObjectForNPObject(NPObject* object,
 void ForgetV8ObjectForNPObject(NPObject*object);
 
 #endif  // V8_NPOBJECT_H__
+

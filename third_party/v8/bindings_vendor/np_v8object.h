@@ -1,9 +1,11 @@
-// Copyright 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef NP_V8OBJECT_H__
 #define NP_V8OBJECT_H__
 
-#include "bindings/npruntime.h"
+#include "third_party/npapi/bindings/npruntime.h"
 #include <v8.h>
 
 namespace WebCore {
@@ -34,3 +36,4 @@ NPObject* NPN_CreateScriptObject(NPP npp, v8::Handle<v8::Object>,
 NPObject* NPN_CreateNoScriptObject(void);
 
 #endif  // NP_V8OBJECT_H__
+

@@ -1,4 +1,31 @@
-// Copyright (2007) Google Inc. All Rights Reserved.
+// Copyright (c) 2008, Google Inc.
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+// 
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "config.h"
 
@@ -29,19 +56,27 @@ static v8::Handle<v8::Value> NPObjectInvokeImpl(
 
   // These three types are subtypes of HTMLPlugInElement.
   if (V8HTMLAppletElement::HasInstance(args.Holder()) ||
-    V8HTMLEmbedElement::HasInstance(args.Holder()) ||
-    V8HTMLObjectElement::HasInstance(args.Holder())) {
+      V8HTMLEmbedElement::HasInstance(args.Holder()) ||
+      V8HTMLObjectElement::HasInstance(args.Holder())) {
     // The holder object is a subtype of HTMLPlugInElement.
-    HTMLPlugInElement* imp = V8Proxy::FastToNativeObject<HTMLPlugInElement>(
-        V8ClassIndex::NODE, args.Holder());
-    v8::Handle<v8::Object> instance = imp->getInstance();
-    npobject = V8Proxy::ToNativeObject<NPObject>(
-        V8ClassIndex::NPOBJECT, instance);
+    HTMLPlugInElement* imp =
+        V8Proxy::DOMWrapperToNode<HTMLPlugInElement>(args.Holder());
+    ScriptInstance script_instance = imp->getInstance();
+    if (script_instance) {
+      npobject = V8Proxy::ToNativeObject<NPObject>(
+          V8ClassIndex::NPOBJECT, script_instance->instance());
+    } else {
+      npobject = NULL;
+    }
 
   } else {
     // The holder object is not a subtype of HTMLPlugInElement, it
     // must be an NPObject which has three internal fields.
-    ASSERT(args.Holder()->InternalFieldCount() == 3);
+    if (args.Holder()->InternalFieldCount() != 3) {
+      V8Proxy::ThrowError(V8Proxy::REFERENCE_ERROR,
+                          "NPMethod called on non-NPObject");
+      return v8::Undefined();
+    }
     npobject = V8Proxy::ToNativeObject<NPObject>(
         V8ClassIndex::NPOBJECT, args.Holder());
   }
@@ -104,13 +139,13 @@ v8::Handle<v8::Value> NPObjectInvokeDefaultHandler(const v8::Arguments& args) {
 }
 
 
-static void WeakTemplateCallback(v8::Persistent<v8::Object> obj, void* param);
+static void WeakTemplateCallback(v8::Persistent<v8::Value> obj, void* param);
 
 // NPIdentifier is PrivateIdentifier*.
 static WeakReferenceMap<PrivateIdentifier, v8::FunctionTemplate> \
     static_template_map(&WeakTemplateCallback);
 
-static void WeakTemplateCallback(v8::Persistent<v8::Object> obj,
+static void WeakTemplateCallback(v8::Persistent<v8::Value> obj,
                                  void* param) {
   PrivateIdentifier* iden = static_cast<PrivateIdentifier*>(param);
   ASSERT(iden != NULL);
@@ -196,8 +231,8 @@ v8::Handle<v8::Value> NPObjectGetIndexedProperty(v8::Local<v8::Object> self,
 static v8::Handle<v8::Value> NPObjectSetProperty(v8::Local<v8::Object> self,
                                                  NPIdentifier ident,
                                                  v8::Local<v8::Value> value) {
-  NPObject* npobject = V8Proxy::ToNativeObject<NPObject>(V8ClassIndex::NPOBJECT,
-                                                         self);
+  NPObject* npobject =
+    V8Proxy::ToNativeObject<NPObject>(V8ClassIndex::NPOBJECT, self);
 
   // Verify that our wrapper wasn't using a NPObject which
   // has already been deleted.
@@ -250,11 +285,11 @@ v8::Handle<v8::Value> NPObjectSetIndexedProperty(v8::Local<v8::Object> self,
 }
 
 
-static void WeakNPObjectCallback(v8::Persistent<v8::Object> obj, void* param);
+static void WeakNPObjectCallback(v8::Persistent<v8::Value> obj, void* param);
 
 static DOMWrapperMap<NPObject> static_npobject_map(&WeakNPObjectCallback);
 
-static void WeakNPObjectCallback(v8::Persistent<v8::Object> obj,
+static void WeakNPObjectCallback(v8::Persistent<v8::Value> obj,
                                  void* param) {
   NPObject* npobject = static_cast<NPObject*>(param);
   ASSERT(static_npobject_map.contains(npobject));

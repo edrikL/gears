@@ -40,7 +40,9 @@ using namespace v8;
 
 static Mutex StringIdentifierMapLock;
 
-typedef std::map<std::string, PrivateIdentifier*> StringIdentifierMap;
+// Define StringPiece for compatability with Chromium source.
+typedef std::string StringPiece;
+typedef std::map<StringPiece, PrivateIdentifier*> StringIdentifierMap;
 
 static StringIdentifierMap* getStringIdentifierMap() {
     static StringIdentifierMap* stringIdentifierMap = 0;
@@ -76,18 +78,25 @@ NPIdentifier V8_NPN_GetStringIdentifier(const NPUTF8* name) {
     if (name) {
         MutexLock safeLock(&StringIdentifierMapLock);
 
-        StringIdentifierMap::iterator iter =
-            getStringIdentifierMap()->find(std::string(name));
-        if (iter != getStringIdentifierMap()->end())
+        StringIdentifierMap* identMap = getStringIdentifierMap();
+
+        // We use StringPiece here as the key-type to avoid a string copy to
+        // construct the map key.
+        StringPiece nameStr(name);
+        StringIdentifierMap::iterator iter = identMap->find(nameStr);
+        if (iter != identMap->end())
             return static_cast<NPIdentifier>(iter->second);
 
-        PrivateIdentifier* identifier = reinterpret_cast<PrivateIdentifier*>(
-            malloc(sizeof(PrivateIdentifier)));
-        // We never release identifier names, so this dictionary will grow,
-        // as will the memory for the identifier name strings.
+        size_t nameLen = nameStr.length();
+
+        // We never release identifier names, so this dictionary will grow, as
+        // will the memory for the identifier name strings.
+        PrivateIdentifier* identifier = static_cast<PrivateIdentifier*>(
+            malloc(sizeof(PrivateIdentifier) + nameLen + 1));
+        memcpy(identifier + 1, name, nameLen + 1);
         identifier->isString = true;
-        identifier->value.string = nputf8_strdup(name);
-        (*getStringIdentifierMap())[std::string(name)] = identifier;
+        identifier->value.string = reinterpret_cast<NPUTF8*>(identifier + 1);
+        (*identMap)[nameStr] = identifier;
         return (NPIdentifier)identifier;
     }
 
@@ -107,8 +116,10 @@ void V8_NPN_GetStringIdentifiers(const NPUTF8** names, int32_t nameCount,
 NPIdentifier V8_NPN_GetIntIdentifier(int32_t intid) {
     MutexLock safeLock(&IntIdentifierMapLock);
 
-    IntIdentifierMap::iterator iter = getIntIdentifierMap()->find(intid);
-    if (iter != getIntIdentifierMap()->end())
+    IntIdentifierMap* identMap = getIntIdentifierMap();
+
+    IntIdentifierMap::iterator iter = identMap->find(intid);
+    if (iter != identMap->end())
         return static_cast<NPIdentifier>(iter->second);
 
     PrivateIdentifier* identifier = reinterpret_cast<PrivateIdentifier*>(
@@ -116,7 +127,7 @@ NPIdentifier V8_NPN_GetIntIdentifier(int32_t intid) {
     // We never release identifier names, so this dictionary will grow.
     identifier->isString = false;
     identifier->value.number = intid;
-    (*getIntIdentifierMap())[intid] = identifier;
+    (*identMap)[intid] = identifier;
     return (NPIdentifier)identifier;
 }
 
@@ -358,7 +369,9 @@ void _NPN_UnregisterObject(NPObject* obj) {
         ASSERT(g_root_objects.find(obj) != g_root_objects.end());
         NPObjectSet* set = g_root_objects[obj];
         while (set->size() > 0) {
+#ifndef NDEBUG
             size_t size = set->size();
+#endif
             NPObject* sub_object = *(set->begin());
             // The sub-object should not be a owner!
             ASSERT(g_root_objects.find(sub_object) == g_root_objects.end());

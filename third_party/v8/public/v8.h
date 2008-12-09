@@ -1,16 +1,42 @@
-// Copyright 2007-2008 Google Inc. All Rights Reserved.
-// <<license>>
+// Copyright 2007-2008 the V8 project authors. All rights reserved.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+//       copyright notice, this list of conditions and the following
+//       disclaimer in the documentation and/or other materials provided
+//       with the distribution.
+//     * Neither the name of Google Inc. nor the names of its
+//       contributors may be used to endorse or promote products derived
+//       from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** \mainpage V8 API Reference Guide
-
-  Add text to introduce,
-
-  point back to code.google.com/apis/v8/index.html
-
-  etc etc etc
+ *
+ * V8 is Google's open source JavaScript engine.
+ *
+ * This set of documents provides reference material generated from the
+ * V8 header file, include/v8.h.
+ *
+ * For other documentation see http://code.google.com/apis/v8/
  */
-#ifndef _V8
-#define _V8
+
+#ifndef V8_H_
+#define V8_H_
 
 #include <stdio.h>
 
@@ -19,12 +45,52 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned short uint16_t;  // NOLINT
 typedef long long int64_t;  // NOLINT
-#else
-#include <stdint.h>
+
+// Setup for Windows DLL export/import. When building the V8 DLL the
+// BUILDING_V8_SHARED needs to be defined. When building a program which uses
+// the V8 DLL USING_V8_SHARED needs to be defined. When either building the V8
+// static library or building a program which uses the V8 static library neither
+// BUILDING_V8_SHARED nor USING_V8_SHARED should be defined.
+// The reason for having both EXPORT and EXPORT_INLINE is that classes which
+// have their code inside this header file needs to have __declspec(dllexport)
+// when building the DLL but cannot have __declspec(dllimport) when building
+// a program which uses the DLL.
+#if defined(BUILDING_V8_SHARED) && defined(USING_V8_SHARED)
+#error both BUILDING_V8_SHARED and USING_V8_SHARED are set - please check the\
+  build configuration to ensure that at most one of these is set
 #endif
 
+#ifdef BUILDING_V8_SHARED
+#define EXPORT __declspec(dllexport)
+#define EXPORT_INLINE __declspec(dllexport)
+#elif USING_V8_SHARED
+#define EXPORT __declspec(dllimport)
+#define EXPORT_INLINE
+#else
+#define EXPORT
+#define EXPORT_INLINE
+#endif  // BUILDING_V8_SHARED
+
+#else  // _WIN32
+
+#include <stdint.h>
+
+// Setup for Linux shared library export. There is no need to destinguish
+// neither between building or using the V8 shared library nor between using
+// the shared or static V8 library as there is on Windows. Therefore there is
+// no checking of BUILDING_V8_SHARED and USING_V8_SHARED.
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#define EXPORT __attribute__ ((visibility("default")))
+#define EXPORT_INLINE __attribute__ ((visibility("default")))
+#else  // defined(__GNUC__) && (__GNUC__ >= 4)
+#define EXPORT
+#define EXPORT_INLINE
+#endif  // defined(__GNUC__) && (__GNUC__ >= 4)
+
+#endif  // _WIN32
+
 /**
- * The v8 javascript engine.
+ * The v8 JavaScript engine.
  */
 namespace v8 {
 
@@ -62,7 +128,7 @@ class Data;
  * \param object the weak global object to be reclaimed by the garbage collector
  * \param parameter the value passed in when making the weak global object
  */
-typedef void (*WeakReferenceCallback)(Persistent<Object> object,
+typedef void (*WeakReferenceCallback)(Persistent<Value> object,
                                       void* parameter);
 
 
@@ -98,7 +164,7 @@ typedef void (*WeakReferenceCallback)(Persistent<Object> object,
  * behind the scenes and the same rules apply to these values as to
  * their handles.
  */
-template <class T> class Handle {
+template <class T> class EXPORT_INLINE Handle {
  public:
 
   /**
@@ -114,7 +180,7 @@ template <class T> class Handle {
   /**
    * Creates a handle for the contents of the specified handle.  This
    * constructor allows you to pass handles as arguments by value and
-   * assign between handles.  However, if you try to assign between
+   * to assign between handles.  However, if you try to assign between
    * incompatible handles, for instance from a Handle<String> to a
    * Handle<Number> it will cause a compiletime error.  Assigning
    * between compatible handles, for instance assigning a
@@ -186,7 +252,7 @@ template <class T> class Handle {
  * handle scope are destroyed when the handle scope is destroyed.  Hence it
  * is not necessary to explicitly deallocate local handles.
  */
-template <class T> class Local : public Handle<T> {
+template <class T> class EXPORT_INLINE Local : public Handle<T> {
  public:
   Local();
   template <class S> inline Local(Local<S> that)
@@ -214,7 +280,7 @@ template <class T> class Local : public Handle<T> {
 
 /**
  * An object reference that is independent of any handle scope.  Where
- * a Local handle only lives as long as the HandleScope where it was
+ * a Local handle only lives as long as the HandleScope in which it was
  * allocated, a Persistent handle remains valid until it is explicitly
  * disposed.
  *
@@ -229,7 +295,7 @@ template <class T> class Local : public Handle<T> {
  * different storage cells but rather two references to the same
  * storage cell.
  */
-template <class T> class Persistent : public Handle<T> {
+template <class T> class EXPORT_INLINE Persistent : public Handle<T> {
  public:
 
   /**
@@ -242,12 +308,12 @@ template <class T> class Persistent : public Handle<T> {
    * Creates a persistent handle for the same storage cell as the
    * specified handle.  This constructor allows you to pass persistent
    * handles as arguments by value and to assign between persistent
-   * handles.  However, if you try to assign between incompatible
+   * handles.  However, attempting to assign between incompatible
    * persistent handles, for instance from a Persistent<String> to a
-   * Persistent<Number> it will cause a compiletime error.  Assigning
+   * Persistent<Number> will cause a compiletime error.  Assigning
    * between compatible persistent handles, for instance assigning a
    * Persistent<String> to a variable declared as Persistent<Value>,
-   * is legal because String is a subclass of Value.
+   * is allowed as String is a subclass of Value.
    */
   template <class S> inline Persistent(Persistent<S> that)
       : Handle<T>(reinterpret_cast<T*>(*that)) {
@@ -261,6 +327,10 @@ template <class T> class Persistent : public Handle<T> {
 
   template <class S> inline Persistent(S* that) : Handle<T>(that) { }
 
+  /**
+   * "Casts" a plain handle which is known to be a persistent handle
+   * to a persistent handle.
+   */
   template <class S> explicit inline Persistent(Handle<S> that)
       : Handle<T>(*that) { }
 
@@ -270,8 +340,8 @@ template <class T> class Persistent : public Handle<T> {
   }
 
   /**
-   * Creates a new persistent handle for an existing (local or
-   * persistent) handle.
+   * Creates a new persistent handle for an existing local or
+   * persistent handle.
    */
   static Persistent<T> New(Handle<T> that);
 
@@ -310,13 +380,13 @@ template <class T> class Persistent : public Handle<T> {
 };
 
 
-/**
+ /**
  * A stack-allocated class that governs a number of local handles.
  * After a handle scope has been created, all local handles will be
  * allocated within that handle scope until either the handle scope is
  * deleted or another handle scope is created.  If there is already a
  * handle scope and a new one is created, all allocations will take
- * place in the new handle scope until that is deleted.  After that,
+ * place in the new handle scope until it is deleted.  After that,
  * new handles will again be allocated in the original handle scope.
  *
  * After the handle scope of a local handle has been deleted the
@@ -324,7 +394,7 @@ template <class T> class Persistent : public Handle<T> {
  * handle and may deallocate it.  The behavior of accessing a handle
  * for which the handle scope has been deleted is undefined.
  */
-class HandleScope {
+class EXPORT HandleScope {
  public:
   HandleScope() : previous_(current_), is_closed_(false) {
     current_.extensions = 0;
@@ -332,7 +402,7 @@ class HandleScope {
 
   ~HandleScope() {
     // TODO(1245391): In a perfect world, there would be a way of not
-    // having to check for expl icitly closed scopes maybe through
+    // having to check for explicitly closed scopes maybe through
     // subclassing HandleScope?
     if (!is_closed_) RestorePreviousState();
   }
@@ -362,7 +432,7 @@ class HandleScope {
   void* operator new(size_t size);
   void operator delete(void*, size_t);
 
-  class Data {
+  class EXPORT Data {
    public:
     int extensions;
     void** next;
@@ -377,8 +447,8 @@ class HandleScope {
   const Data previous_;
 
   /**
-   * Re-establishes the previous scope state. Should not be called for
-   * any other scope than the current scope and not more than once.
+   * Re-establishes the previous scope state. Should be called only
+   * once, and only for the current scope.
    */
   void RestorePreviousState() {
     if (current_.extensions > 0) DeleteExtensions();
@@ -395,10 +465,8 @@ class HandleScope {
   /** Deallocates any extensions used by the current scope.*/
   static void DeleteExtensions();
 
-#ifdef DEBUG
   // Zaps the handles in the half-open interval [start, end).
   static void ZapRange(void** start, void** end);
-#endif
 
   friend class ImplementationUtilities;
 };
@@ -410,7 +478,7 @@ class HandleScope {
 /**
  * The superclass of values and API object templates.
  */
-class Data {
+class EXPORT Data {
  private:
   Data();
 };
@@ -419,10 +487,10 @@ class Data {
 /**
  * Pre-compilation data that can be associated with a script.  This
  * data can be calculated for a script in advance of actually
- * compiling it, and stored between compilations.  When script data
- * is given to the compile method compilation will be faster.
+ * compiling it, and can be stored between compilations.  When script
+ * data is given to the compile method compilation will be faster.
  */
-class ScriptData {
+class EXPORT ScriptData {  // NOLINT
  public:
   virtual ~ScriptData() { }
   static ScriptData* PreCompile(const char* input, int length);
@@ -436,28 +504,28 @@ class ScriptData {
 /**
  * The origin, within a file, of a script.
  */
-class ScriptOrigin {
+class EXPORT ScriptOrigin {
  public:
-  ScriptOrigin(Handle<String> resource_name,
+  ScriptOrigin(Handle<Value> resource_name,
                Handle<Integer> resource_line_offset = Handle<Integer>(),
                Handle<Integer> resource_column_offset = Handle<Integer>())
       : resource_name_(resource_name),
         resource_line_offset_(resource_line_offset),
         resource_column_offset_(resource_column_offset) { }
-  inline Handle<String> ResourceName();
-  inline Handle<Integer> ResourceLineOffset();
-  inline Handle<Integer> ResourceColumnOffset();
+  inline Handle<Value> ResourceName() const;
+  inline Handle<Integer> ResourceLineOffset() const;
+  inline Handle<Integer> ResourceColumnOffset() const;
  private:
-  Handle<String> resource_name_;
+  Handle<Value> resource_name_;
   Handle<Integer> resource_line_offset_;
   Handle<Integer> resource_column_offset_;
 };
 
 
 /**
- * A compiled javascript script.
+ * A compiled JavaScript script.
  */
-class Script {
+class EXPORT Script {
  public:
 
   /**
@@ -469,6 +537,16 @@ class Script {
                                ScriptOrigin* origin = NULL,
                                ScriptData* pre_data = NULL);
 
+  /**
+   * Compiles the specified script using the specified file name
+   * object (typically a string) as the script's origin.
+   */
+  static Local<Script> Compile(Handle<String> source,
+                               Handle<Value> file_name);
+
+  /**
+   * Runs the script returning the resulting value.
+   */
   Local<Value> Run();
 };
 
@@ -476,23 +554,41 @@ class Script {
 /**
  * An error message.
  */
-class Message {
+class EXPORT Message {
  public:
   Local<String> Get();
-  Local<Value> GetSourceLine();
+  Local<String> GetSourceLine();
 
-  // TODO(1241256): Rewrite (or remove) this method.  We don't want to
-  // deal with ownership of the returned string and we want to use
-  // javascript data structures exclusively.
-  char* GetUnderline(char* source_line, char underline_char);
+  Handle<Value> GetScriptResourceName();
 
-  Handle<String> GetScriptResourceName();
-
-  // TODO(1240903): Remove this when no longer used in WebKit V8
-  // bindings.
-  Handle<Value> GetSourceData();
-
+  /**
+   * Returns the number, 1-based, of the line where the error occurred.
+   */
   int GetLineNumber();
+
+  /**
+   * Returns the index within the script of the first character where
+   * the error occurred.
+   */
+  int GetStartPosition();
+
+  /**
+   * Returns the index within the script of the last character where
+   * the error occurred.
+   */
+  int GetEndPosition();
+
+  /**
+   * Returns the index within the line of the first character where
+   * the error occurred.
+   */
+  int GetStartColumn();
+
+  /**
+   * Returns the index within the line of the last character where
+   * the error occurred.
+   */
+  int GetEndColumn();
 
   // TODO(1245381): Print to a string instead of on a FILE.
   static void PrintCurrentStackTrace(FILE* out);
@@ -503,9 +599,9 @@ class Message {
 
 
 /**
- * The superclass of all javascript values and objects.
+ * The superclass of all JavaScript values and objects.
  */
-class Value : public Data {
+class EXPORT Value : public Data {
  public:
 
   /**
@@ -546,30 +642,35 @@ class Value : public Data {
    */
   bool IsArray();
 
-   /**
+  /**
    * Returns true if this value is an object.
    */
   bool IsObject();
 
-   /**
+  /**
    * Returns true if this value is boolean.
    */
   bool IsBoolean();
 
-   /**
+  /**
    * Returns true if this value is a number.
    */
   bool IsNumber();
 
-   /**
+  /**
    * Returns true if this value is external.
    */
   bool IsExternal();
 
-   /**
+  /**
    * Returns true if this value is a 32-bit signed integer.
    */
   bool IsInt32();
+
+  /**
+   * Returns true if this value is a Date.
+   */
+  bool IsDate();
 
   Local<Boolean> ToBoolean();
   Local<Number> ToNumber();
@@ -601,14 +702,14 @@ class Value : public Data {
 /**
  * The superclass of primitive values.  See ECMA-262 4.3.2.
  */
-class Primitive : public Value { };
+class EXPORT Primitive : public Value { };
 
 
 /**
  * A primitive boolean value (ECMA-262, 4.3.14).  Either the true
  * or false value.
  */
-class Boolean : public Primitive {
+class EXPORT Boolean : public Primitive {
  public:
   bool Value();
   static inline Handle<Boolean> New(bool value);
@@ -616,50 +717,59 @@ class Boolean : public Primitive {
 
 
 /**
- * A javascript string value (ECMA-262, 4.3.17).
+ * A JavaScript string value (ECMA-262, 4.3.17).
  */
-class String : public Primitive {
+class EXPORT String : public Primitive {
  public:
+
+  /**
+   * Returns the number of characters in this string.
+   */
   int Length();
 
- /**
-  * Write the contents of the string to an external buffer.
-  * If no arguments are given, expects that buffer is large
-  * enough to hold the entire string and NULL terminator. Copies
-  * the contents of the string and the NULL terminator into
-  * buffer.
-  *
-  * Copies up to length characters into the output buffer.
-  * Only null-terminates if there is enough space in the buffer.
-  *
-  * \param buffer The buffer into which the string will be copied.
-  * \param start The starting position within the string at which
-  * copying begins.
-  * \param length The number of bytes to copy from the string.
-  * \return The number of characters copied to the buffer
-  * excluding the NULL terminator.
-  */
-  int Write(uint16_t* buffer, int start = 0, int length = -1);  // UTF-16
-  int WriteAscii(char* buffer,
-                 int start = 0,
-                 int length = -1);  // literally ascii
+  /**
+   * Returns the number of bytes in the UTF-8 encoded
+   * representation of this string.
+   */
+  int Utf8Length();
 
- /**
-  * Returns true if the string is external
-  */
+  /**
+   * Write the contents of the string to an external buffer.
+   * If no arguments are given, expects the buffer to be large
+   * enough to hold the entire string and NULL terminator. Copies
+   * the contents of the string and the NULL terminator into the
+   * buffer.
+   *
+   * Copies up to length characters into the output buffer.
+   * Only null-terminates if there is enough space in the buffer.
+   *
+   * \param buffer The buffer into which the string will be copied.
+   * \param start The starting position within the string at which
+   * copying begins.
+   * \param length The number of bytes to copy from the string.
+   * \return The number of characters copied to the buffer
+   * excluding the NULL terminator.
+   */
+  int Write(uint16_t* buffer, int start = 0, int length = -1);  // UTF-16
+  int WriteAscii(char* buffer, int start = 0, int length = -1);  // ASCII
+  int WriteUtf8(char* buffer, int length = -1); // UTF-8
+
+  /**
+   * Returns true if the string is external
+   */
   bool IsExternal();
 
- /**
-  * Returns true if the string is both external and ascii
-  */
+  /**
+   * Returns true if the string is both external and ascii
+   */
   bool IsExternalAscii();
- /**
-  * An ExternalStringResource is a wrapper around a two-byte string
-  * buffer that resides outside the V8's heap. Implement an
-  * ExternalStringResource to manage the life cycle of the underlying
-  * buffer.
-  */
-  class ExternalStringResource {
+  /**
+   * An ExternalStringResource is a wrapper around a two-byte string
+   * buffer that resides outside V8's heap. Implement an
+   * ExternalStringResource to manage the life cycle of the underlying
+   * buffer.  Note that the string data must be immutable.
+   */
+  class EXPORT ExternalStringResource {  // NOLINT
    public:
     /**
      * Override the destructor to manage the life cycle of the underlying
@@ -673,18 +783,23 @@ class String : public Primitive {
    protected:
     ExternalStringResource() {}
    private:
+    // Disallow copying and assigning.
     ExternalStringResource(const ExternalStringResource&);
     void operator=(const ExternalStringResource&);
   };
 
   /**
-  * An ExternalAsciiStringResource is a wrapper around an ascii
-  * string buffer that resides outside V8's heap. Implement an
-  * ExternalAsciiStringResource to manage the life cycle of the
-  * underlying buffer.
-  */
+   * An ExternalAsciiStringResource is a wrapper around an ascii
+   * string buffer that resides outside V8's heap. Implement an
+   * ExternalAsciiStringResource to manage the life cycle of the
+   * underlying buffer.  Note that the string data must be immutable
+   * and that the data must be strict 7-bit ASCII, not Latin1 or
+   * UTF-8, which would require special treatment internally in the
+   * engine and, in the case of UTF-8, do not allow efficient indexing.
+   * Use String::New or convert to 16 bit data for non-ASCII.
+   */
 
-  class ExternalAsciiStringResource {
+  class EXPORT ExternalAsciiStringResource {  // NOLINT
    public:
     /**
      * Override the destructor to manage the life cycle of the underlying
@@ -698,6 +813,7 @@ class String : public Primitive {
    protected:
     ExternalAsciiStringResource() {}
    private:
+    // Disallow copying and assigning.
     ExternalAsciiStringResource(const ExternalAsciiStringResource&);
     void operator=(const ExternalAsciiStringResource&);
   };
@@ -723,7 +839,7 @@ class String : public Primitive {
    * be careful to supply the length parameter.
    * If it is not given, the function calls
    * 'strlen' to determine the buffer length, it might be
-   * wrong if '\0' character is in the 'data'.
+   * wrong if 'data' contains a null character.
    */
   static Local<String> New(const char* data, int length = -1);
 
@@ -733,63 +849,94 @@ class String : public Primitive {
   /** Creates a symbol. Returns one if it exists already.*/
   static Local<String> NewSymbol(const char* data, int length = -1);
 
- /**
-  * Creates a new external string using the data defined in the given
-  * resource. The resource is deleted when the external string is no
-  * longer live on V8's heap. The caller of this function should not
-  * delete or modify the resource. Neither should the underlying buffer be
-  * deallocated or modified except through the destructor of the
-  * external string resource.
-  */
+  /**
+   * Creates a new external string using the data defined in the given
+   * resource. The resource is deleted when the external string is no
+   * longer live on V8's heap. The caller of this function should not
+   * delete or modify the resource. Neither should the underlying buffer be
+   * deallocated or modified except through the destructor of the
+   * external string resource.
+   */
   static Local<String> NewExternal(ExternalStringResource* resource);
 
-   /**
-  * Creates a new external string using the ascii data defined in the given
-  * resource. The resource is deleted when the external string is no
-  * longer live on V8's heap. The caller of this function should not
-  * delete or modify the resource. Neither should the underlying buffer be
-  * deallocated or modified except through the destructor of the
-  * external string resource.
-  */
+  /**
+   * Creates a new external string using the ascii data defined in the given
+   * resource. The resource is deleted when the external string is no
+   * longer live on V8's heap. The caller of this function should not
+   * delete or modify the resource. Neither should the underlying buffer be
+   * deallocated or modified except through the destructor of the
+   * external string resource.
+   */
   static Local<String> NewExternal(ExternalAsciiStringResource* resource);
 
-  /** Creates an undetectable string from the supplied character.*/
+  /** Creates an undetectable string from the supplied ascii or utf-8 data.*/
   static Local<String> NewUndetectable(const char* data, int length = -1);
 
-    /** Creates an undetectable string from the supplied unsigned integer.*/
+  /** Creates an undetectable string from the supplied utf-16 data.*/
   static Local<String> NewUndetectable(const uint16_t* data, int length = -1);
+
+  /**
+   * Converts an object to a utf8-encoded character array.  Useful if
+   * you want to print the object.
+   */
+  class EXPORT Utf8Value {
+   public:
+    explicit Utf8Value(Handle<v8::Value> obj);
+    ~Utf8Value();
+    char* operator*() { return str_; }
+    int length() { return length_; }
+   private:
+    char* str_;
+    int length_;
+
+    // Disallow copying and assigning.
+    Utf8Value(const Utf8Value&);
+    void operator=(const Utf8Value&);
+  };
 
   /**
    * Converts an object to an ascii string.
    * Useful if you want to print the object.
    */
-  class AsciiValue {
+  class EXPORT AsciiValue {
    public:
     explicit AsciiValue(Handle<v8::Value> obj);
     ~AsciiValue();
     char* operator*() { return str_; }
+    int length() { return length_; }
    private:
     char* str_;
+    int length_;
+
+    // Disallow copying and assigning.
+    AsciiValue(const AsciiValue&);
+    void operator=(const AsciiValue&);
   };
 
   /**
    * Converts an object to a two-byte string.
    */
-  class Value {
+  class EXPORT Value {
    public:
     explicit Value(Handle<v8::Value> obj);
     ~Value();
     uint16_t* operator*() { return str_; }
+    int length() { return length_; }
    private:
     uint16_t* str_;
+    int length_;
+
+    // Disallow copying and assigning.
+    Value(const Value&);
+    void operator=(const Value&);
   };
 };
 
 
 /**
- * A javascript number value (ECMA-262, 4.3.20)
+ * A JavaScript number value (ECMA-262, 4.3.20)
  */
-class Number : public Primitive {
+class EXPORT Number : public Primitive {
  public:
   double Value();
   static Local<Number> New(double value);
@@ -800,9 +947,9 @@ class Number : public Primitive {
 
 
 /**
- * A javascript value representing a signed integer.
+ * A JavaScript value representing a signed integer.
  */
-class Integer : public Number {
+class EXPORT Integer : public Number {
  public:
   static Local<Integer> New(int32_t value);
   int64_t Value();
@@ -813,9 +960,9 @@ class Integer : public Number {
 
 
 /**
- * A javascript value representing a 32-bit signed integer.
+ * A JavaScript value representing a 32-bit signed integer.
  */
-class Int32 : public Integer {
+class EXPORT Int32 : public Integer {
  public:
   int32_t Value();
  private:
@@ -824,9 +971,9 @@ class Int32 : public Integer {
 
 
 /**
- * A javascript value representing a 32-bit unsigned integer.
+ * A JavaScript value representing a 32-bit unsigned integer.
  */
-class Uint32 : public Integer {
+class EXPORT Uint32 : public Integer {
  public:
   uint32_t Value();
  private:
@@ -837,9 +984,17 @@ class Uint32 : public Integer {
 /**
  * An instance of the built-in Date constructor (ECMA-262, 15.9).
  */
-class Date : public Value {
+class EXPORT Date : public Value {
  public:
   static Local<Value> New(double time);
+
+  /**
+   * A specialization of Value::NumberValue that is more efficient
+   * because we know the structure of this object.
+   */
+  double NumberValue();
+
+  static Date* Cast(v8::Value* obj);
 };
 
 
@@ -851,9 +1006,9 @@ enum PropertyAttribute {
 };
 
 /**
- * A javascript object (ECMA-262, 4.3.3)
+ * A JavaScript object (ECMA-262, 4.3.3)
  */
-class Object : public Value {
+class EXPORT Object : public Value {
  public:
   bool Set(Handle<Value> key,
            Handle<Value> value,
@@ -866,6 +1021,14 @@ class Object : public Value {
   bool Delete(Handle<String> key);
   bool Has(uint32_t index);
   bool Delete(uint32_t index);
+
+  /**
+   * Returns an array containing the names of the enumerable properties
+   * of this object, including properties from prototype objects.  The
+   * array returned by this method contains the same values as would
+   * be enumerated by a for-in statement over this object.
+   */
+  Local<Array> GetPropertyNames();
 
   /**
    * Get the prototype object.  This does not skip objects marked to
@@ -905,6 +1068,12 @@ class Object : public Value {
   /** Tests for an index lookup interceptor.*/
   bool HasIndexedLookupInterceptor();
 
+  /**
+   * Turns on access check on the object if the object is an instance of
+   * a template that has access check callbacks. If an object has no
+   * access check info, the object cannot be accessed by anyone.
+   */
+  void TurnOnAccessCheck();
 
   static Local<Object> New();
   static Object* Cast(Value* obj);
@@ -916,7 +1085,7 @@ class Object : public Value {
 /**
  * An instance of the built-in array constructor (ECMA-262, 15.4.2).
  */
-class Array : public Object {
+class EXPORT Array : public Object {
  public:
   uint32_t Length();
 
@@ -928,9 +1097,9 @@ class Array : public Object {
 
 
 /**
- * A javascript function object (ECMA-262, 15.3).
+ * A JavaScript function object (ECMA-262, 15.3).
  */
-class Function : public Object {
+class EXPORT Function : public Object {
  public:
   Local<Object> NewInstance();
   Local<Object> NewInstance(int argc, Handle<Value> argv[]);
@@ -944,11 +1113,11 @@ class Function : public Object {
 
 
 /**
- * A javascript value that wraps a c++ void*.  This type of value is
- * mainly used to associate c++ data structures with javascript
+ * A JavaScript value that wraps a c++ void*.  This type of value is
+ * mainly used to associate c++ data structures with JavaScript
  * objects.
  */
-class External : public Value {
+class EXPORT External : public Value {
  public:
   static Local<External> New(void* value);
   static External* Cast(Value* obj);
@@ -964,7 +1133,7 @@ class External : public Value {
 /**
  * The superclass of object and function templates.
  */
-class Template : public Data {
+class EXPORT Template : public Data {
  public:
   /** Adds a property to each instance created by this template.*/
   void Set(Handle<String> name, Handle<Data> value,
@@ -980,11 +1149,11 @@ class Template : public Data {
 
 /**
  * The argument information given to function call callbacks.  This
- * class provides access to information about context of the call,
+ * class provides access to information about the context of the call,
  * including the receiver, the number and values of arguments, and
  * the holder of the function.
  */
-class Arguments {
+class EXPORT Arguments {
  public:
   inline int Length() const;
   inline Local<Value> operator[](int i) const;
@@ -1014,7 +1183,7 @@ class Arguments {
  * The information passed to an accessor callback about the context
  * of the property access.
  */
-class AccessorInfo {
+class EXPORT AccessorInfo {
  public:
   inline AccessorInfo(Local<Object> self,
                       Local<Value> data,
@@ -1066,7 +1235,7 @@ typedef Handle<Value> (*NamedPropertySetter)(Local<String> property,
 
 /**
  * Returns a non-empty handle if the interceptor intercepts the request.
- * The result is true to indicate the property is found.
+ * The result is true if the property exists and false otherwise.
  */
 typedef Handle<Boolean> (*NamedPropertyQuery)(Local<String> property,
                                               const AccessorInfo& info);
@@ -1074,18 +1243,22 @@ typedef Handle<Boolean> (*NamedPropertyQuery)(Local<String> property,
 
 /**
  * Returns a non-empty handle if the deleter intercepts the request.
- * Otherwise, the return value is the value of deleted expression.
+ * The return value is true if the property could be deleted and false
+ * otherwise.
  */
 typedef Handle<Boolean> (*NamedPropertyDeleter)(Local<String> property,
                                                 const AccessorInfo& info);
 
 /**
- * TODO(758124): Add documentation?
+ * Returns an array containing the names of the properties the named
+ * property getter intercepts.
  */
 typedef Handle<Array> (*NamedPropertyEnumerator)(const AccessorInfo& info);
 
+
 /**
- * TODO(758124): Add documentation?
+ * Returns the value of the property if the getter intercepts the
+ * request.  Otherwise, returns an empty handle.
  */
 typedef Handle<Value> (*IndexedPropertyGetter)(uint32_t index,
                                                const AccessorInfo& info);
@@ -1102,39 +1275,49 @@ typedef Handle<Value> (*IndexedPropertySetter)(uint32_t index,
 
 /**
  * Returns a non-empty handle if the interceptor intercepts the request.
- * The result is true to indicate the property is found.
+ * The result is true if the property exists and false otherwise.
  */
 typedef Handle<Boolean> (*IndexedPropertyQuery)(uint32_t index,
                                                 const AccessorInfo& info);
 
 /**
  * Returns a non-empty handle if the deleter intercepts the request.
- * Otherwise, the return value is the value of deleted expression.
+ * The return value is true if the property could be deleted and false
+ * otherwise.
  */
 typedef Handle<Boolean> (*IndexedPropertyDeleter)(uint32_t index,
                                                   const AccessorInfo& info);
 
-
+/**
+ * Returns an array containing the indices of the properties the
+ * indexed property getter intercepts.
+ */
 typedef Handle<Array> (*IndexedPropertyEnumerator)(const AccessorInfo& info);
 
 
 /**
- * TODO(758124): Clarify documentation? Determines whether host
- * objects can read or write an accessor? (What does the default
- * allow? Both or neither?)  If a host object needs access check and
- * the check failed, some properties (accessors created by API) are
- * still accessible.  Such properties have AccessControl to allow read
- * or write.
+ * Access control specifications.
+ *
+ * Some accessors should be accessible across contexts.  These
+ * accessors have an explicit access control parameter which specifies
+ * the kind of cross-context access that should be allowed.
+ *
+ * Additionally, for security, accessors can prohibit overwriting by
+ * accessors defined in JavaScript.  For objects that have such
+ * accessors either locally or in their prototype chain it is not
+ * possible to overwrite the accessor by using __defineGetter__ or
+ * __defineSetter__ from JavaScript code.
  */
 enum AccessControl {
-  DEFAULT         = 0,
-  ALL_CAN_READ    = 1,
-  ALL_CAN_WRITE   = 2
+  DEFAULT               = 0,
+  ALL_CAN_READ          = 1,
+  ALL_CAN_WRITE         = 1 << 1,
+  PROHIBITS_OVERWRITING = 1 << 2
 };
 
 
 /**
- * Undocumented security features.
+ * Access type specification.
  */
 enum AccessType {
   ACCESS_GET,
@@ -1144,11 +1327,21 @@ enum AccessType {
   ACCESS_KEYS
 };
 
+
+/**
+ * Returns true if cross-context access should be allowed to the named
+ * property with the given key on the global object.
+ */
 typedef bool (*NamedSecurityCallback)(Local<Object> global,
                                       Local<Value> key,
                                       AccessType type,
                                       Local<Value> data);
 
+
+/**
+ * Returns true if cross-context access should be allowed to the indexed
+ * property with the given index on the global object.
+ */
 typedef bool (*IndexedSecurityCallback)(Local<Object> global,
                                         uint32_t index,
                                         AccessType type,
@@ -1156,24 +1349,24 @@ typedef bool (*IndexedSecurityCallback)(Local<Object> global,
 
 
 /**
- * TODO(758124): Make sure this documentation is up to date.
- *
- * A FunctionTemplate is used to create functions at runtime. There can only be
- * ONE function created in an environment.
+ * A FunctionTemplate is used to create functions at runtime. There
+ * can only be one function created from a FunctionTemplate in a
+ * context.
  *
  * A FunctionTemplate can have properties, these properties are added to the
- * function object which it is created.
+ * function object when it is created.
  *
- * A FunctionTemplate has a corresponding instance template which is used to
- * create object instances when the function used as a constructor. Properties
- * added to the instance template are added to each object instance.
+ * A FunctionTemplate has a corresponding instance template which is
+ * used to create object instances when the function is used as a
+ * constructor. Properties added to the instance template are added to
+ * each object instance.
  *
  * A FunctionTemplate can have a prototype template. The prototype template
  * is used to create the prototype object of the function.
  *
- * Following example illustrates relationship between FunctionTemplate and
- * various pieces:
+ * The following example shows how to use a FunctionTemplate:
  *
+ * \code
  *    v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New();
  *    t->Set("func_property", v8::Number::New(1));
  *
@@ -1188,67 +1381,81 @@ typedef bool (*IndexedSecurityCallback)(Local<Object> global,
  *
  *    v8::Local<v8::Function> function = t->GetFunction();
  *    v8::Local<v8::Object> instance = function->NewInstance();
+ * \endcode
  *
  * Let's use "function" as the JS variable name of the function object
- * and "instance" for the instance object created above, the following
- * JavaScript statements hold:
+ * and "instance" for the instance object created above.  The function
+ * and the instance will have the following properties:
  *
- *   func_property in function == true
- *   function.func_property == 1
+ * \code
+ *   func_property in function == true;
+ *   function.func_property == 1;
  *
- *   function.prototype.proto_method() invokes 'callback'
- *   function.prototype.proto_const == 2
+ *   function.prototype.proto_method() invokes 'InvokeCallback'
+ *   function.prototype.proto_const == 2;
  *
- *   instance instanceof function == true
- *   instance.instance_accessor calls InstanceAccessorCallback
- *   instance.instance_property == 3
+ *   instance instanceof function == true;
+ *   instance.instance_accessor calls 'InstanceAccessorCallback'
+ *   instance.instance_property == 3;
+ * \endcode
  *
+ * A FunctionTemplate can inherit from another one by calling the
+ * FunctionTemplate::Inherit method.  The following graph illustrates
+ * the semantics of inheritance:
  *
- * Inheritance:
+ * \code
+ *   FunctionTemplate Parent  -> Parent() . prototype -> { }
+ *     ^                                                  ^
+ *     | Inherit(Parent)                                  | .__proto__
+ *     |                                                  |
+ *   FunctionTemplate Child   -> Child()  . prototype -> { }
+ * \endcode
  *
- * A FunctionTemplate can inherit from another one by calling Inherit method.
- * Following graph illustrates the semantic of inheritance:
+ * A FunctionTemplate 'Child' inherits from 'Parent', the prototype
+ * object of the Child() function has __proto__ pointing to the
+ * Parent() function's prototype object. An instance of the Child
+ * function has all properties on Parent's instance templates.
  *
- *  FunctionTemplate Parent  -> Parent() . prototype -> { }
- *    ^                                                  ^
- *    | Inherit(Parent)                                  | .__proto__
- *    |                                                  |
- *  FunctionTemplate Child   -> Child()  . prototype -> { }
+ * Let Parent be the FunctionTemplate initialized in the previous
+ * section and create a Child FunctionTemplate by:
  *
- * A FunctionTemplate 'Child' inherits from 'Parent', the prototype object
- * of Child() function has __proto__ pointing to Parent() function's prototype
- * object. An instance of Child function has all properties on parents'
- * instance templates.
- *
- * Let Parent be the FunctionTemplate initialized in previous section and
- * create a Child function template by:
- *
+ * \code
  *   Local<FunctionTemplate> parent = t;
  *   Local<FunctionTemplate> child = FunctionTemplate::New();
  *   child->Inherit(parent);
  *
  *   Local<Function> child_function = child->GetFunction();
  *   Local<Object> child_instance = child_function->NewInstance();
+ * \endcode
  *
- * The following JS code holds:
+ * The Child function and Child instance will have the following
+ * properties:
+ *
+ * \code
  *   child_func.prototype.__proto__ == function.prototype;
- *   child_instance.instance_accessor calls InstanceAccessorCallback
+ *   child_instance.instance_accessor calls 'InstanceAccessorCallback'
  *   child_instance.instance_property == 3;
+ * \endcode
  */
-class FunctionTemplate : public Template {
+class EXPORT FunctionTemplate : public Template {
  public:
   /** Creates a function template.*/
-  static Local<FunctionTemplate> New(InvocationCallback callback = 0,
-                                     Handle<Value> data = Handle<Value>(),
-                                     Handle<Signature> signature =
-                                         Handle<Signature>());
+  static Local<FunctionTemplate> New(
+      InvocationCallback callback = 0,
+      Handle<Value> data = Handle<Value>(),
+      Handle<Signature> signature = Handle<Signature>());
   /** Returns the unique function instance in the current execution context.*/
   Local<Function> GetFunction();
 
+  /**
+   * Set the call-handler callback for a FunctionTemplate.  This
+   * callback is called whenever the function created from this
+   * FunctionTemplate is called.
+   */
   void SetCallHandler(InvocationCallback callback,
                       Handle<Value> data = Handle<Value>());
-  void SetLookupHandler(LookupCallback handler);
 
+  /** Get the InstanceTemplate. */
   Local<ObjectTemplate> InstanceTemplate();
 
   /** Causes the function template to inherit from a parent function template.*/
@@ -1260,19 +1467,31 @@ class FunctionTemplate : public Template {
    */
   Local<ObjectTemplate> PrototypeTemplate();
 
+
+  /**
+   * Set the class name of the FunctionTemplate.  This is used for
+   * printing objects created with the function created from the
+   * FunctionTemplate as its constructor.
+   */
   void SetClassName(Handle<String> name);
 
   /**
-   * Determines whether the __proto__ accessor ignores instances of the function template.
-   * Call with a value of true to make the __proto__ accessor ignore instances of the function template.
-   * Call with a value of false to make the __proto__ accessor not ignore instances of the function template.
-   * By default, instances of a function template are not ignored.
-   * TODO(758124): What does "not ignored" mean?
+   * Determines whether the __proto__ accessor ignores instances of
+   * the function template.  If instances of the function template are
+   * ignored, __proto__ skips all instances and instead returns the
+   * next object in the prototype chain.
+   *
+   * Call with a value of true to make the __proto__ accessor ignore
+   * instances of the function template.  Call with a value of false
+   * to make the __proto__ accessor not ignore instances of the
+   * function template.  By default, instances of a function template
+   * are not ignored.
    */
   void SetHiddenPrototype(bool value);
 
   /**
-   * Returns true if the given object is an instance of this function template.
+   * Returns true if the given object is an instance of this function
+   * template.
    */
   bool HasInstance(Handle<Value> object);
 
@@ -1305,23 +1524,42 @@ class FunctionTemplate : public Template {
 
 
 /**
- * ObjectTemplate: (TODO(758124): Add comments.)
+ * An ObjectTemplate is used to create objects at runtime.
+ *
+ * Properties added to an ObjectTemplate are added to each object
+ * created from the ObjectTemplate.
  */
-class ObjectTemplate : public Template {
+class EXPORT ObjectTemplate : public Template {
  public:
+  /** Creates an ObjectTemplate. */
   static Local<ObjectTemplate> New();
+
   /** Creates a new instance of this template.*/
   Local<Object> NewInstance();
 
   /**
    * Sets an accessor on the object template.
-   * /param name (TODO(758124): Describe)
-   * /param getter (TODO(758124): Describe)
-   * /param setter (TODO(758124): Describe)
-   * /param data ((TODO(758124): Describe)
-   * /param settings settings must be one of:
-   *   DEFAULT = 0, ALL_CAN_READ = 1, or ALL_CAN_WRITE = 2
-   * /param attribute (TODO(758124): Describe)
+   *
+   * Whenever the property with the given name is accessed on objects
+   * created from this ObjectTemplate the getter and setter callbacks
+   * are called instead of getting and setting the property directly
+   * on the JavaScript object.
+   *
+   * \param name The name of the property for which an accessor is added.
+   * \param getter The callback to invoke when getting the property.
+   * \param setter The callback to invoke when setting the property.
+   * \param data A piece of data that will be passed to the getter and setter
+   *   callbacks whenever they are invoked.
+   * \param settings Access control settings for the accessor. This is a bit
+   *   field consisting of one of more of
+   *   DEFAULT = 0, ALL_CAN_READ = 1, or ALL_CAN_WRITE = 2.
+   *   The default is to not allow cross-context access.
+   *   ALL_CAN_READ means that all cross-context reads are allowed.
+   *   ALL_CAN_WRITE means that all cross-context writes are allowed.
+   *   The combination ALL_CAN_READ | ALL_CAN_WRITE can be used to allow all
+   *   cross-context access.
+   * \param attribute The attributes of the property for which an accessor
+   *   is added.
    */
   void SetAccessor(Handle<String> name,
                    AccessorGetter getter,
@@ -1332,12 +1570,19 @@ class ObjectTemplate : public Template {
 
   /**
    * Sets a named property handler on the object template.
-   * /param getter (TODO(758124): Describe)
-   * /param setter (TODO(758124): Describe)
-   * /param query (TODO(758124): Describe)
-   * /param deleter (TODO(758124): Describe)
-   * /param enumerator (TODO(758124): Describe)
-   * /param data (TODO(758124): Describe)
+   *
+   * Whenever a named property is accessed on objects created from
+   * this object template, the provided callback is invoked instead of
+   * accessing the property directly on the JavaScript object.
+   *
+   * \param getter The callback to invoke when getting a property.
+   * \param setter The callback to invoke when setting a property.
+   * \param query The callback to invoke to check is an object has a property.
+   * \param deleter The callback to invoke when deleting a property.
+   * \param enumerator The callback to invoke to enumerate all the named
+   *   properties of an object.
+   * \param data A piece of data that will be passed to the callbacks
+   *   whenever they are invoked.
    */
   void SetNamedPropertyHandler(NamedPropertyGetter getter,
                                NamedPropertySetter setter = 0,
@@ -1348,12 +1593,19 @@ class ObjectTemplate : public Template {
 
   /**
    * Sets an indexed property handler on the object template.
-   * /param getter (TODO(758124): Describe)
-   * /param setter (TODO(758124): Describe)
-   * /param query (TODO(758124): Describe)
-   * /param deleter (TODO(758124): Describe)
-   * /param enumerator (TODO(758124): Describe)
-   * /param data (TODO(758124): Describe)
+   *
+   * Whenever an indexed property is accessed on objects created from
+   * this object template, the provided callback is invoked instead of
+   * accessing the property directly on the JavaScript object.
+   *
+   * \param getter The callback to invoke when getting a property.
+   * \param setter The callback to invoke when setting a property.
+   * \param query The callback to invoke to check is an object has a property.
+   * \param deleter The callback to invoke when deleting a property.
+   * \param enumerator The callback to invoke to enumerate all the indexed
+   *   properties of an object.
+   * \param data A piece of data that will be passed to the callbacks
+   *   whenever they are invoked.
    */
   void SetIndexedPropertyHandler(IndexedPropertyGetter getter,
                                  IndexedPropertySetter setter = 0,
@@ -1364,20 +1616,37 @@ class ObjectTemplate : public Template {
   /**
    * Sets the callback to be used when calling instances created from
    * this template as a function.  If no callback is set, instances
-   * behave like normal javascript objects that cannot be called as a
+   * behave like normal JavaScript objects that cannot be called as a
    * function.
    */
   void SetCallAsFunctionHandler(InvocationCallback callback,
                                 Handle<Value> data = Handle<Value>());
 
-  /** Make object instances of the template as undetectable.*/
+  /**
+   * Mark object instances of the template as undetectable.
+   *
+   * In many ways, undetectable objects behave as though they are not
+   * there.  They behave like 'undefined' in conditionals and when
+   * printed.  However, properties can be accessed and called as on
+   * normal objects.
+   */
   void MarkAsUndetectable();
 
-  /** TODO(758124): Clarify documentation: Object instances of the
-   * template need access check.*/
+  /**
+   * Sets access check callbacks on the object template.
+   *
+   * When accessing properties on instances of this object template,
+   * the access check callback will be called to determine whether or
+   * not to allow cross-context access to the properties.
+   * The last parameter specifies whether access checks are turned
+   * on by default on instances. If access checks are off by default,
+   * they can be turned on on individual instances by calling
+   * Object::TurnOnAccessCheck().
+   */
   void SetAccessCheckCallbacks(NamedSecurityCallback named_handler,
                                IndexedSecurityCallback indexed_handler,
-                               Handle<Value> data = Handle<Value>());
+                               Handle<Value> data = Handle<Value>(),
+                               bool turned_on_by_default = true);
 
   /**
    * Gets the number of internal fields for objects generated from
@@ -1399,10 +1668,10 @@ class ObjectTemplate : public Template {
 
 
 /**
- * A function signature which specifies which receivers and arguments
- * in can legally be called with.
+ * A Signature specifies which receivers and arguments a function can
+ * legally be called with.
  */
-class Signature : public Data {
+class EXPORT Signature : public Data {
  public:
   static Local<Signature> New(Handle<FunctionTemplate> receiver =
                                   Handle<FunctionTemplate>(),
@@ -1414,10 +1683,10 @@ class Signature : public Data {
 
 
 /**
- * A utility for determining the type of objects based on which
- * template they were constructed from.
+ * A utility for determining the type of objects based on the template
+ * they were constructed from.
  */
-class TypeSwitch : public Data {
+class EXPORT TypeSwitch : public Data {
  public:
   static Local<TypeSwitch> New(Handle<FunctionTemplate> type);
   static Local<TypeSwitch> New(int argc, Handle<FunctionTemplate> types[]);
@@ -1433,7 +1702,7 @@ class TypeSwitch : public Data {
 /**
  * Ignore
  */
-class Extension {
+class EXPORT Extension {  // NOLINT
  public:
   Extension(const char* name,
             const char* source = 0,
@@ -1458,16 +1727,20 @@ class Extension {
   int dep_count_;
   const char** deps_;
   bool auto_enable_;
+
+  // Disallow copying and assigning.
+  Extension(const Extension&);
+  void operator=(const Extension&);
 };
 
 
-void RegisterExtension(Extension* extension);
+void EXPORT RegisterExtension(Extension* extension);
 
 
 /**
  * Ignore
  */
-class DeclareExtension {
+class EXPORT DeclareExtension {
  public:
   inline DeclareExtension(Extension* extension) {
     RegisterExtension(extension);
@@ -1478,24 +1751,24 @@ class DeclareExtension {
 // --- S t a t i c s ---
 
 
-Handle<Primitive> Undefined();
-Handle<Primitive> Null();
-Handle<Boolean> True();
-Handle<Boolean> False();
+Handle<Primitive> EXPORT Undefined();
+Handle<Primitive> EXPORT Null();
+Handle<Boolean> EXPORT True();
+Handle<Boolean> EXPORT False();
 
 
 /**
  * A set of constraints that specifies the limits of the runtime's
  * memory use.
  */
-class ResourceConstraints {
+class EXPORT ResourceConstraints {
  public:
   ResourceConstraints();
-  int max_young_space_size() { return max_young_space_size_; }
+  int max_young_space_size() const { return max_young_space_size_; }
   void set_max_young_space_size(int value) { max_young_space_size_ = value; }
-  int max_old_space_size() { return max_old_space_size_; }
+  int max_old_space_size() const { return max_old_space_size_; }
   void set_max_old_space_size(int value) { max_old_space_size_ = value; }
-  uint32_t* stack_limit() { return stack_limit_; }
+  uint32_t* stack_limit() const { return stack_limit_; }
   void set_stack_limit(uint32_t* value) { stack_limit_ = value; }
  private:
   int max_young_space_size_;
@@ -1517,18 +1790,18 @@ typedef void (*MessageCallback)(Handle<Message> message, Handle<Value> data);
 
 
 /**
- * Schedules an exception to be thrown when returning to javascript.  When an
- * exception has been scheduled it is illegal to invoke any javascript
+ * Schedules an exception to be thrown when returning to JavaScript.  When an
+ * exception has been scheduled it is illegal to invoke any JavaScript
  * operation; the caller must return immediately and only after the exception
- * has been handled does it become legal to invoke javascript operations.
+ * has been handled does it become legal to invoke JavaScript operations.
  */
-Handle<Value> ThrowException(Handle<Value> exception);
+Handle<Value> EXPORT ThrowException(Handle<Value> exception);
 
 /**
  * Create new error objects by calling the corresponding error object
  * constructor with the message.
  */
-class Exception {
+class EXPORT Exception {
  public:
   static Local<Value> RangeError(Handle<String> message);
   static Local<Value> ReferenceError(Handle<String> message);
@@ -1538,16 +1811,9 @@ class Exception {
 };
 
 
-/**
- * Ignore
- */
-struct VersionInfo {
-  int major, minor, build_major, build_minor, revision;
-};
+// --- C o u n t e r s  C a l l b a c k s ---
 
-// --- C o u n t e r s  C a l l b a c k s
-
-typedef int* (*CounterLookupCallback)(const wchar_t* name);
+typedef int* (*CounterLookupCallback)(const char* name);
 
 // --- F a i l e d A c c e s s C h e c k C a l l b a c k ---
 typedef void (*FailedAccessCheckCallback)(Local<Object> target,
@@ -1558,42 +1824,73 @@ typedef void (*FailedAccessCheckCallback)(Local<Object> target,
 
 /**
  * Applications can register a callback function which is called
- * before and after a major Garbage Collection.
- * Allocations are not allowed in the callback function, you therefore.
- * cannot manipulate objects (set or delete properties for example)
- * since it is likely such operations will result in the allocation of objects.
+ * before and after a major garbage collection.  Allocations are not
+ * allowed in the callback function, you therefore cannot manipulate
+ * objects (set or delete properties for example) since it is possible
+ * such operations will result in the allocation of objects.
  */
 typedef void (*GCCallback)();
 
 
-//  --- C o n t e x t  G e n e r a t o r
+// --- E x t e r n a l  S y m b o l  C a l l b a c k ---
+
+/**
+ * Callback used to allocate certain V8 symbols as external strings.
+ *
+ * The data passed to the callback is utf8 encoded.
+ *
+ * Allocations are not allowed in the callback function, you therefore
+ * cannot manipulate objects (set or delete properties for example)
+ * since it is possible such operations will result in the allocation
+ * of objects.
+ */
+typedef String::ExternalStringResource* (*ExternalSymbolCallback)(
+    const char* utf8,
+    size_t length);
+
+
+// --- C o n t e x t  G e n e r a t o r ---
 
 /**
  * Applications must provide a callback function which is called to generate
- * a context if a context wasn't deserialized from the snapshot.
+ * a context if a context was not deserialized from the snapshot.
  */
-
 typedef Persistent<Context> (*ContextGenerator)();
 
 
 /**
  * Container class for static utility functions.
  */
-class V8 {
+class EXPORT V8 {
  public:
+  /** Set the callback to invoke in case of fatal errors. */
   static void SetFatalErrorHandler(FatalErrorCallback that);
 
-  // TODO(758124): Clarify documentation: Prevent top level from
-  // calling V8::FatalProcessOutOfMemory if HasOutOfMemoryException();
+  /**
+   * Ignore out-of-memory exceptions.
+   *
+   * V8 running out of memory is treated as a fatal error by default.
+   * This means that the fatal error handler is called and that V8 is
+   * terminated.
+   *
+   * IgnoreOutOfMemoryException can be used to not treat a
+   * out-of-memory situation as a fatal error.  This way, the contexts
+   * that did not cause the out of memory problem might be able to
+   * continue execution.
+   */
   static void IgnoreOutOfMemoryException();
 
-  // Check if V8 is dead.
+  /**
+   * Check if V8 is dead and therefore unusable.  This is the case after
+   * fatal errors such as out-of-memory situations.
+   */
   static bool IsDead();
 
   /**
-   * TODO(758124): Clarify documentation - what is the "ones" in
-   * "existing ones": Adds a message listener, does not overwrite any
-   * existing ones with the same callback function.
+   * Adds a message listener.
+   *
+   * The same message listener can be added more than once and it that
+   * case it will be called more than once for each message.
    */
   static bool AddMessageListener(MessageCallback that,
                                  Handle<Value> data = Handle<Value>());
@@ -1604,13 +1901,19 @@ class V8 {
   static void RemoveMessageListeners(MessageCallback that);
 
   /**
-   * Sets v8 flags from a string.
-   * TODO(758124): Describe flags?
+   * Sets V8 flags from a string.
    */
   static void SetFlagsFromString(const char* str, int length);
 
-  /** Sets the version fields in the given VersionInfo struct.*/
-  static void GetVersion(VersionInfo* info);
+  /**
+   * Sets V8 flags from the command line.
+   */
+  static void SetFlagsFromCommandLine(int* argc,
+                                      char** argv,
+                                      bool remove_flags);
+
+  /** Get the version string. */
+  static const char* GetVersion();
 
   /**
    * Enables the host application to provide a mechanism for recording
@@ -1628,36 +1931,68 @@ class V8 {
   static void SetFailedAccessCheckCallbackFunction(FailedAccessCheckCallback);
 
   /**
-   * Enables the host application to receive a notification before a major GC.
-   * Allocations are not allowed in the callback function, you therefore
-   * cannot manipulate objects (set or delete properties for example)
-   * since it is likely such operations will result in the allocation of objects.
+   * Enables the host application to receive a notification before a
+   * major garbage colletion.  Allocations are not allowed in the
+   * callback function, you therefore cannot manipulate objects (set
+   * or delete properties for example) since it is possible such
+   * operations will result in the allocation of objects.
    */
   static void SetGlobalGCPrologueCallback(GCCallback);
 
   /**
-   * Enables the host application to receive a notification after a major GC.
-   * (TODO(758124): is the following true for this one too?)
-   * Allocations are not allowed in the callback function, you therefore
-   * cannot manipulate objects (set or delete properties for example)
-   * since it is likely such operations will result in the allocation of objects.
+   * Enables the host application to receive a notification after a
+   * major garbage collection.  Allocations are not allowed in the
+   * callback function, you therefore cannot manipulate objects (set
+   * or delete properties for example) since it is possible such
+   * operations will result in the allocation of objects.
    */
   static void SetGlobalGCEpilogueCallback(GCCallback);
 
   /**
-   * Allows the host application to group objects together. If one object
-   * in the group is alive, all objects in the group are alive.
-   * After each GC, object groups are removed. It is intended to be used
-   * in the before-GC callback function to simulate DOM tree connections
-   * among JS wrapper objects.
+   * Applications can register a callback that will be used when
+   * allocating most of the V8 symbols.  The callback must return an
+   * external string resource that represents the symbols.
+   *
+   * Most often when performing a property lookup the key will be a
+   * symbol.  Allocating symbols as external strings can reduce the
+   * amount of string conversions needed when using interceptors and
+   * accessors.
+   *
+   * \note This is an experimental feature and it might be removed.
+   */
+  static void SetExternalSymbolCallback(ExternalSymbolCallback);
+
+  /**
+   * Allows the host application to group objects together. If one
+   * object in the group is alive, all objects in the group are alive.
+   * After each garbage collection, object groups are removed. It is
+   * intended to be used in the before-garbage-collection callback
+   * function for istance to simulate DOM tree connections among JS
+   * wrapper objects.
    */
   static void AddObjectToGroup(void* id, Persistent<Object> obj);
 
   /**
-   * Initializes from snapshot if possible. Otherwise, attempts to initialize
-   * from scratch.
+   * Initializes from snapshot if possible. Otherwise, attempts to
+   * initialize from scratch.
    */
   static bool Initialize();
+
+  /**
+   * Adjusts the amount of registered external memory.  Used to give
+   * V8 an indication of the amount of externally allocated memory
+   * that is kept alive by JavaScript objects.  V8 uses this to decide
+   * when to perform global garbage collections.  Registering
+   * externally allocated memory will trigger global garbage
+   * collections more often than otherwise in an attempt to garbage
+   * collect the JavaScript objects keeping the externally allocated
+   * memory alive.
+   *
+   * \param change_in_bytes the change in externally allocated memory
+   *   that is kept alive by JavaScript objects.
+   * \returns the adjusted value.
+   */
+  static int AdjustAmountOfExternalAllocatedMemory(int change_in_bytes);
 
  private:
   V8();
@@ -1679,7 +2014,7 @@ class V8 {
 /**
  * An external exception handler.
  */
-class TryCatch {
+class EXPORT TryCatch {
  public:
 
   /**
@@ -1695,7 +2030,7 @@ class TryCatch {
   /**
    * Returns true if an exception has been caught by this try/catch block.
    */
-  bool HasCaught();
+  bool HasCaught() const;
 
   /**
    * Returns the exception caught by this try/catch block.  If no exception has
@@ -1703,7 +2038,16 @@ class TryCatch {
    *
    * The returned handle is valid until this TryCatch block has been destroyed.
    */
-  Local<Value> Exception();
+  Local<Value> Exception() const;
+
+  /**
+   * Returns the message associated with this exception.  If there is
+   * no message associated an empty handle is returned.
+   *
+   * The returned handle is valid until this TryCatch block has been
+   * destroyed.
+   */
+  Local<v8::Message> Message() const;
 
   /**
    * Clears any exceptions that may have been caught by this try/catch block.
@@ -1716,12 +2060,30 @@ class TryCatch {
    */
   void Reset();
 
+  /**
+   * Set verbosity of the external exception handler.
+   *
+   * By default, exceptions that are caught by an external exception
+   * handler are not reported.  Call SetVerbose with true on an
+   * external exception handler to have exceptions caught by the
+   * handler reported as if they were not caught.
+   */
   void SetVerbose(bool value);
+
+  /**
+   * Set whether or not this TryCatch should capture a Message object
+   * which holds source information about where the exception
+   * occurred.  True by default.
+   */
+  void SetCaptureMessage(bool value);
 
  public:
   TryCatch* next_;
   void* exception_;
+  void* message_;
   bool is_verbose_;
+  bool capture_message_;
+  void* js_handler_;
 };
 
 
@@ -1731,7 +2093,7 @@ class TryCatch {
 /**
  * Ignore
  */
-class ExtensionConfiguration {
+class EXPORT ExtensionConfiguration {
  public:
   ExtensionConfiguration(int name_count, const char* names[])
       : name_count_(name_count), names_(names) { }
@@ -1746,14 +2108,22 @@ class ExtensionConfiguration {
  * A sandboxed execution context with its own set of built-in objects
  * and functions.
  */
-class Context {
+class EXPORT Context {
  public:
+  /** Returns the global object of the context. */
   Local<Object> Global();
 
-  static Persistent<Context> New(ExtensionConfiguration* extensions = 0,
-                                 Handle<ObjectTemplate> global_template =
-                                     Handle<ObjectTemplate>(),
-                                 Handle<Value> global_object = Handle<Value>());
+  /**
+   * Detaches the global object from its context before
+   * the global object can be reused to create a new context.
+   */
+  void DetachGlobal();
+
+  /** Creates a new context. */
+  static Persistent<Context> New(
+      ExtensionConfiguration* extensions = 0,
+      Handle<ObjectTemplate> global_template = Handle<ObjectTemplate>(),
+      Handle<Value> global_object = Handle<Value>());
 
   /** Returns the last entered context. */
   static Local<Context> GetEntered();
@@ -1761,35 +2131,43 @@ class Context {
   /** Returns the context that is on the top of the stack. */
   static Local<Context> GetCurrent();
 
-  /** Returns the security context that is currently used. */
-  static Local<Context> GetCurrentSecurityContext();
-
   /**
    * Sets the security token for the context.  To access an object in
    * another context, the security tokens must match.
    */
   void SetSecurityToken(Handle<Value> token);
 
+  /** Restores the security token to the default value. */
+  void UseDefaultSecurityToken();
+
   /** Returns the security token of this context.*/
   Handle<Value> GetSecurityToken();
 
+  /**
+   * Enter this context.  After entering a context, all code compiled
+   * and run is compiled and run in this context.  If another context
+   * is already entered, this old context is saved so it can be
+   * restored when the new context is exited.
+   */
   void Enter();
+
+  /**
+   * Exit this context.  Exiting the current context restores the
+   * context that was in place when entering the current context.
+   */
   void Exit();
 
-  /** Returns true if the context has experienced an out of memory situation.*/
+  /** Returns true if the context has experienced an out of memory situation. */
   bool HasOutOfMemoryException();
 
-  /** Returns true if called from within a context.*/
+  /** Returns true if V8 has a current context. */
   static bool InContext();
-
-  /** Returns true if called from within a security context.*/
-  static bool InSecurityContext();
 
   /**
    * Stack-allocated class which sets the execution context for all
    * operations executed within a local scope.
    */
-  class Scope {
+  class EXPORT Scope {
    public:
     inline Scope(Handle<Context> context) : context_(context) {
       context_->Enter();
@@ -1808,17 +2186,18 @@ class Context {
 
 
 /**
- * Multiple threads in V8 are allowed, but only one thread at a time is
- * allowed to use V8.  The definition of using V8' includes accessing
- * handles or holding onto object pointers obtained from V8 handles.
- * It is up to the user of V8 to ensure (perhaps with locking) that
- * this constraint is not violated.
+ * Multiple threads in V8 are allowed, but only one thread at a time
+ * is allowed to use V8.  The definition of 'using V8' includes
+ * accessing handles or holding onto object pointers obtained from V8
+ * handles.  It is up to the user of V8 to ensure (perhaps with
+ * locking) that this constraint is not violated.
  *
  * If you wish to start using V8 in a thread you can do this by constructing
  * a v8::Locker object.  After the code using V8 has completed for the
  * current thread you can call the destructor.  This can be combined
  * with C++ scope-based construction as follows:
  *
+ * \code
  * ...
  * {
  *   v8::Locker locker;
@@ -1826,17 +2205,20 @@ class Context {
  *   // Code using V8 goes here.
  *   ...
  * } // Destructor called here
+ * \endcode
  *
  * If you wish to stop using V8 in a thread A you can do this by either
  * by destroying the v8::Locker object as above or by constructing a
  * v8::Unlocker object:
  *
+ * \code
  * {
  *   v8::Unlocker unlocker;
  *   ...
  *   // Code not using V8 goes here while V8 can run in another thread.
  *   ...
  * } // Destructor called here.
+ * \endcode
  *
  * The Unlocker object is intended for use in a long-running callback
  * from V8, where you want to release the V8 lock for other threads to
@@ -1852,6 +2234,7 @@ class Context {
  * An unlocker will unlock several lockers if it has to and reinstate
  * the correct depth of locking on its destruction. eg.:
  *
+ * \code
  * // V8 not locked.
  * {
  *   v8::Locker locker;
@@ -1868,32 +2251,46 @@ class Context {
  *   // V8 still locked (1 level).
  * }
  * // V8 Now no longer locked.
+ * \endcode
  */
-class Unlocker {
+class EXPORT Unlocker {
  public:
   Unlocker();
   ~Unlocker();
 };
 
 
-class Locker {
+class EXPORT Locker {
  public:
   Locker();
   ~Locker();
-#ifdef DEBUG
-  static void AssertIsLocked();
-#else
-  static inline void AssertIsLocked() { }
-#endif
-  /*
-   * Fires a timer every n ms that will switch between
-   * multiple threads that are in contention for the V8 lock.
+
+  /**
+   * Start preemption.
+   *
+   * When preemption is started, a timer is fired every n milli seconds
+   * that will switch between multiple threads that are in contention
+   * for the V8 lock.
    */
   static void StartPreemption(int every_n_ms);
+
+  /**
+   * Stop preemption.
+   */
   static void StopPreemption();
+
+  /**
+   * Returns whether or not the locker is locked by the current thread.
+   */
+  static bool IsLocked();
+
  private:
   bool has_lock_;
   bool top_level_;
+
+  // Disallow copying and assigning.
+  Locker(const Locker&);
+  void operator=(const Locker&);
 };
 
 
@@ -2027,17 +2424,17 @@ Local<T> HandleScope::Close(Handle<T> value) {
   return Local<T>(reinterpret_cast<T*>(after));
 }
 
-Handle<String> ScriptOrigin::ResourceName() {
+Handle<Value> ScriptOrigin::ResourceName() const {
   return resource_name_;
 }
 
 
-Handle<Integer> ScriptOrigin::ResourceLineOffset() {
+Handle<Integer> ScriptOrigin::ResourceLineOffset() const {
   return resource_line_offset_;
 }
 
 
-Handle<Integer> ScriptOrigin::ResourceColumnOffset() {
+Handle<Integer> ScriptOrigin::ResourceColumnOffset() const {
   return resource_column_offset_;
 }
 
@@ -2053,8 +2450,8 @@ void Template::Set(const char* name, v8::Handle<Data> value) {
 
 
 /**
- * \example evaluator.cc
- * A simple evaluator that takes a list of expressions on the
+ * \example shell.cc
+ * A simple shell that takes a list of expressions on the
  * command-line and executes them.
  */
 
@@ -2068,7 +2465,8 @@ void Template::Set(const char* name, v8::Handle<Data> value) {
 
 
 #undef EXPORT
+#undef EXPORT_INLINE
 #undef TYPE_CHECK
 
 
-#endif  // _V8
+#endif  // V8_H_
