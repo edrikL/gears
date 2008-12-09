@@ -1,4 +1,6 @@
-// Copyright 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef BINDINGS_V8_DOM_WRAPPER_MAP
 #define BINDINGS_V8_DOM_WRAPPER_MAP
@@ -63,7 +65,8 @@ template <class KeyType>
 class DOMWrapperMap : public WeakReferenceMap<KeyType, v8::Object> {
  public:
   DOMWrapperMap(v8::WeakReferenceCallback callback) :
-       WeakReferenceMap(callback) { }
+       WeakReferenceMap<KeyType, v8::Object>(callback) { }
 };
 
 #endif  // BINDINGS_V8_DOM_WRAPPER_MAP
+

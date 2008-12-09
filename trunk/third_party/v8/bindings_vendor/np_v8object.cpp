@@ -32,14 +32,15 @@
 #include <sstream>
 #include <v8.h>
 #include "np_v8object.h"
+#include "ChromiumBridge.h"
 #include "Frame.h"
 #include "bindings/npruntime.h"
 #include "npruntime_priv.h"
 #include "PlatformString.h"
+#include "ScriptController.h"
 #include "v8_helpers.h"
 #include "v8_np_utils.h"
 #include "v8_proxy.h"
-#include "V8Bridge.h"
 #include "DOMWindow.h"
 
 using WebCore::V8ClassIndex;
@@ -242,6 +243,12 @@ bool NPN_InvokeDefault(NPP npp, NPObject *npobj, const NPVariant *args,
 
 bool NPN_Evaluate(NPP npp, NPObject *npobj, NPString *npscript,
                   NPVariant *result) {
+  bool popups_allowed = WebCore::ChromiumBridge::popupsAllowed(npp);
+  return NPN_EvaluateHelper(npp, popups_allowed, npobj, npscript, result);
+}
+
+bool NPN_EvaluateHelper(NPP npp, bool popups_allowed, NPObject* npobj, 
+                        NPString* npscript, NPVariant *result) {
   VOID_TO_NPVARIANT(*result);
   if (npobj == NULL)
     return false;
@@ -257,7 +264,10 @@ bool NPN_Evaluate(NPP npp, NPObject *npobj, NPString *npscript,
 
     v8::Context::Scope scope(context);
 
-    WebCore::String filename(L"npscript");
+    WebCore::String filename;
+    if (!popups_allowed)
+      filename = "npscript";
+
     // Convert UTF-8 stream to WebCore::String.
     WebCore::String script = WebCore::String::fromUTF8(
         npscript->UTF8Characters, npscript->UTF8Length);
@@ -326,7 +336,7 @@ bool NPN_SetProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName,
     NPIdentifierToV8Identifier(propertyName, identifier);
     obj->Set(v8::String::New(identifier.c_str()),
         ConvertNPVariantToV8Object(value,
-            object->root_object->frame()->windowScriptNPObject()));
+            object->root_object->frame()->script()->windowScriptNPObject()));
     return true;
   }
 
@@ -409,8 +419,6 @@ bool NPN_HasMethod(NPP npp, NPObject *npobj, NPIdentifier methodName) {
 
 void NPN_SetException(NPObject *npobj, const NPUTF8 *message) {
   if (npobj->_class == NPScriptObjectClass) {
-    V8NPObject *object = reinterpret_cast<V8NPObject*>(npobj);
-
     v8::HandleScope handle_scope;
     v8::Handle<v8::Context> context = GetV8Context(NULL, npobj);
     if (context.IsEmpty()) return;
@@ -457,7 +465,7 @@ bool NPN_Enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
     v8::Handle<v8::Value> argv[] = { obj };
     v8::Local<v8::Value> props_obj =
         enumerator->Call(v8::Handle<v8::Object>::Cast(enumerator_obj),
-                         arraysize(argv), argv);
+                         ARRAYSIZE_UNSAFE(argv), argv);
     if (props_obj.IsEmpty())
       return false;
 

@@ -1,4 +1,6 @@
-// Copyright (2007) Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 // Forked with few modifications from:
 // https://svn/chrome/trunk/webkit/port/bindings/v8/v8_npobject.h@16743
@@ -54,3 +56,4 @@ v8::Local<v8::Object> CreateV8ObjectForNPObject(NPObject* object,
 void ForgetV8ObjectForNPObject(NPObject*object);
 
 #endif  // V8_NPOBJECT_H__
+

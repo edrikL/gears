@@ -1,10 +1,12 @@
-// Copyright 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_NP_UTILS_H__
 #define V8_NP_UTILS_H__
 
 #include <v8.h>
-#include "bindings/npruntime.h"
+#include "third_party/npapi/bindings/npruntime.h"
 
 namespace WebCore {
   class Frame;
@@ -25,3 +27,4 @@ v8::Handle<v8::Value> ConvertNPVariantToV8Object(const NPVariant* value,
 NPIdentifier GetStringIdentifier(v8::Handle<v8::String> str);
 
 #endif  // V8_NP_UTILS_H__
+

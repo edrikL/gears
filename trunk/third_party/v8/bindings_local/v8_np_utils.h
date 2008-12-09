@@ -1,4 +1,6 @@
-// Copyright 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 // Forked with few modifications from:
 // https://svn/chrome/trunk/webkit/port/bindings/v8/v8_np_utils.h@16743
@@ -27,3 +29,4 @@ v8::Handle<v8::Value> ConvertNPVariantToV8Object(const NPVariant* value,
 NPIdentifier GetStringIdentifier(v8::Handle<v8::String> str);
 
 #endif  // V8_NP_UTILS_H__
+

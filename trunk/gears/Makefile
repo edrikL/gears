@@ -679,7 +679,7 @@ CHROME_CPPSRCS	+= \
 		$(NULL)
 
 V8_DIR = ../third_party/v8/bin-$(MODE)
-CHROME_LINK_EXTRAS += $(V8_DIR)/libv8core.lib $(V8_DIR)/libjscre.lib $(V8_DIR)/no_snapshotv8.lib 
+CHROME_LINK_EXTRAS += $(V8_DIR)/v8_base.lib $(V8_DIR)/v8_snapshot.lib
 
 #-----------------------------------------------------------------------------
 # third_party/zlib

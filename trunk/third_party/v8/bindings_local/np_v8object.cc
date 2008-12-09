@@ -90,7 +90,7 @@ static bool V8_NPN_EvaluateInternal(NPP npp, NPObject *npobj,
 NPClass* NPScriptObjectClass = &V8NPObjectClass;
 
 NPObject *V8_NPN_GetGlobalObject(NPP npp) {
-  v8::Locker::AssertIsLocked();
+  ASSERT(v8::Locker::IsLocked());
   v8::HandleScope handle_scope;
   v8::Handle<v8::Context> context = GetV8Context(npp, NULL);
   if (context.IsEmpty())
@@ -102,7 +102,7 @@ NPObject *V8_NPN_GetGlobalObject(NPP npp) {
 }
 
 NPObject* V8_NPN_CreateScriptObject(NPP npp, v8::Handle<v8::Object> object) {
-  v8::Locker::AssertIsLocked();
+  ASSERT(v8::Locker::IsLocked());
   // Check to see if this object is already wrapped.
   if (object->InternalFieldCount() == 3 &&
       object->GetInternalField(1)->IsNumber() &&
@@ -243,7 +243,7 @@ bool V8_NPN_Evaluate(NPP npp, NPObject *npobj, NPString *npscript, NPVariant *re
 
 static bool V8_NPN_EvaluateInternal(NPP npp, NPObject *npobj,
                                     NPString *npscript, NPVariant *result) {
-  v8::Locker::AssertIsLocked();
+  ASSERT(v8::Locker::IsLocked());
   VOID_TO_NPVARIANT(*result);
 
   v8::HandleScope handle_scope;
@@ -405,7 +405,6 @@ bool V8_NPN_HasMethod(NPP npp, NPObject *npobj, NPIdentifier methodName) {
 
 void V8_NPN_SetException(NPObject *npobj, const NPUTF8 *message) {
   NPP npp = BrowserUtils::GetCurrentJsCallContext()->js_context();
-
   V8Locker locker;
   v8::HandleScope handle_scope;
   v8::Handle<v8::Context> context = GetV8Context(npp, npobj);

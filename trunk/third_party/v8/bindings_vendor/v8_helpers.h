@@ -1,9 +1,11 @@
-// Copyright 2007 Google Inc. All Rights Reserved.
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #ifndef V8_HELPERS_H__
 #define V8_HELPERS_H__
 
-#include "bindings/npruntime.h"
+#include "third_party/npapi/bindings/npruntime.h"
 #include <v8.h>
 
 namespace WebCore {
@@ -20,3 +22,4 @@ v8::Local<v8::Context> GetV8Context(NPP npp, NPObject* npobj);
 WebCore::V8Proxy* GetV8Proxy(NPObject* npobj);
 
 #endif  // V8_HELPERS_H__
+
