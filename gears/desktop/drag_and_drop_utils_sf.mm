@@ -32,7 +32,6 @@
 
 #import "gears/base/common/common.h"
 #import "gears/base/safari/nsstring_utils.h"
-#import "gears/desktop/drag_and_drop_utils_common.h"
 #import "gears/desktop/file_dialog.h"
 
 static FileDragAndDropMetaData *g_file_drag_and_drop_meta_data = NULL;
@@ -233,7 +232,7 @@ void AcceptDrag(ModuleEnvironment *module_environment,
   g_drag_operation = acceptance ? NSDragOperationCopy : NSDragOperationNone;
 }
 
-void GetDragData(ModuleEnvironment *module_environment,
+bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,
                  JsObject *data_out,
                  std::string16 *error_out) {
@@ -245,9 +244,7 @@ void GetDragData(ModuleEnvironment *module_environment,
   // we are called during a user drag and drop action.
   if (!IsInADragOperation() && !IsInADropOperation()) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
+    return false;
   }
-  if (!AddFileDragAndDropData(module_environment, data_out, error_out)) {
-    assert(!error_out->empty());
-  }
+  return AddFileDragAndDropData(module_environment, data_out, error_out);
 }

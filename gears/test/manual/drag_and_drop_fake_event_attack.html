@@ -1,5 +1,5 @@
 <html><head>
-<title>Gears Drag and Drop, getDragData(fakeEvent)</title></head>
+<title>Gears Drag and Drop, getDragData(fakeEvent, 'Files')</title></head>
 <body>
 <ol>
 <li>Drag some files from the desktop.</li>
@@ -51,7 +51,7 @@ function handler(isDrop, isDragEnterOrDragOver) {
     invalidEvent = evt;
     if (isDrop) {
       try {
-        var data = desktop.getDragData(evt);
+        var data = desktop.getDragData(evt, 'Files');
         // The line above should always throw an exception, if we are in
         // manual dispatch (as opposed to a genuine drag and drop event).
         if (isInManualDispatch) {
@@ -106,7 +106,7 @@ if (isFirefox) {
 function tryGetDragData(evt) {
   document.getElementById('eventTypeOutput').innerHTML = evt.type;
   try {
-    desktop.getDragData(evt);
+    desktop.getDragData(evt, 'Files');
     // The line above should always throw an exception.
     alert('Gears drag and drop has a potential security hole.');
   } catch (ex) {

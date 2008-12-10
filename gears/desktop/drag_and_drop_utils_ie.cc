@@ -37,7 +37,6 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 
 #include "gears/base/ie/activex_utils.h"
-#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -209,7 +208,7 @@ void AcceptDrag(ModuleEnvironment *module_environment,
 }
 
 
-void GetDragData(ModuleEnvironment *module_environment,
+bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,
                  JsObject *data_out,
                  std::string16 *error_out) {
@@ -217,15 +216,13 @@ void GetDragData(ModuleEnvironment *module_environment,
   DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
   if (type == DRAG_AND_DROP_EVENT_INVALID) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
+    return false;
   }
 
-  if (!AddFileDragAndDropData(module_environment,
-                              type == DRAG_AND_DROP_EVENT_DROP,
-                              data_out,
-                              error_out)) {
-    assert(!error_out->empty());
-  }
+  return AddFileDragAndDropData(module_environment,
+                                type == DRAG_AND_DROP_EVENT_DROP,
+                                data_out,
+                                error_out);
 }
 
 #endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM

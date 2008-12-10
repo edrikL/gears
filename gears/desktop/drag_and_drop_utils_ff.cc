@@ -41,7 +41,6 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/mime_detect.h"
 #include "gears/base/firefox/ns_file_utils.h"
-#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 
 
@@ -299,7 +298,7 @@ void AcceptDrag(ModuleEnvironment *module_environment,
 }
 
 
-void GetDragData(ModuleEnvironment *module_environment,
+bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,
                  JsObject *data_out,
                  std::string16 *error_out) {
@@ -308,7 +307,7 @@ void GetDragData(ModuleEnvironment *module_environment,
       module_environment, event_as_js_object, &dom_event);
   if (type == DRAG_AND_DROP_EVENT_INVALID) {
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
+    return false;
   }
 
   // TODO(nigeltao): Should we early exit for DRAG_AND_DROP_EVENT_DRAGLEAVE
@@ -320,14 +319,14 @@ void GetDragData(ModuleEnvironment *module_environment,
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!drag_service) {
     *error_out = GET_INTERNAL_ERROR_MESSAGE();
-    return;
+    return false;
   }
 
   nsCOMPtr<nsIDragSession> drag_session;
   nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
   if (NS_FAILED(nr) || !drag_session.get()) {
     *error_out = GET_INTERNAL_ERROR_MESSAGE();
-    return;
+    return false;
   }
 
   // TODO(nigeltao): cache the filenames (and their MIME types, extensions,
@@ -336,13 +335,11 @@ void GetDragData(ModuleEnvironment *module_environment,
   // drag session ends and a new one begins, which might not be trivial if
   // you get the same nsIDragSession pointer (since it's just the singleton
   // DragService that's been QueryInterface'd) for two separate sessions.
-  if (!AddFileDragAndDropData(module_environment,
-                              drag_session.get(),
-                              type == DRAG_AND_DROP_EVENT_DROP,
-                              data_out,
-                              error_out)) {
-    assert(!error_out->empty());
-  }
+  return AddFileDragAndDropData(module_environment,
+                                drag_session.get(),
+                                type == DRAG_AND_DROP_EVENT_DROP,
+                                data_out,
+                                error_out);
 }
 
 

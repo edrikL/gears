@@ -38,6 +38,13 @@ enum DragAndDropEventType {
   DRAG_AND_DROP_EVENT_INVALID
 };
 
+enum DragAndDropFlavorType {
+  DRAG_AND_DROP_FLAVOR_FILES,
+  DRAG_AND_DROP_FLAVOR_TEXT,
+  DRAG_AND_DROP_FLAVOR_URL,
+  DRAG_AND_DROP_FLAVOR_INVALID
+};
+
 class FileDragAndDropMetaData {
  public:
   FileDragAndDropMetaData();
