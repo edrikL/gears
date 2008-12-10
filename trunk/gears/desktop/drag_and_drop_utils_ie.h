@@ -27,6 +27,7 @@
 #define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_IE_H__
 
 #include "gears/base/common/base_class.h"
+#include "gears/desktop/drag_and_drop_utils_common.h"
 
 HRESULT GetHtmlDataTransfer(
     IHTMLWindow2 *html_window_2,
@@ -43,7 +44,7 @@ void AcceptDrag(ModuleEnvironment *module_environment,
                 bool acceptance,
                 std::string16 *error_out);
 
-void GetDragData(ModuleEnvironment *module_environment,
+bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event,
                  JsObject *data_out,
                  std::string16 *error_out);

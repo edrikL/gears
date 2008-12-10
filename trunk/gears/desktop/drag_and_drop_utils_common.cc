@@ -95,22 +95,20 @@ bool FileDragAndDropMetaData::ToJsObject(
   // TODO(nigeltao): Error checking. We should return empty (or 0) instead of
   // partial results, in case of failure.
 
-  object_out->SetPropertyInt(STRING16(L"fileCount"), filenames_.size());
+  object_out->SetPropertyInt(STRING16(L"count"), filenames_.size());
   object_out->SetPropertyDouble(
-      STRING16(L"fileTotalBytes"),
+      STRING16(L"totalBytes"),
       static_cast<double>(total_bytes_));
 
   scoped_ptr<JsArray> extensions_array(
       module_environment->js_runner_->NewArray());
   AppendStringsToJsArray(extensions_, extensions_array.get());
-  object_out->SetPropertyArray(STRING16(L"fileExtensions"),
-      extensions_array.get());
+  object_out->SetPropertyArray(STRING16(L"extensions"), extensions_array.get());
 
   scoped_ptr<JsArray> mime_types_array(
       module_environment->js_runner_->NewArray());
   AppendStringsToJsArray(mime_types_, mime_types_array.get());
-  object_out->SetPropertyArray(STRING16(L"fileMimeTypes"),
-      mime_types_array.get());
+  object_out->SetPropertyArray(STRING16(L"mimeTypes"), mime_types_array.get());
 
   if (is_in_a_drop) {
     scoped_ptr<JsArray> file_array(

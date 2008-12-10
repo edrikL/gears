@@ -213,7 +213,7 @@ class GearsDesktop : public ModuleImplBaseClass {
   // OUT: -
   void AcceptDrag(JsCallContext *context);
 
-  // IN: Event event
+  // IN: Event event, string flavor
   // OUT: object data
   void GetDragData(JsCallContext *context);
 

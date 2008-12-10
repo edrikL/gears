@@ -1076,32 +1076,49 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   }
 
   scoped_ptr<JsObject> event_as_js_object;
+  std::string16 flavor_as_string;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_OBJECT, &event_as_js_object },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &flavor_as_string },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
+
+  // Currently, we only support one flavor: "Files". In the future, we may
+  // support others, such as "Text" or "URL".
+  // TODO(nigeltao): Should "Files" be case (in)sensitive? Or should it be
+  // something like "GearsFiles" or "application/x-gears-files"?
+  DragAndDropFlavorType flavor = DRAG_AND_DROP_FLAVOR_INVALID;
+  if (flavor_as_string == STRING16(L"Files")) {
+    flavor = DRAG_AND_DROP_FLAVOR_FILES;
+  }
+  if (flavor == DRAG_AND_DROP_FLAVOR_INVALID) {
+    context->SetException(STRING16(L"Unsupported flavor type."));
+    return;
+  }
 
   std::string16 error;
   scoped_ptr<JsObject> result(
       module_environment_->js_runner_->NewObject());
 
 #if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
-  ::GetDragData(module_environment_.get(),
-                event_as_js_object.get(),
-                result.get(),
-                &error);
+  bool data_available = ::GetDragData(module_environment_.get(),
+                                      event_as_js_object.get(),
+                                      result.get(),
+                                      &error);
 #else
   // TODO(nigeltao): implement on Chromium.
+  bool data_available = false;
   error = STRING16(L"getDragData is not supported for this platform.");
 #endif
 
-  if (!error.empty()) {
+  if (data_available) {
+    context->SetReturnValue(JSPARAM_OBJECT, result.get());
+  } else if (error.empty()) {
+    context->SetReturnValue(JSPARAM_UNDEFINED, NULL);
+  } else {
     context->SetException(error);
-    return;
   }
-
-  context->SetReturnValue(JSPARAM_OBJECT, result.get());
 }
 
 
