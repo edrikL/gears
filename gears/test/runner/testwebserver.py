@@ -375,6 +375,8 @@ class RequestHandler(asynchat.async_chat,
     """
     if (path.endswith('.worker.js')):
       return 'application/x-gears-worker'
+    elif (path.endswith('.worker.js2')):
+      return 'application/x-gears-worker  ;  charset=UTF-8'
     else:
       return SimpleHTTPServer.SimpleHTTPRequestHandler.guess_type(self, path)
 

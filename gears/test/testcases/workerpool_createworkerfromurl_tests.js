@@ -46,6 +46,11 @@ var crossOriginWorkerPath = '/testcases/test_worker_cross_origin.worker.js';
 // being executed.
 var crossOriginWorkerBadContentType =
     '/testcases/test_worker_bad_content_type.js';
+    
+// This worker gets served with a '; charset=UTF-8' suffix on its content-type
+// because of it's extension ('.worker.js2').
+var crossOriginWorkerWithCharsetSuffix =
+    '/testcases/test_worker_charset_suffix.worker.js2';
 
 var redirectPath = '/testcases/cgi/server_redirect.py?location=';
 
@@ -198,4 +203,18 @@ function testCrossOriginWorkerWithBadContentType() {
   var wp = google.gears.factory.create('beta.workerpool');
   wp.createWorkerFromUrl(differentOrigin + crossOriginWorkerBadContentType);
   waitForGlobalErrors([expectedError]);
+}
+
+// Test that cross-origin workers when the content-type header has a charset
+// suffix.
+function testCrossOriginWorkerWithCharsetSuffix() {
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.onmessage = function(text, sender, m) {
+    completeAsync();
+  };
+  var childId = wp.createWorkerFromUrl(
+      differentOrigin + crossOriginWorkerWithCharsetSuffix);
+
+  startAsync();
+  wp.sendMessage('cross origin ping', childId);
 }

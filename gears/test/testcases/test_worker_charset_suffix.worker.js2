@@ -1,0 +1,3 @@
+google.gears.workerPool.onmessage = function(m, s) {
+  google.gears.workerPool.sendMessage("pong", s);
+}
