@@ -67,5 +67,12 @@ bool HasGearsWorkerContentType(HttpRequest *request) {
   std::string16 content_type;
   request->GetResponseHeader(HttpConstants::kContentTypeHeader, &content_type);
   LowerString(content_type);
+
+  std::string::size_type semicolon_pos = content_type.find(STRING16(L";"));
+  if (semicolon_pos != std::string::npos) {
+    content_type = content_type.substr(0, semicolon_pos);
+  }
+
+  content_type = StripWhiteSpace(content_type);
   return content_type == kGearsWorkerContentType;
 }
