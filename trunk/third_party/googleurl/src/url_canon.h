@@ -379,6 +379,10 @@ bool CanonicalizePort(const UTF16Char* spec,
                       CanonOutput* output,
                       url_parse::Component* out_port);
 
+// Returns the default port for the given canonical scheme, or PORT_UNSPECIFIED
+// if the scheme is unknown.
+int DefaultPortForScheme(const char* scheme, int scheme_len);
+
 // Path. If the input does not begin in a slash (including if the input is
 // empty), we'll prepend a slash to the path to make it canonical.
 //
@@ -439,17 +443,13 @@ void CanonicalizeQuery(const UTF16Char* spec,
 // canonicalizer that does not produce ASCII output). The output is
 // guaranteed to be valid UTF-8.
 //
-// The only way this function will fail is if the input is invalid
-// UTF-8/UTF-16. In this case, we'll use the "Unicode replacement character"
-// for the confusing bits and copy the rest. The application will probably not
-// want to treat a failure converting the ref as a failure canonicalizing the
-// URL, since the page can probably still be loaded, just not scrolled
-// properly.
-bool CanonicalizeRef(const char* spec,
+// This function will not fail. If the input is invalid UTF-8/UTF-16, we'll use
+// the "Unicode replacement character" for the confusing bits and copy the rest.
+void CanonicalizeRef(const char* spec,
                      const url_parse::Component& path,
                      CanonOutput* output,
                      url_parse::Component* out_path);
-bool CanonicalizeRef(const UTF16Char* spec,
+void CanonicalizeRef(const UTF16Char* spec,
                      const url_parse::Component& path,
                      CanonOutput* output,
                      url_parse::Component* out_path);
@@ -504,6 +504,22 @@ bool CanonicalizePathURL(const UTF16Char* spec,
                          const url_parse::Parsed& parsed,
                          CanonOutput* output,
                          url_parse::Parsed* new_parsed);
+
+// Use for mailto URLs. This "canonicalizes" the url into a path and query
+// component. It does not attempt to merge "to" fields. It uses UTF-8 for
+// the query encoding if there is a query. This is because a mailto URL is
+// really intended for an external mail program, and the encoding of a page,
+// etc. which would influence a query encoding normally are irrelevant.
+bool CanonicalizeMailtoURL(const char* spec,
+                           int spec_len,
+                           const url_parse::Parsed& parsed,
+                           CanonOutput* output,
+                           url_parse::Parsed* new_parsed);
+bool CanonicalizeMailtoURL(const UTF16Char* spec,
+                           int spec_len,
+                           const url_parse::Parsed& parsed,
+                           CanonOutput* output,
+                           url_parse::Parsed* new_parsed);
 
 // Part replacer --------------------------------------------------------------
 
@@ -728,6 +744,19 @@ bool ReplacePathURL(const char* base,
                     const Replacements<UTF16Char>& replacements,
                     CanonOutput* output,
                     url_parse::Parsed* new_parsed);
+
+// Mailto URLs can only have the scheme, path, and query replaced.
+// All other components will be ignored.
+bool ReplaceMailtoURL(const char* base,
+                      const url_parse::Parsed& base_parsed,
+                      const Replacements<char>& replacements,
+                      CanonOutput* output,
+                      url_parse::Parsed* new_parsed);
+bool ReplaceMailtoURL(const char* base,
+                      const url_parse::Parsed& base_parsed,
+                      const Replacements<UTF16Char>& replacements,
+                      CanonOutput* output,
+                      url_parse::Parsed* new_parsed);
 
 // Relative URL ---------------------------------------------------------------
 

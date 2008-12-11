@@ -4,7 +4,7 @@
 #include "googleurl/src/gurl.h"
 #include "googleurl/src/url_canon.h"
 #include "googleurl/src/url_test_utils.h"
-#include "testing/base/gunit.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 // Some implementations of base/basictypes.h may define ARRAYSIZE.
 // If it's not defined, we define it to the ARRAYSIZE_UNSAFE macro
@@ -47,9 +47,16 @@ TEST(GURLTest, Types) {
       // should happen.
     {"something:HOSTNAME.com/", "something:HOSTNAME.com/"},
     {"something:/HOSTNAME.com/", "something:/HOSTNAME.com/"},
+#ifdef WIN32
+      // URLs that look like absolute Windows drive specs.
+    {"c:\\foo.txt", "file:///C:/foo.txt"},
+    {"Z|foo.txt", "file:///Z:/foo.txt"},
+    {"\\\\server\\foo.txt", "file://server/foo.txt"},
+    {"//server/foo.txt", "file://server/foo.txt"},
+#endif
   };
 
-  for (int i = 0; i < arraysize(type_cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(type_cases); i++) {
     GURL gurl(type_cases[i].src);
     EXPECT_STREQ(type_cases[i].expected, gurl.spec().c_str());
   }
@@ -159,12 +166,15 @@ TEST(GURLTest, Resolve) {
     {"http://www.google.com/blah/bloo?c#d", "../../../hello/./world.html?a#b", true, "http://www.google.com/hello/world.html?a#b"},
     {"http://www.google.com/foo#bar", "#com", true, "http://www.google.com/foo#com"},
     {"http://www.google.com/", "Https:images.google.com", true, "https://images.google.com/"},
+      // Unknown schemes with a "://" should be treated as standard.
+    {"somescheme://foo/", "bar", true, "somescheme://foo/bar"},
+      // Unknown schemes with no "://" are not standard.
     {"data:blahblah", "http://google.com/", true, "http://google.com/"},
     {"data:blahblah", "http:google.com", true, "http://google.com/"},
-    {"data:blahblah", "file.html", false, ""},
+    {"data:/blahblah", "file.html", false, ""},
   };
 
-  for (int i = 0; i < ARRAYSIZE(resolve_cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(resolve_cases); i++) {
     // 8-bit code path.
     GURL input(resolve_cases[i].base);
     GURL output = input.Resolve(resolve_cases[i].relative);
@@ -180,6 +190,25 @@ TEST(GURLTest, Resolve) {
   }
 }
 
+TEST(GURLTest, GetOrigin) {
+  struct TestCase {
+    const char* input;
+    const char* expected;
+  } cases[] = {
+    {"http://www.google.com", "http://www.google.com/"},
+    {"javascript:window.alert(\"hello,world\");", ""},
+    {"http://user:pass@www.google.com:21/blah#baz", "http://www.google.com:21/"},
+    {"http://user@www.google.com", "http://www.google.com/"},
+    {"http://:pass@www.google.com", "http://www.google.com/"},
+    {"http://:@www.google.com", "http://www.google.com/"},
+  };
+  for (size_t i = 0; i < ARRAYSIZE(cases); i++) {
+    GURL url(cases[i].input);
+    GURL origin = url.GetOrigin();
+    EXPECT_EQ(cases[i].expected, origin.spec());
+  }
+}
+
 TEST(GURLTest, GetWithEmptyPath) {
   struct TestCase {
     const char* input;
@@ -190,7 +219,7 @@ TEST(GURLTest, GetWithEmptyPath) {
     {"http://www.google.com/foo/bar.html?baz=22", "http://www.google.com/"},
   };
 
-  for (int i = 0; i < ARRAYSIZE(cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(cases); i++) {
     GURL url(cases[i].input);
     GURL empty_path = url.GetWithEmptyPath();
     EXPECT_EQ(cases[i].expected, empty_path.spec());
@@ -221,7 +250,7 @@ TEST(GURLTest, Replacements) {
 #endif
   };
 
-  for (int i = 0; i < ARRAYSIZE(replace_cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(replace_cases); i++) {
     const ReplaceCase& cur = replace_cases[i];
     GURL url(cur.base);
     GURL::Replacements repl;
@@ -251,10 +280,50 @@ TEST(GURLTest, PathForRequest) {
     {"http://www.google.com/foo/bar.html?query#ref", "/foo/bar.html?query"},
   };
 
-  for (int i = 0; i < ARRAYSIZE(cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(cases); i++) {
     GURL url(cases[i].input);
     std::string path_request = url.PathForRequest();
     EXPECT_EQ(cases[i].expected, path_request);
+  }
+}
+
+TEST(GURLTest, EffectiveIntPort) {
+  struct PortTest {
+    const char* spec;
+    int expected_int_port;
+  } port_tests[] = {
+    // http
+    {"http://www.google.com/", 80},
+    {"http://www.google.com:80/", 80},
+    {"http://www.google.com:443/", 443},
+
+    // https
+    {"https://www.google.com/", 443},
+    {"https://www.google.com:443/", 443},
+    {"https://www.google.com:80/", 80},
+
+    // ftp
+    {"ftp://www.google.com/", 21},
+    {"ftp://www.google.com:21/", 21},
+    {"ftp://www.google.com:80/", 80},
+
+    // gopher
+    {"gopher://www.google.com/", 70},
+    {"gopher://www.google.com:70/", 70},
+    {"gopher://www.google.com:80/", 80},
+
+    // file - no port
+    {"file://www.google.com/", url_parse::PORT_UNSPECIFIED},
+    {"file://www.google.com:443/", url_parse::PORT_UNSPECIFIED},
+
+    // data - no port
+    {"data:www.google.com:90", url_parse::PORT_UNSPECIFIED},
+    {"data:www.google.com", url_parse::PORT_UNSPECIFIED},
+  };
+
+  for (size_t i = 0; i < ARRAYSIZE(port_tests); i++) {
+    GURL url(port_tests[i].spec);
+    EXPECT_EQ(port_tests[i].expected_int_port, url.EffectiveIntPort());
   }
 }
 
@@ -271,7 +340,7 @@ TEST(GURLTest, IPAddress) {
     {"some random input!", false},
   };
 
-  for (int i = 0; i < ARRAYSIZE(ip_tests); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(ip_tests); i++) {
     GURL url(ip_tests[i].spec);
     EXPECT_EQ(ip_tests[i].expected_ip, url.HostIsIPAddress());
   }
@@ -322,4 +391,15 @@ TEST(GURLTest, Newlines) {
   EXPECT_EQ("http://www.google.com/foo", url_2.spec());
 
   // Note that newlines are NOT stripped from ReplaceComponents.
+}
+
+TEST(GURLTest, IsStandard) {
+  GURL a("http:foo/bar");
+  EXPECT_TRUE(a.IsStandard());
+
+  GURL b("foo:bar/baz");
+  EXPECT_FALSE(b.IsStandard());
+
+  GURL c("foo://bar/baz");
+  EXPECT_TRUE(c.IsStandard());
 }

@@ -45,6 +45,8 @@
 
 namespace url_canon {
 
+// Character type handling -----------------------------------------------------
+
 // Bits that identify different character types. These types identify different
 // bits that are set for each 8-bit character in the kSharedCharTypeTable.
 enum SharedCharTypes {
@@ -52,17 +54,20 @@ enum SharedCharTypes {
   // not have this flag will be escaped, see url_canon_query.cc
   CHAR_QUERY = 1,
 
+  // Valid in the username/password field.
+  CHAR_USERINFO = 2,
+
   // Valid in a IPv4 address (digits plus dot and 'x' for hex).
-  CHAR_IPV4 = 2,
+  CHAR_IPV4 = 4,
 
   // Valid in an ASCII-representation of a hex digit (as in %-escaped).
-  CHAR_HEX = 4,
+  CHAR_HEX = 8,
 
   // Valid in an ASCII-representation of a decimal digit.
-  CHAR_DEC = 8,
+  CHAR_DEC = 16,
 
   // Valid in an ASCII-representation of an octal digit.
-  CHAR_OCT = 16,
+  CHAR_OCT = 32,
 };
 
 // This table contains the flags in SharedCharTypes for each 8-bit character.
@@ -87,6 +92,15 @@ inline bool IsIPv4Char(unsigned char c) {
 inline bool IsHexChar(unsigned char c) {
   return IsCharOfType(c, CHAR_HEX);
 }
+
+// Appends the given string to the output, escaping characters that do not
+// match the given |type| in SharedCharTypes.
+void AppendStringOfType(const char* source, int length,
+                        SharedCharTypes type,
+                        CanonOutput* output);
+void AppendStringOfType(const UTF16Char* source, int length,
+                        SharedCharTypes type,
+                        CanonOutput* output);
 
 // Maps the hex numerical values 0x0 to 0xf to the corresponding ASCII digit
 // that will be used to represent it.
@@ -153,17 +167,19 @@ extern const UTF16Char kUnicodeReplacementCharacter;
 // can be incremented in a loop and will be ready for the next character.
 // (for a single-byte ASCII character, it will not be changed).
 inline bool ReadUTFChar(const char* str, int* begin, int length,
-                        unsigned* code_point) {
-  U8_NEXT(str, *begin, length, *code_point);
+                        unsigned* code_point_out) {
+  int code_point;  // Avoids warning when U8_NEXT writes -1 to it.
+  U8_NEXT(str, *begin, length, code_point);
+  *code_point_out = static_cast<unsigned>(code_point);
 
   // The ICU macro above moves to the next char, we want to point to the last
   // char consumed.
   (*begin)--;
 
   // Validate the decoded value.
-  if (U_IS_UNICODE_CHAR(*code_point))
+  if (U_IS_UNICODE_CHAR(code_point))
     return true;
-  *code_point = kUnicodeReplacementCharacter;
+  *code_point_out = kUnicodeReplacementCharacter;
   return false;
 }
 
@@ -346,7 +362,7 @@ inline bool Is8BitChar(UTF16Char c) {
 
 template<typename CHAR>
 inline bool DecodeEscaped(const CHAR* spec, int* begin, int end,
-                          char* unescaped_value) {
+                          unsigned char* unescaped_value) {
   if (*begin + 3 > end ||
       !Is8BitChar(spec[*begin + 1]) || !Is8BitChar(spec[*begin + 2])) {
     // Invalid escape sequence because there's not enough room, or the
@@ -366,29 +382,6 @@ inline bool DecodeEscaped(const CHAR* spec, int* begin, int end,
   *begin += 2;
   return true;
 }
-
-// Given a '%' character at |*begin| in the string |spec|, this will copy
-// the appropriate characters to the output for it to be in canonical form.
-//
-// |*begin| will be updated to point to the last character of the escape
-// sequence so that when called with the index of a for loop, the next time
-// through it will point to the next character to be considered.
-//
-// On failure (return false) this will just do a literal copy of the percent
-// sign and, if possible, the following two characters, which would be
-// otherwise interpreted as the values. If the characters are wide, we will
-// stop copying since they we don't know the proper conversion rules.
-//
-// On failure, the caller should NOT accept the URL as valid, as it could be
-// a security problem. Imagine if the caller could be coaxed to produce a
-// valid escape sequence out of characters this function does not consider
-// to be vaild (maybe the caller is canonicalizing fullwidth to ASCII).
-// A URL could be constructed that the canonicalizer would treat differently
-// than the server, which could potentially be bad.
-bool CanonicalizeEscaped(const char* spec, int* begin, int end,
-                         CanonOutput* output);
-bool CanonicalizeEscaped(const UTF16Char* spec, int* begin, int end,
-                         CanonOutput* output);
 
 // Appends the given substring to the output, escaping "some" characters that
 // it feels may not be safe. It assumes the input values are all contained in
@@ -446,6 +439,10 @@ void SetupOverrideComponents(const char* base,
 // appropriate substrings. This buffer is a parameter because the source has
 // no storage, so the buffer must have the same lifetime as the source
 // parameter owned by the caller.
+//
+// THE CALLER MUST NOT ADD TO THE |utf8_buffer| AFTER THIS CALL. Members of
+// |source| will point into this buffer, which could be invalidated if
+// additional data is added and the CanonOutput resizes its buffer.
 //
 // Returns true on success. Fales means that the input was not valid UTF-16,
 // although we will have still done the override with "invalid characters" in
