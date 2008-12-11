@@ -153,6 +153,20 @@ class GURL {
   GURL Resolve(const std::string& relative) const;
   GURL Resolve(const UTF16String& relative) const;
 
+  // Like Resolve() above but takes a character set encoder which will be used
+  // for any query text specified in the input. The charset converter parameter
+  // may be NULL, in which case it will be treated as UTF-8.
+  //
+  // TODO(brettw): These should be replaced with versions that take something
+  // more friendly than a raw CharsetConverter (maybe like an ICU character set
+  // name).
+  GURL ResolveWithCharsetConverter(
+      const std::string& relative,
+      url_canon::CharsetConverter* charset_converter) const;
+  GURL ResolveWithCharsetConverter(
+      const UTF16String& relative,
+      url_canon::CharsetConverter* charset_converter) const;
+
   // Creates a new GURL by replacing the current URL's components with the
   // supplied versions. See the Replacements class in url_canon.h for more.
   //
@@ -180,16 +194,28 @@ class GURL {
   // will be the empty URL.
   GURL GetWithEmptyPath() const;
 
+  // A helper function to return a GURL containing just the scheme, host,
+  // and port from a URL. Equivalent to clearing any username and password,
+  // replacing the path with a slash, and clearing everything after that. If
+  // this URL is not a standard URL, then the result will be an empty,
+  // invalid GURL. If the URL has neither username nor password, this
+  // degenerates to GetWithEmptyPath().
+  //
+  // It is an error to get the origin of an invalid URL. The result
+  // will be the empty URL.
+  GURL GetOrigin() const;
+
+  // Returns true if the scheme for the current URL is a known "standard"
+  // scheme or there is a "://" after it. Standard schemes have an authority
+  // and a path section. This includes file:, which some callers may want to
+  // filter out explicitly by calling SchemeIsFile.
+  bool IsStandard() const;
+
   // Returns true if the given parameter (should be lower-case ASCII to match
   // the canonicalized scheme) is the scheme for this URL. This call is more
   // efficient than getting the scheme and comparing it because no copies or
   // object constructions are done.
   bool SchemeIs(const char* lower_ascii_scheme) const;
-
-  // Returns true if the scheme for the current URL is a "standard" scheme that
-  // has an authority and a path section. This includes file:, which some
-  // callers may want to filter out explicitly.
-  bool SchemeIsStandard() const;
 
   // We often need to know if this is a file URL. File URLs are "standard", but
   // are often treated separately by some programs.
@@ -270,6 +296,11 @@ class GURL {
   // values defined in Parsed for ExtractPort.
   int IntPort() const;
 
+  // Returns the port number of the url, or the default port number.
+  // If the scheme has no concept of port (or unknown default) returns
+  // PORT_UNSPECIFIED.
+  int EffectiveIntPort() const;
+
   // Extracts the filename portion of the path and returns it. The filename
   // is everything after the last slash in the path. This may be empty.
   std::string ExtractFileName() const;
@@ -301,12 +332,10 @@ class GURL {
   // any memory allocations.
   void Swap(GURL* other);
 
-#ifdef WIN32  // Currently defined only for Windows.
   // Returns a reference to a singleton empty GURL. This object is for callers
   // who return references but don't have anything to return in some cases.
   // This function may be called from any thread.
   static const GURL& EmptyGURL();
-#endif
 
  private:
   // Returns the substring of the input identified by the given component.

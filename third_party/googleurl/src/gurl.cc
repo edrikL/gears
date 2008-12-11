@@ -29,6 +29,8 @@
 
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <pthread.h>
 #endif
 
 #include <algorithm>
@@ -54,18 +56,21 @@ bool InitCanonical(const std::basic_string<CHAR>& input_spec,
   url_canon::StdStringCanonOutput output(canonical);
   bool success = url_util::Canonicalize(
       input_spec.data(), static_cast<int>(input_spec.length()),
-      &output, parsed);
+      NULL, &output, parsed);
 
   output.Complete();  // Must be done before using string.
   return success;
 }
 
+static std::string* empty_string = NULL;
+static GURL* empty_gurl = NULL;
+
+#ifdef WIN32
+
 // Returns a static reference to an empty string for returning a reference
 // when there is no underlying string.
 const std::string& EmptyStringForGURL() {
-#ifdef WIN32
   // Avoid static object construction/destruction on startup/shutdown.
-  static std::string* empty_string = NULL;
   if (!empty_string) {
     // Create the string. Be careful that we don't break in the case that this
     // is being called from multiple threads. Statics are not threadsafe.
@@ -78,12 +83,24 @@ const std::string& EmptyStringForGURL() {
     }
   }
   return *empty_string;
-#else
-  // TODO(brettw) Write a threadsafe Unix version!
-  static std::string empty_string;
-  return empty_string;
-#endif
 }
+
+#else
+
+static pthread_once_t empty_string_once = PTHREAD_ONCE_INIT;
+static pthread_once_t empty_gurl_once = PTHREAD_ONCE_INIT;
+
+void EmptyStringForGURLOnce(void) {
+  empty_string = new std::string;
+}
+
+const std::string& EmptyStringForGURL() {
+  // Avoid static object construction/destruction on startup/shutdown.
+  pthread_once(&empty_string_once, EmptyStringForGURLOnce);
+  return *empty_string;
+}
+
+#endif  // WIN32
 
 } // namespace
 
@@ -139,8 +156,17 @@ const std::string& GURL::spec() const {
   return EmptyStringForGURL();
 }
 
-// Note: code duplicated below (it's inconvenient to use a template here).
 GURL GURL::Resolve(const std::string& relative) const {
+  return ResolveWithCharsetConverter(relative, NULL);
+}
+GURL GURL::Resolve(const UTF16String& relative) const {
+  return ResolveWithCharsetConverter(relative, NULL);
+}
+
+// Note: code duplicated below (it's inconvenient to use a template here).
+GURL GURL::ResolveWithCharsetConverter(
+    const std::string& relative,
+    url_canon::CharsetConverter* charset_converter) const {
   // Not allowed for invalid URLs.
   if (!is_valid_)
     return GURL();
@@ -152,9 +178,10 @@ GURL GURL::Resolve(const std::string& relative) const {
   result.spec_.reserve(spec_.size() + 32);
   url_canon::StdStringCanonOutput output(&result.spec_);
 
-  if (!url_util::ResolveRelative(spec_.data(), parsed_, relative.data(),
-                                 static_cast<int>(relative.length()),
-                                 &output, &result.parsed_)) {
+  if (!url_util::ResolveRelative(
+          spec_.data(), static_cast<int>(spec_.length()), parsed_,
+          relative.data(), static_cast<int>(relative.length()),
+          charset_converter, &output, &result.parsed_)) {
     // Error resolving, return an empty URL.
     return GURL();
   }
@@ -165,7 +192,9 @@ GURL GURL::Resolve(const std::string& relative) const {
 }
 
 // Note: code duplicated above (it's inconvenient to use a template here).
-GURL GURL::Resolve(const UTF16String& relative) const {
+GURL GURL::ResolveWithCharsetConverter(
+    const UTF16String& relative,
+    url_canon::CharsetConverter* charset_converter) const {
   // Not allowed for invalid URLs.
   if (!is_valid_)
     return GURL();
@@ -177,9 +206,10 @@ GURL GURL::Resolve(const UTF16String& relative) const {
   result.spec_.reserve(spec_.size() + 32);
   url_canon::StdStringCanonOutput output(&result.spec_);
 
-  if (!url_util::ResolveRelative(spec_.data(), parsed_, relative.data(),
-                                 static_cast<int>(relative.length()),
-                                 &output, &result.parsed_)) {
+  if (!url_util::ResolveRelative(
+          spec_.data(), static_cast<int>(spec_.length()), parsed_,
+          relative.data(), static_cast<int>(relative.length()),
+          charset_converter, &output, &result.parsed_)) {
     // Error resolving, return an empty URL.
     return GURL();
   }
@@ -204,8 +234,8 @@ GURL GURL::ReplaceComponents(
   url_canon::StdStringCanonOutput output(&result.spec_);
 
   result.is_valid_ = url_util::ReplaceComponents(
-      spec_.data(), parsed_, replacements,
-      &output, &result.parsed_);
+      spec_.data(), static_cast<int>(spec_.length()), parsed_, replacements,
+      NULL, &output, &result.parsed_);
 
   output.Complete();
   return result;
@@ -226,17 +256,33 @@ GURL GURL::ReplaceComponents(
   url_canon::StdStringCanonOutput output(&result.spec_);
 
   result.is_valid_ = url_util::ReplaceComponents(
-      spec_.data(), parsed_, replacements,
-      &output, &result.parsed_);
+      spec_.data(), static_cast<int>(spec_.length()), parsed_, replacements,
+      NULL, &output, &result.parsed_);
 
   output.Complete();
   return result;
 }
 
+GURL GURL::GetOrigin() const {
+  // This doesn't make sense for invalid or nonstandard URLs, so return
+  // the empty URL
+  if (!is_valid_ || !IsStandard())
+    return GURL();
+
+  url_canon::Replacements<char> replacements;
+  replacements.ClearUsername();
+  replacements.ClearPassword();
+  replacements.ClearPath();
+  replacements.ClearQuery();
+  replacements.ClearRef();
+
+  return ReplaceComponents(replacements);
+}
+
 GURL GURL::GetWithEmptyPath() const {
   // This doesn't make sense for invalid or nonstandard URLs, so return
   // the empty URL.
-  if (!is_valid_ || !SchemeIsStandard()) 
+  if (!is_valid_ || !IsStandard())
     return GURL();
 
   // We could optimize this since we know that the URL is canonical, and we are
@@ -257,6 +303,11 @@ GURL GURL::GetWithEmptyPath() const {
   return other;
 }
 
+bool GURL::IsStandard() const {
+  return url_util::IsStandard(spec_.data(), static_cast<int>(spec_.length()),
+                              parsed_.scheme);
+}
+
 bool GURL::SchemeIs(const char* lower_ascii_scheme) const {
   if (parsed_.scheme.len <= 0)
     return lower_ascii_scheme == NULL;
@@ -265,15 +316,18 @@ bool GURL::SchemeIs(const char* lower_ascii_scheme) const {
                                         lower_ascii_scheme);
 }
 
-bool GURL::SchemeIsStandard() const {
-  return url_util::IsStandardScheme(&spec_[parsed_.scheme.begin],
-                                    parsed_.scheme.len);
-}
-
 int GURL::IntPort() const {
   if (parsed_.port.is_nonempty())
     return url_parse::ParsePort(spec_.data(), parsed_.port);
   return url_parse::PORT_UNSPECIFIED;
+}
+
+int GURL::EffectiveIntPort() const {
+  int int_port = IntPort();
+  if (int_port == url_parse::PORT_UNSPECIFIED && IsStandard())
+    return url_canon::DefaultPortForScheme(spec_.data() + parsed_.scheme.begin,
+                                           parsed_.scheme.len);
+  return int_port;
 }
 
 std::string GURL::ExtractFileName() const {
@@ -307,10 +361,8 @@ bool GURL::HostIsIPAddress() const {
 
 #ifdef WIN32
 
-// static
 const GURL& GURL::EmptyGURL() {
   // Avoid static object construction/destruction on startup/shutdown.
-  static GURL* empty_gurl = NULL;
   if (!empty_gurl) {
     // Create the string. Be careful that we don't break in the case that this
     // is being called from multiple threads.
@@ -322,6 +374,18 @@ const GURL& GURL::EmptyGURL() {
       delete new_empty_gurl;
     }
   }
+  return *empty_gurl;
+}
+
+#else
+
+void EmptyGURLOnce(void) {
+  empty_gurl = new GURL;
+}
+
+const GURL& GURL::EmptyGURL() {
+  // Avoid static object construction/destruction on startup/shutdown.
+  pthread_once(&empty_gurl_once, EmptyGURLOnce);
   return *empty_gurl;
 }
 

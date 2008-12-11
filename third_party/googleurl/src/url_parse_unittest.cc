@@ -29,7 +29,7 @@
 
 #include "base/basictypes.h"
 #include "googleurl/src/url_parse.h"
-#include "testing/base/gunit.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 // Some implementations of base/basictypes.h may define ARRAYSIZE.
 // If it's not defined, we define it to the ARRAYSIZE_UNSAFE macro
@@ -84,13 +84,23 @@ struct URLParseCase {
   const char* ref;
 };
 
-// Simpler version of the above for testing path URLs.
+// Simpler version of URLParseCase for testing path URLs.
 struct PathURLParseCase {
   const char* input;
 
   const char* scheme;
   const char* path;
 };
+
+// Simpler version of URLParseCase for testing mailto URLs.
+struct MailtoURLParseCase {
+  const char* input;
+
+  const char* scheme;
+  const char* path;
+  const char* query;
+};
+
 
 bool ComponentMatches(const char* input,
                       const char* reference,
@@ -107,11 +117,16 @@ bool ComponentMatches(const char* input,
   if (component.len < 0)
     return false;  // Reference is not NULL but we don't have anything
 
-  if (strlen(reference) != component.len)
+  if (strlen(reference) != static_cast<size_t>(component.len))
     return false;  // Lengths don't match
 
   // Now check the actual characters.
   return strncmp(reference, &input[component.begin], component.len) == 0;
+}
+
+void ExpectInvalidComponent(const url_parse::Component& component) {
+  EXPECT_EQ(0, component.begin);
+  EXPECT_EQ(-1, component.len);
 }
 
 }  // namespace
@@ -137,7 +152,7 @@ TEST(URLParser, Length) {
     "http://user@",
     "http:",
   };
-  for (int i = 0; i < arraysize(length_cases); i++) {
+  for (size_t i = 0; i < arraysize(length_cases); i++) {
     int true_length = static_cast<int>(strlen(length_cases[i]));
 
     url_parse::Parsed parsed;
@@ -197,7 +212,7 @@ TEST(URLParser, CountCharactersBefore) {
     {"file:///c:/foo", Parsed::HOST, true, 7},
     {"file:///c:/foo", Parsed::PATH, true, 7},
   };
-  for (int i = 0; i < arraysize(count_cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(count_cases); i++) {
     int length = static_cast<int>(strlen(count_cases[i].url));
 
     // Simple test to distinguish file and standard URLs.
@@ -260,9 +275,8 @@ static URLParseCase cases[] = {
 {"?",                                   NULL,   NULL,  NULL,      NULL,         -1, NULL,      "",          NULL},
 {"/",                                   NULL,   NULL,  NULL,      NULL,         -1, NULL,      NULL,        NULL},
 {":23",                                 "",     NULL,  NULL,      "23",         -1, NULL,      NULL,        NULL},
-{"/:23",                                NULL,   NULL,  NULL,      NULL,         23, NULL,      NULL,        NULL},
+{"/:23",                                "/",    NULL,  NULL,      "23",         -1, NULL,      NULL,        NULL},
 {"//",                                  NULL,   NULL,  NULL,      NULL,         -1, NULL,      NULL,        NULL},
-{"/:",                                  NULL,   NULL,  NULL,      NULL,         -1, NULL,      NULL,        NULL},
 {"::",                                  "",     NULL,  NULL,      NULL,         -1, NULL,      NULL,        NULL},
 {"::23",                                "",     NULL,  NULL,      NULL,         23, NULL,      NULL,        NULL},
 {"foo://",                              "foo",  NULL,  NULL,      NULL,         -1, NULL,      NULL,        NULL},
@@ -296,7 +310,7 @@ static URLParseCase cases[] = {
 {"http://foo/abcd#foo?bar",             "http", NULL,  NULL,      "foo",        -1, "/abcd",   NULL,        "foo?bar"},
 
   // IPV6, check also interesting uses of colons.
-{"[61:24:74]:98",                       NULL,   NULL,  NULL,      "[61:24:74]", 98, NULL,      NULL,        NULL},
+{"[61:24:74]:98",                       "[61",  NULL,  NULL,      "24:74]",     98, NULL,      NULL,        NULL},
 {"http://[61:27]:98",                   "http", NULL,  NULL,      "[61:27]",    98, NULL,      NULL,        NULL},
 {"http:[61:27]/:foo",                   "http", NULL,  NULL,      "[61:27]",    -1, "/:foo",   NULL,        NULL},
 
@@ -306,7 +320,7 @@ TEST(URLParser, Standard) {
   // Declared outside for loop to try to catch cases in init() where we forget
   // to reset something that is reset by the construtor.
   url_parse::Parsed parsed;
-  for (int i = 0; i < arraysize(cases); i++) {
+  for (size_t i = 0; i < arraysize(cases); i++) {
     const char* url = cases[i].input;
     url_parse::ParseStandardURL(url, static_cast<int>(strlen(url)), &parsed);
     int port = url_parse::ParsePort(url, parsed.port);
@@ -341,30 +355,20 @@ TEST(URLParser, PathURL) {
   // Declared outside for loop to try to catch cases in init() where we forget
   // to reset something that is reset by the construtor.
   url_parse::Parsed parsed;
-  for (int i = 0; i < arraysize(path_cases); i++) {
+  for (size_t i = 0; i < arraysize(path_cases); i++) {
     const char* url = path_cases[i].input;
     url_parse::ParsePathURL(url, static_cast<int>(strlen(url)), &parsed);
 
     EXPECT_TRUE(ComponentMatches(url, path_cases[i].scheme, parsed.scheme));
     EXPECT_TRUE(ComponentMatches(url, path_cases[i].path, parsed.path));
 
-    EXPECT_EQ(0, parsed.username.begin);
-    EXPECT_EQ(-1, parsed.username.len);
-
-    EXPECT_EQ(0, parsed.password.begin);
-    EXPECT_EQ(-1, parsed.password.len);
-
-    EXPECT_EQ(0, parsed.host.begin);
-    EXPECT_EQ(-1, parsed.host.len);
-
-    EXPECT_EQ(0, parsed.port.begin);
-    EXPECT_EQ(-1, parsed.port.len);
-
-    EXPECT_EQ(0, parsed.query.begin);
-    EXPECT_EQ(-1, parsed.query.len);
-
-    EXPECT_EQ(0, parsed.ref.begin);
-    EXPECT_EQ(-1, parsed.ref.len);
+    // The remaining components are never used for path urls.
+    ExpectInvalidComponent(parsed.username);
+    ExpectInvalidComponent(parsed.password);
+    ExpectInvalidComponent(parsed.host);
+    ExpectInvalidComponent(parsed.port);
+    ExpectInvalidComponent(parsed.query);
+    ExpectInvalidComponent(parsed.ref);
   }
 }
 
@@ -442,7 +446,7 @@ TEST(URLParser, ExtractFileName) {
     {"http://www.google.com/foo/bar.html?query#ref", "bar.html"},
   };
 
-  for (int i = 0; i < ARRAYSIZE(file_cases); i++) {
+  for (size_t i = 0; i < ARRAYSIZE(file_cases); i++) {
     const char* url = file_cases[i].input;
     int len = static_cast<int>(strlen(url));
 
@@ -528,4 +532,42 @@ TEST(URLParser, ExtractQueryKeyValue) {
   EXPECT_TRUE(NthParameterIs(f, 3, "", "="));
   EXPECT_TRUE(NthParameterIs(f, 4, "", ""));
   EXPECT_TRUE(NthParameterIs(f, 5, NULL, NULL));
+}
+
+// MailtoURL --------------------------------------------------------------------
+
+static MailtoURLParseCase mailto_cases[] = {
+//|input                       |scheme   |path               |query
+{"mailto:foo@gmail.com",        "mailto", "foo@gmail.com",    NULL},
+{"  mailto: to  \t",            "mailto", " to",              NULL},
+{"mailto:addr1%2C%20addr2 ",    "mailto", "addr1%2C%20addr2", NULL},
+{"Mailto:addr1, addr2 ",        "Mailto", "addr1, addr2",     NULL},
+{"mailto:addr1:addr2 ",         "mailto", "addr1:addr2",      NULL},
+{"mailto:?to=addr1,addr2",      "mailto", NULL,               "to=addr1,addr2"},
+{"mailto:?to=addr1%2C%20addr2", "mailto", NULL,               "to=addr1%2C%20addr2"},
+{"mailto:addr1?to=addr2",       "mailto", "addr1",            "to=addr2"},
+{"mailto:?body=#foobar#",       "mailto", NULL,               "body=#foobar#",},
+{"mailto:#?body=#foobar#",      "mailto", "#",                "body=#foobar#"},
+};
+
+TEST(URLParser, MailtoUrl) {
+  // Declared outside for loop to try to catch cases in init() where we forget
+  // to reset something that is reset by the construtor.
+  url_parse::Parsed parsed;
+  for (size_t i = 0; i < arraysize(mailto_cases); ++i) {
+    const char* url = mailto_cases[i].input;
+    url_parse::ParseMailtoURL(url, static_cast<int>(strlen(url)), &parsed);
+    int port = url_parse::ParsePort(url, parsed.port);
+
+    EXPECT_TRUE(ComponentMatches(url, mailto_cases[i].scheme, parsed.scheme));
+    EXPECT_TRUE(ComponentMatches(url, mailto_cases[i].path, parsed.path));
+    EXPECT_TRUE(ComponentMatches(url, mailto_cases[i].query, parsed.query));
+    EXPECT_EQ(url_parse::PORT_UNSPECIFIED, port);
+
+    // The remaining components are never used for mailto urls.
+    ExpectInvalidComponent(parsed.username);
+    ExpectInvalidComponent(parsed.password);
+    ExpectInvalidComponent(parsed.port);
+    ExpectInvalidComponent(parsed.ref);
+  }
 }

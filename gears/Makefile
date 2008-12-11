@@ -231,6 +231,7 @@ URL_PARSING_CPPSRCS	+= \
 		url_canon_host.cc \
 		url_canon_internal.cc \
 		url_canon_ip.cc \
+		url_canon_mailtourl.cc \
 		url_canon_path.cc \
 		url_canon_pathurl.cc \
 		url_canon_query.cc \

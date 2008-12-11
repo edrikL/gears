@@ -190,7 +190,7 @@ void BackUpToPreviousSlash(int path_begin_in_output,
 
 // Appends the given path to the output. It assumes that if the input path
 // starts with a slash, it should be copied to the output. If no path has
-// have already been appended to the output (the case when not resolving
+// already been appended to the output (the case when not resolving
 // relative URLs), the path should begin with a slash.
 //
 // If there are already path components (this mode is used when appending
@@ -268,20 +268,19 @@ bool DoPartialPath(const CHAR* spec,
 
         } else if (out_ch == '%') {
           // Handle escape sequences.
-          char unescaped_value;
+          unsigned char unescaped_value;
           if (DecodeEscaped(spec, &i, end, &unescaped_value)) {
             // Valid escape sequence, see if we keep, reject, or unescape it.
-            unsigned char unsigned_unescaped =
-                static_cast<unsigned char>(unescaped_value);
-            char unescaped_flags = kPathCharLookup[unsigned_unescaped];
+            char unescaped_flags = kPathCharLookup[unescaped_value];
 
             if (unescaped_flags & UNESCAPE) {
               // This escaped value shouldn't be escaped, copy it.
               output->push_back(unescaped_value);
             } else if (unescaped_flags & INVALID_BIT) {
-              // Invalid escaped character, copy the percent and remember
-              // the error.
+              // Invalid escaped character, copy it and remember the error.
               output->push_back('%');
+              output->push_back(static_cast<char>(spec[i - 1]));
+              output->push_back(static_cast<char>(spec[i]));
               success = false;
             } else {
               // Valid escaped character but we should keep it escaped. We

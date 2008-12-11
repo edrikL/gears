@@ -43,23 +43,6 @@ namespace url_parse {
 
 namespace {
 
-// Forward declarations
-// armcc build fails without this.
-template<typename CHAR>
-void ParseAuthority(const CHAR* spec,
-                    const Component& auth,
-                    Component* username,
-                    Component* password,
-                    Component* hostname,
-                    Component* port_num);
-
-template<typename CHAR>
-void ParsePath(const CHAR* spec,
-               const Component& path,
-               Component* filepath,
-               Component* query,
-               Component* ref);
-
 // Returns true if the given character is a valid digit to use in a port.
 inline bool IsPortDigit(UTF16Char ch) {
   return ch >= '0' && ch <= '9';
@@ -318,16 +301,13 @@ bool DoExtractScheme(const CHAR* url,
     if (url[i] == ':') {
       *scheme = MakeRange(begin, i);
       return true;
-    } else if (IsAuthorityTerminator(url[i])) {
-      // An authority terminator was found before the end of the scheme, so we
-      // say that there is no scheme (for example "google.com/foo:bar").
-      return false;
     }
   }
   return false;  // No colon found: no scheme
 }
 
-// The main parsing function for URLs, this is the backend for the 
+// The main parsing function for standard URLs. Standard URLs have a scheme,
+// host, path, etc.
 template<typename CHAR>
 void DoParseStandardURL(const CHAR* spec, int spec_len, Parsed* parsed) {
   DCHECK(spec_len >= 0);
@@ -336,49 +316,13 @@ void DoParseStandardURL(const CHAR* spec, int spec_len, Parsed* parsed) {
   int begin = 0;
   TrimURL(spec, &begin, &spec_len);
 
-  // Handle empty specs or ones that contain only whitespace or control chars.
-  if (begin == spec_len) {
-    // ParsedAfterScheme will fill in empty values if there is no more data.
-    parsed->scheme.reset();
-    DoParseAfterScheme(spec, spec_len, begin, parsed);
-    return;
-  }
-
-  // Find the first non-scheme character before the beginning of the path. This
-  // code handles URLs that may have empty schemes, which makes it different
-  // than the ExtractScheme code above, which can happily fail if it doesn't
-  // find a colon.
-  int scheme_colon = -1;  // Index of first colon that preceeds the authority
-  for (int i = begin; i < spec_len; i++) {
-    if (IsAuthorityTerminator(spec[i]) ||
-        spec[i] == '@' || spec[i] == '[') {
-      // Start of path, found a username ("@"), or start of an IPV6 address
-      // literal. This means there is no scheme found.
-      break;
-    }
-    if (spec[i] == ':') {
-      scheme_colon = i;
-      break;
-    }
-  }
-
   int after_scheme;
-  if (scheme_colon >= 0) {
-    //   spec = <scheme>:/<the-rest>
-    // or
-    //   spec = <scheme>:<authority>
-    //   spec = <scheme>:<path-no-slashes>
-    parsed->scheme = MakeRange(begin, scheme_colon);
-    after_scheme = scheme_colon + 1;  // Character following the colon.
+  if (DoExtractScheme(spec, spec_len, &parsed->scheme)) {
+    after_scheme = parsed->scheme.end() + 1;  // Skip past the colon.
   } else {
-    //   spec = <authority-no-port-or-password>/<path>
-    //   spec = <path>
-    // or
-    //   spec = <authority-no-port-or-password>/<path-with-colon>
-    //   spec = <path-with-colon>
-    // or
-    //   spec = <authority-no-port-or-password>
-    //   spec = <path-no-slashes-or-colon>
+    // Say there's no scheme when there is a colon. We could also say that
+    // everything is the scheme. Both would produce an invalid URL, but this way
+    // seems less wrong in more cases.
     parsed->scheme.reset();
     after_scheme = begin;
   }
@@ -404,7 +348,6 @@ void DoParsePathURL(const CHAR* spec, int spec_len, Parsed* parsed) {
 
   // Handle empty specs or ones that contain only whitespace or control chars.
   if (begin == spec_len) {
-    // ParsedAfterScheme will fill in empty values if there is no more data.
     parsed->scheme.reset();
     parsed->path.reset();
     return;
@@ -427,6 +370,68 @@ void DoParsePathURL(const CHAR* spec, int spec_len, Parsed* parsed) {
     // No scheme found, just path.
     parsed->scheme.reset();
     parsed->path = MakeRange(begin, spec_len);
+  }
+}
+
+template<typename CHAR>
+void DoParseMailtoURL(const CHAR* spec, int spec_len, Parsed* parsed) {
+  DCHECK(spec_len >= 0);
+
+  // Get the non-path and non-scheme parts of the URL out of the way, we never
+  // use them.
+  parsed->username.reset();
+  parsed->password.reset();
+  parsed->host.reset();
+  parsed->port.reset();
+  parsed->ref.reset();
+  parsed->query.reset(); // May use this; reset for convenience.
+
+  // Strip leading & trailing spaces and control characters.
+  int begin = 0;
+  TrimURL(spec, &begin, &spec_len);
+
+  // Handle empty specs or ones that contain only whitespace or control chars.
+  if (begin == spec_len) {
+    parsed->scheme.reset();
+    parsed->path.reset();
+    return;
+  }
+
+  int path_begin = -1;
+  int path_end = -1;
+
+  // Extract the scheme, with the path being everything following. We also
+  // handle the case where there is no scheme.
+  if (ExtractScheme(&spec[begin], spec_len - begin, &parsed->scheme)) {
+    // Offset the results since we gave ExtractScheme a substring.
+    parsed->scheme.begin += begin;
+
+    if (parsed->scheme.end() != spec_len - 1) {
+      path_begin = parsed->scheme.end() + 1;
+      path_end = spec_len;
+    }
+  } else {
+    // No scheme found, just path.
+    parsed->scheme.reset();
+    path_begin = begin;
+    path_end = spec_len;
+  }
+
+  // Split [path_begin, path_end) into a path + query.
+  for (int i = path_begin; i < path_end; ++i) {
+    if (spec[i] == '?') {
+      parsed->query = MakeRange(i + 1, path_end);
+      path_end = i;
+      break;
+    }
+  }
+
+  // For compatability with the standard URL parser, treat no path as
+  // -1, rather than having a length of 0
+  if (path_begin == path_end) {
+    parsed->path.reset();
+  } else {
+    parsed->path = MakeRange(path_begin, path_end);
   }
 }
 
@@ -687,6 +692,14 @@ void ParsePathURL(const char* url, int url_len, Parsed* parsed) {
 
 void ParsePathURL(const UTF16Char* url, int url_len, Parsed* parsed) {
   DoParsePathURL(url, url_len, parsed);
+}
+
+void ParseMailtoURL(const char* url, int url_len, Parsed* parsed) {
+  DoParseMailtoURL(url, url_len, parsed);
+}
+
+void ParseMailtoURL(const UTF16Char* url, int url_len, Parsed* parsed) {
+  DoParseMailtoURL(url, url_len, parsed);
 }
 
 void ParsePathInternal(const char* spec,
