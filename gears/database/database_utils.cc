@@ -49,6 +49,14 @@ int ForbidActions(void *userData, int iType,
     // access here.
     return SQLITE_DENY;
   }
+  if (iType == SQLITE_FUNCTION
+      && (!strcasecmp(zArg, "fts2_tokenizer")
+          || !strcasecmp(zArg, "fts3_tokenizer"))) {
+    // The FTS3 tokenizer is also compiled into the system SQLite, but
+    // we can deny its usage in the authorizer.
+    LOG(("Denying attempt to use FTS tokenizer (%s)\n", zArg));
+    return SQLITE_DENY;
+  }
 #endif
   return SQLITE_OK;
 }
