@@ -10,6 +10,13 @@
  * optimizations.  Most users will not need to touch this file.
  */
 
+/*
+ * This file has been modified for the Mozilla/Netscape environment.
+ * Modifications are distributed under the Netscape Public License and are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 
 /*
  * Define BITS_IN_JSAMPLE as either
@@ -98,6 +105,14 @@ typedef short JSAMPLE;
 
 typedef short JCOEF;
 
+/* Defines for MMX/SSE2 support. */
+
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#define HAVE_MMX_INTEL_MNEMONICS 
+
+/* SSE2 code appears broken for some cpus (bug 247437) */
+/* #define HAVE_SSE2_INTEL_MNEMONICS */
+#endif
 
 /* Compressed datastreams are represented as arrays of JOCTET.
  * These must be EXACTLY 8 bits wide, at least once they are written to
@@ -158,8 +173,10 @@ typedef short INT16;
 /* INT32 must hold at least signed 32-bit values. */
 
 #ifndef XMD_H			/* X11/xmd.h correctly defines INT32 */
-#ifndef _BASETSD_H_  // Gears: added this to fix *Skia* WIN32 build.
+#ifndef _BASETSD_H_		/* basetsd.h correctly defines INT32 */
+#ifndef _BASETSD_H
 typedef long INT32;
+#endif
 #endif
 #endif
 
@@ -211,10 +228,12 @@ typedef unsigned int JDIMENSION;
  * explicit coding is needed; see uses of the NEED_FAR_POINTERS symbol.
  */
 
+#ifndef FAR
 #ifdef NEED_FAR_POINTERS
 #define FAR  far
 #else
 #define FAR
+#endif
 #endif
 
 
@@ -225,8 +244,20 @@ typedef unsigned int JDIMENSION;
  * Defining HAVE_BOOLEAN before including jpeglib.h should make it work.
  */
 
+/* Mozilla mod: IJG distribution makes boolean = int, but on Windows
+ * it's far safer to define boolean = unsigned char.  Easier to switch
+ * than fight.
+ */
+
+/* For some reason, on SunOS 5.3 HAVE_BOOLEAN gets defined when using
+ * gcc, but boolean doesn't.  Even if you use -UHAVE_BOOLEAN, it still
+ * gets reset somewhere.
+ */
+#if defined(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES) && defined(HAVE_BOOLEAN)
+#undef HAVE_BOOLEAN
+#endif
 #ifndef HAVE_BOOLEAN
-typedef int boolean;
+typedef unsigned char boolean;
 #endif
 #ifndef FALSE			/* in case these macros already exist */
 #define FALSE	0		/* values of boolean */
@@ -258,13 +289,22 @@ typedef int boolean;
  * (You may HAVE to do that if your compiler doesn't like null source files.)
  */
 
+/*
+ * Mozilla mods here: undef some features not actually used by the browser.
+ * This reduces object code size and more importantly allows us to compile
+ * even with broken compilers that crash when fed certain modules of the
+ * IJG sources.  Currently we undef:
+ * DCT_FLOAT_SUPPORTED INPUT_SMOOTHING_SUPPORTED IDCT_SCALING_SUPPORTED
+ * QUANT_1PASS_SUPPORTED QUANT_2PASS_SUPPORTED
+ */
+
 /* Arithmetic coding is unsupported for legal reasons.  Complaints to IBM. */
 
 /* Capability options common to encoder and decoder: */
 
 #define DCT_ISLOW_SUPPORTED	/* slow but accurate integer algorithm */
-#define DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
-#define DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
+#undef  DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
+#undef  DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
 
 /* Encoder capability options: */
 
@@ -280,20 +320,20 @@ typedef int boolean;
  * The exact same statements apply for progressive JPEG: the default tables
  * don't work for progressive mode.  (This may get fixed, however.)
  */
-#define INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
+#undef  INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
 
-/* Decoder capability options: */
+/* TextResourceDecoder capability options: */
 
 #undef  D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
 #define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
 #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
-#define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
+#undef  IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
 #define UPSAMPLE_MERGING_SUPPORTED  /* Fast path for sloppy upsampling? */
-#define QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
-#define QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
+#undef  QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
+#undef  QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
 
 /* more capability options later, no doubt */
 
@@ -326,12 +366,21 @@ typedef int boolean;
  * as the inline keyword; otherwise define it as empty.
  */
 
+/* Mozilla mods here: add more ways of defining INLINE */
+
 #ifndef INLINE
 #ifdef __GNUC__			/* for instance, GNU C knows about inline */
 #define INLINE __inline__
 #endif
+#if defined( __IBMC__ ) || defined (__IBMCPP__)
+#define INLINE _Inline
+#endif
 #ifndef INLINE
+#ifdef __cplusplus
+#define INLINE inline		/* a C++ compiler should have it too */
+#else
 #define INLINE			/* default is to define it as empty */
+#endif
 #endif
 #endif
 
