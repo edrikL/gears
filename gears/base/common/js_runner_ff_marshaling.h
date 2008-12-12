@@ -35,6 +35,7 @@
 
 #include <gecko_internal/jsapi.h>
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -118,6 +119,9 @@ class JsContextWrapper {
   static JSBool JsWrapperCaller(JSContext *cx, JSObject *obj,
                                 uintN argc, jsval *argv, jsval *retval);
 
+  static bool IsGearsModuleName(const char* module_name);
+  static void InsertGearsModuleName(const char* module_name);
+
   JSContext *cx_;
   JSObject  *global_obj_;
 
@@ -133,6 +137,11 @@ class JsContextWrapper {
 
   scoped_refptr<SharedJsClasses> shared_js_classes_;
   bool cleanup_roots_has_been_called_;
+
+  // Global set of Gears module names. The set gets populated
+  // automatically as Gears modules are created.
+  static std::set<std::string> gears_module_names_;
+  static Mutex gears_module_names_mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(JsContextWrapper);
 };
