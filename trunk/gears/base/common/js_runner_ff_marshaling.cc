@@ -109,6 +109,9 @@ static const int kArgvInstanceIndex = -1;
 // hold the JSClass objects in a ref-counted SharedJsClasses object, which will
 // delete the JSClass'es when there are no longer any references to them.
 
+std::set<std::string> JsContextWrapper::gears_module_names_;
+Mutex JsContextWrapper::gears_module_names_mutex_;
+
 enum JsWrapperDataType {
   PROTO_JSOBJECT,
   INSTANCE_JSOBJECT,
@@ -286,6 +289,16 @@ bool JsContextWrapper::CreateJsTokenForModule(ModuleImplBaseClass *module,
     proto_wrappers_.push_back(proto_data.get());
     shared_js_classes_->Insert(alloc_js_class.release());
     JS_SetPrivate(cx_, proto, proto_data.release());
+
+    // Add the module name to the global list of Gears module names.
+    // TODO(andreip): investigate a nice way to build up the list of module
+    // names at compile time. Since such a list would be static, it would
+    // eliminate the need for locking a mutex in InsertGearsModuleName() and
+    // IsGearsModuleName().
+    // One attempt was made in 9284351 but only for the objects created by the
+    // Gears factory. The same approach can probably be extended to cover
+    // all Gears scriptable objects.
+    InsertGearsModuleName(module_name.c_str());
   }
 
   JS_BeginRequest(cx_);
@@ -491,6 +504,8 @@ ModuleImplBaseClass *JsContextWrapper::GetModuleFromJsToken(
   // any other type of JSObject.  To do that, we get its JSClass, and check
   // that against those JSClasses we have previously seen (in this
   // JsContextWrapper) for Dispatcher-based modules.
+  // TODO(nigeltao): take the same approach as the check done in
+  // JsContextWrapper::JsWrapperCaller().
   JSClass *js_class = JS_GET_CLASS(cx_, obj);
   if (!shared_js_classes_->Contains(js_class)) {
     return NULL;
@@ -530,9 +545,23 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
   assert(function_data);
   assert(function_data->header.type == FUNCTION_JSOBJECT);
 
-  JsWrapperDataForInstance *instance_data =
-      static_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx, instance_obj));
-  if (!instance_data) {
+  JSClass *class_data = JS_GET_CLASS(cx, instance_obj);
+  assert(class_data);
+  // See if this is a Gears class. Note that IsGearsModuleName doesn't need
+  // to test against the list of all possible Gears module names. It suffices to
+  // test against the list of module names that were created so far (or else
+  // we would get a call to a method on a module that was never instantiated
+  // before, which is impossible).
+  // A previous attempt to implement this test was as follows:
+  // JsWrapperDataForInstance *instance_data =
+  //    static_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx, instance_obj));
+  // if (!instance_data) { (...) }
+  // This relied on the fact that instance_data must have been previously set
+  // by Gears or must be NULL otherwise. While this worked on FF3, it did not
+  // work on FF2 since on this browser, at JSObject creation time, the
+  // JSObject's "fslots" array is left unitialized so JS_GetPrivate() may return
+  // a completely bogus value.
+  if (!IsGearsModuleName(class_data->name)) {
     // We can get here in the case of a Gears method being invoked via
     // a reference, as in the example below:
     // someModule = google.gears.factory.create('beta.someModule');
@@ -550,6 +579,10 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
         STRING16(L"Member function called without a Gears object."));
     return JS_FALSE;
   }
+
+  JsWrapperDataForInstance *instance_data =
+      static_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx, instance_obj));
+  assert(instance_data);
   assert(instance_data->header.type == INSTANCE_JSOBJECT);
   assert(instance_data->module);
   assert(function_data->dispatch_id);
@@ -586,4 +619,18 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
   }
 
   return !call_context.is_exception_set() ? JS_TRUE : JS_FALSE;
+}
+
+// static
+bool JsContextWrapper::IsGearsModuleName(const char* module_name) {
+  assert(module_name);
+  MutexLock locker(&gears_module_names_mutex_);
+  return gears_module_names_.find(module_name) != gears_module_names_.end();
+}
+
+// static
+void JsContextWrapper::InsertGearsModuleName(const char* module_name) {
+  assert(module_name);
+  MutexLock locker(&gears_module_names_mutex_);
+  gears_module_names_.insert(module_name);
 }
