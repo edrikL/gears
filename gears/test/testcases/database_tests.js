@@ -343,11 +343,21 @@ function testLoadExtensionDisabled() {
     db.execute('SELECT load_extension(?)', ['/etc/passwd']).close();
     assert(false,'DB should have failed with "no such function"');
   } catch(error) {
-    var expected = /.*DETAILS: no such function: load_extension.*/;
-    // TODO(shess): Remove isSafariWorker test when Safari workers
-    // propagate exceptions correctly (issue 729).
-    var isSafariWorker = isSafari && google.gears.workerPool;
-    if (!isSafariWorker) {
+    var isSafariOrAndroidWorker =
+        (isSafari || isAndroid) && google.gears.workerPool;
+    if (isSafariOrAndroidWorker) {
+      // TODO(shess): Remove isSafariOrAndroidWorker test when Safari
+      // and Android workers propagate exceptions correctly (issue
+      // 729).
+    } else if (isAndroid) {
+      // The system SQLite implements load_extension, but should be
+      // disabled by default. The function exists, so the error
+      // message is different.
+      var expected = /.*DETAILS: SQL logic error.*/;
+      assert(expected.exec(error.message),
+             'DB error should be "SQL logic error"');
+    } else {
+      var expected = /.*DETAILS: no such function: load_extension.*/;
       assert(expected.exec(error.message),
              'DB error should be "no such function"');
     }

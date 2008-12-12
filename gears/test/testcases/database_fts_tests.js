@@ -275,12 +275,32 @@ function testLoadableTokenizerDisabled() {
     assert(false,'DB should have failed with "no such function"');
   } catch(error) {
     var expected = /.*DETAILS: no such function: fts2_tokenizer.*/;
-    // TODO(shess): Remove isSafariWorker test when Safari workers
-    // propagate exceptions correctly (issue 729).
-    var isSafariWorker = isSafari && google.gears.workerPool;
-    if (!isSafariWorker) {
+    // TODO(shess): Remove isSafariOrAndroidWorker test when Safari
+    // and Android workers propagate exceptions correctly (issue 729).
+    var isSafariOrAndroidWorker =
+        (isSafari || isAndroid) && google.gears.workerPool;
+    if (!isSafariOrAndroidWorker) {
       assert(expected.exec(error.message),
              'DB error should be "no such function"');
+    }
+  }
+
+  if (isAndroid) {
+    // Android actually implements FTS3 in its system SQLite and the
+    // tokenizer is compiled in. Check that the authorizer is catching
+    // its usage.
+    try {
+      db.execute('SELECT fts3_tokenizer(?)', ['test']).close();
+      assert(false,'DB should have failed with "authorization denied"');
+    } catch(error) {
+      if (google.gears.workerPool) {
+        // TODO(shess): Remove workerpool test when Safari and Android
+        // workers propagate exceptions correctly (issue 729).
+      } else {
+        var expected = /.*DETAILS: not authorized to use function.*/;
+        assert(expected.exec(error.message),
+               'DB error should be "authorization denied"');
+      }
     }
   }
 }
