@@ -178,7 +178,7 @@ CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl
 
 ICU_CFLAGS += -I../third_party/icu38/public/common
 
-LIBPNG_CFLAGS += -DPNG_USER_CONFIG -I../third_party/zlib
+LIBPNG_CFLAGS += -DPNG_USER_CONFIG -DCHROME_PNG_WRITE_SUPPORT -DGEARS_PNG_BUILD -I../third_party/zlib
 
 ZLIB_CFLAGS += -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)

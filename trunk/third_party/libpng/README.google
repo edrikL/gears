@@ -1,11 +1,19 @@
-URL:  http://www.libpng.org/
-Version: 1.2.22
-License: zlib
-License File: LICENSE
+Our custom configuration options are defined in pngusr.h. This was previously
+called mozpngconf.h, which was copied from Mozilla and modified by Apple (hence
+the webkit_* names).
 
-Description:
-A PNG image encoder/decoder.
+Updated to 1.2.29
+
+http://www.libpng.org/pub/png/libpng.html
 
 Local Modifications:
 Our custom configuration options are defined in pngusr.h.
 We also added the support for GEARS_PNG_NO_READ_VERIFY_CRC.
+Turned off the PNG_NO_SEQUENTIAL_READ_SUPPORTED define as the existing Skia
+library relies on APIs which are disabled when this constant is defined.
+Consolidated parts of the original pnguser.h file with the updated version.
+The Mangling of libpng functions to webkit_XXX has been turned off for Gears
+as these APIs are needed for the Skia library to link correctly.
+The PNG write macros are enabled only when the CHROME_PNG_WRITE_SUPPORT define
+is enabled.
+
