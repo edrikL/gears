@@ -250,6 +250,9 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_OBJECT: {
       scoped_ptr<JsObject> object(js_runner->NewObject());
+      if (!object.get()) {
+        return false;
+      }
       *out = object->token();
 
       std::map<std::string16, MarshaledJsToken*> *o = value_.object_value;
@@ -266,6 +269,9 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_ARRAY: {
       scoped_ptr<JsArray> array(js_runner->NewArray());
+      if (!array.get()) {
+        return false;
+      }
       *out = array->token();
 
       std::vector<MarshaledJsToken*> *a = value_.array_value;

@@ -1100,6 +1100,10 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   std::string16 error;
   scoped_ptr<JsObject> result(
       module_environment_->js_runner_->NewObject());
+  if (!result.get()) {
+    context->SetException(STRING16(L"Failed to create a JavaScript object."));
+    return;
+  }
 
 #if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
   bool data_available = ::GetDragData(module_environment_.get(),
