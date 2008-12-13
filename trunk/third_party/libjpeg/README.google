@@ -1,13 +1,12 @@
-This contains a copy of libjpeg-6b.
+URL: http://www.ijg.org/
+Version: 6b
+License: IJG license.
+This note must appear in accompanying documentation to Gears:
+"This software is based in part on the work of the Independent JPEG Group"
+License File: (see README)
 
-The project files does not incldue from the distribution:
-  jidctred.c : downsampling
-  jdtrans.c : decoder transcoder
-
-Also not included are files obviously not needed:
-  jmemdos.c
-  jmemname.c
-along with all of the frontend files for doing utility programs.
+Description: This package contains C software to implement JPEG image
+compression and decompression.
 
 Local Modifications:
 - The source from http://www.ijg.org/files/jpegsrc.v6b.tar.gz was downloaded
