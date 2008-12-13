@@ -651,7 +651,10 @@ void GearsHttpRequest::DataAvailable(HttpRequest *source, int64 position) {
     assert(runner);
     if (runner) {
       scoped_ptr<JsObject> js_object(runner->NewObject());
-      assert(js_object.get());
+      if (!js_object.get()) {
+        assert(js_object.get());
+        return;
+      }
       if (content_length_ < 0) {
         // cache on first access
         content_length_ = 0;

@@ -73,7 +73,10 @@ void GearsHttpRequestUpload::ReportProgress(int64 position, int64 total) {
     assert(runner);
     if (runner) {
       scoped_ptr<JsObject> js_object(runner->NewObject());
-      assert(js_object.get());
+      if (!js_object.get()) {
+        assert(js_object.get());
+        return;
+      }
       js_object->SetPropertyDouble(STRING16(L"total"),
                                    static_cast<double>(total));
       js_object->SetPropertyDouble(STRING16(L"loaded"),
