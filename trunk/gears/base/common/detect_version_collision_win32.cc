@@ -34,6 +34,12 @@
 #include "gears/ui/ie/string_table.h"
 #include "genfiles/product_constants.h"
 
+// Gets the string for the title of the dialog. Returns NULL if an error
+// occured getting the string.
+static const char16 *GetVersionCollisionErrorTitle();
+
+static const int kMaxStringLength = 256;
+
 // We run our detection code once at startup
 static bool OneTimeDetectVersionCollision();
 static bool detected_collision = OneTimeDetectVersionCollision();
@@ -150,13 +156,47 @@ void MaybeNotifyUserOfVersionCollision() {
 void NotifyUserOfVersionCollision() {
   assert(detected_collision);
   alerted_user = true;
-  const int kMaxStringLength = 256;
-  char16 title[kMaxStringLength];
-  char16 text[kMaxStringLength];
-  if (LoadString(GetGearsModuleHandle(),
-                 IDS_VERSION_COLLISION_TITLE, title, kMaxStringLength) &&
-      LoadString(GetGearsModuleHandle(),
-                 IDS_VERSION_COLLISION_TEXT, text, kMaxStringLength)) {
+  const char16 *title = GetVersionCollisionErrorTitle();
+  const char16 *text = GetVersionCollisionErrorString();
+  if (title && text) {
     MessageBox(NULL, text, title, MB_OK);
   }
+}
+
+const char16 *GetVersionCollisionErrorString() {
+#ifdef OS_WINCE
+  // On WinCE, LoadString does not support multiple languages.
+  // TODO(steveblock): Internationalize string.
+  static const char16 *error_text = STRING16(L"A " PRODUCT_FRIENDLY_NAME 
+                                    L" update has been downloaded.\n"
+                                    L"\n"
+                                    L"Please restart your browser"
+                                    L" to complete the upgrade process.\n");
+  return error_text;
+#else
+  // TODO(playmobil): This code isn't threadsafe, refactor.
+  static char16 error_text[kMaxStringLength];
+
+  if (!LoadString(GetGearsModuleHandle(), IDS_VERSION_COLLISION_TEXT,
+                  error_text, kMaxStringLength)) {
+    return NULL;
+  }
+  return error_text;
+#endif
+}
+
+static const char16 *GetVersionCollisionErrorTitle() {
+#ifdef OS_WINCE
+  // On WinCE, LoadString does not support multiple languages.
+  // TODO(steveblock): Internationalize string.
+  static const char16 *title = STRING16(L"Please restart your browser");
+  return title;
+#else
+  static char16 title[kMaxStringLength];
+  if (!LoadString(GetGearsModuleHandle(), IDS_VERSION_COLLISION_TITLE,
+                  title, kMaxStringLength)) {
+    return NULL;
+  }
+  return title;
+#endif
 }

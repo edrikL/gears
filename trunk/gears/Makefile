@@ -1930,9 +1930,14 @@ $(BROWSER)_VPATH += \
 		ui/generated \
 		$(NULL)
 
+ifeq ($(OS),wince)
+# The string table uses multiple languages, which are not supported by
+# LoadString on WinCE.
+else
 IE_LINK_EXTRAS += \
 		$(IE_OUTDIR)/string_table.res \
 		$(NULL)
+endif
 
 VISTA_BROKER_LINK_EXTRAS += \
 		$(VISTA_BROKER_OUTDIR)/string_table.res \
@@ -2035,9 +2040,14 @@ IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
 		$(NULL)
 
+ifeq ($(OS),wince)
+# The string table uses multiple languages, which are not supported by
+# LoadString on WinCE.
+else
 IE_STABSRCS += \
 		string_table.rc.stab \
 		$(NULL)
+endif
 
 # Additional files specific to Win32 or WinCE.
 ifeq ($(OS),win32)

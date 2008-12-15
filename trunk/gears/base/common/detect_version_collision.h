@@ -67,6 +67,8 @@
 
 #include <ctype.h>
 
+#include "gears/base/common/string16.h"
+
 // Returns true if we detected a different version of Gears was running
 // at startup. If a collision is detected, this instance of Gears will
 // be crippled to prevent data corruption and general mayhem.
@@ -78,5 +80,9 @@ void MaybeNotifyUserOfVersionCollision();
 
 // Puts up a simple message box alerting the user about the problem
 void NotifyUserOfVersionCollision();
+
+// Gets the string that describes the collision. Returns NULL if an error
+// occured getting the string.
+const char16 *GetVersionCollisionErrorString();
 
 #endif  // GEARS_BASE_COMMON_DETECT_VERSION_COLLISION_H__

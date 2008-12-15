@@ -41,10 +41,10 @@ STDMETHODIMP ToolsMenuItem::QueryContextMenu(HMENU hmenu,
 
   command_first_ = id_cmd_first;
 
+  // On WinCE, LoadString does not support multiple languages, so we can't load
+  // IDS_REGISTRY_MENU_TEXT.
   InsertMenu(hmenu, index_menu, MF_BYPOSITION, command_first_,
-      L"Gears Settings");  // TODO(andreip): [naming] looks like the i18n
-                           // strings are not built into the gears dll for WinCE
-                           // so loading IDS_REGISTRY_MENU_TEXT does not work.
+      L"Gears Settings");  // [naming]
 
   return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 1);
 }
