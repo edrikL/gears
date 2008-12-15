@@ -226,10 +226,16 @@ void NotifyUserOfVersionCollision() {
   
   // TODO(playmobil): Load from internationalized string table.
   const char16 *kTitle = STRING16(L"Please restart your browser");
-  const char16 *kMessage = STRING16(L"A " PRODUCT_FRIENDLY_NAME 
-                           L" update has been downloaded.\n"
-                           L"\n"
-                           L"Please close all browser windows"
-                           L" to complete the upgrade process.\n");  
+  const char16 *kMessage = GetVersionCollisionErrorString();
   MessageBox(kTitle, kMessage);
+}
+
+const char16 *GetVersionCollisionErrorString() {
+  // TODO(playmobil): Internationalize string.
+  static const char16 *error_text = STRING16(L"A " PRODUCT_FRIENDLY_NAME 
+                                    L" update has been downloaded.\n"
+                                    L"\n"
+                                    L"Please close all browser windows"
+                                    L" to complete the upgrade process.\n");
+  return error_text;
 }

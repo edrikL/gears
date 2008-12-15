@@ -106,34 +106,6 @@ GearsFactoryImpl::GearsFactoryImpl()
   SetActiveUserFlag();
 }
 
-#if BROWSER_FF
-  // TODO(nigeltao): implement version collision UI for Firefox.
-#elif defined(WIN32) || defined(BROWSER_WEBKIT)
-// Returns NULL if an error occured loading the string.
-static const char16 *GetVersionCollisionErrorString() {
-#if defined(WIN32)
-  // TODO(playmobil): This code isn't threadsafe, refactor.
-  const int kMaxStringLength = 256;
-  static char16 error_text[kMaxStringLength];
-  if (!LoadString(GetGearsModuleHandle(), IDS_VERSION_COLLISION_TEXT, 
-                  error_text, kMaxStringLength)) {
-    return NULL;
-  }
-  return error_text;
-#elif defined(BROWSER_WEBKIT)
-  //TODO(playmobil): Internationalize string.
-  static const char16 *error_text = STRING16(L"A " PRODUCT_FRIENDLY_NAME 
-                                    L" update has been downloaded.\n"
-                                    L"\n"
-                                    L"Please close all browser windows"
-                                    L" to complete the upgrade process.\n");
-  return error_text;
-#else
-  return NULL;
-#endif
-}
-#endif
-
 void GearsFactoryImpl::Create(JsCallContext *context) {
 #if BROWSER_FF
   // TODO(nigeltao): implement version collision UI for Firefox.
