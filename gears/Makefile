@@ -1200,6 +1200,7 @@ OPERA_CPPSRCS	+= \
 		detect_version_collision_win32.cc \
 		message_queue_win32.cc \
 		js_standalone_engine_op.cc \
+		opera_utils.cc \
 		paths_op.cc \
 		$(NULL)
 
