@@ -3,13 +3,10 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 3.9 2005/08/04 19:14:14 tor%cs.brown.edu Exp $ */
+/* @(#) $Id$ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
-
-/* This include does prefixing as below, but with an updated set of names */
-#include "mozzconf.h"
 
 /*
  * If you *really* need a unique prefix for all types and library functions,
