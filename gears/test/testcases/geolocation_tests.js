@@ -30,6 +30,7 @@ function testArguments() {
   // All good.
   var goodOptions = {
     enableHighAccuracy: false,
+    maximumAge: 0,
     timeout: 0,
     gearsRequestAddress: false,
     gearsAddressLanguage: 'test',
@@ -66,68 +67,102 @@ function testArguments() {
                                    dummyFunction,
                                    {enableHighAccuracy: 42});
   }, 'options.enableHighAccuracy should be a boolean.');
+  // Wrong type for maximumAge.
+  var maximumAgeTypeError = 'options.maximumAge should be a non-negative 32 ' +
+                            'bit signed integer or Infinity.';
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {maximumAge: 42.9});
+  }, maximumAgeTypeError);
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {maximumAge: -1});
+  }, maximumAgeTypeError);
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {maximumAge: 2147483648});  // 2^31
+  }, maximumAgeTypeError);
+  assertError(function() {
+    geolocation.getCurrentPosition(dummyFunction,
+                                   dummyFunction,
+                                   {maximumAge: -Infinity});
+  }, maximumAgeTypeError);
   // Wrong type for timeout.
+  var timeoutTypeError = 'options.timeout should be a non-negative 32 bit ' +
+                         'signed integer.';
   assertError(function() {
     geolocation.getCurrentPosition(dummyFunction,
                                    dummyFunction,
                                    {timeout: 42.9});
-  }, 'options.timeout should be a non-negative 32 bit signed integer.');
+  }, timeoutTypeError);
   assertError(function() {
     geolocation.getCurrentPosition(dummyFunction,
                                    dummyFunction,
                                    {timeout: -1});
-  }, 'options.timeout should be a non-negative 32 bit signed integer.');
+  }, timeoutTypeError);
   assertError(function() {
     geolocation.getCurrentPosition(dummyFunction,
                                    dummyFunction,
                                    {timeout: 2147483648});  // 2^31
-  }, 'options.timeout should be a non-negative 32 bit signed integer.');
+  }, timeoutTypeError);
   // Wrong type for gearsRequestAddress.
   assertError(
       function() {
         geolocation.getCurrentPosition(dummyFunction,
                                        dummyFunction,
                                        {gearsRequestAddress: 42});
-      },
-      'options.gearsRequestAddress should be a boolean.');
+      }, 'options.gearsRequestAddress should be a boolean.');
   // Wrong type for gearsAddressLanguage.
+  var gearsAddressLanguageTypeError = 'options.gearsAddressLanguage should ' +
+                                      'be a non-empty string.';
   assertError(
       function() {
         geolocation.getCurrentPosition(dummyFunction,
                                        dummyFunction,
                                        {gearsAddressLanguage: 42});
-      },
-      'options.gearsAddressLanguage should be a string.');
+      }, gearsAddressLanguageTypeError);
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(dummyFunction,
+                                       dummyFunction,
+                                       {gearsAddressLanguage: ''});
+      }, gearsAddressLanguageTypeError);
   // Wrong type for gearsLocationProviderUrls.
+  var gearsLocationProviderUrlsTypeError =
+      'options.gearsLocationProviderUrls should be null or an array of strings';
   assertError(
       function() {
         geolocation.getCurrentPosition(dummyFunction,
                                        dummyFunction,
                                        {gearsLocationProviderUrls: 42});
-      },
-      'options.gearsLocationProviderUrls should be null or an array of ' +
-      'strings');
+      }, gearsLocationProviderUrlsTypeError);
   assertError(
       function() {
         geolocation.getCurrentPosition(dummyFunction,
                                        dummyFunction,
                                        {gearsLocationProviderUrls: [42]});
-      },
-      'options.gearsLocationProviderUrls should be null or an array of ' +
-      'strings');
+      }, gearsLocationProviderUrlsTypeError);
 }
 
 function testNoProviders() {
+  // A request with no providers should assert unless maximumAge is non-zero.
   assertError(
       function() {
         geolocation.getCurrentPosition(
             dummyFunction,
             dummyFunction,
-            {gearsLocationProviderUrls: [], enableHighAccuracy: false});
+            {gearsLocationProviderUrls: []});
       },
       'Fix request has no location providers.',
       'Calling getCurrentPosition() should fail if no location providers are ' +
-      'specified.');
+      'specified unless maximumAge is non-zero.');
+  geolocation.getCurrentPosition(
+      dummyFunction,
+      dummyFunction,
+      {maximumAge: 1, gearsLocationProviderUrls: []});
 }
 
 function testZeroTimeout() {

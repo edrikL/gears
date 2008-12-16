@@ -219,6 +219,9 @@ class GearsGeolocation
     FixRequestInfo() : last_success_callback_time(0) {}
     ProviderVector providers;
     bool enable_high_accuracy;
+    // The maximum age of a cached position which can be accepted for this fix.
+    // A value of -1 means no limit is applied. Must be non-negative otherwise.
+    int maximum_age;
     // The maximum time period in which this request must obtain a fix. A value
     // of -1 implies no limit is applied. Must be non-negative otherwise.
     int timeout;
@@ -264,7 +267,13 @@ class GearsGeolocation
   void TimeoutExpiredImpl(int fix_request_id);
   void CallbackRequiredImpl(int fix_request_id);
 
+  // Determines if we have a cached position that meets the requirement of the
+  // specified maximumAge. maximumAge must be non-zero.
   bool IsCachedPositionSuitable(int maximum_age);
+
+  // Adds all providers to a fix request.
+  void AddProvidersToRequest(std::vector<std::string16> &urls,
+                             FixRequestInfo *info);
 
   // Internal method used by GetCurrentPosition and WatchPosition to get a
   // position fix.
@@ -299,7 +308,6 @@ class GearsGeolocation
   // Parses the JavaScript arguments passed to the GetCurrentPosition and
   // WatchPosition methods.
   static bool ParseArguments(JsCallContext *context,
-                             bool repeats,
                              std::vector<std::string16> *urls,
                              GearsGeolocation::FixRequestInfo *info);
   // Parses a JsObject representing the options parameter. The output is a
@@ -347,9 +355,9 @@ class GearsGeolocation
 
   // Causes a callback to JavaScript to be made at the specified number of
   // milliseconds in the future.
-  void MakeFutureSuccessCallback(int timeout_milliseconds,
-                                 int fix_request_id,
-                                 const Position &position);
+  void MakeFutureWatchSuccessCallback(int timeout_milliseconds,
+                                      int fix_request_id,
+                                      const Position &position);
 
   // TODO(steveblock): Refactor the logic used to maintain the fix request maps
   // into a separate class.

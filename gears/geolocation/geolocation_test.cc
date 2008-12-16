@@ -252,7 +252,7 @@ void TestParseGeolocationOptions(JsCallContext *context,
                                  JsRunnerInterface *js_runner) {
   std::vector<std::string16> urls;
   GearsGeolocation::FixRequestInfo info;
-  if (!GearsGeolocation::ParseArguments(context, false, &urls, &info)) {
+  if (!GearsGeolocation::ParseArguments(context, &urls, &info)) {
     if (!context->is_exception_set()) {
       context->SetException(
           STRING16(L"Internal error parsing geolocation options."));
@@ -272,9 +272,10 @@ void TestParseGeolocationOptions(JsCallContext *context,
   }
   // TODO(steveblock): Consider sharing these string constants with those in
   // geolocation.cc.
-  if (!return_object->SetPropertyBool(STRING16(L"repeats"), info.repeats) ||
-      !return_object->SetPropertyBool(STRING16(L"enableHighAccuracy"),
+  if (!return_object->SetPropertyBool(STRING16(L"enableHighAccuracy"),
                                       info.enable_high_accuracy) ||
+      !return_object->SetPropertyInt(STRING16(L"maximumAge"),
+                                     info.maximum_age) ||
       !return_object->SetPropertyInt(STRING16(L"timeout"), info.timeout) ||
       !return_object->SetPropertyBool(STRING16(L"gearsRequestAddress"),
                                       info.request_address) ||

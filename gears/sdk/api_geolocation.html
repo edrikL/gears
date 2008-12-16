@@ -127,6 +127,7 @@ geo.getCurrentPosition(updatePosition, handleError);
 
 <pre><code><a href="#positionoptions">PositionOptions class</a>
   readwrite attribute bool enableHighAccuracy
+  readwrite attribute int maximumAge
   readwrite attribute int timeout
   readwrite attribute bool gearsRequestAddress
   readwrite attribute string gearsAddressLanguage
@@ -175,12 +176,21 @@ geo.getCurrentPosition(updatePosition, handleError);
     request, see <code><a href="#positionoptions">PositionOptions</a></code>.</td>
 </tr><tr class="odd">
     <td>Description:</td>
-    <td class="odd">Attempts to obtain a new position. If a good fix is obtained
-within the time specified by <code>PositionOptions.timeout</code>, the success
-callback function is called exactly once with a good position. If the timeout
-expires or none of the location providers are able to provide a good fix, the
-error callback is called exactly, unless <code>null</code> was passed for
-<code>errorCallback</code>.
+    <td class="odd">Provides a previously cached position if available or
+    attempts to obtain a new position.<br><br>
+    If <code>PositionOptions.maximumAge</code> is zero, the cached position is
+    not used and a new position fix is always sought. The method will throw an
+    exception if no location providers are used.<br><br>
+    If <code>PositionOptions.maximumAge</code> is non-zero, Gears will call the
+    success callback if the cached position is more recent than 
+    <code>PositionOptions.maximumAge</code>. If not, Gears will attempt to
+    obtain a new position fix. The error callabck is called exactly once as soon
+    as a position fix is obtained, or the error callnback is called on failure.
+    If the cached position is not sufficiently recent and no location providers
+    are used, the error callback is called.<br><br>
+    Whenever Gears attempts to obtain a new position fix, this is subject to
+    <code>PositionOptions.timeout</code>. The error callback is called on
+    timeout.
 <br />
 <br />
 The signature of the success callback is:<br />
@@ -210,14 +220,26 @@ request, see <code><a href="#positionoptions">PositionOptions</a></code>.</td>
 </tr>
   <tr class="odd">
     <td>Description:</td>
-    <td class="odd">Repeatedly obtains a new position. The success callback
-function is called as soon as a good position is available, or whenever the 
-position changes significantly, subject to a maximum callback frequency. The
-error callback is called if a fatal error occurs which will prevent a position
-fix from ever being obtained by this watch, unless <code>null</code> was passed
-for <code>errorCallback</code>. The error callback, if supplied, is also called
-if Gears detects that the device has moved, but is unable to obtain a new
-position fix within the time specifed by <code>PositionOptions.timeout</code>.
+    <td class="odd">Provides a previously cached position if available and
+    repeatedly obtains a new position.<br><br>
+    If <code>PositionOptions.maximumAge</code> is zero, the cached position is
+    not used and a new position fix is always sought. The method will throw an
+    exception if no location providers are used.<br><br>
+    If <code>PositionOptions.maximumAge</code> is non-zero, Gears will call the
+    success callback if the cached position is more recent than 
+    <code>PositionOptions.maximumAge</code>. If any case, Gears will then
+    attempt to obtain a new position fix. The success callback function is
+    called as soon as a good position is available and whenever the position
+    changes significantly, subject to a maximum callback frequency. The error
+    callback is called if a fatal error occurs which will prevent a position fix
+    from ever being obtained by this watch. If the cached position is not
+    sufficiently recent and no location providers are used, the error callback
+    is called.<br><br>
+    Whenever Gears attempts to obtain a new position fix, this is subject to
+    <code>PositionOptions.timeout</code>. The error callback is called on
+    timeout when obtaining the first position fix, or if Gears detects that the
+    device has moved, but is unable to obtain a new position fix within the time
+    specifed by <code>PositionOptions.timeout</code>.
 <br />
 <br />
 The signature of the success callback is:<br />
@@ -373,6 +395,18 @@ show those that are specified.    </td>
   Also, there is no guarantee that the device will be able to provide more
   accurate results than if this flag is not specified. The default value
   is false.</td>
+</tr>
+<tr class="odd">
+  <td><strong>maximumAge</strong></td>
+  <td class="odd">readwrite int</td>
+  <td class="odd">Optional, specifies the maximum permissible age of a cached
+  position provided by the getCurrentPosition and watchPosition methods. When
+  either of these methods is called, if Gears has a cached permission and it is
+  more recent than the specified maximum age, the success callback will be
+  called immediatley with this cached position. If not, Gears will attempt to
+  obtain a new position fix. If a value of Infinity is specified, no time limit
+  is applied. The default value is zero, meaning that a cached position is never
+  used and Gears wil always attempt to get a new position fix.</td>
 </tr>
 <tr class="odd">
   <td><strong>timeout</strong></td>
