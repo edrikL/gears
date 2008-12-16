@@ -1,9 +1,9 @@
 // Copyright 2008, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,33 +13,34 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#ifndef GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__
-#define GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__
+#ifndef GEARS_BASE_OPERA_BROWSING_CONTEXT_OP_H__
+#define GEARS_BASE_OPERA_BROWSING_CONTEXT_OP_H__
 
-#include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/browsing_context.h"
+#include "gears/base/common/js_types.h"
 
-// This class represents a browsing context that can be used by browsers to
-// distinguish which page a network request originated from.  Script objects
-// are associated with a context, and workers inherit the context of the
-// object that created them.
-class BrowsingContext : virtual public RefCounted {
+class OPBrowsingContext : public BrowsingContext {
  public:
-  BrowsingContext() { }
-  virtual ~BrowsingContext() { }
+  OPBrowsingContext(JsContextPtr context) : js_context_(context) { }
+
+  JsContextPtr GetJsContext() { return js_context_; }
+  void SetJsContext(JsContextPtr context) { js_context_ = context; }
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(BrowsingContext);
+  JsContextPtr js_context_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(OPBrowsingContext);
 };
 
-#endif  // GEARS_LOCALSERVER_COMMON_BROWSING_CONTEXT_H__
+#endif  // GEARS_BASE_OPERA_BROWSING_CONTEXT_OP_H__

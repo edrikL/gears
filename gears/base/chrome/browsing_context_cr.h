@@ -35,6 +35,9 @@ class CRBrowsingContext : public BrowsingContext {
   CRBrowsingContext(CPBrowsingContext c) : context(c) { }
 
   CPBrowsingContext context;
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(CRBrowsingContext);
 };
 
 #endif  // GEARS_LOCALSERVER_CHROME_BROWSING_CONTEXT_H__
