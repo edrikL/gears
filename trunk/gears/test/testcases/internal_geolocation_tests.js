@@ -46,17 +46,17 @@ function testParseOptions() {
   if (isUsingCCTests) {
     var dummyFunction = function() {};
 
-    // Test correct parsing.
+    // Intialise to default values.
+    var defaultLocationProviderUrl = 'http://www.google.com/loc/json'
     var correctOptions = {
-      repeats: false,
       enableHighAccuracy: false,
+      maximumAge: 0,
       timeout: -1,
       gearsRequestAddress: false,
       gearsAddressLanguage: '',
-      gearsLocationProviderUrls: ['http://www.google.com/loc/json']
+      gearsLocationProviderUrls: [defaultLocationProviderUrl]
     };
 
-    var urls = ['url1', 'url2'];
     var parsedOptions;
 
     // No options.
@@ -79,34 +79,32 @@ function testParseOptions() {
         dummyFunction, dummyFunction, {gearsLocationProviderUrls: null});
     assertObjectEqual(correctOptions, parsedOptions);
 
-    // All properties false, provider URLs set.
+    // All properties explicitly set to default values where possible.
     parsedOptions = internalTests.testParseGeolocationOptions(
         dummyFunction,
         dummyFunction,
-        {
-          enableHighAccuracy: false,
-          gearsRequestAddress: false,
-          gearsAddressLanguage: '',
-          gearsLocationProviderUrls: urls
-        });
-    correctOptions.gearsLocationProviderUrls = urls;
+        {enableHighAccuracy: false, maximumAge: 0, gearsRequestAddress: false});
+    correctOptions.gearsLocationProviderUrls = [defaultLocationProviderUrl];
     assertObjectEqual(correctOptions, parsedOptions);
 
-    // All properties true, provider URLs set.
+    // Test infinite maximum age.
     parsedOptions = internalTests.testParseGeolocationOptions(
-      dummyFunction,
-      dummyFunction,
-      {
-        enableHighAccuracy: true,
-        gearsRequestAddress: true,
-        gearsAddressLanguage: 'test',
-        gearsLocationProviderUrls: urls
-      });
-    correctOptions.enableHighAccuracy = true;
-    correctOptions.gearsRequestAddress = true;
-    correctOptions.gearsAddressLanguage = 'test';
-    correctOptions.gearsLocationProviderUrls = urls;
+        dummyFunction, dummyFunction, {maximumAge: Infinity});
+    correctOptions.maximumAge = -1;
     assertObjectEqual(correctOptions, parsedOptions);
+
+    // All properties set to non-default values.
+    var options = {
+      enableHighAccuracy: true,
+      maximumAge: 1,
+      timeout: 0,
+      gearsRequestAddress: true,
+      gearsAddressLanguage: 'test',
+      gearsLocationProviderUrls: ['url1', 'url2']
+    };
+    parsedOptions = internalTests.testParseGeolocationOptions(
+        dummyFunction, dummyFunction, options);
+    assertObjectEqual(options, parsedOptions);
   }
 }
 
@@ -627,4 +625,122 @@ function testWatchTimeout() {
                                             errorCallback,
                                             options);
   }
+}
+
+// Helper function for PopulateCacheAndMakeRequest
+function PopulateCachedPosition(geolocation, successFunction) {
+  // Uses the mock location provider to populate the cached position with a set
+  // value.
+  //
+  // Note that we can never guarantee that the cached position will be updated
+  // by the position from by a given provider because logic in the arbitrator
+  // only updates the cached position if the new position has a better accuracy.
+  // To make the Pulse unit tests run reliably, the position we use here is the
+  // most accurate used in the unit tests.
+  //
+  // To make sure that the cached position has the correct timestamp (as well as
+  // the correct lat/lng), we force two updates.
+  var intermediatePositionToCache = {
+    latitude: -80.0,
+    longitude: 0.0,
+    accuracy: 1.0
+  };
+  function SetIntermediatePosition() {
+    internalTests.configureGeolocationMockLocationProviderForTest(
+        intermediatePositionToCache);
+    geolocation.getCurrentPosition(
+        function(position) { SetPosition(); },
+        null,
+        {gearsLocationProviderUrls: null});
+  }
+  function SetPosition() {
+    internalTests.configureGeolocationMockLocationProviderForTest(
+        positionToCache);
+    geolocation.getCurrentPosition(
+        function(position) {
+          assert(geolocation.lastPosition.timestamp >= Date.parse(startTime),
+                 'Last position too old in PopulateCachedPosition.');
+          var lastPosition = geolocation.lastPosition;
+          delete lastPosition.timestamp;
+          assertObjectEqual(
+              positionToCache, lastPosition,
+              'Last position incorrect in PopulateCachedPosition.');
+          internalTests.removeGeolocationMockLocationProvider();
+          successFunction();
+        },
+        null,
+        {gearsLocationProviderUrls: null});
+  }
+  var startTime = Date();
+  SetIntermediatePosition();
+}
+
+// Needs to be global to be used in tests.
+var positionToCache = {
+  latitude: 51.0,
+  longitude: -0.1,
+  accuracy: 1.0
+};
+
+// Helper function for testCachedPositionXXX tests
+function PopulateCacheAndMakeRequest(waitTime, successCallback, errorCallback,
+                                     options) {
+  var geolocation = google.gears.factory.create('beta.geolocation');
+  PopulateCachedPosition(geolocation, function() {
+    var timer = google.gears.factory.create('beta.timer');
+    timer.setTimeout(function() {
+      geolocation.getCurrentPosition(successCallback, errorCallback, options);
+    }, waitTime);
+  });
+}
+
+function testCachedPositionWithinMaximumAge() {
+  // Test that a request with a non-zero maximumAge immediately calls the
+  // success callback with the cached position if we have a suitable one.
+  startAsync();
+  PopulateCacheAndMakeRequest(
+      0,  // Wait for less than maximumAge.
+      function(position) {
+        delete position.timestamp;
+        assertObjectEqual(positionToCache, position,
+                          'Position incorrect in TestMaximumAge.');
+        completeAsync();
+      },
+      null,
+      {maximumAge: 1000});
+}
+
+function testCachedPositionOutsideMaximumAgeNoProviders() {
+  // Test that a request with a non-zero maximumAge and no location providers
+  // immediately calls the error callback if we don't have a suitable cached
+  // position.
+  startAsync();
+  PopulateCacheAndMakeRequest(
+      10,  // Wait for longer than maximumAge.
+      function() {},
+      function(error) {
+        assertErrorEqual(error.POSITION_UNAVAILABLE,
+                         'No suitable cached position available.',
+                         error);
+        completeAsync();
+      },
+      {maximumAge: 1, gearsLocationProviderUrls: null});
+}
+
+function testCachedPositionOutsideMaximumAge() {
+  // Test that a request with a non-zero maximumAge and location providers
+  // does not immediately call the error callback if we don't have a suitable
+  // cached position. We use a non-existant URL for the location provider to
+  // force an error.
+  startAsync();
+  PopulateCacheAndMakeRequest(
+      10,  // Wait for longer than maximumAge.
+      function() {},
+      function(error) {
+        assert(error.message.search('returned error code 404.') != -1);
+        error.message = null;
+        assertErrorEqual(error.POSITION_UNAVAILABLE, null, error);
+        completeAsync();
+      },
+      {maximumAge: 1, gearsLocationProviderUrls: ['non_existant_url']});
 }

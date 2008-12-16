@@ -39,6 +39,7 @@
 
 #include "gears/geolocation/geolocation.h"
 
+#include <limits>
 #include <math.h>
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/permissions_manager.h"
@@ -53,6 +54,7 @@ static const char16 *kDefaultLocationProviderUrl =
 
 // API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
+static const char16 *kMaximumAge = STRING16(L"maximumAge");
 static const char16 *kTimeout = STRING16(L"timeout");
 static const char16 *kGearsRequestAddress = STRING16(L"gearsRequestAddress");
 static const char16 *kGearsAddressLanguage = STRING16(L"gearsAddressLanguage");
@@ -448,7 +450,7 @@ void GearsGeolocation::OnNotify(MessageService *service,
         reinterpret_cast<const FixRequestIdNotificationData*>(data);
     TimeoutExpiredImpl(timeout_expired_data->fix_request_id);
   } else if (topic_string == kCallbackRequiredObserverTopic) {
-    // The timeout for a watch callback expired.
+    // The timeout for a callback expired.
     const FixRequestIdNotificationData *callback_required_data =
         reinterpret_cast<const FixRequestIdNotificationData*>(data);
     CallbackRequiredImpl(callback_required_data->fix_request_id);
@@ -481,19 +483,30 @@ void GearsGeolocation::HandleEvent(JsEventType event_type) {
 
 // Non-API methods
 
-void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
+bool GearsGeolocation::IsCachedPositionSuitable(int maximum_age) {
   ASSERT_SINGLE_THREAD();
+  assert(maximum_age != 0);
 
-  // Get the arguments.
-  std::vector<std::string16> urls;
-  scoped_ptr<FixRequestInfo> info(new FixRequestInfo());
-  if (!ParseArguments(context, repeats, &urls, info.get())) {
-    assert(context->is_exception_set());
-    return;
+  if (!last_position_.IsGoodFix()) {
+    return false;
   }
+  if (maximum_age == -1) {  // Encoding for infinity.
+    return true;
+  }
+  assert(maximum_age > 0);
+  // maximum_age is limited to 2^31 milliseconds. The current (November 2008)
+  // timestamp is around 2^40, so there's no danger of underflow.
+  int64 oldest_timestamp = GetCurrentTimeMillis() - maximum_age;
+  assert(oldest_timestamp > 0);
+  return last_position_.timestamp > oldest_timestamp;
+}
 
-  // Add the providers. The lifetime of the providers is handled by the location
-  // provider pool, through Register and Unregister.
+void GearsGeolocation::AddProvidersToRequest(std::vector<std::string16> &urls,
+                                             FixRequestInfo *info) {
+  assert(info);
+
+  // The lifetime of the providers is handled by the location provider pool,
+  // through Register and Unregister.
   std::string16 host_name = EnvPageSecurityOrigin().host();
   LocationProviderPool *pool = LocationProviderPool::GetInstance();
 
@@ -558,25 +571,97 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     assert(network_provider);
     info->providers.push_back(network_provider);
   }
+}
 
-  // If this fix has no providers, throw an exception and quit.
-  if (info->providers.empty()) {
-    context->SetException(STRING16(L"Fix request has no location providers."));
+void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
+  ASSERT_SINGLE_THREAD();
+
+  // The fact that Gears allows the caller to specify zero location providers
+  // makes the logic around the use of a cached position with maximumAge a
+  // little complex.
+  // - maximumAge is zero. The cached position is not used. We throw an
+  //   exception if no location providers are specified, or use the providers to
+  //   obtain a new fix otherwise. (maximumAge defaults to zero, so this
+  //   preserves the behaviour prior to the addition of maximumAge).
+  // - maximumAge is non-zero and location providers are specified.
+  //   - One-shot request. We call the success callback immediately if the
+  //     cached position is suitable, or use the providers to obtain a new fix
+  //     otherwise.
+  //   - Repeating request. We call the success callback immediately if the
+  //     cached position is suitable. In any case we then use the providers to
+  //     obtain a new fix.
+  // - maximumAge is non-zero and no location providers are specified. We call
+  //   the success callback immediately if the cached position is suitable, or
+  //   call the error callback immediately otherwise.
+
+  // Get the arguments.
+  std::vector<std::string16> urls;
+  scoped_ptr<FixRequestInfo> info(new FixRequestInfo());
+  if (!ParseArguments(context, &urls, info.get())) {
+    assert(context->is_exception_set());
     return;
   }
+  info->repeats = repeats;
 
-  // If this is a non-repeating request, hint to all providers that new data is
-  // required ASAP.
-  if (!info->repeats) {
-    for (ProviderVector::iterator iter = info->providers.begin();
-         iter != info->providers.end();
-         ++iter) {
-      (*iter)->UpdatePosition();
+  // This is purely an optimisation.
+  bool is_useful_to_add_location_providers = true;
+  // If the fix request is a one-shot request and will call back immediately,
+  // there's no point in adding any providers.
+  if (!info->repeats &&
+      info->maximum_age != 0 &&
+      IsCachedPositionSuitable(info->maximum_age)) {
+    is_useful_to_add_location_providers = false;
+  }
+
+  // Add the location providers.
+  if (is_useful_to_add_location_providers) {
+    AddProvidersToRequest(urls, info.get());
+
+    // If this is a non-repeating request, hint to all providers that new data
+    // is required ASAP.
+    if (!info->repeats) {
+      for (ProviderVector::iterator iter = info->providers.begin();
+           iter != info->providers.end();
+           ++iter) {
+        (*iter)->UpdatePosition();
+      }
     }
   }
 
-  // Record this fix. This updates the map of providers and fix requests. The
-  // map takes ownership of the info structure on success.
+  // Check whether we need to call back immediately.
+  bool should_call_back_immediately = false;
+  Position position_to_call_back;
+  if (info->maximum_age == 0) {
+    // If this fix has no providers, throw an exception and quit.
+    if (info->providers.empty()) {
+      context->SetException(
+          STRING16(L"Fix request has no location providers."));
+      return;
+    }
+  } else {
+    // Non-zero maximumAge
+    if (info->providers.empty()) {
+      should_call_back_immediately = true;
+      if (IsCachedPositionSuitable(info->maximum_age)) {
+        position_to_call_back = last_position_;
+      } else {
+        position_to_call_back.error_code =
+            Position::ERROR_CODE_POSITION_UNAVAILABLE;
+        position_to_call_back.error_message =
+            STRING16(L"No suitable cached position available.");
+      }
+    } else {
+      if (IsCachedPositionSuitable(info->maximum_age)) {
+        should_call_back_immediately = true;
+        position_to_call_back = last_position_;
+      }
+    }
+  }
+  assert(is_useful_to_add_location_providers || should_call_back_immediately);
+  
+  // Record this fix. This updates the map of providers for this fix request
+  // and provides a fix request ID. The map takes ownership of the info
+  // structure on success.
   int fix_request_id = 0;
   if (!RecordNewFixRequest(info.get(), &fix_request_id)) {
     context->SetException(STRING16(L"Exceeded maximum number of fix "
@@ -585,8 +670,22 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   }
   assert(fix_request_id != 0);
 
-  // Start the timeout timer for this fix request.
-  StartTimeoutTimer(fix_request_id);
+  // Invoke the callback. We use a message to do so asynchronously.
+  if (should_call_back_immediately) {
+    assert(position_to_call_back.IsInitialized());
+    assert(!info->success_callback_timer.get());
+
+    info->pending_position = position_to_call_back;
+    info->success_callback_timer.reset(new TimedMessage(
+        0,  // Call back immediately
+        kCallbackRequiredObserverTopic,
+        new FixRequestIdNotificationData(this, fix_request_id)));
+  }
+
+  // If we have providers, start the timeout timer for this fix request.
+  if (!info->providers.empty()) {
+    StartTimeoutTimer(fix_request_id);
+  }
 
   // Set the return value if this fix repeats.
   if (info->repeats) {
@@ -658,9 +757,9 @@ void GearsGeolocation::HandleRepeatingRequestUpdate(int fix_request_id,
     } else {
       // Start an asynchronous timer which will post a message back to this
       // thread once the minimum time period has elapsed.
-      MakeFutureSuccessCallback(static_cast<int>(time_remaining),
-                                fix_request_id,
-                                position);
+      MakeFutureWatchSuccessCallback(static_cast<int>(time_remaining),
+                                     fix_request_id,
+                                     position);
     }
   }
 }
@@ -803,6 +902,9 @@ void GearsGeolocation::LocationUpdateAvailableImpl(
 
   // Update the last known position, which is the best position estimate we
   // currently have.
+  // TODO(steveblock): Rather than updating when there is significant movement,
+  // we should probably update (though not neccessarily call back) if there is
+  // any movmement, provided the accuracy is not worse.
   if (IsNewPositionMovement(last_position_, position) ||
       IsNewPositionMoreAccurate(last_position_, position) ||
       IsNewPositionMoreTimely(last_position_, position)) {
@@ -909,12 +1011,24 @@ void GearsGeolocation::TimeoutExpiredImpl(int fix_request_id) {
 void GearsGeolocation::CallbackRequiredImpl(int fix_request_id) {
   ASSERT_SINGLE_THREAD();
 
-  // Check that the fix request still exists
+  // Check that the fix request still exists.
   FixRequestInfo *fix_info = MaybeGetFixRequest(fix_request_id);
   if (fix_info) {
     assert(fix_info->success_callback_timer.get());
     fix_info->success_callback_timer.reset();
-    MakeSuccessCallback(fix_info, fix_info->pending_position);
+
+    assert(fix_info->pending_position.IsInitialized());
+    if (fix_info->pending_position.IsGoodFix()) {
+      if (!MakeSuccessCallback(fix_info, fix_info->pending_position)) {
+        LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
+             "success callback failed.\n"));
+      }
+    } else {
+      if (!MakeErrorCallback(fix_info, fix_info->pending_position)) {
+        LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
+             "error callback failed.\n"));
+      }
+    }
   }
 }
 
@@ -993,14 +1107,12 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
 
 // static
 bool GearsGeolocation::ParseArguments(JsCallContext *context,
-                                      bool repeats,
                                       std::vector<std::string16> *urls,
                                       FixRequestInfo *info) {
   assert(context);
   assert(urls);
   assert(info);
 
-  info->repeats = repeats;
   // Arguments are: function successCallback, optional function errorCallback,
   // optional object options. errorCallback can be null.
   //
@@ -1033,6 +1145,7 @@ bool GearsGeolocation::ParseArguments(JsCallContext *context,
 
   // Set default values for options.
   info->enable_high_accuracy = false;
+  info->maximum_age = 0;
   info->timeout = -1;  // No limit is applied
   info->request_address = false;
   urls->clear();
@@ -1067,6 +1180,28 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
     context->SetException(error);
     return false;
   }
+  if (options->GetPropertyType(kMaximumAge) != JSPARAM_UNDEFINED) {
+    double maximum_age_double;
+    int maximum_age_int;
+    // Floating point types should support infinity.
+    assert(std::numeric_limits<double>::has_infinity);
+    if (std::numeric_limits<double>::has_infinity &&
+        options->GetPropertyAsDouble(kMaximumAge, &maximum_age_double) &&
+        maximum_age_double == std::numeric_limits<double>::infinity()) {
+      info->maximum_age = -1;
+    } else if (options->GetPropertyAsInt(kMaximumAge, &maximum_age_int) &&
+        maximum_age_int >= 0) {
+      info->maximum_age = maximum_age_int;
+    } else {
+      std::string16 error = STRING16(L"options.");
+      error += kMaximumAge;
+      error += STRING16(L" should be a non-negative 32 bit signed integer or "
+                        L"Infinity.");
+      context->SetException(error);
+      return false;
+    }
+    assert(info->maximum_age >= -1);
+  }
   if (options->GetPropertyType(kTimeout) != JSPARAM_UNDEFINED) {
     int timeout = -1;
     if (!options->GetPropertyAsInt(kTimeout, &timeout) ||
@@ -1089,14 +1224,19 @@ bool GearsGeolocation::ParseOptions(JsCallContext *context,
     context->SetException(error);
     return false;
   }
-  if (options->GetPropertyType(kGearsAddressLanguage) != JSPARAM_UNDEFINED &&
-      !options->GetPropertyAsString(kGearsAddressLanguage,
-                                    &(info->address_language))) {
-    std::string16 error = STRING16(L"options.");
-    error += kGearsAddressLanguage;
-    error += STRING16(L" should be a string.");
-    context->SetException(error);
-    return false;
+  if (options->GetPropertyType(kGearsAddressLanguage) != JSPARAM_UNDEFINED) {
+    std::string16 address_language;
+    if (!options->GetPropertyAsString(kGearsAddressLanguage,
+                                      &address_language) ||
+        address_language.empty()) {
+      std::string16 error = STRING16(L"options.");
+      error += kGearsAddressLanguage;
+      error += STRING16(L" should be a non-empty string.");
+      context->SetException(error);
+      return false;
+    }
+    info->address_language = address_language;
+    assert(!info->address_language.empty());
   }
   if (options->GetPropertyType(kGearsLocationProviderUrls) !=
           JSPARAM_UNDEFINED) {
@@ -1280,7 +1420,7 @@ bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request,
   // callback or cancel the request.
   Ref();
 
-  // Make sure we have an unload monitor in place to cancel pending request
+  // Make sure we have an unload monitor in place to cancel pending requests
   // when the page unloads.
   if (unload_monitor_ == NULL) {
     unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
@@ -1393,14 +1533,16 @@ void GearsGeolocation::RemoveProvider(LocationProviderBase *provider,
   LocationProviderPool::GetInstance()->Unregister(provider, this);
 }
 
-void GearsGeolocation::MakeFutureSuccessCallback(int timeout_milliseconds,
-                                                 int fix_request_id,
-                                                 const Position &position) {
+void GearsGeolocation::MakeFutureWatchSuccessCallback(
+    int timeout_milliseconds,
+    int fix_request_id,
+    const Position &position) {
   ASSERT_SINGLE_THREAD();
 
   // Check that there isn't already a timer running for this request.
   FixRequestInfo *fix_info = GetFixRequest(fix_request_id);
   assert(!fix_info->success_callback_timer.get());
+  assert(fix_info->repeats);
 
   fix_info->pending_position = position;
   fix_info->success_callback_timer.reset(new TimedMessage(
