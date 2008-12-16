@@ -30,6 +30,8 @@
 #if BROWSER_CHROME
 #include "gears/base/chrome/browsing_context_cr.h"
 #include "gears/base/chrome/module_cr.h"
+#elif BROWSER_OPERA
+#include "gears/base/opera/browsing_context_op.h"
 #else
 #include "gears/base/common/browsing_context.h"
 #endif
@@ -133,6 +135,8 @@ bool BrowserUtils::GetPageBrowsingContext(
 #if BROWSER_CHROME
   CPBrowsingContext cp_context = CP::GetBrowsingContext(context);
   browsing_context->reset(new CRBrowsingContext(cp_context));
+#elif BROWSER_OPERA
+  browsing_context->reset(new OPBrowsingContext(context));
 #else
   // TODO(mpcomplete): implement me.
   browsing_context->reset();
