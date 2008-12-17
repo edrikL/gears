@@ -1176,25 +1176,26 @@ endif
 
 ifeq ($(OS),android)
 # Installer which packages up relevant Android Gears files into a .zip
-$(ANDROID_INSTALLER_OUTDIR):
-	@echo "Create $@"
-	@mkdir -p $@
-
 $(ANDROID_INSTALLER_DLL): $(NPAPI_MODULE_DLL)
 	@echo "Copy $<"
+	@mkdir -p $(ANDROID_INSTALLER_OUTDIR)
 	@cp $< $@
 	@echo "Strip $<"
 	@$(CROSS_PREFIX)strip $@
 
 $(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html.compress
 	@echo "Copy `basename $@`"
+	@mkdir -p $(ANDROID_INSTALLER_OUTDIR)
 	@cp $< $@
 
-$(ANDROID_INSTALLER_ZIP_PACKAGE): $(ANDROID_INSTALLER_OUTDIR) $(patsubst %.html,$(ANDROID_INSTALLER_OUTDIR)/%.html,$(NPAPI_HTML_COMPRESSED_FILES)) $(ANDROID_INSTALLER_DLL)
+$(ANDROID_INSTALLER_ZIP_PACKAGE): $(patsubst %.html,$(ANDROID_INSTALLER_OUTDIR)/%.html,$(NPAPI_HTML_COMPRESSED_FILES)) $(ANDROID_INSTALLER_DLL)
 	@echo "Build Android package"
+	@mkdir -p $(ANDROID_INSTALLER_OUTDIR)
+	@-rm -f $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).zip
 	@(cd $(INSTALLERS_OUTDIR) && zip -r $(INSTALLER_BASE_NAME).zip `basename $(ANDROID_INSTALLER_OUTDIR)`)
 	@echo "Clean files"
 	@rm -rf $(ANDROID_INSTALLER_OUTDIR)
+	@ls -l $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).zip
 endif # android
 
 ifeq ($(OS),osx)
