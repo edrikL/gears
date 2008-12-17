@@ -404,6 +404,9 @@ class HttpRequestAndroid : public HttpRequest {
   // True if Abort() was used on this instance at any point, false
   // otherwise.
   bool was_aborted_;
+  // This mutex protects both was_aborted_ and state_, since
+  // the latter is written from the main thread and read
+  // concurrently from the child thread.
   Mutex was_aborted_mutex_;
   // The response body for a completed request. This is a ByteStore so
   // it can be easily wrapped in a BlobInterface.

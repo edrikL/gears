@@ -582,9 +582,6 @@ void HttpRequestAndroid::SwitchToChildThreadState(State state) {
 }
 
 void HttpRequestAndroid::HandleStateMachine() {
-  LOG(("Running %s thread in state %s\n",
-       IsMainThread() ? "main" : "child",
-       GetStateName(state_)));
   // Loop the state machine until the current thread is no longer in
   // control.
   // Note that state transitions happen only in the following circumstances
@@ -612,7 +609,16 @@ void HttpRequestAndroid::HandleStateMachine() {
   // from MAIN_IDLE to some random state.
 
   for (;;) {
-    switch (state_) {
+    State local_state;
+    {
+      MutexLock locker(&was_aborted_mutex_);
+      local_state = state_;
+    }
+    LOG(("Running %s thread in state %s\n",
+         IsMainThread() ? "main" : "child",
+         GetStateName(local_state)));
+
+    switch (local_state) {
       case STATE_MAIN_IDLE:
         assert(IsMainThread());
         // Exit the state machine loop.
@@ -754,7 +760,12 @@ void HttpRequestAndroid::HandleStateMachine() {
       }
 
       case STATE_MAIN_COMPLETE:
-        assert(IsMainThread());
+        if (IsChildThread()) {
+          // Looks like we've been aborted before we branched here.
+          assert(was_aborted_);
+          break;
+        }
+
         // Shut down the child thread now, otherwise we have to wait
         // until the last unreference, which may be a long time if it
         // is held by a JavaScript HttpRequest instance.
