@@ -1183,7 +1183,10 @@ $(ANDROID_INSTALLER_DLL): $(NPAPI_MODULE_DLL)
 	@echo "Strip $<"
 	@$(CROSS_PREFIX)strip $@
 
-$(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html.compress
+# TODO(jripley): The compressed html files are not working. Use the
+# uncompressed ones for now.
+#$(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html.compress
+$(ANDROID_INSTALLER_OUTDIR)/%.html: $(NPAPI_OUTDIR)/genfiles/%.html
 	@echo "Copy `basename $@`"
 	@mkdir -p $(ANDROID_INSTALLER_OUTDIR)
 	@cp $< $@
