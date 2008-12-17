@@ -69,6 +69,8 @@ class FileDialogAndroid : public FileDialog, public MessageObserverInterface {
 
   // options string (json-formatted) sent to the java side.
   std::string options_;
+  // Weather this API is supported (i.e. Java counterpart class is present).
+  bool supported_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileDialogAndroid);
 };

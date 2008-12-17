@@ -160,7 +160,14 @@ void FileDialogAndroid::ProcessSelection(StringList files) {
                                                  data.release());
 }
 
-FileDialogAndroid::FileDialogAndroid() {
+FileDialogAndroid::FileDialogAndroid() : supported_(false) {
+  JavaClass java_dialog_class;
+  if (!java_dialog_class.FindClass(kNativeDialogClass)) {
+    LOG(("Couldn't load the NativeDialog class!\n"));
+    return;
+  }
+
+  supported_ = true;
   // We register the native method callback
   static bool isRegistered;
   if (isRegistered == false) {
@@ -188,6 +195,11 @@ void FileDialogAndroid::OnNotify(MessageService *service,
 bool FileDialogAndroid::BeginSelection(NativeWindowPtr parent,
                                        const FileDialog::Options& options,
                                        std::string16* error) {
+  if (!supported_) {
+    *error = STRING16(L"File API not supported.");
+    return false;
+  }
+
   if (!SetOptions(options, error))
     return false;
   if (!Display(error))
@@ -208,6 +220,8 @@ void FileDialogAndroid::DoUIAction(UIAction action) {
 
 bool FileDialogAndroid::SetOptions(const FileDialog::Options& options,
                                    std::string16* error) {
+  if (!supported_) return false;
+
   StringList filter = options.filter;
   Json::Value json_options;
   Json::Value array;
@@ -235,6 +249,8 @@ bool FileDialogAndroid::SetOptions(const FileDialog::Options& options,
 }
 
 jobject FileDialogAndroid::GetContext() {
+  if (!supported_) return NULL;
+
   JavaLocalFrame frame;
   jobject context = NULL;
   jobject java_webview = NULL;
@@ -248,13 +264,13 @@ jobject FileDialogAndroid::GetContext() {
     // get the JavaClass for WebView
     if (!java_webview_class.FindClass(kWebviewClass)) {
       LOG(("Couldn't load the WebView class\n"));
-      return false;
+      return NULL;
     }
 
     if (!java_webview_class.GetMultipleMethodIDs(webview_methods,
         NELEM(webview_methods))) {
       LOG(("Couldn't get WebView methods\n"));
-      return false;
+      return NULL;
     }
 
     // call getContext()
@@ -265,6 +281,8 @@ jobject FileDialogAndroid::GetContext() {
 }
 
 bool FileDialogAndroid::Display(std::string16* error) {
+  if (!supported_) return false;
+
   JavaLocalFrame frame;
   jobject context = GetContext();
 
