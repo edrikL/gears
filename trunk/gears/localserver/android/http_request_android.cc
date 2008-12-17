@@ -763,7 +763,7 @@ void HttpRequestAndroid::HandleStateMachine() {
         if (IsChildThread()) {
           // Looks like we've been aborted before we branched here.
           assert(was_aborted_);
-          break;
+          return;
         }
 
         // Shut down the child thread now, otherwise we have to wait
