@@ -2218,6 +2218,7 @@ $(BROWSER)_CPPSRCS += \
 		managed_resource_store.cc \
 		managed_resource_store_module.cc \
 		manifest.cc \
+		progress_event.cc \
 		resource_store.cc \
 		resource_store_module.cc \
 		safe_http_request.cc \
@@ -2253,7 +2254,6 @@ FF3_CPPSRCS	+= \
 		async_task_ff.cc \
 		cache_intercept.cc \
 		http_request_ff.cc \
-		progress_event.cc \
 		progress_input_stream.cc \
 		$(NULL)
 
@@ -2269,7 +2269,6 @@ IE_CPPSRCS	+= \
 		file_submit_behavior.cc \
 		http_handler_ie.cc \
 		http_request_ie.cc \
-		progress_event.cc \
 		progress_input_stream.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
@@ -2334,7 +2333,6 @@ SF_CPPSRCS	+= \
 		http_request_delegate.mm \
 		http_request_sf.mm \
 		localserver_db_proxy.mm \
-		progress_event.cc \
 		progress_input_stream.mm \
 		ui_thread.cc \
 		$(NULL)
