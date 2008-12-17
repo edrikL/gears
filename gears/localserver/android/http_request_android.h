@@ -38,10 +38,12 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/thread.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/localserver/common/progress_event.h"
 
 class BrowsingContext;
 
-class HttpRequestAndroid : public HttpRequest {
+class HttpRequestAndroid : public HttpRequest,
+                           public ProgressEvent::Listener {
  public:
   virtual void Ref();
   virtual void Unref();
@@ -116,6 +118,10 @@ class HttpRequestAndroid : public HttpRequest {
   // called as data becomes available.
   virtual bool SetListener(HttpListener *listener,
                            bool enable_data_available);
+  // Implements the ProgressEvent::Listener interface. This is called
+  // on the main thread by an AsyncFunctor fired by
+  // ProgressEvent::Update.
+  virtual void OnUploadProgress(int64 position, int64 total);  
   // Helper function to parse a "Content-Type:" response haeader, also
   // used by UrlInterceptAndroid. Extracts the MIME type and encoding
   // from it. mime_type and/or encoding can be skipped by passing NULL
@@ -399,6 +405,14 @@ class HttpRequestAndroid : public HttpRequest {
   // If true, the listener will be notified as soon as data is first
   // available.
   bool listener_enable_data_available_;
+  // If true, the current transfer direction is upload (POST). If
+  // false, the current transfer direction is download (GET, or body
+  // of POST). This is only modified in the main thread at a point
+  // when there are no ProgressEvent messages on the queue.
+  bool listener_in_post_;
+  // The total number of bytes that will be by the child thread, or 0
+  // if this cannot be determined.
+  int64_t total_bytes_to_send_;
   // True if this is an asynchronous (non-blocking) request.
   bool asynchronous_;
   // True if Abort() was used on this instance at any point, false

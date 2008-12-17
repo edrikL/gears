@@ -193,6 +193,8 @@ HttpRequestAndroid::HttpRequestAndroid()
       java_object_(),
       http_listener_(NULL),
       listener_enable_data_available_(false),
+      listener_in_post_(false),
+      total_bytes_to_send_(0),
       asynchronous_(true),
       was_aborted_(false),
       was_aborted_mutex_(),
@@ -514,6 +516,8 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
   if (!IsOpen()) return false;
   if (IsPostOrPut()) {
     post_blob_.reset(blob ? blob : new EmptyBlob());
+    total_bytes_to_send_ = post_blob_->Length();
+    assert(total_bytes_to_send_ >= 0);
   } else if (blob) {
     return false;
   }
@@ -661,6 +665,8 @@ void HttpRequestAndroid::HandleStateMachine() {
         // Child thread successfully connected to the remote site. If
         // there is POST data, send it now, otherwise skip straight.
         if (method_ == HttpConstants::kHttpPOST) {
+          // Switch progress events to updating the upload position.
+          listener_in_post_ = true;
           SwitchToChildThreadState(STATE_CHILD_POST);
           return;
         } else {
@@ -681,6 +687,8 @@ void HttpRequestAndroid::HandleStateMachine() {
 
       case STATE_MAIN_PARSE_HEADERS:
         assert(IsMainThread());
+        // Switch progress events to updating the download position.
+        listener_in_post_ = false;
         if (ParseHeaders()) {
           // Test for redirect.
           std::string16 redirect_url = GetRedirect();
@@ -987,6 +995,10 @@ bool HttpRequestAndroid::SendPostData() {
                                  byte_array.Get(),
                                  static_cast<int>(to_send))) {
         pos += to_send;
+        // Update upload progress.
+        if (listener_enable_data_available_) {
+          ProgressEvent::Update(this, this, pos, total_bytes_to_send_);
+        }
         // Loop.
       } else {
         LOG(("Sending post data failed\n"));
@@ -1177,6 +1189,12 @@ bool HttpRequestAndroid::Receive() {
       }
       env->ReleaseByteArrayElements(byte_array.Get(), pinned_array, 0);
       total_bytes += got;
+      // Update download progress. We don't need to sent the
+      // total. This is fixed-up elsewhere using the headers as
+      // necessary.
+      if (listener_enable_data_available_) {
+        ProgressEvent::Update(this, this, total_bytes, 0);
+      }
     }
   }
   MutexLock lock(&mutex_);
@@ -1365,7 +1383,6 @@ bool HttpRequestAndroid::SetListener(HttpListener *listener,
   assert(IsMainThread());
   MutexLock lock(&mutex_);
   http_listener_ = listener;
-  // TODO(jripley): listener_enable_data_available_ not implemented.
   listener_enable_data_available_ = enable_data_available;
   return true;
 }
@@ -1404,6 +1421,27 @@ bool HttpRequestAndroid::IsSameOrigin(const std::string16 &from,
     LOG(("%s not the same origin as %s\n", from8.c_str(), to8.c_str()));
 #endif
     return false;
+  }
+}
+
+void HttpRequestAndroid::OnUploadProgress(int64 position, int64 total) {
+  assert(IsMainThread());
+  // This is executed on the main thread, so the listener cannot be
+  // changed asynchronously.
+  if (!listener_enable_data_available_ ||
+      http_listener_ == NULL ||
+      was_aborted_) {
+    // If there's nobody interested in the progress update, drop it.
+    return;
+  }
+  LOG(("%s progress: %d %d\n",
+       listener_in_post_ ? "Upload" : "Download",
+       static_cast<int>(position),
+       static_cast<int>(total)));
+  if (listener_in_post_) {
+    http_listener_->UploadProgress(this, position, total);
+  } else {
+    http_listener_->DataAvailable(this, position);
   }
 }
 
