@@ -259,10 +259,10 @@ bool MarshaledJsToken::Unmarshal(
       for (std::map<std::string16, MarshaledJsToken*>::iterator i =
           o->begin(); i != o->end(); ++i) {
         JsScopedToken property_value;
-        if (!i->second->Unmarshal(module_environment, &property_value)) {
+        if (!i->second->Unmarshal(module_environment, &property_value) ||
+            !object->SetProperty(i->first, property_value)) {
           return false;
         }
-        object->SetProperty(i->first, property_value);
       }
       success = true;
       break;
@@ -279,8 +279,11 @@ bool MarshaledJsToken::Unmarshal(
       for (int i = 0; i < n; i++) {
         JsScopedToken token;
         MarshaledJsToken *mjt = (*a)[i];
-        if (mjt && mjt->Unmarshal(module_environment, &token)) {
-          array->SetElement(i, token);
+        if (mjt) {
+          if (!mjt->Unmarshal(module_environment, &token) ||
+              !array->SetElement(i, token)) {
+            return false;
+          }
         }
       }
       success = true;
