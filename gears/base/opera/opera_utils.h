@@ -32,7 +32,7 @@
 
 #include "gears/base/common/message_queue.h"  // for ThreadId
 
-class OperaGearsAPI;
+class OperaGearsApiInterface;
 class OperaWorkerThreadInterface;
 
 class OperaUtils {
@@ -40,10 +40,10 @@ class OperaUtils {
   // Called by Opera when it first loads Gears. opera_api points to an object
   // that implements the Opera API for Gears. browser_thread must be
   // set to the ID of the thread Opera runs on.
-  static void Init(OperaGearsAPI *opera_api, ThreadId browser_thread);
+  static void Init(OperaGearsApiInterface *opera_api, ThreadId browser_thread);
 
   // Returns the pointer to the Opera API for Gears.
-  static OperaGearsAPI *GetBrowserApiForGears();
+  static OperaGearsApiInterface *GetBrowserApiForGears();
 
   // Returns the ID of the thread the browser runs on.
   static ThreadId GetBrowserThreadId();
@@ -56,7 +56,7 @@ class OperaUtils {
 
  private:
   // Holds the pointer to the global Opera API for Gears.
-  static OperaGearsAPI *opera_api_;
+  static OperaGearsApiInterface *opera_api_;
   // Holds the ID of the thread the browser runs on.
   static ThreadId browser_thread_;
 

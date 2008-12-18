@@ -115,18 +115,19 @@ class OperaWorkerThreadImpl : public OperaWorkerThreadInterface {
 };
 
 // static
-OperaGearsAPI *OperaUtils::opera_api_ = NULL;
+OperaGearsApiInterface *OperaUtils::opera_api_ = NULL;
 // static
 ThreadId OperaUtils::browser_thread_ = 0;
 
 //static
-void OperaUtils::Init(OperaGearsAPI *opera_api, ThreadId browser_thread) {
+void OperaUtils::Init(OperaGearsApiInterface *opera_api,
+                      ThreadId browser_thread) {
   opera_api_ = opera_api;
   browser_thread_ = browser_thread;
 }
 
 // static
-OperaGearsAPI *OperaUtils::GetBrowserApiForGears() {
+OperaGearsApiInterface *OperaUtils::GetBrowserApiForGears() {
   assert(opera_api_ != NULL);
   return opera_api_;
 }
