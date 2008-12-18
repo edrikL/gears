@@ -96,3 +96,26 @@ As of September 12, 2008, these are our changes from sqlite_vendor:
  - Modifications to Makefile.linux-gcc and main.mk for compiling
    SQLite tests.
  - Compile warning fixed in func.c (check if this is still needed)
+ - Fixed a typo bug in fts2_icu.c: "strlen(nInput)" (filed upstream as
+   http://www.sqlite.org/cvstrac/tktview?tn=3543)
+
+Changes from Chrome:
+ - I marked all changes I made with "evanm", so you can find them with
+   "grep evanm *".
+ - Most files include sqlite3ext.h with SQLITE_CORE #defined, but two don't:
+   fts2_tokenizer.c and icu.c.  Without this #define, the calls in
+   fts2_tokenizer.c try to go through some pointer to the sqlite API instead
+   of calling the functions directly (to work as a loadable module), but then
+   crash (because the other files never initialize that loadable module
+   support).  As a hack I #defined it in these files, but it'd be nice to
+   figure out what really ought to happen here (perhaps this file is new and
+   hasn't been tested to verify it works right).  Update: Seems this is an
+   issue we get because we're using fts2 instead of fts3.
+ - shell_icu.c is a Chrome-specific file used to load our ICU data.  shell.c
+   has been modifed to call into shell_icu.c.
+ - fts2_icu.c has a critical bug. U8_NEXT is used over a UTF-16 string. It's
+   rep$ by U16_NEXT (jungshik)
+ - Added a new function sqlite3Preload we use to prime the database cache. It
+   allows much faster performance by reading the file in one contiguous
+   operation rather than bringing it in organically, which involves a lot of
+   seeking.

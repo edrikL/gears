@@ -112,7 +112,7 @@ static int icuOpen(
 
   *ppCursor = 0;
 
-  if( -1 == nInput ) nInput = strlen(nInput);
+  if( -1 == nInput ) nInput = strlen(zInput);
   nChar = nInput+1;
   pCsr = (IcuCursor *)sqlite3_malloc(
       sizeof(IcuCursor) +                /* IcuCursor */
@@ -196,7 +196,7 @@ static int icuNext(
 
     while( iStart<iEnd ){
       int iWhite = iStart;
-      U8_NEXT(pCsr->aChar, iWhite, pCsr->nChar, c);
+      U16_NEXT(pCsr->aChar, iWhite, pCsr->nChar, c);
       if( u_isspace(c) ){
         iStart = iWhite;
       }else{

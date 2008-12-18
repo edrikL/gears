@@ -3571,6 +3571,7 @@ static int tokenizeSegment(
   int firstIndex = pQuery->nTerms;
   int iCol;
   int nTerm = 1;
+  int iEndLast = -1;
   
   int rc = pModule->xOpen(pTokenizer, pSegment, nSegment, &pCursor);
   if( rc!=SQLITE_OK ) return rc;
@@ -3595,6 +3596,20 @@ static int tokenizeSegment(
       pQuery->nextIsOr = 1;
       continue;
     }
+
+    /*
+     * The ICU tokenizer considers '*' a break character, so the code below
+     * sets isPrefix correctly, but since that code doesn't eat the '*', the
+     * ICU tokenizer returns it as the next token.  So eat it here until a
+     * better solution presents itself.
+     */
+    if( pQuery->nTerms>0 && nToken==1 && pSegment[iBegin]=='*' &&
+        iEndLast==iBegin){
+      pQuery->pTerms[pQuery->nTerms-1].isPrefix = 1;
+      continue;
+    }
+    iEndLast = iEnd;
+    
     queryAdd(pQuery, pToken, nToken);
     if( !inPhrase && iBegin>0 && pSegment[iBegin-1]=='-' ){
       pQuery->pTerms[pQuery->nTerms-1].isNot = 1;
