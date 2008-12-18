@@ -503,6 +503,16 @@ static const unsigned char aJournalMagic[] = {
 */
 #define PAGER_MAX_PGNO 2147483647
 
+/* Begin preload-cache.patch for Chromium */
+/* See comments above the definition. */
+int sqlite3PagerAcquire2(
+  Pager *pPager,
+  Pgno pgno,
+  DbPage **ppPage,
+  int noContent,
+  unsigned char *pDataToFill);
+/* End preload-cache.patch for Chromium */
+
 /*
 ** The pagerEnter() and pagerLeave() routines acquire and release
 ** a mutex on each pager.  The mutex is recursive.
@@ -3766,6 +3776,25 @@ static int pagerAcquire(
   DbPage **ppPage,    /* Write a pointer to the page here */
   int noContent       /* Do not bother reading content from disk if true */
 ){
+  /* This just passes through to our modified version with NULL data. */
+  return sqlite3PagerAcquire2(pPager, pgno, ppPage, noContent, 0);
+}
+
+/*
+** This is an internal version of sqlite3PagerAcquire that takes an extra
+** parameter of data to use to fill the page with. This allows more efficient
+** filling for preloaded data. If this extra parameter is NULL, we'll go to
+** the file.
+**
+** See sqlite3PagerLoadall which uses this function.
+*/
+int sqlite3PagerAcquire2(
+  Pager *pPager,      /* The pager open on the database file */
+  Pgno pgno,          /* Page number to fetch */
+  DbPage **ppPage,    /* Write a pointer to the page here */
+  int noContent,      /* Do not bother reading content from disk if true */
+  unsigned char* pDataToFill
+){
   PgHdr *pPg;
   int rc;
 
@@ -3834,11 +3863,18 @@ static int pagerAcquire(
       pPg->needRead = noContent && !pPager->alwaysRollback;
       IOTRACE(("ZERO %p %d\n", pPager, pgno));
     }else{
-      rc = readDbPage(pPager, pPg, pgno);
-      if( rc!=SQLITE_OK && rc!=SQLITE_IOERR_SHORT_READ ){
-        pPg->pgno = 0;
-        sqlite3PagerUnref(pPg);
-        return rc;
+      if (pDataToFill) {
+        /* Just copy from the given memory. */
+        memcpy(PGHDR_TO_DATA(pPg), pDataToFill, pPager->pageSize);
+        CODEC1(pPager, PGHDR_TO_DATA(pPg), pPg->pgno, 3);
+      } else {
+        /* Load from disk (old regular sqlite code path). */
+        rc = readDbPage(pPager, pPg, pgno);
+        if( rc!=SQLITE_OK && rc!=SQLITE_IOERR_SHORT_READ ){
+          pPg->pgno = 0;
+          sqlite3PagerUnref(pPg);
+          return rc;
+        }
       }
       pPg->needRead = 0;
     }
@@ -5302,6 +5338,87 @@ int sqlite3PagerMovepage(Pager *pPager, DbPage *pPg, Pgno pgno, int isCommit){
   return SQLITE_OK;
 }
 #endif
+
+/* Begin preload-cache.patch for Chromium */
+/**
+** When making large allocations, there is no need to stress the heap and
+** potentially hold its lock while we allocate a bunch of memory.  If we know
+** the allocation will be large, go directly to the OS instead of the heap.
+**/
+static void* allocLarge(size_t size) {
+#if SQLITE_OS_WIN
+  return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
+  return sqlite3Malloc(size);
+#endif
+}
+
+static void freeLarge(void* ptr) {
+#if SQLITE_OS_WIN
+  VirtualFree(ptr, 0, MEM_RELEASE);
+#else
+  sqlite3_free(ptr);
+#endif
+}
+
+/**
+** Addition: This will attempt to populate the database cache with
+** the first N bytes of the file, where N is the total size of the cache.
+** Because we can load this as one chunk from the disk, this is much faster
+** than loading a subset of the pages one at a time in random order.
+**
+** The pager must be initialized before this function is called. This means a
+* statement must be open that has initialized the pager and is keeping the
+** cache in memory.
+**/
+int sqlite3PagerLoadall(Pager* pPager)
+{
+  int i;
+  int rc;
+  int loadSize;
+  int loadPages;
+  unsigned char *fileData;
+
+  if (pPager->dbSize < 0 || pPager->pageSize < 0) {
+    /* pager not initialized, this means a statement is not open */
+    return SQLITE_MISUSE;
+  }
+
+  /* compute sizes */
+  if (pPager->mxPage < pPager->dbSize)
+    loadPages = pPager->mxPage;
+  else
+    loadPages = pPager->dbSize;
+  loadSize = loadPages * pPager->pageSize;
+
+  /* load the file as one chunk */
+  fileData = allocLarge(loadSize);
+  if (! fileData)
+    return SQLITE_NOMEM;
+  rc = sqlite3OsRead(pPager->fd, fileData, loadSize, 0);
+  if (rc != SQLITE_OK) {
+    freeLarge(fileData);
+    return rc;
+  }
+
+  /* Copy the data to each page. Note that the page numbers we pass to _get
+   * are one-based, 0 is a marker for no page. We also need to check that we
+   * haven't loaded more pages than the cache can hold total. There may have
+   * already been a few pages loaded before, so we may fill the cache before
+   * loading all of the pages we want to.
+   */
+  for(i=1; i <= loadPages && pPager->nPage < pPager->mxPage; i++) {
+    DbPage *pPage;
+    rc = sqlite3PagerAcquire2(pPager, i, &pPage, 0,
+                              &fileData[(i-1)*(i64)pPager->pageSize]);
+    if (rc != SQLITE_OK)
+      break;
+    sqlite3PagerUnref(pPage);
+  }
+  freeLarge(fileData);
+  return SQLITE_OK;
+}
+/* End preload-cache.patch for Chromium */
 
 /*
 ** Return a pointer to the data for the specified page.

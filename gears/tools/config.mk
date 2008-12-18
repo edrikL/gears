@@ -253,6 +253,7 @@ SQLITE_CFLAGS += -DSQLITE_CORE \
   -DSQLITE_OMIT_LOAD_EXTENSION=1 \
   -DSQLITE_OMIT_VACUUM=1 \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
+  -DSQLITE_GEARS_DISABLE_SHELL_ICU \
   -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
 
 SKIA_LIB_DIR = ../third_party/skia

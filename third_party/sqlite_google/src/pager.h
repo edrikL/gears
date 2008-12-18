@@ -109,6 +109,8 @@ int sqlite3PagerMovepage(Pager*,DbPage*,Pgno,int);
 void *sqlite3PagerGetData(DbPage *); 
 void *sqlite3PagerGetExtra(DbPage *); 
 int sqlite3PagerLockingMode(Pager *, int);
+/* This function is for preload-cache.patch for Chromium: */
+int sqlite3PagerLoadall(Pager*);
 int sqlite3PagerJournalMode(Pager *, int);
 i64 sqlite3PagerJournalSizeLimit(Pager *, i64);
 void *sqlite3PagerTempSpace(Pager*);
