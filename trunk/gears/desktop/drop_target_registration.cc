@@ -26,10 +26,8 @@
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
-#if defined(BROWSER_CHROME) || defined(OS_WINCE) || defined(OS_ANDROID)
-  // The Drag-and-Drop API has not been implemented for Chrome,
-  // PocketIE, and Android.
-#else
+#include "gears/desktop/drop_target_base.h"
+#ifdef GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 
 #include "gears/desktop/drop_target_registration.h"
 
@@ -64,5 +62,5 @@ void GearsDropTargetRegistration::UnregisterDropTarget(JsCallContext *context) {
 }
 
 
-#endif  // BROWSER_CHROME, OS_WINCE, OS_ANDROID
+#endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #endif  // OFFICIAL_BUILD
