@@ -37,12 +37,14 @@ PermissionsManager::PermissionsManager(const SecurityOrigin &security_origin,
     : security_origin_(security_origin), is_worker_(is_worker) {
 }
 
-bool PermissionsManager::AcquirePermission(PermissionsDB::PermissionType type) {
-  return AcquirePermission(type, NULL);
+bool PermissionsManager::AcquirePermission(PermissionsDB::PermissionType type,
+                                           BrowsingContext *context) {
+  return AcquirePermission(type, context, NULL);
 }
 
 bool PermissionsManager::AcquirePermission(
     PermissionsDB::PermissionType type,
+    BrowsingContext *context,
     const PermissionsDialog::CustomContent *custom) {
 
   // Check if we already have a decision.
@@ -51,7 +53,7 @@ bool PermissionsManager::AcquirePermission(
     permission_state_[type] = PermissionsDialog::Prompt(security_origin_,
                                                         type,
                                                         custom,
-                                                        NULL);
+                                                        context);
   }
 
   // Return the boolean decision.

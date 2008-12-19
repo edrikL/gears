@@ -112,7 +112,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
     }
-    
+
     const char16 *error_text = GetVersionCollisionErrorString();
     if (error_text) {
       context->SetException(error_text);
@@ -152,7 +152,8 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     // Make sure the user gives this site permission to use Gears unless the
     // module can be created without requiring any permissions.
     if (!GetPermissionsManager()->AcquirePermission(
-        PermissionsDB::PERMISSION_LOCAL_DATA)) {
+        PermissionsDB::PERMISSION_LOCAL_DATA,
+        EnvPageBrowsingContext())) {
       context->SetException(kPermissionExceptionString);
       return;
     }
@@ -169,7 +170,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
-  
+
   if (module_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.desktop")) {
@@ -251,11 +252,12 @@ void GearsFactoryImpl::GetBuildInfo(JsCallContext *context) {
 void GearsFactoryImpl::GetPermission(JsCallContext *context) {
   scoped_ptr<PermissionsDialog::CustomContent> custom_content(
       PermissionsDialog::CreateCustomContent(context));
- 
+
   if (!custom_content.get()) { return; }
- 
+
   bool has_permission = GetPermissionsManager()->AcquirePermission(
       PermissionsDB::PERMISSION_LOCAL_DATA,
+      EnvPageBrowsingContext(),
       custom_content.get());
 
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
