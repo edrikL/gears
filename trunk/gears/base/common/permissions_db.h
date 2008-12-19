@@ -72,7 +72,7 @@ class PermissionsDB {
 
   // The existing types of permissions.
   enum PermissionType {
-    // database(manager), localserver, workerpool, audio(recorder), canvas
+    // database(manager), localserver, workerpool, canvas
     PERMISSION_LOCAL_DATA,
     // geolocation
     PERMISSION_LOCATION_DATA,

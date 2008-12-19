@@ -50,19 +50,10 @@ endif
 ifeq ($(USING_LIBPNG),)
   USING_LIBPNG = 1
 endif
-ifeq ($(USING_LIBSPEEX),)
-  USING_LIBSPEEX = 1
-endif
-ifeq ($(USING_LIBTREMOR),)
-  USING_LIBTREMOR = 1
-endif
 ifeq ($(USING_MOZJS),)
   ifeq ($(BROWSER),SF)
     USING_MOZJS = 1
   endif
-endif
-ifeq ($(USING_PORTAUDIO),)
-  USING_PORTAUDIO = 1
 endif
 ifeq ($(USING_SQLITE),)
   USING_SQLITE = 1
@@ -160,8 +151,6 @@ ifeq ($(OS),android)
   USING_SQLITE=0
 # Use system zlib.
   USING_ZLIB=0
-# Do not use portaudio at all.
-  USING_PORTAUDIO=0
 # Use system-packaged Java classes instead of runtime loading.
   USING_CLASS_LOADER=0
 # Use SpiderMonkey.
@@ -273,10 +262,6 @@ ifeq ($(USING_LIBGD),1)
 CPPFLAGS += -I../third_party/libgd
 endif
 
-PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/common -I../third_party/portaudio/include
-LIBSPEEX_CFLAGS += -I../third_party/speex/include
-LIBSPEEX_CFLAGS += -DFIXED_POINT -DDISABLE_FLOAT_API -DHAVE_CONFIG_H
-LIBTREMOR_CFLAGS += -I../third_party/tremor/include -I../third_party/tremor/lib
 GTEST_CPPFLAGS += -I../third_party/gtest/include -I../third_party/gtest
 
 # Common items, like notifier, is not related to any browser.
@@ -522,19 +507,6 @@ SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
 
-PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
-# for PortAudio: build only the OSS hostapi for linux
-PORTAUDIO_CFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
-# for PortAudio: disable some warnings
-PORTAUDIO_CFLAGS += -Wno-unused-variable
-# for PortAudio: enable multithreading support with pthread library
-PORTAUDIO_CFLAGS += -pthread
-
-# for Speex:
-LIBSPEEX_CFLAGS += -Wno-unused-variable
-# for Tremor:
-LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
-
 # all the GTK headers using includes relative to this directory
 GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include
 CPPFLAGS += $(GTK_CFLAGS)
@@ -559,8 +531,6 @@ MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .so
 DLLFLAGS = $(SHARED_LINKFLAGS) -shared -Wl,--version-script -Wl,tools/xpcom-ld-script
-# for PortAudio: need pthread and math
-DLLFLAGS += -lpthread -lm
 
 MKEXE = g++
 EXE_PREFIX =
@@ -641,21 +611,6 @@ THIRD_PARTY_CFLAGS = -Wno-main
 
 # for gtest:
 GTEST_CPPFLAGS += -DGTEST_NOT_MAC_FRAMEWORK_MODE
-
-PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/unix
-# for PortAudio: build only the CoreAudio hostapi for osx
-PORTAUDIO_CFLAGS += -DPA_USE_COREAUDIO
-# for PortAudio: disable some warnings
-PORTAUDIO_CFLAGS += -Wno-unused-variable -Wno-uninitialized
-
-# for Ogg:
-LIBOGG_CFLAGS += -D__MACOSX__
-
-# for Speex:
-LIBSPEEX_CFLAGS += -Wno-unused-variable
-
-# for Tremor:
-LIBTREMOR_CFLAGS += -Wno-unused-variable -Wno-unused-function
 
 # COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
 # -DOSX is needed by Glint 3-rd party library built into notifier.
@@ -738,8 +693,6 @@ DLLFLAGS += -Ltools/osx -lleopard_support
 else
 $(BROWSER)_DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
-# for PortAudio: need CoreAudio, AudioToolbox, AudioUnit, Carbon frameworks
-DLLFLAGS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
 
 MKEXE = g++
 EXE_PREFIX =
@@ -805,11 +758,6 @@ CPPFLAGS_opt =
 CPPFLAGS += /nologo -DSTRICT -D_UNICODE -DUNICODE -D_USRDLL -DWIN32 -D_WINDLL \
             -D_CRT_SECURE_NO_DEPRECATE -DNOMINMAX
 
-# PortAudio assumes it is in the include path
-PORTAUDIO_CFLAGS += -I../third_party/portaudio/src/os/win
-# for PortAudio: build only the MME hostapi for win32/wince
-PORTAUDIO_CFLAGS += -DPA_NO_DS -DPA_NO_ASIO
-
 ifeq ($(OS),win32)
 # We require APPVER=5.0 for things like HWND_MESSAGE.
 # When APPVER=5.0, win32.mak in the Platform SDK sets:
@@ -863,22 +811,6 @@ endif
 
 BREAKPAD_CPPFLAGS += /wd4018 /wd4003
 THIRD_PARTY_CPPFLAGS += /wd4018 /wd4003
-# for PortAudio:
-#   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'
-#   warning C4101: 'identifier' : unreferenced local variable
-PORTAUDIO_CFLAGS += /wd4133 /wd4101
-
-# for Speex:
-LIBSPEEX_CFLAGS += -I../third_party/speex/win32
-#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
-#   warning C4305: truncation from 'type1' to 'type2'
-LIBSPEEX_CFLAGS += /wd4244 /wd4305
-
-# for Tremor:
-#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
-#   warning C4305: truncation from 'type1' to 'type2'
-#   warning C4005: macro redefinition
-LIBTREMOR_CFLAGS += /wd4244 /wd4305 /wd4005
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
 COMPILE_FLAGS_opt = /MT  /Zi /Zc:wchar_t- /O2

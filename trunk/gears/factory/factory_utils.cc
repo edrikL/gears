@@ -178,9 +178,7 @@ void SetActiveUserFlag() {
 }
 
 bool RequiresLocalDataPermissionType(const std::string16 &module_name) {
-  return module_name == STRING16(L"beta.audio") ||
-         module_name == STRING16(L"beta.audiorecorder") ||
-         module_name == STRING16(L"beta.canvas") ||
+  return module_name == STRING16(L"beta.canvas") ||
          module_name == STRING16(L"beta.console") ||
          module_name == STRING16(L"beta.database") ||
          module_name == STRING16(L"beta.databasemanager") ||

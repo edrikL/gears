@@ -99,12 +99,6 @@ void Dispatcher<GearsTest>::Init() {
 #endif
   RegisterMethod("configureGeolocationMockGpsDeviceForTest",
                  &GearsTest::ConfigureGeolocationMockGpsDeviceForTest);
-#ifdef OFFICIAL_BUILD
-  // The Audio API has not been finalized for official builds.
-#else
-  RegisterMethod("configureAudioRecorderForTest",
-                 &GearsTest::ConfigureAudioRecorderForTest);
-#endif
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
   RegisterMethod("testLocalServerPerformance",
                  &GearsTest::TestLocalServerPerformance);
@@ -151,11 +145,6 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/geolocation_db_test.h"
 #include "gears/geolocation/geolocation_test.h"
-#ifdef OFFICIAL_BUILD
-// The Audio API has not been finalized for official builds.
-#else
-#include "gears/media/audio_recorder_test.h"
-#endif
 #include "gears/localserver/common/async_task_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
@@ -2185,14 +2174,6 @@ void GearsTest::ConfigureGeolocationMockGpsDeviceForTest(
     JsCallContext *context) {
   ::ConfigureGeolocationMockGpsDeviceForTest(context);
 }
-
-#ifdef OFFICIAL_BUILD
-// The Audio API has not been finalized for official builds.
-#else
-void GearsTest::ConfigureAudioRecorderForTest(JsCallContext *context) {
-  ::ConfigureAudioRecorderForTest(context);
-}
-#endif
 
 void GearsTest::CreateBlobFromString(JsCallContext *context) {
   std::string16 input_utf16;
