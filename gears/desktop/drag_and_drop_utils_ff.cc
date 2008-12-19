@@ -35,11 +35,15 @@
 #include <gecko_sdk/include/nsILocalFile.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsXPCOM.h>
+#if defined(LINUX) && !defined(OS_MACOSX)
+#include <gtk/gtk.h>
+#endif
 
 #include "gears/desktop/drag_and_drop_utils_ff.h"
 
 #include "gears/base/common/file.h"
 #include "gears/base/common/mime_detect.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
 #include "gears/desktop/file_dialog.h"
 
@@ -335,55 +339,209 @@ bool GetDragData(ModuleEnvironment *module_environment,
   // drag session ends and a new one begins, which might not be trivial if
   // you get the same nsIDragSession pointer (since it's just the singleton
   // DragService that's been QueryInterface'd) for two separate sessions.
+  // Note that, on Linux, we do cache, due to g_file_drag_and_drop_meta_data,
+  // but this doesn't apply for Firefox/Windows and Firefox/Mac.
   return AddFileDragAndDropData(module_environment,
                                 drag_session.get(),
-                                type == DRAG_AND_DROP_EVENT_DROP,
+                                type,
                                 data_out,
                                 error_out);
 }
 
 
+#if defined(LINUX) && !defined(OS_MACOSX)
+// On Firefox2 / GTK / Linux, nsIDragSession->GetData is only valid during
+// dragover and drop events (and in particular not during dragenter events),
+// since it is only during the first two events that Gecko calls
+// dragSessionGTK->TargetSetLastContext with a valid GTK widget, in
+// widget/src/gtk2/nsWindow.cpp.
+//
+// Nonetheless, we still want to provide (aggregate) file metadata via Gears'
+// JavaScript API during dragenter and dragover. To workaround the lack of a
+// nsIDragSession, we interrogate the X server directly about its
+// XdndSelection, via GTK / GDK.
+//
+// GTK emits "signals" for UI events such as drag_motion and drag_leave.
+// Gecko adds itself as the first handler of such events on the main GTK
+// window (in mozilla/widget/src/gtk2/nsWindow.cpp), and signal handlers
+// can return FALSE to stop the signal propagating to later handlers that
+// have been connected via g_signal_connect.
+//
+// In order to be notified of this signal *before* the nsWindow is, we install
+// an "emission hook", exactly once per application, and never remove it.
+// The "emission hook" is not tied to any particular GtkWidget, and always
+// returns TRUE (because returning FALSE will uninstall the hook). The
+// emission hook runs before conventional signal handlers, and in it we query
+// the X server for what's being dragged over the application.
+static enum {
+  XDND_SELECTION_STATE_NONE,
+  XDND_SELECTION_STATE_REQUESTING_CLIPBOARD,
+  XDND_SELECTION_STATE_AWAITING_CLIPBOARD,
+  XDND_SELECTION_STATE_TIMED_OUT,
+  XDND_SELECTION_STATE_REPLY_RECEIVED
+} g_xdnd_selection_state = XDND_SELECTION_STATE_NONE;
+
+
+static scoped_ptr<FileDragAndDropMetaData> g_file_drag_and_drop_meta_data;
+
+
+// When we request clipboard information on the first drag_motion event (i.e.
+// during drag enter), GTK will call back here.
+static gboolean on_selection(GtkWidget *widget,
+                             GtkSelectionData *selection_data,
+                             guint time,
+                             gpointer user_data) {
+  if (g_xdnd_selection_state != XDND_SELECTION_STATE_AWAITING_CLIPBOARD) {
+    // If we are not AWAITING_CLIPBOARD, then we have either TIMED_OUT, or
+    // the drag is from the same process and we ignore it.
+    if (g_xdnd_selection_state == XDND_SELECTION_STATE_REQUESTING_CLIPBOARD) {
+      g_xdnd_selection_state = XDND_SELECTION_STATE_REPLY_RECEIVED;
+    }
+    return TRUE;
+  }
+  g_xdnd_selection_state = XDND_SELECTION_STATE_REPLY_RECEIVED;
+  if (selection_data->data == NULL) {
+    // The selection does not contain text/uri-list data (i.e. files).
+    return TRUE;
+  }
+
+  std::vector<std::string> filenames_as_ascii_urls;
+  std::string uri_list(reinterpret_cast<const char*>(selection_data->data));
+  // Even though Unix line endings are traditionally \n and not \r\n, the
+  // text-uri format specifies \r\n as delimeters.
+  Tokenize<std::string>(uri_list, "\r\n", &filenames_as_ascii_urls);
+
+  // Convert from file:// URLs to an actual filename (which also involves
+  // decoding %20s into spaces, for example).
+  bool success = true;
+  std::vector<std::string16> filenames;
+  for (std::vector<std::string>::iterator i = filenames_as_ascii_urls.begin();
+       i != filenames_as_ascii_urls.end(); ++i) {
+    std::string16 filename16;
+    UTF8ToString16((*i).c_str(), &filename16);
+
+    nsString filename_nsstring(filename16.c_str(), filename16.length());
+    nsCOMPtr<nsIFile> file;
+    nsresult nr = NSFileUtils::GetFileFromURLSpec(
+        filename_nsstring, getter_AddRefs(file));
+    if (NS_FAILED(nr)) { success = false; break; }
+    nsString filename;
+    nr = file->GetPath(filename);
+    if (NS_FAILED(nr)) { success = false; break; }
+    filenames.push_back(std::string16(filename.get()));
+  }
+
+  assert(g_file_drag_and_drop_meta_data->IsEmpty());
+  if (success) {
+    g_file_drag_and_drop_meta_data->SetFilenames(filenames);
+  }
+  return TRUE;
+}
+
+
+static gboolean on_drag_motion_signal_hook(GSignalInvocationHint *ihint,
+                                           guint n_param_values,
+                                           const GValue *param_values,
+                                           gpointer data) {
+  if (g_xdnd_selection_state != XDND_SELECTION_STATE_NONE) {
+    return TRUE;
+  }
+
+  // Create an off-screen window in order to talk to the X server.
+  static GtkWidget *selection_widget = NULL;
+  static GdkAtom atom1 = GDK_NONE;
+  static GdkAtom atom2 = GDK_NONE;
+  if (!selection_widget) {
+    selection_widget = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_window_set_screen(GTK_WINDOW(selection_widget),
+                          gtk_widget_get_screen(selection_widget));
+    gtk_window_resize(GTK_WINDOW(selection_widget), 1, 1);
+    gtk_window_move(GTK_WINDOW(selection_widget), -100, -100);
+    gtk_widget_show(selection_widget);
+    g_signal_connect(
+        selection_widget, "selection_received", G_CALLBACK(on_selection), NULL);
+    atom1 = gdk_atom_intern("XdndSelection", FALSE);
+    atom2 = gdk_atom_intern("text/uri-list", FALSE);
+  }
+
+  g_file_drag_and_drop_meta_data->Reset();
+  g_xdnd_selection_state = XDND_SELECTION_STATE_REQUESTING_CLIPBOARD;
+  gtk_selection_convert(selection_widget, atom1, atom2, GDK_CURRENT_TIME);
+
+  // If the gtk_selection_convert call above immediately triggers the
+  // selection_received signal (which changes g_xdnd_selection_state), then
+  // the drag source is in the same process (i.e. it is from the Firefox
+  // chrome, or it is from a web page), and we don't trust the source (in case
+  // an arbitrary web page added a "file:///etc/passwd" URL as a drag source
+  // to try to read the user's file system). Instead, we only accept a drag
+  // source if it is from a separate process, such as a file manager.
+  if (g_xdnd_selection_state != XDND_SELECTION_STATE_REQUESTING_CLIPBOARD) {
+    return TRUE;
+  }
+
+  g_xdnd_selection_state = XDND_SELECTION_STATE_AWAITING_CLIPBOARD;
+  PRTime entryTime = PR_Now();
+  while (g_xdnd_selection_state == XDND_SELECTION_STATE_AWAITING_CLIPBOARD) {
+    // We're copying Gecko, which sleeps for 20ms between iterations (as seen
+    // in mozilla/widget/src/gtk2/nsDragService.cpp).
+    usleep(20);
+    // Gecko's NS_DND_TIMEOUT is 500ms, or equivalently, 500000 microseconds.
+    if (PR_Now() - entryTime > 500000) {
+      g_xdnd_selection_state = XDND_SELECTION_STATE_TIMED_OUT;
+      break;
+    }
+    gtk_main_iteration();
+  }
+
+  return TRUE;
+}
+
+static gboolean on_drag_leave_signal_hook(GSignalInvocationHint *ihint,
+                                          guint n_param_values,
+                                          const GValue *param_values,
+                                          gpointer data) {
+  g_xdnd_selection_state = XDND_SELECTION_STATE_NONE;
+  return TRUE;
+}
+
+
+void InitializeGtkSignalEmissionHooks() {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  g_signal_add_emission_hook(
+      g_signal_lookup("drag_motion", GTK_TYPE_WIDGET), 0,
+      on_drag_motion_signal_hook, NULL, NULL);
+  g_signal_add_emission_hook(
+      g_signal_lookup("drag_leave", GTK_TYPE_WIDGET), 0,
+      on_drag_leave_signal_hook, NULL, NULL);
+  g_file_drag_and_drop_meta_data.reset(new FileDragAndDropMetaData);
+}
+#endif  // defined(LINUX) && !defined(OS_MACOSX)
+
+
 bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
                             nsIDragSession *drag_session,
-                            bool is_in_a_drop,
+                            DragAndDropEventType type,
                             JsObject *data_out,
                             std::string16 *error_out) {
-  if (!is_in_a_drop) {
-    // TODO(nigeltao): On Firefox2 / GTK / Linux, nsIDragSession->GetData
-    // is only valid during dragover and drop events, and not during dragenter
-    // dragleave events, since it is only during the first two events that
-    // Gecko calls dragSessionGTK->TargetSetLastContext with a valid GTK
-    // widget, in widget/src/gtk2/nsWindow.cpp.
-    //
-    // Thus, we return early, for non-drop events, to avoid a "Gtk-CRITICAL **:
-    // gtk_drag_get_data: assertion `GTK_IS_WIDGET (widget)' failed" error
-    // when calling nsIDragSession->GetNumDropItems.
-    //
-    // However, to be consistent with the other browsers / OSes, we should
-    // provide aggregate file drag and drop data during dragenter, which
-    // might mean that we (Gears) have to bypass Gecko's allegedly cross-
-    // platform nsIDragSession interface and go lower down into OS-level
-    // (e.g. Win32 or GTK) drag and drop APIs.
-    return true;
+  assert(type != DRAG_AND_DROP_EVENT_INVALID);
+  if (type == DRAG_AND_DROP_EVENT_DRAGLEAVE) {
+    return false;
   }
 
 #if defined(LINUX) && !defined(OS_MACOSX)
-  // Although Firefox's underlying XPCOM widget library aims to present a
-  // consistent cross-platform interface, there are still significant
-  // differences in drag-and-drop. In particular, different OSes support
-  // different "data flavors". On Windows and on Mac, we can specify the
-  // kFileMime flavor to get a nsIFile object off the clipboard, but on
-  // Linux, that doesn't work, and we have to specify kURLMime instead to
-  // get the "file:///home/user/foo.txt" string to convert to a filename.
-  // For implementation details, look at Firefox's source code, particularly
-  // nsClipboard.cpp and nsDragService.cpp in widget/src/{gtk2,mac,windows}.
-  // On platforms, such as Windows, where both kURLMime and kFileMime are
-  // supported, then the latter is preferred because it allows us to follow
-  // links (e.g. .lnk files on Windows, and alias files on Mac).
-  const char *flavor = kURLMime;
+  // On Linux, we ignore the nsIDragSession, and instead query the
+  // g_file_drag_and_drop_meta_data object that was set up earlier, during
+  // our signal emission hooks for GTK's "drag-motion" signal.
+  return g_file_drag_and_drop_meta_data->ToJsObject(
+      module_environment,
+      type == DRAG_AND_DROP_EVENT_DROP,
+      data_out,
+      error_out);
 #else
-  const char *flavor = kFileMime;
-#endif
 
   PRUint32 num_drop_items;
   nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
@@ -394,30 +552,15 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &nr);
     if (NS_FAILED(nr)) { return false; }
-    transferable->AddDataFlavor(flavor);
+    transferable->AddDataFlavor(kFileMime);
     drag_session->GetData(transferable, i);
 
     nsCOMPtr<nsISupports> data;
     PRUint32 data_len;
-    nr = transferable->GetTransferData(flavor, getter_AddRefs(data), &data_len);
+    nr = transferable->GetTransferData(
+        kFileMime, getter_AddRefs(data), &data_len);
     if (NS_FAILED(nr)) { return false; }
 
-    // Here the code diverges depending on the platform. On Linux, we
-    // crack a nsIURI out of the transferable and convert the string
-    // to a file path. On Windows and Mac, we get a nsIFile out of the
-    // transferable and query it directly for its file path.
-#if defined(LINUX) && !defined(OS_MACOSX)
-    nsCOMPtr<nsISupportsString> data_as_xpcom_string(do_QueryInterface(data));
-    nsString data_as_string;
-    nr = data_as_xpcom_string->GetData(data_as_string);
-    if (NS_FAILED(nr)) { return false; }
-    nsCOMPtr<nsIFile> file;
-    nr = NSFileUtils::GetFileFromURLSpec(data_as_string, getter_AddRefs(file));
-    if (NS_FAILED(nr)) { return false; }
-    nsString filename;
-    nr = file->GetPath(filename);
-    if (NS_FAILED(nr)) { return false; }
-#else
     nsCOMPtr<nsIFile> file(do_QueryInterface(data));
     if (!file) { return false; }
     nsString path;
@@ -445,12 +588,15 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
       nr = local_file->GetPath(filename);
     }
     if (NS_FAILED(nr)) { return false; }
-#endif
 
     filenames.push_back(std::string16(filename.get()));
   }
   FileDragAndDropMetaData file_drag_and_drop_meta_data;
   file_drag_and_drop_meta_data.SetFilenames(filenames);
   return file_drag_and_drop_meta_data.ToJsObject(
-      module_environment, is_in_a_drop, data_out, error_out);
+      module_environment,
+      type == DRAG_AND_DROP_EVENT_DROP,
+      data_out,
+      error_out);
+#endif
 }

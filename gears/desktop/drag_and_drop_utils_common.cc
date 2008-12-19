@@ -92,6 +92,10 @@ bool FileDragAndDropMetaData::ToJsObject(
     bool is_in_a_drop,
     JsObject *object_out,
     std::string16 *error_out) {
+  if (filenames_.empty()) {
+    return false;
+  }
+
   // TODO(nigeltao): Error checking. We should return empty (or 0) instead of
   // partial results, in case of failure.
 

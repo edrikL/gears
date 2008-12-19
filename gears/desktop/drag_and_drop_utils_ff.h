@@ -36,7 +36,7 @@ class nsIDragSession;
 
 bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
                             nsIDragSession *drag_session,
-                            bool is_in_a_drop,
+                            DragAndDropEventType type,
                             JsObject *data_out,
                             std::string16 *error_out);
 
@@ -49,5 +49,9 @@ bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event,
                  JsObject *data_out,
                  std::string16 *error_out);
+
+#if defined(LINUX) && !defined(OS_MACOSX)
+void InitializeGtkSignalEmissionHooks();
+#endif
 
 #endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_FF_H__
