@@ -26,15 +26,33 @@
 #include "gears/ui/common/html_dialog.h"
 
 #include <assert.h>
+#include "gears/base/common/js_types.h"
+#include "gears/base/opera/browsing_context_op.h"
+#include "gears/base/opera/opera_utils.h"
+#include "third_party/opera/opera_callback_api.h"
 
 
 bool HtmlDialog::DoModalImpl(const char16 *html_filename,
                              int width,
                              int height,
                              const char16 *arguments_string) {
-  // TODO(steveblock): Implement me.
-  assert(false);
-  return false;
+  OperaGearsApiInterface *opera_api = OperaUtils::GetBrowserApiForGears();
+  assert(opera_api);
+
+  // Opera uses the JsContext to root the dialog to the current document. So
+  // browsing_context_ must be set (via the HtmlDialog constructor) for
+  // the permissions dialog, but is not required for the settings dialog.
+  JsContextPtr js_context = NULL;
+  if (browsing_context_) {
+    js_context =
+        static_cast<OPBrowsingContext*>(browsing_context_)->GetJsContext();
+    assert(js_context);
+  }
+  const unsigned short *result;
+  opera_api->OpenDialog(js_context, html_filename, width, height,
+                        arguments_string, &result);
+
+  return SetResult(result);
 }
 
 bool HtmlDialog::DoModelessImpl(const char16 *html_filename,
@@ -43,13 +61,17 @@ bool HtmlDialog::DoModelessImpl(const char16 *html_filename,
                                 const char16 *arguments_string,
                                 ModelessCompletionCallback callback,
                                 void *closure) {
-  // TODO(steveblock): Implement me.
+  // Unused in Opera.
   assert(false);
   return false;
 }
 
 bool HtmlDialog::GetLocale(std::string16 *locale) {
-  // TODO(steveblock): Implement me.
+#ifdef OS_WINCE
+  return GetCurrentSystemLocale(locale);
+#else
+  // TODO(stighal@opera.com): Get the correct locale.
   assert(false);
   return false;
+#endif
 }
