@@ -315,8 +315,8 @@ function testMockDeviceDataProvider() {
           {mac_address: 'good_mac_address'});
       geolocation.getCurrentPosition(
           successCallback,
-          function() {
-            assert(false, 'makeSuccessfulRequest failed');
+          function(error) {
+            assert(false, 'makeSuccessfulRequest failed: ' + error.message);
           },
           {
             gearsRequestAddress: true,
@@ -328,8 +328,9 @@ function testMockDeviceDataProvider() {
       internalTests.configureGeolocationWifiDataProviderForTest(
           {mac_address: 'no_location_mac_address'});
       geolocation.getCurrentPosition(
-          function() {
-            assert(false, 'makeUnsuccessfulRequest succeeded');
+          function(position) {
+            assert(false, 'makeUnsuccessfulRequest succeeded: (' +
+                          position.latitude + ', ' + position.longitude + ')');
           },
           noPositionErrorCallback,
           {gearsLocationProviderUrls: [mockNetworkLocationProvider]});
@@ -340,8 +341,9 @@ function testMockDeviceDataProvider() {
           {mac_address: '00-00-00-00-00-00'});
       internalTests.configureGeolocationRadioDataProviderForTest({cell_id: 88});
       geolocation.getCurrentPosition(
-          function() {
-            assert(false, 'makeMalformedRequest succeeded');
+          function(position) {
+            assert(false, 'makeMalformedRequest succeeded: (' +
+                          position.latitude + ', ' + position.longitude + ')');
           },
           malformedRequestErrorCallback,
           {gearsLocationProviderUrls: [mockNetworkLocationProvider]});
@@ -372,13 +374,15 @@ function testMockDeviceDataProvider() {
 
     function noPositionErrorCallback(error) {
       assertEqual(error.POSITION_UNAVAILABLE, error.code);
-      assert(error.message.search('did not provide a good position fix') > 0);
+      assert(error.message.search('did not provide a good position fix') > 0,
+             'Unexpected error message');
       makeMalformedRequest();
     };
 
     function malformedRequestErrorCallback(error) {
       assertEqual(error.POSITION_UNAVAILABLE, error.code);
-      assert(error.message.search('returned error code 400') > 0);
+      assert(error.message.search('returned error code 400') > 0,
+             'Unexpected error message');
       completeAsync();
     };
 
