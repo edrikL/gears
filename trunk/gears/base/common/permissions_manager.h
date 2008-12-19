@@ -31,19 +31,23 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/ui/common/permissions_dialog.h"
 
+class BrowsingContext;
+
 class PermissionsManager {
  public:
   PermissionsManager(const SecurityOrigin &security_origin, bool is_worker);
 
   // Attempts to acquire the given type of permission. If the permission is not
   // currently set (either temporarily or in the database), it prompts the user.
-  bool AcquirePermission(PermissionsDB::PermissionType type);
+  bool AcquirePermission(PermissionsDB::PermissionType type,
+                         BrowsingContext *context);
 
   // Attempts to acquire the given type of permission. If the permission is not
   // currently set (either temporarily or in the database), it prompts the user.
   // The permissions prompt is customized with the contents of the 'custom'
   // object.
   bool AcquirePermission(PermissionsDB::PermissionType type,
+                         BrowsingContext *context,
                          const PermissionsDialog::CustomContent *custom);
 
   // Returns true if the owning module has the given permission type and false

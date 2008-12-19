@@ -381,6 +381,7 @@ void GearsGeolocation::GetPermission(JsCallContext *context) {
  
   bool has_permission = GetPermissionsManager()->AcquirePermission(
       PermissionsDB::PERMISSION_LOCATION_DATA,
+      EnvPageBrowsingContext(),
       custom_content.get());
 
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
@@ -1626,7 +1627,8 @@ static bool IsNewPositionMoreTimely(const Position &old_position,
 static bool AcquirePermissionForLocationData(ModuleImplBaseClass *geo_module,
                                              JsCallContext *context) {
   if (!geo_module->GetPermissionsManager()->AcquirePermission(
-      PermissionsDB::PERMISSION_LOCATION_DATA)) {
+      PermissionsDB::PERMISSION_LOCATION_DATA,
+      geo_module->EnvPageBrowsingContext())) {
     std::string16 error = STRING16(L"Page does not have permission to access "
                                    L"location information using "
                                    PRODUCT_FRIENDLY_NAME);
