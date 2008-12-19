@@ -34,6 +34,11 @@
 #include "third_party/opera/opera_callback_api.h"
 #include "third_party/opera/opera_worker_interface.h"
 
+#ifdef OS_WINCE
+#include "gears/installer/common/cab_updater.h"
+static const char16* kGuid = L"%7B000C0320-09CE-4D7E-B3C9-66B2ACB7FF80%7D";
+#endif
+
 // Implementation of the wrapper class for the native opera worker threads
 class OperaWorkerThreadImpl : public OperaWorkerThreadInterface {
  public:
@@ -124,6 +129,13 @@ void OperaUtils::Init(OperaGearsApiInterface *opera_api,
                       ThreadId browser_thread) {
   opera_api_ = opera_api;
   browser_thread_ = browser_thread;
+
+#ifdef OS_WINCE
+  HWND opera_window = ::FindWindow(L"Opera_MainWndClass", NULL);
+
+  static CabUpdater updater;
+  updater.Start(opera_window, kGuid);
+#endif
 }
 
 // static
