@@ -83,19 +83,26 @@ function testSynchronizationStressTest() {
            'Received an extra message %s for worker %s'.subs(retval, workerId));
   }
 
-  function childInit() {
-    messageTotal = 0;
-    google.gears.workerPool.onmessage = childOnMessage;
-  }
+  var childInit = [
+    'function childInit() {',
+    '  messageTotal = 0;',
+    '  google.gears.workerPool.onmessage = childOnMessage;',
+    '}',
+    ''
+  ].join('\n');
 
-  function childOnMessage(text, sender, m) {
-    var numResponses = parseInt(m.text);
-    for (var i = 0; i < numResponses; ++i) {
-      google.gears.workerPool.sendMessage(String(gFirstResponse + messageTotal),
-                                          sender);
-      messageTotal += 1;
-    }
-  }
+  var childOnMessage = [
+    'function childOnMessage(text, sender, m) {',
+    '  var numResponses = parseInt(m.text);',
+    '  for (var i = 0; i < numResponses; ++i) {',
+    '    google.gears.workerPool.sendMessage(',
+    '        String(gFirstResponse + messageTotal),',
+    '        sender);',
+    '    messageTotal += 1;',
+    '  }',
+    '}',
+    ''
+  ].join('\n');
 
   var childCode = childOnMessage + childInit + 'childInit();';
   var workerPool = google.gears.factory.create('beta.workerpool');
@@ -138,16 +145,19 @@ function testGCWithFunctionClosures() {
 
   startAsync();
 
-  function childThread() {
-    google.gears.workerPool.onmessage = function(text, sender, m) {
-      if (m.text != 'ping') {
-        throw new Error('unexpected message "' + m.text + '" to child worker');
-      }
-      google.gears.workerPool.sendMessage('pong', m.sender);
-    }
-
-    google.gears.workerPool.forceGC();
-  }
+  var childThread = [
+    'function childThread() {',
+    '  google.gears.workerPool.onmessage = function(text, sender, m) {',
+    '    if (m.text != "ping") {',
+    '      throw new Error(',
+    '          "unexpected message \'" + m.text + "\' to child worker");',
+    '    }',
+    '    google.gears.workerPool.sendMessage("pong", m.sender);',
+    '  }',
+    '  google.gears.workerPool.forceGC();',
+    '}',
+    ''
+  ].join('\n');
 
   var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, m) {

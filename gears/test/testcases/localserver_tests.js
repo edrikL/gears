@@ -32,6 +32,23 @@ var UPDATE_STATUS = {
   failure: 3
 };
 
+// These functions, represented as strings, are used in
+// testManagedResourceStoreThreads and testManagedResourceStoreErrorThreads.
+var workerInit = [
+  'function workerInit() {',
+  '  google.gears.workerPool.onmessage = workerOnMessage;',
+  '}',
+  ''
+].join('\n');
+var workerOnMessage = [
+  'function workerOnMessage(text, sender, m) {',
+  '  var localserver = google.gears.factory.create("beta.localserver");',
+  '  var managedStore = localserver.openManagedStore(text);',
+  '  managedStore.checkForUpdate();',
+  '}',
+  ''
+].join('\n');
+
 function getFreshStore() {
   if (localServer.openStore(STORE_NAME)) {
     localServer.removeStore(STORE_NAME);
@@ -495,21 +512,11 @@ function testManagedResourceStoreThreads() {
   };
 
   var workerpool = google.gears.factory.create('beta.workerpool');
-  var workerId = workerpool.createWorker(String(workerInit) +
-                                         String(workerOnMessage) +
+  var workerId = workerpool.createWorker(workerInit +
+                                         workerOnMessage +
                                          'workerInit();');
 
   workerpool.sendMessage(managedStore.name, workerId);
-
-  function workerInit() {
-    google.gears.workerPool.onmessage = workerOnMessage;
-  }
-
-  function workerOnMessage(text, sender, m) {
-    var localserver = google.gears.factory.create('beta.localserver');
-    var managedStore = localserver.openManagedStore(text);
-    managedStore.checkForUpdate();
-  }
 }
 
 function testManagedResourceStoreErrorCallback() {
@@ -536,21 +543,11 @@ function testManagedResourceStoreErrorThreads() {
   }
 
   var workerpool = google.gears.factory.create('beta.workerpool');
-  var workerId = workerpool.createWorker(String(workerInit) +
-                                         String(workerOnMessage) +
+  var workerId = workerpool.createWorker(workerInit +
+                                         workerOnMessage +
                                          'workerInit();');
 
   workerpool.sendMessage(managedStore.name, workerId);
-
-  function workerInit() {
-    google.gears.workerPool.onmessage = workerOnMessage;
-  }
-
-  function workerOnMessage(text, sender, m) {
-    var localserver = google.gears.factory.create('beta.localserver');
-    var managedStore = localserver.openManagedStore(text);
-    managedStore.checkForUpdate();
-  }
 }
 
 function testManagedResourceStoreInvalidContentLength() {
