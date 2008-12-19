@@ -50,21 +50,19 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifdef OFFICIAL_BUILD
-// The Canvas, Console, Database2, Image and Media APIs have not
+// The Canvas, Console, Database2 and Image APIs have not
 // been finalized for official builds.
 #else
 #include "gears/blob/blob_builder_module.h"
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
 #ifdef OS_WINCE
-// Furthermore, Canvas, Console, Image and Media are unimplemented for all
+// Furthermore, Canvas, Console and Image are unimplemented for all
 // browsers on WinCE.
 #else
 #include "gears/canvas/canvas.h"
 #include "gears/console/console.h"
 #include "gears/image/image_loader.h"
-#include "gears/media/audio.h"
-#include "gears/media/audio_recorder.h"
 #endif  // OS_WINCE
 #endif  // OFFICIAL_BUILD
 
@@ -199,7 +197,7 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
     CreateModule<GearsWorkerPool>(module_environment_.get(),
                                   context, &object);
 #ifdef OFFICIAL_BUILD
-  // The BlobBuilder, Canvas, Console, Database2, Image and Media APIs have not
+  // The BlobBuilder, Canvas, Console, Database2 and Image APIs have not
   // been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.blobbuilder")) {
@@ -211,14 +209,9 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.dummymodule")) {
     CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
 #ifdef OS_WINCE
-  // Furthermore, Canvas, Console, Image and Media are unimplemented for all
+  // Furthermore, Canvas, Console and Image are unimplemented for all
   // browsers on WinCE.
 #else
-  } else if (module_name == STRING16(L"beta.audio")) {
-    CreateModule<GearsAudio>(module_environment_.get(), context, &object);
-  } else if (module_name == STRING16(L"beta.audiorecorder")) {
-    CreateModule<GearsAudioRecorder>(module_environment_.get(),
-                                     context, &object);
 #if defined(WIN32) || defined(OS_MACOSX)
   } else if (module_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
