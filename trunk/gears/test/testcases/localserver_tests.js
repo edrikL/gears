@@ -341,7 +341,11 @@ function testCaptureBlob() {
 
     httpGetAsRequest(captureUrl, function(request2) {
       assertBlobProbablyEqual(responseBlob, request2.responseBlob);
-      assertEqual(contentType, request2.getResponseHeader('Content-Type'));
+      if (!isSafari) {
+        // When http://code.google.com/p/gears/issues/detail?id=782 is fixed,
+        // this test should be peformed for safari too.
+        assertEqual(contentType, request2.getResponseHeader('Content-Type'));
+      }
       completeAsync();
     });
   });
