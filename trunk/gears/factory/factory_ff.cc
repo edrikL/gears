@@ -32,6 +32,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_types.h"
+#include "gears/desktop/drag_and_drop_utils_ff.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -58,6 +59,13 @@ NS_IMETHODIMP GearsFactory::InitFactoryFromDOM() {
                                       NULL, &factory_impl_)) {
     return NS_ERROR_FAILURE;
   }
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+#if defined(LINUX) && !defined(OS_MACOSX)
+  InitializeGtkSignalEmissionHooks();
+#endif
+#endif
   unload_monitor_.reset(new JsEventMonitor(module_environment->js_runner_,
                                            JSEVENT_UNLOAD, this));
   return NS_OK;

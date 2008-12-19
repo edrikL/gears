@@ -45,8 +45,10 @@ function updateEventOutput(event) {
 
 function willReject(context) {
   var result = context.event.clientX >= 200;
-  document.getElementById('rejectOutput').innerHTML =
-      result ? 'Drop <b>REJECTED</b>.' : 'Drop <b>OK</b>.';
+  var html = result ? 'Drop <b>REJECTED</b>.' : 'Drop <b>OK</b>.';
+  html += '<br>' + context.count + ' files, ' +
+      context.totalBytes + ' bytes.';
+  document.getElementById('rejectOutput').innerHTML = html;
   return result;
 }
 
@@ -97,9 +99,13 @@ function toggleEnabledDisabled() {
           for (i = 0; i < context.files.length; i++) {
             var file = context.files[i];
             s += '<b>' + file.name + '</b> has length <b>' +
-                file.blob.length + '</b>.<br/>';
+                file.blob.length + '</b><br>';
           }
         }
+        s += 'count: <b>' + context.count + '</b><br>';
+        s += 'totalBytes: <b>' + context.totalBytes + '</b><br>';
+        s += 'mimeTypes: <b>' + context.mimeTypes + '</b><br>';
+        s += 'extensions: <b>' + context.extensions + '</b><br>';
         document.getElementById('dropOutput').innerHTML = s;
         document.getElementById('rejectOutput').innerHTML = '&nbsp;';
       }

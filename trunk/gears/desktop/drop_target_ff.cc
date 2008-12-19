@@ -225,6 +225,17 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
 
   nsString event_type;
   event->GetType(event_type);
+  DragAndDropEventType type = DRAG_AND_DROP_EVENT_INVALID;
+  if (event_type.Equals(kDragOverAsString)) {
+    type = DRAG_AND_DROP_EVENT_DRAGOVER;
+  } else if (event_type.Equals(kDragEnterAsString)) {
+    type = DRAG_AND_DROP_EVENT_DRAGENTER;
+  } else if (event_type.Equals(kDragExitAsString)) {
+    type = DRAG_AND_DROP_EVENT_DRAGLEAVE;
+  } else if (event_type.Equals(kDragDropAsString)) {
+    type = DRAG_AND_DROP_EVENT_DROP;
+  }
+  
 
   std::string16 ignored;
   scoped_ptr<JsObject> context_object(
@@ -232,13 +243,13 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   AddEventToJsObject(context_object.get(), event);
   if (!AddFileDragAndDropData(module_environment_.get(),
                               drag_session.get(),
-                              event_type.Equals(kDragDropAsString) == PR_TRUE,
+                              type,
                               context_object.get(),
                               &ignored)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (on_drop_.get() && event_type.Equals(kDragDropAsString)) {
+  if (on_drop_.get() && (type == DRAG_AND_DROP_EVENT_DROP)) {
     ProvideDebugVisualFeedback(false);
     if (will_accept_drop_) {
       will_accept_drop_ = false;
@@ -259,12 +270,13 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   } else {
     bool is_drag_exit = false;
     JsRootedCallback *callback = NULL;
-    if (on_drag_enter_.get() && event_type.Equals(kDragEnterAsString)) {
+    if (on_drag_enter_.get() && (type == DRAG_AND_DROP_EVENT_DRAGENTER)) {
       ProvideDebugVisualFeedback(true);
       callback = on_drag_enter_.get();
-    } else if (on_drag_over_.get() && event_type.Equals(kDragOverAsString)) {
+    } else if (on_drag_over_.get() && (type == DRAG_AND_DROP_EVENT_DRAGOVER)) {
       callback = on_drag_over_.get();
-    } else if (on_drag_leave_.get() && event_type.Equals(kDragExitAsString)) {
+    } else if (on_drag_leave_.get() &&
+               (type == DRAG_AND_DROP_EVENT_DRAGLEAVE)) {
       ProvideDebugVisualFeedback(false);
       callback = on_drag_leave_.get();
       is_drag_exit = true;
