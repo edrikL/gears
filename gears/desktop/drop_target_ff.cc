@@ -108,22 +108,16 @@ DropTarget *DropTarget::CreateDropTarget(ModuleEnvironment *module_environment,
   drop_target->html_element_ = dom_element.dom_html_element();
   drop_target->AddRef();  // Balanced by a Release() call during UnregisterSelf.
 
-  if (drop_target->on_drag_enter_.get()) {
-    event_target->AddEventListener(kDragEnterAsString,
-                                   drop_target.get(), false);
-  }
-  if (drop_target->on_drag_over_.get()) {
-    event_target->AddEventListener(kDragOverAsString,
-                                   drop_target.get(), false);
-  }
-  if (drop_target->on_drag_leave_.get()) {
-    event_target->AddEventListener(kDragExitAsString,
-                                   drop_target.get(), false);
-  }
-  if (drop_target->on_drop_.get()) {
-    event_target->AddEventListener(kDragDropAsString,
-                                   drop_target.get(), false);
-  }
+  // TODO(nigeltao): we should check for errors during AddEventListener (and
+  // similary for IE and Safari).
+  event_target->AddEventListener(kDragEnterAsString,
+                                 drop_target.get(), false);
+  event_target->AddEventListener(kDragOverAsString,
+                                 drop_target.get(), false);
+  event_target->AddEventListener(kDragExitAsString,
+                                 drop_target.get(), false);
+  event_target->AddEventListener(kDragDropAsString,
+                                 drop_target.get(), false);
 
   drop_target->ProvideDebugVisualFeedback(false);
   return drop_target.get();
@@ -137,18 +131,10 @@ void DropTarget::UnregisterSelf() {
   unregister_self_has_been_called_ = true;
 
   if (event_target_) {
-    if (on_drag_enter_.get()) {
-      event_target_->RemoveEventListener(kDragEnterAsString, this, false);
-    }
-    if (on_drag_over_.get()) {
-      event_target_->RemoveEventListener(kDragOverAsString, this, false);
-    }
-    if (on_drag_leave_.get()) {
-      event_target_->RemoveEventListener(kDragExitAsString, this, false);
-    }
-    if (on_drop_.get()) {
-      event_target_->RemoveEventListener(kDragDropAsString, this, false);
-    }
+    event_target_->RemoveEventListener(kDragEnterAsString, this, false);
+    event_target_->RemoveEventListener(kDragOverAsString, this, false);
+    event_target_->RemoveEventListener(kDragExitAsString, this, false);
+    event_target_->RemoveEventListener(kDragDropAsString, this, false);
   }
 
   Release();  // Balanced by an AddRef() call during CreateDropTarget.
@@ -212,17 +198,69 @@ void DropTarget::AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event) {
 }
 
 
-NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
-  nsCOMPtr<nsIDragService> drag_service =
-      do_GetService("@mozilla.org/widget/dragservice;1");
-  if (!drag_service) { return NS_ERROR_FAILURE; }
-  // TODO(nigeltao): Do we have to do the Firefox2/Linux workaround of
-  // explicitly calling drag_service->StartDragSession(), just like we do in
-  // drag_and_drop_utils_ff.cc's GetDragAndDropEventType.
-  nsCOMPtr<nsIDragSession> drag_session;
-  nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
-  if (NS_FAILED(nr) || !drag_session.get()) { return NS_ERROR_FAILURE; }
+bool DropTarget::ExecJsCallback(DragAndDropEventType type,
+                                nsIDragSession *drag_session,
+                                nsIDOMEvent *event) {
+  JsRootedCallback *callback = NULL;
+  switch (type) {
+    case DRAG_AND_DROP_EVENT_DRAGENTER:
+      callback = on_drag_enter_.get();
+      break;
+    case DRAG_AND_DROP_EVENT_DRAGOVER:
+      callback = on_drag_over_.get();
+      break;
+    case DRAG_AND_DROP_EVENT_DRAGLEAVE:
+      callback = on_drag_leave_.get();
+      break;
+    case DRAG_AND_DROP_EVENT_DROP:
+      callback = on_drop_.get();
+      break;
+    default:
+      assert(false);
+      break;
+  }
+  if (!callback) {
+    return false;
+  }
 
+  std::string16 ignored;
+  scoped_ptr<JsObject> context_object(
+      module_environment_->js_runner_->NewObject());
+  // TODO(nigeltao): Should we be checking the will_accept_drop_ state? What
+  // should we do when Firefox sends us a DROP event even if the script has
+  // been rejecting the drop (via returning true) - should we fire a DROP or
+  // a DRAGLEAVE from Gears up to script?
+  if (will_accept_drop_ &&
+      type != DRAG_AND_DROP_EVENT_DRAGLEAVE &&
+      !AddFileDragAndDropData(module_environment_.get(),
+                              drag_session,
+                              type,
+                              context_object.get(),
+                              &ignored)) {
+    context_object.reset(module_environment_->js_runner_->NewObject());
+  }
+  AddEventToJsObject(context_object.get(), event);
+
+  scoped_ptr<JsRootedToken> return_value;
+  const int argc = 1;
+  JsParamToSend argv[argc] = {
+    { JSPARAM_OBJECT, context_object.get() }
+  };
+  module_environment_->js_runner_->InvokeCallback(
+      callback, NULL, argc, argv, as_out_parameter(return_value));
+
+  // The HTML5 specification (section 5.4.5) says that an event handler
+  // returning *false* means that we should not perform the default
+  // action (i.e. the web-app wants Gears' file drop behavior, and not
+  // the default browser behavior of navigating away from the current
+  // page to the file being dropped).
+  return return_value.get() &&
+      JSVAL_IS_BOOLEAN(return_value->token()) &&
+      JSVAL_TO_BOOLEAN(return_value->token()) == false;
+}
+
+
+NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
   nsString event_type;
   event->GetType(event_type);
   DragAndDropEventType type = DRAG_AND_DROP_EVENT_INVALID;
@@ -230,85 +268,68 @@ NS_IMETHODIMP DropTarget::HandleEvent(nsIDOMEvent *event) {
     type = DRAG_AND_DROP_EVENT_DRAGOVER;
   } else if (event_type.Equals(kDragEnterAsString)) {
     type = DRAG_AND_DROP_EVENT_DRAGENTER;
+    ProvideDebugVisualFeedback(true);
   } else if (event_type.Equals(kDragExitAsString)) {
     type = DRAG_AND_DROP_EVENT_DRAGLEAVE;
+    ProvideDebugVisualFeedback(false);
   } else if (event_type.Equals(kDragDropAsString)) {
     type = DRAG_AND_DROP_EVENT_DROP;
-  }
-  
-
-  std::string16 ignored;
-  scoped_ptr<JsObject> context_object(
-      module_environment_->js_runner_->NewObject());
-  AddEventToJsObject(context_object.get(), event);
-  if (!AddFileDragAndDropData(module_environment_.get(),
-                              drag_session.get(),
-                              type,
-                              context_object.get(),
-                              &ignored)) {
+    ProvideDebugVisualFeedback(false);
+  } else {
+    assert(false);
     return NS_ERROR_FAILURE;
   }
+  
+  nsCOMPtr<nsIDragService> drag_service =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+  if (!drag_service) { return NS_ERROR_FAILURE; }
+#if BROWSER_FF2 && defined(LINUX) && !defined(OS_MACOSX)
+  if (type == DRAG_AND_DROP_EVENT_DRAGENTER) {
+    // On Firefox2/Linux, the DragSession is incorrectly started *after* the
+    // first dragenter event. We workaround this by explicitly starting the
+    // drag session. For more information, see the similar workaround in the
+    // drag_and_drop_utils_ff code.
+    drag_service->StartDragSession();
+  }
+#endif
+  nsCOMPtr<nsIDragSession> drag_session;
+  nsresult nr = drag_service->GetCurrentSession(getter_AddRefs(drag_session));
+  if (NS_FAILED(nr) || !drag_session.get()) { return NS_ERROR_FAILURE; }
 
-  if (on_drop_.get() && (type == DRAG_AND_DROP_EVENT_DROP)) {
-    ProvideDebugVisualFeedback(false);
+  // TODO(nigeltao): Fix up the case where the script rejects the files, but
+  // the user still drops (and Firefox / Linux still sends us a DROP event).
+  // Perhaps we need to do something like this:
+  // if (type == DROP && !will_accept_drop_) {
+  //   type = LEAVE;
+  // }
+  // although we should check that dropping files that the script rejects
+  // does not cause navigation away from the page.
+  bool callback_returned_false =
+      ExecJsCallback(type, drag_session.get(), event);
+
+  if (type == DRAG_AND_DROP_EVENT_DRAGENTER ||
+      type == DRAG_AND_DROP_EVENT_DRAGOVER) {
+    nr = drag_session->SetDragAction(will_accept_drop_
+        ? static_cast<int>(nsIDragService::DRAGDROP_ACTION_COPY)
+        : static_cast<int>(nsIDragService::DRAGDROP_ACTION_NONE));
+    if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
+    will_accept_drop_ = callback_returned_false;
+
+  } else if (type == DRAG_AND_DROP_EVENT_DRAGLEAVE) {
+    will_accept_drop_ = false;
+
+  } else if (type == DRAG_AND_DROP_EVENT_DROP) {
+    // Prevent the default browser behavior of navigating away from the
+    // current page to the file being dropped.
+    nr = event->StopPropagation();
+    if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
     if (will_accept_drop_) {
-      will_accept_drop_ = false;
-      // Prevent the default browser behavior of navigating away from the
-      // current page to the file being dropped.
-      event->StopPropagation();
-
-      const int argc = 1;
-      JsParamToSend argv[argc] = {
-        { JSPARAM_OBJECT, context_object.get() }
-      };
-      module_environment_->js_runner_->InvokeCallback(
-          on_drop_.get(), NULL, argc, argv, NULL);
       nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
       if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
     }
-
-  } else {
-    bool is_drag_exit = false;
-    JsRootedCallback *callback = NULL;
-    if (on_drag_enter_.get() && (type == DRAG_AND_DROP_EVENT_DRAGENTER)) {
-      ProvideDebugVisualFeedback(true);
-      callback = on_drag_enter_.get();
-    } else if (on_drag_over_.get() && (type == DRAG_AND_DROP_EVENT_DRAGOVER)) {
-      callback = on_drag_over_.get();
-    } else if (on_drag_leave_.get() &&
-               (type == DRAG_AND_DROP_EVENT_DRAGLEAVE)) {
-      ProvideDebugVisualFeedback(false);
-      callback = on_drag_leave_.get();
-      is_drag_exit = true;
-    }
-    if (callback) {
-      const int argc = 1;
-      JsParamToSend argv[argc] = {
-        { JSPARAM_OBJECT, context_object.get() }
-      };
-      if (is_drag_exit) {
-        module_environment_->js_runner_->InvokeCallback(
-            callback, NULL, argc, argv, NULL);
-        will_accept_drop_ = false;
-      } else {
-        scoped_ptr<JsRootedToken> return_value;
-        module_environment_->js_runner_->InvokeCallback(
-            callback, NULL, argc, argv, as_out_parameter(return_value));
-        // The HTML5 specification (section 5.4.5) says that an event handler
-        // returning *false* means that we should not perform the default
-        // action (i.e. the web-app wants Gears' file drop behavior, and not
-        // the default browser behavior of navigating away from the current
-        // page to the file being dropped).
-        will_accept_drop_ = return_value.get() &&
-            JSVAL_IS_BOOLEAN(return_value->token()) &&
-            JSVAL_TO_BOOLEAN(return_value->token()) == false;
-        nr = drag_session->SetDragAction(will_accept_drop_
-            ? static_cast<int>(nsIDragService::DRAGDROP_ACTION_COPY)
-            : static_cast<int>(nsIDragService::DRAGDROP_ACTION_NONE));
-        if (NS_FAILED(nr)) { return NS_ERROR_FAILURE; }
-      }
-    }
+    will_accept_drop_ = false;
   }
+
   return NS_OK;
 }
 
