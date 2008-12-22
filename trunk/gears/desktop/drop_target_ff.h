@@ -33,6 +33,7 @@
 #include <gecko_internal/nsIXPConnect.h>
 #include <gecko_sdk/include/nsIDOMEventListener.h>
 
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/drop_target_base.h"
 
 class DropTarget
@@ -67,6 +68,9 @@ class DropTarget
              std::string16 *error_out);
 
   void AddEventToJsObject(JsObject *js_object, nsIDOMEvent *event);
+  bool ExecJsCallback(DragAndDropEventType type,
+                      nsIDragSession *drag_session,
+                      nsIDOMEvent *event);
   void ProvideDebugVisualFeedback(bool is_drag_enter);
 
   DISALLOW_EVIL_CONSTRUCTORS(DropTarget);
