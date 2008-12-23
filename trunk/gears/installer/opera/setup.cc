@@ -31,7 +31,7 @@
 #include "gears/installer/common/resource.h"  // for restart dialog strings
 
 static const char16* kOperaProcessName = L"Opera9.exe";
-static const char16* kOperaLaunchExe = L"\\Program Files\\9.5 Beta\\OperaL.exe";
+static const char16* kOperaLaunchExe = L"\\Program Files\\Opera 9.5 Beta\\OperaL.exe";
 static const char16* kGearsSite = L"http://gears.google.com/done.html";
 
 HINSTANCE module_instance;
