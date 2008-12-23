@@ -33,11 +33,6 @@
 #include <pthread.h>
 #endif
 
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
-
 //------------------------------------------------------------------------------
 // Provides for per thread-local storage in a win32 DLL. This classes allocates
 // a single TLS index from the OS, and keeps multiple entries in a map
@@ -109,7 +104,7 @@ class ThreadLocals {
   static void SetTlsEntries(Entry* map);
   static Entry* GetTlsEntries();
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
   // We use one thread-local storage slot from the OS and keeps a map
   // in that slot. This is the index of that slot as returned by TlsAlloc.
   static DWORD tls_index_;
@@ -196,10 +191,5 @@ class ThreadLocalValue {
  private:
   const ThreadLocals::Slot slot_;
 };
-
-// TODO(mpcomplete): remove.
-#if BROWSER_NPAPI
-#undef BROWSER_IE
-#endif
 
 #endif  // GEARS_BASE_COMMON_THREAD_LOCALS_H__
