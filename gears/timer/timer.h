@@ -41,11 +41,6 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_token.h"
 
-// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
-#if BROWSER_NPAPI && defined(WIN32)
-#define OS_ANDROID 1
-#endif
-
 // As an implementation detail, on IE we have a single WindowsPlatformTimer
 // per GearsTimer.  This is basically a Window (in the HWND sense) that
 // registers for WM_TIMER messages.  We re-use the same WindowsPlatformTimer
@@ -82,7 +77,7 @@ class WindowsPlatformTimer
 };
 #endif
 
-#if defined(OS_ANDROID)
+#if defined(OS_ANDROID) || BROWSER_CHROME
 #include "gears/base/common/async_router.h"
 #include "gears/geolocation/timed_callback.h"
 
@@ -112,7 +107,7 @@ class AndroidPlatformTimer : public TimedCallback::ListenerInterface {
   TimerMap timer_map_;
   DECL_SINGLE_THREAD;
 };
-#endif // defined(OS_ANDROID)
+#endif // defined(OS_ANDROID) || BROWSER_CHROME
 
 class GearsTimer
     : public ModuleImplBaseClass
@@ -122,7 +117,7 @@ class GearsTimer
       : ModuleImplBaseClass("GearsTimer"),
 #if BROWSER_IE
         platform_timer_(new WindowsPlatformTimer(this)),
-#elif defined(OS_ANDROID)
+#elif defined(OS_ANDROID) || BROWSER_CHROME
         platform_timer_(new AndroidPlatformTimer(this)),
 #endif
         next_timer_id_(1) {}
@@ -196,7 +191,7 @@ class GearsTimer
 #if BROWSER_IE
   WindowsPlatformTimer *platform_timer_;
   friend class WindowsPlatformTimer;
-#elif defined(OS_ANDROID)
+#elif defined(OS_ANDROID) || BROWSER_CHROME
   scoped_ptr<AndroidPlatformTimer> platform_timer_;
   friend class AndroidPlatformTimer;
 #endif
@@ -232,10 +227,5 @@ class GearsTimer
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };
-
-// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
-#if BROWSER_NPAPI && defined(WIN32)
-#undef BROWSER_IE
-#endif
 
 #endif  // GEARS_TIMER_TIMER_H__

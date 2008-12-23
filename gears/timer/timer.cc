@@ -33,11 +33,6 @@
 
 #include "gears/base/common/js_types.h"
 
-// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
-#if BROWSER_NPAPI && defined(WIN32)
-#define OS_ANDROID 1
-#endif
-
 #if BROWSER_IE
 WindowsPlatformTimer::WindowsPlatformTimer(GearsTimer *gears_timer)
     : gears_timer_(gears_timer),
@@ -99,7 +94,7 @@ void WindowsPlatformTimer::CancelGearsTimer(int timer_id) {
 }
 #endif
 
-#if defined(OS_ANDROID)
+#if defined(OS_ANDROID) || BROWSER_CHROME
 // Functor used to marshal a timeout to the thread which initiated it.
 class AndroidTimeoutFunctor : public AsyncFunctor {
  public:
@@ -238,7 +233,7 @@ void AndroidPlatformTimer::OnMessage(TimedCallback *caller, int timer_id) {
     gears_timer_->Unref();
   }
 }
-#endif // defined(OS_ANDROID)
+#endif // defined(OS_ANDROID) || BROWSER_CHROME
 
 // Disables the timer when the TimerInfo is deleted.
 GearsTimer::TimerInfo::~TimerInfo() {
@@ -250,7 +245,7 @@ GearsTimer::TimerInfo::~TimerInfo() {
   if (owner) {
 #if BROWSER_IE
     owner->platform_timer_->CancelGearsTimer(timer_id);
-#elif defined(OS_ANDROID)
+#elif defined(OS_ANDROID) || BROWSER_CHROME
     owner->platform_timer_->RemoveTimer(timer_id);
 #endif
   }
@@ -434,7 +429,7 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
     timers_.erase(timer_id);
     return 0;
   }
-#elif defined(OS_ANDROID)
+#elif defined(OS_ANDROID) || BROWSER_CHROME
   platform_timer_->AddTimer(timer_id);
 #endif
 
