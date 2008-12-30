@@ -37,6 +37,7 @@ m4_include(ui/common/button.css)~)
 m4_include(ui/common/html_dialog.css)
     #icon {
       margin-right:0.5em;
+      margin-left:0.5em;
     }
 
     #content {
@@ -50,6 +51,7 @@ m4_include(ui/common/html_dialog.css)
 
     #scroll img {
       margin-right:1em;
+      margin-left:1em;
     }
 
     #highlightbox {
@@ -66,7 +68,7 @@ m4_include(ui/common/html_dialog.css)
       border-width:0 1px;
       padding:1em;
     }
-    
+
     #shortcut-name {
       margin-bottom:2px;
       font-weight: bold;
@@ -140,7 +142,7 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="top"><img id="shortcut-icon" width="32" height="32" src="blank.gif"></td>
-              <td align="left" width="100%" valign="middle">
+              <td width="100%" valign="middle">
                 <div id="shortcut-name"></div
                 ><div id="shortcut-description"></div>
               </td>
