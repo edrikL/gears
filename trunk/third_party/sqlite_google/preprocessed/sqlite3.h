@@ -5757,7 +5757,7 @@ int sqlite3_blob_read(sqlite3_blob *, void *Z, int N, int iOffset);
 */
 int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 
-/* Begin preload-cache.patch */
+/* Begin preload-cache.patch for Chromium */
 /*
 ** Preload the databases into the pager cache, up to the maximum size of the
 ** pager cache.
@@ -5770,7 +5770,7 @@ int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 ** an error. Otherwise, we return OK.
 */
 int sqlite3Preload(sqlite3 *db);
-/* End preload-cache.patch */
+/* End preload-cache.patch for Chromium */
 
 /*
 ** CAPI3REF: Virtual File System Objects {H11200} <S20100>

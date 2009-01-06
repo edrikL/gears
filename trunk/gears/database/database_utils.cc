@@ -32,6 +32,13 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h" // for IsStringValidPathComponent()
 
+#if WIN32
+// From google3/base/port.h
+#pragma warning(disable : 4018)  // signed/unsigned mismatch
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+
 int ForbidActions(void *userData, int iType,
                   const char *zPragma, const char *zArg,
                   const char *zDatabase, const char *zView) {
@@ -42,22 +49,23 @@ int ForbidActions(void *userData, int iType,
     // open the possibility of compiling the pragma code out entirely.
     return SQLITE_DENY;
   }
-#ifdef OS_ANDROID
-  if (iType == SQLITE_ATTACH) {
-    // On Android, we're using the system version of SQLite which
-    // isn't compiled with SQLITE3_OMIT_ATTACH, so we have to deny
+  if (iType == SQLITE_ATTACH || iType == SQLITE_DETACH) {
+    // We no longer compile with SQLITE3_OMIT_ATTACH, so we have to deny
     // access here.
+    // Note: This forbids VACUUM as well, since that statement attempts to
+    // ATTACH the vacuum db.
     return SQLITE_DENY;
   }
-  if (iType == SQLITE_FUNCTION
-      && (!strcasecmp(zArg, "fts2_tokenizer")
-          || !strcasecmp(zArg, "fts3_tokenizer"))) {
-    // The FTS3 tokenizer is also compiled into the system SQLite, but
-    // we can deny its usage in the authorizer.
-    LOG(("Denying attempt to use FTS tokenizer (%s)\n", zArg));
-    return SQLITE_DENY;
+  if (iType == SQLITE_FUNCTION) {
+    if (!strcasecmp(zArg, "fts2_tokenizer")
+          || !strcasecmp(zArg, "fts3_tokenizer")) {
+      LOG(("Denying attempt to use FTS tokenizer (%s)\n", zArg));
+      return SQLITE_DENY;
+    }
+    if (!strcasecmp(zArg, "sqlite_attach") ||
+        !strcasecmp(zArg, "sqlite_detach"))
+      return SQLITE_DENY;
   }
-#endif
   return SQLITE_OK;
 }
 
