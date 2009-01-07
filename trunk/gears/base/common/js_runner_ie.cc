@@ -723,14 +723,18 @@ bool JsRunnerImpl::Stop() {
 
 STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
                                            IUnknown **item) {
-  IUnknown *found_item = global_name_to_object_[name];
-  if (!found_item) { return TYPE_E_ELEMENTNOTFOUND; }
+  NameToObjectMap::const_iterator found =
+      global_name_to_object_.find(std::string16(name));
+  if (found == global_name_to_object_.end()) {
+    return TYPE_E_ELEMENTNOTFOUND;
+  }
+  assert(found->second);
 
   // IActiveScript expects items coming into it to already be AddRef()'d. It
   // will Release() these references on IActiveScript.Close().
   // For an example of this, see: http://support.microsoft.com/kb/q221992/.
-  found_item->AddRef();
-  *item = found_item;
+  found->second->AddRef();
+  *item = found->second;
   return S_OK;
 }
 
