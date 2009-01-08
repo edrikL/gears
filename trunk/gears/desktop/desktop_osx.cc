@@ -123,12 +123,14 @@ static bool CreateShellScript(const std::string16 &script_path,
     return false;
   }
 
+  // WARNING: Please look at b/1408993 before making any changes to shortcut
+  // creation.
   std::string contents("#!/bin/sh\n");
   contents += "\"`dirname \"$0\"`/launch_url_with_browser\" '";
   contents += reinterpret_cast<const char *>(process_path);
-  contents += "' '";
+  contents += "' \"";
   contents += launch_url_utf8;
-  contents += "'\n";
+  contents += "\"\n";
 
   // Write to file
   if (!File::CreateNewFile(script_path.c_str()))

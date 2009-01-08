@@ -177,6 +177,8 @@ bool Desktop::CreateShortcutPlatformImpl(
 
   // See http://standards.freedesktop.org/desktop-entry-spec/latest/ for
   // format documentation.
+  // WARNING: Please look at b/1408993 before making any changes to shortcut
+  // creation.
   std::string16 shortcut_contents(
       STRING16(L"[Desktop Entry]\nType=Application\nVersion=1.0"));
   shortcut_contents += STRING16(L"\nName=");
@@ -185,9 +187,9 @@ bool Desktop::CreateShortcutPlatformImpl(
   shortcut_contents += icon_path;
   shortcut_contents += STRING16(L"\nExec=");
   shortcut_contents += browser_path;
-  shortcut_contents += STRING16(L" '");
+  shortcut_contents += STRING16(L" \"");
   shortcut_contents += shortcut.app_url;
-  shortcut_contents += STRING16(L"'\n");
+  shortcut_contents += STRING16(L"\"\n");
 
   std::string shortcut_contents_utf8;
   if (String16ToUTF8(shortcut_contents.c_str(), shortcut_contents.size(),

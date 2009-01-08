@@ -186,6 +186,13 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info,
     return false;
   }
 
+  // If we ever want to support this see b/1408993, also note that
+  // IsSameOriginAsUrl() rejects data URLs.
+  if (IsDataUrl(shortcut_info->app_url.c_str())) {
+    error_ = STRING16(L"Data URLs not supported for shortcuts.");
+    return false;
+  }
+
   // We only allow shortcuts to be created within origin for now.
   if (!security_origin_.IsSameOriginAsUrl(shortcut_info->app_url.c_str())) {
     error_ = STRING16(L"Cannot create cross-origin shortcuts.");
