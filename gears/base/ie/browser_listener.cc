@@ -131,7 +131,12 @@ HRESULT __stdcall BrowserListener::Invoke(DISPID event, const IID &riid,
           url, download_depth_); 
 
       OnBeforeNavigate2(window, url, &cancel);
-      *(args[0].pboolVal) = cancel ? VARIANT_TRUE : VARIANT_FALSE;
+      assert(!cancel);
+      // TODO(michaeln): We're seeing some crashes at this assignment, since
+      // gears never attempts to cancel navigations and the default is to not
+      // cancel, we can skip this assignment. The crash may be related to
+      // non-thread safe GURL initialization which is also addressed in this CL.
+      // *(args[0].pboolVal) = cancel ? VARIANT_TRUE : VARIANT_FALSE;
 
       if (!IsDownloading())
         OnPageDownloadBegin(url);

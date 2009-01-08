@@ -31,6 +31,15 @@
 #include "gears/base/common/string_utils.h"
 #include "third_party/googleurl/src/gurl.h"
 
+// GURL initialization is not threadsafe, so we force the library to initialize
+// at CRT init time.
+static bool InitializeGURL() {
+  GURL init("about:blank");
+  assert(init.is_valid());
+  return init.is_valid();
+}
+static bool gurl_initialized = InitializeGURL();
+
 bool IsRelativeUrl(const char16 *url) {
   // From RFC 2396 (URI Generic Syntax):
   // * "Relative URI references are distinguished from absolute URI in that
@@ -57,7 +66,8 @@ bool IsRelativeUrl(const char16 *url) {
       return false;  // absolute URL
     }
   }
-  return true;
+  return true && gurl_initialized;
+ // ANDed with gurl_initialized to defeat dead stripping in opt builds
 }
 
 bool IsDataUrl(const char16 *url) {
