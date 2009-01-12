@@ -311,18 +311,18 @@ bool Desktop::HandleDialogResults(ShortcutInfo *shortcut_info,
     }
   }
 
-  // TODO(zork): Get the shortcut location from the dialog.
   uint32 locations =
 #ifdef OS_WINCE
-      // WinCE only supports the start menu.
+      // WinCE only supports the start menu. The dialog will always return a
+      // value of SHORTCUT_LOCATION_NONE, so we set the correct value here.
       SHORTCUT_LOCATION_STARTMENU;
 #else
-      SHORTCUT_LOCATION_DESKTOP;
-#endif
-
-  if (shortcuts_dialog->result["locations"].asBool()) {
+      SHORTCUT_LOCATION_NONE;
+  if (shortcuts_dialog->result["locations"].asInt()) {
     locations = shortcuts_dialog->result["locations"].asInt();
   }
+#endif
+
   if (!SetShortcut(shortcut_info, allow, permanently, locations, &error_)) {
     return false;
   }
@@ -508,6 +508,11 @@ bool Desktop::SetShortcut(Desktop::ShortcutInfo *shortcut,
   // If the user denies shortcut creation temporarily, this is where we bail
   // from the creation logic.
   if (!allow) {
+    return true;
+  }
+
+  // We also bail if no locations are specified.
+  if (locations == SHORTCUT_LOCATION_NONE) {
     return true;
   }
 
