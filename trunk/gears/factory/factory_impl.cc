@@ -85,7 +85,7 @@ void Dispatcher<GearsFactoryImpl>::Init() {
   RegisterMethod("create", &GearsFactoryImpl::Create);
   RegisterMethod("getBuildInfo", &GearsFactoryImpl::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactoryImpl::GetPermission);
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   RegisterMethod("privateSetGlobalObject",
                  &GearsFactoryImpl::PrivateSetGlobalObject);
   RegisterMethod("privateSendUnloadEvent",
@@ -97,7 +97,7 @@ const std::string GearsFactoryImpl::kModuleName("GearsFactoryImpl");
 
 GearsFactoryImpl::GearsFactoryImpl()
     : ModuleImplBaseClass(kModuleName),
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
       unload_event_fired_(false),
 #endif
       is_creation_suspended_(false) {
@@ -277,7 +277,7 @@ void GearsFactoryImpl::GetVersion(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_STRING16, &version);
 }
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 void GearsFactoryImpl::PrivateSetGlobalObject(JsCallContext *context) {
   // This is a no-op, because to start with, on WinCE, privateSetGlobalObject
   // is provided by the GearsFactory, not the GearsFactoryImpl. The purpose of

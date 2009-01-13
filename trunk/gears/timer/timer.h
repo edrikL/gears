@@ -49,7 +49,7 @@
 //
 // For Firefox, we use multiple "@mozilla.org/timer;1" XPCOM timers per
 // GearsTimer objects, one for each setTimeout or setInterval call.
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 class GearsTimer;
 
 class WindowsPlatformTimer
@@ -77,7 +77,7 @@ class WindowsPlatformTimer
 };
 #endif
 
-#if defined(OS_ANDROID) || BROWSER_CHROME
+#if defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
 #include "gears/base/common/async_router.h"
 #include "gears/geolocation/timed_callback.h"
 
@@ -107,7 +107,7 @@ class AndroidPlatformTimer : public TimedCallback::ListenerInterface {
   TimerMap timer_map_;
   DECL_SINGLE_THREAD;
 };
-#endif // defined(OS_ANDROID) || BROWSER_CHROME
+#endif // defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
 
 class GearsTimer
     : public ModuleImplBaseClass
@@ -115,14 +115,14 @@ class GearsTimer
  public:
   GearsTimer()
       : ModuleImplBaseClass("GearsTimer"),
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         platform_timer_(new WindowsPlatformTimer(this)),
-#elif defined(OS_ANDROID) || BROWSER_CHROME
+#elif defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
         platform_timer_(new AndroidPlatformTimer(this)),
 #endif
         next_timer_id_(1) {}
   ~GearsTimer() {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     if (platform_timer_->IsWindow()) {
       platform_timer_->DestroyWindow();
     } else {
@@ -188,10 +188,10 @@ class GearsTimer
 #endif
   };
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   WindowsPlatformTimer *platform_timer_;
   friend class WindowsPlatformTimer;
-#elif defined(OS_ANDROID) || BROWSER_CHROME
+#elif defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
   scoped_ptr<AndroidPlatformTimer> platform_timer_;
   friend class AndroidPlatformTimer;
 #endif

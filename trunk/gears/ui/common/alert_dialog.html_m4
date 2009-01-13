@@ -66,14 +66,6 @@ m4_include(ui/common/html_dialog.css)
   </div>
   <div id="foot"></div>
 
-<!--
-Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
-browser flags available here.
--->
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
-</object>~)
-
 </body>
 <!--
 We include all files through m4 as the HTML dialog implementation on
@@ -90,18 +82,6 @@ m4_include(genfiles/alert_dialog.js)
 
 <script>
   var debug = false;
-  if (debug) {
-    // Handy for debugging layout:
-    if (browser.ie_mobile) {
-      window.pie_dialog = new Object();
-      window.pie_dialog.IsSmartPhone = function() { return false; };
-      window.pie_dialog.SetCancelButton = function() {};
-      window.pie_dialog.SetButton = function() {};
-      window.pie_dialog.SetButtonEnabled = function() {};
-      window.pie_dialog.SetScriptContext = function() {};
-      window.pie_dialog.ResizeDialog = function() {};
-    }
-  }
 
   initDialog();
   initAlert();

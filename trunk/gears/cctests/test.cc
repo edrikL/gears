@@ -64,7 +64,7 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if defined(BROWSER_IEMOBILE)
   RegisterMethod("removeEntriesFromBrowserCache",
                  &GearsTest::RemoveEntriesFromBrowserCache);
   RegisterMethod("testEntriesPresentInBrowserCache",
@@ -343,7 +343,7 @@ void GearsTest::RunTests(JsCallContext *context) {
 #if (defined(WIN32) && !defined(OS_WINCE)) || \
     defined(LINUX) || defined(OS_MACOSX)
   ok &= TestIpcSystemQueue(&error);
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   ok &= TestIpcPeerQueue(&error);
 #endif
 #endif
@@ -1996,7 +1996,7 @@ void CreateObjectFunction(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyFunction(STRING16(L"func"), func));
 }
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if defined(BROWSER_IEMOBILE)
 // These methods are used by the JavaScript testBrowserCache test.
 
 bool GetJsArrayAsStringVector(const JsArray *js_array,
@@ -2114,7 +2114,7 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
   ok = true;
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
-#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
+#endif  // BROWSER_IEMOBILE
 
 void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
   ::TestParseGeolocationOptions(context, GetJsRunner());

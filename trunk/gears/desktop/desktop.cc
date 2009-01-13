@@ -1063,7 +1063,7 @@ void GearsDesktop::AcceptDrag(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   std::string16 error;
-#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
+#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
   ::AcceptDrag(module_environment_.get(),
                event_as_js_object.get(),
                acceptance,
@@ -1117,7 +1117,7 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
     return;
   }
 
-#if BROWSER_FF || (BROWSER_IE && !defined(OS_WINCE)) || BROWSER_WEBKIT
+#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
   bool data_available = ::GetDragData(module_environment_.get(),
                                       event_as_js_object.get(),
                                       result.get(),

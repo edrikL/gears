@@ -34,7 +34,7 @@
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 #include "gears/base/ie/activex_utils.h"
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
@@ -42,7 +42,7 @@
 #endif
 
 ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
                                      IUnknown *iunknown_site,
 #endif
                                      bool is_worker,
@@ -51,7 +51,7 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
     : security_origin_(security_origin),
 #if BROWSER_FF || BROWSER_NPAPI
       js_context_(js_runner->GetContext()),
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
       iunknown_site_(iunknown_site),
 #endif
       is_worker_(is_worker),
@@ -74,7 +74,7 @@ ModuleEnvironment::~ModuleEnvironment() {
 
 #if BROWSER_FF
 ModuleEnvironment *ModuleEnvironment::CreateFromDOM() {
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 ModuleEnvironment *ModuleEnvironment::CreateFromDOM(IUnknown *site) {
 #elif BROWSER_NPAPI
 ModuleEnvironment *ModuleEnvironment::CreateFromDOM(JsContextPtr instance) {
@@ -94,7 +94,7 @@ ModuleEnvironment *ModuleEnvironment::CreateFromDOM(JsContextPtr instance) {
   return new ModuleEnvironment(
       security_origin, is_worker, NewDocumentJsRunner(NULL, cx),
       browsing_context.get());
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   bool succeeded =
       ActiveXUtils::GetPageOrigin(site, &security_origin) &&
       ActiveXUtils::GetPageBrowsingContext(site, &browsing_context);

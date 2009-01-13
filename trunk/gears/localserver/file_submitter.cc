@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
-  // FileSubmitter is not implemented for IE Mobile on WinCE.
+#if defined(OS_WINCE) || defined(BROWSER_NPAPI)
+  // FileSubmitter is not implemented for WinCE or NPAPI
 #else
 
 #if BROWSER_IE
@@ -265,4 +265,4 @@ bool GearsFileSubmitter::CaptureInputElement(JsDomElement &dom_element) {
 #endif
 }
 
-#endif // #if defined(OS_WINCE) && defined(BROWSER_IE)
+#endif  // defined(OS_WINCE) || defined(BROWSER_NPAPI)

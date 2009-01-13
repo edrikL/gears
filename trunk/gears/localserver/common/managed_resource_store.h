@@ -97,7 +97,7 @@ class ManagedResourceStore : public LocalServer {
                      int64 *last_time,
                      std::string16 *manifest_date_header,
                      std::string16 *error_message);
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if BROWSER_IEMOBILE
   // Retrieves from the database the URLs for the current version and inserts an
   // empty entry in the browser cache for each.
   bool InsertBogusBrowserCacheEntries();
@@ -106,7 +106,7 @@ class ManagedResourceStore : public LocalServer {
 
  private:
   friend class UpdateTask;
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   friend class IEUpdateTask;
 #elif BROWSER_FF || BROWSER_SAFARI || defined(OS_ANDROID)
   friend class UpdateTaskSingleProcess;

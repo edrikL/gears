@@ -159,7 +159,7 @@ static bool TestUrlResolve() {
       STRING16(L"http://server/directory/foo#bar"),
       STRING16(L"http://server/directory/foo")
     },
-#ifdef BROWSER_IE
+#if defined(BROWSER_IE) || defined(BROWSER_IEMOBILE)
     // TODO(playmobil): escape URLs on IE6.
     // Behavior for this case is inconsistent between IE6 and IE7.
     // IE6 doesn't escape the URL and return 'http://server/a b/c d'.
@@ -182,7 +182,7 @@ static bool TestUrlResolve() {
     },
 #endif
 
-#ifdef BROWSER_IE
+#if defined(BROWSER_IE) || defined(BROWSER_IEMOBILE)
     // TODO(playmobil): make IE7 Resolve&Normalize handle user:pass in URL.
     // Behavior for this case is inconsistent between IE6 and IE7.
     // IE6 handles http://user:pass@domain without issues.

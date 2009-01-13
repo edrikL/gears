@@ -105,7 +105,7 @@ class CMutexWince : public ATL::CMutex {
   static CriticalSection lock_;
 };
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 class BrowserCache {
  public:
   // This method adds a zero-size entry of type EDITED_CACHE_ENTRY to the
@@ -146,7 +146,7 @@ class UnloadEventSource {
 
   DISALLOW_EVIL_CONSTRUCTORS(UnloadEventSource);
 };
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
 // Localization utilities
 

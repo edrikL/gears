@@ -252,7 +252,7 @@ JsRunnerInterface* NewJsRunner();
 // TODO(nigeltao): void *base is unused for non-IE browsers, and JsContextPtr
 // context is unused on IE. We should merge the two concepts.
 JsRunnerInterface* NewDocumentJsRunner(
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     IUnknown *base,
 #else
     void *base,

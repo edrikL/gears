@@ -200,13 +200,9 @@ m4_include(genfiles/icon_32x32.png.base64)m4_dnl
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-<!--
-Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
-browser flags available here.
--->
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+m4_ifelse(PRODUCT_BROWSER,~IEMOBILE~,m4_dnl
 ~         <!--
-          We use form input buttons instead of button elements as PIE
+          We use form input buttons instead of button elements as IE Mobile
           does not support them.
           -->
 
@@ -237,11 +233,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
 </body>
 
-<!--
-Note that this should be a switch on OS_WINCE and BROWSER_IE, but we don't have
-browser flags available here.
--->
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+m4_ifelse(PRODUCT_BROWSER,~IEMOBILE~,m4_dnl
 ~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">~m4_dnl
 ~</object>~)
 

@@ -57,7 +57,7 @@ typedef jsval JsToken;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 #include <windows.h>
 // no "base_interface_ie.h" because IE doesn't require a COM base interface
@@ -498,7 +498,7 @@ class JsCallContext {
 #if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval);
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
                 EXCEPINFO FAR *excep_info);
 #elif BROWSER_FF
@@ -557,7 +557,7 @@ class JsCallContext {
   int argc_;
   const JsToken *argv_;
   JsToken *retval_;
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   DISPPARAMS FAR *disp_params_;
   VARIANT FAR *retval_;
   EXCEPINFO FAR *exception_info_;

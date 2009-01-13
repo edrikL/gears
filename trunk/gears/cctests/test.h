@@ -28,7 +28,7 @@
 #ifndef GEARS_CCTESTS_TEST_H__
 #define GEARS_CCTESTS_TEST_H__
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 #include <windows.h>
 #include <wininet.h>  // For INTERNET_CACHE_ENTRY_INFO
 #endif
@@ -115,7 +115,7 @@ class GearsTest : public ModuleImplBaseClass {
   // OUT: bool
   void TestGetType(JsCallContext *context);
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   // These methods are used by the JavaScript testBrowserCache test.
 
   // IN: variant urls
@@ -245,7 +245,7 @@ class GearsTest : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 // These functions are declared in wince_compatibility.cc. They are wrappers
 // around static functions defined there.
 INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url);

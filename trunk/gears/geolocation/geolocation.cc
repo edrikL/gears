@@ -267,13 +267,13 @@ GearsGeolocation::~GearsGeolocation() {
   ASSERT_SINGLE_THREAD();
 
   // We should never be deleted until all pending requests have been cancelled.
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   // The lack of unload monitoring on IE Mobile on WinCE means that we may leak
   // providers and fix requests.
 #else
   assert(providers_.empty());
   assert(fix_requests_.empty());
-#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
+#endif  // BROWSER_IEMOBILE
 
   MessageService *message_service = MessageService::GetInstance();
   assert(message_service);

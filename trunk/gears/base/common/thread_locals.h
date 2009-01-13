@@ -104,7 +104,7 @@ class ThreadLocals {
   static void SetTlsEntries(Entry* map);
   static Entry* GetTlsEntries();
 
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
   // We use one thread-local storage slot from the OS and keeps a map
   // in that slot. This is the index of that slot as returned by TlsAlloc.
   static DWORD tls_index_;

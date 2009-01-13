@@ -39,7 +39,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/inspector/inspector_resources.h"
@@ -197,7 +197,7 @@ static const char16 *kSchemaBrowserName = STRING16(L"browser");
 
 // The values stored in the system_info table
 const int kCurrentVersion = 12;
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 static const char16 *kCurrentBrowser = STRING16(L"ie");
 #elif BROWSER_FF
 static const char16 *kCurrentBrowser = STRING16(L"firefox");
@@ -1369,7 +1369,7 @@ bool WebCacheDB::DeleteServer(int64 id) {
   response_bodies_store_->DeleteDirectoryForServer(id);
 #endif
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   std::vector<EntryInfo> entries;
   VersionInfo version;
   if (FindVersion(id, VERSION_CURRENT, &version)) {
@@ -1404,7 +1404,7 @@ bool WebCacheDB::DeleteServer(int64 id) {
   }
 
   bool committed = transaction.Commit();
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (committed) {
     for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
       BrowserCache::RemoveBogusEntry(entries[i].url.c_str());

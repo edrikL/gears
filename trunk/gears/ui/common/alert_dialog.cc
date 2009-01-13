@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(BROWSER_IE) && !defined(OS_WINCE)
+#ifdef BROWSER_IE
 
 #include <assert.h>
 #include <windows.h>
@@ -58,4 +58,4 @@ void AlertDialog::ShowModal(AlertMessageId id) {
   dialog.DoModal(STRING16(L"alert_dialog.html"), kDialogWidth, kDialogHeight);
 }
 
-#endif  // defined(BROWSER_IE) && !defined(OS_WINCE)
+#endif  // BROWSER_IE

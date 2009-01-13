@@ -54,7 +54,7 @@ GearsResultSet::GearsResultSet()
 
 GearsResultSet::~GearsResultSet() {
   if (statement_) {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     LOG16((L"~GearsResultSet - was NOT closed by caller\n"));
 #else
     LOG(("~GearsResultSet - was NOT closed by caller\n"));
@@ -107,7 +107,7 @@ bool GearsResultSet::Finalize() {
     sql_status = SqlitePoisonIfCorrupt(db, sql_status);
     statement_ = NULL;
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     LOG16((L"DB ResultSet Close: %d", sql_status));
 #else
     LOG(("DB ResultSet Close: %d", sql_status));

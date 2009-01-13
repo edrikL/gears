@@ -25,7 +25,7 @@
 
 #include "gears/localserver/resource_store_module.h"
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 #include <windows.h>
 #endif
 
@@ -42,7 +42,7 @@
 //-----------------------------------------------------------------------------
 // GearsResourceStoreMessageHwnd
 //-----------------------------------------------------------------------------
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 class GearsResourceStoreMessageHwnd
     : public CWindowImpl<GearsResourceStoreMessageHwnd> {
  public:
@@ -150,14 +150,14 @@ const std::string GearsResourceStore::kModuleName("GearsResourceStore");
 
 GearsResourceStore::GearsResourceStore()
     : ModuleImplBaseClass(kModuleName),
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
       message_hwnd_(new GearsResourceStoreMessageHwnd(this)),
 #endif
       next_capture_id_(0), page_is_unloaded_(false) {}
 
 GearsResourceStore::~GearsResourceStore() {
   AbortAllRequests();
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   if (message_hwnd_->IsWindow()) {
     message_hwnd_->DestroyWindow();
   } else {
@@ -660,7 +660,7 @@ void GearsResourceStore::GetAllHeaders(JsCallContext *context) {
 // CreateFileSubmitter
 //------------------------------------------------------------------------------
 void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef OS_WINCE
   context->SetException(STRING16(L"createFileSubmitter is not implemented."));
   return;
 #elif BROWSER_NPAPI
@@ -706,7 +706,7 @@ void GearsResourceStore::HandleEvent(JsEventType event_type) {
 //------------------------------------------------------------------------------
 void GearsResourceStore::AbortAllRequests() {
   if (capture_task_.get()) {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     capture_task_->SetListenerWindow(NULL, 0);
 #else
     capture_task_->SetListener(NULL);
@@ -769,7 +769,7 @@ bool GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     return false;
   }
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   message_hwnd_->Initialize();
   capture_task_->SetListenerWindow(
       message_hwnd_->m_hWnd,
@@ -794,7 +794,7 @@ bool GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 //------------------------------------------------------------------------------
 // HandleEvent
 //------------------------------------------------------------------------------
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else
 void GearsResourceStore::HandleEvent(int code, int param,
@@ -828,7 +828,7 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
 // OnCaptureTaskComplete
 //------------------------------------------------------------------------------
 void GearsResourceStore::OnCaptureTaskComplete() {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   capture_task_->SetListenerWindow(NULL, 0);
 #else
   capture_task_->SetListener(NULL);

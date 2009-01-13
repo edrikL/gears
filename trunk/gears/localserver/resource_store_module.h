@@ -35,7 +35,7 @@
 #include "gears/localserver/common/resource_store.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 class GearsResourceStoreMessageHwnd;
 #endif
 
@@ -44,7 +44,7 @@ class GearsResourceStoreMessageHwnd;
 //-----------------------------------------------------------------------------
 class GearsResourceStore
     : public ModuleImplBaseClass,
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
       // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else
       public AsyncTask::Listener,
@@ -136,7 +136,7 @@ class GearsResourceStore
                                 bool succeeded);
   // JsEventHandlerInterface
   virtual void HandleEvent(JsEventType event_type);
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else
   // AsyncTask::Listener
@@ -166,7 +166,7 @@ class GearsResourceStore
 
   friend class GearsLocalServer;
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   GearsResourceStoreMessageHwnd *message_hwnd_;
   friend class GearsResourceStoreMessageHwnd;
 #endif

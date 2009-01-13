@@ -43,7 +43,7 @@
 
 class ModuleWrapperBaseClass;
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if defined(BROWSER_IEMOBILE)
 class GearsFactory;
 #endif
 
@@ -64,14 +64,14 @@ struct ModuleEnvironment : public RefCounted {
   // ModuleEnvironment should be immediately held within a scoped_refptr.
 #if BROWSER_FF
   static ModuleEnvironment *CreateFromDOM();
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   static ModuleEnvironment *CreateFromDOM(IUnknown *site);
 #elif BROWSER_NPAPI
   static ModuleEnvironment *CreateFromDOM(JsContextPtr instance);
 #endif
 
   ModuleEnvironment(SecurityOrigin security_origin,
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
                     IUnknown *iunknown_site,
 #endif
                     bool is_worker,
@@ -87,7 +87,7 @@ struct ModuleEnvironment : public RefCounted {
 #if BROWSER_FF || BROWSER_NPAPI
   // The JavaScript context in which this module was created.
   JsContextPtr js_context_;
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   // Pointer to the object that hosts this object. On Win32, this is the pointer
   // passed to SetSite. On WinCE this is the JS IDispatch pointer.
   CComPtr<IUnknown> iunknown_site_;
@@ -167,7 +167,7 @@ class ModuleImplBaseClass {
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if defined(BROWSER_IEMOBILE)
   // This method is defined in desktop/ie/factory.cc. It lets us verify that
   // privateSetGlobalObject() has been called from JavaScript in IE Mobile on
   // WinCE.

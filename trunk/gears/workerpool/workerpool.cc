@@ -33,7 +33,7 @@
 #include "gears/localserver/common/http_request.h"
 #if BROWSER_FF
 #include "gears/workerpool/firefox/pool_threads_manager.h"
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 #include "gears/workerpool/ie/pool_threads_manager.h"
 #elif BROWSER_NPAPI
 #include "gears/workerpool/npapi/pool_threads_manager.h"
@@ -304,7 +304,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
 
 #ifdef DEBUG
 void GearsWorkerPool::ForceGC(JsCallContext *context) {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   // TODO(aa): Investigate why this is crashing the unit tests.  In the
   // meantime, not a big deal for IE.  forceGC() was added for finding garbage
   // collection bugs on Firefox, where we control the JS engine more manually.

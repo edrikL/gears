@@ -27,7 +27,7 @@
 #define GEARS_UI_COMMON_ALERT_DIALOG_H__
 
 // This is only used for desktop IE for now
-#if defined(BROWSER_IE) && !defined(OS_WINCE)
+#ifdef BROWSER_IE
 
 // The set of messages supported.
 enum AlertMessageId {
@@ -42,5 +42,5 @@ class AlertDialog {
   AlertDialog() {}
 };
 
-#endif  // BROWSER_IE && !OS_WINCE
+#endif  // BROWSER_IE
 #endif  // GEARS_UI_COMMON_SETTINGS_DIALOG_H__

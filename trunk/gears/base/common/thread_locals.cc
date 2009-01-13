@@ -31,7 +31,7 @@
 // TODO(michaeln): figure out if it's safe to initialize this tls_index_ here or
 // not. It's set in when DllMain(processAttached) is called, will initializing
 // it via the CRT squash that value set via DllMain?
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
 // For IE, IE Mobile, Chrome and Opera, we use the platform type and value.
 #ifdef OS_WINCE
 // On Windows Mobile 5 TLS_OUT_OF_INDEXES is undefined.
@@ -168,7 +168,7 @@ void ThreadLocals::DestroyEntries(Entry* entries) {
 // SetTlsEntries
 //------------------------------------------------------------------------------
 void ThreadLocals::SetTlsEntries(Entry* entries) {
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
   ::TlsSetValue(tls_index_, entries);
 #elif BROWSER_FF
   PR_SetThreadPrivate(tls_index_, entries);
@@ -183,7 +183,7 @@ void ThreadLocals::SetTlsEntries(Entry* entries) {
 // GetTlsEntries
 //------------------------------------------------------------------------------
 ThreadLocals::Entry* ThreadLocals::GetTlsEntries() {
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
   return reinterpret_cast<Entry*>(TlsGetValue(tls_index_));
 #elif BROWSER_FF
   return reinterpret_cast<Entry*>(PR_GetThreadPrivate(tls_index_));
@@ -194,7 +194,7 @@ ThreadLocals::Entry* ThreadLocals::GetTlsEntries() {
 }
 
 
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
 
 //------------------------------------------------------------------------------
 // HandleProcessAttached

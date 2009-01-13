@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 
 #include "gears/base/common/html_event_monitor.h"
 
@@ -142,4 +142,4 @@ void HtmlEventMonitor::Stop() {
   event_hook_ = NULL;
 }
 
-#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
+#endif  // BROWSER_IEMOBILE
