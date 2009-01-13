@@ -35,9 +35,9 @@
 #ifndef GEARS_LOCALSERVER_COMMON_CRITICAL_SECTION_H__
 #define GEARS_LOCALSERVER_COMMON_CRITICAL_SECTION_H__
 
-#if BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
 //------------------------------------------------------------------------------
-// BROWSER_IE || BROWSER_CHROME || BROWSER_OPERA
+// BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
 //------------------------------------------------------------------------------
 #include <atlsync.h>
 

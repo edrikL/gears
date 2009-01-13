@@ -67,7 +67,7 @@ typedef int int32;
 #include <gecko_sdk/include/prtypes.h>
 #else
 //------------------------------------------------------------------------------
-// BROWSER_IE || BROWSER_NPAPI
+// BROWSER_IE || BROWSER_IEMOBILE || BROWSER_NPAPI
 //------------------------------------------------------------------------------
 // Signed integer types
 typedef signed char         int8;

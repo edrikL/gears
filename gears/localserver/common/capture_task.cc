@@ -26,7 +26,7 @@
 #include "gears/localserver/common/capture_task.h"
 
 #include "gears/base/common/exception_handler.h"
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/blob/blob_interface.h"
@@ -192,7 +192,7 @@ bool CaptureTask::ProcessUrl(const std::string16 &url) {
   if (new_item.payload.status_code == HttpConstants::HTTP_NOT_MODIFIED) {
     LOG(("CaptureTask::ProcessUrl - received HTTP_NOT_MODIFIED\n"));
     processed_urls_.insert(url);
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
     BrowserCache::EnsureBogusEntry(url.c_str());
 #endif
     return true;

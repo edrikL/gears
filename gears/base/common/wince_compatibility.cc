@@ -53,7 +53,7 @@ static void SkipTokens(const std::string16 &path,
                        int &pos,
                        bool skip_separators);
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 // Used by BrowserCache methods for IE Mobile.
 static void IncrementFiletime(FILETIME *file_time,
                               const int64 &hundreds_of_nanoseconds);
@@ -64,7 +64,7 @@ static bool IsFiletimeGreater(const FILETIME &left_hand,
 static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url);
 // Determines if a cache entry is a bogus Gears entry.
 static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info);
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
 int _charmax = 255;
 
@@ -206,7 +206,7 @@ BOOL CMutexWince::Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName) {
   return success;
 }
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 // This function is required because on IE Mobile on WinCE, throwing a
 // JavaScript exception from C++ doesn't trigger the default JS exception
 // handler.
@@ -261,9 +261,9 @@ void CallWindowOnerror(JsRunnerInterface *js_runner,
     return;
   }
 }
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 // BrowserCache - used on IE Mobile.
 
 // A cache entry inserted with NORMAL_CACHE_ENTRY is used whenever the
@@ -413,7 +413,7 @@ bool BrowserCache::RemoveBogusEntry(const char16 *url) {
   LOG16((L"BrowserCache: No bogus cache entry for %s, not removing.\n", url));
   return true;
 }
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
 // Internal
 
@@ -432,7 +432,7 @@ static void SkipTokens(const std::string16 &path,
   }
 }
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 static void IncrementFiletime(FILETIME *file_time,
                               const int64 &hundreds_of_nanoseconds) {
   int64 file_time_integer = static_cast<int64>(file_time->dwHighDateTime) << 32;
@@ -503,9 +503,9 @@ bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info) {
   return IsEntryBogus(info);
 }
 #endif
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
-#ifdef BROWSER_IE
+#ifdef BROWSER_IEMOBILE
 // Unload monitoring infrastructure - used on IE Mobile
 
 UnloadEventHandlerInterface* UnloadEventSource::handler_ = NULL;
@@ -530,7 +530,7 @@ void UnloadEventSource::UnregisterHandler() {
   assert(handler_ != NULL);
   handler_ = NULL;
 }
-#endif  // BROWSER_IE
+#endif  // BROWSER_IEMOBILE
 
 // Localization
 

@@ -36,7 +36,7 @@
 
 // IE and Firefox keep cached files in the file system. Safari does not
 // yet do so.
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 #define USE_FILE_STORE defined
 #elif BROWSER_FF
 #define USE_FILE_STORE defined

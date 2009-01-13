@@ -29,15 +29,13 @@
 #if BROWSER_FF
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
-#elif BROWSER_IE
-#ifdef OS_WINCE 
-// On WinCE we use privateSendUnloadEvent and IPIEHTMLWindow2::put_onunload()
+#elif BROWSER_IEMOBILE
+// We use privateSendUnloadEvent and IPIEHTMLWindow2::put_onunload()
 // instead of IHTMLWindow3 and attachEvent().
 #include <webvw.h>
-#else
+#elif BROWSER_IE
 #include <mshtml.h>
 #include "gears/base/ie/atl_browser_headers.h"
-#endif
 #endif
 
 #include "gears/base/common/base_class.h"
@@ -64,12 +62,10 @@ class HtmlEventMonitor {
 
 #if BROWSER_FF
   bool Start(nsIDOMEventTarget *event_source);
-#elif BROWSER_IE
-#ifdef OS_WINCE
+#elif BROWSER_IEMOBILE
   bool Start(IPIEHTMLWindow2 *event_source);
-#else
+#elif BROWSER_IE
   bool Start(IHTMLWindow3 *event_source);
-#endif
 #elif BROWSER_NPAPI
   bool Start(NPP context, NPObject *event_source);
 #endif
@@ -84,12 +80,10 @@ class HtmlEventMonitor {
 
 #if BROWSER_FF
   nsCOMPtr<nsIDOMEventTarget> event_source_;
-#elif BROWSER_IE
-#ifdef OS_WINCE
+#elif BROWSER_IEMOBILE
   CComPtr<IPIEHTMLWindow2> event_source_;
-#else
+#elif BROWSER_IE
   CComPtr<IHTMLWindow3> event_source_;
-#endif
 #elif BROWSER_NPAPI
   NPP event_context_;
   ScopedNPVariant event_source_;

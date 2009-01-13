@@ -29,7 +29,7 @@
 #if BROWSER_FF
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_sdk/include/nsIDOMHTMLElement.h>
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 #include <windows.h>
 #endif
 
@@ -55,7 +55,7 @@ class JsDomElement {
     assert(is_initialized_);
     return dom_html_element_;
   }
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   IDispatch *dispatch() {
     assert(is_initialized_);
     return dispatch_;
@@ -70,7 +70,7 @@ class JsDomElement {
  private:
 #if BROWSER_FF
   nsCOMPtr<nsIDOMHTMLElement> dom_html_element_;
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   CComPtr<IDispatch> dispatch_;
 #elif BROWSER_NPAPI
   scoped_ptr<JsObject> js_object_;

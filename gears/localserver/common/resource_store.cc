@@ -26,7 +26,7 @@
 #include "gears/localserver/common/resource_store.h"
 #include <vector>
 #include "gears/base/common/string16.h"
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
 #include "gears/blob/blob_interface.h"
@@ -251,7 +251,7 @@ bool ResourceStore::PutItem(Item *item) {
   }
 
   bool committed = transaction.Commit();
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (committed) {
     BrowserCache::EnsureBogusEntry(item->entry.url.c_str());
   }
@@ -279,7 +279,7 @@ bool ResourceStore::DeleteAll() {
     return false;
   }
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   std::vector<WebCacheDB::EntryInfo> entries;
   db->FindEntries(version_id_, &entries);
 #endif
@@ -289,7 +289,7 @@ bool ResourceStore::DeleteAll() {
   }
 
   bool committed = transaction.Commit();
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (committed) {
     for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
       BrowserCache::RemoveBogusEntry(entries[i].url.c_str());
@@ -316,7 +316,7 @@ bool ResourceStore::Delete(const char16* url) {
   }
 
   bool deleted = db->DeleteEntry(version_id_, url);
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (deleted) {
     BrowserCache::RemoveBogusEntry(url);
   }
@@ -361,7 +361,7 @@ bool ResourceStore::Rename(const char16* orig_url, const char16 *new_url) {
   }
 
   bool committed = transaction.Commit();
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (committed) {
     BrowserCache::RemoveBogusEntry(orig_url);
     BrowserCache::EnsureBogusEntry(new_url);
@@ -412,7 +412,7 @@ bool ResourceStore::Copy(const char16* src_url, const char16 *dst_url) {
   }
 
   bool committed = transaction.Commit();
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#ifdef BROWSER_IEMOBILE
   if (committed) {
     BrowserCache::EnsureBogusEntry(item.entry.url.c_str());
   }

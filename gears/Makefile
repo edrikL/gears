@@ -754,7 +754,7 @@ COMMON_M4SRCS	+= \
 		npapi_msi.wxs.m4 \
 		product_constants.h.m4 \
 		win32_msi.wxs.m4 \
-		wince_cab_ie.inf.m4 \
+		wince_cab_iemobile.inf.m4 \
 		wince_cab_op.inf.m4 \
 		$(NULL)
 
@@ -2369,34 +2369,29 @@ endif
 #-----------------------------------------------------------------------------
 # installer/iemobile
 
-ifeq ($(OS),wince)
-ifeq ($(BROWSER),IE)
-IE_VPATH	+= \
+IEMOBILE_VPATH	+= \
 		installer/common \
 		installer/iemobile \
 		$(NULL)
 
-IE_WINCESETUP_CPPSRCS += \
+IEMOBILE_WINCESETUP_CPPSRCS += \
 		process_restarter.cc \
 		setup.cc \
 		$(NULL)
 
-IE_WINCESETUP_LINK_EXTRAS += \
-		$(IE_OUTDIR)/setup.res \
+IEMOBILE_WINCESETUP_LINK_EXTRAS += \
+		$(IEMOBILE_OUTDIR)/setup.res \
 		$(NULL)
 
 # List these setup-related items in IE_FOO just so they get built before used.
-IE_STABSRCS += \
+IEMOBILE_STABSRCS += \
 		setup.rc.stab \
 		$(NULL)
-endif # IE
-endif # wince
 
 #-----------------------------------------------------------------------------
 # installer/opera
 
 ifeq ($(OS),wince)
-ifeq ($(BROWSER),OPERA)
 OPERA_VPATH	+= \
 		installer/common \
 		installer/opera \
@@ -2415,7 +2410,6 @@ OPERA_WINCESETUP_LINK_EXTRAS += \
 OPERA_STABSRCS += \
 		setup.rc.stab \
 		$(NULL)
-endif # OPERA
 endif # wince
 
 #-----------------------------------------------------------------------------
@@ -2525,7 +2519,7 @@ endif
 endif
 
 
-# Opera-specific. Opera is built with BROWSER=OPERA and OS=wince.
+# Opera Mobile specific. Opera Mobile is built with BROWSER=OPERA and OS=wince.
 ifeq ($(BROWSER),OPERA)
 ifeq ($(OS),wince)
 
@@ -2538,6 +2532,21 @@ OPERA_M4SRCS += $(NPAPI_M4SRCS)
 OPERA_IDLSRCS += $(NPAPI_IDLSRCS)
 OPERA_HTML_M4SRCS += $(NPAPI_HTML_M4SRCS)
 OPERA_LIBS += $(NPAPI_LIBS)
+endif
+endif
+
+# IE Mobile specific. IE Mobile is built with BROWSER=IEMOBILE and OS=wince.
+ifeq ($(BROWSER),IEMOBILE)
+ifeq ($(OS),wince)
+
+IEMOBILE_CPPSRCS += $(IE_CPPSRCS)
+IEMOBILE_CPPFLAGS += $(IE_CPPFLAGS)
+IEMOBILE_VPATH += $(IE_VPATH)
+IEMOBILE_DLLFLAGS += $(IE_DLLFLAGS)
+IEMOBILE_M4SRCS += $(IE_M4SRCS)
+IEMOBILE_IDLSRCS += $(IE_IDLSRCS)
+IEMOBILE_HTML_M4SRCS += $(IE_HTML_M4SRCS)
+IEMOBILE_LIBS += $(IE_LIBS)
 endif
 endif
 

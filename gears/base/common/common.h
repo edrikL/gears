@@ -61,7 +61,7 @@
 #include "gears/base/common/common_osx.h"
 #endif
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 #include "gears/base/common/common_ie.h"
 #elif BROWSER_FF
 #include "gears/base/common/common_ff.h"

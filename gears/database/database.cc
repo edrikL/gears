@@ -154,7 +154,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
     return;
   }
 
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   LOG16((L"DB Execute: %s\n", expr));
 #else
 #ifdef DEBUG
@@ -234,7 +234,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: %s (string)\n", i, arg_str));
 #else
 #ifdef DEBUG
@@ -249,7 +249,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
         break;
       }
       case JSPARAM_NULL: {
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: null\n", i));
 #else
         LOG(("        Parameter %i: null\n", i));
@@ -260,7 +260,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
       case JSPARAM_UNDEFINED: {
         // Insert the string "undefined" to match the firefox implementation.
         // TODO(zork): This should throw an error in beta.database2.
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: undefined\n", i));
 #else
         LOG(("        Parameter %i: undefined\n", i));
@@ -276,7 +276,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: %i\n", i, arg_int));
 #else
         LOG(("        Parameter %i: %i\n", i, arg_int));
@@ -290,7 +290,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
           context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
           return false;
         }
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: %lf\n", i, arg_double));
 #else
         LOG(("        Parameter %i: %lf\n", i, arg_double));
@@ -306,7 +306,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
         }
         std::string16 arg_str;
         arg_str = arg_bool ? STRING16(L"true") : STRING16(L"false");
-#ifdef BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
         LOG16((L"        Parameter %i: %s\n", i, arg_str));
 #else
 #ifdef DEBUG

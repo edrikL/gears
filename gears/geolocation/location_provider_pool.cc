@@ -45,12 +45,12 @@ LocationProviderPool::LocationProviderPool()
 }
 
 LocationProviderPool::~LocationProviderPool() {
-#if defined(OS_WINCE) && defined(BROWSER_IE)
+#if BROWSER_IEMOBILE
   // The lack of unload monitoring on IE Mobile on WinCE means that we may leak
   // providers.
 #else
   assert(providers_.empty());
-#endif  // defined(OS_WINCE) && defined(BROWSER_IE)
+#endif  // BROWSER_IEMOBILE
 }
 
 // static

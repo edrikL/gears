@@ -35,7 +35,9 @@
 typedef int ThreadId;
 #elif BROWSER_WEBKIT || defined(LINUX) || defined(ANDROID)
 typedef pthread_t ThreadId;
-#elif BROWSER_IE || defined(WIN32) || defined(OS_WINCE)
+// Note that testing for WIN32 would be sufficient here, as BROWSER_IE and
+// BROWSER_IEMOBILE exist only on Win32 or WinCE, and WinCE defines WIN32.
+#elif BROWSER_IE || BROWSER_IEMOBILE || defined(WIN32) || defined(OS_WINCE)
 typedef DWORD ThreadId;
 #endif
 

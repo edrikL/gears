@@ -42,7 +42,7 @@
 // See update_task.h, web_capture_task.h (derived classes)
 //------------------------------------------------------------------------------
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 #include "gears/localserver/ie/async_task_ie.h"
 #elif BROWSER_FF
 #include "gears/localserver/firefox/async_task_ff.h"

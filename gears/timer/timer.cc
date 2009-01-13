@@ -33,7 +33,7 @@
 
 #include "gears/base/common/js_types.h"
 
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 WindowsPlatformTimer::WindowsPlatformTimer(GearsTimer *gears_timer)
     : gears_timer_(gears_timer),
       in_handler_(false) {
@@ -94,7 +94,7 @@ void WindowsPlatformTimer::CancelGearsTimer(int timer_id) {
 }
 #endif
 
-#if defined(OS_ANDROID) || BROWSER_CHROME
+#if defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
 // Functor used to marshal a timeout to the thread which initiated it.
 class AndroidTimeoutFunctor : public AsyncFunctor {
  public:
@@ -233,7 +233,7 @@ void AndroidPlatformTimer::OnMessage(TimedCallback *caller, int timer_id) {
     gears_timer_->Unref();
   }
 }
-#endif // defined(OS_ANDROID) || BROWSER_CHROME
+#endif // defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
 
 // Disables the timer when the TimerInfo is deleted.
 GearsTimer::TimerInfo::~TimerInfo() {
@@ -243,9 +243,9 @@ GearsTimer::TimerInfo::~TimerInfo() {
   }
 #endif
   if (owner) {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
     owner->platform_timer_->CancelGearsTimer(timer_id);
-#elif defined(OS_ANDROID) || BROWSER_CHROME
+#elif defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
     owner->platform_timer_->RemoveTimer(timer_id);
 #endif
   }
@@ -342,7 +342,7 @@ void GearsTimer::ClearTimeoutOrInterval(JsCallContext *context) {
 // Makes sure the object's structures are initialized.  We need to set up the
 // unload monitor for the web page.
 void GearsTimer::Initialize() {
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   platform_timer_->Initialize();
 #endif
 
@@ -424,12 +424,12 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
   // Start the timer
   timer->platform_timer->InitWithFuncCallback(
       TimerCallback, timer, timeout, type);
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   if (0 == platform_timer_->SetTimer(timer_id, timeout, NULL)) {
     timers_.erase(timer_id);
     return 0;
   }
-#elif defined(OS_ANDROID) || BROWSER_CHROME
+#elif defined(OS_ANDROID) || BROWSER_CHROME || BROWSER_OPERA
   platform_timer_->AddTimer(timer_id);
 #endif
 

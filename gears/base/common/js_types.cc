@@ -36,7 +36,7 @@
 
 #if BROWSER_FF
 #include "gears/base/common/js_runner_ff_marshaling.h"
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_browser_headers.h"
@@ -266,7 +266,7 @@ bool JsArrayImpl::SetElementString(int index, const std::string16 &value) {
   }
 }
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 JsArrayImpl::JsArrayImpl() : js_context_(NULL) {
 }
@@ -685,7 +685,7 @@ bool JsObjectImpl::SetPropertyString(const std::string16 &name,
   }
 }
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 JsObjectImpl::JsObjectImpl() : js_context_(NULL) {
 }
@@ -1274,7 +1274,7 @@ bool UndefinedToJsToken(JsContextPtr context, JsScopedToken *out) {
   return true;
 }
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out) {
   if (t.vt != VT_BOOL) { return false; }
@@ -1966,7 +1966,7 @@ JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
     JS_AddRoot(context_, &token_);
     JS_EndRequest(context_);
   }
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   if (token_.vt == VT_DISPATCH) {
     token_.pdispVal->AddRef();
   }
@@ -1981,7 +1981,7 @@ JsRootedToken::~JsRootedToken() {
     JS_RemoveRoot(context_, &token_);
     JS_EndRequest(context_);
   }
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
   if (token_.vt == VT_DISPATCH) {
     token_.pdispVal->Release();
   }
@@ -2141,7 +2141,7 @@ void JsCallContext::SetException(const std::string16 &message) {
   JS_EndRequest(js_context_);
 }
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 bool ConvertJsParamToToken(const JsParamToSend &param,
                            JsContextPtr context, CComVariant *token) {
@@ -2395,7 +2395,7 @@ const JsToken &JsCallContext::GetArgument(int index) {
   return argv_[index];
 }
 
-#elif BROWSER_IE
+#elif BROWSER_IE || BROWSER_IEMOBILE
 
 int JsCallContext::GetArgumentCount() {
   return disp_params_->cArgs;

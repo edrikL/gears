@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(OS_WINCE) && defined(BROWSER_IE)
-
 #include <windows.h>  // must be first
 #include <winioctl.h>
 #include "gears/installer/common/process_restarter.h"
@@ -218,4 +216,3 @@ static void CheckRegistryKeys() {
 }
 
 };  // extern "C"
-#endif  // defined(OS_WINCE) && defined(BROWSER_IE)

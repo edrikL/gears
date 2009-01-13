@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef DEBUG
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
 #include "gears/base/ie/atl_browser_headers.h"
 #endif
 #endif
@@ -615,7 +615,7 @@ static bool CreateUniqueFile(const char16* full_dirpath,
 
   // a folder full of files that shouldn't be there, something is wrong!
 #ifdef DEBUG
-#if BROWSER_IE
+#if BROWSER_IE || BROWSER_IEMOBILE
   LOG16((L"Failed: CreateUniqueFile( %s ) = %d\n",
          full_filepath->c_str(), GetLastError()));
 #endif

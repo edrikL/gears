@@ -13,9 +13,9 @@ BuildMax=0xE0000000
 ; String aliases for convenience
 [Strings]
 m4_ifelse(DEBUG,^1^,^m4_dnl
-BuildOutputDirectory="bin-dbg\wince-arm\ie"
+BuildOutputDirectory="bin-dbg\wince-arm\iemobile"
 ^,^1^,^1^,^m4_dnl
-BuildOutputDirectory="bin-opt\wince-arm\ie"
+BuildOutputDirectory="bin-opt\wince-arm\iemobile"
 ^)
 SetupDll="setup.dll"
 GearsDll="PRODUCT_SHORT_NAME_UQ.dll"

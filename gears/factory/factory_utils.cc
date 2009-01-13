@@ -109,9 +109,8 @@ void AppendBuildInfo(std::string16 *s) {
 
 #if BROWSER_IE
   s->append(STRING16(L";ie"));
-#ifdef OS_WINCE
-  s->append(STRING16(L"_mobile"));
-#endif
+#elif BROWSER_IEMOBILE
+  s->append(STRING16(L";ie_mobile"));
 #elif BROWSER_FF
   s->append(STRING16(L";firefox"));
 #elif BROWSER_SAFARI
@@ -124,7 +123,7 @@ void AppendBuildInfo(std::string16 *s) {
 }
 
 void SetActiveUserFlag() {
-#ifdef WIN32
+#if defined(WIN32) && !defined(OS_WINCE)
   // We use the HKCU version of the Google Update "did run" value so that
   // we can write to it from IE on Vista.
   HKEY reg_client_state;

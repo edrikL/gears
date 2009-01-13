@@ -36,7 +36,7 @@
 
 #if BROWSER_FF
 #include "gears/desktop/drop_target_ff.h"
-#elif BROWSER_IE && !defined(OS_WINCE)
+#elif BROWSER_IE
 #include "gears/desktop/drop_target_ie.h"
 #elif BROWSER_SAFARI
 #include "gears/desktop/drop_target_sf.h"
