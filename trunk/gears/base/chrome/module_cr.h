@@ -195,4 +195,15 @@ class PluginSyncMessage : public Serializable {
  protected:
   std::vector<uint8> retval_;
 };
+
+// This class can only be used on the plugin thread
+class CPFileDialog {
+ public:
+  bool OpenDialog(CPBrowsingContext context,
+                  bool multiple_files,
+                  const char16 *title,
+                  const char16 *filter);
+  virtual void OnSelect(const std::vector<std::string16> &files) = 0;
+  virtual void OnCancel() {}
+};
 #endif  // GEARS_BASE_CHROME_MODULE_CR_H__

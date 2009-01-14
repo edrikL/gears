@@ -230,6 +230,24 @@ void STDCALL CPP_OnSyncMessage(void *data, uint32 data_len, void **retval,
   }
 }
 
+void STDCALL CPP_OnFileDialogResult(void *data, const char **files,
+                                    uint32 files_len) {
+  CPFileDialog *dialog_info = static_cast<CPFileDialog *>(data);
+
+  if (files_len) {
+    std::vector<std::string16> filenames;
+    std::string16 filename;
+    for (uint32 c = 0; c < files_len; c++) {
+      UTF8ToString16(files[c], &filename);
+      filenames.push_back(filename);
+    }
+
+    dialog_info->OnSelect(filenames);
+  } else {
+    dialog_info->OnCancel();
+  }
+}
+
 void STDCALL CPP_HtmlDialogClosed(void *plugin_context,
                                   const char *json_retval) {
   assert(plugin_context);
@@ -384,6 +402,7 @@ CPError CP::Initialize(CPID id, const CPBrowserFuncs *bfuncs,
   plugin_funcs.should_intercept_request = CPP_ShouldInterceptRequest;
   plugin_funcs.on_message = CPP_OnMessage;
   plugin_funcs.on_sync_message = CPP_OnSyncMessage;
+  plugin_funcs.on_file_dialog_result = CPP_OnFileDialogResult;
   plugin_funcs.html_dialog_closed = CPP_HtmlDialogClosed;
   plugin_funcs.handle_command = CPP_HandleCommand;
   size_t pfuncs_size = pfuncs->size;
@@ -560,6 +579,26 @@ bool PluginSyncMessage::Send() {
     CP::browser_funcs().free(buffer);
     return true;
   }
+}
+
+bool CPFileDialog::OpenDialog(CPBrowsingContext context,
+                              bool multiple_files,
+                              const char16 *title,
+                              const char16 *filter) {
+  std::string title_utf8;
+  std::string filter_utf8;
+  if (!String16ToUTF8(title, wcslen(title), &title_utf8) ||
+      !String16ToUTF8(filter, wcslen(filter), &filter_utf8)) {
+    return false;
+  }
+
+  return (CPERR_SUCCESS == CP::browser_funcs().open_file_dialog(
+                               g_cpid,
+                               context,
+                               multiple_files,
+                               title_utf8.c_str(),
+                               filter_utf8.c_str(),
+                               this));
 }
 
 CPBrowsingContext CP::GetBrowsingContext(JsContextPtr context) {
