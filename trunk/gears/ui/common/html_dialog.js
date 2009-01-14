@@ -272,10 +272,6 @@ function enableButton(buttonElem) {
  * e.g. windows mobile devices)
  */
 function wrapDomain(str) {
-  if (!browser.ie_mobile) {
-    return str;
-  }
-
   // Replace occurences of '.' with an image representing a dot. This allows the
   // browser to wrap the URL at these points as if there were whitespace
   // present.

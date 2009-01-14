@@ -240,7 +240,7 @@ m4_include(genfiles/shortcuts_dialog.js)
   var dialogMinHeight = 200;
 
   // We currently only support custom locations for desktop windows.
-  var locationsEnabled = browser.windows && !browser.ie_mobile;
+  var locationsEnabled = browser.windows;
 
   var args;
 

@@ -133,13 +133,19 @@ var browser = {};
   // WebKit also gives product == "gecko".
   browser.mozilla = !browser.webkit && navigator.product == "Gecko";
   browser.safari = ua.indexOf("Safari") > -1;
-  browser.mac = navigator.platform.indexOf("Mac") > -1;
-  browser.linux = navigator.platform.indexOf("Linux") > -1;
-  browser.windows = navigator.platform.indexOf("Win") > -1;
   browser.android = ua.indexOf("Android") > -1;
   browser.chrome = window.chrome;  // TODO(mpcomplete): use ua string
   if (browser.android || browser.chrome) {
     browser.safari = false;
   }
+
+  browser.mac = navigator.platform.indexOf("Mac") > -1;
+  browser.linux = navigator.platform.indexOf("Linux") > -1;
+  browser.wince = navigator.platform.indexOf("WinCE") > -1 ||
+      navigator.platform.indexOf("Pocket PC") > -1 ||
+      navigator.platform.indexOf("Windows CE") > -1 ||
+      navigator.platform.indexOf("Windows Mobile") > -1;
+  browser.windows = !browser.wince && navigator.platform.indexOf("Win") > -1;
+
   // TODO(aa): Add detection for more browsers, as necessary.
 })();
