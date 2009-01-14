@@ -1313,6 +1313,7 @@ $(BROWSER)_CPPSRCS += \
 
 $(BROWSER)_CPPSRCS += \
 		file_dialog.cc \
+		file_dialog_chrome.cc \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_win32.cc \

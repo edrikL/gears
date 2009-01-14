@@ -25,6 +25,9 @@
 
 #include "gears/desktop/file_dialog.h"
 
+#if BROWSER_CHROME
+#include "gears/base/chrome/module_cr.h"
+#endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_refptr.h"
@@ -32,6 +35,10 @@
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
 #include "gears/ui/common/i18n_strings.h"
+
+#if BROWSER_CHROME
+#include "gears/desktop/file_dialog_chrome.h"
+#endif
 
 #if defined(WIN32)
 #include "gears/desktop/file_dialog_win32.h"
@@ -95,7 +102,16 @@ FileDialog* FileDialog::Create(ModuleEnvironment* module_environment) {
   NativeWindowPtr parent = NULL;
   GetBrowserWindow(module_environment, &parent);
 #if defined(WIN32)
+#if BROWSER_CHROME
+  FileDialog* dialog = NULL;
+  if (CP::gears_in_renderer()) {
+    dialog = new FileDialogChrome(module_environment->browsing_context_.get());
+  } else {
+    dialog = new FileDialogWin32;
+  }
+#else
   FileDialog* dialog = new FileDialogWin32;
+#endif
 #elif defined(OS_MACOSX)
   FileDialog* dialog = new FileDialogCarbon;
 #elif defined(LINUX)

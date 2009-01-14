@@ -215,6 +215,8 @@ bool FileDialogWin32::SetFilter(const StringList& filter,
                                  NULL, NULL, NULL);
       if (ERROR_NO_MORE_ITEMS == result)
         break;
+      if (ERROR_INVALID_HANDLE == result)
+        break;
       if (ERROR_SUCCESS != result)
         continue;
       if (name[0] != L'.')
