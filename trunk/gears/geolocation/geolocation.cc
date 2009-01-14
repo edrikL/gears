@@ -82,6 +82,13 @@ static const char16 *kCallbackRequiredObserverTopic =
 static const int kLastRepeatingRequestId = kint32max;  // Repeating IDs positive
 static const int kLastSingleRequestId = kint32min;  // Single IDs negative
 
+// Position object constants.
+static const char16 *kLatitudeString = STRING16(L"latitude");
+static const char16 *kLongitudeString = STRING16(L"longitude");
+static const char16 *kAccuracyString = STRING16(L"accuracy");
+static const char16 *kAltitudeString = STRING16(L"altitude");
+static const char16 *kAltitudeAccuracyString = STRING16(L"altitudeAccuracy");
+
 
 TimedMessage::TimedMessage(int timeout_milliseconds,
                            const std::string16 &message_type,
@@ -1299,45 +1306,73 @@ bool GearsGeolocation::CreateJavaScriptPositionObject(
   assert(position.IsGoodFix());
 
   bool result = true;
-  // latitude, longitude, accuracy and timestamp should always be valid.
-  result &= position_object->SetPropertyDouble(STRING16(L"latitude"),
-                                               position.latitude);
-  result &= position_object->SetPropertyDouble(STRING16(L"longitude"),
-                                               position.longitude);
-  result &= position_object->SetPropertyDouble(STRING16(L"accuracy"),
-                                               position.accuracy);
+
+  // The timestamp is a property of the position object. It should always be
+  // valid.
   scoped_ptr<JsObject> date_object(js_runner->NewDate(position.timestamp));
-  result &= NULL != date_object.get();
-  if (date_object.get()) {
-    result &= position_object->SetPropertyObject(STRING16(L"timestamp"),
-                                                 date_object.get());
+  if (!date_object.get()) {
+    assert(false);
+    return false;
   }
+  result &= position_object->SetPropertyObject(STRING16(L"timestamp"),
+                                               date_object.get());
+
+  // The W3C spec stipulates that the latitude, longitude etc should be members
+  // of the coords object. In addition, we add these properties to the position
+  // object directly to maintain backwards compatibility with the pre-exisiting
+  // Gears API.
+  scoped_ptr<JsObject> coords_object(js_runner->NewObject());
+  if (!coords_object.get()) {
+    assert(false);
+    return false;
+  }
+
+  // latitude, longitude and accuracy should always be valid.
+  result &= position_object->SetPropertyDouble(kLatitudeString,
+                                               position.latitude);
+  result &= position_object->SetPropertyDouble(kLongitudeString,
+                                               position.longitude);
+  result &= position_object->SetPropertyDouble(kAccuracyString,
+                                               position.accuracy);
+  result &= coords_object->SetPropertyDouble(kLatitudeString,
+                                             position.latitude);
+  result &= coords_object->SetPropertyDouble(kLongitudeString,
+                                             position.longitude);
+  result &= coords_object->SetPropertyDouble(kAccuracyString,
+                                             position.accuracy);
 
   // Other properties may not be valid.
   if (position.altitude > kBadAltitude) {
-    result &= position_object->SetPropertyDouble(STRING16(L"altitude"),
+    result &= position_object->SetPropertyDouble(kAltitudeString,
                                                  position.altitude);
+    result &= coords_object->SetPropertyDouble(kAltitudeString,
+                                               position.altitude);
   }
   if (position.altitude_accuracy >= 0.0) {
-    result &= position_object->SetPropertyDouble(STRING16(L"altitudeAccuracy"),
+    result &= position_object->SetPropertyDouble(kAltitudeAccuracyString,
                                                  position.altitude_accuracy);
+    result &= coords_object->SetPropertyDouble(kAltitudeAccuracyString,
+                                               position.altitude_accuracy);
   }
+
+  result &= position_object->SetPropertyObject(STRING16(L"coords"),
+                                               coords_object.get());
 
   // Address
   if (use_address) {
     scoped_ptr<JsObject> address_object(js_runner->NewObject());
-    if (address_object.get()) {
-      result &= CreateJavaScriptAddressObject(position.address,
-                                              address_object.get());
-      // Only add the address object if it has some properties.
-      std::vector<std::string16> properties;
-      if (address_object.get()->GetPropertyNames(&properties) &&
-          !properties.empty()) {
-        result &= position_object->SetPropertyObject(STRING16(L"gearsAddress"),
-                                                     address_object.get());
-      }
-    } else {
-      result = false;
+    if (!address_object.get()) {
+      assert(false);
+      return false;
+    }
+    result &= CreateJavaScriptAddressObject(position.address,
+                                            address_object.get());
+    // Only add the address object if it has some properties.
+    std::vector<std::string16> properties;
+    if (address_object.get()->GetPropertyNames(&properties) &&
+        !properties.empty()) {
+      result &= position_object->SetPropertyObject(STRING16(L"gearsAddress"),
+                                                   address_object.get());
     }
   }
 
