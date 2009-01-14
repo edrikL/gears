@@ -32,13 +32,20 @@
 function testSynchronizationStressTest() {
   startAsync();
 
-  var NUM_WORKERS = 10;  // set >= 10 to break Firefox (2007/02/22)
+  // TODO(steveblock): Once the unit tests are stable on WinCE, we should
+  // revisit the values below to find out exactly what's going on.
+
+  // WinCE: Tests timeout if > 5
+  // Other platforms: set >= 10 to break Firefox (2007/02/22)
+  var NUM_WORKERS = isWince ? 5 : 10;
   var workerIndexToWorkerId = [];
   var workerIdToWorkerIndex = [];
   var totalMessagesReceived = 0;
   var nextValueToRecvFromWorkerId = []; // [worker] -> value
   var NUM_REQUEST_LOOPS = 5;            // set workers * requests * responses
-  var NUM_RESPONSES_PER_REQUEST = 100;  // >= 10000 to break IE (2007/02/22)
+  // WinCE: Tests timeout if > 50
+  // Other platforms: set >= 10000 to break IE (2007/02/22)
+  var NUM_RESPONSES_PER_REQUEST = isWince ? 50 : 100;
   var EXPECTED_RESPONSES_PER_WORKER =
     NUM_REQUEST_LOOPS * NUM_RESPONSES_PER_REQUEST;
 
