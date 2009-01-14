@@ -157,23 +157,23 @@ function testGetLocationFromResponse() {
 
     // Test good response with valid position.
     var responseBody = '{ ' +
-                       '"location" : { ' +
-                       '"latitude" : 53.1, ' +
-                       '"longitude" : -0.1, ' +
-                       '"altitude" : 30.1, ' +
-                       '"accuracy" : 1200.1, ' +
-                       '"altitude_accuracy" : 10.1, ' +
-                       '"address" : { ' +
-                       '"street_number": "100", ' +
-                       '"street": "Amphibian Walkway", ' +
-                       '"city": "Mountain View", ' +
-                       '"county": "Mountain View County", ' +
-                       '"region": "California", ' +
-                       '"country": "United States of America", ' +
-                       '"country_code": "US", ' +
-                       '"postal_code": "94043" ' +
-                       '} ' +
-                       '} ' +
+                       '  "location" : { ' +
+                       '    "latitude" : 53.1, ' +
+                       '    "longitude" : -0.1, ' +
+                       '    "altitude" : 30.1, ' +
+                       '    "accuracy" : 1200.1, ' +
+                       '    "altitude_accuracy" : 10.1, ' +
+                       '    "address" : { ' +
+                       '      "street_number": "100", ' +
+                       '      "street": "Amphibian Walkway", ' +
+                       '      "city": "Mountain View", ' +
+                       '      "county": "Mountain View County", ' +
+                       '      "region": "California", ' +
+                       '      "country": "United States of America", ' +
+                       '      "country_code": "US", ' +
+                       '      "postal_code": "94043" ' +
+                       '    } ' +
+                       '  } ' +
                        '}';
     position = internalTests.testGeolocationGetLocationFromResponse(
         true,  // HttpPost result
@@ -181,43 +181,52 @@ function testGetLocationFromResponse() {
         responseBody,
         42,    // timestamp
         '');   // server URL
-    correctPosition = new Object();
-    correctPosition.latitude = 53.1;
-    correctPosition.longitude = -0.1;
-    correctPosition.altitude = 30.1;
-    correctPosition.accuracy = 1200.1;
-    correctPosition.altitudeAccuracy = 10.1;
-    correctPosition.gearsAddress = new Object();
-    correctPosition.gearsAddress.streetNumber = '100';
-    correctPosition.gearsAddress.street = 'Amphibian Walkway';
-    correctPosition.gearsAddress.city = 'Mountain View';
-    correctPosition.gearsAddress.county = 'Mountain View County';
-    correctPosition.gearsAddress.region = 'California';
-    correctPosition.gearsAddress.country = 'United States of America';
-    correctPosition.gearsAddress.countryCode = 'US';
-    correctPosition.gearsAddress.postalCode = '94043';
-    correctPosition.timestamp = new Date(42);
+    correctPosition = {
+      latitude: 53.1,
+      longitude: -0.1,
+      altitude: 30.1,
+      accuracy: 1200.1,
+      altitudeAccuracy: 10.1,
+      coords: {
+        latitude: 53.1,
+        longitude: -0.1,
+        altitude: 30.1,
+        accuracy: 1200.1,
+        altitudeAccuracy: 10.1
+      },
+      gearsAddress: {
+        streetNumber: '100',
+        street: 'Amphibian Walkway',
+        city: 'Mountain View',
+        county: 'Mountain View County',
+        region: 'California',
+        country: 'United States of America',
+        countryCode: 'US',
+        postalCode: '94043'
+      },
+      timestamp: new Date(42)
+    };
     assertObjectEqual(correctPosition, position);
 
     // We should also accept integer values for floating point fields.
     var responseBody = '{ ' +
-                       '"location" : { ' +
-                       '"latitude" : 53, ' +
-                       '"longitude" : 0, ' +
-                       '"altitude" : 30, ' +
-                       '"accuracy" : 1200, ' +
-                       '"altitude_accuracy" : 10, ' +
-                       '"address" : { ' +
-                       '"street_number": "100", ' +
-                       '"street": "Amphibian Walkway", ' +
-                       '"city": "Mountain View", ' +
-                       '"county": "Mountain View County", ' +
-                       '"region": "California", ' +
-                       '"country": "United States of America", ' +
-                       '"country_code": "US", ' +
-                       '"postal_code": "94043" ' +
-                       '} ' +
-                       '} ' +
+                       '  "location" : { ' +
+                       '    "latitude" : 53, ' +
+                       '    "longitude" : 0, ' +
+                       '    "altitude" : 30, ' +
+                       '    "accuracy" : 1200, ' +
+                       '    "altitude_accuracy" : 10, ' +
+                       '    "address" : { ' +
+                       '      "street_number": "100", ' +
+                       '      "street": "Amphibian Walkway", ' +
+                       '      "city": "Mountain View", ' +
+                       '      "county": "Mountain View County", ' +
+                       '      "region": "California", ' +
+                       '      "country": "United States of America", ' +
+                       '      "country_code": "US", ' +
+                       '      "postal_code": "94043" ' +
+                       '    } ' +
+                       '  } ' +
                        '}';
     position = internalTests.testGeolocationGetLocationFromResponse(
         true,  // HttpPost result
@@ -230,6 +239,13 @@ function testGetLocationFromResponse() {
     correctPosition.altitude = 30;
     correctPosition.accuracy = 1200;
     correctPosition.altitudeAccuracy = 10;
+    correctPosition.coords = {
+      latitude: 53,
+      longitude: 0,
+      altitude: 30,
+      accuracy: 1200,
+      altitudeAccuracy: 10
+    };
     assertObjectEqual(correctPosition, position);
 
     // Test no response.
@@ -356,6 +372,13 @@ function testMockDeviceDataProvider() {
         altitude: 30,
         accuracy: 1200,
         altitudeAccuracy: 10,
+        coords: {
+          latitude: 51.59,
+          longitude: -1.49,
+          altitude: 30,
+          accuracy: 1200,
+          altitudeAccuracy: 10
+        },
         gearsAddress: {
           streetNumber: '76',
           street: 'Buckingham Palace Road',
@@ -367,7 +390,7 @@ function testMockDeviceDataProvider() {
           countryCode: 'uk'
         }
       };
-      position.timestamp = undefined;
+      delete position.timestamp;
       assertObjectEqual(correctPosition, position);
       makeUnsuccessfulRequest();
     };
@@ -397,13 +420,17 @@ function testMockProvider() {
     var mockPosition = {
       latitude: 51.0,
       longitude: -0.1,
-      accuracy: 100.1
+      accuracy: 100.1,
+      coords: {
+        latitude: 51.0,
+        longitude: -0.1,
+        accuracy: 100.1
+      }
     };
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     function locationAvailable(position) {
-      assertEqualAnyType(mockPosition.latitude, position.latitude);
-      assertEqualAnyType(mockPosition.longitude, position.longitude);
-      assertEqualAnyType(mockPosition.accuracy, position.accuracy);
+      delete position.timestamp;
+      assertObjectEqual(mockPosition, position);
       internalTests.removeGeolocationMockLocationProvider();
       completeAsync();
     };
@@ -448,14 +475,19 @@ function testMockGpsDevice() {
       var mockPositionOne = {
         latitude: -33.0,
         longitude: 137.0,
-        accuracy: 100.0
+        accuracy: 100.0,
+        coords: {
+          latitude: -33.0,
+          longitude: 137.0,
+          accuracy: 100.0
+        }
       };
       function setPositionOne() {
         internalTests.configureGeolocationMockGpsDeviceForTest(mockPositionOne);
         geolocation.getCurrentPosition(callbackOne, null, options);
       }
       function callbackOne(position) {
-        position.timestamp = undefined;
+        delete position.timestamp;
         assertObjectEqual(mockPositionOne, position);
         setPositionTwo();
       }
@@ -463,14 +495,19 @@ function testMockGpsDevice() {
       var mockPositionTwo = {
         latitude: 45.0,
         longitude: -100.0,
-        accuracy: 100.0
+        accuracy: 100.0,
+        coords: {
+          latitude: 45.0,
+          longitude: -100.0,
+          accuracy: 100.0
+        }
       };
       function setPositionTwo() {
         internalTests.configureGeolocationMockGpsDeviceForTest(mockPositionTwo);
         geolocation.getCurrentPosition(callbackTwo, null, options);
       }
       function callbackTwo(position) {
-        position.timestamp = undefined;
+        delete position.timestamp;
         assertObjectEqual(mockPositionTwo, position);
         completeAsync();
       }
@@ -505,18 +542,21 @@ function testReverseGeocoding() {
         gearsLocationProviderUrls: [reverseGeocoder]
       };
 
+      // The address is hard-coded in reverse_geocoder.py.
       var mockGpsPosition = {
         latitude: 0.1,
         longitude: 2.3,
         altitude: 4,
         accuracy: 5,
-        altitudeAccuracy: 6
-      };
-
-      function successCallback(position) {
-        var correctPosition = mockGpsPosition;
-        // This is hard-coded in reverse_geocoder.py.
-        correctPosition.gearsAddress = {
+        altitudeAccuracy: 6,
+        coords: {
+          latitude: 0.1,
+          longitude: 2.3,
+          altitude: 4,
+          accuracy: 5,
+          altitudeAccuracy: 6
+        },
+        gearsAddress: {
           streetNumber: '76',
           street: 'Buckingham Palace Road',
           postalCode: 'SW1W 9TQ',
@@ -525,9 +565,12 @@ function testReverseGeocoding() {
           region: 'London',
           country: 'United Kingdom',
           countryCode: 'uk'
-        };
-        position.timestamp = undefined;
-        assertObjectEqual(correctPosition, position);
+        }
+      };
+
+      function successCallback(position) {
+        delete position.timestamp;
+        assertObjectEqual(mockGpsPosition, position);
         completeAsync();
       }
 
@@ -554,7 +597,12 @@ function testTimeout() {
     var mockPosition = {
       latitude: 51.0,
       longitude: -0.1,
-      accuracy: 100.1
+      accuracy: 100.1,
+      coords: {
+        latitude: 51.0,
+        longitude: -0.1,
+        accuracy: 100.1
+      }
     };
     internalTests.configureGeolocationMockLocationProviderForTest(mockPosition);
     function locationAvailable(position) {
@@ -581,12 +629,22 @@ function testWatchTimeout() {
     var mockPosition1 = {
       latitude: 51.0,
       longitude: -0.1,
-      accuracy: 100.1
+      accuracy: 100.1,
+      coords: {
+        latitude: 51.0,
+        longitude: -0.1,
+        accuracy: 100.1
+      }
     };
     var mockPosition2 = {
       latitude: 52.0,
       longitude: -1.1,
-      accuracy: 101.1
+      accuracy: 101.1,
+      coords: {
+        latitude: 52.0,
+        longitude: -1.1,
+        accuracy: 101.1
+      }
     };
     var state = 0;
     function successCallback(position) {
@@ -683,7 +741,12 @@ function PopulateCachedPosition(geolocation, successFunction) {
 var positionToCache = {
   latitude: 51.0,
   longitude: -0.1,
-  accuracy: 1.0
+  accuracy: 1.0,
+  coords: {
+    latitude: 51.0,
+    longitude: -0.1,
+    accuracy: 1.0
+  }
 };
 
 // Helper function for testCachedPositionXXX tests
