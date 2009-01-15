@@ -31,8 +31,7 @@
 // TODO(michaeln): figure out if it's safe to initialize this tls_index_ here or
 // not. It's set in when DllMain(processAttached) is called, will initializing
 // it via the CRT squash that value set via DllMain?
-#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
-// For IE, IE Mobile, Chrome and Opera, we use the platform type and value.
+#ifdef USE_WIN32_TLS
 #ifdef OS_WINCE
 // On Windows Mobile 5 TLS_OUT_OF_INDEXES is undefined.
 // On Windows Mobile 6 TLS_OUT_OF_INDEXES is defined to 0xffffffff
@@ -42,10 +41,10 @@ const DWORD kNoIndex = 0xffffffff;
 const DWORD kNoIndex = TLS_OUT_OF_INDEXES;
 #endif
 DWORD ThreadLocals::tls_index_;
-#elif BROWSER_FF
+#elif USE_NSPR_TLS
 const PRUintn kNoIndex = 0xffffffff;
 PRUintn ThreadLocals::tls_index_;
-#elif BROWSER_SAFARI || defined(ANDROID)
+#elif USE_POSIX_TLS
 pthread_once_t ThreadLocals::tls_index_init_ = PTHREAD_ONCE_INIT;
 pthread_key_t ThreadLocals::tls_index_;
 #endif
@@ -124,7 +123,9 @@ void ThreadLocals::DestroyValue(Slot key) {
 // GetEntries
 //------------------------------------------------------------------------------
 ThreadLocals::Entry *ThreadLocals::GetEntries(bool createIfNeeded) {
-#if !BROWSER_SAFARI && !defined(ANDROID)
+#ifdef USE_POSIX_TLS
+  // kNoIndex is not defined for posix
+#else
   assert(tls_index_ != kNoIndex);
 #endif
   Entry *entries = GetTlsEntries();
@@ -168,11 +169,11 @@ void ThreadLocals::DestroyEntries(Entry* entries) {
 // SetTlsEntries
 //------------------------------------------------------------------------------
 void ThreadLocals::SetTlsEntries(Entry* entries) {
-#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
+#ifdef USE_WIN32_TLS
   ::TlsSetValue(tls_index_, entries);
-#elif BROWSER_FF
+#elif USE_NSPR_TLS
   PR_SetThreadPrivate(tls_index_, entries);
-#elif BROWSER_SAFARI || defined(ANDROID)
+#elif USE_POSIX_TLS
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
   pthread_setspecific(tls_index_, entries);
 #endif
@@ -183,18 +184,18 @@ void ThreadLocals::SetTlsEntries(Entry* entries) {
 // GetTlsEntries
 //------------------------------------------------------------------------------
 ThreadLocals::Entry* ThreadLocals::GetTlsEntries() {
-#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
+#ifdef USE_WIN32_TLS
   return reinterpret_cast<Entry*>(TlsGetValue(tls_index_));
-#elif BROWSER_FF
+#elif USE_NSPR_TLS
   return reinterpret_cast<Entry*>(PR_GetThreadPrivate(tls_index_));
-#elif BROWSER_SAFARI || defined(ANDROID)
+#elif USE_POSIX_TLS
   pthread_once(&tls_index_init_, ThreadLocals::InitializeKey);
   return reinterpret_cast<Entry*>(pthread_getspecific(tls_index_));
 #endif
 }
 
 
-#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
+#ifdef USE_WIN32_TLS
 
 //------------------------------------------------------------------------------
 // HandleProcessAttached
@@ -235,7 +236,7 @@ void ThreadLocals::HandleThreadDetached() {
   }
 }
 
-#elif BROWSER_FF
+#elif USE_NSPR_TLS
 
 //------------------------------------------------------------------------------
 // HandleModuleConstructed
@@ -258,7 +259,7 @@ void PR_CALLBACK ThreadLocals::TlsDestructor(void *priv) {
     DestroyEntries(reinterpret_cast<Entry*>(priv));
 }
 
-#elif BROWSER_SAFARI || defined(ANDROID)
+#elif USE_POSIX_TLS
 
 void ThreadLocals::InitializeKey() {
   pthread_key_create(&tls_index_, FinalizeKey);
