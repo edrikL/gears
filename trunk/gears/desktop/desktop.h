@@ -36,7 +36,6 @@
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-class GearsNotification;
 class HtmlDialog;
 class IpcMessageQueue;
 
@@ -124,22 +123,6 @@ class Desktop {
   bool FetchIcon(IconData *icon, std::string16 *error,
                  IconHandlerInterface *icon_handler);
 
-#if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
-  // The notification API has not been finalized for official builds.
-#else
-  // Call this after creating a notification to validate it.  Returns false
-  // if the notification fails validation checks, with an optional error
-  // message in error().
-  bool ValidateNotification(GearsNotification *notification);
-
-  // Handle all the every required to actually display the notification.
-  // Returns false on failure, with an optional error message in error().
-  // NOTE: It takes ownership of released_notification.
-  bool ValidateAndShowNotification(GearsNotification *released_notification);
-
-  bool ValidateAndRemoveNotification(GearsNotification *released_notification);
-#endif  // defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
-
   // Error message getters.
   bool has_error() { return !error_.empty(); }
   const std::string16 &error() { return error_; }
@@ -186,22 +169,6 @@ class GearsDesktop : public ModuleImplBaseClass {
   // IN: function callback, optional object open_file_options
   // OUT: void
   void OpenFiles(JsCallContext *context);
-
-#if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
-  // The notification API has not been finalized for official builds.
-#else
-  // IN: void
-  // OUT: void
-  void CreateNotification(JsCallContext *context);
-
-  // IN: notification object
-  // OUT: void
-  void ShowNotification(JsCallContext *context);
-
-  // IN: string id
-  // OUT: void
-  void RemoveNotification(JsCallContext *context);
-#endif  // defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 
 #if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 // The Drag-and-Drop API has not been finalized for official builds.

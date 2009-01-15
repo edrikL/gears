@@ -91,10 +91,6 @@ COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COM
 $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $($(BROWSER)_CPPSRCS) $($(BROWSER)_CSRCS))
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
 IPC_TEST_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(IPC_TEST_OUTDIR), $(IPC_TEST_CPPSRCS) $(IPC_TEST_CSRCS))
-NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS) $(NOTIFIER_CSRCS))
-NOTIFIER_PREFPANE_OBJS   = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_PREFPANE_CPPSRCS))
-NOTIFIER_SHELL_OBJS      = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_SHELL_CPPSRCS))
-NOTIFIER_TEST_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_TEST_CPPSRCS)  $(NOTIFIER_TEST_CSRCS))
 OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
@@ -141,10 +137,6 @@ DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IPC_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(NOTIFIER_PREFPANE_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(NOTIFIER_SHELL_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(NOTIFIER_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_CRASH_INSPECTOR_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SF_INSTALLER_PLUGIN_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -228,10 +220,6 @@ SF_INPUTMANAGER_EXE     = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 # exception_handler_win32.cc and exception_handler_osx/google_breakpad.mm.
 CRASH_SENDER_EXE        = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
 IPC_TEST_EXE            = $(IPC_TEST_OUTDIR)/$(EXE_PREFIX)ipc_test$(EXE_SUFFIX)
-NOTIFIER_DLL            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(DLL_SUFFIX)
-NOTIFIER_EXE            = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
-NOTIFIER_PREFPANE_EXE   = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_prefpane$(EXE_SUFFIX)
-NOTIFIER_TEST_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier_test$(EXE_SUFFIX)
 # Note: crash_inspector name needs to stay in sync with name used in
 # exception_handler_osx/google_breakpad.mm.
 OSX_CRASH_INSPECTOR_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_inspector$(EXE_SUFFIX)
@@ -247,8 +235,6 @@ PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 # TODO(aa): This can move to common_outdir like crash_sender.exe
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
-NOTIFIER_BUNDLE          = $(INSTALLERS_OUTDIR)/Safari/Notifier.app
-NOTIFIER_PREFPANE_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/GearsNotifier.prefPane
 
 SF_INSTALLER_PLUGIN_BUNDLE = $(INSTALLERS_OUTDIR)/Safari/StatsPane.bundle
 SF_PLUGIN_BUNDLE           = $(INSTALLERS_OUTDIR)/Safari/Gears.bundle
@@ -448,27 +434,10 @@ endif
 # BROWSER value set.
 ifeq ($(BROWSER), NONE)
 # If one of these OS names matches, the 'findstring' result is not empty.
-ifneq ($(findstring $(OS),linux|osx|win32),)
-modules:: $(NOTIFIER_TEST_EXE) $(NOTIFIER_EXE)
-endif
-ifeq ($(OS),osx)
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-modules::$(NOTIFIER_PREFPANE_EXE)
-endif
-endif
 ifeq ($(OS),win32)
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
-modules:: $(CRASH_SENDER_EXE) $(NOTIFIER_DLL)
-endif
-ifeq ($(OS),osx)
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-modules:: $(NOTIFIER_BUNDLE) $(NOTIFIER_PREFPANE_BUNDLE)
-endif
+modules:: $(CRASH_SENDER_EXE)
 endif
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
@@ -797,9 +766,6 @@ $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 $(OPERA_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_OPERA=1 $<
 
-$(COMMON_OUTDIR)/%.res: %.rc $(NOTIFIER_RESOURCES)
-	$(RC) $(RCFLAGS) $<
-
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
 
@@ -1082,32 +1048,6 @@ $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(STRIP_EXECUTABLE)
 endif
 
-ifeq ($(OS),win32)
-$(NOTIFIER_EXE): $(NOTIFIER_SHELL_OBJS) $(NOTIFIER_SHELL_LINK_EXTRAS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_SHELL_OBJS) $(NOTIFIER_SHELL_LINK_EXTRAS) $(NOTIFIER_SHELL_LIBS)
-$(NOTIFIER_DLL): $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS)
-	$(ECHO) $(NOTIFIER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(ECHO) $(BREAKPAD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
-	$(MKDLL) $(DLLFLAGS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
-	rm $(OUTDIR)/obj_list.temp
-else
-$(NOTIFIER_EXE): $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS) $(BREAKPAD_OBJS) $(NOTIFIER_LINK_EXTRAS) $(NOTIFIER_LIBS)
-ifeq ($(OS),osx)
-# Dump the symbols and strip the executable
-# TODO: This triggers an assert in dump_syms, figure this out and uncomment.
-#	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a ppc $@ > $@_ppc.symbols
-#	../third_party/breakpad_osx/src/tools/mac/dump_syms/dump_syms -a i386 $@ > $@_i386.symbols
-	$(STRIP_EXECUTABLE)
-endif
-endif
-
-$(NOTIFIER_PREFPANE_EXE): $(NOTIFIER_PREFPANE_OBJS)
-	$(MKEXE) $(EXEFLAGS) -bundle $(NOTIFIER_PREFPANE_OBJS) -framework PreferencePanes
-
-$(NOTIFIER_TEST_EXE): $(NOTIFIER_TEST_OBJS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_TEST_OBJS) $(NOTIFIER_LIBS)
-
 ifeq ($(USING_CCTESTS),1)
 $(IPC_TEST_EXE): $(IPC_TEST_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(IPC_TEST_OBJS) $(IPC_LIBS)
@@ -1220,20 +1160,8 @@ endif
 	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
 ifeq ($(OS),osx)
 	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-	cp -r $(NOTIFIER_BUNDLE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
-endif
 else # not OSX
 ifeq ($(OS),linux)
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-	cp $(NOTIFIER_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/
-	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/notifier_resources
-	cp -r $(NOTIFIER_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/notifier_resources
-endif
 else # not LINUX (and not OSX)
 ifeq ($(MODE),dbg)
 ifdef IS_WIN32_OR_WINCE
@@ -1243,9 +1171,6 @@ endif
 endif
 endif # not LINUX
 endif # not OSX
-ifeq ($(USING_CCTESTS),1)
-	cp $(NOTIFIER_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-endif
 ifeq ($(USING_CCTESTS),1)
 	cp $(IPC_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif
@@ -1304,43 +1229,6 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_E
 # Copy ipc_test
 ifeq ($(USING_CCTESTS),1)
 	cp "$(IPC_TEST_EXE)" "$@/Contents/Resources/"
-endif
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-# Copy notifier.app and prefpane
-# Must run make BROWSER=NONE prior to this
-	cp -r $(NOTIFIER_BUNDLE) $@/Contents/Resources/
-	cp -r $(NOTIFIER_PREFPANE_BUNDLE) $@/Contents/Resources/
-endif
-
-ifeq ($(OFFICIAL_BUILD),1)
-# Notifier is not yet part of the official build
-else
-$(NOTIFIER_BUNDLE): $(NOTIFIER_EXE) $(COMMON_M4FILES)
-	rm -rf $@
-# Create notifier bundle
-	mkdir -p $@/Contents/MacOS/
-	mkdir -p $@/Contents/Resources/
-	cp $(COMMON_OUTDIR)/genfiles/Notifier-Info.plist $@/Contents/Info.plist
-# Copy notifier exe
-	cp -r $(NOTIFIER_EXE) $@/Contents/MacOS/
-# Copy notifier resources
-	cp $(NOTIFIER_RESOURCES) $@/Contents/Resources/
-
-$(NOTIFIER_PREFPANE_BUNDLE): $(NOTIFIER_PREFPANE_EXE) $(NOTIFIER_PREFPANE_NIB) $(NOTIFIER_PREFPANE_STRINGS) $(NOTIFIER_PREFPANE_RESOURCES) $(COMMON_M4FILES)
-	rm -rf $@
-	mkdir -p $@/Contents/MacOS/
-	mkdir -p $@/Contents/Resources/
-	cp -r $(NOTIFIER_PREFPANE_EXE) $@/Contents/MacOS/
-# TODO(chimene): automate version info
-	cp $(COMMON_OUTDIR)/genfiles/Prefpane-Info.plist $@/Contents/Info.plist
-# TODO(chimene): Localization of nib file
-	mkdir -p $@/Contents/Resources/English.lproj/
-# TODO(chimene): Don't copy designable.nib
-	cp -r $(NOTIFIER_PREFPANE_NIB) $@/Contents/Resources/English.lproj/
-	cp $(NOTIFIER_PREFPANE_STRINGS) $@/Contents/Resources/English.lproj/
-	cp $(NOTIFIER_PREFPANE_RESOURCES) $@/Contents/Resources/
 endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)

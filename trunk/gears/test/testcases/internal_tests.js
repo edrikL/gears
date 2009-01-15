@@ -269,12 +269,6 @@ function testBrowserCache() {
   }
 }
 
-function testNotifier() {
-  if (isUsingCCTests && !isOfficial) {
-    internalTests.testNotifier();
-  }
-}
-
 function testAsyncTaskPostCookies() {
   // TODO(steveblock): Enable this test for Chrome when bug 1301226 is fixed.
   if (isUsingCCTests && !(isWin32 && isNPAPI)) {

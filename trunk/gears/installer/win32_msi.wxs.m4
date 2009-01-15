@@ -114,14 +114,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
             <!-- IMPORTANT: the OurShared* 'Name' fields MUST match the WIN32 paths in /{firefox,ie}/PathUtils.cc -->
             <Directory Id='OurSharedDir' Name='Shared'>
-              <Component Id='OurSharedDirFiles' Guid='$(var.OurComponentGUID_SharedFiles)'>
-                <File Id='notifier_exe' Name='notifier.exe' DiskId='1'
-                  Source="$(var.OurCommonPath)/notifier.exe" />
-              </Component>
               <Directory Id='OurSharedVersionedDir' Name='PRODUCT_VERSION'>
                 <Component Id='OurSharedVersionedDirFiles' Guid='$(var.OurComponentGUID_SharedVersionedFiles)'>
-                  <File Id='notifier_dll' Name='notifier.dll' DiskId='1'
-                    Source="$(var.OurCommonPath)/notifier.dll" />
                   <File Id='shared_crash_sender' Name='crash_sender.exe' DiskId='1'
                     Source="$(var.OurCommonPath)/crash_sender.exe" />
 m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
@@ -158,8 +152,6 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
                     Source="$(var.OurIEPath)/vista_broker.pdb" />
 `~)
 m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
-                  <File Id='ie_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
-                    Source="$(var.OurCommonPath)/notifier_test.exe" />
                   <File Id='ie_ipc_test_exe' Name='ipc_test.exe' DiskId='1'
                     Source="$(var.OurIpcTestPath)/ipc_test.exe" />
 `~)
@@ -205,8 +197,6 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
 m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
-                  <File Id='ff_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
-                    Source="$(var.OurCommonPath)/notifier_test.exe" />
                   <File Id='ff_ipc_test_exe' Name='ipc_test.exe' DiskId='1'
                     Source="$(var.OurIpcTestPath)/ipc_test.exe" />
 `~)
@@ -282,7 +272,6 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='OurFFComponentsDirFiles' />
       <ComponentRef Id='OurFFLibDirFiles' />
       <ComponentRef Id='OurFFContentDirFiles' />
-      <ComponentRef Id='OurSharedDirFiles' />
       <ComponentRef Id='OurSharedVersionedDirFiles' />
 m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='~`OurFF`~m4_underscore(LANG)~`DirFiles`~' />
