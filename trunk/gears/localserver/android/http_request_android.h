@@ -342,7 +342,7 @@ class HttpRequestAndroid : public HttpRequest,
   // Method IDs. Must match the order in java_methods_.
   enum JavaMethod {
     JAVA_METHOD_CONSTRUCTOR = 0,
-    JAVA_METHOD_ENABLE_LOGGING,
+    JAVA_METHOD_SET_CONTENT_LENGTH,
     JAVA_METHOD_INIT_CHILD_THREAD,
     JAVA_METHOD_SET_REQUEST_HEADER,
     JAVA_METHOD_GET_REQUEST_HEADER,
