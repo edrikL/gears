@@ -52,6 +52,7 @@ geographical position.</p>
       <li><a href="#position">Position class</a></li>
       <li><a href="#positionoptions">PositionOptions class</a></li>      
       <li><a href="#positionerror">PositionError class</a></li>
+      <li><a href="#coords">Coords class</a></li>
       <li><a href="#address">Address class</a></li>
     </ol>
     </li>
@@ -117,13 +118,14 @@ geo.getCurrentPosition(updatePosition, handleError);
   boolean getPermission([siteName], [imageUrl], [extraMessage])</code></pre>
   
 <pre><code><a href="#position">Position class</a>
+  readonly attribute Date timestamp
+  readonly attribute Coords coords
+  readonly attribute Address gearsAddress
   readonly attribute double latitude
   readonly attribute double longitude
   readonly attribute double accuracy
   readonly attribute double altitude
-  readonly attribute double altitudeAccuracy
-  readonly attribute Date timestamp
-  readonly attribute Address gearsAddress</code></pre>
+  readonly attribute double altitudeAccuracy</code></pre>
 
 <pre><code><a href="#positionoptions">PositionOptions class</a>
   readwrite attribute bool enableHighAccuracy
@@ -140,6 +142,13 @@ geo.getCurrentPosition(updatePosition, handleError);
   readonly attribute int TIMEOUT
   readonly attribute int code
   readonly attribute string message</code></pre>
+
+<pre><code><a href="#coords">Coords class</a>
+  readonly attribute double latitude
+  readonly attribute double longitude
+  readonly attribute double accuracy
+  readonly attribute double altitude
+  readonly attribute double altitudeAccuracy</code></pre>
 
 <pre><code><a href="#address">Address class</a>
   readonly attribute string streetNumber
@@ -163,7 +172,7 @@ geo.getCurrentPosition(updatePosition, handleError);
 </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">This method has no return value.</td>
+    <td class="code">This method has no return value.</td>
   </tr>
 <tr class="odd">
 <td>Parameters:</td>
@@ -208,7 +217,7 @@ watchPosition(function successCallback,
 </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">A unique watch identifier.</td>
+    <td class="code">A unique watch identifier.</td>
   </tr>
 <tr class="odd">
 <td>Parameters:</td>
@@ -256,7 +265,7 @@ The signature of the error callback is:<br />
   </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">This method has no return value.</td>
+    <td class="code">This method has no return value.</td>
   </tr>
   <tr class="odd">
 <td>Parameter:</td>
@@ -275,7 +284,7 @@ The signature of the error callback is:<br />
   </tr>
   <tr class="odd">
     <td width="113">Return value:</td>
-    <td width="550" class="odd">Indicates whether the site has permission to access the user's location through Gears.</td>
+    <td class="odd">Indicates whether the site has permission to access the user's location through Gears.</td>
 </tr>
   <tr class="odd">
     <td>Parameters:</td>
@@ -305,9 +314,9 @@ show those that are specified.    </td>
 
 <table>
 <tr class="odd">
-  <th width="158">Attribute</th>
-  <th width="109">Type</th>
-  <th width="432">Description</th>
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
 </tr>
 <tr class="odd">
   <td><strong><a name="lastPosition" id="lastPosition"></a>lastPosition</strong></td>
@@ -331,48 +340,51 @@ show those that are specified.    </td>
 
 <table>
 <tr class="odd">
-  <th width="158">Attribute</th>
-  <th width="109">Type</th>
-  <th width="432">Description</th>
-</tr>
-<tr class="odd">
-  <td width="158"><strong>latitude</strong></td>
-  <td width="109" >readonly double</td>
-  <td width="432" > Latitude in degrees using the World Geodetic System 1984
-  (WGS84) datum.</td>
-</tr>
-<tr class="odd">
-  <td><strong>longitude</strong></td>
-  <td class="" >readonly double</td>
-  <td class="" > Longitude in degrees (WGS84 datum).</td>
-</tr>
-<tr class="odd">
-  <td><strong>accuracy</strong></td>
-  <td class="odd">readonly double</td>
-  <td class="odd">The horizontal accuracy of the position in meters, or null
-  if not available.</td>
-</tr>
-<tr class="odd">
-  <td><strong>altitude</strong></td>
-  <td class="odd">readonly double</td>
-  <td class="odd"> Height in meters (WGS84 datum), or null if not available.</td>
-</tr>
-<tr class="odd">
-  <td><strong>altitudeAccuracy</strong></td>
-  <td class="odd">readonly double </td>
-  <td class="odd">The vertical accuracy of the position in meters, or null
-  if not available.</td>
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
 </tr>
 <tr class="odd">
   <td><strong>timestamp</strong></td>
   <td class="odd">readonly Date</td>
-  <td class="odd"> The time when the location was established.</td>
+  <td class="odd">The time when the location was established.</td>
+</tr>
+<tr class="odd">
+  <td><strong>coords</strong></td>
+  <td class="odd">readonly Coords</td>
+  <td class="odd">The coordinates of the position, expressed as a latitude, longitude and altitude.
+  See <code><a href="#coords">Coords</a></code>.</td>
 </tr>
 <tr class="odd">
   <td><strong>gearsAddress</strong></td>
   <td class="odd">readonly Address</td>
-  <td class="odd"> A reverse-geocoded address, if requested and available.
+  <td class="odd">A reverse-geocoded address, if requested and available.
   See <code><a href="#address">Address</a></code>.</td>
+</tr>
+<tr class="odd">
+  <td><strong>latitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">Deprecated. Applications should use Position.coords.latitude.</td>
+</tr>
+<tr class="odd">
+  <td><strong>longitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">Deprecated. Applications should use Position.coords.longitude.</td>
+</tr>
+<tr class="odd">
+  <td><strong>accuracy</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">Deprecated. Applications should use Position.coords.accuracy.</td>
+</tr>
+<tr class="odd">
+  <td><strong>altitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">Deprecated. Applications should use Position.coords.altitude.</td>
+</tr>
+<tr class="odd">
+  <td><strong>altitudeAccuracy</strong></td>
+  <td class="odd">readonly double </td>
+  <td class="odd">Deprecated. Applications should use Position.coords.altitudeAccuracy.</td>
 </tr>
 </table>
 
@@ -383,9 +395,9 @@ show those that are specified.    </td>
 
 <table>
 <tr class="odd">
-  <th width="158">Attribute</th>
-  <th width="109">Type</th>
-  <th width="432">Description</th>
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
 </tr>
 <tr class="odd">
   <td><strong><a name="enableHigh" id="enableHigh"></a>enableHighAccuracy</strong></td>
@@ -451,9 +463,9 @@ show those that are specified.    </td>
 
 <table>
 <tr class="odd">
-  <th width="158">Attribute</th>
-  <th width="109">Type</th>
-  <th width="500">Description</th>
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
 </tr>
 <tr class="odd">
   <td><strong>UNKNOWN_ERROR</strong></td>
@@ -500,15 +512,56 @@ show those that are specified.    </td>
 </table>
 
 
+<h2 id="coords">Coords class</h2> 
+
+<h3>Attributes</h3>
+
+<table>
+<tr class="odd">
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
+</tr>
+<tr class="odd">
+  <td><strong>latitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd"> Latitude in degrees using the World Geodetic System 1984
+  (WGS84) datum.</td>
+</tr>
+<tr class="odd">
+  <td><strong>longitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd"> Longitude in degrees (WGS84 datum).</td>
+</tr>
+<tr class="odd">
+  <td><strong>accuracy</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">The horizontal accuracy of the position in meters, or null
+  if not available.</td>
+</tr>
+<tr class="odd">
+  <td><strong>altitude</strong></td>
+  <td class="odd">readonly double</td>
+  <td class="odd">Height in meters (WGS84 datum), or null if not available.</td>
+</tr>
+<tr class="odd">
+  <td><strong>altitudeAccuracy</strong></td>
+  <td class="odd">readonly double </td>
+  <td class="odd">The vertical accuracy of the position in meters, or null
+  if not available.</td>
+</tr>
+</table>
+
+
 <h2 id="address">Address class</h2> 
 
 <h3>Attributes</h3>
 
 <table>
 <tr class="odd">
-  <th width="158">Attribute</th>
-  <th width="109">Type</th>
-  <th width="432">Description</th>
+  <th width="170">Attribute</th>
+  <th width="110">Type</th>
+  <th>Description</th>
 </tr>
 <tr class="odd">
   <td><strong>streetNumber</strong></td>
