@@ -102,13 +102,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])</code></pre>
   
 <pre><code><a href="api_geolocation.html#position">Position class</a>
+   readonly attribute Date    <b>timestamp</b>
+   readonly attribute Coords  <b>coords</b>
+   readonly attribute Address <b>gearsAddress</b>
    readonly attribute double  <b>latitude</b>
    readonly attribute double  <b>longitude</b>
    readonly attribute double  <b>accuracy</b>
    readonly attribute double  <b>altitude</b>
-   readonly attribute double  <b>altitudeAccuracy</b>
-   readonly attribute Date    <b>timestamp</b>
-   readonly attribute Address <b>gearsAddress</b></code></pre>
+   readonly attribute double  <b>altitudeAccuracy</b></code></pre>
 
 <pre><code><a href="api_geolocation.html#positionoptions">PositionOptions class</a>
    readwrite attribute bool     <b>enableHighAccuracy</b>
@@ -125,6 +126,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly attribute int    <b>TIMEOUT</b>
    readonly attribute int    <b>code</b>
    readonly attribute string <b>message</b></code></pre>
+
+<pre><code><a href="api_geolocation.html#coords">Coords class</a>
+   readonly attribute double <b>latitude</b>
+   readonly attribute double <b>longitude</b>
+   readonly attribute double <b>accuracy</b>
+   readonly attribute double <b>altitude</b>
+   readonly attribute double <b>altitudeAccuracy</b></code></pre>
 
 <pre><code><a href="api_geolocation.html#address">Address class</a>
    readonly attribute string <b>streetNumber</b>
