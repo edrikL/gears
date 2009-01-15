@@ -29,7 +29,18 @@
 #include <map>
 #include "gears/base/common/common.h"
 
-#if BROWSER_SAFARI || defined(ANDROID)
+#undef USE_NSPR_TLS
+#undef USE_WIN32_TLS
+#undef USE_POSIX_TLS
+
+#if BROWSER_FF
+// we use NSPR for all firefox builds regardless of OS
+#define USE_NSPR_TLS 1
+#elif defined(WIN32)
+#define USE_WIN32_TLS 1
+#else
+// we assume posix
+#define USE_POSIX_TLS 1
 #include <pthread.h>
 #endif
 
@@ -104,7 +115,7 @@ class ThreadLocals {
   static void SetTlsEntries(Entry* map);
   static Entry* GetTlsEntries();
 
-#if BROWSER_IE || BROWSER_IEMOBILE || BROWSER_CHROME || BROWSER_OPERA
+#ifdef USE_WIN32_TLS
   // We use one thread-local storage slot from the OS and keeps a map
   // in that slot. This is the index of that slot as returned by TlsAlloc.
   static DWORD tls_index_;
@@ -125,7 +136,8 @@ class ThreadLocals {
 
   // Should be called when a thread is terminating.
   static void HandleThreadDetached();
-#elif BROWSER_FF
+
+#elif USE_NSPR_TLS
   // We use one thread-local storage slot from the OS and keeps a map
   // in that slot. This is the index of that slot as returned by TlsAlloc.
   static PRUintn tls_index_;
@@ -145,7 +157,8 @@ class ThreadLocals {
 
   // Called by NSPR when the value in our TLS slot is destructed.
   static void PR_CALLBACK TlsDestructor(void *priv);
-#elif BROWSER_SAFARI || defined(ANDROID)
+
+#elif USE_POSIX_TLS
   // The pthread key to use to save the map
   static pthread_key_t tls_index_;
 
