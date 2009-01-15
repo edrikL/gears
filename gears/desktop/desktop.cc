@@ -47,8 +47,6 @@
 #include "gears/blob/blob_interface.h"
 #include "gears/desktop/drop_target_registration.h"
 #include "gears/desktop/file_dialog.h"
-#include "gears/desktop/notification_message_orderer.h"
-#include "gears/notifier/notification.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -73,18 +71,6 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("openFiles", &GearsDesktop::OpenFiles);
 
 #ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#ifdef OS_ANDROID
-  // The notification API has not been implemented for Android
-#else
-  RegisterMethod("createNotification", &GearsDesktop::CreateNotification);
-  RegisterMethod("removeNotification", &GearsDesktop::RemoveNotification);
-  RegisterMethod("showNotification", &GearsDesktop::ShowNotification);
-#endif  // OS_ANDROID
-#endif  // OFFICIAL_BUILD
-
-#ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
@@ -103,16 +89,6 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
 #else
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
-
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#ifdef OS_ANDROID
-  // The notification API has not been implemented for Android.
-#else
-static NotificationMessageOrderer g_notification_message_orderer;
-#endif  // OS_ANDROID
-#endif  // OFFICIAL_BUILD
 
 bool DecodeIcon(Desktop::IconData *icon, int expected_size,
                 std::string16 *error) {
@@ -147,11 +123,6 @@ bool DecodeIcon(Desktop::IconData *icon, int expected_size,
 
 GearsDesktop::GearsDesktop()
     : ModuleImplBaseClass("GearsDesktop") {
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-  GearsNotification::RegisterAsSerializable();
-#endif  // OFFICIAL_BUILD
 }
 
 Desktop::Desktop(const SecurityOrigin &security_origin,
@@ -852,195 +823,6 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   *url = full_url;
   return true;
 }
-
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#ifdef OS_ANDROID
-  // The notification API has not been implemented for Android.
-#else
-
-bool Desktop::ValidateNotification(GearsNotification *notification) {
-  assert(!has_error() && notification &&
-         !notification->security_origin().initialized());
-
-  // Associate the notification with its security orgin.
-  notification->set_security_origin(security_origin_);
-
-  // TODO(levin): validate actions with respect to the secruity origin.
-
-  // Handle the icon url.
-  // Normalize and resolve, in case this is a relative URL.
-  if (!notification->icon_url().empty()) {
-    if (!ResolveUrl(notification->mutable_icon_url(), &error_)) {
-      return false;
-    }
-
-    // We only allow icons to be retrieved within origin for now.
-    if (!IsDataUrl(notification->icon_url().c_str()) &&
-        !security_origin_.IsSameOriginAsUrl(notification->icon_url().c_str())) {
-      error_ = STRING16(L"Cannot use cross-origin notfications icons.");
-      return false;
-    }
-  }
-
-  return true;
-}
-
-class NotificationIconHandler : public Desktop::IconHandlerInterface {
- public:
-  explicit NotificationIconHandler(GearsNotification *released_notification)
-      : notification_(released_notification),
-        reservation_(g_notification_message_orderer.AddReservation(
-                         *released_notification)) {
-    icon_.url = notification_->icon_url();
-  }
-
-  ~NotificationIconHandler() {
-    if (reservation_ != NotificationMessageOrderer::kInvalidReservation) {
-      g_notification_message_orderer.RemoveReservation(reservation_);
-    }
-  }
-
-  virtual void set_abort_interface(Desktop::AbortInterface *) {
-    // Not used for now.
-  }
-
-  virtual Desktop::IconData *mutable_icon() {
-    return &icon_;
-  }
-
-  virtual void ProcessIcon(bool success,
-                           const std::string16 &icon_error) {
-    scoped_ptr<NotificationIconHandler> delete_me(this);
-    if (!icon_error.empty()) {
-      assert(!success);
-      LogError(STRING16(L"fetch icon"), icon_error.c_str());
-    }
-
-    std::string16 error;
-    if (success) {
-      if (DecodeIcon(&icon_, kNotificationIconDimensions, &error)) {
-        notification_->set_icon_raw_data(icon_.raw_data);
-      } else {
-        LogError(STRING16(L"decode icon"), error.c_str());
-        error.clear();
-      }
-    }
-
-    g_notification_message_orderer.PostNotification(kDesktop_AddNotification,
-                                                    notification_.release(),
-                                                    reservation_);
-    reservation_ = NotificationMessageOrderer::kInvalidReservation;
-  }
-
- private:
-  void LogError(const char16 *type, const char16 *error) {
-    std::string origin;
-    String16ToUTF8(notification_->security_origin().url().c_str(), &origin);
-    std::string id;
-    String16ToUTF8(notification_->id().c_str(), &id);
-    std::string type8;
-    String16ToUTF8(type, &type8);
-    std::string error8;
-    String16ToUTF8(error, &error8);
-    LOG(("Notification (origin=%s, id=%s) %s error: %s",
-         origin.c_str(), id.c_str(), type8.c_str(), error8.c_str()));
-  }
-  scoped_ptr<GearsNotification> notification_;
-  int64 reservation_;
-  Desktop::IconData icon_;
-  DISALLOW_EVIL_CONSTRUCTORS(NotificationIconHandler);
-};
-
-bool Desktop::ValidateAndShowNotification(
-    GearsNotification *released_notification) {
-  assert(released_notification);
-  if (!ValidateNotification(released_notification)) {
-    delete released_notification;
-    return false;
-  }
-
-  // Don't create icon_handler until released_notification
-  // has its url resolved (inside of ValidateNotification).
-  NotificationIconHandler *icon_handler =
-      new NotificationIconHandler(released_notification);
-  if (!FetchIcon(icon_handler->mutable_icon(), &error_, icon_handler)) {
-    return false;
-  }
-  return true;
-}
-
-bool Desktop::ValidateAndRemoveNotification(
-    GearsNotification *released_notification) {
-  assert(released_notification);
-  scoped_ptr<GearsNotification> notification(released_notification);
-  if (!ValidateNotification(notification.get())) {
-    return false;
-  }
-  g_notification_message_orderer.PostNotification(
-      kDesktop_RemoveNotification,
-      notification.release(),
-      NotificationMessageOrderer::kInvalidReservation);
-  return true;
-}
-
-void GearsDesktop::CreateNotification(JsCallContext *context) {
-  scoped_refptr<GearsNotification> notification;
-  if (!CreateModule<GearsNotification>(module_environment_.get(),
-                                       context, &notification)) {
-    return;
-  }
-  context->SetReturnValue(JSPARAM_MODULE, notification.get());
-}
-
-void GearsDesktop::ShowNotification(JsCallContext *context) {
-  ModuleImplBaseClass *module = NULL;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_MODULE, &module },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-  if (GearsNotification::kModuleName != module->get_module_name()) {
-    context->SetException(STRING16(L"First argument must be a notification."));
-    return;
-  }
-  scoped_ptr<GearsNotification> notification(new GearsNotification());
-  notification->CopyFrom(*(static_cast<GearsNotification*>(module)));
-
-  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
-  if (!desktop.ValidateAndShowNotification(notification.release())) {
-    if (desktop.has_error())
-      context->SetException(desktop.error());
-    return;
-  }
-}
-
-void GearsDesktop::RemoveNotification(JsCallContext *context) {
-  std::string16 id;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &id },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-
-  if (id.empty()) {
-    context->SetException(
-        STRING16(L"Cannot remove the notification with empty id."));
-    return;
-  }
-  scoped_ptr<GearsNotification> notification(new GearsNotification());
-  notification->set_id(id);
-
-  Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
-  if (!desktop.ValidateAndRemoveNotification(notification.release())) {
-    if (desktop.has_error())
-      context->SetException(desktop.error());
-    return;
-  }
-}
-#endif  // OS_ANDROID
-#endif  // OFFICIAL_BUILD
 
 #ifdef OFFICIAL_BUILD
 // The Drag-and-Drop API has not been finalized for official builds.

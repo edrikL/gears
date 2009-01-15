@@ -262,7 +262,7 @@ endif
 
 GTEST_CPPFLAGS += -I../third_party/gtest/include -I../third_party/gtest
 
-# Common items, like notifier, is not related to any browser.
+# Common items, is not related to any browser.
 COMMON_CPPFLAGS += -DBROWSER_NONE=1
 
 ######################################################################
@@ -611,8 +611,7 @@ THIRD_PARTY_CFLAGS = -Wno-main
 GTEST_CPPFLAGS += -DGTEST_NOT_MAC_FRAMEWORK_MODE
 
 # COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
-# -DOSX is needed by Glint 3-rd party library built into notifier.
-COMMON_CPPFLAGS += -fvisibility=hidden -DOSX
+COMMON_CPPFLAGS += -fvisibility=hidden
 COMMON_CXXFLAGS += -fvisibility-inlines-hidden
 
 COMPILE_FLAGS_dbg = -O0
@@ -919,8 +918,6 @@ NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
 endif
 OPERA_LIBS = $(WINCE_LIBS)
 
-NOTIFIER_SHELL_LIBS = advapi32.lib shell32.lib shlwapi.lib
-
 # Other tools specific to win32/wince builds.
 RC = rc
 RCFLAGS_dbg = -DDEBUG=1
@@ -957,8 +954,6 @@ endif
 # Add USING_CCTESTS in debug builds and non-official opt builds.
 # This adds the GearsTest object (gears/cctest), which can be
 # used to access a perf timer and run the C++ unit tests.
-# It also adds notifier_test to run tests for the notifier
-# application.
 USING_CCTESTS = 0
 ifeq ($(MODE),dbg)
 USING_CCTESTS = 1

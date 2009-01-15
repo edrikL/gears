@@ -134,90 +134,6 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# third_party/glint
-# Note: Glint is only needed in NOTIFIER_EXE, not in MODULE_DLL,
-# so we don't add Glint to THIRD_PARTY_CPPSRCS - that would increase the size
-# of of MODULE_DLL unnecessarily.
-GLINT_VPATH += \
-		../third_party/glint/crossplatform \
-		$(NULL)
-
-GLINT_CPPSRCS += \
-		allocator.cc \
-		animation_timeline.cc \
-		base_object.cc \
-		bitmap.cc \
-		button.cc \
-		color.cc \
-		column.cc \
-		core.cc \
-		current_time.cc \
-		draw_stack.cc \
-		image_node.cc \
-		lexer.cc \
-		message.cc \
-		nine_grid.cc \
-		node.cc \
-		rectangle.cc \
-		root_ui.cc \
-		row.cc \
-		simple_text.cc \
-		size.cc \
-		snapshot_stack.cc \
-		tile_plane.cc \
-		transform.cc \
-		$(NULL)
-
-# Glint Win32 files
-ifeq ($(OS),win32)
-GLINT_VPATH += \
-		../third_party/glint/win \
-		$(NULL)
-
-GLINT_CPPSRCS += \
-		formatted_text.cc \
-		win32.cc \
-		$(NULL)
-endif
-
-# Glint OSX files
-ifeq ($(OS),osx)
-GLINT_VPATH += \
-		../third_party/glint/mac \
-		../third_party/glint/posix \
-		$(NULL)
-
-GLINT_CPPSRCS += \
-		darwin_platform_bitmaps.mm \
-		darwin_platform_fonttext.mm \
-		darwin_platform_misc.mm \
-		darwin_platform_windows.mm \
-		glint_bitmap_view.mm \
-		glint_window.mm \
-		glint_work_item_dispatcher.mm \
-		$(NULL)
-
-GLINT_CPPSRCS += \
-		posix.cc \
-		formatted_text.cc \
-		$(NULL)
-endif
-
-# Glint Linux files
-ifeq ($(OS),linux)
-GLINT_VPATH += \
-		../third_party/glint/linux \
-		../third_party/glint/posix \
-		$(NULL)
-
-GLINT_CPPSRCS += \
-		linux.cc \
-		posix.cc \
-		formatted_text.cc \
-		$(NULL)
-endif
-
-#-----------------------------------------------------------------------------
 # third_party/googleurl
 
 THIRD_PARTY_VPATH	+= \
@@ -859,7 +775,6 @@ $(BROWSER)_CPPSRCS	+= \
 ifeq ($(OS),osx)
 $(BROWSER)_CPPSRCS	+= \
 		common_osx.mm \
-		notifier_process_osx.mm \
 		nsstring_utils.mm \
 		user_config_osx.cc \
 		$(NULL)
@@ -1302,12 +1217,10 @@ $(BROWSER)_CPPSRCS += \
 		desktop_android.cc \
 		desktop_linux.cc \
 		desktop_osx.cc \
-		desktop_test.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
 		drop_target_base.cc \
 		drop_target_registration.cc \
-		notification_message_orderer.cc \
 		shortcut_utils_win32.cc \
 		$(NULL)
 
@@ -1318,21 +1231,6 @@ $(BROWSER)_CPPSRCS += \
 		file_dialog_osx.cc \
 		file_dialog_win32.cc \
 		file_dialog_android.cc \
-		$(NULL)
-
-# The browser module also needs these files, to communicate with the notifier.
-$(BROWSER)_VPATH += \
-		notifier \
-		$(NULL)
-
-$(BROWSER)_CPPSRCS += \
-		const_notifier.cc \
-		notifier_process_linux.cc \
-		notifier_process_posix.cc \
-		notifier_process_win32.cc \
-		notifier_proxy.cc \
-		notifier_utils_win32.cc \
-		notification.cc \
 		$(NULL)
 
 CHROME_CPPSRCS	+= \
@@ -1383,240 +1281,6 @@ GTEST_CPPSRCS	+= \
 		gtest-port.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
-
-#-----------------------------------------------------------------------------
-# notifier
-
-COMMON_VPATH	+= \
-		notifier \
-		../third_party/convert_utf \
-		$(GLINT_VPATH) \
-		$(NULL)
-
-NOTIFIER_SHELL_CPPSRCS += \
-		const_notifier.cc \
-		notifier_shell_win32.cc \
-		notifier_utils_win32.cc \
-		$(NULL)
-
-NOTIFIER_CORE	+= \
-		$(ICU_CPPSRCS) \
-		$(URL_PARSING_CPPSRCS) \
-		balloons.cc \
-		const_notifier.cc \
-		event.cc \
-		file.cc \
-		file_posix.cc \
-		file_win32.cc \
-		http_constants.cc \
-		http_utils.cc \
-		ipc_message_queue_linux.cc \
-		ipc_message_queue_null.cc \
-		ipc_message_queue_win32.cc \
-		mutex.cc \
-		mutex_posix.cc \
-		mutex_win32.cc \
-		notification_manager.cc \
-		notifier_process_linux.cc \
-		notifier_process_posix.cc \
-		notifier_process_win32.cc \
-		notifier_utils_win32.cc \
-		notification.cc \
-		paths_none.cc \
-		security_model.cc \
-		serialization.cc \
-		stopwatch.cc \
-		stopwatch_posix.cc \
-		stopwatch_win32.cc \
-		string16.cc \
-		string_utils.cc \
-		string_utils_osx.cc \
-		system_linux.cc \
-		system_win32.cc \
-		thread.cc \
-		thread_posix.cc \
-		thread_win32.cc \
-		time_utils_win32.cc \
-		timed_call.cc \
-		timed_call_test.cc \
-		user_activity.cc \
-		user_activity_linux.cc \
-		user_activity_win32.cc \
-		$(NULL)
-
-NOTIFIER_CPPSRCS += \
-		$(GLINT_CPPSRCS) \
-		$(NOTIFIER_CORE) \
-		notifier.cc \
-		notifier_linux.cc \
-		notifier_win32.cc \
-		$(NULL)
-
-ifeq ($(OS),win32)		
-NOTIFIER_CPPSRCS += \
-		exception_handler_win32.cc \
-		$(NULL)
-endif # win32
-
-ifeq ($(OS),osx)
-COMMON_VPATH    += \
-		base/common/exception_handler_osx \
-		$(NULL)
-
-NOTIFIER_CPPSRCS += \
-		exception_handler_osx.mm \
-		google_breakpad.mm \
-		mach_ipc.mm \
-		on_demand_server.mm \
-		simple_string_dictionary.mm \
-		$(NULL)
-endif # osx
-
-NOTIFIER_RESOURCES += \
-		notifier/resources/background.png \
-		notifier/resources/button_strip.png \
-		notifier/resources/menu_button_strip.png \
-		$(NULL)
-
-ifeq ($(OS),osx)
-NOTIFIER_CPPSRCS += \
-		$(GROWL_CPPSRCS) \
-		common_osx.mm \
-		growl_collection.mm \
-		notifier_osx.mm \
-		notifier_pref_common.cc \
-		notifier_pref_listener.cc \
-		notifier_process_osx.mm \
-		nsstring_string16.mm \
-		system_osx.mm \
-		user_activity_osx.mm \
-		$(NULL)
-
-COMMON_VPATH	+= \
-		tools/osx \
-		$(GROWL_VPATH) \
-		$(NULL)
-
-COMMON_M4SRCS += \
-		Notifier-Info.plist.m4 \
-		$(NULL)
-
-NOTIFIER_RESOURCES += \
-		notifier/resources/close_button_strip_osx.png \
-		$(NULL)
-else
-NOTIFIER_RESOURCES += \
-		notifier/resources/close_button_strip.png \
-		$(NULL)
-endif  # osx
-
-NOTIFIER_CSRCS += \
-		ConvertUTF.c \
-		$(NULL)
-
-ifeq ($(OS),linux)
-COMMON_VPATH	+= \
-		../third_party/google_perftools/src/base \
-		$(NULL)
-
-NOTIFIER_CORE	+= \
-		sysinfo.cc \
-		$(NULL)
-
-NOTIFIER_LIBS 	+= \
-		-lX11 \
-		-lgtk-x11-2.0 \
-		-L../third_party/gtk/linux/lib \
-		$(NULL)
-endif
-
-ifeq ($(OS),win32)
-COMMON_VPATH	+= \
-		notifier/resources \
-		$(NULL)
-
-NOTIFIER_SHELL_LINK_EXTRAS += \
-		$(COMMON_OUTDIR)/notifier_shell.res \
-		$(NULL)
-
-NOTIFIER_LINK_EXTRAS += \
-		$(COMMON_OUTDIR)/notifier.res \
-		$(NULL)
-
-NOTIFIER_LIBS 	+= \
-		gdiplus.lib \
-		$(NULL)
-
-endif
-
-#-----------------------------------------------------------------------------
-# notifier_prefpane
-
-ifeq ($(OS),osx)
-COMMON_VPATH += \
-		notifier/prefpane \
-		$(GROWL_VPATH) \
-		$(NULL)
-
-NOTIFIER_PREFPANE_CPPSRCS += \
-		$(GROWL_CPPSRCS) \
-		notifier_pref.mm \
-		notifier_pref_common.cc \
-		$(NULL)
-
-NOTIFIER_PREFPANE_NIB += \
-		notifier/prefpane/English.lproj/notifier_pref.nib \
-		$(NULL)
-
-NOTIFIER_PREFPANE_STRINGS += \
-		notifier/prefpane/English.lproj/InfoPlist.strings \
-		notifier/prefpane/English.lproj/Localizable.strings \
-		$(NULL)
-
-NOTIFIER_PREFPANE_RESOURCES += \
-		notifier/prefpane/notifier_pref_icon.tiff \
-		$(NULL)
-
-COMMON_M4SRCS += \
-		Prefpane-Info.plist.m4 \
-		$(NULL)
-endif
-
-#-----------------------------------------------------------------------------
-# notifier_test
-COMMON_VPATH	+= \
-		$(GTEST_VPATH) \
-		$(NULL)
-
-NOTIFIER_TEST_CPPSRCS += \
-		$(GLINT_CPPSRCS) \
-		$(GTEST_CPPSRCS) \
-		$(NOTIFIER_CORE) \
-		balloon_collection_test.cc \
-		notification_manager_test.cc \
-		unit_test.cc \
-		$(NULL)
-
-ifeq ($(OS),osx)
-NOTIFIER_TEST_CPPSRCS += \
-		$(GROWL_CPPSRCS) \
-		common_osx.mm \
-		growl_collection.mm \
-		notifier_pref_common.cc \
-		notifier_pref_listener.cc \
-		nsstring_string16.mm \
-		system_osx.mm \
-		unit_test_osx.mm \
-		$(NULL)
-
-COMMON_VPATH += \
-		$(GROWL_VPATH) \
-		$(NULL)
-endif
-
-NOTIFIER_TEST_CSRCS += \
-		ConvertUTF.c \
-		$(NULL)
 
 #-----------------------------------------------------------------------------
 # ipc_test

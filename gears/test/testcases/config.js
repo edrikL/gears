@@ -147,13 +147,6 @@ if (isIE || isFirefox) {
 }
 suites.push(localServerSuite);
 
-if (!isOfficial && !isWince) {
-  var notifierSuite = new TestSuite('Notifier');
-  notifierSuite.addFile('../testcases/notifier_tests.js',
-      {useWorker: false, useIFrame: true});
-  suites.push(notifierSuite);
-}
-
 var timerSuite = new TestSuite('Timer');
 timerSuite.addFile('../testcases/timer_tests.js',
                    {useWorker: true, useIFrame: true});

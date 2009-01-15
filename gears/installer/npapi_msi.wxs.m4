@@ -99,8 +99,6 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
           Source="$(var.OurNpapiPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
 m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
-        <File Id='ie_notifier_test_exe' Name='notifier_test.exe' DiskId='1'
-          Source="$(var.OurCommonPath)/notifier_test.exe" />
         <File Id='ie_ipc_test_exe' Name='ipc_test.exe' DiskId='1'
           Source="$(var.OurIpcTestPath)/ipc_test.exe" />
 `~)

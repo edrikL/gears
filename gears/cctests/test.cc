@@ -37,7 +37,6 @@
 #include "gears/base/common/url_utils.h"  // For ResolveAndNormalize()
 #include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
-#include "gears/desktop/desktop_test.h"
 #include "third_party/jsoncpp/json.h"
 
 #ifdef WIN32
@@ -102,15 +101,6 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
   RegisterMethod("testLocalServerPerformance",
                  &GearsTest::TestLocalServerPerformance);
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#ifdef OS_ANDROID
-  // The notification API has not been implemented for Android.
-#else
-  RegisterMethod("testNotifier", &GearsTest::TestNotifier);
-#endif  // OS_ANDROID
-#endif  // OFFICIAL_BUILD
   RegisterMethod("testAsyncTaskPostCookies",
                  &GearsTest::TestAsyncTaskPostCookies);
 }
@@ -362,15 +352,6 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
   ok &= TestGeolocationDB(&error);
-#ifdef OFFICIAL_BUILD
-  // The notification API has not been finalized for official builds.
-#else
-#ifdef OS_ANDROID
-  // The notification API has not been implemented for Android.
-#else
-  ok &= TestNotificationMessageOrdering(&error);
-#endif  // OS_ANDROID
-#endif  // OFFICIAL_BUILD
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -2195,144 +2176,6 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_MODULE, gears_blob.get());
 }
 
-
-#ifdef OFFICIAL_BUILD
-// The notification API has not been finalized for official builds.
-#else
-
-#if (defined(WIN32) && !defined(OS_WINCE)) || defined(LINUX)
-class ProcessCreator {
- public:
-  static ProcessCreator* Create(const char16 *full_filepath);
-
-  // Returns the exit code from the process, but only waits
-  // at most wait_seconds for it to finish.  If the process
-  // hasn't exited, then it returns -1;
-  int GetExitCode(int wait_seconds);
-
- private:
-#if defined(WIN32)
-  explicit ProcessCreator(HANDLE process) : process_(process) {}
-#else
-  explicit ProcessCreator(pid_t pid) : child_process_pid_(pid) {}
-#endif  // WIN32
-
-
-#if defined(WIN32)
-  HANDLE process_;
-#else
-  pid_t child_process_pid_;
-#endif  // WIN32
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessCreator);
-};
-
-#if defined(WIN32)
-ProcessCreator* ProcessCreator::Create(const char16 *full_filepath) {
-  STARTUPINFO startup_info = {0};
-  startup_info.cb = sizeof(STARTUPINFO);
-  PROCESS_INFORMATION process_information = {0};
-  if (!::CreateProcess(full_filepath,
-                       NULL,
-                       NULL,
-                       NULL,
-                       false,
-                       CREATE_NO_WINDOW,
-                       NULL,
-                       NULL,
-                       &startup_info,
-                       &process_information)) {
-    return NULL;
-  }
-  ::CloseHandle(process_information.hThread);
-  return new ProcessCreator(process_information.hProcess);
-}
-
-int ProcessCreator::GetExitCode(int wait_seconds) {
-  // Ensure that the process exited correctly and didn't timeout.
-  if (::WaitForSingleObject(process_, wait_seconds * 1000) != WAIT_OBJECT_0) {
-    return -1;
-  }
-
-  DWORD exit_code = -1;
-  if (!::GetExitCodeProcess(process_, &exit_code)) {
-    return -1;
-  }
-  return exit_code;
-}
-#else
-ProcessCreator* ProcessCreator::Create(const char16 *full_filepath) {
-  pid_t pid = fork();
-  if (pid < 0) {
-    return NULL;
-  }
-  if (pid == 0) {
-    std::string file;
-    if (!String16ToUTF8(full_filepath, &file)) {
-      return NULL;
-    }
-    execl(file.c_str(), "notifier_test", NULL);
-    exit(-1);
-  }
-  return new ProcessCreator(pid);
-}
-
-int ProcessCreator::GetExitCode(int wait_seconds) {
-  // Set up a signal to interrupt waitpid from waiting forever.
-  alarm(wait_seconds);
-  int exit_code = -1;
-  if (waitpid(child_process_pid_, &exit_code, WUNTRACED) == -1) {
-    exit_code = -1;
-  }
-  // Cancel the alarm.
-  alarm(0);
-  return exit_code;
-}
-#endif  // WIN32
-#endif  // (defined(WIN32) && !defined(OS_WINCE)) || defined(LINUX)
-
-#if defined(WIN32)
-const char16* kNotifierTestApp = STRING16(L"notifier_test.exe");
-#else
-const char16* kNotifierTestApp = STRING16(L"notifier_test");
-#endif  // WIN32
-
-void GearsTest::TestNotifier(JsCallContext *context) {
-#if defined(WIN32) && !defined(OS_WINCE)
-  std::string16 component_directory;
-  if (!GetComponentDirectory(&component_directory)) {
-    context->SetException(STRING16(L"Couldn't get install directory."));
-    return;
-  }
-
-  // Find the notifier_test application.
-  std::string16 notifier_test(component_directory);
-  AppendName(kNotifierTestApp, &notifier_test);
-  if (!File::Exists(notifier_test.c_str())) {
-    notifier_test.assign(component_directory);
-    RemoveName(&notifier_test);
-    AppendName(STRING16(L"common"), &notifier_test);
-    AppendName(kNotifierTestApp, &notifier_test);
-  }
-  if (!File::Exists(notifier_test.c_str())) {
-    context->SetException(STRING16(L"Couldn't find notifier_test."));
-    return;
-  }
-
-  scoped_ptr<ProcessCreator> process(
-      ProcessCreator::Create(notifier_test.c_str()));
-  if (!process.get()) {
-    context->SetException(STRING16(L"Couldn't start notifier_test."));
-    return;
-  }
-  if (process->GetExitCode(5 * 60) != 0) {
-    context->SetException(STRING16(L"notifier_test failed.  Run "
-                                   L"notifier_test.exe for more information."));
-    return;
-  }
-#endif  // defined(WIN32) && !defined(OS_WINCE)
-
-}
-#endif  // OFFICIAL_BUILD
 
 void GearsTest::TestAsyncTaskPostCookies(JsCallContext *context) {
   // Note that GetArguments allocates a new JsRootedCallback.
