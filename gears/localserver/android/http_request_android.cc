@@ -84,9 +84,9 @@ JavaClass::Method HttpRequestAndroid::java_methods_[JAVA_METHOD_COUNT] = {
   { JavaClass::kNonStatic,
     "<init>",
     "()V" },
-  { JavaClass::kStatic,
-    "enableLogging",
-    "(Z)V" },
+  { JavaClass::kNonStatic,
+    "setContentLength",
+    "(J)V" },
   { JavaClass::kNonStatic,
     "initChildThread",
     "()V" },
@@ -518,6 +518,9 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
     post_blob_.reset(blob ? blob : new EmptyBlob());
     total_bytes_to_send_ = post_blob_->Length();
     assert(total_bytes_to_send_ >= 0);
+    JniGetEnv()->CallVoidMethod(java_object_.Get(),
+                                GetMethod(JAVA_METHOD_SET_CONTENT_LENGTH),
+                                static_cast<jlong>(post_blob_->Length()));
   } else if (blob) {
     return false;
   }
@@ -1486,12 +1489,6 @@ bool HttpRequestAndroid::InitJni() {
     LOG(("Couldn't get HttpRequestAndroid methods\n"));
     return false;
   }
-#ifdef DEBUG
-  // Turn on logging in the Java class.
-  env->CallStaticVoidMethod(java_class_.Get(),
-                            GetMethod(JAVA_METHOD_ENABLE_LOGGING),
-                            static_cast<jboolean>(true));
-#endif
   return true;
 }
 
