@@ -31,7 +31,7 @@
 #ifdef OS_WINCE
 #include "gears/base/ie/bho.h"
 #include <piedocvw.h>
-#inlcude "gears/base/common/common.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/installer/common/cab_updater.h"
