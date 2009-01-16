@@ -131,6 +131,16 @@ FF3_RESOURCES = \
 	$(NULL)
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
+OPERA_RESOURCES = \
+	$(OPERA_OUTDIR)/genfiles/permissions_dialog.html \
+	$(OPERA_OUTDIR)/genfiles/settings_dialog.html \
+	$(OPERA_OUTDIR)/genfiles/shortcuts_dialog.html \
+	$(OPERA_OUTDIR)/genfiles/blank.gif \
+	$(OPERA_OUTDIR)/genfiles/icon_32x32.png \
+	$(OPERA_OUTDIR)/genfiles/local_data.png \
+	$(OPERA_OUTDIR)/genfiles/location_data.png \
+	$(NULL)
+
 DEPS = \
 	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(BREAKPAD_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -208,7 +218,9 @@ FF3_MODULE_DLL      = $(FF3_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 IE_MODULE_DLL       = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 IEMOBILE_MODULE_DLL = $(IEMOBILE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 NPAPI_MODULE_DLL    = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
-OPERA_MODULE_DLL    = $(OPERA_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+# We have to use different names for the IE Mobile and Opera Mobile DLLs on
+# WinCE to prevent clashes.
+OPERA_MODULE_DLL    = $(OPERA_OUTDIR)/$(DLL_PREFIX)$(MODULE)op$(DLL_SUFFIX)
 SF_MODULE_DLL       = $(SF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
 FF3_MODULE_TYPELIB      = $(FF3_OUTDIR)/$(MODULE).xpt
@@ -766,6 +778,13 @@ $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 $(OPERA_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_OPERA=1 $<
 
+# For Opera, also copy all the image files used in the HTML dialogs to the
+# genfiles directory.
+$(OPERA_OUTDIR)/genfiles/%.gif: ui/common/%.gif
+	cp $< $@
+$(OPERA_OUTDIR)/genfiles/%.png: ui/common/%.png
+	cp $< $@
+
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
 
@@ -1252,7 +1271,7 @@ $(IEMOBILE_WINCE_INSTALLER_CAB): $(IEMOBILE_INFSRC) $(IEMOBILE_MODULE_DLL) $(IEM
 	cabwiz.exe $(IEMOBILE_INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_iemobile.cab $@
 
-$(OPERA_WINCE_INSTALLER_CAB): $(OPERA_INFSRC) $(OPERA_MODULE_DLL) $(OPERA_WINCESETUP_DLL)
+$(OPERA_WINCE_INSTALLER_CAB): $(OPERA_INFSRC) $(OPERA_MODULE_DLL) $(OPERA_WINCESETUP_DLL) $(OPERA_RESOURCES)
 	cabwiz.exe $(OPERA_INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME)_op.cab $@
 
