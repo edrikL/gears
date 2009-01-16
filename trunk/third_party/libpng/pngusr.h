@@ -42,21 +42,37 @@
   #define abort() exit(EXIT_FAILURE)
 #endif
 
+#if GEARS_STATIC_LIB
+// Changes to get Skia to compile:
+// TODO(cprince): Remove these from Skia instead?
+#define PNG_NO_HANDLE_AS_UNKNOWN
+#define PNG_NO_READ_sBIT
+#define PNG_NO_READ_FILLER
+#define PNG_NO_READ_UNKNOWN_CHUNKS
+#define PNG_NO_READ_USER_CHUNKS
+#else
+#define PNG_NO_ERROR_TEXT
+#define PNG_NO_WARNINGS
+#define PNG_NO_WARN_UNINITIALIZED_ROW
+#define PNG_NO_READ_GAMMA
+#define PNG_NO_READ_gAMA
+
+// TODO(mpcomplete): this is used by libgd.  Static-linking only works in
+// official builds, where libgd is not used.  Fix this.
+#define PNG_NO_INFO_IMAGE
+#endif
+
 #define PNG_NO_GLOBAL_ARRAYS
 #define PNG_NO_USER_TRANSFORM_PTR
 #define PNG_NO_CONSOLE_IO
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
-#define PNG_NO_WARN_UNINITIALIZED_ROW
-#define PNG_NO_WARNINGS
 
 #ifdef PNG_NO_WARNINGS
 #define png_warning(s1,s2) (void)""
 #define png_chunk_warning(s1,s2) (void)""
 #endif  // PNG_NO_WARNINGS
-
-#define PNG_NO_ERROR_TEXT
 
 #ifdef PNG_NO_ERROR_TEXT
 #define png_error(s1,s2)  png_err(s1)
@@ -67,7 +83,6 @@
 // Read flags
 //
 
-#define PNG_NO_READ_GAMMA
 #define PNG_NO_READ_BACKGROUND
 #define PNG_NO_READ_DITHER
 #define PNG_NO_READ_INVERT
@@ -80,7 +95,6 @@
 #define PNG_NO_READ_USER_TRANSFORM
 #define PNG_NO_READ_bKGD
 #define PNG_NO_READ_cHRM
-#define PNG_NO_READ_gAMA
 #define PNG_NO_READ_hIST
 #define PNG_NO_READ_iCCP
 #define PNG_NO_READ_oFFs
@@ -95,14 +109,6 @@
 #define PNG_NO_FIXED_POINT_SUPPORTED
 #define PNG_NO_READ_OPT_PLTE
 #define PNG_NO_MNG_FEATURES
-
-// Changes to get Skia to compile:
-// TODO(cprince): Remove these from Skia instead?
-// #define PNG_NO_HANDLE_AS_UNKNOWN
-// #define PNG_NO_READ_sBIT
-// #define PNG_NO_READ_FILLER
-// #define PNG_NO_READ_UNKNOWN_CHUNKS
-// #define PNG_NO_READ_USER_CHUNKS
 
 
 #ifdef OFFICIAL_BUILD

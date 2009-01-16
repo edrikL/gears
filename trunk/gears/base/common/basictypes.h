@@ -88,6 +88,11 @@ typedef unsigned __int64   uint64;
 #else
 typedef unsigned long long uint64;
 #endif /* _MSC_VER */
+
+#if GEARS_STATIC_LIB
+#include "gears/base/chrome/static_lib.h"
+#endif
+
 #endif /* BROWSER_* */
 
 //------------------------------------------------------------------------------
