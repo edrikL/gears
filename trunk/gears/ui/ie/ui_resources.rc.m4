@@ -41,8 +41,9 @@
 // using something else? It seems to work as is.
 //-----------------------------------------------------------------------------
 
-button.css                   HTML  "ui/common/button.css"
-button.css.end               HTML  {"\0END\0"}
+#ifdef WINCE
+// We don't use custom buttons on WinCE.
+#else
 button_bg.gif                HTML  "ui/common/button_bg.gif"
 button_bg.gif.end            HTML  {"\0END\0"}
 button_corner_black.gif      HTML  "ui/common/button_corner_black.gif"
@@ -51,6 +52,8 @@ button_corner_blue.gif       HTML  "ui/common/button_corner_blue.gif"
 button_corner_blue.gif.end   HTML  {"\0END\0"}
 button_corner_grey.gif       HTML  "ui/common/button_corner_grey.gif"
 button_corner_grey.gif.end   HTML  {"\0END\0"}
+#endif
+
 html_dialog.css              HTML  "ui/common/html_dialog.css"
 html_dialog.css.end          HTML  {"\0END\0"}
 icon_32x32.png               HTML  "ui/common/icon_32x32.png"
@@ -60,8 +63,12 @@ local_data.png.end           HTML  {"\0END\0"}
 location_data.png            HTML  "ui/common/location_data.png"
 location_data.png.end        HTML  {"\0END\0"}
 
+#ifdef WINCE
+// We don't use the alert dialog on WinCE.
+#else
 alert_dialog.html            HTML "genfiles/alert_dialog.html"
 alert_dialog.html.end        HTML {"\0END\0"}
+#endif
 permissions_dialog.html      HTML "genfiles/permissions_dialog.html"
 permissions_dialog.html.end  HTML {"\0END\0"}
 settings_dialog.html         HTML "genfiles/settings_dialog.html"

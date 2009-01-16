@@ -872,6 +872,10 @@ IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/module.res \
 		$(NULL)
 
+IEMOBILE_LINK_EXTRAS	+= \
+		$(IEMOBILE_OUTDIR)/module.res \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # base/npapi
 
@@ -1558,6 +1562,10 @@ IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
 		$(NULL)
 
+IEMOBILE_LINK_EXTRAS	+= \
+		$(IEMOBILE_OUTDIR)/ui_resources.res \
+		$(NULL)
+
 ifeq ($(OS),wince)
 # The string table uses multiple languages, which are not supported by
 # LoadString on WinCE.
@@ -2059,7 +2067,11 @@ IEMOBILE_WINCESETUP_CPPSRCS += \
 		setup.cc \
 		$(NULL)
 
+# setup.res contains strings used by both the module DLL and setup.dll.
 IEMOBILE_WINCESETUP_LINK_EXTRAS += \
+		$(IEMOBILE_OUTDIR)/setup.res \
+		$(NULL)
+IEMOBILE_LINK_EXTRAS += \
 		$(IEMOBILE_OUTDIR)/setup.res \
 		$(NULL)
 
@@ -2082,7 +2094,11 @@ OPERA_WINCESETUP_CPPSRCS += \
 		setup.cc \
 		$(NULL)
 
+# setup.res contains strings used by both the module DLL and setup.dll.
 OPERA_WINCESETUP_LINK_EXTRAS += \
+		$(OPERA_OUTDIR)/setup.res \
+		$(NULL)
+OPERA_LINK_EXTRAS += \
 		$(OPERA_OUTDIR)/setup.res \
 		$(NULL)
 
@@ -2212,6 +2228,7 @@ OPERA_M4SRCS += $(NPAPI_M4SRCS)
 OPERA_IDLSRCS += $(NPAPI_IDLSRCS)
 OPERA_HTML_M4SRCS += $(NPAPI_HTML_M4SRCS)
 OPERA_LIBS += $(NPAPI_LIBS)
+# OPERA_LINK_EXTRAS is set independently of NPAPI_LINK_EXTRAS
 endif
 endif
 
@@ -2227,6 +2244,7 @@ IEMOBILE_M4SRCS += $(IE_M4SRCS)
 IEMOBILE_IDLSRCS += $(IE_IDLSRCS)
 IEMOBILE_HTML_M4SRCS += $(IE_HTML_M4SRCS)
 IEMOBILE_LIBS += $(IE_LIBS)
+# IEMOBILE_LINK_EXTRAS is set independently of IE_LINK_EXTRAS
 endif
 endif
 
