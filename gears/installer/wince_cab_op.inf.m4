@@ -18,11 +18,15 @@ BuildOutputDirectory="bin-dbg\wince-arm\opera"
 BuildOutputDirectory="bin-opt\wince-arm\opera"
 ^)
 SetupDll="setup.dll"
-GearsDll="PRODUCT_SHORT_NAME_UQ.dll"
+GearsDll="gearsop.dll"  ;[naming]
 PermissionsDialog="permissions_dialog.html"
 SettingsDialog="settings_dialog.html"
 ShortcutsDialog="shortcuts_dialog.html"
-InstallDir="\Application Data\Opera 9.5"
+InstallDir="\Application Data\Opera 9.5 Beta"
+BlankImage="blank.gif"
+Icon32x32Image="icon_32x32.png"
+LocalDataImage="local_data.png"
+LocationDataImage="location_data.png"
 
 [CEStrings]
 ; Must be different from that for Gears for IE to avoid conflicts.
@@ -40,6 +44,10 @@ AppName="Gears for Opera Mobile"  ;[naming]
 %PermissionsDialog%=2  ; In HtmlSourceDirectory
 %SettingsDialog%=2     ; In HtmlSourceDirectory
 %ShortcutsDialog%=2    ; In HtmlSourceDirectory
+%BlankImage%=2         ; In HtmlSourceDirectory
+%Icon32x32Image%=2     ; In HtmlSourceDirectory
+%LocalDataImage%=2     ; In HtmlSourceDirectory
+%LocationDataImage%=2  ; In HtmlSourceDirectory
 
 ; The destination directories for the files that will be in the CAB
 [DestinationDirs]
@@ -55,6 +63,10 @@ HtmlDestinationDirectory=0,%InstallDir%
 %PermissionsDialog%,%PermissionsDialog%,,0
 %SettingsDialog%,%SettingsDialog%,,0
 %ShortcutsDialog%,%ShortcutsDialog%,,0
+%BlankImage%,%BlankImage%,,0
+%Icon32x32Image%,%Icon32x32Image%,,0
+%LocalDataImage%,%LocalDataImage%,,0
+%LocationDataImage%,%LocationDataImage%,,0
 
 ; The action to take during installation
 [DefaultInstall]
