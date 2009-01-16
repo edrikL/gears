@@ -29,6 +29,13 @@
 #ifndef GEARS_BASE_COMMON_STATIC_LIB_H__
 #define GEARS_BASE_COMMON_STATIC_LIB_H__
 
+// These functions are used by Chrome, so their names must not change.
+#define NP_GetEntryPoints Gears_NP_GetEntryPoints
+#define NP_Initialize Gears_NP_Initialize
+#define NP_Shutdown Gears_NP_Shutdown
+#define CP_Initialize Gears_CP_Initialize
+
+// These functions are used only by Gears.
 #define GetV8Context gears_GetV8Context
 #define WrapNPObject gears_WrapNPObject
 #define NPScriptObjectClass gears_NPScriptObjectClass
