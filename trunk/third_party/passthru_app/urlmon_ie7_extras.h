@@ -30,6 +30,7 @@
 // Only a small number of interface definitions have been hoisted:
 //  IInternetProtocolEx
 //  IUri
+//  IUriContainer
 //  IWinInetCacheHints
 //  IWinInetCacheHints2
 //
@@ -52,6 +53,11 @@ typedef interface IInternetProtocolEx IInternetProtocolEx;
 #define __IUri_FWD_DEFINED__
 typedef interface IUri IUri;
 #endif   /* __IUri_FWD_DEFINED__ */
+
+#ifndef __IUriContainer_FWD_DEFINED__
+#define __IUriContainer_FWD_DEFINED__
+typedef interface IUriContainer IUriContainer;
+#endif     /* __IUriContainer_FWD_DEFINED__ */
 
 #ifndef __IWinInetCacheHints_FWD_DEFINED__
 #define __IWinInetCacheHints_FWD_DEFINED__
@@ -211,6 +217,21 @@ public:
 // EXTERN_C const IID IID_IUri;
 #define IID_IUri __uuidof(IUri)
 #endif /* __IUri_INTERFACE_DEFINED__ */
+
+#ifndef __IUriContainer_INTERFACE_DEFINED__
+#define __IUriContainer_INTERFACE_DEFINED__
+typedef /* [unique] */ IUriContainer *LPURICONTAINER;
+MIDL_INTERFACE("a158a630-ed6f-45fb-b987-f68676f57752")
+IUriContainer : public IUnknown
+{
+public:
+    virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE GetIUri( 
+        /* [out] */ IUri **ppIUri) = 0;
+    
+};
+// EXTERN_C const IID IID_IUriContainer;
+#define IID_IUriContainer __uuidof(IUriContainer)
+#endif     /* __IUriContainer_INTERFACE_DEFINED__ */
 
 #ifndef __IWinInetCacheHints_INTERFACE_DEFINED__
 #define __IWinInetCacheHints_INTERFACE_DEFINED__

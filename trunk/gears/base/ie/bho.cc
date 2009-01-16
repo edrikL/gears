@@ -31,10 +31,11 @@
 #ifdef OS_WINCE
 #include "gears/base/ie/bho.h"
 #include <piedocvw.h>
+#inlcude "gears/base/common/common.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/installer/common/cab_updater.h"
-#include "gears/localserver/ie/http_handler_ie.h"
+#include "gears/localserver/ie/http_intercept.h"
 
 // TODO(steveblock): Fix this GUID. See bug 406.
 const char16* kGuid = L"%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D";
@@ -57,7 +58,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     // when the BHO is unitialized. It seems that this call 
     // is not made on WinCE.
   } else {
-    HttpHandler::Register();
+    InitializeHttpInterception();
 
     CComQIPtr<IWebBrowser2> site = pUnkSite;
     ASSERT(site);
@@ -75,6 +76,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 //------------------------------------------------------------------------------
 #else
 #include "gears/base/ie/bho.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/common/exception_handler.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
@@ -105,7 +107,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   if (pUnkSite == NULL) {
     BrowserListener::Teardown();
   } else {
-    HttpHandler::Register();
+    InitializeHttpInterception();
     CComQIPtr<IWebBrowser2> browser2 = pUnkSite;
     if (browser2) {
       BrowserListener::Init(browser2);

@@ -348,14 +348,13 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
     return E_POINTER;
   *ppvObject = NULL;
 
-  // Our HttpHandler (see http_handler_ie.cc h) provides a mechanism to
+  // Our intercept layer provides a mechanism to
   // bypass the LocalServer that involves querying for a particular service
-  // id that does not exists. Here we detect that query and set our handler
-  // in bypass mode.
-  if (InlineIsEqualGUID(guidService, HttpHandler::SID_QueryBypassCache) &&
-      InlineIsEqualGUID(riid, HttpHandler::IID_QueryBypassCache)) {
+  // id that does not exists. Here we detect that query handshake accordingly.
+  if (InlineIsEqualGUID(guidService, SID_HttpInterceptBypass) &&
+      InlineIsEqualGUID(riid, IID_HttpInterceptBypass)) {
     if (ShouldBypassLocalServer()) {
-      HttpHandler::SetBypassCache();
+      SetBypassHttpInterception();
     }
     return E_NOINTERFACE;
   }

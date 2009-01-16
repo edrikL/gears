@@ -857,7 +857,9 @@ ifeq ($(OS),win32)
 IE_CPPSRCS	+= \
 		browser_listener.cc \
 		html_event_monitor_ie.cc \
+		iat_patch.cc \
 		ie_version.cc \
+		pe_image.cc \
 		$(NULL)
 endif
 ifeq ($(OS),wince)
@@ -1782,12 +1784,25 @@ IE_VPATH	+= \
 IE_CPPSRCS	+= \
 		async_task_ie.cc \
 		file_submit_behavior.cc \
-		http_handler_ie.cc \
+		http_intercept.cc \
 		http_request_ie.cc \
 		progress_input_stream.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
 		$(NULL)
+ifeq ($(OS),win32)
+IE_CPPSRCS	+= \
+		http_handler_base.cc \
+		http_handler_patch.cc \
+		http_patches.cc \
+		$(NULL)
+endif
+ifeq ($(OS),wince)
+IE_CPPSRCS	+= \
+		http_handler_app.cc \
+		http_handler_base.cc \
+		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # localserver/npapi

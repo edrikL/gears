@@ -47,18 +47,18 @@
 // occurs, then stops the default handling and intervenes to satisfy the
 // request from our cache.
 
-#ifndef GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
-#define GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
+#ifndef GEARS_LOCALSERVER_IE_HTTP_HANDLER_APP_H__
+#define GEARS_LOCALSERVER_IE_HTTP_HANDLER_APP_H__
 
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/atl_browser_headers.h"
 #include "gears/localserver/common/localserver_db.h"
+#include "gears/localserver/ie/http_handler_base.h"
 #include "third_party/passthru_app/ProtocolCF.h"
 #include "third_party/passthru_app/ProtocolImpl.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-
-class HttpHandler;
+class HttpHandlerAPP;
 
 //------------------------------------------------------------------------------
 // PassthruSink
@@ -67,10 +67,10 @@ class HttpHandler;
 //------------------------------------------------------------------------------
 class PassthruSink
     : public PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
-        CComMultiThreadModel> {
+                                                         CComMultiThreadModel> {
  public:
   PassthruSink() : http_handler_(NULL) {}
-  void SetHttpHandler(HttpHandler *handler) { http_handler_ = handler; }
+  void SetHttpHandler(HttpHandlerAPP *handler) { http_handler_ = handler; }
 
   // The ReportProgress method is overriden to detect 302s back into our cache
   // and intervene to satisfy the request from our cache.
@@ -83,48 +83,32 @@ class PassthruSink
   // sink
   typedef PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
       CComMultiThreadModel> BaseClass;
-  // A convenience pointer to our HttpHandler
-  HttpHandler *http_handler_;
+  // A convenience pointer to our HttpHandlerAPP
+  HttpHandlerAPP *http_handler_;
 };
 
 
 // A "StartPolicy" to satisfy the CInternetProtocol<> template
-typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandler, PassthruSink>
+typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandlerAPP, PassthruSink>
     PassthruStartPolicy;
 
 
 //------------------------------------------------------------------------------
-// HttpHandler
+// HttpHandlerAPP
 //  An Asynchronous Pluggable Protocol that we register as an http/https
 //  namespace handler to satisfy http requests with the contents or our cache.
 //------------------------------------------------------------------------------
-class HttpHandler
-    : public PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
-        CComMultiThreadModel> {
+class HttpHandlerAPP
+    : public HttpHandlerBase,
+      public PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
+                                               CComMultiThreadModel> {
  public:
   // Registers and unregisters our handler in the http/https namespace.
-  static HRESULT Register();
-  static HRESULT Unregister();
+  static HRESULT Install();
+  static HRESULT Uninstall();
 
-  // Returns the number of times the Start or StartEx method has been called
-  // since system startup.
-  static int GetStartedCount();
-
-  // HttpHandler supports a mechanism to bypass the cache on a
-  // per request basis which is used when capturing resources during
-  // an application update task or webcapture task. The handler queries
-  // its service provider chain for the following SID / IID pair prior
-  // to handling a request. If SetBypassCache is invoked as a side
-  // effect of this query, the handler will bypass the webcache and
-  // use the browser's default http handler.
-  // @see HttpHandler::Start
-  // @see IEHttpRequest::QueryService
-  static const GUID SID_QueryBypassCache;
-  static const GUID IID_QueryBypassCache;
-  static void SetBypassCache();
-
-  HttpHandler();
-  ~HttpHandler();
+  HttpHandlerAPP();
+  ~HttpHandlerAPP();
 
   HRESULT FinalConstruct();
 
@@ -258,82 +242,13 @@ class HttpHandler
  private:
   // Calling BaseClass::Foo() passes an API call thru to the default handler
   typedef PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
-      CComMultiThreadModel> BaseClass;
+                                            CComMultiThreadModel> BaseClass;
 
   friend PassthruSink;
-
-  // IInternetProtocol(Ex)
-  HRESULT StartImpl(
-    /* [in] */ const char16 *url,
-    /* [in] */ IInternetProtocolSink *prot_sink,
-    /* [in] */ IInternetBindInfo *bind_info,
-    /* [in] */ DWORD flags,
-    /* [in] */ HANDLE_PTR reserved);
-
-  HRESULT ReadImpl(void *buffer, ULONG byte_count, ULONG *bytes_read);
-
-  // IWinInetInfo
-  HRESULT QueryOptionImpl(
-    /* [in] */ DWORD dwOption,
-    /* [in, out] */ LPVOID pBuffer,
-    /* [in, out] */ DWORD *pcbBuf);
-
-  // IWinInetHttpInfo
-  HRESULT QueryInfoImpl(
-    /* [in] */ DWORD dwOption,
-    /* [in, out] */ LPVOID pBuffer,
-    /* [in, out] */ DWORD *pcbBuf,
-    /* [in, out] */ DWORD *pdwFlags,
-    /* [in, out] */ DWORD *pdwReserved);
-
-  // Helpers to call thru to our sink. These wrappers gaurd against calling
-  // thru after we've been terminated or aborted. They are only used where
-  // we're handling a request as opposed to passing thru to the default handler.
-  HRESULT CallReportProgress(ULONG status_code, LPCWSTR status_text);
-  HRESULT CallReportData(DWORD flags, ULONG progress, ULONG progress_max);
-  HRESULT CallReportResult(HRESULT result, DWORD error, LPCWSTR result_text);
-  HRESULT CallBeginningTransaction(LPCWSTR url,
-                                   LPCWSTR headers,
-                                   DWORD reserved,
-                                   LPWSTR *additional_headers);
-  HRESULT CallOnResponse(DWORD status_code,
-                         LPCWSTR response_headers,
-                         LPCWSTR request_headers,
-                         LPWSTR *additional_request_headers);
-
-  // True when we're passing thru to the default handler created by our base
-  bool is_passingthru_;
-
-  // True when we're directly handling the request as opposed to passing thru
-  // to the default handler
-  bool is_handling_;
-
-  // True if the request is a HEAD request, only valid if 'started_'
-  bool is_head_request_;
-
-  // True once we've called sink->ReportResult()
-  bool has_reported_result_;
-
-  // True if Abort() was called
-  bool was_aborted_;
-
-  // True if Terminate() was called
-  bool was_terminated_;
-
-  // The response body we're returning, only valid if 'started_'
-  WebCacheDB::PayloadInfo payload_;
-
-  // Read position, only valid if 'is_handling_'
-  size_t read_pointer_;
 
   // A convenience pointer to our PassthruSink. The PassthruSink is only
   // used when the default handler is in use.
   PassthruSink *passthru_sink_;
-
-  // Sink related interface pointers used when not passing thru to the
-  // default handler.
-  CComPtr<IInternetProtocolSink> protocol_sink_;
-  CComPtr<IHttpNegotiate> http_negotiate_;
 };
 
 
@@ -342,7 +257,7 @@ class HttpHandler
 //  A custom class factory that implements IInternetProtocolInfo. Rather
 //  than creating a new handler instance in order to call methods of this
 //  interface, IE will call these methods through the interface provided on
-//  the factory. This greatly reduces the number of HttpHandler instances.
+//  the factory. This greatly reduces the number of HttpHandlerAPP instances.
 //------------------------------------------------------------------------------
 class HttpHandlerFactory
     : public PassthroughAPP::CComClassFactoryProtocol,
@@ -383,25 +298,4 @@ class HttpHandlerFactory
       DWORD reserved);
 };
 
-//------------------------------------------------------------------------------
-// HttpHandlerCheck
-//  Class used to detect when our HttpHandler is not being called by the,
-//  system and to inform the user if not.
-//------------------------------------------------------------------------------
-class HttpHandlerCheck {
- public:
-  HttpHandlerCheck() : is_checking_(false), handler_started_count_(0) {}
-  void StartCheck(const char16 *url);
-  void FinishCheck();
-  void CancelCheck() { is_checking_ = false; }
-  bool IsChecking() const { return is_checking_; }
-#ifdef DEBUG
-  static void ResetHasWarned();
-#endif
- private:
-  bool is_checking_;
-  int handler_started_count_;
-  SecurityOrigin origin_;
-};
-
-#endif  // GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
+#endif  // GEARS_LOCALSERVER_IE_HTTP_HANDLER_APP_H__

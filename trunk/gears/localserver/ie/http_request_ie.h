@@ -34,7 +34,7 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/progress_event.h"
-#include "gears/localserver/ie/http_handler_ie.h"
+#include "gears/localserver/ie/http_intercept.h"
 
 class BlobInterface;
 class ByteStore;
@@ -264,7 +264,7 @@ class IEHttpRequest
   bool has_synthesized_response_payload_;
 
   // Used to check if our handler is intercepting requests.
-  HttpHandlerCheck handler_check_;
+  HttpInterceptCheck handler_check_;
 
   // URLMON object references
   CComPtr<IMoniker> url_moniker_;
