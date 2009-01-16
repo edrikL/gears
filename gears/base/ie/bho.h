@@ -36,7 +36,7 @@
 #else
 #define MAYBE_DERIVE_FROM_BROWSER_LISTENER ,public BrowserListener
 #include "gears/base/ie/browser_listener.h"
-#include "gears/localserver/ie/http_handler_ie.h"
+#include "gears/localserver/ie/http_intercept.h"
 #endif
 
 class ATL_NO_VTABLE BrowserHelperObject
@@ -68,7 +68,7 @@ class ATL_NO_VTABLE BrowserHelperObject
   virtual void OnBeforeNavigate2(IWebBrowser2 *window, const CString &url,
                                  bool *cancel);
   virtual void OnDocumentComplete(IWebBrowser2 *window, const CString &url);
-  HttpHandlerCheck handler_check_;
+  HttpInterceptCheck handler_check_;
 #endif
 };
 OBJECT_ENTRY_AUTO(__uuidof(BrowserHelperObject), BrowserHelperObject)
