@@ -37,14 +37,34 @@
 //------------------------------------------------------------------------------
 
 ProcessRestarter::ProcessRestarter(const char16* process_name) {
-  ProcessRestarter(process_name, NULL);
+  assert(process_name && wcslen(process_name) > 0);
+  Init(process_name, NULL, NULL);
 }
 
 ProcessRestarter::ProcessRestarter(const char16* process_name,
-                                   const char16* window_name)
-    : recursion_level_(0),
-      process_name_(process_name),
-      window_name_(window_name) {
+                                   const char16* window_name) {
+  assert(window_name && wcslen(window_name) > 0);
+  Init(process_name, window_name, NULL);
+}
+
+ProcessRestarter::ProcessRestarter(const char16* process_name,
+                                   const char16* window_name,
+                                   const char16* class_name) {
+  assert(class_name && wcslen(class_name) > 0);
+  Init(process_name, window_name, class_name);
+}
+
+void ProcessRestarter::Init(const char16* process_name,
+                            const char16* window_name,
+                            const char16* class_name) {
+  recursion_level_ = 0;
+  process_name_ = process_name;
+  window_name_ = window_name;
+  class_name_ = class_name;
+
+  assert((process_name_ && wcslen(process_name_) > 0) ||
+         (window_name_ && wcslen(window_name_) > 0) ||
+         (class_name_ && wcslen(class_name_) > 0));
 }
 
 // Clean up if we've left the process handle open
@@ -176,13 +196,22 @@ HRESULT ProcessRestarter::FindProcessInstances(bool* is_running) {
   if (SUCCEEDED(FindProcessInstancesUsingSnapshot(is_running))) {
     return S_OK;
   }
-  return FindProcessInstancesUsingFindWindow(is_running);
+  if (SUCCEEDED(FindProcessInstancesUsingFindWindow(is_running))) {
+    return S_OK;
+  }
+  return FindProcessInstancesUsingFindClass(is_running);
 }
 
 // See http://msdn2.microsoft.com/en-us/library/aa446560.aspx for details
 // on how to enumerate processes on Windows Mobile.
 HRESULT ProcessRestarter::FindProcessInstancesUsingSnapshot(bool* found) {
   ASSERT(found);
+
+  // We fail fast if process_name_ is NULL or the empty string.
+  if (process_name_ == NULL || wcslen(process_name_) == 0) {
+    return E_FAIL;
+  }
+
   // Clear the process_ids_.
   process_ids_.clear();
   // Create a snapshot of the processes running in the system.
@@ -220,13 +249,43 @@ HRESULT ProcessRestarter::FindProcessInstancesUsingSnapshot(bool* found) {
 HRESULT ProcessRestarter::FindProcessInstancesUsingFindWindow(bool* found) {
   ASSERT(found);
   
-  // We fail fast if the window_name is NULL or the empty string.
+  // We fail fast if window_name_ is NULL or the empty string.
   if (window_name_ == NULL || wcslen(window_name_) == 0) {
     return E_FAIL;
   }
 
   HRESULT result;
   HWND handle = FindWindow(NULL, window_name_);
+  if (handle == NULL) {
+    // We didn't find the window. Is this because there is no such window
+    // or because FindWindow failed for a different reason?
+    result = HRESULT_FROM_WIN32(::GetLastError());
+    if (SUCCEEDED(result)) {
+      // There is no such window.
+      *found = false;
+    }
+    return result;
+  }
+
+  // Found a window, get the PID.
+  uint32 process_id = 0;
+  uint32 thread_id =
+      ::GetWindowThreadProcessId(handle, reinterpret_cast<DWORD*>(&process_id));
+  process_ids_.push_back(process_id);
+  *found = true;
+  return S_OK;
+}
+
+HRESULT ProcessRestarter::FindProcessInstancesUsingFindClass(bool* found) {
+  ASSERT(found);
+
+  // We fail fast if class_name_ is NULL or the empty string.
+  if (class_name_ == NULL || wcslen(class_name_) == 0) {
+    return E_FAIL;
+  }
+
+  HRESULT result;
+  HWND handle = FindWindow(class_name_, NULL);
   if (handle == NULL) {
     // We didn't find the window. Is this because there is no such window
     // or because FindWindow failed for a different reason?
