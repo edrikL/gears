@@ -31,7 +31,9 @@
 #include "gears/installer/common/resource.h"  // for restart dialog strings
 
 static const char16* kOperaProcessName = L"Opera9.exe";
-static const char16* kOperaLaunchExe = L"\\Program Files\\Opera 9.5 Beta\\OperaL.exe";
+static const char16* kOperaLaunchExe =
+    L"\\Program Files\\Opera 9.5 Beta\\OperaL.exe";
+static const char16* kOperaWindowClass = L"Opera_MainWndClass";
 static const char16* kGearsSite = L"http://gears.google.com/done.html";
 
 HINSTANCE module_instance;
@@ -59,7 +61,7 @@ __declspec(dllexport) InstallerActions Install_Init(
     LPCTSTR installation_directory) {
   // We only handle the first call.
   if (!is_first_call) return kContinue;
-  ProcessRestarter running_process(kOperaProcessName, NULL);
+  ProcessRestarter running_process(kOperaProcessName, NULL, kOperaWindowClass);
   running_process.KillTheProcess(
       1000,
       ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
@@ -78,7 +80,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
     WORD    failed_registry_keys,
     WORD    failed_registry_values,
     WORD    failed_shortcuts) {
-  ProcessRestarter running_process(kOperaProcessName, NULL);
+  ProcessRestarter running_process(kOperaProcessName, NULL, kOperaWindowClass);
   bool is_running = false;
   HRESULT result = running_process.IsProcessRunning(&is_running);
   if ((SUCCEEDED(result) && is_running) || FAILED(result)) {
@@ -99,7 +101,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
 
     MessageBox(parent_window, fail_message, title, MB_OK | MB_ICONEXCLAMATION);
   } else {
-    ProcessRestarter restart_process(kOperaLaunchExe, NULL);
+    ProcessRestarter restart_process(kOperaLaunchExe);
     if (FAILED(restart_process.StartTheProcess(kGearsSite))) {
       // Unfortunately we failed, so inform the user.
       LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(

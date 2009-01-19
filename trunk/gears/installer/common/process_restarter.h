@@ -40,15 +40,25 @@ class ProcessRestarter {
   static const int KILL_METHOD_2_THREAD_MESSAGE = 0x02;
   static const int KILL_METHOD_3_TERMINATE_PROCESS = 0x04;
 
-  // Creates the object given the process_name to kill.
+  // Creates the object given the process_name to kill. process_name must not be
+  // NULL or empty.
   explicit ProcessRestarter(const char16* process_name);
-  // Creates the object given the process_name to kill.
-  // The window_name parameter denotes the name of the main window created
-  // by the process. If not NULL or empty, this string will be used as a
-  // fallback mechanism for finding the process handle when finding by
-  // process name failed due to a win32 API error.
+  // As above, but adds window_name. The window_name parameter denotes the name
+  // of the main window created by the process. window_name must not be NULL or
+  // empty. This string will be used as a fallback mechanism for finding the
+  // process handle when finding by process name failed due to a win32 API
+  // error.
   ProcessRestarter(const char16* process_name,
                    const char16* window_name);
+  // As above, but adds class_name. The class_name parameter denotes the name
+  // of the class of the main window created by the process. class_name must not
+  // be NULL or empty. This string will be used as a fallback mechanism for
+  // finding the process handle when finding by process name and window name
+  // failed.
+  ProcessRestarter(const char16* process_name,
+                   const char16* window_name,
+                   const char16* class_name);
+
   virtual ~ProcessRestarter();
 
   // Go through process list try to find the required one to kill, trying three
@@ -71,6 +81,11 @@ class ProcessRestarter {
   HRESULT IsProcessRunning(bool* is_running);
 
  private:
+  // Initializes member variables. Must be called from constructors.
+  void Init(const char16* process_name,
+            const char16* window_name,
+            const char16* class_name);
+
   // Finds all instances of the process.
   // The found parameter is only set if the return value denotes success.
   HRESULT FindProcessInstances(bool* found);
@@ -79,9 +94,13 @@ class ProcessRestarter {
   // The found parameter is only set if the return value denotes success.
   HRESULT FindProcessInstancesUsingSnapshot(bool* found);
 
-  // Finds all instances of the process using ::FindWindow
+  // Finds all instances of the process using ::FindWindow with the window name.
   // The found parameter is only set if the return value denotes success.
   HRESULT FindProcessInstancesUsingFindWindow(bool* found);
+
+  // Finds all instances of the process using ::FindWindow with the window
+  // class. The found parameter is only set if the return value denotes success.
+  HRESULT FindProcessInstancesUsingFindClass(bool* found);
 
   // Will try to open handle to each instance.
   // Leaves process handles open (in member process_handles_).
@@ -133,6 +152,7 @@ class ProcessRestarter {
   // Private member variables:
   const char16* process_name_;
   const char16* window_name_;
+  const char16* class_name_;
   // One process can have several instances
   // running. This array will keep handles to all
   // instances of the process.
