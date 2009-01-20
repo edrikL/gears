@@ -47,82 +47,102 @@ static const char *kUrlMonDllName = "urlmon.dll";
 //   glyph indicating that you can't click on it.
 //------------------------------------------------------------------------------
 
-typedef HRESULT (WINAPI* CoInternetQueryInfo_Fn)(LPCWSTR url,
-                                                 QUERYOPTION option,
-                                                 DWORD flags,
-                                                 LPVOID buffer,
-                                                 DWORD buffer_len,
-                                                 DWORD *buffer_len_out,
-                                                 DWORD reserved);
+// The importing modules we patch
+enum ModuleToPatch {
+  MODULE_IEFRAME,
+  MODULE_MSHTML
+};
 
-static iat_patch::IATPatchFunction ieframe_patch;
-static iat_patch::IATPatchFunction mshtml_patch;
-
-
-STDAPI Hook_CoInternetQueryInfo(LPCWSTR url,
-                                QUERYOPTION option,
-                                DWORD flags,
-                                LPVOID buffer,
-                                DWORD buffer_len,
-                                DWORD *buffer_len_out,
-                                DWORD reserved) {
-  HRESULT hr = HttpHandlerBase::CoInternetQueryInfo(url, option, flags, buffer,
-                                                    buffer_len, buffer_len_out,
-                                                    reserved);
-  if (hr == INET_E_DEFAULT_ACTION) {
-    // TODO(michaeln): Chaining, for now we call urlmon directly.
-    hr = ::CoInternetQueryInfo(url, option, flags, buffer,
-                               buffer_len, buffer_len_out,
-                               reserved);
-  }
-  assert(ieframe_patch.check_patch());
-  assert(mshtml_patch.check_patch());
-  return hr;
-}
-
-
-static HRESULT PatchCoInternetQueryInfoForModule(
-                                   const char *module_name,
-                                   iat_patch::IATPatchFunction *iat_patch) {
-  HMODULE module = GetModuleHandleA(module_name);
-  if (!module) {
-    module = LoadLibraryA(module_name);
-    if (!module) {
-      return  AtlHresultFromLastError();
+class CoInternetQueryInfoPatchBase {
+ public:
+  HRESULT Init() {
+    const char *module_name;
+    switch (GetModuleToPatch()) {
+      case MODULE_IEFRAME:
+        // The anatomy of IE6 vs IE7 is different enough to require patching
+        // a different set of modules that import URLMON. In IE7 and IE8,
+        // IEFRAME replaced the older SHDOCVW found in IE6.
+        module_name = IsIEAtLeastVersion(7, 0, 0, 0) ? "ieframe.dll"
+                                                     : "shdocvw.dll";
+        break;
+      case MODULE_MSHTML:
+        module_name = "mshtml.dll";
+        break;
+      default:
+        assert(false);
+        return E_FAIL;
     }
+    HMODULE module = GetModuleHandleA(module_name);
+    if (!module) {
+      module = LoadLibraryA(module_name);
+      if (!module) {
+        return  AtlHresultFromLastError();
+      }
+    }
+    return iat_patch_.Patch(module, kUrlMonDllName, "CoInternetQueryInfo",
+                            GetHookProc());
   }
-  return iat_patch->Patch(module, kUrlMonDllName, "CoInternetQueryInfo",
-                          reinterpret_cast<LPVOID>(Hook_CoInternetQueryInfo));
-}
+
+ protected:
+  typedef HRESULT (WINAPI* CoInternetQueryInfo_Fn)(LPCWSTR url,
+                                                   QUERYOPTION option,
+                                                   DWORD flags,
+                                                   LPVOID buffer,
+                                                   DWORD buffer_len,
+                                                   DWORD *buffer_len_out,
+                                                   DWORD reserved);
+  virtual ModuleToPatch GetModuleToPatch() = 0;
+  virtual void *GetHookProc() = 0;
+  iat_patch::IATPatchFunction iat_patch_;
+};
+
+
+// Template class used to define a distinct static Hook proc for each
+// module we patch so we chain to the appropiate original function.
+template<ModuleToPatch kModule>
+class CoInternetQueryInfoPatch : public CoInternetQueryInfoPatchBase {
+ public:
+  static CoInternetQueryInfoPatch s_instance;
+
+ private:
+  virtual ModuleToPatch GetModuleToPatch() {
+    return kModule;
+  }
+
+  virtual void *GetHookProc() {
+    return reinterpret_cast<void*>(Hook_CoInternetQueryInfo);
+  }
+
+  static HRESULT WINAPI Hook_CoInternetQueryInfo(
+                                         LPCWSTR url,
+                                         QUERYOPTION option,
+                                         DWORD flags,
+                                         LPVOID buffer,
+                                         DWORD buffer_len,
+                                         DWORD *buffer_len_out,
+                                         DWORD reserved) {
+    HRESULT hr = HttpHandlerBase::CoInternetQueryInfo(url, option, flags,
+                                                      buffer, buffer_len,
+                                                      buffer_len_out, reserved);
+    if (hr == INET_E_DEFAULT_ACTION) {
+      CoInternetQueryInfo_Fn fn = reinterpret_cast<CoInternetQueryInfo_Fn>
+                          (s_instance.iat_patch_.original());
+      hr = fn(url, option, flags, buffer, buffer_len, buffer_len_out, reserved);
+    }
+    return hr;
+  }
+};
+
+
+template<ModuleToPatch kModule>
+CoInternetQueryInfoPatch<kModule> CoInternetQueryInfoPatch<kModule>::s_instance;
 
 
 static HRESULT PatchCoInternetQueryInfo() {
-  // TODO(michaeln): look more closely at which modules we want to poke at
-  const char *module_names[] = { "ieframe.dll", "mshtml.dll" };
-  iat_patch::IATPatchFunction *patches[] = { &ieframe_patch, &mshtml_patch };
-  assert(ARRAYSIZE(module_names) == ARRAYSIZE(patches));
-
-  if (!IsIEAtLeastVersion(7, 0, 0, 0)) {
-    // The anatomy of IE6 vs IE7 is different enough to require patching
-    // a different set of modules that import URLMON. In IE7 and IE8,
-    // IEFRAME replaced the older SHDOCVW found in IE6.
-    module_names[0] = "shdocvw.dll";
-  }
-
-  HRESULT hr = S_OK;
-  for (size_t i = 0; i < ARRAYSIZE(patches) && hr == S_OK; ++i) {
-    hr = PatchCoInternetQueryInfoForModule(module_names[i], patches[i]);
-    LOG16((L"PatchCoInternetQueryInfo(%S) = %d\n", module_names[i], hr));
-  }
-
-  if (hr != S_OK) {
-    for (size_t i = 0; i < ARRAYSIZE(patches); ++i) {
-      if (patches[i]->is_patched()) {
-        patches[i]->Unpatch();
-      }
-    }
-  }
-  return hr;
+  HRESULT hr = CoInternetQueryInfoPatch<MODULE_IEFRAME>::s_instance.Init();
+  if (FAILED(hr))
+    return hr;
+  return CoInternetQueryInfoPatch<MODULE_MSHTML>::s_instance.Init();
 }
 
 

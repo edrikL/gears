@@ -90,7 +90,26 @@ static bool InterceptEnumCallback(const PEImage &image, const char* module,
      (0 == lstrcmpiA(name, intercept_information->function_name))) {
     // Save the old pointer.
     if (NULL != intercept_information->old_function) {
-      *(intercept_information->old_function) = GetIATFunction(iat);
+      void* old_function = GetIATFunction(iat);
+      if (image.module() == GetModuleHandleFromAddress(old_function)) {
+        // If the old pointer points back into the importing module, we don't
+        // trust it. It's most likely a deferred loading stub. In this case
+        // we lookup the original function pointer in the exporting module
+        // and return that value instead.
+        HMODULE exporting_module = LoadLibraryA(module);
+        void* exported_function = (exporting_module != NULL)
+                                      ? GetProcAddress(exporting_module, name)
+                                      : NULL;
+        if (NULL == exported_function) {
+          // Terminate the enumeration and fail to patch
+          intercept_information->return_code = GetLastError();
+          intercept_information->finished_operation = true;
+          DCHECK(false);
+          return false;
+        }
+        old_function = exported_function;
+      }
+      *(intercept_information->old_function) = old_function;
     }
 
     if (NULL != intercept_information->iat_thunk) {

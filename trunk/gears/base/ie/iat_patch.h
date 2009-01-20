@@ -104,6 +104,7 @@ class IATPatchFunction {
   // module_handle          Module to be intercepted
   // imported_from_module   Module that exports the 'function_name'
   // function_name          Name of the API to be intercepted
+  // new_function           Interceptor function
   //
   // Returns: Windows error code (winerror.h). NO_ERROR if successful
   //
@@ -121,6 +122,11 @@ class IATPatchFunction {
 
   bool is_patched() const {
     return (NULL != intercept_function_);
+  }
+
+  // Returns the original function pointer.
+  void* original() const {
+    return original_function_;
   }
 
   // Verifies the the import table still points to our intercept_function.
