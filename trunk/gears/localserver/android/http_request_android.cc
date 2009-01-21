@@ -51,7 +51,7 @@
 
 // Fully qualified name of our counterpart Java class.
 static const char *const kHttpRequestAndroidClassName =
-    GEARS_JAVA_PACKAGE "/HttpRequestAndroid";
+    GEARS_JAVA_PACKAGE "/ApacheHttpRequestAndroid";
 
 // Default MIME type associated with a document which doesn't specify it.
 static const char16 *const kDefaultMimeType = STRING16(L"text/plain");
