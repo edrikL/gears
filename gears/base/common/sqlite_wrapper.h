@@ -37,6 +37,9 @@
 #include "third_party/sqlite_google/preprocessed/sqlite3.h"
 #endif
 
+// forward declaration of classes used in this interface
+class Mutex;
+
 // forward declarations of classes defined here
 class SQLTransaction;
 class scoped_sqlite3_stmt_ptr;
@@ -143,6 +146,16 @@ class SQLDatabase {
   // log_label parameter is optional and may be NULL.
   bool CommitTransaction(const char *log_label);
 
+  // Sets an optional mutex that will be locked immediately prior to beginning
+  // a transaction via SQLite, and unlocked immediately after ending the
+  // transaction. The default is NULL. Should not be set while the
+  // SQLDatabase instance is within a transaction. This can be used to avoid
+  // depending on SQLite's transaction locking within the current process.
+  void SetTransactionMutex(Mutex *mutex) {
+    assert(!IsInTransaction());
+    opt_transaction_mutex_ = mutex;
+  }
+
   // Callbacks
   void SetTransactionListener(SQLTransactionListener *listener);
 
@@ -193,6 +206,8 @@ class SQLDatabase {
   // When the current transaction was started, not valid when there is
   // no transaction open
   int64 transaction_start_time_;  // used for logging only
+
+  Mutex *opt_transaction_mutex_;
 
   // callbacks
   SQLTransactionListener *transaction_listener_;
