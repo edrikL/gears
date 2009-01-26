@@ -25,6 +25,7 @@
 
 #include <vector>
 #include "gears/base/common/file.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
@@ -98,7 +99,8 @@ static void LogIfConspicuouslyLongTime(const char *format_str,
 
 SQLDatabase::SQLDatabase() : 
     db_(NULL), transaction_count_(0), needs_rollback_(false), 
-    transaction_start_time_(0), transaction_listener_(NULL) {
+    transaction_start_time_(0), opt_transaction_mutex_(NULL),
+    transaction_listener_(NULL) {
 }
 
 
@@ -200,6 +202,9 @@ void SQLDatabase::Close() {
   if (db_) {
     sqlite3_close(db_);
     db_ = NULL;
+    if (IsInTransaction() && opt_transaction_mutex_) {
+      opt_transaction_mutex_->Unlock();
+    }
   }  
 }
 
@@ -244,9 +249,16 @@ bool SQLDatabase::BeginTransaction(const char *log_label) {
   LOG(("SQLDatabase: BeginTransaction for %s\n", log_label));
   transaction_start_time_ = GetCurrentTimeMillis();
 
+  if (opt_transaction_mutex_) {
+    opt_transaction_mutex_->Lock();
+  }
+
   // We always use BEGIN IMMEDIATE for now but this could be parameterized in
   // the future if necessary.
   if (SQLITE_OK != sqlite3_exec(db_, "BEGIN IMMEDIATE", NULL, NULL, NULL)) {
+    if (opt_transaction_mutex_) {
+      opt_transaction_mutex_->Unlock();
+    }
     LOG(("SQLDatabase: Cannot exceute BEGIN IMMEDIATE: %d for %s\n", 
          sqlite3_errcode(db_),
          log_label));
@@ -326,6 +338,9 @@ bool SQLDatabase::EndTransaction(const char *log_label) {
   // not been called.
   if (!needs_rollback_) {
     if (SQLITE_OK == sqlite3_exec(db_, "COMMIT", NULL, NULL, NULL)) {
+      if (opt_transaction_mutex_) {
+        opt_transaction_mutex_->Unlock();
+      }
       LogIfConspicuouslyLongTime(
           "SQLDatabase: Committed transaction was open for %d ms for %s\n",
           transaction_start_time_, log_label);
@@ -348,6 +363,9 @@ bool SQLDatabase::EndTransaction(const char *log_label) {
   // TODO(aa): What, if any, are the cases that rollback can fail. Should we do
   // anything about them?
   sqlite3_exec(db_, "ROLLBACK", NULL, NULL, NULL);
+  if (opt_transaction_mutex_) {
+    opt_transaction_mutex_->Unlock();
+  }
   LogIfConspicuouslyLongTime(
       "SQLDatabase: Rolled back transaction was open for %d ms for %s\n",
       transaction_start_time_, log_label);

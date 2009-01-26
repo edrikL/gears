@@ -31,6 +31,7 @@
 
 #include "gears/base/common/exception_handler.h"  // For ExceptionManager
 #include "gears/base/common/file.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
@@ -212,6 +213,9 @@ static const char16 *kCurrentBrowser = STRING16(L"npapi");
 #endif
 
 
+// Used to serialize transactions on the localserver.db file
+static Mutex global_transaction_mutex;
+
 //------------------------------------------------------------------------------
 // constructor
 //------------------------------------------------------------------------------
@@ -234,6 +238,8 @@ bool WebCacheDB::Init() {
   if (!db_.Open(kFilename)) {
     return false;
   }
+
+  db_.SetTransactionMutex(&global_transaction_mutex);
 
   // Initialize the storage for bodies
 #ifdef USE_FILE_STORE
