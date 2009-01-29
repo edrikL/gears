@@ -69,8 +69,7 @@ static HRESULT ResolveShortcut(TCHAR *buffer) {
 HRESULT GetHtmlDataTransfer(
     IHTMLWindow2 *html_window_2,
     CComPtr<IHTMLEventObj> &html_event_obj,
-    CComPtr<IHTMLDataTransfer> &html_data_transfer)
-{
+    CComPtr<IHTMLDataTransfer> &html_data_transfer) {
   HRESULT hr;
   hr = html_window_2->get_event(&html_event_obj);
   if (FAILED(hr)) return hr;
@@ -82,13 +81,10 @@ HRESULT GetHtmlDataTransfer(
 
 
 bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
-                            bool is_in_a_drop,
-                            JsObject *data_out,
-                            std::string16 *error_out) {
+                            FileDragAndDropMetaData *meta_data_out) {
   CComPtr<IHTMLWindow2> html_window_2;
   if (FAILED(ActiveXUtils::GetHtmlWindow2(
           module_environment->iunknown_site_, &html_window_2))) {
-    *error_out = STRING16(L"Could not access the IHtmlWindow2.");
     return false;
   }
 
@@ -139,11 +135,8 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     GlobalUnlock(stg_medium.hGlobal);
     ReleaseStgMedium(&stg_medium);
   }
-
-  FileDragAndDropMetaData meta_data;
-  meta_data.SetFilenames(filenames);
-  return meta_data.ToJsObject(
-      module_environment, is_in_a_drop, data_out, error_out);
+  meta_data_out->SetFilenames(filenames);
+  return true;
 }
 
 
@@ -219,11 +212,196 @@ bool GetDragData(ModuleEnvironment *module_environment,
     return false;
   }
 
-  return AddFileDragAndDropData(module_environment,
-                                type == DRAG_AND_DROP_EVENT_DROP,
-                                data_out,
-                                error_out);
+  FileDragAndDropMetaData meta_data;
+  return AddFileDragAndDropData(module_environment, &meta_data) &&
+      meta_data.ToJsObject(
+          module_environment,
+          type == DRAG_AND_DROP_EVENT_DROP,
+          data_out,
+          error_out);
 }
+
+
+STDMETHODIMP DropTargetInterceptor::QueryInterface(REFIID riid, void **object) {
+  if ((riid == IID_IUnknown) || (riid == IID_IDropTarget)) {
+    *object = this;
+    AddRef();
+    return S_OK;
+  } else {
+    return E_NOINTERFACE;
+  }
+}
+
+
+STDMETHODIMP_(ULONG) DropTargetInterceptor::AddRef() {
+  // TODO(nigeltao): Remove this debugging statement (and the corresponding
+  // ones in Release, constructor and destructor).
+  LOG16((L"DropTargetInterceptor::AddRef   %p %ld (+1)\n", this, GetRef()));
+  Ref();
+  return 1;
+}
+
+
+STDMETHODIMP_(ULONG) DropTargetInterceptor::Release() {
+  LOG16((L"DropTargetInterceptor::Release  %p %ld (-1)\n", this, GetRef()));
+  Unref();
+  return 1;
+}
+
+
+STDMETHODIMP DropTargetInterceptor::DragEnter(
+    IDataObject *object, DWORD state, POINTL point, DWORD *effect) {
+  cached_meta_data_is_valid_ = false;
+  will_accept_drop_ = true;
+  HRESULT hr = original_drop_target_->DragEnter(object, state, point, effect);
+  if (SUCCEEDED(hr) && !will_accept_drop_) {
+    *effect = DROPEFFECT_NONE;
+  }
+  return hr;
+}
+
+
+STDMETHODIMP DropTargetInterceptor::DragOver(
+    DWORD state, POINTL point, DWORD *effect) {
+  will_accept_drop_ = true;
+  HRESULT hr = original_drop_target_->DragOver(state, point, effect);
+  if (SUCCEEDED(hr) && !will_accept_drop_) {
+    *effect = DROPEFFECT_NONE;
+  }
+  return hr;
+}
+
+
+STDMETHODIMP DropTargetInterceptor::DragLeave() {
+  HRESULT hr = original_drop_target_->DragLeave();
+  cached_meta_data_is_valid_ = false;
+  return hr;
+}
+
+
+STDMETHODIMP DropTargetInterceptor::Drop(
+    IDataObject *object, DWORD state, POINTL point, DWORD *effect) {
+  HRESULT hr = original_drop_target_->Drop(object, state, point, effect);
+  cached_meta_data_is_valid_ = false;
+  return hr;
+}
+
+
+FileDragAndDropMetaData &DropTargetInterceptor::GetFileDragAndDropMetaData() {
+  if (!cached_meta_data_is_valid_) {
+    cached_meta_data_.Reset();
+    cached_meta_data_is_valid_ =
+        AddFileDragAndDropData(module_environment_.get(), &cached_meta_data_);
+  }
+  return cached_meta_data_;
+}
+
+
+void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+  module_environment_->js_runner_->RemoveEventHandler(JSEVENT_UNLOAD, this);
+  is_revoked_ = true;
+  // TODO(nigeltao): Should we check if we are still the hwnd's droptarget?
+  RevokeDragDrop(hwnd_);
+  RegisterDragDrop(hwnd_, original_drop_target_);
+  // The following Unref balances the Ref() in the constructor, and may delete
+  // this DropTargetInterceptor instance.
+  Unref();
+}
+
+
+void DropTargetInterceptor::SetWillAcceptDrop(bool will_accept_drop) {
+  will_accept_drop_ = will_accept_drop;
+}
+
+
+DropTargetInterceptor::DropTargetInterceptor(
+    ModuleEnvironment *module_environment,
+    HWND hwnd,
+    IDropTarget *original_drop_target)
+    : cached_meta_data_is_valid_(false),
+      module_environment_(module_environment),
+      hwnd_(hwnd),
+      original_drop_target_(original_drop_target),
+      will_accept_drop_(true),
+      is_revoked_(false) {
+  LEAK_COUNTER_INCREMENT(DropTargetInterceptor);
+  LOG16((L"DropTargetInterceptor::ctor     %p\n", this));
+  assert(hwnd_);
+  assert(original_drop_target_);
+  module_environment_->js_runner_->AddEventHandler(JSEVENT_UNLOAD, this);
+  // We maintain a reference to ourselves, for the lifetime of the page (i.e.
+  // until page unload), since the alternative is to be tied to the lifetime
+  // of some script-level object, which may be more fragile (e.g. if that
+  // object is garbage collected during the execution of a DnD event handler).
+  // The Ref() is balanced by an Unref() during HandleEvent(JSEVENT_UNLOAD).
+  Ref();
+  // TODO(nigeltao): Check if the following two calls return something other
+  // than S_OK, and react appropriately.
+  RevokeDragDrop(hwnd_);
+  RegisterDragDrop(hwnd_, this);
+  instances_[hwnd_] = this;
+}
+
+
+DropTargetInterceptor::~DropTargetInterceptor() {
+  LEAK_COUNTER_DECREMENT(DropTargetInterceptor);
+  LOG16((L"DropTargetInterceptor::dtor     %p\n", this));
+  assert(is_revoked_);
+  instances_.erase(hwnd_);
+}
+
+
+static BOOL CALLBACK EnumChildWindowsProc(HWND hwnd, LPARAM param) {
+  WCHAR class_name[100];
+  GetClassName(hwnd, static_cast<LPTSTR>(class_name), 100);
+  if (wcscmp(class_name, L"Internet Explorer_Server")) {
+    return TRUE;
+  }
+
+  DWORD process_id = 0;
+  DWORD thread_id = GetWindowThreadProcessId(hwnd, &process_id);
+
+  if (thread_id == GetCurrentThreadId() &&
+      process_id == GetCurrentProcessId()) {
+    *(reinterpret_cast<HWND*>(param)) = hwnd;
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
+
+std::map<HWND, DropTargetInterceptor*> DropTargetInterceptor::instances_;
+
+
+DropTargetInterceptor *DropTargetInterceptor::Intercept(
+    ModuleEnvironment *module_environment) {
+  HWND browser_window = 0;
+  HWND child = 0;
+  if (GetBrowserWindow(module_environment, &browser_window)) {
+    EnumChildWindows(browser_window, EnumChildWindowsProc, (LPARAM)&child);
+  }
+  if (!child) {
+    return NULL;
+  }
+
+  std::map<HWND, DropTargetInterceptor*>::iterator i =
+      instances_.find(child);
+  DropTargetInterceptor *interceptor = NULL;
+  if (i != instances_.end()) {
+    interceptor = i->second;
+  } else {
+    IDropTarget *original_drop_target =
+        static_cast<IDropTarget*>(GetProp(child, L"OleDropTargetInterface"));
+    if (original_drop_target) {
+      interceptor = new DropTargetInterceptor(
+          module_environment, child, original_drop_target);
+    }
+  }
+  return interceptor;
+}
+
 
 #endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #endif  // OFFICIAL_BUILD
