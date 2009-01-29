@@ -115,9 +115,9 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     }
 
     UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
-    TCHAR buffer[MAX_PATH + 1];
-    for (UINT i = 0; i < num_files; i++) {
-      DragQueryFile(hdrop, i, buffer, sizeof(buffer));
+    WCHAR buffer[MAX_PATH];
+    for (UINT i = 0; i < num_files; ++i) {
+      DragQueryFile(hdrop, i, buffer, MAX_PATH);
       SHFILEINFO sh_file_info;
       if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
                          SHGFI_ATTRIBUTES) ||
