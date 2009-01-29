@@ -30,6 +30,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  <title></title>
   <style type="text/css">
 
 m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
@@ -277,7 +279,10 @@ m4_include(genfiles/shortcuts_dialog.js)
   initDialog();
   initLayout();
   initShortcuts(args);
-  resizeDialogToFitContent(dialogMinHeight);
+
+  // Do not resize on Opera Mobile, let the browser resize automatically.
+  if (!(browser.wince && browser.opera))
+    resizeDialogToFitContent(dialogMinHeight);
 
   function initLayout() {
     if (locationsEnabled) {

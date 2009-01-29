@@ -30,6 +30,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  <title></title>
   <style type="text/css">
 
 m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
@@ -370,7 +372,7 @@ m4_include(genfiles/permissions_dialog.js)
     if (!customName) {
       elem = dom.getElementById("origin-only");
       elem.style.display = "block";
-      if (browser.ie_mobile) {
+      if (browser.ie_mobile || (browser.wince && browser.opera)) {
         elem.innerHTML = wrapDomain(origin);
       } else {
         setTextContent(elem, origin);
@@ -385,7 +387,7 @@ m4_include(genfiles/permissions_dialog.js)
     } else {
       elem = dom.getElementById("origin");
       elem.style.display = "block";
-      if (browser.ie_mobile) {
+      if (browser.ie_mobile || (browser.wince && browser.opera)) {
         elem.innerHTML = wrapDomain(origin);
       } else {
         setTextContent(elem, origin);
@@ -418,7 +420,10 @@ m4_include(genfiles/permissions_dialog.js)
       dom.getElementById("checkbox-row").style.display = 'block';
       updateAllowButtonEnabledState();
     }
-    resizeDialogToFitContent();
+
+    // Do not resize on Opera Mobile, let the browser resize automatically
+    if (!(browser.wince && browser.opera))
+      resizeDialogToFitContent();
   }
 
 

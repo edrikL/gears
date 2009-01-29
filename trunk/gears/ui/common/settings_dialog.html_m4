@@ -30,6 +30,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  <title></title>
   <style type="text/css">
 
 m4_ifelse(PRODUCT_OS,~android~,~~,~m4_dnl
@@ -128,7 +130,14 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     }
 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~~,~
+~
+m4_ifelse(PRODUCT_BROWSER,~OPERA~,m4_dnl
+~
+    div.radio-buttons {
+      width: 120px;
+    }
+~,~~)
+~,~
     div.radio-buttons {
 m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
@@ -279,7 +288,10 @@ m4_include(genfiles/settings_dialog.js)
 
   if (!browser.ie_mobile) {
     CustomButton.initializeAll();
-    if (!browser.android) {
+
+    // Do not initialize custom layout on Opera Mobile, let the browser layout
+    // automatically.
+    if (!browser.android && !(browser.wince && browser.opera)) {
       initCustomLayout(layoutSettings);
     }
   } else {
@@ -374,7 +386,7 @@ m4_include(genfiles/settings_dialog.js)
     }
     content += "><tbody>";
     content += "<tr><td class=\"origin-name\">";
-    if (browser.ie_mobile) {
+    if (browser.ie_mobile || (browser.wince && browser.opera)) {
       content += wrapDomain(originData.name);
     } else {
       content += originData.name;
