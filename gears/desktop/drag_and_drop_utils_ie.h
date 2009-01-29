@@ -26,18 +26,74 @@
 #ifndef GEARS_DESKTOP_DRAG_AND_DROP_UTILS_IE_H__
 #define GEARS_DESKTOP_DRAG_AND_DROP_UTILS_IE_H__
 
+#include <map>
+
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/desktop/drag_and_drop_utils_common.h"
+
+
+// A DropTargetInterceptor is a IDropTarget implementation that sits in front
+// of (and mostly delegates to) Internet Explorer's default IDropTarget. Its
+// purpose is to allow Gears to respond last to drag and drop events, which
+// allows us to set an effect (i.e. cursor) of DROPEFFECT_NONE, when rejecting
+// a file drop. In comparison, trying to set event.dataTransfer.dropEffect to
+// 'none', via IE's JavaScript is overridden by IE's default behavior for file
+// drops, which is to show DROPEFFECT_COPY or DROPEFFECT_LINK, but not
+// DROPEFFECT_NONE.
+//
+// This is also where we cache file drag-and-drop metadata so that, for
+// example, during the numerous DRAGOVER events, we only query the clipboard
+// (and the filesystem) once.
+class DropTargetInterceptor
+    : public IDropTarget,
+      public RefCounted,
+      public JsEventHandlerInterface {
+ public:
+  static DropTargetInterceptor *Intercept(
+      ModuleEnvironment *module_environment);
+
+  STDMETHODIMP QueryInterface(REFIID riid, void **object);
+  STDMETHODIMP_(ULONG) AddRef();
+  STDMETHODIMP_(ULONG) Release();
+  STDMETHODIMP DragEnter(
+      IDataObject *object, DWORD state, POINTL point, DWORD *effect);
+  STDMETHODIMP DragOver(DWORD state, POINTL point, DWORD *effect);
+  STDMETHODIMP DragLeave();
+  STDMETHODIMP Drop(
+      IDataObject *object, DWORD state, POINTL point, DWORD *effect);
+
+  FileDragAndDropMetaData &GetFileDragAndDropMetaData();
+
+  virtual void HandleEvent(JsEventType event_type);
+  void SetWillAcceptDrop(bool will_accept_drop);
+
+ private:
+  static std::map<HWND, DropTargetInterceptor*> instances_;
+
+  FileDragAndDropMetaData cached_meta_data_;
+  bool cached_meta_data_is_valid_;
+
+  scoped_refptr<ModuleEnvironment> module_environment_;
+  HWND hwnd_;
+  CComPtr<IDropTarget> original_drop_target_;
+  bool will_accept_drop_;
+  bool is_revoked_;
+
+  DropTargetInterceptor(
+      ModuleEnvironment *module_environment,
+      HWND hwnd,
+      IDropTarget *original_drop_target);
+  ~DropTargetInterceptor();
+
+  DISALLOW_EVIL_CONSTRUCTORS(DropTargetInterceptor);
+};
+
 
 HRESULT GetHtmlDataTransfer(
     IHTMLWindow2 *html_window_2,
     CComPtr<IHTMLEventObj> &html_event_obj,
     CComPtr<IHTMLDataTransfer> &html_data_transfer);
-
-bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
-                            bool is_in_a_drop,
-                            JsObject *data_out,
-                            std::string16 *error_out);
 
 void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
