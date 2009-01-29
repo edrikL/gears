@@ -153,7 +153,9 @@ DragAndDropEventType GetWindowEvent(ModuleEnvironment *module_environment,
   CComBSTR type;
   if (FAILED(ActiveXUtils::GetHtmlWindow2(
           module_environment->iunknown_site_, &window)) ||
+      (window == NULL) ||
       FAILED(window->get_event(&window_event)) ||
+      (window_event == NULL) ||
       FAILED(window_event->get_type(&type))) {
     // If we get here, then there is no window.event, so we are not in
     // the browser's event dispatch.
