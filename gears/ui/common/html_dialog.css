@@ -30,7 +30,21 @@ body, html {
   padding:0;
   margin:0;
   height:100%;
+
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+m4_ifelse(PRODUCT_BROWSER,~OPERA~,m4_dnl
+~
+  /*
+  On Opera Mobile we use overflow:auto to allow content to resize automatically
+  */
+  overflow:auto;
+~,~
   overflow:hidden;
+~)
+~,~
+  overflow:hidden;
+~)
   cursor:default;
 
   /* 
@@ -74,18 +88,25 @@ button {
 }
 
 #foot {
-m4_ifelse(PRODUCT_OS,~android~,m4_dnl
-~
   /*
-  On Android we do not use position:absolute due to some
+  On Android and Opera Mobile we do not use position:absolute due to some
   rendering limitations (absolute positioning works, but
   the automatic resizing of dialog is confused by the
   variable content and the display is wrong, while if we
   remove the absolute positioning, #foot is back in the
   flow and the dialog displays correctly)
   */
+m4_ifelse(PRODUCT_OS,~android~,m4_dnl
+~~,~
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+m4_ifelse(PRODUCT_BROWSER,~OPERA~,m4_dnl
+~~,~
+  position:absolute;
+~)
 ~,~
   position:absolute;
+~)
 ~)
   background:white;
   bottom:0;
@@ -98,7 +119,7 @@ m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 
 #buttons-wince {
   /*
-  On Windows Mobile, we hide the div containing the buttons by default, as
+  On IE Mobile, we hide the div containing the buttons by default, as
   they are only used on touchscreen devices.
   */
   display:none;

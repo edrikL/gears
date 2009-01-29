@@ -140,6 +140,8 @@ function getArguments() {
     argsString = getFirefoxArguments(window.arguments[0]);
   } else if (browser.safari) {
     argsString = window.gears_dialogArguments;
+  } else if (browser.opera) {
+    argsString = window.dialogArguments;
   } else if (browser.android) {
     argsString = "" + window.bridge.getDialogArguments();
   } else if (browser.chrome) {
@@ -179,6 +181,9 @@ function saveAndClose(resultObject) {
     window.close();
   } else if (browser.safari) {
     window.gears_dialog.setResults(resultString);
+  } else if (browser.opera) {
+    window.returnValue = resultString;
+    window.close();
   } else if (browser.android) {
     window.bridge.closeDialog(resultString);
   } else if (browser.chrome) {
