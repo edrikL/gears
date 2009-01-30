@@ -33,27 +33,25 @@
 
 
 // The topic for the message system.
-const char16* kTopic = STRING16(L"Cab Update Event");
+static const char16* kTopic = STRING16(L"Cab Update Event");
 // The key for ThreadLocals.
-const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
+static const ThreadLocals::Slot kThreadLocalKey = ThreadLocals::Alloc();
 
-const char16 *kGearsCabName = L"gears-wince-opt.cab";
-
-// The delay before the first update.
-const int32 kFirstUpdatePeriod = (1000 * 60 * 2);  // 2 minutes
 // The time interval between the rest of the update checks.
-const int32 kUpdatePeriod = (1000 * 60 * 60 * 24);  // 24 hours
+static const int kUpdatePeriod = (1000 * 60 * 60 * 24);  // 24 hours
 // A grace period after a connection event. Setting up a new connection
 // can take time so we wait a little after the event.
-const int32 kGracePeriod = (1000 * 30);  // 30 seconds
+static const int kGracePeriod = (1000 * 30);  // 30 seconds
 
-CabUpdater::CabUpdater()
-    : checker_(PeriodicChecker::CreateChecker()),
+CabUpdaterBase::CabUpdaterBase()
+    : checker_(NULL),
       is_showing_update_dialog_(false),
-      download_task_(NULL) {
+      download_task_(NULL),
+      first_update_period_(0),
+      module_name_(NULL) {
 }
 
-CabUpdater::~CabUpdater() {
+CabUpdaterBase::~CabUpdaterBase() {
   assert(checker_);
   delete checker_;
   if (download_task_) {
@@ -61,11 +59,12 @@ CabUpdater::~CabUpdater() {
   }
 }
 
-void CabUpdater::Start(HWND browser_window, std::string16 guid) {
+void CabUpdaterBase::Start(HWND browser_window, std::string16 guid) {
   browser_window_ = browser_window;
   assert(browser_window_);
   assert(checker_);
-  if (checker_->Init(kFirstUpdatePeriod, kUpdatePeriod, kGracePeriod, guid,
+  assert(first_update_period_ > 0);
+  if (checker_->Init(first_update_period_, kUpdatePeriod, kGracePeriod, guid,
                      this)) {
     MessageService::GetInstance()->AddObserver(this, kTopic);
     // We get stopped when the DLL unloads.
@@ -74,7 +73,7 @@ void CabUpdater::Start(HWND browser_window, std::string16 guid) {
   }
 }
 
-void CabUpdater::OnNotify(MessageService *service,
+void CabUpdaterBase::OnNotify(MessageService *service,
                           const char16 *topic,
                           const NotificationData *data) {
   assert(wcscmp(topic, kTopic) == 0);
@@ -108,9 +107,9 @@ void CabUpdater::OnNotify(MessageService *service,
 // Internal
 
 // static
-void CabUpdater::Stop(void* self) {
+void CabUpdaterBase::Stop(void* self) {
   assert(self);
-  CabUpdater* updater = reinterpret_cast<CabUpdater*>(self);
+  CabUpdaterBase* updater = reinterpret_cast<CabUpdaterBase*>(self);
   // Stop the periodic checker, without waiting for it to clean up. In general
   // this is dangerous, because the periodic checker's worker thread may attempt
   // to access the object's internals, or call back to this object, after these
@@ -123,8 +122,9 @@ void CabUpdater::Stop(void* self) {
   MessageService::GetInstance()->RemoveObserver(updater, kTopic);
 }
 
-bool CabUpdater::ShowUpdateAvailableDialog() {
-  HMODULE module = GetModuleHandle(PRODUCT_SHORT_NAME);
+bool CabUpdaterBase::ShowUpdateAvailableDialog() {
+  assert(module_name_);
+  HMODULE module = GetModuleHandle(module_name_);
   if (!module) return false;
   // Load the dialog strings
   LPCTSTR message = reinterpret_cast<LPCTSTR>(
@@ -146,8 +146,9 @@ bool CabUpdater::ShowUpdateAvailableDialog() {
                               MB_YESNO | MB_ICONQUESTION));
 }
 
-bool CabUpdater::ShowInstallationFailedDialog() {
-  HMODULE module = GetModuleHandle(PRODUCT_SHORT_NAME);
+bool CabUpdaterBase::ShowInstallationFailedDialog() {
+  assert(module_name_);
+  HMODULE module = GetModuleHandle(module_name_);
   if (!module) return false;
   // Load the dialog strings
   LPCTSTR message = reinterpret_cast<LPCTSTR>(
@@ -167,23 +168,8 @@ bool CabUpdater::ShowInstallationFailedDialog() {
   return true;
 }
 
-// PeriodicChecker::ListenerInterface implementation
-void CabUpdater::UpdateUrlAvailable(const std::string16 &url) {
-  // Start the download task
-  MutexLock lock(&download_task_mutex_);
-  if (download_task_ == NULL) {
-    // Cache the temp file we use for the download and start the download.
-
-    if (File::GetBaseTemporaryDirectory(&temp_file_path_)) {
-      temp_file_path_ += kGearsCabName;
-      download_task_ =
-          DownloadTask::Create(url.c_str(), temp_file_path_.c_str(), this);
-    }
-  }
-}
-
 // DownloadTask::ListenerInterface implementation
-void CabUpdater::DownloadComplete(bool success) {
+void CabUpdaterBase::DownloadComplete(bool success) {
   if (success) {
     // Marshall the callback to the browser thread so that we can show the
     // dialog.

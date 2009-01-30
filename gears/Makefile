@@ -2062,6 +2062,10 @@ IEMOBILE_VPATH	+= \
 		installer/iemobile \
 		$(NULL)
 
+IEMOBILE_CPPSRCS	+= \
+		cab_updater_ie.cc \
+		$(NULL)
+
 IEMOBILE_WINCESETUP_CPPSRCS += \
 		process_restarter.cc \
 		setup.cc \
@@ -2087,6 +2091,10 @@ ifeq ($(OS),wince)
 OPERA_VPATH	+= \
 		installer/common \
 		installer/opera \
+		$(NULL)
+
+OPERA_CPPSRCS	+= \
+		cab_updater_op.cc \
 		$(NULL)
 
 OPERA_WINCESETUP_CPPSRCS += \

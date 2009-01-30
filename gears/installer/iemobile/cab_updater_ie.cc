@@ -23,48 +23,33 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
-#define GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
+#include "gears/installer/iemobile/cab_updater_ie.h"
 
-#include "gears/base/common/common.h"
-#include "gears/localserver/common/async_task.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/thread_locals.h"
 
-class BlobInterface;
+static const char16 *kGearsCabName = L"gears-wince-opt.cab";
+static const int kFirstUpdatePeriod = (1000 * 60 * 2);  // 2 minutes
 
-// A task that downloads a new version of Gears.
-class DownloadTask : public AsyncTask {
- public:
-  friend class scoped_ptr<DownloadTask>;
+IECabUpdater::IECabUpdater() {
+  checker_ = PeriodicChecker::CreateChecker(NULL);
+  first_update_period_ = kFirstUpdatePeriod;
+  module_name_ = PRODUCT_SHORT_NAME;
+}
 
-  class ListenerInterface {
-   public:
-    virtual void DownloadComplete(bool success) = 0;
-  };
+// PeriodicChecker::ListenerInterface implementation
+void IECabUpdater::UpdateUrlAvailable(const std::string16 &url) {
+  // Start the download task
+  MutexLock lock(&download_task_mutex_);
+  if (download_task_ == NULL) {
+    // Cache the temp file we use for the download and start the download.
 
-  static DownloadTask *Create(const char16 *url,
-                              const char16 *save_path,
-                              ListenerInterface *listener,
-                              BrowsingContext *browsing_context);
-  void StopThreadAndDelete();
-
- private:
-  // Use Create and StopThreadAndDelete to create and destroy
-  DownloadTask(const char16 *url,
-               const char16 *save_path,
-               ListenerInterface *listener,
-               BrowsingContext *browsing_context);
-  virtual ~DownloadTask() {}
-
-  // AsyncTask implementation
-  virtual void Run();
-
-  bool SaveToFile(BlobInterface *data);
-
-  std::string16 url_;
-  std::string16 save_path_;
-  ListenerInterface *listener_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(DownloadTask);
-};
-
-#endif  // GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
+    if (File::GetBaseTemporaryDirectory(&temp_file_path_)) {
+      temp_file_path_ += kGearsCabName;
+      download_task_ = DownloadTask::Create(url.c_str(),
+                                            temp_file_path_.c_str(),
+                                            this,
+                                            NULL);
+    }
+  }
+}

@@ -23,48 +23,23 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
-#define GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
+#ifndef GEARS_INSTALLER_OPERA_CAB_UPDATER_OP_H__
+#define GEARS_INSTALLER_OPERA_CAB_UPDATER_OP_H__
 
-#include "gears/base/common/common.h"
-#include "gears/localserver/common/async_task.h"
+#include "gears/installer/common/cab_updater.h"
 
-class BlobInterface;
-
-// A task that downloads a new version of Gears.
-class DownloadTask : public AsyncTask {
+class OPCabUpdater : public CabUpdaterBase {
  public:
-  friend class scoped_ptr<DownloadTask>;
+  OPCabUpdater(BrowsingContext *browsing_context);
+  virtual ~OPCabUpdater() {}
 
-  class ListenerInterface {
-   public:
-    virtual void DownloadComplete(bool success) = 0;
-  };
-
-  static DownloadTask *Create(const char16 *url,
-                              const char16 *save_path,
-                              ListenerInterface *listener,
-                              BrowsingContext *browsing_context);
-  void StopThreadAndDelete();
+  // PeriodicChecker::ListenerInterface implementation
+  virtual void UpdateUrlAvailable(const std::string16 &url);
 
  private:
-  // Use Create and StopThreadAndDelete to create and destroy
-  DownloadTask(const char16 *url,
-               const char16 *save_path,
-               ListenerInterface *listener,
-               BrowsingContext *browsing_context);
-  virtual ~DownloadTask() {}
+  BrowsingContext *browsing_context_;
 
-  // AsyncTask implementation
-  virtual void Run();
-
-  bool SaveToFile(BlobInterface *data);
-
-  std::string16 url_;
-  std::string16 save_path_;
-  ListenerInterface *listener_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(DownloadTask);
+  DISALLOW_EVIL_CONSTRUCTORS(OPCabUpdater);
 };
 
-#endif  // GEARS_INSTALLER_COMMON_DOWNLOAD_TASK_H__
+#endif  // GEARS_INSTALLER_OPERA_CAB_UPDATER_OP_H__

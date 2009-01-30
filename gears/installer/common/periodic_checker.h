@@ -30,10 +30,11 @@
 // new version is available, a callback is made to the listener with the
 // download URL of the new version.
 
-#ifndef GEARS_INSTALLER_IEMOBILE_PERIODIC_CHECKER_H__
-#define GEARS_INSTALLER_IEMOBILE_PERIODIC_CHECKER_H__
+#ifndef GEARS_INSTALLER_COMMON_PERIODIC_CHECKER_H__
+#define GEARS_INSTALLER_COMMON_PERIODIC_CHECKER_H__
 
 #include "gears/base/common/atl_headers_win32.h"
+#include "gears/base/common/browsing_context.h"
 #include <gears/base/common/string16.h>
 #include "gears/base/common/wince_compatibility.h"
 
@@ -48,7 +49,7 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   };
 
   // Simple factory method.
-  static PeriodicChecker* CreateChecker();
+  static PeriodicChecker *CreateChecker(BrowsingContext *browsing_context);
   // Initializes the checker and sets the desired times between update checks.
   // Also sets the application ID sent to the server for update checks and the
   // listener for callbacks.
@@ -76,8 +77,7 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   END_MSG_MAP()
 
   // Internal
-  PeriodicChecker();
-
+  PeriodicChecker(BrowsingContext *browsing_context);
   // Message handlers.
   LRESULT OnTimer(UINT message, WPARAM unused1, LPARAM unused2, BOOL &handled);
   LRESULT OnFetchTaskComplete(UINT message, WPARAM success, LPARAM unused,
@@ -124,7 +124,9 @@ class PeriodicChecker : public CWindowImpl<PeriodicChecker> {
   // The message ID used for listening to connection status events.
   uint32 con_mgr_msg_;
 
+  scoped_refptr<BrowsingContext> browsing_context_;
+
   DISALLOW_EVIL_CONSTRUCTORS(PeriodicChecker);
 };
 
-#endif  // GEARS_INSTALLER_IEMOBILE_PERIODIC_CHECKER_H__
+#endif  // GEARS_INSTALLER_COMMON_PERIODIC_CHECKER_H__

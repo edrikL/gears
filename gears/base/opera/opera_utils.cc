@@ -35,7 +35,7 @@
 #include "third_party/opera/opera_worker_interface.h"
 
 #ifdef OS_WINCE
-#include "gears/installer/common/cab_updater.h"
+#include "gears/installer/opera/cab_updater_op.h"
 static const char16* kGuid = L"%7B000C0320-09CE-4D7E-B3C9-66B2ACB7FF80%7D";
 #endif
 
@@ -133,7 +133,10 @@ void OperaUtils::Init(OperaGearsApiInterface *opera_api,
 #ifdef OS_WINCE
   HWND opera_window = ::FindWindow(L"Opera_MainWndClass", NULL);
 
-  static CabUpdater updater;
+  // TODO(deepak@opera.com): Move this code to a location where we have access
+  // to a valid browsing context.
+  BrowsingContext *browsing_context = NULL;
+  static OPCabUpdater updater(browsing_context);
   updater.Start(opera_window, kGuid);
 #endif
 }

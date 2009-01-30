@@ -34,8 +34,10 @@ static const int kBufferSizeBytes = 32 * 1024;  // 32 Kb
 // static
 DownloadTask *DownloadTask::Create(const char16* url,
                                    const char16* save_path,
-                                   ListenerInterface *listener) {
-  scoped_ptr<DownloadTask> task(new DownloadTask(url, save_path, listener));
+                                   ListenerInterface *listener,
+                                   BrowsingContext *browsing_context) {
+  scoped_ptr<DownloadTask> task(
+      new DownloadTask(url, save_path, listener, browsing_context));
   assert(task.get());
   if (!task.get() || !task->Init() || !task->Start()) {
     return NULL;
@@ -50,8 +52,9 @@ void DownloadTask::StopThreadAndDelete() {
 
 DownloadTask::DownloadTask(const char16* url,
                            const char16* save_path,
-                           ListenerInterface *listener)
-    : AsyncTask(NULL),
+                           ListenerInterface *listener,
+                           BrowsingContext *browsing_context)
+    : AsyncTask(browsing_context),
       url_(url),
       save_path_(save_path),
       listener_(listener) {

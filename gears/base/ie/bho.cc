@@ -34,7 +34,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/detect_version_collision.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/installer/common/cab_updater.h"
+#include "gears/installer/iemobile/cab_updater_ie.h"
 #include "gears/localserver/ie/http_intercept.h"
 
 // TODO(steveblock): Fix this GUID. See bug 406.
@@ -65,7 +65,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     assert(NULL == browser_window_);
     site->get_HWND(reinterpret_cast<long*>(&browser_window_));
 
-    static CabUpdater updater;
+    static IECabUpdater updater;
     updater.Start(browser_window_, kGuid);
   }
   return S_OK;
