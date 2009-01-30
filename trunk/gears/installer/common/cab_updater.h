@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// This file defines the CabUpdater class, which uses the PeriodicChecker and
-// DownloadTask to handle automitic updating.
+// This file defines the CabUpdaterBase class, which uses the PeriodicChecker
+// and DownloadTask to handle automitic updating.
 //
 // 1. The PeriodicChecker is configured to check for an update after two minutes
 // and every 24 hours thereafter.
@@ -33,24 +33,24 @@
 // 3. If this succeeds, we present the user with a dialog, asking if they would
 // like to install the new version.
 // 4. If the user agrees, we invoke wceload to install the CAB.
-// 5. The CabUpdater waits for a new update from the PeriodicChecker and
+// 5. The CabUpdaterBase waits for a new update from the PeriodicChecker and
 // continues from step 2.
 
-#ifndef GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
-#define GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
+#ifndef GEARS_INSTALLER_COMMON_CAB_UPDATER_H__
+#define GEARS_INSTALLER_COMMON_CAB_UPDATER_H__
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/message_service.h"
 #include "gears/installer/common/download_task.h"
 #include "gears/installer/common/periodic_checker.h"
 
-class CabUpdater
+class CabUpdaterBase
     : public MessageObserverInterface,
       public PeriodicChecker::ListenerInterface,
       public DownloadTask::ListenerInterface {
  public:
-  CabUpdater();
-  virtual ~CabUpdater();
+  CabUpdaterBase();
+  virtual ~CabUpdaterBase();
 
   // Starts the updater. guid is the GUID used in the request query parameters.
   void Start(HWND browser_window, std::string16 guid);
@@ -64,6 +64,23 @@ class CabUpdater
                         const char16 *topic,
                         const NotificationData *data);
 
+ protected:
+  // The periodic update checker. Owned.
+  PeriodicChecker* checker_;
+
+  // The task to download the new CAB.
+  DownloadTask *download_task_;
+  Mutex download_task_mutex_;
+
+  // The temporary file that will be used for the downloaded CAB.
+  std::string16 temp_file_path_;
+
+  // The delay before the first update.
+  int first_update_period_;
+
+  // The name of the module.
+  const char16 *module_name_;
+
  private:
   // Stop method called when the DLL unloads.
   static void Stop(void* self);
@@ -72,28 +89,16 @@ class CabUpdater
   // Shows the dialog saying that installation failed.
   bool ShowInstallationFailedDialog();
 
-  // PeriodicChecker::ListenerInterface implementation
-  virtual void UpdateUrlAvailable(const std::string16 &url);
-
   // DownloadTask::ListenerInterface implementation
   virtual void DownloadComplete(bool success);
 
-  // The periodic update checker. Owned.
-  PeriodicChecker* checker_;
   // Is the update dialog showing?
   bool is_showing_update_dialog_;
-
-  // The task to download the new CAB.
-  DownloadTask *download_task_;
-  Mutex download_task_mutex_;
 
   // The window that will be used as the parent of the dialogs.
   HWND browser_window_;
 
-  // The temporary file that will be used for the downloaded CAB.
-  std::string16 temp_file_path_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(CabUpdater);
+  DISALLOW_EVIL_CONSTRUCTORS(CabUpdaterBase);
 };
 
-#endif  // GEARS_INSTALLER_IEMOBILE_CAB_UPDATER_H__
+#endif  // GEARS_INSTALLER_COMMON_CAB_UPDATER_H__

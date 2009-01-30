@@ -73,7 +73,8 @@ class VersionFetchTask : public AsyncTask {
  public:
   // Factory method
   static VersionFetchTask *Create(const std::string16 &guid,
-                                  HWND listener_window);
+                                  HWND listener_window,
+                                  BrowsingContext *browsing_context);
 
   // Signals the worker thread to stop and asynchronously deletes the object.
   // No further messages will be sent to the listener once a call to this method
@@ -85,7 +86,10 @@ class VersionFetchTask : public AsyncTask {
 
  private:
   // Use Create to create a new instance and StopThreadAndDelete to destroy.
-  VersionFetchTask(const std::string16 &guid, HWND listener_window);
+  VersionFetchTask(const std::string16 &guid,
+                   HWND listener_window,
+                   BrowsingContext *browsing_context);
+
   virtual ~VersionFetchTask() {}
 
   // AsyncTask implementation
@@ -107,8 +111,9 @@ class VersionFetchTask : public AsyncTask {
 
 
 // static
-PeriodicChecker* PeriodicChecker::CreateChecker() {
-  return new PeriodicChecker();
+PeriodicChecker* PeriodicChecker::CreateChecker(
+    BrowsingContext *browsing_context) {
+  return new PeriodicChecker(browsing_context);
 }
 
 bool PeriodicChecker::Init(int32 first_period,
@@ -125,7 +130,7 @@ bool PeriodicChecker::Init(int32 first_period,
       (TRUE == thread_complete_event_.Create(NULL, FALSE, FALSE, NULL));
 }
 
-PeriodicChecker::PeriodicChecker()
+PeriodicChecker::PeriodicChecker(BrowsingContext *browsing_context)
     : first_period_(0),
       normal_period_(0),
       grace_period_(0),
@@ -136,6 +141,7 @@ PeriodicChecker::PeriodicChecker()
       timer_(1),
       task_(NULL),
       window_(NULL),
+      browsing_context_(browsing_context),
       normal_timer_event_(false) {
 }
 
@@ -239,7 +245,7 @@ LRESULT PeriodicChecker::OnTimer(UINT /* message */,
   // Depending on how the periodic checker is configured, this can fire
   // while a task is running. We ignore such events.
   if (!task_) {
-    task_ = VersionFetchTask::Create(guid_, window_);
+    task_ = VersionFetchTask::Create(guid_, window_, browsing_context_.get());
   }
   handled = TRUE;
   return TRUE;
@@ -300,9 +306,11 @@ void PeriodicChecker::ResetTimer(int32 period) {
 
 // static
 VersionFetchTask *VersionFetchTask::Create(const std::string16 &guid,
-                                           HWND listener_window) {
+                                           HWND listener_window,
+                                           BrowsingContext *browsing_context) {
+
   VersionFetchTask *task =
-      new VersionFetchTask(guid, listener_window);
+      new VersionFetchTask(guid, listener_window, browsing_context);
   if (!task) {
     assert(false);
     return NULL;
@@ -315,8 +323,9 @@ VersionFetchTask *VersionFetchTask::Create(const std::string16 &guid,
 }
 
 VersionFetchTask::VersionFetchTask(const std::string16 &guid,
-                                   HWND listener_window)
-    : AsyncTask(NULL),
+                                   HWND listener_window,
+                                   BrowsingContext* browsing_context)
+    : AsyncTask(browsing_context),
       guid_(guid),
       listener_window_(listener_window) {
   assert(listener_window_);
