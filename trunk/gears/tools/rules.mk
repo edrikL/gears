@@ -782,8 +782,10 @@ $(OPERA_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 # genfiles directory.
 $(OPERA_OUTDIR)/genfiles/%.gif: ui/common/%.gif
 	cp $< $@
+	chmod 600 $(OPERA_OUTDIR)/genfiles/*.gif
 $(OPERA_OUTDIR)/genfiles/%.png: ui/common/%.png
 	cp $< $@
+	chmod 600 $(OPERA_OUTDIR)/genfiles/*.png
 
 $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 	$(RC) $(RCFLAGS) /DVISTA_BROKER=1 $<
