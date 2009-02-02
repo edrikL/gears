@@ -34,8 +34,18 @@
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
-#elif BROWSER_IE || BROWSER_IEMOBILE
+
+#elif BROWSER_IE && !defined(OS_WINCE)
 #include "gears/base/ie/activex_utils.h"
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+#include "gears/desktop/drag_and_drop_utils_ie.h"
+#endif
+
+#elif BROWSER_IEMOBILE
+#include "gears/base/ie/activex_utils.h"
+
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
@@ -61,6 +71,14 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
   LEAK_COUNTER_INCREMENT(ModuleEnvironment);
 #if BROWSER_FF
   assert(js_context_ != NULL);
+#elif BROWSER_IE && !defined(OS_WINCE)
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+  if (!is_worker) {
+    drop_target_interceptor_.reset(DropTargetInterceptor::Intercept(this));
+  }
+#endif
 #endif
   js_runner_->OnModuleEnvironmentAttach();
 }

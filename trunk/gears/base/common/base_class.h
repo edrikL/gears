@@ -41,6 +41,7 @@
 #include "gears/base/common/string16.h"  // for string16
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+class DropTargetInterceptor;
 class ModuleWrapperBaseClass;
 
 #if defined(BROWSER_IEMOBILE)
@@ -91,6 +92,14 @@ struct ModuleEnvironment : public RefCounted {
   // Pointer to the object that hosts this object. On Win32, this is the pointer
   // passed to SetSite. On WinCE this is the JS IDispatch pointer.
   CComPtr<IUnknown> iunknown_site_;
+#endif
+
+#if BROWSER_IE && !defined(OS_WINCE)
+#ifdef OFFICIAL_BUILD
+  // The Drag-and-Drop API has not been finalized for official builds.
+#else
+  scoped_refptr<DropTargetInterceptor> drop_target_interceptor_;
+#endif
 #endif
 
   bool is_worker_;

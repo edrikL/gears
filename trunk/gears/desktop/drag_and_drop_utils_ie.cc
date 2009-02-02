@@ -189,6 +189,16 @@ void AcceptDrag(ModuleEnvironment *module_environment,
   }
 
   if (type != DRAG_AND_DROP_EVENT_DROP) {
+    // TODO(nigeltao): Should acceptance be a string (e.g. "copy" or "none")
+    // rather than a boolean, for future expansibility.
+    module_environment->drop_target_interceptor_->SetWillAcceptDrop(acceptance);
+
+    // TODO(nigeltao): Should Gears even be responsible for cancelBubble /
+    // preventDefault / stopPropagation of the event, since that can be done
+    // from JavaScript (unlike setting the cursor to "none" without being
+    // over-ridden by the browser's default cursor settings)? If not (and
+    // hence if we remove the paragraph of code below), should we rename
+    // acceptDrag to setDragCursor?
     CComQIPtr<IHTMLEventObj2> window_event2(window_event);
     CComPtr<IHTMLDataTransfer> data_transfer;
     if (!window_event2 ||
@@ -302,6 +312,11 @@ FileDragAndDropMetaData &DropTargetInterceptor::GetFileDragAndDropMetaData() {
 void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
   module_environment_->js_runner_->RemoveEventHandler(JSEVENT_UNLOAD, this);
+
+  // Break the ModuleEnvironment <--> DropTargetInterceptor reference cycle.
+  assert(module_environment_->drop_target_interceptor_ == this);
+  module_environment_->drop_target_interceptor_.reset(NULL);
+
   is_revoked_ = true;
   // TODO(nigeltao): Should we check if we are still the hwnd's droptarget?
   RevokeDragDrop(hwnd_);
