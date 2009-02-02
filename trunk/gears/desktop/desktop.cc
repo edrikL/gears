@@ -913,7 +913,7 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   if (data_available) {
     context->SetReturnValue(JSPARAM_OBJECT, result.get());
   } else if (error.empty()) {
-    context->SetReturnValue(JSPARAM_UNDEFINED, NULL);
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetException(error);
   }
