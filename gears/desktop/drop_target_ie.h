@@ -98,14 +98,6 @@ class DropTarget
   bool unregister_self_has_been_called_;
   bool will_accept_drop_;
 
-  // TODO(nigeltao): This is an interceptor for the "gears-calls-the-webapp"
-  // or "version 1" DnD API, but we will also need an interceptor for the
-  // "the-webapp-calls-gears" or "version 2" DnD API, which will probably be
-  // a member variable of the ModuleEnvironment. If that happens, then we
-  // will not need a per-DropTarget interceptor, and can therefore eliminate
-  // this member variable.
-  scoped_refptr<DropTargetInterceptor> interceptor_;
-
 #ifdef DEBUG
   CComPtr<IHTMLStyle> html_style_;
 #endif

@@ -84,12 +84,6 @@ DropTarget *DropTarget::CreateDropTarget(ModuleEnvironment *module_environment,
     return NULL;
   }
 
-  drop_target->interceptor_.reset(
-      DropTargetInterceptor::Intercept(module_environment));
-  if (!drop_target->interceptor_.get()) {
-    return NULL;
-  }
-
   hr = drop_target->DispEventAdvise(dom_element_dispatch,
                                     &DIID_HTMLElementEvents2);
   if (FAILED(hr)) { return NULL; }
@@ -178,8 +172,9 @@ HRESULT DropTarget::HandleOnDragEnter()
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
     std::string16 error;
-    interceptor_->GetFileDragAndDropMetaData().ToJsObject(
-        module_environment_.get(), false, context_object.get(), &error);
+    module_environment_->drop_target_interceptor_->
+        GetFileDragAndDropMetaData().ToJsObject(
+            module_environment_.get(), false, context_object.get(), &error);
     if (!error.empty()) {
       return E_FAIL;
     }
@@ -198,7 +193,8 @@ HRESULT DropTarget::HandleOnDragEnter()
     will_accept_drop_ = return_value.get() &&
         V_VT(&return_value->token()) == VT_BOOL &&
         V_BOOL(&return_value->token()) == false;
-    interceptor_->SetWillAcceptDrop(will_accept_drop_);
+    module_environment_->drop_target_interceptor_->
+        SetWillAcceptDrop(will_accept_drop_);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -221,8 +217,9 @@ HRESULT DropTarget::HandleOnDragOver()
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
     std::string16 error;
-    interceptor_->GetFileDragAndDropMetaData().ToJsObject(
-        module_environment_.get(), false, context_object.get(), &error);
+    module_environment_->drop_target_interceptor_->
+        GetFileDragAndDropMetaData().ToJsObject(
+            module_environment_.get(), false, context_object.get(), &error);
     if (!error.empty()) {
       return E_FAIL;
     }
@@ -236,7 +233,8 @@ HRESULT DropTarget::HandleOnDragOver()
     will_accept_drop_ = return_value.get() &&
         V_VT(&return_value->token()) == VT_BOOL &&
         V_BOOL(&return_value->token()) == false;
-    interceptor_->SetWillAcceptDrop(will_accept_drop_);
+    module_environment_->drop_target_interceptor_->
+        SetWillAcceptDrop(will_accept_drop_);
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -263,8 +261,9 @@ HRESULT DropTarget::HandleOnDragLeave()
     // TODO(nigeltao): To match the behavior on other browsers, we should not
     // pass up file drag-and-drop metadata on DRAGLEAVE, but only on DRAGENTER,
     // DRAGOVER and DROP.
-    interceptor_->GetFileDragAndDropMetaData().ToJsObject(
-        module_environment_.get(), false, context_object.get(), &error);
+    module_environment_->drop_target_interceptor_->
+        GetFileDragAndDropMetaData().ToJsObject(
+            module_environment_.get(), false, context_object.get(), &error);
     if (!error.empty()) {
       return E_FAIL;
     }
@@ -293,8 +292,9 @@ HRESULT DropTarget::HandleOnDragDrop()
         module_environment_->js_runner_->NewObject());
     AddEventToJsObject(context_object.get());
     std::string16 error;
-    interceptor_->GetFileDragAndDropMetaData().ToJsObject(
-        module_environment_.get(), true, context_object.get(), &error);
+    module_environment_->drop_target_interceptor_->
+        GetFileDragAndDropMetaData().ToJsObject(
+            module_environment_.get(), true, context_object.get(), &error);
     if (!error.empty()) {
       return E_FAIL;
     }
@@ -320,7 +320,6 @@ void DropTarget::UnregisterSelf() {
   if (event_source_) {
     DispEventUnadvise(event_source_, &DIID_HTMLElementEvents2);
   }
-  interceptor_.reset(NULL);
   Unref();  // Balanced by an Ref() call during CreateDropTarget.
 }
 
