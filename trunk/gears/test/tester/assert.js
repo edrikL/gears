@@ -50,6 +50,7 @@ var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
 var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
 var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
+var isOpera = google.gears.factory.getBuildInfo().indexOf(';opera') > -1;
 
 /**
  * Whether the installed Gears extension has the test scriptable object.

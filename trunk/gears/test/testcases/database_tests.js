@@ -605,6 +605,27 @@ function testRemove() {
 }
 
 function testRemoveCrossThread() {
+  if (isWince && isOpera) {
+    // This test makes two assumptions about the queues used to deliver messages
+    // between threads within Gears.
+    // - The message service and workerpool module use the same message queue
+    // - This queue is FIFO
+    //
+    // When the worker calls db.remove(), GearsDatabase::Remove() sends a
+    // 'database deleted' thread message to update database objects in other
+    // threads. The worker then sends a workerpool message to the parent thread.
+    // By the above assumptions, the 'database deleted' message is received and
+    // processed before the workerpool message, thus ensuring that the database
+    // object is aware of the deletion and returns the expected error.
+    //
+    // These assumptions are not true for Opera Mobile. Workerpool messages are
+    // handled in a different queue than the Gears Message Service. So there is
+    // no guarantee that they are processed in the correct sequence.
+    //
+    // TODO(steveblock): Revisit this issue and resolve properly. See bug 808.
+    return;
+  }
+
   var db1 = google.gears.factory.create('beta.database');
   db1.open('testremoveddb');
 

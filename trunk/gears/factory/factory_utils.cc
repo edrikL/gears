@@ -115,6 +115,9 @@ void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(L";firefox"));
 #elif BROWSER_SAFARI
   s->append(STRING16(L";safari"));
+#elif BROWSER_OPERA
+  // This must come before the test for BROWSER_NPAPI
+  s->append(STRING16(L";opera"));
 #elif BROWSER_NPAPI
   s->append(STRING16(L";npapi"));
 #else
