@@ -46,8 +46,8 @@ DECLARE_DISPATCHER(GearsDatabase);
 const std::string GearsDatabase::kModuleName("GearsDatabase");
 
 static const char16 *kDatabaseDeletedTopic = STRING16(L"database deleted");
-static const int kMaxSqlStatementLength = 10000;  // arbitrary upper limit to
-                                                  // length of SQL statements.
+static const size_t kMaxSqlStatementLength = 10000; // arbitrary upper limit to
+                                                    // length of SQL statements.
 
 // static
 template<>
