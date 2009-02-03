@@ -282,16 +282,20 @@ bool Desktop::HandleDialogResults(ShortcutInfo *shortcut_info,
     }
   }
 
+  // On platforms other than Windows desktop, the HTML dialog always returns
+  // SHORTCUT_LOCATION_NONE. This would cause us to bail in SetShortcut, so we
+  // must set the desired value here.
   uint32 locations =
-#ifdef OS_WINCE
-      // WinCE only supports the start menu. The dialog will always return a
-      // value of SHORTCUT_LOCATION_NONE, so we set the correct value here.
+#if defined(WIN32) && !defined(OS_WINCE)
+      // On Windows desktop, we support multiple shortcut locations. The desired
+      // locations are returned by the HTML dialog.
+      shortcuts_dialog->result["locations"].asInt();
+#elif defined(OS_WINCE)
+      // On WinCE, we only support shortcuts on the start menu.
       SHORTCUT_LOCATION_STARTMENU;
 #else
-      SHORTCUT_LOCATION_NONE;
-  if (shortcuts_dialog->result["locations"].asInt()) {
-    locations = shortcuts_dialog->result["locations"].asInt();
-  }
+      // On other platforms, we only support shortcuts on the desktop.
+      SHORTCUT_LOCATION_DESKTOP;
 #endif
 
   if (!SetShortcut(shortcut_info, allow, permanently, locations, &error_)) {
