@@ -46,6 +46,8 @@ DECLARE_DISPATCHER(GearsDatabase);
 const std::string GearsDatabase::kModuleName("GearsDatabase");
 
 static const char16 *kDatabaseDeletedTopic = STRING16(L"database deleted");
+static const int kMaxSqlStatementLength = 10000;  // arbitrary upper limit to
+                                                  // length of SQL statements.
 
 // static
 template<>
@@ -164,6 +166,11 @@ void GearsDatabase::Execute(JsCallContext *context) {
   LOG(("DB Execute: %s\n", expr_utf8.c_str()));
 #endif
 #endif
+
+  if (expr.length() > kMaxSqlStatementLength) {
+    context->SetException(STRING16(L"SQL statement is too long."));
+    return;
+  }
 
   // Prepare a statement for execution.
   scoped_sqlite3_stmt_ptr stmt;

@@ -314,8 +314,6 @@ function testPragmaGetDisabled() {
 }
 
 // Causes a segmentation fault.
-// TODO(shess) Fix things so that we can run this, again.  See bug 199.
-/*
 function testStackOverflow() {
   var q = 'select * from (select 1';
   for (var i = 0; i < 50000; ++i) {
@@ -324,9 +322,8 @@ function testStackOverflow() {
   q += ')';
   assertError(function() {
     db.execute(q).close();
-  });
+  }, "SQL statement is too long.");
 }
-*/
 
 // Using VACUUM would cause corruption of fts2 tables.  We have
 // auto_vacuum turned on, so VACUUM isn't really necessary.
