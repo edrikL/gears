@@ -762,52 +762,58 @@ function PopulateCacheAndMakeRequest(waitTime, successCallback, errorCallback,
 }
 
 function testCachedPositionWithinMaximumAge() {
-  // Test that a request with a non-zero maximumAge immediately calls the
-  // success callback with the cached position if we have a suitable one.
-  startAsync();
-  PopulateCacheAndMakeRequest(
-      0,  // Wait for less than maximumAge.
-      function(position) {
-        delete position.timestamp;
-        assertObjectEqual(positionToCache, position,
-                          'Position incorrect in TestMaximumAge.');
-        completeAsync();
-      },
-      null,
-      {maximumAge: 1000});
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge immediately calls the
+    // success callback with the cached position if we have a suitable one.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        0,  // Wait for less than maximumAge.
+        function(position) {
+          delete position.timestamp;
+          assertObjectEqual(positionToCache, position,
+                            'Position incorrect in TestMaximumAge.');
+          completeAsync();
+        },
+        null,
+        {maximumAge: 1000});
+  }
 }
 
 function testCachedPositionOutsideMaximumAgeNoProviders() {
-  // Test that a request with a non-zero maximumAge and no location providers
-  // immediately calls the error callback if we don't have a suitable cached
-  // position.
-  startAsync();
-  PopulateCacheAndMakeRequest(
-      10,  // Wait for longer than maximumAge.
-      function() {},
-      function(error) {
-        assertErrorEqual(error.POSITION_UNAVAILABLE,
-                         'No suitable cached position available.',
-                         error);
-        completeAsync();
-      },
-      {maximumAge: 1, gearsLocationProviderUrls: null});
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge and no location providers
+    // immediately calls the error callback if we don't have a suitable cached
+    // position.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        10,  // Wait for longer than maximumAge.
+        function() {},
+        function(error) {
+          assertErrorEqual(error.POSITION_UNAVAILABLE,
+                           'No suitable cached position available.',
+                           error);
+          completeAsync();
+        },
+        {maximumAge: 1, gearsLocationProviderUrls: null});
+  }
 }
 
 function testCachedPositionOutsideMaximumAge() {
-  // Test that a request with a non-zero maximumAge and location providers
-  // does not immediately call the error callback if we don't have a suitable
-  // cached position. We use a non-existant URL for the location provider to
-  // force an error.
-  startAsync();
-  PopulateCacheAndMakeRequest(
-      10,  // Wait for longer than maximumAge.
-      function() {},
-      function(error) {
-        assert(error.message.search('returned error code 404.') != -1);
-        error.message = null;
-        assertErrorEqual(error.POSITION_UNAVAILABLE, null, error);
-        completeAsync();
-      },
-      {maximumAge: 1, gearsLocationProviderUrls: ['non_existant_url']});
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge and location providers
+    // does not immediately call the error callback if we don't have a suitable
+    // cached position. We use a non-existant URL for the location provider to
+    // force an error.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        10,  // Wait for longer than maximumAge.
+        function() {},
+        function(error) {
+          assert(error.message.search('returned error code 404.') != -1);
+          error.message = null;
+          assertErrorEqual(error.POSITION_UNAVAILABLE, null, error);
+          completeAsync();
+        },
+        {maximumAge: 1, gearsLocationProviderUrls: ['non_existant_url']});
+  }
 }
