@@ -124,7 +124,7 @@ class AutoUpdateSyncMessage : public PluginSyncMessage {
 
   // Serializable registration
   static Serializable *New() {
-    return new AutoUpdateMessage;
+    return new AutoUpdateSyncMessage;
   }
   static void Register() {
     Serializable::RegisterClass(SERIALIZABLE_AUTOUPDATE_SYNC_MESSAGE, New);
