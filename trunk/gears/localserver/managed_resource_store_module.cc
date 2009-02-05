@@ -312,6 +312,9 @@ void GearsManagedResourceStore::HandleEvent(JsEventType event_type) {
 void GearsManagedResourceStore::OnNotify(MessageService *service,
                                          const char16 *topic,
                                          const NotificationData *data) {
+  // Keep a ref to ourselves.  Otherwise, calls to the JsRunner may end up 
+  // deleting us.
+  scoped_refptr<GearsManagedResourceStore> hold(this);
   scoped_ptr<JsObject> param;
   JsRootedCallback *handler = 0;
 
