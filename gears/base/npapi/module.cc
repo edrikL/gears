@@ -40,11 +40,11 @@
 //
 #include "gears/base/common/base_class.h"
 #ifdef BROWSER_WEBKIT
-#include "gears/base/common/common_sf.h"
+#include "gears/base/common/common.h"
 #endif
 #include "gears/base/common/thread_locals.h"
 #ifdef BROWSER_WEBKIT
-#include "gears/base/safari/npapi_patches.h" 
+#include "gears/base/safari/npapi_patches.h"
 #endif
 #include "gears/base/npapi/module.h"
 
@@ -164,7 +164,12 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 // NPN_SetException is buggy in WebKit, see 
 // http://bugs.webkit.org/show_bug.cgi?id=16829
 #ifdef BROWSER_WEBKIT
-  g_browser_funcs.setexception = WebKitNPN_SetException;
+  if (NeedsSafariNPN_SetExceptionWorkaround()) {
+    LOG(("Gears: Installed WebKitNPN_SetException workaround"));
+    g_browser_funcs.setexception = WebKitNPN_SetException;
+  } else {
+    LOG(("Gears: No need for WebKitNPN_SetException workaround"));
+  }
 #endif
   
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);

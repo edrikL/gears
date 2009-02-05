@@ -28,6 +28,7 @@
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/common_sf.h"
 #import "gears/base/safari/browser_utils_sf.h"
+#import "gears/base/safari/loader.h"
 #import "gears/base/safari/nsstring_utils.h"
 
 //------------------------------------------------------------------------------
@@ -62,6 +63,20 @@ void ThrowExceptionKey(NSString *key, ...) {
   va_end(list);
 
   [WebScriptObject throwException:msg];
+}
+
+//------------------------------------------------------------------------------
+bool NeedsSafariNPN_SetExceptionWorkaround()
+{
+  Class gearsLoader = NSClassFromString(@"GearsLoader");
+  int webkit_version = [gearsLoader webKitBuildNumber];
+
+  // Safari v4
+  if (webkit_version >= 528) {
+    return false;
+  }
+
+  return true;
 }
 
 //------------------------------------------------------------------------------

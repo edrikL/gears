@@ -86,8 +86,14 @@ void ThrowExceptionKey(NSString *key, ...);
 
 #endif  // __OBJC__
 
+// The following two functions are needed to work around
+// http://bugs.webkit.org/show_bug.cgi?id=16829
+// this is fixed in newer versions of Safari v4 and WebKit trunk
+// >r39912 see https://bugs.webkit.org/show_bug.cgi?id=23201 for 
+// fix details.
+bool NeedsSafariNPN_SetExceptionWorkaround();
+
 // Throw exception via WebKit's WebScriptObject interface.
-// We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
 void WebKitNPN_SetException(NPObject* obj, const char *message);
 
 // Check system version.

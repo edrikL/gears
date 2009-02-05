@@ -42,5 +42,7 @@
 // Load the bundle and return YES if successful
 + (BOOL)loadGearsBundle;
 
+// Get the build number of WebKit, see function body for details.
++ (int)webKitBuildNumber;
 @end
 #endif  // GEARS_BASE_SAFARI_LOADER_H__

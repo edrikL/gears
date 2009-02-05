@@ -27,3 +27,6 @@ Local Modifications:
 - changed <limits.h> include to <sys/syslimits.h> to fix 10.4 compilation in:
   src/common/mac/file_id.h
   src/common/mac/macho_id.h
+  
+  Addenda:
+   dump_syms is built from r309 in order to fix b/1580734 .
