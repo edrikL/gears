@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,32 +13,38 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "genfiles/product_constants.h"
 #import "gears/base/safari/loader.h"
 
 @implementation GearsLoader
-//------------------------------------------------------------------------------
-+ (BOOL)canLoadGears {
+
++ (int)webKitBuildNumber {
+  static int webkit_version = 0;
+
+  if (webkit_version != 0) {
+    return webkit_version;
+  }
+
   Class webViewClass = NSClassFromString(@"WebView");
   NSBundle *webkitBundle = [NSBundle bundleForClass:webViewClass];
   NSString *key = (NSString *)kCFBundleVersionKey;
   NSString *vers = [webkitBundle objectForInfoDictionaryKey:key];
-  
+
   // Check the version of WebKit that the current application is using and
   // see if it's new enough to load with.
-  
+
   // A (somewhat dated list) of Safari Version strings and equivalent
-  // CFBundleVersions can be found here: 
+  // CFBundleVersions can be found here:
   // http://developer.apple.com/internet/safari/uamatrix.html
   // It seems that the most significant digit is the OS Version, and the
   // rest denote the real safari version number.
@@ -48,17 +54,24 @@
   // 5525.18   - Safari 3.1.1 on 10.5
   // 4525.22   - Safari 3.1.2 on 10.4
   // 5525.18   - Safari 3.1.2 on 10.5
+  // 5528.1    - Savari 4 public beta on 10.5
   int version = floor([vers floatValue]);
-  
+
   // Strip off MSD, apparently corresponding to OS Version.
-  version = version % 1000;
-  
+  webkit_version = version % 1000;
+
+  return webkit_version;
+}
+//------------------------------------------------------------------------------
++ (BOOL)canLoadGears {
+  int version = [GearsLoader webKitBuildNumber];
+
   // 525 is Safari 3.1.1
   if (version >= 525)
     return YES;
-  
-  NSLog(@"%s requires WebKit 4525 or later (Current: %d)",
-        PRODUCT_FRIENDLY_NAME_ASCII, [vers intValue]);
+
+  NSLog(@"%s requires WebKit X525 or later (Current: %d)",
+        PRODUCT_FRIENDLY_NAME_ASCII, version);
   return NO;
 }
 
@@ -77,12 +90,12 @@
   // This causes all kinds of mayhem, e.g. pthread_once will fire twice...
   // * On case sensitive HFS+ volumes, if we don't specify the correct case
   // the plugin won't load since the file won't be found.
-  NSArray *paths = 
+  NSArray *paths =
     NSSearchPathForDirectoriesInDomains(
-        NSLibraryDirectory, 
+        NSLibraryDirectory,
         (NSSearchPathDomainMask)(NSUserDomainMask | NSLocalDomainMask),
         YES);
-  
+
   // This must match the case of the Gears.plugin name exactly!  See above.
   NSString *gears_plugin_basename = @"Gears.plugin"; // [naming]
 
@@ -104,14 +117,14 @@
       return tmp_path;
     }
   }
-  
+
   return nil;
 }
 
 //------------------------------------------------------------------------------
 + (BOOL)loadGearsBundle {
   NSBundle *bundle = [NSBundle bundleWithPath:[GearsLoader gearsBundlePath]];
-  
+
   return [bundle load];
 }
 
