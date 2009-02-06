@@ -100,8 +100,6 @@ function verifyCanvasState(canvas) {
   assertEqual(1.0, ctx.globalAlpha);
   assertEqual('source-over', ctx.globalCompositeOperation);
   assertEqual('#000000', ctx.fillStyle);
-  assertEqual('10px sans-serif', ctx.font);
-  assertEqual('start', ctx.textAlign);
 }
 
 function testCanvasStateInitially() {
@@ -120,9 +118,6 @@ function setContextProperties(canvas) {
   ctx.globalAlpha = 0.45;
   ctx.globalCompositeOperation = 'copy';
   ctx.fillStyle = '#12345F';
-  // TODO(nigeltao): Uncomment after implementing the properties.
-  // ctx.font = '24px Tahoma';
-  // ctx.textAlign = 'right';
 }
 
 // Tests that changing width or height resets all pixels to transparent black.
@@ -269,15 +264,10 @@ function runCloneTest(blob, dummyBlob) {
   var alpha = 0.5;
   var compositeOperation = 'copy';
   var fillStyle = '#397F90';
-  // var font = '24px tahoma';
-  // var textAlign = 'center';
 
   originalCtx.globalAlpha = alpha;
   originalCtx.globalCompositeOperation = compositeOperation;
   originalCtx.fillStyle = fillStyle;
-  // TODO(nigeltao): After implementing font and textAlign, uncomment these.
-  // originalCtx.font = font;
-  // originalCtx.textAlign = textAlign;
 
   // Now clone the canvas and check that the clone and its context are
   // identical to the originals.
@@ -292,8 +282,6 @@ function runCloneTest(blob, dummyBlob) {
   assertEqual(originalCtx.globalCompositeOperation,
       cloneCtx.globalCompositeOperation);
   assertEqual(originalCtx.fillStyle, cloneCtx.fillStyle);
-  // assertEqual(originalCtx.font, cloneCtx.font);
-  // assertEqual(originalCtx.textAlign, cloneCtx.textAlign);
 
 
   // Now perform various operations on the clone and check that the original
@@ -306,8 +294,6 @@ function runCloneTest(blob, dummyBlob) {
     assertEqual(alpha, originalCtx.globalAlpha);
     assertEqual(compositeOperation, originalCtx.globalCompositeOperation);
     assertEqual(fillStyle, originalCtx.fillStyle);
-    // assertEqual(font, ctx.font);
-    // assertEqual(textAlign, ctx.textAlign);
   }
   checkOriginal();
 

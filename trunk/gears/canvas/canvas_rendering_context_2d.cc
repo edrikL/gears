@@ -72,54 +72,89 @@ GearsCanvasRenderingContext2D::~GearsCanvasRenderingContext2D() {
 
 template<>
 void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
+  // The section headings here (e.g., "state", "transformations") are copied
+  // from the HTML5 canvas spec: http://www.whatwg.org/specs/web-apps/
+  //     current-work/multipage/the-canvas-element.html
+
+  // back-reference to the canvas
   RegisterProperty("canvas", &GearsCanvasRenderingContext2D::GetCanvas, NULL);
+
+  // state
   RegisterMethod("save", &GearsCanvasRenderingContext2D::Save);
   RegisterMethod("restore", &GearsCanvasRenderingContext2D::Restore);
+
+  // transformations
   RegisterMethod("scale", &GearsCanvasRenderingContext2D::Scale);
   RegisterMethod("rotate", &GearsCanvasRenderingContext2D::Rotate);
   RegisterMethod("translate", &GearsCanvasRenderingContext2D::Translate);
   RegisterMethod("transform", &GearsCanvasRenderingContext2D::Transform);
   RegisterMethod("setTransform", &GearsCanvasRenderingContext2D::SetTransform);
+
+  // compositing
   RegisterProperty("globalAlpha",
       &GearsCanvasRenderingContext2D::GetGlobalAlpha,
       &GearsCanvasRenderingContext2D::SetGlobalAlpha);
   RegisterProperty("globalCompositeOperation",
       &GearsCanvasRenderingContext2D::GetGlobalCompositeOperation,
       &GearsCanvasRenderingContext2D::SetGlobalCompositeOperation);
+
+  // colors and styles
+  // Missing wrt HTML5: strokeStyle.
   RegisterProperty("fillStyle",
       &GearsCanvasRenderingContext2D::GetFillStyle,
       &GearsCanvasRenderingContext2D::SetFillStyle);
+  // Missing wrt HTML5: createLinearGradient.
+  // Missing wrt HTML5: createRadialGradient.
+  // Missing wrt HTML5: createPattern.
+
+  // line caps/joins
+  // Missing wrt HTML5: lineWidth.
+  // Missing wrt HTML5: lineCap.
+  // Missing wrt HTML5: lineJoin.
+  // Missing wrt HTML5: miterLimit.
+
+  // shadows
+  // Missing wrt HTML5: shadowOffsetX.
+  // Missing wrt HTML5: shadowOffsetY.
+  // Missing wrt HTML5: shadowBlur.
+  // Missing wrt HTML5: shadowColor.
+
+  // rects
   RegisterMethod("clearRect", &GearsCanvasRenderingContext2D::ClearRect);
   RegisterMethod("fillRect", &GearsCanvasRenderingContext2D::FillRect);
   RegisterMethod("strokeRect", &GearsCanvasRenderingContext2D::StrokeRect);
-  RegisterProperty("font", &GearsCanvasRenderingContext2D::GetFont,
-      &GearsCanvasRenderingContext2D::SetFont);
-  RegisterProperty("textAlign", &GearsCanvasRenderingContext2D::GetTextAlign,
-      &GearsCanvasRenderingContext2D::SetTextAlign);
-  RegisterMethod("fillText", &GearsCanvasRenderingContext2D::FillText);
-  RegisterMethod("measureText", &GearsCanvasRenderingContext2D::MeasureText);
+
+  // path API
+  // Missing wrt HTML5: beginPath.
+  // Missing wrt HTML5: closePath.
+  // Missing wrt HTML5: moveTo.
+  // Missing wrt HTML5: lineTo.
+  // Missing wrt HTML5: quadraticCurveTo.
+  // Missing wrt HTML5: bezierCurveTo.
+  // Missing wrt HTML5: arcTo.
+  // Missing wrt HTML5: rect.
+  // Missing wrt HTML5: arc.
+  // Missing wrt HTML5: fill.
+  // Missing wrt HTML5: stroke.
+  // Missing wrt HTML5: clip.
+  // Missing wrt HTML5: isPointInPath.
+
+  // text
+  // Missing wrt HTML5: font.
+  // Missing wrt HTML5: textAlign.
+  // Missing wrt HTML5: textBaseline.
+  // Missing wrt HTML5: fillText.
+  // Missing wrt HTML5: strokeText.
+  // Missing wrt HTML5: measureText.
+
+  // drawing images
   RegisterMethod("drawImage", &GearsCanvasRenderingContext2D::DrawImage);
+
+  // pixel manipulation
   RegisterMethod("createImageData",
       &GearsCanvasRenderingContext2D::CreateImageData);
   RegisterMethod("getImageData", &GearsCanvasRenderingContext2D::GetImageData);
   RegisterMethod("putImageData", &GearsCanvasRenderingContext2D::PutImageData);
-  RegisterMethod("colorTransform",
-      &GearsCanvasRenderingContext2D::ColorTransform);
-  RegisterMethod("convolutionTransform",
-      &GearsCanvasRenderingContext2D::ConvolutionTransform);
-  RegisterMethod("medianFilter", &GearsCanvasRenderingContext2D::MedianFilter);
-  RegisterMethod("adjustBrightness",
-      &GearsCanvasRenderingContext2D::AdjustBrightness);
-  RegisterMethod("adjustContrast",
-      &GearsCanvasRenderingContext2D::AdjustContrast);
-  RegisterMethod("adjustSaturation",
-      &GearsCanvasRenderingContext2D::AdjustSaturation);
-  RegisterMethod("adjustHue",
-      &GearsCanvasRenderingContext2D::AdjustHue);
-  RegisterMethod("blur", &GearsCanvasRenderingContext2D::Blur);
-  RegisterMethod("sharpen", &GearsCanvasRenderingContext2D::Sharpen);
-  RegisterMethod("resetTransform",
-      &GearsCanvasRenderingContext2D::ResetTransform);
 }
 
 // TODO(nigeltao): Unless otherwise stated, for the 2D context interface, any
@@ -326,62 +361,6 @@ void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
   context->SetException(STRING16(L"Unimplemented"));
 }
 
-void GearsCanvasRenderingContext2D::GetFont(JsCallContext *context) {
-  std::string16 font = canvas_->font();
-  context->SetReturnValue(JSPARAM_STRING16, &font);
-}
-
-void GearsCanvasRenderingContext2D::SetFont(JsCallContext *context) {
-  std::string16 new_font;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_font }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  canvas_->set_font(new_font);
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::GetTextAlign(JsCallContext *context) {
-  std::string16 text_align = canvas_->text_align();
-  context->SetReturnValue(JSPARAM_STRING16, &text_align);
-}
-
-void GearsCanvasRenderingContext2D::SetTextAlign(JsCallContext *context) {
-  std::string16 new_align;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_align }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  canvas_->set_text_align(new_align);
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::FillText(JsCallContext *context) {
-  std::string16 text;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &text }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::MeasureText(JsCallContext *context) {
-  std::string16 text;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &text }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // TODO(nigeltao): This function has a bug that doesn't make it work after
   // calling resize() on the target canvas. That is, if you resize() a canvas
@@ -566,113 +545,5 @@ void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::ColorTransform(JsCallContext *context) {
-  scoped_ptr<JsObject> matrix;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(matrix) }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::ConvolutionTransform(
-    JsCallContext *context) {
-  scoped_ptr<JsObject> matrix;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(matrix) }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::MedianFilter(JsCallContext *context) {
-  double radius;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &radius }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::AdjustBrightness(JsCallContext *context) {
-  double delta;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &delta }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::AdjustContrast(JsCallContext *context) {
-  double amount;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::AdjustSaturation(JsCallContext *context) {
-  double amount;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &amount }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::AdjustHue(JsCallContext *context) {
-  double angle;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::Blur(JsCallContext *context) {
-  double factor;
-  int radius;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &radius }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::Sharpen(JsCallContext *context) {
-  double factor;
-  int radius;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &factor },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &radius }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
-}
-
-void GearsCanvasRenderingContext2D::ResetTransform(JsCallContext *context) {
   context->SetException(STRING16(L"Unimplemented"));
 }

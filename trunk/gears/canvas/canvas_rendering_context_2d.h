@@ -148,27 +148,6 @@ class GearsCanvasRenderingContext2D
   // TODO(nigeltao): Define stroke color.
   void StrokeRect(JsCallContext *context);
 
-  // These affect future text rendering-related
-  // operations (FillText and MeasureText).
-  void GetFont(JsCallContext *context);
-  void SetFont(JsCallContext *context);
-  void GetTextAlign(JsCallContext *context);
-  void SetTextAlign(JsCallContext *context);
-
-  // Renders filled text at the specified point (baseline left).
-  // If a maxWidth is specified and the text exceeds the width, it is
-  // truncated, unless wrap is specified, in which case it's wrapped.
-  // The text may exceed the height of the canvas (especially with
-  // wrapping) in which case it's truncated vertically.
-  // IN: string text, float x, float y, optional float maxWidth
-  // OUT: -
-  void FillText(JsCallContext *context);
-
-  // Returns a text metrics object with information about the given text.
-  // IN: string text
-  // OUT: TextMetrics
-  void MeasureText(JsCallContext *context);
-
   // Draws a canvas onto this canvas. sx, sy, sw, and sh identify a rectangular
   // subset of the source canvas, and dx, dy, dw, dh identify the target area
   // in the destination canvas (this canvas) into which pixels from the source
@@ -199,59 +178,6 @@ class GearsCanvasRenderingContext2D
   //     int dirtyWidth, int dirtyHeight
   // OUT: -
   void PutImageData(JsCallContext *context);
-
-  // Performs a color transformation on the canvas with the given matrix.
-  // IN: double[] colorMatrix
-  // OUT: -
-  void ColorTransform(JsCallContext *context);
-
-  // Performs a convolution transformation on the canvas with the given matrix.
-  // IN: double[] convolutionMatrix, optional float bias,
-  //     optional boolean applyToAlpha
-  // OUT: -
-  void ConvolutionTransform(JsCallContext *context);
-
-  // Performs a median filter with the given radius, which can be fractional.
-  // IN: double radius
-  // OUT: -
-  void MedianFilter(JsCallContext *context);
-
-  // Adjusts brigthness by the given amount, which is between -1.0 and +1.0
-  // IN: double delta.
-  // OUT: -
-  void AdjustBrightness(JsCallContext *context);
-
-  // Adjusts contrast by the given amount.
-  // IN: double contrast.
-  // OUT: -
-  void AdjustContrast(JsCallContext *context);
-
-  // Adjusts saturation by the given amount, while preserving luminance.
-  // IN: double saturation
-  // OUT: -
-  void AdjustSaturation(JsCallContext *context);
-
-  // Rotates hue on the color wheel by the given amount, while preserving
-  // luminance.
-  // IN: double angle
-  // OUT: -
-  void AdjustHue(JsCallContext *context);
-
-  // Performs a blur by taking a weighted mean of pixels within the
-  // specified radius.
-  // IN: double factor, int radius.
-  // OUT: -
-  void Blur(JsCallContext *context);
-
-  // Inverse of Blur().
-  // IN: double factor, int radius.
-  // OUT: -
-  void Sharpen(JsCallContext *context);
-
-  // Resets the transformation matrix to the identity matrix.
-  // IN: -
-  // OUT: -
-  void ResetTransform(JsCallContext *context);
 
  private:
   // Calls ClearRenderingContextReference() on canvas_, if canvas_ is not NULL.
