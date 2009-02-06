@@ -211,8 +211,6 @@ void GearsCanvas::Clone(JsCallContext *context) {
   clone->set_alpha(alpha());
   clone->set_composite_operation(composite_operation());
   clone->set_fill_style(fill_style());
-  clone->set_font(font());
-  clone->set_text_align(text_align());
   // TODO(nigeltao): Copy the transformation matrix and generally make sure that
   // all state is copied.
 
@@ -387,34 +385,6 @@ void GearsCanvas::set_fill_style(std::string16 new_fill_style) {
   fill_style_ = new_fill_style;
 }
 
-std::string16 GearsCanvas::font() const {
-  return font_;
-}
-
-void GearsCanvas::set_font(std::string16 new_font) {
-  // TODO(nigeltao):
-  // if (new_font is not a valid CSS font specification) {
-  //   return;
-  // }
-
-  font_ = new_font;
-}
-
-std::string16 GearsCanvas::text_align() const {
-  return text_align_;
-}
-
-void GearsCanvas::set_text_align(std::string16 new_text_align) {
-  if (new_text_align != STRING16(L"left") &&
-      new_text_align != STRING16(L"center") &&
-      new_text_align != STRING16(L"right") &&
-      new_text_align != STRING16(L"start") &&
-      new_text_align != STRING16(L"end")) {
-    return;
-  }
-  text_align_ = new_text_align;
-}
-
 void GearsCanvas::ResetCanvas(int width, int height) {
   // Since we're starting with a clean slate, let's reset the SkBitmap as well.
   // For some reason things don't work otherwise.
@@ -431,8 +401,6 @@ void GearsCanvas::ResetCanvas(int width, int height) {
   alpha_ = 1.0;
   composite_operation_ = STRING16(L"source-over");
   fill_style_ = STRING16(L"#000000");
-  font_ = STRING16(L"10px sans-serif");
-  text_align_ = STRING16(L"start");
 }
 
 SkBitmap *GearsCanvas::skia_bitmap() const {

@@ -126,10 +126,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   bool set_composite_operation(std::string16 new_composite_op);
   std::string16 fill_style() const;
   void set_fill_style(std::string16 new_fill_style);
-  std::string16 font() const;
-  void set_font(std::string16 new_font);
-  std::string16 text_align() const;
-  void set_text_align(std::string16 new_text_align);
 
  private:
   // Resets the Canvas to the specified dimensions and fills it with transparent
@@ -152,8 +148,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   double alpha_;
   std::string16 composite_operation_;
   std::string16 fill_style_;
-  std::string16 font_;
-  std::string16 text_align_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
