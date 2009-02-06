@@ -34,7 +34,7 @@
 // JniRegisterMainThread(), and by JniAttachCurrentThread() on others.
 static const ThreadLocalValue<JNIEnv *> s_jni_env_tls;
 // The ID of the main thread, initialized by JniRegisterMainThread().
-static pthread_t s_main_thread_id;
+static pthread_t s_main_thread_id = 0;
 // Pointer to the browser's main thread queuing function. This is an
 // NPAPI call which we'll store here separately to the NPN structure
 // as this is a special case that is available on all
