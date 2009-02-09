@@ -60,6 +60,8 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 #elif BROWSER_WEBKIT
 #include "gears/desktop/drag_and_drop_utils_sf.h"
+#elif BROWSER_CHROME && WIN32
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #endif
 #endif
 
@@ -951,17 +953,17 @@ void GearsDesktop::SetDragCursor(JsCallContext *context) {
   } else {
     error = STRING16(L"Unsupported cursor type passed to setDragCursor.");
   }
-#else
-  // TODO(nigeltao): implement on Chromium.
-  error = STRING16(L"setDragCursor is not supported for this platform.");
-#endif
-
   if (cursor_type != DRAG_AND_DROP_CURSOR_INVALID) {
     ::SetDragCursor(module_environment_.get(),
                     event_as_js_object.get(),
                     cursor_type,
                     &error);
   }
+#else
+  // TODO(nigeltao): implement on Chromium.
+  error = STRING16(L"setDragCursor is not supported for this platform.");
+#endif
+
   if (!error.empty()) {
     context->SetException(error);
     return;

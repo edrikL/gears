@@ -1264,6 +1264,11 @@ SF_CPPSRCS += \
 		drag_and_drop_utils_sf.mm \
 		drop_target_sf.cc \
 		$(NULL)
+
+CHROME_CPPSRCS += \
+		drop_target_cr.cc \
+		$(NULL)
+
 endif # not OFFICIAL_BUILD
 
 NPAPI_JAVASRCS	+= \
