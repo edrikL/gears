@@ -131,3 +131,8 @@ m4_ifelse(PRODUCT_BROWSER,~OPERA~,m4_dnl
   /* IE CSS extension */
   accelerator: true;
 }
+
+wbr:after {
+  /* Opera and Safari do not support <wbr>, so we use &#8203; instead. */
+ content : "\00200B"
+}
