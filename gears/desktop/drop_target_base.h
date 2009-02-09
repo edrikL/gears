@@ -30,11 +30,12 @@
 #else
 
 #if BROWSER_FF || BROWSER_IE || BROWSER_SAFARI
+  #define GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM 1
+#elif BROWSER_CHROME && WIN32
+  #define GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM 1
+#endif
 
-// TODO(nigeltao): Before Drag and Drop is made an official Gears API, we have
-// to (1) implement DnD on Chrome, and (2) decide what to do about
-// mobile platforms like Android and WinCE.
-#define GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM 1
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_dom_element.h"
