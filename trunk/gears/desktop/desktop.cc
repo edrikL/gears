@@ -78,6 +78,7 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
+  RegisterMethod("setDragCursor", &GearsDesktop::SetDragCursor);
 #endif
 #endif  // OFFICIAL_BUILD
 }
@@ -920,6 +921,50 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
     context->SetReturnValue(JSPARAM_NULL, NULL);
   } else {
     context->SetException(error);
+  }
+}
+
+
+void GearsDesktop::SetDragCursor(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"setDragCursor is not supported in workers."));
+    return;
+  }
+
+  scoped_ptr<JsObject> event_as_js_object;
+  std::string16 cursor;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &event_as_js_object },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &cursor },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  DragAndDropCursorType cursor_type = DRAG_AND_DROP_CURSOR_INVALID;
+  std::string16 error;
+#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
+  if (cursor == STRING16(L"copy")) {
+    cursor_type = DRAG_AND_DROP_CURSOR_COPY;
+  } else if (cursor == STRING16(L"none")) {
+    cursor_type = DRAG_AND_DROP_CURSOR_NONE;
+  } else {
+    error = STRING16(L"Unsupported cursor type passed to setDragCursor.");
+  }
+#else
+  // TODO(nigeltao): implement on Chromium.
+  error = STRING16(L"setDragCursor is not supported for this platform.");
+#endif
+
+  if (cursor_type != DRAG_AND_DROP_CURSOR_INVALID) {
+    ::SetDragCursor(module_environment_.get(),
+                    event_as_js_object.get(),
+                    cursor_type,
+                    &error);
+  }
+  if (!error.empty()) {
+    context->SetException(error);
+    return;
   }
 }
 

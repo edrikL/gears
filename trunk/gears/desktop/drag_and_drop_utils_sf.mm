@@ -221,15 +221,13 @@ void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
                 bool acceptance,
                 std::string16 *error_out) {
-  // As per GetDragData below, we rely on our IsInAXxxxOperation tests to tell
-  // whether or not we are called during a user drag and drop action.
-  if (!IsInADragOperation() && !IsInADropOperation()) {
-    *error_out = STRING16(L"The drag-and-drop event is invalid.");
-    return;
+  DragAndDropCursorType cursor_type = acceptance
+      ? DRAG_AND_DROP_CURSOR_COPY
+      : DRAG_AND_DROP_CURSOR_NONE;
+  SetDragCursor(module_environment, event, cursor_type, error_out);
+  if (error_out->empty()) {
+    event->SetPropertyBool(STRING16(L"returnValue"), false);
   }
-  event->SetPropertyBool(STRING16(L"returnValue"), false);
-  g_drag_operation_has_been_set = true;
-  g_drag_operation = acceptance ? NSDragOperationCopy : NSDragOperationNone;
 }
 
 bool GetDragData(ModuleEnvironment *module_environment,
@@ -247,4 +245,27 @@ bool GetDragData(ModuleEnvironment *module_environment,
     return false;
   }
   return AddFileDragAndDropData(module_environment, data_out, error_out);
+}
+
+void SetDragCursor(ModuleEnvironment *module_environment,
+                   JsObject *event,
+                   DragAndDropCursorType cursor_type,
+                   std::string16 *error_out) {
+  // As per GetDragData below, we rely on our IsInAXxxxOperation tests to tell
+  // whether or not we are called during a user drag and drop action.
+  if (!IsInADragOperation() && !IsInADropOperation()) {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+  if (!IsInADropOperation()) {
+    if (cursor_type == DRAG_AND_DROP_CURSOR_COPY) {
+      g_drag_operation_has_been_set = true;
+      g_drag_operation = NSDragOperationCopy;
+    } else if (cursor_type == DRAG_AND_DROP_CURSOR_NONE) {
+      g_drag_operation_has_been_set = true;
+      g_drag_operation = NSDragOperationNone;
+    } else {
+      assert(cursor_type == DRAG_AND_DROP_CURSOR_INVALID);
+    }
+  }
 }

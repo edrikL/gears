@@ -69,4 +69,9 @@ bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *data_out,
                  std::string16 *error_out);
 
+void SetDragCursor(ModuleEnvironment *module_environment,
+                   JsObject *event,
+                   DragAndDropCursorType cursor_type,
+                   std::string16 *error_out);
+
 #endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_SF_H__

@@ -193,8 +193,10 @@ HRESULT DropTarget::HandleOnDragEnter()
     will_accept_drop_ = return_value.get() &&
         V_VT(&return_value->token()) == VT_BOOL &&
         V_BOOL(&return_value->token()) == false;
-    module_environment_->drop_target_interceptor_->
-        SetWillAcceptDrop(will_accept_drop_);
+    if (!will_accept_drop_) {
+      module_environment_->drop_target_interceptor_->
+          SetDragCursor(DRAG_AND_DROP_CURSOR_NONE);
+    }
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);
@@ -233,8 +235,10 @@ HRESULT DropTarget::HandleOnDragOver()
     will_accept_drop_ = return_value.get() &&
         V_VT(&return_value->token()) == VT_BOOL &&
         V_BOOL(&return_value->token()) == false;
-    module_environment_->drop_target_interceptor_->
-        SetWillAcceptDrop(will_accept_drop_);
+    if (!will_accept_drop_) {
+      module_environment_->drop_target_interceptor_->
+          SetDragCursor(DRAG_AND_DROP_CURSOR_NONE);
+    }
   }
 
   hr = CancelEventBubble(html_event_obj, html_data_transfer);

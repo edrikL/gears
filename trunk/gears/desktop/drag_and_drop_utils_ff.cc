@@ -264,6 +264,26 @@ void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event_as_js_object,
                 bool acceptance,
                 std::string16 *error_out) {
+  DragAndDropCursorType cursor_type = acceptance
+      ? DRAG_AND_DROP_CURSOR_COPY
+      : DRAG_AND_DROP_CURSOR_NONE;
+  SetDragCursor(module_environment, event_as_js_object, cursor_type, error_out);
+  if (!error_out->empty()) {
+    return;
+  }
+  nsCOMPtr<nsIDOMEvent> dom_event;
+  DragAndDropEventType type = GetDragAndDropEventType(
+      module_environment, event_as_js_object, &dom_event);
+  if (type == DRAG_AND_DROP_EVENT_DROP) {
+    dom_event->StopPropagation();
+  }
+}
+
+
+void SetDragCursor(ModuleEnvironment *module_environment,
+                   JsObject *event_as_js_object,
+                   DragAndDropCursorType cursor_type,
+                   std::string16 *error_out) {
   nsCOMPtr<nsIDOMEvent> dom_event;
   DragAndDropEventType type = GetDragAndDropEventType(
       module_environment, event_as_js_object, &dom_event);
@@ -271,12 +291,14 @@ void AcceptDrag(ModuleEnvironment *module_environment,
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
+  if (type == DRAG_AND_DROP_EVENT_DROP ||
+      cursor_type == DRAG_AND_DROP_CURSOR_INVALID) {
+    return;
+  }
 
-  if (type == DRAG_AND_DROP_EVENT_DROP) {
-    dom_event->StopPropagation();
-
-  } else if (type == DRAG_AND_DROP_EVENT_DRAGENTER ||
-             type == DRAG_AND_DROP_EVENT_DRAGOVER) {
+  // TODO(nigeltao): Check that this works on all three OSes (Win/Mac/Linux).
+  if (type == DRAG_AND_DROP_EVENT_DRAGENTER ||
+      type == DRAG_AND_DROP_EVENT_DRAGOVER) {
     nsCOMPtr<nsIDragService> drag_service =
         do_GetService("@mozilla.org/widget/dragservice;1");
     if (!drag_service) {
@@ -291,9 +313,13 @@ void AcceptDrag(ModuleEnvironment *module_environment,
       return;
     }
 
-    nr = drag_session->SetDragAction(acceptance
-        ? static_cast<int>(nsIDragService::DRAGDROP_ACTION_COPY)
-        : static_cast<int>(nsIDragService::DRAGDROP_ACTION_NONE));
+    if (cursor_type == DRAG_AND_DROP_CURSOR_COPY) {
+      nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
+    } else if (cursor_type == DRAG_AND_DROP_CURSOR_NONE) {
+      nr = drag_session->SetDragAction(nsIDragService::DRAGDROP_ACTION_NONE);
+    } else {
+      assert(false);
+    }
     if (NS_FAILED(nr)) {
       *error_out = GET_INTERNAL_ERROR_MESSAGE();
       return;
