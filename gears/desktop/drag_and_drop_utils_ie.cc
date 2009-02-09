@@ -181,24 +181,16 @@ void AcceptDrag(ModuleEnvironment *module_environment,
                 JsObject *event,
                 bool acceptance,
                 std::string16 *error_out) {
-  CComPtr<IHTMLEventObj> window_event;
-  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
-  if (type == DRAG_AND_DROP_EVENT_INVALID) {
-    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+  DragAndDropCursorType cursor_type = acceptance
+      ? DRAG_AND_DROP_CURSOR_COPY
+      : DRAG_AND_DROP_CURSOR_NONE;
+  SetDragCursor(module_environment, event, cursor_type, error_out);
+  if (!error_out->empty()) {
     return;
   }
-
+  CComPtr<IHTMLEventObj> window_event;
+  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
   if (type != DRAG_AND_DROP_EVENT_DROP) {
-    // TODO(nigeltao): Should acceptance be a string (e.g. "copy" or "none")
-    // rather than a boolean, for future expansibility.
-    module_environment->drop_target_interceptor_->SetWillAcceptDrop(acceptance);
-
-    // TODO(nigeltao): Should Gears even be responsible for cancelBubble /
-    // preventDefault / stopPropagation of the event, since that can be done
-    // from JavaScript (unlike setting the cursor to "none" without being
-    // over-ridden by the browser's default cursor settings)? If not (and
-    // hence if we remove the paragraph of code below), should we rename
-    // acceptDrag to setDragCursor?
     CComQIPtr<IHTMLEventObj2> window_event2(window_event);
     CComPtr<IHTMLDataTransfer> data_transfer;
     if (!window_event2 ||
@@ -210,6 +202,19 @@ void AcceptDrag(ModuleEnvironment *module_environment,
       return;
     }
   }
+}
+
+void SetDragCursor(ModuleEnvironment *module_environment,
+                   JsObject *event,
+                   DragAndDropCursorType cursor_type,
+                   std::string16 *error_out) {
+  CComPtr<IHTMLEventObj> window_event;
+  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
+  if (type == DRAG_AND_DROP_EVENT_INVALID) {
+    *error_out = STRING16(L"The drag-and-drop event is invalid.");
+    return;
+  }
+  module_environment->drop_target_interceptor_->SetDragCursor(cursor_type);
 }
 
 
@@ -264,10 +269,14 @@ STDMETHODIMP_(ULONG) DropTargetInterceptor::Release() {
 STDMETHODIMP DropTargetInterceptor::DragEnter(
     IDataObject *object, DWORD state, POINTL point, DWORD *effect) {
   cached_meta_data_is_valid_ = false;
-  will_accept_drop_ = true;
+  cursor_type_ = DRAG_AND_DROP_CURSOR_INVALID;
   HRESULT hr = original_drop_target_->DragEnter(object, state, point, effect);
-  if (SUCCEEDED(hr) && !will_accept_drop_) {
-    *effect = DROPEFFECT_NONE;
+  if (SUCCEEDED(hr)) {
+    if (cursor_type_ == DRAG_AND_DROP_CURSOR_COPY) {
+      *effect = DROPEFFECT_COPY;
+    } else if (cursor_type_ == DRAG_AND_DROP_CURSOR_NONE) {
+      *effect = DROPEFFECT_NONE;
+    }
   }
   return hr;
 }
@@ -275,10 +284,14 @@ STDMETHODIMP DropTargetInterceptor::DragEnter(
 
 STDMETHODIMP DropTargetInterceptor::DragOver(
     DWORD state, POINTL point, DWORD *effect) {
-  will_accept_drop_ = true;
+  cursor_type_ = DRAG_AND_DROP_CURSOR_INVALID;
   HRESULT hr = original_drop_target_->DragOver(state, point, effect);
-  if (SUCCEEDED(hr) && !will_accept_drop_) {
-    *effect = DROPEFFECT_NONE;
+  if (SUCCEEDED(hr)) {
+    if (cursor_type_ == DRAG_AND_DROP_CURSOR_COPY) {
+      *effect = DROPEFFECT_COPY;
+    } else if (cursor_type_ == DRAG_AND_DROP_CURSOR_NONE) {
+      *effect = DROPEFFECT_NONE;
+    }
   }
   return hr;
 }
@@ -327,8 +340,8 @@ void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
 }
 
 
-void DropTargetInterceptor::SetWillAcceptDrop(bool will_accept_drop) {
-  will_accept_drop_ = will_accept_drop;
+void DropTargetInterceptor::SetDragCursor(DragAndDropCursorType cursor_type) {
+  cursor_type_ = cursor_type;
 }
 
 
@@ -340,7 +353,7 @@ DropTargetInterceptor::DropTargetInterceptor(
       module_environment_(module_environment),
       hwnd_(hwnd),
       original_drop_target_(original_drop_target),
-      will_accept_drop_(true),
+      cursor_type_(DRAG_AND_DROP_CURSOR_INVALID),
       is_revoked_(false) {
   LEAK_COUNTER_INCREMENT(DropTargetInterceptor);
   LOG16((L"DropTargetInterceptor::ctor     %p\n", this));

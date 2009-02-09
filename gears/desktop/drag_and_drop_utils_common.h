@@ -30,6 +30,12 @@
 #include <vector>
 #include "gears/base/common/js_types.h"
 
+enum DragAndDropCursorType {
+  DRAG_AND_DROP_CURSOR_NONE,
+  DRAG_AND_DROP_CURSOR_COPY,
+  DRAG_AND_DROP_CURSOR_INVALID
+};
+
 enum DragAndDropEventType {
   DRAG_AND_DROP_EVENT_DRAGENTER,
   DRAG_AND_DROP_EVENT_DRAGOVER,

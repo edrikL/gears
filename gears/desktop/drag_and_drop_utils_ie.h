@@ -66,7 +66,7 @@ class DropTargetInterceptor
   FileDragAndDropMetaData &GetFileDragAndDropMetaData();
 
   virtual void HandleEvent(JsEventType event_type);
-  void SetWillAcceptDrop(bool will_accept_drop);
+  void SetDragCursor(DragAndDropCursorType cursor_type);
 
  private:
   static std::map<HWND, DropTargetInterceptor*> instances_;
@@ -77,7 +77,7 @@ class DropTargetInterceptor
   scoped_refptr<ModuleEnvironment> module_environment_;
   HWND hwnd_;
   CComPtr<IDropTarget> original_drop_target_;
-  bool will_accept_drop_;
+  DragAndDropCursorType cursor_type_;
   bool is_revoked_;
 
   DropTargetInterceptor(
@@ -104,5 +104,10 @@ bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event,
                  JsObject *data_out,
                  std::string16 *error_out);
+
+void SetDragCursor(ModuleEnvironment *module_environment,
+                   JsObject *event,
+                   DragAndDropCursorType cursor_type,
+                   std::string16 *error_out);
 
 #endif  // GEARS_DESKTOP_DRAG_AND_DROP_UTILS_IE_H__
