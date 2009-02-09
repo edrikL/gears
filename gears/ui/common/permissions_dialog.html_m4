@@ -372,12 +372,8 @@ m4_include(genfiles/permissions_dialog.js)
     if (!customName) {
       elem = dom.getElementById("origin-only");
       elem.style.display = "block";
-      if (browser.ie_mobile || (browser.wince && browser.opera)) {
-        elem.innerHTML = wrapDomain(origin);
-      } else {
-        setTextContent(elem, origin);
-      }
-
+      elem.innerHTML = breakString(origin, '.', '\\.');
+      
       // When all we have is the origin, we lay it out centered because that
       // looks nicer. This is also what the original dialog did, which did not
       // support the extra name, icon, or message.
@@ -387,11 +383,7 @@ m4_include(genfiles/permissions_dialog.js)
     } else {
       elem = dom.getElementById("origin");
       elem.style.display = "block";
-      if (browser.ie_mobile || (browser.wince && browser.opera)) {
-        elem.innerHTML = wrapDomain(origin);
-      } else {
-        setTextContent(elem, origin);
-      }
+      elem.innerHTML = breakString(origin, '.', '\\.');
     }
 
     if (customIcon) {

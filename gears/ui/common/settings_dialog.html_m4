@@ -386,11 +386,7 @@ m4_include(genfiles/settings_dialog.js)
     }
     content += "><tbody>";
     content += "<tr><td class=\"origin-name\">";
-    if (browser.ie_mobile || (browser.wince && browser.opera)) {
-      content += wrapDomain(originData.name);
-    } else {
-      content += originData.name;
-    }
+    content += breakString(originData.name, '.', '\\.');
     content += "</td><td><a href='#' onclick='handleRemoveClick(";
     content += index;
     content += ");'>";

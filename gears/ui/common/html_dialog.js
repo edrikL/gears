@@ -273,16 +273,26 @@ function enableButton(buttonElem) {
 }
 
 /**
- * Returns a wrapped domain (useful for small screens dialogs, 
- * e.g. windows mobile devices)
+ * Modifies a string to allow line breaks after each occurence of the specified
+ * string. escapedSearchString is the string escaped for use with regex, if
+ * required. eg '.' -> '\\.'
  */
-function wrapDomain(str) {
-  // Replace occurences of '.' with an image representing a dot. This allows the
-  // browser to wrap the URL at these points as if there were whitespace
-  // present.
-  var dotImage = "<img height='2px' width='2px' " +
-                 "style='background-color: black; margin: 0px 1px;'>";
-  return str.replace(/[.]/g, dotImage);
+function breakString(str, searchString, escapedSearchString) {
+  if (!escapedSearchString) {
+    escapedSearchString = searchString;
+  }
+  // The <wbr> tag is not standard HTML, but is supported by IE, FF and Chrome.
+  // Opera and Safari do not support <wbr>, so we use HTML entity &#8203;. This
+  // is placed after the <wbr> tag using CSS. See
+  // http://www.quirksmode.org/oddsandends/wbr.html for details.
+  var optionalLineBreak = '<wbr>';
+  if (browser.ie_mobile) {
+    // IE Mobile does not support <wbr> or &#8203;, so we use a zero-sized
+    // image. (Note that this does not work on desktop IE).
+    optionalLineBreak = '<img width="0px" height="0px">';
+  }
+  var regex = new RegExp(escapedSearchString, 'g');
+  return str.replace(regex, searchString + optionalLineBreak);
 }
 
 /**
