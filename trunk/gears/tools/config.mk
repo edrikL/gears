@@ -250,16 +250,6 @@ SQLITE_CFLAGS += -DSQLITE_CORE \
   -DSQLITE_GEARS_DISABLE_SHELL_ICU \
   -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
 
-SKIA_LIB_DIR = ../third_party/skia
-ifeq ($(OFFICIAL_BUILD),1)
-# Not finalized for official builds.
-else
-# Make-ish way of saying: if (OS == win32 || OS == osx)
-ifneq ($(findstring $(OS), win32|osx),)
-SKIA_LIB = $(SKIA_LIB_DIR)/$(LIB_PREFIX)skia-$(MODE)-$(OS)-$(ARCH)$(LIB_SUFFIX)
-endif
-endif
-
 LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 
 ifeq ($(USING_LIBGD),1)

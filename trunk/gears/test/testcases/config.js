@@ -64,11 +64,15 @@ if (isDebug) {
   suites.push(blobSuite);
 }
 
-if (!isOfficial && (isWin32 || isOsx)) {
+// The Canvas API is temporarily disabled whilst we switch the Skia dependency
+// from being a pre-built binary static library to being built from source.
+if (false) {
+if (!isOfficial) {
   var canvasSuite = new TestSuite('Canvas');
   canvasSuite.addFile('../testcases/canvas_tests.js',
       {useWorker: true, useIFrame: true});
   suites.push(canvasSuite);
+}
 }
 
 if (!isWince && !isOfficial) {
