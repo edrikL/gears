@@ -60,7 +60,9 @@
 // Furthermore, Canvas, Console and Image are unimplemented for all
 // browsers on WinCE.
 #else
-#include "gears/canvas/canvas.h"
+// The Canvas API is temporarily disabled whilst we switch the Skia dependency
+// from being a pre-built binary static library to being built from source.
+// #include "gears/canvas/canvas.h"
 #include "gears/console/console.h"
 #include "gears/image/image_loader.h"
 #endif  // OS_WINCE
@@ -213,10 +215,10 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   // Furthermore, Canvas, Console and Image are unimplemented for all
   // browsers on WinCE.
 #else
-#if defined(WIN32) || defined(OS_MACOSX)
-  } else if (module_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
-#endif  // WIN32 || OS X
+// The Canvas API is temporarily disabled whilst we switch the Skia dependency
+// from being a pre-built binary static library to being built from source.
+//   } else if (module_name == STRING16(L"beta.canvas")) {
+//     CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.imageloader")) {

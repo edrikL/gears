@@ -1163,7 +1163,10 @@ endif
 ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
-ifneq ($(findstring $(OS), win32|osx),)
+
+# The Canvas API is temporarily disabled whilst we switch the Skia dependency
+# from being a pre-built binary static library to being built from source.
+ifeq (0,1)
 $(BROWSER)_VPATH += \
 		canvas \
 		$(NULL)
@@ -1174,7 +1177,7 @@ $(BROWSER)_CPPSRCS += \
 		canvas.cc \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
-endif  # win32 | osx
+endif  # Temporarily disabled
 endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
