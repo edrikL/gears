@@ -40,12 +40,6 @@
 #include "gears/desktop/file_dialog.h"
 
 // Global drag state
-// For a multi-tabbed browser environment, we'll need to fix this, eg., one
-// tab might accept .txt files and another .pdf only, event may get out of
-// sequence.  So global state is dicey; make it per-NPP-instance state.
-//
-// TODO(noel) fix this in V2, fix the FF/Safari drivers since they maintain
-// global drag state too.  IE should be fine (IDropTarget).
 
 static std::set<std::string16> g_mime_set;
 static std::set<std::string16> g_type_set;
@@ -659,19 +653,18 @@ bool DropTarget::HandleOnDragDrop(JsObject *event) {
 // AddFileMetaData() helper.
 
 static bool ToJsArray(std::set<std::string16> const &s, JsArray *array) {
-  typedef std::set<std::string16> string16_set;
-
   int length = 0;
   if (!array || !array->GetLength(&length))
     return false;
 
-  for (string16_set::const_iterator it = s.begin(); it != s.end(); ++it) {
-    if (!array->SetElementString(length++, *it))
+  std::set<std::string16>::const_iterator it = s.begin();
+  while (it != s.end()) {
+    if (!array->SetElementString(length++, *it++))
       return false;
   }
 
   return true;
-};
+}
 
 static bool AddFileMetaData(JsRunnerInterface *runner,
                             JsObject *event, JsObject *context) {
