@@ -167,6 +167,12 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info,
     return false;
   }
 
+  // Windows has issues with long URLs.
+  if (shortcut_info->app_url.length() > 255) {
+    error_ = STRING16(L"URL must be 255 characters or less.");
+    return false;
+  }
+
   // We only allow shortcuts to be created within origin for now.
   if (!security_origin_.IsSameOriginAsUrl(shortcut_info->app_url.c_str())) {
     error_ = STRING16(L"Cannot create cross-origin shortcuts.");
