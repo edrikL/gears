@@ -1,0 +1,5 @@
+This is the skia/src and skia/include directories of a vanilla check-out of
+the Skia graphics library, revision 89, performed on 2009-02-10, via
+  svn checkout http://skia.googlecode.com/svn/trunk/ skia-read-only
+as directed by the instructions at
+  http://code.google.com/p/skia/source/checkout
