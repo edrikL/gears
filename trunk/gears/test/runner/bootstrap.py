@@ -21,23 +21,24 @@ class Bootstrap:
   # Temp installer directory.
   INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
 
-  def __init__(self, gears_binaries, installers, testrunner, suites_report):
+  def __init__(self, gears_binaries, installers, testrunner, reporter):
     """Set test objects.
 
     Args:
       gears_binaries: directory where the binaries will be published.
       installers: list of Installer objects
       testrunner: TestRunner object
-      suites_report: SuitesReport object that outputs test suites report
+      reporter: SuitesReport object that outputs test suites report
     """
     self.__gears_binaries = gears_binaries
     self.__installers = installers
     self.__testrunner = testrunner
-    self.__suites_report = suites_report
+    self.__reporter = reporter
 
   def invoke(self):
     """Start everything, main method."""
-    self.copyFilesLocally()
+    if self.__gears_binaries != 'chromium':
+      self.copyFilesLocally()
     self.install()
     self.startTesting()
     self.writeResultsToFile()
@@ -97,7 +98,7 @@ class Bootstrap:
   def writeResultsToFile(self):
     self.__createOutputDir(True)
     stream = open('output/TESTS-TestSuites.xml', 'w')
-    self.__suites_report.writeReport(self.test_results, stream)
+    self.__reporter.writeReport(self.test_results, stream)
     stream.close()
 
   def __createOutputDir(self, force_recreate=False):
@@ -113,6 +114,7 @@ sys.path.extend(Config.ADDITIONAL_PYTHON_LIBRARY_PATHS)
 from testrunner import TestRunner
 from testwebserver import TestWebserver
 from suites_report import SuitesReport
+from suites_report import ChromiumReport
 import browser_launchers
 import installer
 import osutils
@@ -133,7 +135,7 @@ def main():
   clean()
 
   test_url = 'http://localhost:8001/tester/gui.html'
-  suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
+  reporter = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
   installers = []
   launchers = []
@@ -152,8 +154,15 @@ def main():
     launchers.append(browser_launchers.IExploreWinCeLauncher(local_ip))
     installers.append(installer.WinCeInstaller(local_ip))
     test_url = 'http://%s:8001/tester/gui.html' % local_ip
+  elif sys.argv[1] == 'chromium':
+    launchers.append(browser_launchers.ChromiumWin32Launcher())
+    reporter = ChromiumReport()
+    if sys.argv[2]:
+      installers.append(installer.ChromiumWin32Installer(mode=sys.argv[2]))
+    else:
+      installers.append(installer.ChromiumWin32Installer())
   elif osutils.osIsWin():
-    launchers.append(browser_launchers.IExploreWin32Launcher('ff2profile-win'))
+    launchers.append(browser_launchers.IExploreWin32Launcher())
     launchers.append(browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
     launchers.append(browser_launchers.Firefox3Win32Launcher('ff3profile-win'))
     launchers.append(browser_launchers.ChromeWin32Launcher())
@@ -183,7 +192,7 @@ def main():
 
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)
-  bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
+  bootstrap = Bootstrap(gears_binaries, installers, testrunner, reporter)
   bootstrap.invoke()
 
 

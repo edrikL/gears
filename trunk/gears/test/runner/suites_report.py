@@ -1,4 +1,5 @@
 import os
+import sys
 from Cheetah.Template import Template
 
 class SuitesReport:
@@ -76,3 +77,27 @@ class SuitesReport:
     # Leave value as string for consistency
     store["suites"][suite_name]["elapsed"] = \
         str(store["suites"][suite_name]["elapsed"])
+
+
+class ChromiumReport:
+  """Reporter for chromium tests."""
+
+  def writeReport(self, data, outfile):
+    """Print out fails to stdout so that they'll show up in logs.
+
+    Exit python with an appropriate return code to signal the end of
+    testing to buildbot.
+    """
+    outfile.close()
+    failures = 0
+    for browser in data.values():
+      print 'Gears Info: %s' % browser['gears_info']
+      print 'Results:'
+      for suite in browser['results']:
+        for result in suite['results'].keys():
+          test_result = suite['results'][result]
+          if test_result['status'] == 'failed':
+            print '%s - %s' % (result, test_result['status'])
+            failures = 1
+    # sys.exit informs buildbot of the pass/fail status.
+    sys.exit(failures)

@@ -9,7 +9,6 @@ if os.name == 'nt':
   import win32api
   import win32con
   import win32file
-  import wmi
 
 # Workaround permission, stat.I_WRITE not allowing delete on some systems
 FULL_PERMISSION = int('777', 8)
@@ -22,9 +21,13 @@ class BaseInstaller:
 
   def _prepareProfiles(self):
     """ Unzip profiles. """
+    save_dir = os.getcwd()
+    os.chdir(os.path.dirname(__file__))
     profile_dir = 'profiles'
     profiles = os.listdir(profile_dir)
     for profile in profiles:
+      if not profile.endswith('.zip'):
+        continue
       profile_path = os.path.join(profile_dir, profile)
       target_path = profile[:profile.find('.')]
       if os.path.exists(target_path):
@@ -33,6 +36,7 @@ class BaseInstaller:
       profile_zip = open(profile_path, 'rb')
       self._unzip(profile_zip, target_path)
       profile_zip.close()
+    os.chdir(save_dir)
 
   def _installExtension(self, build):
     """Locate the desired ff profile, overwrite it, and unzip build to it.
@@ -126,8 +130,11 @@ class BaseInstaller:
     self._copyAndChmod(src, dst_path)
 
   def _copyAndChmod(self, src, targ):
+    save_dir = os.getcwd()
+    os.chdir(os.path.dirname(__file__))
     shutil.copytree(src, targ)
     self._chmod(targ, FULL_PERMISSION)
+    os.chdir(save_dir)
 
   def _chmod(self, target, permission):
     """Recursively set permissions to target and children.
@@ -355,6 +362,50 @@ class ChromeWin32Installer(BaseWin32Installer):
     return self._findBuildPath('chrome', directory)
 
 
+class ChromiumWin32Installer(BaseWin32Installer):
+  """Installer class for Win32 Chromium tip of tree.
+
+  This Class set will be called by buildbot instead
+  of the usual pulse setup, after a fresh build of
+  both chromium and gears.dll.
+  """
+
+  CHROMIUM_PROFILE_PATH = r'Chromium\User Data\Default\Plugin Data'
+  GEARS_DBG_PATH = r'src\gears\Hammer\dbg\obj\gears\win32-i386-dbg\npapi'
+  GEARS_OPT_PATH = r'src\gears\Hammer\opt\obj\gears\win32-i386-dbg\npapi'
+  CHROMIUM_BIN_PATH = r'src\chrome'
+
+  def __init__(self, mode='Debug'):
+    self._prepareProfiles()
+    self.profile = 'permissions'
+    home = os.getenv('USERPROFILE')
+    appdata_xp = os.path.join(home, 'Local Settings\\Application Data')
+    self.permissions_path = os.path.join(appdata_xp,
+        self.CHROMIUM_PROFILE_PATH)
+    if mode == 'Debug':
+      self.gears_path = self.GEARS_DBG_PATH
+      self.chrome_path = os.path.join(self.CHROMIUM_BIN_PATH, 'Debug')
+    else:
+      self.gears_path = self.GEARS_OPT_PATH
+      self.chrome_path = os.path.join(self.CHROMIUM_BIN_PATH, 'Opt')
+
+  def install(self):
+    """Install gears.dll and test profile data for chromium."""
+    gears_dll_path = os.path.join(self.gears_path, 'gears.dll')
+    gears_pdb_path = os.path.join(self.gears_path, 'gears.pdb')
+    gears_dll_dst = os.path.join(self.chrome_path, 'plugins\\gears\\')
+
+    print 'Copying Gears dll/pdb'
+    shutil.copy(gears_dll_path, gears_dll_dst)
+    shutil.copy(gears_pdb_path, gears_dll_dst)
+
+    print 'Clearing plugin data'
+    self._deleteFolder(self.permissions_path)
+
+    print 'Copying Gears permissions.'
+    self._copyProfile(self.profile, self.permissions_path, 'Google Gears')
+
+
 class WinCeInstaller(BaseInstaller):
   """Installer for WinCE, extends Installer."""
 
@@ -477,9 +528,8 @@ class Firefox2MacInstaller(BaseFirefoxMacInstaller):
   FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile_name):
-    firefox_bin = Firefox2MacInstaller.FIREFOX_PATH
     BaseFirefoxMacInstaller.__init__(self, profile_name, 
-                                     firefox_bin, 'ff2profile-mac')
+                                     self.FIREFOX_PATH, 'ff2profile-mac')
 
 
 class Firefox3MacInstaller(BaseFirefoxMacInstaller):
@@ -488,9 +538,18 @@ class Firefox3MacInstaller(BaseFirefoxMacInstaller):
   FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile_name):
-    firefox_bin = Firefox3MacInstaller.FIREFOX_PATH
     BaseFirefoxMacInstaller.__init__(self, profile_name, 
-                                     firefox_bin, 'ff3profile-mac')
+                                     self.FIREFOX_PATH, 'ff3profile-mac')
+
+
+class Firefox31MacInstaller(BaseFirefoxMacInstaller):
+  """Firefox 3.1 installer for mac."""
+
+  FIREFOX_PATH = '/Applications/Firefox3.1.app/Contents/MacOS/firefox-bin'
+
+  def __init__(self, profile_name):
+    BaseFirefoxMacInstaller.__init__(self, profile_name,
+                                     self.FIREFOX_PATH, 'ff3profile-mac')
 
 
 class SafariMacInstaller(BaseInstaller):
