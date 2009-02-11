@@ -7,7 +7,10 @@ import time
 if os.name == 'nt':
   import win32api
   import win32con
-  import wmi
+  try:
+    import wmi
+  except ImportError:
+    wmi = None
 
 class BaseBrowserLauncher:
   """Handle launching and killing of a specific test browser."""
@@ -32,7 +35,6 @@ class BaseWin32Launcher(BaseBrowserLauncher):
 
   def launch(self, url):
     """ First perform some cleanup, then launch browser. """
-    self._DestroyOldSlaveProcesses()
     BaseBrowserLauncher.launch(self, url)
 
   def _killInstancesByName(self, process_name):
@@ -60,6 +62,8 @@ class BaseWin32Launcher(BaseBrowserLauncher):
     Here we check to see if any did not shut down properly and
     destroy any that remain.
     """
+    if not wmi:
+      return
     process_list = wmi.WMI().Win32_Process(Name='rundll32.exe')
     for process in process_list:
       pid = process.ProcessID
@@ -116,6 +120,19 @@ class Firefox3Win32Launcher(BaseFirefoxWin32Launcher):
     return 'Firefox3Win32'
 
 
+class Firefox31Win32Launcher(BaseFirefoxWin32Launcher):
+  """Launcher for ff3.1 win32."""
+
+  FIREFOX_PATH = 'Mozilla Firefox 3.1 Beta 2\\firefox.exe'
+
+  def __init__(self, profile, automated=True):
+    BaseFirefoxWin32Launcher.__init__(self, profile, self.FIREFOX_PATH,
+                                      automated)
+
+  def type(self):
+    return 'Firefox31Win32'
+
+
 class IExploreWin32Launcher(BaseWin32Launcher):
   """Launcher for iexplorer browser on Win32 platforms."""
 
@@ -164,6 +181,24 @@ class ChromeWin32Launcher(BaseWin32Launcher):
 
   def type(self):
     return 'ChromeWin32'
+
+
+class ChromiumWin32Launcher(BaseWin32Launcher):
+  """Launcher class for tip of tree chromium.
+
+  Used on buildbot setup with tip of tree chromium and gears.
+  """
+
+  CHROMIUM_PATH = r'src\chrome\Debug\chrome.exe'
+
+  def __init__(self):
+    self.browser_command = [self.CHROMIUM_PATH]
+
+  def killAllInstances(self):
+    pass
+
+  def type(self):
+    return 'ChromiumWin32'
 
 
 class IExploreWinCeLauncher(BaseBrowserLauncher):
@@ -244,8 +279,8 @@ class Firefox2MacLauncher(BaseFirefoxMacLauncher):
   FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile, automated=True):
-    firefox_bin = Firefox2MacLauncher.FIREFOX_PATH
-    BaseFirefoxMacLauncher.__init__(self, profile, automated, firefox_bin)
+    BaseFirefoxMacLauncher.__init__(self, profile, automated,
+                                    self.FIREFOX_PATH)
 
   def type(self):
     return 'Firefox2Mac'
@@ -257,11 +292,24 @@ class Firefox3MacLauncher(BaseFirefoxMacLauncher):
   FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile, automated=True):
-    firefox_bin = Firefox3MacLauncher.FIREFOX_PATH
-    BaseFirefoxMacLauncher.__init__(self, profile, automated, firefox_bin)
+    BaseFirefoxMacLauncher.__init__(self, profile, automated,
+                                    self.FIREFOX_PATH)
 
   def type(self):
     return 'Firefox3Mac'
+
+
+class Firefox31MacLauncher(BaseFirefoxMacLauncher):
+  """Firefox 3.1 launcher for mac."""
+
+  FIREFOX_PATH = '/Applications/Firefox3.1.app/Contents/MacOS/firefox-bin'
+
+  def __init__(self, profile, automated=True):
+    BaseFirefoxMacLauncher.__init__(self, profile, automated,
+                                    self.FIREFOX_PATH)
+
+  def type(self):
+    return 'Firefox31Mac'
 
 
 class BaseFirefoxLinuxLauncher(BasePosixLauncher):
