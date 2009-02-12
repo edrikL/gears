@@ -366,7 +366,23 @@ m4_include(genfiles/shortcuts_dialog.js)
     var descriptionElement = dom.getElementById("shortcut-description");
     
     loadImage(iconElement, pickIconToRender(shortcutData));
-    dom.setTextContent(nameElement, shortcutData.name);
+
+    if (browser.chrome) {
+      // Chrome generates very long, single word shortcut names. We allow the
+      // name to break on '_'.
+      var token = '_';
+      var chunks = shortcutData.name.split(token);
+      for (var i = 0; i < chunks.length - 1; i++) {
+        // Add the text using createTextNode since name is supplied by user.
+        nameElement.appendChild(document.createTextNode(chunks[i] + token));
+        nameElement.appendChild(document.createElement('wbr'));
+      }
+      // chunks always has length >= 1, even if name is empty.
+      nameElement.appendChild(
+          document.createTextNode(chunks[chunks.length - 1]));
+    } else {
+      dom.setTextContent(nameElement, shortcutData.name);
+    }
 
     if (isDefined(typeof shortcutData.description) &&
         shortcutData.description) {
