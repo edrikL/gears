@@ -381,7 +381,13 @@ HRESULT HttpHandlerBase::StartImpl(LPCWSTR url,
   std::string16 mimetype;
   payload_.GetHeader(HttpConstants::kContentTypeHeader, &mimetype);
   if (!mimetype.empty()) {
-    hr = CallReportProgress(BINDSTATUS_MIMETYPEAVAILABLE, mimetype.c_str());
+#ifdef USE_HTTP_HANDLER_APP
+    // TODO(andreip): if RAWMIMETYPE works for wince, we don't need this ifdef
+    const int kMimeBindStatusCode = BINDSTATUS_MIMETYPEAVAILABLE;
+#else
+    const int kMimeBindStatusCode = BINDSTATUS_RAWMIMETYPE;
+#endif
+    hr = CallReportProgress(kMimeBindStatusCode, mimetype.c_str());
     if (FAILED(hr)) return hr;
   }
 
