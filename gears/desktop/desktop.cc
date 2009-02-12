@@ -923,12 +923,12 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   error = STRING16(L"getDragData is not supported for this platform.");
 #endif
 
-  if (data_available) {
-    context->SetReturnValue(JSPARAM_OBJECT, result.get());
-  } else if (error.empty()) {
-    context->SetReturnValue(JSPARAM_NULL, NULL);
-  } else {
+  if (!error.empty()) {
     context->SetException(error);
+  } else if (data_available) {
+    context->SetReturnValue(JSPARAM_OBJECT, result.get());
+  } else {
+    context->SetReturnValue(JSPARAM_NULL, NULL);
   }
 }
 
