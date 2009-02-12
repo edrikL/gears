@@ -34,13 +34,6 @@
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/ui/common/alert_dialog.h"
 
-// Depending on the build target, we use a different technique of hijacking
-// HTTP(S) requests. HttpHandlerAPP is a namespace handler. HttpHandlerPatch
-// more directly patches COM objects and system calls provided by URLMON.
-#ifdef OS_WINCE
-#define USE_HTTP_HANDLER_APP
-#endif
-
 #ifdef USE_HTTP_HANDLER_APP
 #include "gears/localserver/ie/http_handler_app.h"
 #else
