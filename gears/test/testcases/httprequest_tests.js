@@ -510,3 +510,68 @@ function testSetGetOnprogress() {
   request.upload.onprogress = handleProgress;
   assertEqual(handleProgress, request.upload.onprogress);
 }
+
+function testReadyStates() {
+  // Tests that a request goes through all ready states in order.
+  if (isFirefox || isSafari || isAndroid) {
+    // Firefox, Safari and Android all skip states. Note that this test
+    // passes when using the native XmlHttpRequest object on all browsers.
+    // See bug 827.
+    return;
+  }
+  var UNSENT = 0;
+  var OPENED = 1;
+  var HEADERS_RECEIVED = 2;
+  var LOADING = 3;
+  var DONE = 4;
+
+  var urlbase = '/testcases/test_file_1.txt';
+  var request = google.gears.factory.create('beta.httprequest');
+
+  var isCallingOpen = false;
+  var isCallingSend = false;
+  var isSendCalled = false;
+
+  request.onreadystatechange = function() {
+    switch (request.readyState) {
+      case OPENED:
+        assert(isCallingOpen && previousReadyState == UNSENT ||
+               isCallingSend && previousReadyState == OPENED,
+               'Previous readyState should be UNSENT or OPENED');
+        break;
+      case HEADERS_RECEIVED:
+        assert(isSendCalled);
+        assertEqual(OPENED, previousReadyState,
+                    'Previous readyState should be OPENED');
+        break;
+      case LOADING:
+        assert(isSendCalled);
+        assert(HEADERS_RECEIVED == previousReadyState ||
+               LOADING == previousReadyState,
+               'Previous readyState should be HEADERS_RECEIVED or LOADING');
+        break;
+      case DONE:
+        assert(isSendCalled);
+        assertEqual(LOADING, previousReadyState,
+                    'Previous readyState should be LOADING');
+        completeAsync();
+        break;
+      default:
+        assert(false, 'Unexpected readyState');
+    }
+    previousReadyState = request.readyState;
+  }
+
+  startAsync();
+  assertEqual(UNSENT, request.readyState, 'readyState should be UNSENT');
+
+  var previousReadyState = UNSENT;
+  isCallingOpen = true;
+  request.open('GET', urlbase);
+  isCallingOpen = false;
+
+  isSendCalled = true;
+  isCallingSend = true;
+  request.send();
+  isCallingSend = false;
+}
