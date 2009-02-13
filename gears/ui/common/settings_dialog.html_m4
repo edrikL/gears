@@ -338,8 +338,13 @@ m4_include(genfiles/settings_dialog.js)
     } else {
       args = getArguments();
     }
-    loadI18nStrings(args.locale);
-    permissions = args.permissions;
+    if (args) {
+      loadI18nStrings(args.locale);
+      permissions = args.permissions;
+    } else {
+      loadI18nStrings();
+      permissions = [];
+    }
     originalPermissions = cloneObject(permissions);
 
     updatePermissionsList();
