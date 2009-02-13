@@ -387,7 +387,7 @@ class ChromiumWin32Installer(BaseWin32Installer):
       self.chrome_path = os.path.join(self.CHROMIUM_BIN_PATH, 'Debug')
     else:
       self.gears_path = self.GEARS_OPT_PATH
-      self.chrome_path = os.path.join(self.CHROMIUM_BIN_PATH, 'Opt')
+      self.chrome_path = os.path.join(self.CHROMIUM_BIN_PATH, 'Release')
 
   def install(self):
     """Install gears.dll and test profile data for chromium."""

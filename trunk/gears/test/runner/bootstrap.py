@@ -155,12 +155,14 @@ def main():
     installers.append(installer.WinCeInstaller(local_ip))
     test_url = 'http://%s:8001/tester/gui.html' % local_ip
   elif sys.argv[1] == 'chromium':
-    launchers.append(browser_launchers.ChromiumWin32Launcher())
     reporter = ChromiumReport()
-    if sys.argv[2]:
+    if len(sys.argv) > 2:
       installers.append(installer.ChromiumWin32Installer(mode=sys.argv[2]))
+      launchers.append(
+          browser_launchers.ChromiumWin32Launcher(mode=sys.argv[2]))
     else:
       installers.append(installer.ChromiumWin32Installer())
+      launchers.append(browser_launchers.ChromiumWin32Launcher())
   elif osutils.osIsWin():
     launchers.append(browser_launchers.IExploreWin32Launcher())
     launchers.append(browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
