@@ -26,12 +26,12 @@
 #ifndef GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 #define GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__
 
-#if !defined(OFFICIAL_BUILD) && (defined(WIN32) || defined(OS_MACOSX))
+#if !defined(OFFICIAL_BUILD)
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/canvas/canvas.h"
-#include "third_party/skia/include/SkCanvas.h"
+#include "third_party/skia/include/core/SkCanvas.h"
 
 namespace canvas {
 extern const SkBitmap::Config skia_config;
@@ -193,5 +193,5 @@ class GearsCanvasRenderingContext2D
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvasRenderingContext2D);
 };
 
-#endif  // !defined(OFFICIAL_BUILD) && ...
+#endif  // !defined(OFFICIAL_BUILD)
 #endif  // GEARS_CANVAS_CANVAS_RENDERING_CONTEXT_2D_H__

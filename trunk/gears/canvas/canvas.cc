@@ -30,10 +30,11 @@
 #include "gears/canvas/blob_backed_skia_input_stream.h"
 #include "gears/canvas/blob_backed_skia_output_stream.h"
 #include "gears/canvas/canvas_rendering_context_2d.h"
-#include "third_party/skia/include/SkCanvas.h"
-#include "third_party/skia/include/SkImageDecoder.h"
-#include "third_party/skia/include/SkRect.h"
-#include "third_party/skia/include/SkStream.h"
+#include "third_party/skia/include/core/SkCanvas.h"
+#include "third_party/skia/include/core/SkRect.h"
+#include "third_party/skia/include/core/SkStream.h"
+#include "third_party/skia/include/images/SkImageDecoder.h"
+#include "third_party/skia/include/images/SkImageEncoder.h"
 
 namespace canvas {
 const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
@@ -176,7 +177,8 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
     encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap(),
         static_cast<int> (quality * 100));
   } else {
-    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap());
+    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap(),
+        SkImageEncoder::kDefaultQuality);
   }
   if (!encode_succeeded) {
     context->SetException(STRING16(L"Could not encode image."));

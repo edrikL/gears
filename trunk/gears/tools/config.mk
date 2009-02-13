@@ -55,6 +55,9 @@ ifeq ($(USING_MOZJS),)
     USING_MOZJS = 1
   endif
 endif
+ifeq ($(USING_SKIA),)
+  USING_SKIA = 1
+endif
 ifeq ($(USING_SQLITE),)
   USING_SQLITE = 1
 endif
@@ -176,6 +179,8 @@ else
 LIBPNG_CFLAGS += -I../third_party/zlib
 endif
 
+SKIA_CFLAGS += -I../third_party/skia/include/core -I../third_party/skia/include/images
+
 ZLIB_CFLAGS += -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)
 ZLIB_CFLAGS += -DNO_ERRNO_H
@@ -188,6 +193,10 @@ endif
 ifeq ($(USING_LIBPNG),1)
 CFLAGS += $(LIBPNG_CFLAGS)
 CPPFLAGS += $(LIBPNG_CFLAGS)
+endif
+ifeq ($(USING_SKIA),1)
+CFLAGS += $(SKIA_CFLAGS)
+CPPFLAGS += $(SKIA_CFLAGS)
 endif
 ifeq ($(USING_ZLIB),1)
 CFLAGS += $(ZLIB_CFLAGS)
@@ -804,6 +813,7 @@ SQLITE_CFLAGS += /wd4146
 endif
 
 BREAKPAD_CPPFLAGS += /wd4018 /wd4003
+SKIA_COMPILE_FLAGS += /wd4244 /wd4800
 THIRD_PARTY_CPPFLAGS += /wd4018 /wd4003
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
@@ -814,6 +824,10 @@ COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$(*F).pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(M
 COMPILE_FLAGS += -D_HAS_EXCEPTIONS=0 -D_ATL_NO_EXCEPTIONS
 # Do not export UTF functions.
 COMPILE_FLAGS += -DU_STATIC_IMPLEMENTATION
+
+ifeq ($(USING_SKIA),1)
+COMPILE_FLAGS += $(SKIA_COMPILE_FLAGS)
+endif
 
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) /TP /J

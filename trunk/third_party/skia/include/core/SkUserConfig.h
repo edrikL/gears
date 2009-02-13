@@ -17,6 +17,30 @@
 #ifndef SkUserConfig_DEFINED
 #define SkUserConfig_DEFINED
 
+// BEGIN Gears changes, a la Chromium's src/skia/include/corecg/SkUserConfig.h
+#ifdef WIN32
+
+#define SK_IGNORE_STDINT_DOT_H
+
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef int int32_t;
+typedef unsigned int uint32_t;
+
+// Skia uses this deprecated bzero function to fill zeros into a string.
+#define bzero(str, len) memset(str, 0, len)
+
+// Non-gcc compilers don't speak __restrict__.
+#ifdef SK_RESTRICT
+  #undef SK_RESTRICT
+  #define SK_RESTRICT
+#endif
+
+#endif  // WIN32
+// END Gears changes
+
 /*  SkTypes.h, the root of the public header files, does the following trick:
  
     #include "SkPreConfig.h"

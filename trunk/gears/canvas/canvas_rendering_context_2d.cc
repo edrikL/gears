@@ -26,7 +26,7 @@
 #include "gears/canvas/canvas_rendering_context_2d.h"
 
 #include "gears/base/common/js_runner.h"
-#include "third_party/skia/include/SkPorterDuff.h"
+#include "third_party/skia/include/core/SkPorterDuff.h"
 
 DECLARE_DISPATCHER(GearsCanvasRenderingContext2D);
 const std::string

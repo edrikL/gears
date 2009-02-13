@@ -1,0 +1,30 @@
+<html><head><title>Gears Canvas</title></head>
+<body>
+<h1>Gears Canvas</h1>
+<img id="outputImg" width="100px" height="80px" style="border:1px solid black">
+<script type="text/javascript" src="../../sdk/gears_init.js"></script>
+<script type="text/javascript">
+
+
+var canvas = google.gears.factory.create('beta.canvas');
+canvas.width = 100;
+canvas.height = 80;
+
+var context = canvas.getContext('gears-2d');
+// TODO(nigeltao): Implement context.fillRect.
+
+var blob = canvas.toBlob();
+alert('blob.length = ' + blob.length);
+
+var localServer = google.gears.factory.create('beta.localserver');
+localServer.removeStore("test_manual_canvas");
+var store = localServer.createStore("test_manual_canvas");
+
+var capturedUrl = parseInt(Math.random() * 1000) + '.png';
+store.captureBlob(blob, capturedUrl, 'image/png');
+document.getElementById('outputImg').src = capturedUrl;
+
+
+</script>
+</body>
+</html>

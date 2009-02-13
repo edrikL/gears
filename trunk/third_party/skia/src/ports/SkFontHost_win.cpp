@@ -25,8 +25,8 @@
 #include "windows.h"
 #include "tchar.h"
 
-// client3d has to undefine this for now
-#define CAN_USE_LOGFONT_NAME
+// client3d has to undefine this for now (and so does Gears)
+//#define CAN_USE_LOGFONT_NAME
 
 static SkMutex gFTMutex;
 

@@ -28,7 +28,7 @@
 
 #include "gears/base/common/basictypes.h"
 #include "gears/blob/blob_interface.h"
-#include "third_party/skia/include/SkStream.h"
+#include "third_party/skia/include/core/SkStream.h"
 
 class BlobBackedSkiaInputStream : public SkStream {
  public:
