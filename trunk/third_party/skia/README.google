@@ -24,11 +24,16 @@ skia/src/images/SkImageDecoder_libpng.cpp line 30 were changed to add
 "third_party/libjpeg/" and "third_party/libpng/" to the #include calls.
 
 
+skia/src/ports/SkFontHost_mac.cpp line 70 reversed the order of the
+constructor's initializers to match the order of the field declarations,
+in order to fix a compiler warning.
+
+
 skia/src/ports/SkFontHost_win.cpp lines 28-29 disabled CAN_USE_LOGFONT_NAME
 since it causes a compile error (since Gears uses 16-bit TCHARs and presumably
 Skia/Win32 is usually built with 8-bit TCHARs).
 
 
-skia/src/ports/gears_skia_win_fixes.cpp implements empty stubs for a number
+skia/src/ports/gears_skia_win_fixes.cpp implemented empty stubs for a number
 of functions declared in Skia's .h files but are missing from Skia's Windows
 port (which is presumably a work-in-progress).

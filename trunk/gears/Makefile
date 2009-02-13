@@ -489,6 +489,7 @@ THIRD_PARTY_CPPSRCS	+= \
 else
 ifeq ($(OS),osx)
 THIRD_PARTY_CPPSRCS	+= \
+		SkFontHost_mac.cpp \
 		SkThread_pthread.cpp \
 		$(NULL)
 else
