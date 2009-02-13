@@ -27,7 +27,7 @@
 #include "SkUtils.h"
 
 extern "C" {
-#include "png.h"
+#include "third_party/libpng/png.h"
 }
 
 class SkPNGImageDecoder : public SkImageDecoder {

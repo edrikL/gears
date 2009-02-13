@@ -27,7 +27,7 @@
 #define GEARS_CANVAS_BLOB_BACKED_SKIA_OUTPUT_STREAM_H__
 
 #include "gears/blob/blob_builder.h"
-#include "third_party/skia/include/SkStream.h"
+#include "third_party/skia/include/core/SkStream.h"
 
 class BlobBackedSkiaOutputStream : public SkWStream {
  public:

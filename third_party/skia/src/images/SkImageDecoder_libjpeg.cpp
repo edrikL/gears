@@ -25,8 +25,8 @@
 
 #include <stdio.h>
 extern "C" {
-    #include "jpeglib.h"
-    #include "jerror.h"
+    #include "third_party/libjpeg/jpeglib.h"
+    #include "third_party/libjpeg/jerror.h"
 }
 
 // this enables timing code to report milliseconds for an encode

@@ -367,6 +367,151 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/skia
+
+ifeq ($(USING_SKIA),1)
+ifeq ($(OFFICIAL_BUILD),1)
+# The Canvas API is not yet enabled in official builds.
+else
+ifneq ($(OS),wince)
+THIRD_PARTY_VPATH	+= \
+		../third_party/skia/src/core \
+		../third_party/skia/src/images \
+		../third_party/skia/src/ports \
+		$(NULL)
+
+# these cpp files are from skia/src/core
+THIRD_PARTY_CPPSRCS	+= \
+		Sk64.cpp \
+		SkAlphaRuns.cpp \
+		SkBitmap.cpp \
+		SkBitmapProcShader.cpp \
+		SkBitmapProcState.cpp \
+		SkBitmapProcState_matrixProcs.cpp \
+		SkBitmapSampler.cpp \
+		SkBitmapShader.cpp \
+		SkBitmap_scroll.cpp \
+		SkBlitRow_D16.cpp \
+		SkBlitRow_D4444.cpp \
+		SkBlitter.cpp \
+		SkBlitter_4444.cpp \
+		SkBlitter_A1.cpp \
+		SkBlitter_A8.cpp \
+		SkBlitter_ARGB32.cpp \
+		SkBlitter_RGB16.cpp \
+		SkBlitter_Sprite.cpp \
+		SkBuffer.cpp \
+		SkCanvas.cpp \
+		SkChunkAlloc.cpp \
+		SkColor.cpp \
+		SkColorFilter.cpp \
+		SkColorTable.cpp \
+		SkComposeShader.cpp \
+		SkCordic.cpp \
+		SkDebug.cpp \
+		SkDebug_stdio.cpp \
+		SkDeque.cpp \
+		SkDevice.cpp \
+		SkDither.cpp \
+		SkDraw.cpp \
+		SkEdge.cpp \
+		SkFilterProc.cpp \
+		SkFlattenable.cpp \
+		SkFloat.cpp \
+		SkFloatBits.cpp \
+		SkGeometry.cpp \
+		SkGlobals.cpp \
+		SkGlyphCache.cpp \
+		SkGraphics.cpp \
+		SkMask.cpp \
+		SkMaskFilter.cpp \
+		SkMath.cpp \
+		SkMatrix.cpp \
+		SkMemory_stdlib.cpp \
+		SkPackBits.cpp \
+		SkPaint.cpp \
+		SkPath.cpp \
+		SkPathEffect.cpp \
+		SkPathHeap.cpp \
+		SkPathMeasure.cpp \
+		SkPicture.cpp \
+		SkPictureFlat.cpp \
+		SkPicturePlayback.cpp \
+		SkPictureRecord.cpp \
+		SkPixelRef.cpp \
+		SkPoint.cpp \
+		SkProcSpriteBlitter.cpp \
+		SkPtrRecorder.cpp \
+		SkQuadClipper.cpp \
+		SkRasterizer.cpp \
+		SkRect.cpp \
+		SkRefCnt.cpp \
+		SkRegion.cpp \
+		SkRegion_path.cpp \
+		SkScalerContext.cpp \
+		SkScan.cpp \
+		SkScan_AntiPath.cpp \
+		SkScan_Antihair.cpp \
+		SkScan_Hairline.cpp \
+		SkScan_Path.cpp \
+		SkShader.cpp \
+		SkSpriteBlitter_ARGB32.cpp \
+		SkSpriteBlitter_RGB16.cpp \
+		SkStream.cpp \
+		SkString.cpp \
+		SkStroke.cpp \
+		SkStrokerPriv.cpp \
+		SkTSearch.cpp \
+		SkTypeface.cpp \
+		SkUnPreMultiply.cpp \
+		SkUtils.cpp \
+		SkWriter32.cpp \
+		SkXfermode.cpp \
+		$(NULL)
+
+# these cpp files are from skia/src/images
+THIRD_PARTY_CPPSRCS	+= \
+		SkImageDecoder.cpp \
+		SkImageDecoder_Factory.cpp \
+		SkImageDecoder_libjpeg.cpp \
+		SkImageDecoder_libpng.cpp \
+		SkImageEncoder.cpp \
+		SkImageEncoder_Factory.cpp \
+		SkScaledBitmapSampler.cpp \
+		$(NULL)
+
+# these cpp files are from skia/src/ports (except skia/src/SkMMapStream.cpp)
+ifeq ($(OS),linux)
+THIRD_PARTY_CPPSRCS	+= \
+		SkMMapStream.cpp \
+		SkThread_pthread.cpp \
+		$(NULL)
+else
+ifeq ($(OS),osx)
+THIRD_PARTY_CPPSRCS	+= \
+		SkThread_pthread.cpp \
+		$(NULL)
+else
+ifeq ($(OS),win32)
+THIRD_PARTY_CPPSRCS	+= \
+		gears_skia_win_fixes.cpp \
+		SkFontHost_win.cpp \
+		SkGlobals_global.cpp \
+		SkThread_win.cpp \
+		$(NULL)
+else
+THIRD_PARTY_CPPSRCS	+= \
+		SkThread_none.cpp \
+		$(NULL)
+endif
+endif
+endif
+
+endif # not wince
+endif # OFFICIAL_BUILD
+endif # USING_SKIA
+
+#-----------------------------------------------------------------------------
 # third_party/spidermonkey
 
 ifeq ($(USING_MOZJS),1)
@@ -1163,10 +1308,8 @@ endif
 ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
+ifneq ($(OS),wince)
 
-# The Canvas API is temporarily disabled whilst we switch the Skia dependency
-# from being a pre-built binary static library to being built from source.
-ifeq (0,1)
 $(BROWSER)_VPATH += \
 		canvas \
 		$(NULL)
@@ -1177,7 +1320,8 @@ $(BROWSER)_CPPSRCS += \
 		canvas.cc \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
-endif  # Temporarily disabled
+
+endif  # not wince
 endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
