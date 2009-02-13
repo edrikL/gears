@@ -35,6 +35,7 @@ class BaseWin32Launcher(BaseBrowserLauncher):
 
   def launch(self, url):
     """ First perform some cleanup, then launch browser. """
+    self._DestroyOldSlaveProcesses()
     BaseBrowserLauncher.launch(self, url)
 
   def _killInstancesByName(self, process_name):
