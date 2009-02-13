@@ -52,6 +52,7 @@
 #include "gears/ui/common/html_dialog.h"
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/googleurl/src/gurl.h"
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #if BROWSER_FF
@@ -158,6 +159,35 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info,
   // Normalize and resolve, in case this is a relative URL.
   if (!ResolveUrl(&shortcut_info->app_url, &error_)) {
     return false;
+  }
+
+  // On win32, we need to make sure that the query part of the shortcut URL does
+  // not contain percent symbols (other than in valid escape codes, eg %20).
+  // Such a URL could be used to post the values of environment variables
+  // (eg %USER%) to a malicious site.
+  //
+  // Percent symbols are used to encode special characters in the URL, so we
+  // don't want to simply strip all percent symbols. Instead we first unescape
+  // the query, such that the ony remaining percent symbols are 'literal'
+  // percent symbols. We then strip all percent symbols from the query and
+  // re-escape. This means that all literal percent symbols, both escaped (%25)
+  // and unescaped, will be stripped from the query.
+  // eg /steal%20data?user%20name=%25USER%25 -> /steal%20data?user%20name=USER
+  // eg /steal%20data?user%20name=%USER% -> /steal%20data?user%20name=USER
+  //
+  // We do this on all platforms for consistency.
+  GURL url(shortcut_info->app_url);
+  if (url.has_query()) {
+    std::string modified_query = UnescapeURL(url.query());
+    ReplaceAll(modified_query, std::string("%"), std::string(""));
+    url_parse::Component component(0, modified_query.length());
+    url_canon::Replacements<char> replacements;
+    replacements.SetQuery(modified_query.c_str(), component);
+    // ReplaceComponents re-escapes after making the replacement.
+    GURL modified_url = url.ReplaceComponents(replacements);
+    if (!UTF8ToString16(modified_url.spec(), &shortcut_info->app_url)) {
+      return false;
+    }
   }
 
   // If we ever want to support this see b/1408993, also note that

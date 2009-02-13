@@ -147,6 +147,10 @@ desktop.openFiles(openFilesCallback);
       Shortcuts created through this API cannot overwrite an existing shortcut
       with the same name, and such attempts fail silently. This restriction
       may be relaxed in a future version of Gears.
+      <br><br>
+      Any query in the shortcut URL must not contain literal percent symbols,
+      encoded (%25) or otherwise. Any such characters will be stripped from the
+      URL.
     </td>
   </tr>
 </table>

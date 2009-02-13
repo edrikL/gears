@@ -66,9 +66,6 @@ bool ParseDataUrl(const std::string16& url, std::string16* mime_type,
 std::string UnescapeURL(const std::string& escaped_text);
 std::string16 UnescapeURL(const std::string16& escaped_text);
 
-// ----------------------------------------------------------------------
-// Converts a UTF8 path to a percent encoded "file:///" URL.
-// ----------------------------------------------------------------------
 enum EscapeUrlFlags {
   ESCAPE_SCHEME        =     1,
   ESCAPE_USERNAME      =     2,
@@ -93,7 +90,11 @@ enum EscapeUrlFlags {
   ESCAPE_COLON         = 16384,  // forces escape of colon
   ESCAPE_SKIPCONTROL   = 32768   // skips C0 and DEL from unescaping
 };
-std::string UTF8PathToUrl(const std::string &path, bool directory);
 std::string EscapeUrl(const std::string &source, unsigned int flags);
+
+// ----------------------------------------------------------------------
+// Converts a UTF8 path to a percent encoded "file:///" URL.
+// ----------------------------------------------------------------------
+std::string UTF8PathToUrl(const std::string &path, bool directory);
 
 #endif // GEARS_BASE_COMMON_URL_UTILS_H__

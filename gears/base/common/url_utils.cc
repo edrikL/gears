@@ -161,7 +161,7 @@ str UnescapeURLImpl(const str& escaped_text, bool replace_plus) {
   result.reserve(escaped_text.length());
 
   for (size_t i = 0, max = escaped_text.size(); i < max; ++i) {
-     if (escaped_text[i] == '%' && i + 2 < max) {
+    if (escaped_text[i] == '%' && i + 2 < max) {
       const typename str::value_type most_sig_digit(escaped_text[i + 1]);
       const typename str::value_type least_sig_digit(escaped_text[i + 2]);
       if (IsHex(most_sig_digit) && IsHex(least_sig_digit)) {
