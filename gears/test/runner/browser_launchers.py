@@ -189,13 +189,22 @@ class ChromiumWin32Launcher(BaseWin32Launcher):
   Used on buildbot setup with tip of tree chromium and gears.
   """
 
-  CHROMIUM_PATH = r'src\chrome\Debug\chrome.exe'
+  CHROMIUM_DBG_PATH = r'src\chrome\Debug\chrome.exe'
+  CHROMIUM_OPT_PATH = r'src\chrome\Release\chrome.exe'
 
-  def __init__(self):
-    self.browser_command = [self.CHROMIUM_PATH]
+  def __init__(self, mode='Debug'):
+    if mode == 'Debug':
+      self.browser_command = [self.CHROMIUM_DBG_PATH]
+    else:
+      self.browser_command = [self.CHROMIUM_OPT_PATH]
 
+  def _killInstancesByName(self, name):
+    c = ['cmd.exe', '/c', '%WINDIR%\\system32\\taskkill.exe', '/f', '/im']
+    subprocess.Popen(c + [name])
+  
   def killAllInstances(self):
-    pass
+    self._killInstancesByName('chrome.exe')
+    self._killInstancesByName('WerFault.exe')
 
   def type(self):
     return 'ChromiumWin32'
