@@ -67,7 +67,7 @@ struct SkFaceRec {
     ATSUFontID      fFontID;
     ATSUStyle       fStyle;
 
-    SkFaceRec() : fFontID(0), fRefCnt(0), fStyle(NULL) {};
+    SkFaceRec() : fRefCnt(0), fFontID(0), fStyle(NULL) {};
 
     ~SkFaceRec() {
         if (fStyle) {
