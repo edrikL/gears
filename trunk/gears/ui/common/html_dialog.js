@@ -148,7 +148,7 @@ function getArguments() {
     argsString = chrome.dialogArguments;
   }
 
-  if (typeof argsString == "string") {
+  if (typeof argsString == "string" && argsString.length > 0) {
     return JSON.parse(argsString);
   } else {
     return null;
