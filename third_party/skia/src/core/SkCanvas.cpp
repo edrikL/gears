@@ -279,6 +279,7 @@ public:
             : fCanvas(canvas), fPaint((SkPaint*)&paint), fType(t) {
         if ((fLooper = paint.getLooper()) != NULL) {
             fLooper->init(canvas, (SkPaint*)&paint);
+            fOnce = false;
         } else {
             fOnce = true;
         }

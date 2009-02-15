@@ -455,6 +455,7 @@ SkPicturePlayback::SkPicturePlayback(SkStream* stream) {
         uint32_t size = buffer.readU32();
         uint32_t bytes = fRegions[i].unflatten(buffer.skip(size));
         SkASSERT(size == bytes);
+        if (size == bytes) {};  // Avoid "unused variable" compiler warning.
     }
 }
 
