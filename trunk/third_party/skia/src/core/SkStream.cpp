@@ -47,6 +47,7 @@ int8_t SkStream::readS8() {
     int8_t value;
     size_t len = this->read(&value, 1);
     SkASSERT(1 == len);
+    if (1 == len) {};  // Avoid "unused variable" compiler warning.
     return value;
 }
 
@@ -54,6 +55,7 @@ int16_t SkStream::readS16() {
     int16_t value;
     size_t len = this->read(&value, 2);
     SkASSERT(2 == len);
+    if (2 == len) {};  // Avoid "unused variable" compiler warning.
     return value;
 }
 
@@ -61,6 +63,7 @@ int32_t SkStream::readS32() {
     int32_t value;
     size_t len = this->read(&value, 4);
     SkASSERT(4 == len);
+    if (4 == len) {};  // Avoid "unused variable" compiler warning.
     return value;
 }
 
@@ -68,6 +71,7 @@ SkScalar SkStream::readScalar() {
     SkScalar value;
     size_t len = this->read(&value, sizeof(SkScalar));
     SkASSERT(sizeof(SkScalar) == len);
+    if (sizeof(SkScalar) == len) {};  // Avoid "unused variable" compiler warning.
     return value;
 }
 

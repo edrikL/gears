@@ -11,12 +11,31 @@ build configuration options, based on Chromium's Skia/Win32 edits visible at
 http://src.chromium.org/viewvc/chrome/trunk/src/skia/include/corecg/SkUserConfig.h
 
 
+skia/src/core/SkCanvas.cpp line 282 (fOnce = false) was added to avoid a
+compiler warning in optimized mode, where fOnce was used uninitialized under
+a certain code path. On inspection of the AutoDrawLooper code, it was
+apparent that a post-condition of the constructor is that ((fLooper != NULL) ||
+fOnce) and that fLooper is never re-assigned, and therefore in method next(),
+fOnce is never used uninitialized. Adding line 282 therefore does not affect
+AutoDrawLooper's behavior, but it does silence the compiler warning.
+
+
 skia/src/core/SkFP.h line 44 was changed from
 ...0.33333333333...
 to
 ...0.33333333333f...
 in order to disambiguate the various pow(...) implementations on the Win32
 build (i.e. the (float,float) version from the (double,double) version).
+
+
+skia/src/core/SkPicturePlayback.cpp line 458 was added to avoid an "unused
+variable" compiler warning, in optimized mode, where SkASSERT was #define'd to
+be empty.
+
+
+skia/src/core/SkStream.cpp lines 50,58,66,74 were added to avoid an "unused
+variable" compiler warning, in optimized mode, where SkASSERT was #define'd to
+be empty.
 
 
 skia/src/images/SkImageDecoder_libjpeg.cpp lines 28-29 and
