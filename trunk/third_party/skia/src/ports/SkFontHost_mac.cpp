@@ -192,6 +192,7 @@ static SkTypeface* CreateTypeface_(const char *name, const SkTypeface::Style sty
 
     SkFaceRec* rec = insert_ft_face(cs, atsuStyle);
     SkASSERT(rec);
+    if (rec) {};  // Avoid "unused variable" compiler warning.
 
     return ptypeface;
 }
