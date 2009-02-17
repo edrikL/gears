@@ -255,13 +255,13 @@ bool IssueCommandAndParseResult(const char *command,
 }
 
 static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
-  return IssueCommandAndParseResult("iwlist scan",
+  return IssueCommandAndParseResult("iwlist scan 2> /dev/null",
                                     "Cell ",
                                     "Address: ",
                                     "ESSID:",
                                     "Signal level=",
                                     access_points) ||
-         IssueCommandAndParseResult("iwconfig",
+         IssueCommandAndParseResult("iwconfig 2> /dev/null",
                                     "ESSID:\"",
                                     "Access Point: ",
                                     "ESSID:",
