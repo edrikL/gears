@@ -172,14 +172,20 @@ HRESULT ProcessRestarter::StartTheProcess(const std::string16& args) {
     // Process is already running. Bail out.
     return S_FALSE;
   }
-  SHELLEXECUTEINFO info;
-  ZeroMemory(&info, sizeof(SHELLEXECUTEINFO));
-  info.cbSize = sizeof(SHELLEXECUTEINFO);
-  info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
-  info.lpFile = process_name_;
-  info.lpParameters = args.c_str();
-  info.nShow = SW_SHOWNORMAL;
-  if (::ShellExecuteEx(&info) == TRUE) return S_OK;
+
+  PROCESS_INFORMATION info;
+  if (CreateProcess(process_name_,
+                    args.c_str(),
+                    NULL,
+                    NULL,
+                    NULL,
+                    0,
+                    NULL,
+                    NULL,
+                    NULL,
+                    &info) == TRUE) {
+    return S_OK;
+  }
   return HRESULT_FROM_WIN32(::GetLastError());
 }
 
