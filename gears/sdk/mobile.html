@@ -39,27 +39,35 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <div id="pagecontent">
 
-<p>Gears is now available on Windows Mobile 5 and 6 devices.</p>
+<p>Gears is now available for a number of mobile browsers and devices.
+<ul>
+<li>IE Mobile on Windows Mobile 5 and 6 devices
+<li>Opera Mobile (Presto build 2.1.0+) on Windows Mobile 6 touchscreen devices
+<li>Android devices
+</ul>
+</p>
+
 <p>Mobile devices are, by their nature, often disconnected from the network.
 Even when connected, the latencies in data connections in mobile networks
 can make web applications sluggish. Gears gives developers the tools
 to overcome these obstacles.</p>
 
-<p>Gears works in exactly the same way on a Windows Mobile 5 or
-6 device as it does on a desktop PC. If you've already written an application
-that uses Gears, your application will also work on a Windows Mobile
-5 or 6 device. Except, of course, only <em>within the limitations of that
+<p>Gears works in exactly the same way on a mobile device as it does on a
+desktop PC. If you've already written an application
+that uses Gears, your application will also work on a mobile device. Except, of
+course, only <em>within the limitations of that
 device</em>. This means you need to consider things such as small screen
-and limited ability to input text as well as the limitations of the Document
-Object Model and CSS APIs present on mobile devices. Limitations of Windows
-Mobile 5 and 6 devices are discussed later in this document.</p>
+and limited ability to input text. Furthermore, on some mobile browsers, the
+implementation of the Document Object Model and CSS is limited. Limitations of
+the IE Mobile browser shipped with Windows Mobile 5 and 6 are discussed later in
+this document.</p>
 
 <h1>Contents</h1>
 <div>
   <ol class="toc">
   <li><a href="#aud">Audience</a></li>
   <li><a href="#mobstart">Getting Started</a></li>
-  <li><a href="#limits">Windows Mobile 5 and 6 Limitations</a></li>
+  <li><a href="#limits">IE Mobile Limitations</a></li>
   <li><a href="#env_setup">Setting up a Windows Mobile Emulator</a></li>
   </ol>
 </div>
@@ -69,49 +77,62 @@ Mobile 5 and 6 devices are discussed later in this document.</p>
 <h1>Audience</h1>
 
 <p>This document is intended for experienced AJAX programmers who want
-to develop Gears-enabled web applications for Windows Mobile 5 or 6 devices.
+to develop Gears-enabled web applications for mobile devices.
+It also provides specific recommendations and help for developers working with
+Windows Mobile 5 or 6.
 It provides instructions on setting up a development environment and discusses
-known limitatations and workarounds.</p>
+known limitatations and workarounds for the IE Mobile browser.</p>
 
 
 <a name="mobstart" id="mobstart"></a>
 <h1>Getting Started </h1>
 
 <ul>
-  <li>If you're not familiar with developing for Windows mobile devices,
-    consider <a href="#limits">Windows Mobile 5 and 6 Limitations</a>.</li>
+  <li>Consider the limitations of the mobile device and browser you'll be
+    developing for.</li>
   <li>If you're not familiar with Gears, work through 
     <a href="design.html">Getting Started with Gears</a>.</li>
   <li>If you're developing a new app, we recommend that you develop using
-    a desktop browser but bear in mind <a href="#limits">Windows Mobile 5 and
-    6 Limitations</a>. Why <em>desktop</em>? Well, just considering screen
+    a desktop browser but bear in mind the limitations of your mobile device and
+    browser. Why <em>desktop</em>? Well, just considering screen
     size alone, it's easier.</li>
-  <li>Set up a <a href="#env_setup">Windows mobile device emulator</a>. </li>
+  <li>Set up a device emulator.</li>
   <li><a href="install.html" target="_self">Install Gears</a> on the
     emulator.</li>
   <li>Run the <a href="sample.html">sample applications</a> to confirm 
     everything is working.</li>
-  <li>Modify your app to work within the limitations of Windows Mobile 
-    devices.</li>
-  <li><b>If you are porting an existing Web application to Windows Mobile, 
-    make sure you update the
+  <li>If required, modify your app to work within the limitations of the mobile
+    browser.</li>
+</ul>
+
+<p>If you're developing for IE Mobile, we also recommend the following steps.
+</p>
+
+<ul>
+  <li>Before you start, be sure to consider the
+    <a href="#limits">IE Mobile Limitations</a>.</li>
+  <li><b>If you are porting an existing Web application to IE Mobile, make sure
+    you update the
     <a href="http://code.google.com/apis/gears/gears_init.js">gears_init.js</a>
-    file included in your application.</b> The Windows Mobile version of Gears
+    file included in your application.</b> The version of Gears for IE Mobile
     needs to be initialized in a slightly different way than all other versions 
     of Gears, so you need to include the latest version of 
     <a href="http://code.google.com/apis/gears/gears_init.js">gears_init.js</a>
     to guarantee that your application works correctly across all platforms.
   </li>
+  <li>This document includes specific guidelines for
+    <a href="#env_setup">setting up a Windows mobile device emulator</a>.</li>
 </ul>
 
 <p>That's it!</p>
 
 
 <a name="limits" id="limits"></a>
-<h1>Windows Mobile 5 and 6 Limitations</h1>
+<h1>IE Mobile Limitations</h1>
 
-<p>Limitations to consider when writing AJAX applications for Windows Mobile
-5 and 6 devices, and some workarounds, are provided below:</p>
+<p>The IE Mobile browser shipped with Windows Mobile 5 and 6 devices has
+limitations which are important to note when writing AJAX applications.
+Information on these limitations, and some workarounds, are provided below:</p>
 
 <ul>
 <li><a href="#css_win_mo">CSS</a></li>
@@ -126,7 +147,8 @@ known limitatations and workarounds.</p>
 <a name="css_win_mo" id="css_win_mo"></a>
 <h2>CSS</h2>
 
-<p>Neither Windows Mobile 5 nor 6 support the CSS <code>position:</code> style
+<p>Neither IE Mobile on Windows Mobile 5 nor 6 support the CSS
+<code>position:</code> style
 attribute. This means text is not positioned in any way, it simply appears
 within the normal flow of an HTML document.</p>
 
@@ -148,9 +170,10 @@ provided below:</p>
 <a name="getelem" id="getelem"></a>
 <h3>Accessing a Document Element</h3>
 
-<p>Windows Mobile 5 does not support <code>document.getElementById()</code>,
-though Windows Mobile 6 does. The following code snippet provides a workaround
-using the <code>document.all</code> DOM property.</p>
+<p>IE Mobile for Windows Mobile 5 does not support
+<code>document.getElementById()</code>, though IE Mobile for Windows Mobile 6
+does. The following code snippet provides a workaround using the
+<code>document.all</code> DOM property.</p>
 
 <pre><code>/**
  * Tests if an element is defined.
@@ -179,10 +202,10 @@ function getDOMElementById(id) {
 <a name="create_doc_elements_win_mo" id="create_doc_elements_win_mo"></a>
 <h3>Creating a Document Element</h3>
 
-<p>Windows Mobile 5 does not support <code>createElement</code>, though
-Windows Mobile 6 does. For Windows Mobile 5 devices, create elements using
-the <code>innerHTML</code> property. This method also works for all modern
-desktop browsers.</p>
+<p>IE Mobile for Windows Mobile 5 does not support
+<code>createElement</code>, though IE Mobile for Windows Mobile 6 does. For
+Windows Mobile 5 devices, create elements using the <code>innerHTML</code>
+property. This method also works for all modern desktop browsers.</p>
 
 <pre><code>node.innerHTML = &quot;&lt;p id='myElement'&gt;&lt;/p&gt;&quot;;
 </code></pre>
@@ -190,9 +213,9 @@ desktop browsers.</p>
 <a name="element_text" id="element_text"></a>
 <h3>Setting Element Text</h3>
 
-<p>Windows Mobile 5 does not support the <code>createTextNode</code> method.
-To set the text content of an element use the <code>innerText</code> property
-instead:
+<p>IE Mobile for Windows Mobile 5 does not support the
+<code>createTextNode</code> method. To set the text content of an element use
+the <code>innerText</code> property instead:
 
 <pre><code>function setElementText(node, text) {
  if (isDefined(typeof node.innerText)) {
@@ -210,16 +233,16 @@ instead:
 <h3>Modifying a Document Element</h3>
 
 <p>Use the <code>innerHTML</code> and <code>innerText</code> properties
-to modify an element on both Windows Mobile 5 and 6.</p>
+to modify an element on IE Mobile for both Windows Mobile 5 and 6.</p>
 
 
 <a name="active_x_win_mo" id="active_x_win_mo"></a>
 <h2>ActiveX : Problems with setting some objects</h2>
 
-<p>On Windows Mobile 5 and 6 some objects that you may expect to be JavaScript
-objects are instead ActiveX controls. Notably the window object is an ActiveX
-control, and so does not support <code>expando</code> properties. This
-means that you <em>cannot</em> add methods or properties to a window as
+<p>On IE Mobile for Windows Mobile 5 and 6 some objects that you may expect to
+be JavaScript objects are instead ActiveX controls. Notably the window object is
+an ActiveX control, and so does not support <code>expando</code> properties.
+This means that you <em>cannot</em> add methods or properties to a window as
 follows:</p>
 
 <pre><code>window.myObject = new Array(); // Does not work!</code></pre>
@@ -258,18 +281,19 @@ will silently crash:</p>
 <a name="recursion" id="recursion"></a>
 <h2>Recursion</h2>
 
-<p>Avoid recursion. Both Windows Mobile 5 and 6 have an extremely limited
-call stack of about 16 javascript function calls. Violate it and your JavaScript
-will no longer execute.</p>
+<p>Avoid recursion. IE Mobile for both Windows Mobile 5 and 6 have an extremely
+limited call stack of about 16 javascript function calls. Violate it and your
+JavaScript will no longer execute.</p>
 
 
 <a name="layout_refresh" id="layout_refresh"></a>
 <h2>Layout Refresh</h2>
 
-<p>Windows Mobile does not always correctly update the page layout when
-a new element is inserted dynamically into the DOM. For example, modifications
-to an existing table element will not be reflected in the layout. To avoid
-this, you must replace the entire table element whenever it is modified.</p>
+<p>IE Mobile for Windows Mobile does not always correctly update the page layout
+when a new element is inserted dynamically into the DOM. For example,
+modifications to an existing table element will not be reflected in the layout.
+To avoid this, you must replace the entire table element whenever it is
+modified.</p>
 
 
 <a name="msdn" id="msdn"></a>
@@ -278,29 +302,19 @@ this, you must replace the entire table element whenever it is modified.</p>
 <p>MSDN contains a lot of useful information on Windows Mobile development.
 See, for example:</p>
 <ul>
-<li><a href="http://www.google.com/url?q=http://msdn2.microsoft.com/
-en-us/library/aa454218.aspx&usg=AFrqEzcXjmzhzq-sohdSnmZf5HvhVpVfUA">
-MSDN: List of HTML elements supported on Mobile 5</a></li>
-<li><a href="http://www.google.com/url?q=http://msdn2.microsoft.com/
-en-us/library/bb415489.aspx&usg=AFrqEzepfWZ1EzHT2iMORsLATj02bSKUAg">
-MSDN: List of HTML elements supported on Mobile 6</a></li>
-<li><a href="http://www.google.com/url?q=http://msdn2.microsoft.com/
-en-us/library/ms879855.aspx&usg=AFrqEzf51J60jqLN8B8lIq7sXjVZy5vQcg">
+<li><a href="http://msdn2.microsoft.com/en-us/library/aa454218.aspx">
+MSDN: List of HTML elements supported by IE Mobile for Windows Mobile 5</a></li>
+<li><a href="http://msdn2.microsoft.com/en-us/library/bb415489.aspx">
+MSDN: List of HTML elements supported by IE Mobile for Windows Mobile 6</a></li>
+<li><a href="http://msdn2.microsoft.com/en-us/library/ms879855.aspx">
 MSDN: Designing Web Sites for Windows Mobile-based Devices</a></li>
-<li><a href="http://www.google.com/url?q=http://msdn2.microsoft.com/
-en-us/library/ms879855.aspx&usg=AFrqEzf51J60jqLN8B8lIq7sXjVZy5vQcg">
-MSDN: Supported standards in Mobile 6</a></li>
-<li><a href="http://www.google.com/url?q=http://blogs.msdn.com/
-iemobile/archive/2007/06/20/ie-mobile-support-of-activex.aspx&usg=
-AFrqEzfgFMjzal0F0B8VFpqf4Lj-JRoGmQ">
+<li><a href="http://msdn.microsoft.com/en-us/library/bb415422.aspx">
+MSDN: Supported standards in IE Mobile</a></li>
+<li><a href="http://blogs.msdn.com/iemobile/archive/2007/06/20/ie-mobile-support-of-activex.aspx">
 MSDN: IE Mobile support of ActiveX</a></li>
-<li><a href="http://www.google.com/url?q=http://blogs.msdn.com/
-iemobile/archive/2007/05/15/ie-mobile-standards-support.aspx&usg=
-AFrqEzfFEBlP8G-gPeqlBb8-VSuvgLfyNg">
+<li><a href="http://blogs.msdn.com/iemobile/archive/2007/05/15/ie-mobile-standards-support.aspx">
 MSDN: IE Mobile Standards Support</a></li>
-<li><a href="http://www.google.com/url?q=http://blogs.msdn.com/
-iemobile/archive/2005/11/15/493200.aspx&usg=
-AFrqEzc1sp97PXDpTEl6Ef5M6xUVFhZseA">
+<li><a href="http://blogs.msdn.com/iemobile/archive/2005/11/15/493200.aspx">
 MSDN: AJAX on IE Mobile</a></li>
 </ul>
 
