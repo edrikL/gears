@@ -513,9 +513,9 @@ function testSetGetOnprogress() {
 
 function testReadyStates() {
   // Tests that a request goes through all ready states in order.
-  if (isFirefox || isSafari || isAndroid) {
-    // Firefox, Safari and Android all skip states. Note that this test
-    // passes when using the native XmlHttpRequest object on all browsers.
+  if (isFirefox || isSafari || isAndroid || isNPAPI) {
+    // Firefox, Safari, Android and Chrome all skip states. Note that this test
+    // passes when using the native XMLHttpRequest object on all browsers.
     // See bug 827.
     return;
   }
