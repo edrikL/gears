@@ -173,8 +173,12 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
 
   if (module_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(module_environment_.get(), context, &object);
+#ifdef OS_ANDROID
+    // No Desktop module on Android.
+#else
   } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(module_environment_.get(), context, &object);
+#endif
 #ifdef DEBUG
   } else if (module_name == STRING16(L"beta.failblob")) {
     scoped_refptr<GearsBlob> gears_blob;
