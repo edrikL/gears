@@ -1019,22 +1019,35 @@ void GearsGeolocation::CallbackRequiredImpl(int fix_request_id) {
 
   // Check that the fix request still exists.
   FixRequestInfo *fix_info = MaybeGetFixRequest(fix_request_id);
-  if (fix_info) {
-    assert(fix_info->success_callback_timer.get());
-    fix_info->success_callback_timer.reset();
+  if (!fix_info) {
+    return;
+  }
 
-    assert(fix_info->pending_position.IsInitialized());
-    if (fix_info->pending_position.IsGoodFix()) {
-      if (!MakeSuccessCallback(fix_info, fix_info->pending_position)) {
-        LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
-             "success callback failed.\n"));
-      }
-    } else {
-      if (!MakeErrorCallback(fix_info, fix_info->pending_position)) {
-        LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
-             "error callback failed.\n"));
-      }
+  if (!fix_info->repeats) {
+    // Remove the fix request from our map, so that position updates which occur
+    // while the callback to JavaScript is in process do not trigger handling
+    // for this fix request.
+    RemoveFixRequest(fix_request_id);
+  }
+
+  assert(fix_info->success_callback_timer.get());
+  fix_info->success_callback_timer.reset();
+
+  assert(fix_info->pending_position.IsInitialized());
+  if (fix_info->pending_position.IsGoodFix()) {
+    if (!MakeSuccessCallback(fix_info, fix_info->pending_position)) {
+      LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
+           "success callback failed.\n"));
     }
+  } else {
+    if (!MakeErrorCallback(fix_info, fix_info->pending_position)) {
+      LOG(("GearsGeolocation::CallbackRequiredImpl() : JavaScript "
+           "error callback failed.\n"));
+    }
+  }
+
+  if (!fix_info->repeats) {
+    DeleteFixRequest(fix_info);
   }
 }
 
