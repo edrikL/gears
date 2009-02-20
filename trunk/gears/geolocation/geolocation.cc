@@ -458,7 +458,7 @@ void GearsGeolocation::OnNotify(MessageService *service,
         reinterpret_cast<const FixRequestIdNotificationData*>(data);
     TimeoutExpiredImpl(timeout_expired_data->fix_request_id);
   } else if (topic_string == kCallbackRequiredObserverTopic) {
-    // The timeout for a callback expired.
+    // We need to make a callback.
     const FixRequestIdNotificationData *callback_required_data =
         reinterpret_cast<const FixRequestIdNotificationData*>(data);
     CallbackRequiredImpl(callback_required_data->fix_request_id);
@@ -502,11 +502,9 @@ bool GearsGeolocation::IsCachedPositionSuitable(int maximum_age) {
     return true;
   }
   assert(maximum_age > 0);
-  // maximum_age is limited to 2^31 milliseconds. The current (November 2008)
-  // timestamp is around 2^40, so there's no danger of underflow.
-  int64 oldest_timestamp = GetCurrentTimeMillis() - maximum_age;
-  assert(oldest_timestamp > 0);
-  return last_position_.timestamp > oldest_timestamp;
+  int64 age = GetCurrentTimeMillis() - last_position_.timestamp;
+  assert(age >= 0);
+  return age <= maximum_age;
 }
 
 void GearsGeolocation::AddProvidersToRequest(std::vector<std::string16> &urls,
