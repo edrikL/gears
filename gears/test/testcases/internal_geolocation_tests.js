@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Timing discrepancy between C++ side and JS side can be up to 20ms.
+var TIMING_DISCREPANCY = 20;
+
 if (isUsingCCTests) {
   var internalTests = google.gears.factory.create('beta.test');
 }
@@ -711,7 +714,12 @@ function PopulateCachedPosition(geolocation, successFunction) {
     internalTests.configureGeolocationMockLocationProviderForTest(
         intermediatePositionToCache);
     geolocation.getCurrentPosition(
-        function(position) { SetPosition(); },
+        function() {
+          assert(geolocation.lastPosition.timestamp >=
+                 startTime - TIMING_DISCREPANCY,
+              'Last position too old in SetIntermediatePosition');
+          SetPosition();
+        },
         null,
         {gearsLocationProviderUrls: null});
   }
@@ -719,10 +727,10 @@ function PopulateCachedPosition(geolocation, successFunction) {
     internalTests.configureGeolocationMockLocationProviderForTest(
         positionToCache);
     geolocation.getCurrentPosition(
-        function(position) {
-          assert(geolocation.lastPosition.timestamp >= Date.parse(startTime),
-                 'Last position too old in PopulateCachedPosition.');
+        function() {
           var lastPosition = geolocation.lastPosition;
+          assert(lastPosition.timestamp >= startTime - TIMING_DISCREPANCY,
+                 'Last position too old in PopulateCachedPosition.');
           delete lastPosition.timestamp;
           assertObjectEqual(
               positionToCache, lastPosition,
@@ -733,7 +741,7 @@ function PopulateCachedPosition(geolocation, successFunction) {
         null,
         {gearsLocationProviderUrls: null});
   }
-  var startTime = Date();
+  var startTime = new Date();
   SetIntermediatePosition();
 }
 
@@ -786,7 +794,7 @@ function testCachedPositionOutsideMaximumAgeNoProviders() {
     // position.
     startAsync();
     PopulateCacheAndMakeRequest(
-        10,  // Wait for longer than maximumAge.
+        20,  // Wait for longer than maximumAge.
         function() {},
         function(error) {
           assertErrorEqual(error.POSITION_UNAVAILABLE,
@@ -802,11 +810,13 @@ function testCachedPositionOutsideMaximumAge() {
   if (isUsingCCTests) {
     // Test that a request with a non-zero maximumAge and location providers
     // does not immediately call the error callback if we don't have a suitable
-    // cached position. We use a non-existant URL for the location provider to
-    // force an error.
+    // cached position.
+    // We use a non-existant URL for the network location provider to force an
+    // error and check that the error is due to the failure of the network
+    // location provider, not the lack of a cached position.
     startAsync();
     PopulateCacheAndMakeRequest(
-        10,  // Wait for longer than maximumAge.
+        20,  // Wait for longer than maximumAge.
         function() {},
         function(error) {
           assert(error.message.search('returned error code 404.') != -1);
