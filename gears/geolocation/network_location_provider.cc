@@ -80,14 +80,16 @@ NetworkLocationProvider::NetworkLocationProvider(
 }
 
 NetworkLocationProvider::~NetworkLocationProvider() {
-  if (request_) {
-    request_->StopThreadAndDelete();
-  }
-
   // Shut down the worker thread
   is_shutting_down_ = true;
   thread_notification_event_.Signal();
   Join();
+
+  // Must keep the request around until our worker thread has stopped.
+  if (request_) {
+    request_->StopThreadAndDelete();
+    request_ = NULL;
+  }
 
   radio_data_provider_->Unregister(this);
   wifi_data_provider_->Unregister(this);
@@ -373,6 +375,7 @@ bool NetworkLocationProvider::MakeRequest() {
 
   std::string16 access_token;
   AccessTokenManager::GetInstance()->GetToken(url_, &access_token);
+  assert(request_);
   return request_->MakeRequest(access_token,
                                radio_data_,
                                wifi_data_,
