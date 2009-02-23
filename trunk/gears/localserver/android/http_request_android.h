@@ -334,10 +334,7 @@ class HttpRequestAndroid : public HttpRequest,
   // A helper function which sets the state_ member and also checks
   // that this is only performed by the main thread. The child thread
   // is not allowed to modify state_.
-  void SetState(State state) {
-    assert(IsMainThread());
-    state_ = state;
-  }
+  void SetState(State state);
 
   // Method IDs. Must match the order in java_methods_.
   enum JavaMethod {

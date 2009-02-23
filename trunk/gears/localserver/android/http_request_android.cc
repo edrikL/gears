@@ -454,6 +454,14 @@ bool HttpRequestAndroid::Open(const char16 *method,
     initial_url_ = url;
     current_url_ = url;
     SetReadyState(OPEN);
+
+    // SetReadyState can call Abort() as a side effect. If that is the
+    // case, we fail the opening.
+    if (was_aborted_) {
+      LOG(("Aborted while opening.\n"));
+      return false;
+    }
+
     // Set the user agent, otherwise this defaults to Java0. Non-fatal.
     std::string16 user_agent;
     if (BrowserUtils::GetUserAgentString(&user_agent)) {
@@ -586,6 +594,16 @@ void HttpRequestAndroid::SwitchToChildThreadState(State state) {
       new HttpThreadFunctor(this,
                             HttpThreadFunctor::TARGET_THREAD_CHILD,
                             state));
+}
+
+void HttpRequestAndroid::SetState(State state) {
+  assert(IsMainThread());
+  if (was_aborted_ && state_ == STATE_MAIN_IDLE) {
+    // We don't need to do anything here.
+    return;
+  }
+  // Set the new state.
+  state_ = state;
 }
 
 void HttpRequestAndroid::HandleStateMachine() {
