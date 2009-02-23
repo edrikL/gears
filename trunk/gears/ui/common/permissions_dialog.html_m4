@@ -406,7 +406,7 @@ m4_include(genfiles/permissions_dialog.js)
       setTextContent(elem, customMessage);
     }
 
-    if (!browser.ie_mobile) {
+    if (!browser.ie_mobile && !(browser.wince && browser.opera)) {
       // Set up the checkbox to toggle the enabledness of the Allow button.
       dom.getElementById("unlock").onclick = updateAllowButtonEnabledState;
       dom.getElementById("checkbox-row").style.display = 'block';
