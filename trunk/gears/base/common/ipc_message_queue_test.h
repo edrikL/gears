@@ -42,12 +42,10 @@
 // process.
 const char16 *GetHelloMessage();
 
-// Wait until the specified number of processes have been registered. This is
-// only used in testing peer IPC queue.
+// Wait until the specified number of processes have been registered.
 bool WaitForRegisteredProcesses(int n, int timeout);
 
-// Validate the registered processes are what we expect. This is only used in
-// testing peer IPC queue.
+// Validate the registered processes are what we expect.
 bool ValidateRegisteredProcesses(int n, const IpcProcessId *process_ids);
 
 // The message class we send to/from slave processes.
@@ -152,8 +150,7 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
   SlaveMessageHandler() : done_(false),
                           chits_received_(0),
                           chats_received_(0),
-                          parent_process_id_(0),
-                          as_peer_(false) {}
+                          parent_process_id_(0) {}
 
   // IpcMessageQueue::HandlerInterface methods
   virtual void HandleIpcMessage(IpcProcessId source_process_id,
@@ -171,8 +168,6 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
     parent_process_id_ = parent_process_id;
   }
 
-  void set_as_peer(bool as_peer) { as_peer_ = as_peer; }
-
   // Static methods
   static void TerminateSlave();
 
@@ -187,7 +182,6 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
   std::set<IpcProcessId> chit_sources_;
   std::set<IpcProcessId> chat_sources_;
   IpcProcessId parent_process_id_;
-  bool as_peer_;
 
   DISALLOW_EVIL_CONSTRUCTORS(SlaveMessageHandler);
 };
@@ -195,10 +189,10 @@ class SlaveMessageHandler : public IpcMessageQueue::HandlerInterface {
 // The slave process, invoked by master process.
 class SlaveProcess {
  public:
-  SlaveProcess() : id_(0), as_peer_(false) {}
+  SlaveProcess() : id_(0) {}
 
   // Starts a slave process.
-  bool Start(bool as_peer);
+  bool Start();
 
   // Waits until the slave process has been registered.
   bool WaitTillRegistered(int timeout);
@@ -218,7 +212,6 @@ class SlaveProcess {
 
  private:
   IpcProcessId id_;
-  bool as_peer_;
 
   static std::list<IpcProcessId> slave_processes_;
 

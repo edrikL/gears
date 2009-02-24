@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(OS_WINCE)
-
 #include <deque>
 #include <map>
 #include <set>
@@ -36,9 +34,7 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/atl_headers_win32.h"
-#if !BROWSER_NONE
 #include "gears/factory/factory_utils.h"  // for AppendBuildInfo
-#endif
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -153,21 +149,14 @@ static const char16 *kQueueIoBuffer = L"QIoBuffer";
 
 void GetKernelObjectName(const char16 *object_type,
                          IpcProcessId process_id,
-                         bool as_peer,
                          std::string16 *name) {
   name->clear();
   name->append(L"GearsIpc:");
   name->append(IntegerToString16(static_cast<int32>(process_id)));
   name->append(L":");
   name->append(object_type);
-#if BROWSER_NONE
-  assert(!as_peer);
-#else
-  if (as_peer) {
-    name->append(L":");
-    AppendBuildInfo(name);
-  }
-#endif
+  name->append(L":");
+  AppendBuildInfo(name);
 }
 
 
@@ -261,9 +250,9 @@ class IpcBuffer {
   SharedMemory shared_memory_;
   SharedMemory::MappedViewOf<BufferFormat> mapped_buffer_;
 
-  bool Create(IpcProcessId process_id, bool as_peer) {
+  bool Create(IpcProcessId process_id) {
     std::string16 name;
-    GetKernelObjectName(kQueueIoBuffer, process_id, as_peer, &name);
+    GetKernelObjectName(kQueueIoBuffer, process_id, &name);
     if (!shared_memory_.Create(name.c_str(), sizeof(BufferFormat)))
       return false;
 
@@ -276,9 +265,9 @@ class IpcBuffer {
     return true;
   }
 
-  bool Open(IpcProcessId process_id, bool as_peer) {
+  bool Open(IpcProcessId process_id) {
     std::string16 name;
-    GetKernelObjectName(kQueueIoBuffer, process_id, as_peer, &name);
+    GetKernelObjectName(kQueueIoBuffer, process_id, &name);
     return shared_memory_.Open(name.c_str());
   }
 
@@ -423,7 +412,7 @@ class IpcBuffer {
 //-----------------------------------------------------------------------------
 class IpcProcessRegistry {
  public:
-  bool Open(bool as_peer);
+  bool Open();
   bool Add(IpcProcessId id);
   bool Remove(IpcProcessId id);
   void GetAll(std::vector<IpcProcessId> *list);
@@ -455,15 +444,15 @@ class IpcProcessRegistry {
 };
 
 
-bool IpcProcessRegistry::Open(bool as_peer) {
+bool IpcProcessRegistry::Open() {
   std::string16 mutex_name;
-  GetKernelObjectName(kRegistryMutex, 0, as_peer, &mutex_name);
+  GetKernelObjectName(kRegistryMutex, 0, &mutex_name);
   if (!mutex_.Create(mutex_name.c_str()))
     return false;
 
   IpcMutexLock lock(&mutex_);
   std::string16 shared_memory_name;
-  GetKernelObjectName(kRegistryMemory, 0, as_peer, &shared_memory_name);
+  GetKernelObjectName(kRegistryMemory, 0, &shared_memory_name);
   if (shared_memory_.Open(shared_memory_name.c_str())) {
     if (!mapped_registry_.OpenView(&shared_memory_, true))
       return false;
@@ -765,7 +754,7 @@ class OutboundQueue : public QueueBase {
 
   ~OutboundQueue();
 
-  bool Open(IpcProcessId process_id, bool as_peer);
+  bool Open(IpcProcessId process_id);
   void AddMessageToQueue(ShareableIpcMessage *message);
   void WaitComplete(HANDLE handle, bool abandoned);
   bool AddWaitHandles(int64 now, std::vector<HANDLE> *handles);
@@ -808,7 +797,7 @@ class InboundQueue : public QueueBase {
  public:
   InboundQueue(Win32IpcMessageQueue *owner) : QueueBase(owner) {}
 
-  bool Create(IpcProcessId process_id, bool as_peer);
+  bool Create(IpcProcessId process_id);
   void AddWaitHandles(int64 now, std::vector<HANDLE> *handles);
   void WaitComplete(HANDLE handle, bool abandoned);
 
@@ -828,9 +817,8 @@ class InboundQueue : public QueueBase {
 //-----------------------------------------------------------------------------
 class Win32IpcMessageQueue : public IpcMessageQueue {
  public:
-  Win32IpcMessageQueue(bool as_peer)
-    : as_peer_(as_peer), die_(false),
-      current_process_id_(::GetCurrentProcessId()) {} 
+  Win32IpcMessageQueue()
+    : die_(false), current_process_id_(::GetCurrentProcessId()) {} 
 
   bool Init();
 
@@ -860,7 +848,6 @@ class Win32IpcMessageQueue : public IpcMessageQueue {
   friend class InboundQueue;
   friend class OutboundQueue;
 
-  bool as_peer_;
   bool die_;
   IpcProcessRegistry process_registry_;
   IpcProcessId current_process_id_;
@@ -908,20 +895,20 @@ void OutboundQueue::WaitForSpaceAvailable() {
 }
 
 
-bool OutboundQueue::Open(IpcProcessId process_id, bool as_peer) {
+bool OutboundQueue::Open(IpcProcessId process_id) {
   std::string16 write_mutex_name;
-  GetKernelObjectName(kQueueWriteMutex, process_id, as_peer, &write_mutex_name);
+  GetKernelObjectName(kQueueWriteMutex, process_id, &write_mutex_name);
   std::string16 data_available_event_name;
-  GetKernelObjectName(kQueueDataAvailableEvent, process_id, as_peer,
+  GetKernelObjectName(kQueueDataAvailableEvent, process_id,
                       &data_available_event_name);
   std::string16 space_available_event_name;
-  GetKernelObjectName(kQueueSpaceAvailableEvent, process_id, as_peer,
+  GetKernelObjectName(kQueueSpaceAvailableEvent, process_id,
                       &space_available_event_name);
   process_id_ = process_id;
   process_handle_.Attach(::OpenProcess(SYNCHRONIZE, FALSE, process_id));
   if (!process_handle_ ||
       !write_mutex_.Open(write_mutex_name.c_str()) ||
-      !io_buffer_.Open(process_id, as_peer) ||
+      !io_buffer_.Open(process_id) ||
       !data_available_event_.Open(data_available_event_name.c_str()) ||
       !space_available_event_.Open(space_available_event_name.c_str())) {
     return false;
@@ -1113,17 +1100,17 @@ bool OutboundQueue::WriteOnePacket(MessagePacketHeader *header,
 // InboundQueue impl
 //-----------------------------------------------------------------------------
 
-bool InboundQueue::Create(IpcProcessId process_id, bool as_peer) {
+bool InboundQueue::Create(IpcProcessId process_id) {
   std::string16 write_mutex_name;
-  GetKernelObjectName(kQueueWriteMutex, process_id, as_peer, &write_mutex_name);
+  GetKernelObjectName(kQueueWriteMutex, process_id, &write_mutex_name);
   std::string16 data_available_event_name;
-  GetKernelObjectName(kQueueDataAvailableEvent, process_id, as_peer,
+  GetKernelObjectName(kQueueDataAvailableEvent, process_id,
                       &data_available_event_name);
   std::string16 space_available_event_name;
-  GetKernelObjectName(kQueueSpaceAvailableEvent, process_id, as_peer,
+  GetKernelObjectName(kQueueSpaceAvailableEvent, process_id,
                       &space_available_event_name);
   if (!write_mutex_.Create(write_mutex_name.c_str()) ||
-      !io_buffer_.Create(process_id, as_peer) ||
+      !io_buffer_.Create(process_id) ||
       !data_available_event_.Create(data_available_event_name.c_str()) ||
       !space_available_event_.Create(space_available_event_name.c_str())) {
     return false;
@@ -1253,11 +1240,10 @@ static Win32IpcMessageQueue * volatile g_peer_queue_instance = NULL;
 
 // static
 IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-#ifdef BROWSER_IE
   if (!g_peer_queue_instance) {
     MutexLock locker(&g_peer_queue_instance_lock);
     if (!g_peer_queue_instance) {
-      Win32IpcMessageQueue *instance = new Win32IpcMessageQueue(true);
+      Win32IpcMessageQueue *instance = new Win32IpcMessageQueue();
       if (!instance->Init()) {
         LOG(("IpcMessageQueue initialization failed.\n"));
         instance->die_ = true;
@@ -1266,30 +1252,7 @@ IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
     }
   }
   return g_peer_queue_instance;
-#else
-  return NULL;
-#endif  // BROWSER_IE
 }
-
-static Mutex g_system_queue_instance_lock;
-static Win32IpcMessageQueue * volatile g_system_queue_instance = NULL;
-
-// static
-IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
-  if (!g_system_queue_instance) {
-    MutexLock locker(&g_system_queue_instance_lock);
-    if (!g_system_queue_instance) {
-      Win32IpcMessageQueue *instance = new Win32IpcMessageQueue(false);
-      if (!instance->Init()) {
-        LOG(("IpcMessageQueue initialization failed.\n"));
-        instance->die_ = true;
-      }
-      g_system_queue_instance = instance;
-    }
-  }
-  return g_system_queue_instance;
-}
-
 
 IpcProcessId Win32IpcMessageQueue::GetCurrentIpcProcessId() {
   return current_process_id_;
@@ -1299,9 +1262,6 @@ IpcProcessId Win32IpcMessageQueue::GetCurrentIpcProcessId() {
 void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
                                      IpcMessageData *ipc_message_data,
                                      bool including_self) {
-  // SendToAll is not supported for the system queue.
-  assert(as_peer_);
-
   MutexLock thread_sync_lock(&thread_sync_mutex_);
 
   if (die_) {
@@ -1424,8 +1384,8 @@ void Win32IpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
   {
     MutexLock locker(&start_data->started_mutex_);
     inbound_queue_.reset(new InboundQueue(this));
-    if (!inbound_queue_->Create(current_process_id_, as_peer_) ||
-        !process_registry_.Open(as_peer_) ||
+    if (!inbound_queue_->Create(current_process_id_) ||
+        !process_registry_.Open() ||
         !process_registry_.Add(current_process_id_) ||
         !send_data_event_.Create(NULL)) {
       start_data->started_signal_ = true;
@@ -1593,7 +1553,7 @@ OutboundQueue *Win32IpcMessageQueue::GetOutboundQueue(
     return iter->second.get();
   }
   OutboundQueue *queue = new OutboundQueue(this);
-  if (!queue->Open(process_id, as_peer_)) {
+  if (!queue->Open(process_id)) {
     LOG(("OutboundQueue::Open failed for process %d\n", process_id));
     delete queue;
     return NULL;
@@ -1618,9 +1578,9 @@ void Win32IpcMessageQueue::RemoveOutboundQueue(OutboundQueue *queue) {
 #ifdef USING_CCTESTS
 
 void TestingIpcMessageQueueWin32_GetAllProcesses(
-        bool as_peer, std::vector<IpcProcessId> *processes) {
+          std::vector<IpcProcessId> *processes) {
   IpcProcessRegistry registry;
-  registry.Open(as_peer);
+  registry.Open();
   registry.GetAll(processes);
 }
 
@@ -1692,5 +1652,3 @@ void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
 }
 
 #endif
-
-#endif  // defined(WIN32) && !defined(OS_WINCE)

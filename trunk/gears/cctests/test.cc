@@ -171,11 +171,8 @@ bool TestSerialization(std::string16 *error);  // from serialization_test.cc
 bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
 bool TestRefCount(std::string16 *error);  // from scoped_refptr_test.cc
 bool TestBlob(std::string16 *error);  // from blob_test.cc
-#if (defined(WIN32) && !defined(OS_WINCE)) || \
-    defined(LINUX) || defined(OS_MACOSX)
-// from ipc_message_queue_test.cc
-bool TestIpcSystemQueue(std::string16 *error);
-bool TestIpcPeerQueue(std::string16 *error);
+#if (defined(BROWSER_IE) && !defined(OS_WINCE))
+bool TestIpcPeerQueue(std::string16 *error);  // from ipc_message_queue_test.cc
 #endif
 #ifdef OS_ANDROID
 bool TestThreadMessageQueue(std::string16* error);
@@ -330,12 +327,8 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestRefCount(&error);
   ok &= TestBlob(&error);
 
-#if (defined(WIN32) && !defined(OS_WINCE)) || \
-    defined(LINUX) || defined(OS_MACOSX)
-  ok &= TestIpcSystemQueue(&error);
-#if BROWSER_IE || BROWSER_IEMOBILE
+#if (defined(BROWSER_IE) && !defined(OS_WINCE))
   ok &= TestIpcPeerQueue(&error);
-#endif
 #endif
 #ifdef OS_ANDROID
   ok &= TestThreadMessageQueue(&error);

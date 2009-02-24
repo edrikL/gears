@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(OS_WINCE)
-
 #ifdef USING_CCTESTS
 
 #include "gears/base/common/ipc_message_queue_test.h"
@@ -45,10 +43,8 @@
 #include <windows.h>
 #endif
 
-const char16 *kIpcTestApp = STRING16(L"ipc_test.exe");
-
 void TestingIpcMessageQueueWin32_GetAllProcesses(
-        bool as_peer, std::vector<IpcProcessId> *processes);
+        std::vector<IpcProcessId> *processes);
 
 //-----------------------------------------------------------------------------
 // Master process test code
@@ -58,7 +54,7 @@ bool WaitForRegisteredProcesses(int n, int timeout) {
   int64 start_time = GetCurrentTimeMillis();
   std::vector<IpcProcessId> registered_processes;
   while (true) {
-    TestingIpcMessageQueueWin32_GetAllProcesses(true, &registered_processes);
+    TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
     if (registered_processes.size() == n)
       return true;
     if (!timeout || GetCurrentTimeMillis() - start_time > timeout)
@@ -70,7 +66,7 @@ bool WaitForRegisteredProcesses(int n, int timeout) {
 
 bool ValidateRegisteredProcesses(int n, const IpcProcessId *process_ids) {
   std::vector<IpcProcessId> registered_processes;
-  TestingIpcMessageQueueWin32_GetAllProcesses(true, &registered_processes);
+  TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
   if (registered_processes.size() == n) {
     if (process_ids) {
       for (int i = 0; i < n; ++i) {
@@ -93,25 +89,16 @@ bool MasterMessageHandler::WaitForMessages(int n) {
   return num_received_messages_ == num_messages_waiting_to_receive_;
 }
 
-bool GetSlavePath(bool as_peer, std::string16 *slave_path) {
+bool GetSlavePath(std::string16 *slave_path) {
+  // We use ./run_gears_dll.exe <function_in_gears_dll_to_call>
   assert(slave_path);
-
-#ifndef BROWSER_NONE
-  // Additional arguments: peer/system process_id
-  wchar_t additional_arguments[64] = {0};
-  _snwprintf(additional_arguments,
-             sizeof(additional_arguments), 
-             L" %u %d",
-             as_peer,
-             ::GetCurrentProcessId());
-
-#ifdef BROWSER_IE
-  // Via rundll32.exe.
   char16 module_path[MAX_PATH] = {0};  // folder + filename
   if (0 == ::GetModuleFileName(GetGearsModuleHandle(),
                                module_path, MAX_PATH)) {
     return false;
   }
+  PathRemoveFileSpec(module_path);
+  PathAppend(module_path, L"run_gears_dll.exe");
 
   // Get a version without spaces, to use it as a command line argument.
   char16 module_short_path[MAX_PATH] = {0};
@@ -119,36 +106,15 @@ bool GetSlavePath(bool as_peer, std::string16 *slave_path) {
     return false;
   }
 
-  *slave_path += L"rundll32.exe ";
-  *slave_path += module_short_path;
-  *slave_path += L",RunIpcSlave";
-  *slave_path += additional_arguments;
-#else
-  // Via ipc_test.exe.
-  slave_path->append(L"\"");
-
-  std::string16 install_directory;
-  if (!GetComponentDirectory(&install_directory)) {
-    LOG(("Couldn't get install directory\n"));
-    return false;
-  }
-
-  slave_path->append(install_directory);
-  AppendName(kIpcTestApp, slave_path);
-
-  slave_path->append(L"\"");
-  slave_path->append(additional_arguments);
-#endif  // BROWSER_IE
-
-#endif  // !BROWSER_NONE
-
+  *slave_path = module_short_path;
+  *slave_path += L" RunIpcSlave";
   return true;
 }
 
-bool SlaveProcess::Start(bool as_peer) {
+bool SlaveProcess::Start() {
   // Get the command.
   std::string16 slave_path;
-  if (!GetSlavePath(as_peer, &slave_path)) {
+  if (!GetSlavePath(&slave_path)) {
     return false;
   }
 
@@ -164,7 +130,6 @@ bool SlaveProcess::Start(bool as_peer) {
   ::CloseHandle(pi.hThread);
 
   id_ = pi.dwProcessId;
-  as_peer_ = as_peer;
   slave_processes_.push_back(id_);
 
   return true;
@@ -176,8 +141,7 @@ bool SlaveProcess::WaitTillRegistered(int timeout) {
   int64 start_time = GetCurrentTimeMillis();  
   std::vector<IpcProcessId> registered_processes;
   while (GetCurrentTimeMillis() - start_time < timeout) {
-    TestingIpcMessageQueueWin32_GetAllProcesses(as_peer_,
-                                                &registered_processes);
+    TestingIpcMessageQueueWin32_GetAllProcesses(&registered_processes);
     if (std::find(registered_processes.begin(),
                   registered_processes.end(),
                   id_) != registered_processes.end()) {
@@ -210,8 +174,7 @@ bool SlaveProcess::WaitForExit(int timeout) {
 static SlaveMessageHandler g_slave_handler;
 
 IpcMessageQueue *SlaveMessageHandler::GetIpcMessageQueue() const {
-  return as_peer_ ? IpcMessageQueue::GetPeerQueue()
-                  : IpcMessageQueue::GetSystemQueue();
+  return IpcMessageQueue::GetPeerQueue();
 }
 
 void SlaveMessageHandler::TerminateSlave() {
@@ -222,26 +185,10 @@ void SlaveMessageHandler::TerminateSlave() {
 bool InitSlave() {
   LOG(("Initializing slave process %u\n", ::GetCurrentProcessId()));
 
-  // Parse the additional arguments.
-  // The last-1 argument indicates if we should start slave for peer or system
-  // IPC testing. The last argument is the parent process id.
-  int argc = 0;
-  wchar_t **argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
-  if (!argv) {
-    return false;
-  }
-  int as_peer = 0;
-  int process_id = 0;
-  if (argc > 2) {
-    as_peer = _wtoi(argv[argc - 2]);
-    process_id = _wtoi(argv[argc - 1]);
-  }
-  ::GlobalFree(argv);
-  if (process_id <= 0) {
-    return false;
-  }
-  g_slave_handler.set_as_peer(as_peer != 0);
-  g_slave_handler.set_parent_process_id(process_id);
+  std::vector<IpcProcessId> processes;
+  TestingIpcMessageQueueWin32_GetAllProcesses(&processes);
+
+  g_slave_handler.set_parent_process_id(processes.empty() ? 0 : processes[0]);
 
   // Create the new ipc message queue for the child process.
   IpcTestMessage::RegisterAsSerializable();
@@ -294,17 +241,13 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
 
 #elif BROWSER_IE
 
-// This is the function that rundll32 calls when we launch other processes.
-extern "C"
-__declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
-                                               HINSTANCE instance,
-                                               LPWSTR command_line,
-                                               int command_show) {
+// This is the function that run_gears_dll.exe calls
+extern "C" __declspec(dllexport) int __cdecl RunIpcSlave() {
   SlaveMain();
+  return 0;
 }
 
 #endif  // BROWSER_NONE
 
 #endif  // USING_CCTESTS
 
-#endif  //defined(WIN32) && !defined(OS_WINCE)

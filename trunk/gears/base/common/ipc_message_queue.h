@@ -56,10 +56,6 @@ class IpcMessageQueue {
   // NULL if this ipc facility is not required for a particular build target.
   static IpcMessageQueue *GetPeerQueue();
 
-  // Returns a pointer to the singleton for doing IPC in the system. May return 
-  // NULL if this ipc facility is not required for a particular build target.
-  static IpcMessageQueue *GetSystemQueue();
-
   // Message handlers implement this interface. All messages of a
   // given message_type will be directed the registered handler
   // for that message_type.

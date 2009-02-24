@@ -28,7 +28,6 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
-#include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/js_dom_element.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
