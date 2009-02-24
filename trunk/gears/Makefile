@@ -374,6 +374,7 @@ ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
 ifneq ($(OS),wince)
+ifneq ($(OS),android)
 THIRD_PARTY_VPATH	+= \
 		../third_party/skia/src/core \
 		../third_party/skia/src/images \
@@ -508,6 +509,7 @@ endif
 endif
 endif
 
+endif # not android
 endif # not wince
 endif # OFFICIAL_BUILD
 endif # USING_SKIA
@@ -1310,6 +1312,7 @@ ifeq ($(OFFICIAL_BUILD),1)
 # The Canvas API is not yet enabled in official builds.
 else
 ifneq ($(OS),wince)
+ifneq ($(OS),android)
 
 $(BROWSER)_VPATH += \
 		canvas \
@@ -1322,6 +1325,7 @@ $(BROWSER)_CPPSRCS += \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
 
+endif  # not android
 endif  # not wince
 endif  # OFFICIAL_BUILD
 
@@ -1362,13 +1366,14 @@ $(BROWSER)_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # desktop
 
+ifneq ($(OS),android)
+# The Desktop API is disabled on Android
 $(BROWSER)_VPATH += \
 		desktop \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
 		desktop.cc \
-		desktop_android.cc \
 		desktop_linux.cc \
 		desktop_osx.cc \
 		desktop_win32.cc \
@@ -1384,7 +1389,6 @@ $(BROWSER)_CPPSRCS += \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_win32.cc \
-		file_dialog_android.cc \
 		$(NULL)
 
 CHROME_CPPSRCS	+= \
@@ -1418,6 +1422,7 @@ CHROME_CPPSRCS += \
 		$(NULL)
 
 endif # not OFFICIAL_BUILD
+endif # not android
 
 NPAPI_JAVASRCS	+= \
 		DesktopAndroid.java \
@@ -2130,6 +2135,7 @@ endif # not OFFICIAL_BUILD
 
 ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
+ifneq ($(OS),android)
 $(BROWSER)_VPATH += \
 		image \
 		$(NULL)
@@ -2139,6 +2145,7 @@ $(BROWSER)_CPPSRCS += \
 		image.cc \
 		image_loader.cc \
 		$(NULL)
+endif # not android
 endif # not wince
 endif # not OFFICIAL_BUILD
 
