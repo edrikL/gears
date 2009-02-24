@@ -74,5 +74,15 @@ bool HasGearsWorkerContentType(HttpRequest *request) {
   }
 
   content_type = StripWhiteSpace(content_type);
+
+  std::string16 worker_url;
+  request->GetFinalUrl(&worker_url);
+  std::string16 message(STRING16(L"Worker '"));
+  message += worker_url;
+  message += STRING16(L"' is cross-origin. Content-type is '");
+  message += content_type;
+  message += STRING16(L"'.");
+  LOG((String16ToUTF8(message).c_str()));
+
   return content_type == kGearsWorkerContentType;
 }
