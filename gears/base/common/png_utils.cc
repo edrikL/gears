@@ -25,6 +25,10 @@
 
 // This code is based on nsPNGDecoder in Mozilla and PNGImageDecoder in WebKit.
 
+#ifdef OS_ANDROID
+// We do not need this on Android since the Desktop module is not supported.
+#else
+
 #include <assert.h>
 #include "gears/base/common/png_utils.h"
 
@@ -592,3 +596,5 @@ void PngUtils::ShrinkImage(const unsigned char *input, int width, int height,
     base_y += local_height;
   }
 }
+
+#endif  // OS_ANDROID

@@ -213,9 +213,9 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
                                    context, &object);
   } else if (module_name == STRING16(L"beta.dummymodule")) {
     CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
-#ifdef OS_WINCE
+#if defined(OS_WINCE) || defined(OS_ANDROID)
   // Furthermore, Canvas, Console and Image are unimplemented for all
-  // browsers on WinCE.
+  // browsers on WinCE and Android.
 #else
   } else if (module_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(module_environment_.get(), context, &object);

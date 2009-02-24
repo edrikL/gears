@@ -158,6 +158,9 @@ ifeq ($(OS),android)
   USING_CLASS_LOADER=0
 # Use SpiderMonkey.
   USING_MOZJS=1
+# Do not use libjpeg, libpng since we don't have Desktop API
+  USING_LIBJPEG=0
+  USING_LIBPNG=0
 endif
 
 MAKEFLAGS += --no-print-directory
