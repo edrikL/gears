@@ -53,8 +53,8 @@ NPAPI_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/npapi
 OPERA_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/opera
 SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
-IPC_TEST_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/ipc_test
 OSX_LAUNCHURL_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/launch_url_with_browser
+RUN_GEARS_DLL_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/run_gears_dll
 SF_INSTALLER_PLUGIN_OUTDIR = $(OUTDIR)/$(OS)-$(ARCH)/installer_plugin
 VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 
@@ -90,7 +90,6 @@ BREAKPAD_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(BREAKPAD_OUTDIR), $(B
 COMMON_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(COMMON_CPPSRCS) $(COMMON_CSRCS) $(COMMON_GEN_CPPSRCS))
 $(BROWSER)_OBJS          = $(call SUBSTITUTE_OBJ_SUFFIX, $($(BROWSER)_OUTDIR), $($(BROWSER)_CPPSRCS) $($(BROWSER)_CSRCS))
 CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRASH_SENDER_CPPSRCS))
-IPC_TEST_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(IPC_TEST_OUTDIR), $(IPC_TEST_CPPSRCS) $(IPC_TEST_CSRCS))
 OSX_CRASH_INSPECTOR_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(OSX_CRASH_INSPECTOR_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 SF_INPUTMANAGER_OBJS     = $(call SUBSTITUTE_OBJ_SUFFIX, $(SF_OUTDIR), $(SF_INPUTMANAGER_CPPSRCS))
@@ -102,6 +101,7 @@ SQLITE_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(SQLITE_OUTDIR), $(SQL
 PERF_TOOL_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(PERF_TOOL_CPPSRCS))
 IEMOBILE_WINCESETUP_OBJS = $(call SUBSTITUTE_OBJ_SUFFIX, $(IEMOBILE_OUTDIR), $(IEMOBILE_WINCESETUP_CPPSRCS))
 OPERA_WINCESETUP_OBJS    = $(call SUBSTITUTE_OBJ_SUFFIX, $(OPERA_OUTDIR), $(OPERA_WINCESETUP_CPPSRCS))
+RUN_GEARS_DLL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(RUN_GEARS_DLL_OUTDIR), $(RUN_GEARS_DLL_CPPSRCS) $(RUN_GEARS_DLL_CSRCS))
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
 VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS) $(VISTA_BROKER_CSRCS))
 
@@ -146,7 +146,6 @@ DEPS = \
 	$(BREAKPAD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(IPC_TEST_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_CRASH_INSPECTOR_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SF_INSTALLER_PLUGIN_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -155,6 +154,7 @@ DEPS = \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(MOZJS_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(RUN_GEARS_DLL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
@@ -196,6 +196,7 @@ COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
 IEMOBILE_VPATH += $(IEMOBILE_OUTDIR)
 IE_VPATH += $(VISTA_BROKER_OUTDIR)
+IE_VPATH += $(RUN_GEARS_DLL_OUTDIR)
 SF_VPATH += $(SF_OUTDIR)
 ifeq ($(OS),osx)
 $(BROWSER)_VPATH += $(OSX_LAUNCHURL_OUTDIR) $(SF_INSTALLER_PLUGIN_OUTDIR)
@@ -231,7 +232,6 @@ SF_INPUTMANAGER_EXE     = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
 # Note: crash_sender.exe name needs to stay in sync with name used in
 # exception_handler_win32.cc and exception_handler_osx/google_breakpad.mm.
 CRASH_SENDER_EXE        = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
-IPC_TEST_EXE            = $(IPC_TEST_OUTDIR)/$(EXE_PREFIX)ipc_test$(EXE_SUFFIX)
 # Note: crash_inspector name needs to stay in sync with name used in
 # exception_handler_osx/google_breakpad.mm.
 OSX_CRASH_INSPECTOR_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_inspector$(EXE_SUFFIX)
@@ -239,6 +239,12 @@ SF_PROXY_DLL            = $(COMMON_OUTDIR)/$(DLL_PREFIX)gears_proxy$(DLL_SUFFIX)
 OSX_LAUNCHURL_EXE       = $(COMMON_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
 SF_INSTALLER_PLUGIN_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)stats_pane$(EXE_SUFFIX)
 PERF_TOOL_EXE           = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
+
+# Note: We use IE_OUTDIR because run_gears_dll.exe and gears.dll must reside
+# in the same directory to function.
+# Note: run_gears_dll.exe name needs to stay in sync with name used in
+# ipc_message_queue_test_win32.cc
+RUN_GEARS_DLL_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)run_gears_dll$(EXE_SUFFIX)
 
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
 # development environment as deployment environment.
@@ -412,6 +418,10 @@ modules:: $(IE_MODULE_DLL)
 ifeq ($(OS),win32)
 prereqs:: $(VISTA_BROKER_OUTDIR)
 modules:: $(VISTA_BROKER_EXE)
+ifeq ($(USING_CCTESTS),1)
+prereqs:: $(RUN_GEARS_DLL_OUTDIR)
+modules:: $(RUN_GEARS_DLL_EXE)
+endif
 endif
 endif
 
@@ -459,13 +469,6 @@ endif
 endif
 endif
 
-
-ifneq ($(findstring $(OS),linux|osx|win32),)
-ifeq ($(USING_CCTESTS),1)
-prereqs:: $(IPC_TEST_OUTDIR)
-modules:: $(IPC_TEST_EXE)
-endif
-endif
 
 ifeq ($(OS),linux)
 installers:: $(FFMERGED_INSTALLER_XPI)
@@ -563,13 +566,13 @@ $(COMMON_OUTDIRS_I18N):
 	"mkdir" -p $@
 $(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
-$(IPC_TEST_OUTDIR):
-	"mkdir" -p $@
 $(LIBGD_OUTDIR):
 	"mkdir" -p $@
 $(MOZJS_OUTDIR):
 	"mkdir" -p $@
 $(OSX_LAUNCHURL_OUTDIR):
+	"mkdir" -p $@
+$(RUN_GEARS_DLL_OUTDIR):
 	"mkdir" -p $@
 $(SF_INSTALLER_PLUGIN_OUTDIR):
 	"mkdir" -p $@
@@ -681,19 +684,16 @@ $(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.mm
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
-$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.c
-	@$(MKDEP)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
-$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.cc
-	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
-$(IPC_TEST_OUTDIR)/%$(OBJ_SUFFIX): %.mm
-	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
-
 $(OSX_LAUNCHURL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+
+$(RUN_GEARS_DLL_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	@$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
+$(RUN_GEARS_DLL_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
 
 $(SF_INSTALLER_PLUGIN_OUTDIR)/%$(OBJ_SUFFIX): %.m
 	@$(MKDEP)
@@ -866,7 +866,6 @@ $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	  -dOurWin32ProductId=$(OUR_WIN32_PRODUCT_ID) \
 	  -dOurCommonPath=$(OUTDIR)/$(OS)-$(ARCH)/common \
 	  -dOurIEPath=$(OUTDIR)/$(OS)-$(ARCH)/ie \
-	  -dOurIpcTestPath=$(OUTDIR)/$(OS)-$(ARCH)/ipc_test \
 	  -dOurFFPath=$(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) \
 	  -dOurComponentGUID_FFComponentsDirFiles=$(OUR_COMPONENT_GUID_FF_COMPONENTS_DIR_FILES) \
 	  -dOurComponentGUID_FFContentDirFiles=$(OUR_COMPONENT_GUID_FF_CONTENT_DIR_FILES) \
@@ -1082,17 +1081,19 @@ $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(STRIP_EXECUTABLE)
 endif
 
-ifeq ($(USING_CCTESTS),1)
-$(IPC_TEST_EXE): $(IPC_TEST_OBJS)
-	$(MKEXE) $(EXEFLAGS) $(IPC_TEST_OBJS) $(IPC_LIBS)
-else
-.PHONY: $(IPC_TEST_EXE)
-$(IPC_TEST_EXE):
-endif
-
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(MKEXE) $(EXEFLAGS) -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
 	 $(STRIP_EXECUTABLE)
+
+ifeq ($(USING_CCTESTS),1)
+$(RUN_GEARS_DLL_EXE): $(RUN_GEARS_DLL_OBJS) $(RUN_GEARS_DLL_LINK_EXTRAS)
+	$(ECHO) $(RUN_GEARS_DLL_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKEXE) $(EXEFLAGS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
+else
+.PHONY: $(RUN_GEARS_DLL_EXE)
+$(RUN_GEARS_DLL_EXE):
+endif
 
 $(SF_INSTALLER_PLUGIN_EXE): $(SF_INSTALLER_PLUGIN_OBJS)
 	 $(MKDLL) $(DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) -framework Cocoa -framework InstallerPlugins $(SF_INSTALLER_PLUGIN_OBJS)
@@ -1163,7 +1164,7 @@ $(ANDROID_INSTALLER_ZIP_PACKAGE): $(patsubst %.html,$(ANDROID_INSTALLER_OUTDIR)/
 endif # android
 
 ifeq ($(OS),osx)
-$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(IPC_TEST_EXE) $(OSX_LAUNCHURL_EXE)
+$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
 else
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N)
 endif
@@ -1205,9 +1206,7 @@ endif
 endif
 endif # not LINUX
 endif # not OSX
-ifeq ($(USING_CCTESTS),1)
-	cp $(IPC_TEST_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-endif
+
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
@@ -1240,7 +1239,7 @@ $(SF_PLUGIN_PROXY_BUNDLE): $(SF_PLUGIN_BUNDLE) $(SF_PROXY_DLL)
 	cp "tools/osx/uninstall.command" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
 
-$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
+$(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(OSX_CRASH_INSPECTOR_EXE) $(OSX_LAUNCHURL_EXE) $(SF_MODULE_DLL) $(SF_M4FILES) $(SF_M4FILES_I18N)
 # --- Gears.bundle ---
 # Create fresh copies of the Gears.bundle directories.
 	rm -rf $@
@@ -1260,10 +1259,6 @@ $(SF_PLUGIN_BUNDLE): $(CRASH_SENDER_EXE) $(IPC_TEST_EXE) $(OSX_CRASH_INSPECTOR_E
 	mkdir -p $@/Contents/Resources/
 	cp "$(OSX_LAUNCHURL_EXE)" "$@/Contents/Resources/"
 	/usr/bin/touch -c $@
-# Copy ipc_test
-ifeq ($(USING_CCTESTS),1)
-	cp "$(IPC_TEST_EXE)" "$@/Contents/Resources/"
-endif
 
 $(SF_INPUTMANAGER_BUNDLE): $(SF_INPUTMANAGER_EXE)
 # Create fresh copies of the GoogleGearsEnabler directories.

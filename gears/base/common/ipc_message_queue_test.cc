@@ -26,10 +26,6 @@
 // TODO(jianli): add sequence number to the message in order to check if the
 // messages are delivered in the sendering order.
 
-#if (defined(WIN32) && !defined(OS_WINCE)) || \
-    defined(LINUX) || \
-    defined(OS_MACOSX)
-
 #ifdef USING_CCTESTS
 
 #include "gears/base/common/ipc_message_queue_test.h"
@@ -73,14 +69,12 @@
 
 void TestingIpcMessageQueue_GetCounters(IpcMessageQueueCounters *counters,
                                         bool reset);
-#ifdef WIN32
 void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(
         IpcMessageQueue *ipc_message_queue, IpcProcessId id);
 void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock(
         IpcMessageQueue *ipc_message_queue);
 void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock(
         IpcMessageQueue *ipc_message_queue);
-#endif  // WIN32
 
 //-----------------------------------------------------------------------------
 // Constants, functions, and classes used by test code in both the master
@@ -103,14 +97,7 @@ static const int kManySlavesCount = 10;
 #endif  // IPC_STRESS
 
 // we want this larger than the capacity of the packet
-// (~8K for WIN32, ~2K for Linux, 450 for Mac)
-#ifdef WIN32
 static const int kBigPingLength = 18000;
-#elif defined(LINUX) && !defined(OS_MACOSX)
-static const int kBigPingLength = 5000;
-#elif defined(OS_MACOSX)
-static const int kBigPingLength = 1000;
-#endif  // WIN32
 
 static const char16 *kHello = STRING16(L"hello");
 static const char16 *kPing = STRING16(L"ping");
@@ -302,180 +289,6 @@ int MasterMessageHandler::CountSavedMessages(IpcProcessId source,
 
 
 //-----------------------------------------------------------------------------
-// Testing IPC System Queue
-//-----------------------------------------------------------------------------
-
-static MasterMessageHandler g_system_ipc_master_handler;
-
-bool TestIpcSystemQueue(std::string16 *error) {
-  assert(error);
-
-  SlaveProcess::ClearAll();
-
-  // Register our message class and handler.
-  MasterMessageHandler &g_master_handler = g_system_ipc_master_handler;
-
-  IpcTestMessage::RegisterAsSerializable();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
-  TEST_ASSERT(ipc_message_queue);
-  ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_master_handler);
-
-  g_master_handler.SetSaveMessages(true);
-  g_master_handler.ClearSavedMessages();
-
-  // Start two slave processes, a and b.
-  SlaveProcess process_a, process_b;
-  TEST_ASSERT(process_a.Start(false));
-  TEST_ASSERT(process_a.WaitTillRegistered(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(process_b.Start(false));
-  TEST_ASSERT(process_b.WaitTillRegistered(kIpcTestWaitTimeoutMs));
-
-  // Each should send a "hello" message on startup, we wait for that to know
-  // that they are ready to receive IpcTestMessages.
-  TEST_ASSERT(g_master_handler.WaitForMessages(2));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_a.id(), kHello) == 1);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_b.id(), kHello) == 1);
-
-  // Send a "ping" to both processes and wait for expected responses.
-  g_master_handler.ClearSavedMessages();
-  ipc_message_queue->Send(process_a.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kPing));
-  ipc_message_queue->Send(process_b.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kPing));
-  TEST_ASSERT(g_master_handler.WaitForMessages(2));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_a.id(), kPing) == 1);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_b.id(), kPing) == 1);
-
-  // Send a "bigPing" to both processes and wait for expected responses.
-  g_master_handler.ClearSavedMessages();
-  ipc_message_queue->Send(process_a.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kBigPing, kBigPingLength));
-  ipc_message_queue->Send(process_b.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kBigPing, kBigPingLength));
-  TEST_ASSERT(g_master_handler.WaitForMessages(2));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_a.id(), kBigPing) ==
-              1);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_b.id(), kBigPing) ==
-              1);
-
-  // Tell them to quit, wait for them to do so, and verify they are no
-  // longer in the registry.
-  ipc_message_queue->Send(process_a.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kQuit));
-  ipc_message_queue->Send(process_b.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kQuit));
-  TEST_ASSERT(process_a.WaitForExit(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(process_b.WaitForExit(kIpcTestWaitTimeoutMs));
-
-  // Start a new process c.
-  g_master_handler.ClearSavedMessages();
-  SlaveProcess process_c;
-  TEST_ASSERT(process_c.Start(false));
-  TEST_ASSERT(process_c.WaitTillRegistered(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(g_master_handler.WaitForMessages(1));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kHello) == 1);
-
-  // Flood it with many small ping messages and wait for the expected responses.
-  g_master_handler.ClearSavedMessages();
-  for (int i = 0; i < kManyPings; ++i) {
-    ipc_message_queue->Send(process_c.id(),
-                            kIpcQueue_TestMessage,
-                            new IpcTestMessage(kPing));
-  }
-  TEST_ASSERT(g_master_handler.WaitForMessages(kManyPings));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kPing) ==
-              kManyPings);
-
-  // Flood it with a smaller number of large messages.
-  g_master_handler.ClearSavedMessages();
-  for (int i = 0; i < kManyBigPings; ++i) {
-    ipc_message_queue->Send(process_c.id(),
-                            kIpcQueue_TestMessage,
-                            new IpcTestMessage(kBigPing, kBigPingLength));
-  }
-  TEST_ASSERT(g_master_handler.WaitForMessages(kManyBigPings));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kBigPing) ==
-              kManyBigPings);
-  TEST_ASSERT(g_master_handler.num_invalid_big_pings() == 0);
-
-  // Start a new process d.
-  g_master_handler.ClearSavedMessages();
-  SlaveProcess process_d;
-  TEST_ASSERT(process_d.Start(false));
-  TEST_ASSERT(process_d.WaitTillRegistered(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(g_master_handler.WaitForMessages(1));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_d.id(), kHello) == 1);
-
-  // Tell c and d to send us many small pings at the same time.
-  g_master_handler.ClearSavedMessages();
-  ipc_message_queue->Send(process_c.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyPings));
-  ipc_message_queue->Send(process_d.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyPings));
-  TEST_ASSERT(g_master_handler.WaitForMessages(kManyPings * 2));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kPing) ==
-             kManyPings);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_d.id(), kPing) ==
-              kManyPings);
-
-  // Tell c and d to send us many big pings at the same time.
-  g_master_handler.ClearSavedMessages();
-  ipc_message_queue->Send(process_c.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyBigPings));
-  ipc_message_queue->Send(process_d.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyBigPings));
-  TEST_ASSERT(g_master_handler.WaitForMessages(kManyBigPings * 2));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kBigPing) ==
-              kManyBigPings);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_d.id(), kBigPing) ==
-              kManyBigPings);
-  TEST_ASSERT(g_master_handler.num_invalid_big_pings() == 0);
-
-  // Tell c to send us many big pings and d to send us many small pings.
-  g_master_handler.ClearSavedMessages();
-  ipc_message_queue->Send(process_c.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyBigPings));
-  ipc_message_queue->Send(process_d.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kSendManyPings));
-  TEST_ASSERT(g_master_handler.WaitForMessages(kManyBigPings + kManyPings));
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kBigPing) ==
-              kManyBigPings);
-  TEST_ASSERT(g_master_handler.CountSavedMessages(process_d.id(), kPing) ==
-              kManyPings);
-  TEST_ASSERT(g_master_handler.num_invalid_big_pings() == 0);
-
-  // Tell 'c' and 'd' to die.
-  ipc_message_queue->Send(process_c.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kQuit));
-  ipc_message_queue->Send(process_d.id(),
-                          kIpcQueue_TestMessage,
-                          new IpcTestMessage(kQuit));
-  TEST_ASSERT(process_c.WaitForExit(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(process_d.WaitForExit(kIpcTestWaitTimeoutMs));
-
-  TEST_ASSERT(g_master_handler.CountSavedMessages(0, kError) == 0);
-  TEST_ASSERT(g_master_handler.num_invalid_sequence_number_counts() == 0);
-
-  LOG(("TestIpcSystemQueue - passed\n"));
-  g_master_handler.SetSaveMessages(false);
-  g_master_handler.ClearSavedMessages();
-  return true;
-}
-
-//-----------------------------------------------------------------------------
 // Testing IPC Peer Queue
 //-----------------------------------------------------------------------------
 
@@ -513,9 +326,9 @@ bool TestIpcPeerQueue(std::string16 *error) {
 
   // Start two slave processes, a and b.
   SlaveProcess process_a, process_b;
-  TEST_ASSERT(process_a.Start(true));
+  TEST_ASSERT(process_a.Start());
   TEST_ASSERT(process_a.WaitTillRegistered(kIpcTestWaitTimeoutMs));
-  TEST_ASSERT(process_b.Start(true));
+  TEST_ASSERT(process_b.Start());
   TEST_ASSERT(process_b.WaitTillRegistered(kIpcTestWaitTimeoutMs));
 
   // The registry should now contain three processes.
@@ -563,7 +376,7 @@ bool TestIpcPeerQueue(std::string16 *error) {
   // Start a new process c
   g_master_handler.ClearSavedMessages();
   SlaveProcess process_c;
-  TEST_ASSERT(process_c.Start(true));
+  TEST_ASSERT(process_c.Start());
   TEST_ASSERT(process_c.WaitTillRegistered(kIpcTestWaitTimeoutMs));
   TEST_ASSERT(g_master_handler.WaitForMessages(1));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_c.id(), kHello) == 1);
@@ -594,7 +407,7 @@ bool TestIpcPeerQueue(std::string16 *error) {
   // Start a new process d.
   g_master_handler.ClearSavedMessages();
   SlaveProcess process_d;
-  TEST_ASSERT(process_d.Start(true));
+  TEST_ASSERT(process_d.Start());
   TEST_ASSERT(process_d.WaitTillRegistered(kIpcTestWaitTimeoutMs));
   TEST_ASSERT(g_master_handler.WaitForMessages(1));
   TEST_ASSERT(g_master_handler.CountSavedMessages(process_d.id(), kHello) == 1);
@@ -665,7 +478,7 @@ bool TestIpcPeerQueue(std::string16 *error) {
   g_master_handler.ClearSavedMessages();
   SlaveProcess many_slaves[kManySlavesCount];
   for (int i = 0; i < kManySlavesCount; ++i) {
-    TEST_ASSERT(many_slaves[i].Start(true));
+    TEST_ASSERT(many_slaves[i].Start());
   }
   for (int i = 0; i < kManySlavesCount; ++i) {
     TEST_ASSERT(many_slaves[i].WaitTillRegistered(kIpcTestWaitTimeoutMs));
@@ -784,7 +597,6 @@ void SlaveMessageHandler::HandleIpcMessage(
   } else if (test_message->string() == kQuit) {
     TerminateSlave();
 
-#ifdef WIN32
   } else if (test_message->string() == kQuitWhileHoldingRegistryLock) {
     done_ = true;
     TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock(
@@ -796,7 +608,6 @@ void SlaveMessageHandler::HandleIpcMessage(
 
   } else if (test_message->string() == kDieWhileHoldingRegistryLock) {
     TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock(ipc_message_queue);
-#endif  // WIN32
 
   } else if (test_message->string() == kBigPing) {
     if (test_message->bytes_length() == kBigPingLength &&
@@ -872,4 +683,3 @@ void SlaveMessageHandler::HandleIpcMessage(
 
 #endif  // USING_CCTESTS
 
-#endif  // (WIN32 && !OS_WINCE) || LINUX || OS_MACOSX

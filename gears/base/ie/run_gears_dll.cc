@@ -1,4 +1,4 @@
-// Copyright 2008, Google Inc.
+// Copyright 2009, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,13 +23,43 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/ipc_message_queue.h"
+#include <tchar.h>
+#include <windows.h>
+#include <shellapi.h>
 
-// An ipc message facility may or may not be needed depending on the browser's
-// process and threading model. For browser architectures that don't
-// require it, we use this file.
+#include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 
-// static
-IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
-  return NULL;
+int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR, int) {
+  CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL);
+
+  // usage: run_gears_dll.exe <exported_function_name>
+  int argc;
+  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (!argv)
+    return __LINE__;  // return line as a ghetto error code
+  if (argc != 2)
+    return __LINE__;
+  std::string function_name(String16ToUTF8(argv[1]));
+  LocalFree(argv);
+
+  // The gears.dll must reside in the same directory and be named "gears.dll"
+  char16 module_path[MAX_PATH] = {0};
+  if (0 == ::GetModuleFileName(instance, module_path, MAX_PATH)) {
+    return false;
+  }
+  PathRemoveFileSpec(module_path);
+  PathAppend(module_path, L"gears.dll");
+
+  HMODULE module = LoadLibraryW(module_path);
+  if (!module)
+    return __LINE__;
+  PROC function = GetProcAddress(module, function_name.c_str());
+  if (!function)
+    return __LINE__;
+
+  (*function)();
+
+  return 0;
 }

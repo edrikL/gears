@@ -152,8 +152,8 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
                     Source="$(var.OurIEPath)/vista_broker.pdb" />
 `~)
 m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
-                  <File Id='ie_ipc_test_exe' Name='ipc_test.exe' DiskId='1'
-                    Source="$(var.OurIpcTestPath)/ipc_test.exe" />
+                  <File Id='run_gears_dll' Name='run_gears_dll.exe' DiskId='1'
+                    Source="$(var.OurIEPath)/run_gears_dll.exe" />
 `~)
                 </Component>
               </Directory>
@@ -195,10 +195,6 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
 `~,~`m4dnl
                   <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
-`~)
-m4_ifdef(~`USING_CCTESTS`~,~`m4_dnl
-                  <File Id='ff_ipc_test_exe' Name='ipc_test.exe' DiskId='1'
-                    Source="$(var.OurIpcTestPath)/ipc_test.exe" />
 `~)
                 </Component>
               </Directory>

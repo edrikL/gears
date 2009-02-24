@@ -947,12 +947,7 @@ FF3_IDLSRCS	+= \
 FF3_CPPSRCS	+= \
 		dom_utils.cc \
 		html_event_monitor_ff.cc \
-		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
-		ipc_message_queue_test.cc \
-		ipc_message_queue_test_linux.cc \
-		ipc_message_queue_test_win32.cc \
-		ipc_message_queue_win32.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		message_queue_ff.cc \
@@ -961,12 +956,6 @@ FF3_CPPSRCS	+= \
 		paths_ff.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
-
-ifeq ($(OS),osx)
-FF3_CPPSRCS	+= \
-		ipc_message_queue_test_osx.mm \
-		$(NULL)
-endif
 
 #-----------------------------------------------------------------------------
 # base/ie
@@ -991,10 +980,6 @@ IE_CPPSRCS	+= \
 		bho.cc \
 		detect_version_collision_win32.cc \
 		dispatcher_to_idispatch.cc \
-		ipc_message_queue_null.cc \
-		ipc_message_queue_test.cc \
-		ipc_message_queue_test_win32.cc \
-		ipc_message_queue_win32.cc \
 		js_runner_ie.cc \
 		message_queue_win32.cc \
 		module.cc \
@@ -1007,12 +992,16 @@ IE_CPPSRCS	+= \
 		html_event_monitor_ie.cc \
 		iat_patch.cc \
 		ie_version.cc \
+		ipc_message_queue_test.cc \
+		ipc_message_queue_test_win32.cc \
+		ipc_message_queue_win32.cc \
 		pe_image.cc \
 		$(NULL)
 endif
 ifeq ($(OS),wince)
 IE_CPPSRCS	+= \
 		html_event_monitor_iemobile.cc \
+		ipc_message_queue_null.cc \
 		$(NULL)
 endif
 
@@ -1042,12 +1031,7 @@ NPAPI_IDLSRCS	+= \
 NPAPI_CPPSRCS	+= \
 		browser_utils.cc \
 		html_event_monitor_np.cc \
-		ipc_message_queue_linux.cc \
 		ipc_message_queue_null.cc \
-		ipc_message_queue_test.cc \
-		ipc_message_queue_test_linux.cc \
-		ipc_message_queue_test_win32.cc \
-		ipc_message_queue_win32.cc \
 		js_runner_np.cc \
 		np_utils.cc \
 		npn_bindings.cc \
@@ -1141,9 +1125,7 @@ SF_CPPSRCS	+= \
 		detect_version_collision_osx.mm \
 		html_event_monitor_np.cc \
 		http_handler.mm \
-		ipc_message_queue_linux.cc \
-		ipc_message_queue_test.cc \
-		ipc_message_queue_test_osx.mm \
+		ipc_message_queue_null.cc \
 		proxy_resolver_mac.cc \
 		js_runner_np.cc \
 		js_standalone_engine_mozjs.cc \
@@ -1182,6 +1164,24 @@ VISTA_BROKER_CPPSRCS += \
 		$(NULL)
 
 VISTA_BROKER_CSRCS += \
+		ConvertUTF.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# run_gears_dll.exe
+
+IE_VPATH += \
+		base/common \
+		../third_party/convert_utf \
+		$(NULL)
+
+RUN_GEARS_DLL_CPPSRCS += \
+		run_gears_dll.cc \
+		string16.cc \
+		string_utils.cc \
+		$(NULL)
+
+RUN_GEARS_DLL_CSRCS += \
 		ConvertUTF.c \
 		$(NULL)
 
@@ -1445,44 +1445,6 @@ GTEST_CPPSRCS	+= \
 		gtest-port.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
-
-#-----------------------------------------------------------------------------
-# ipc_test
-
-IPC_TEST_CPPSRCS += \
-		event.cc \
-		ipc_message_queue_linux.cc \
-		ipc_message_queue_null.cc \
-		ipc_message_queue_test.cc \
-		ipc_message_queue_test_linux.cc \
-		ipc_message_queue_test_win32.cc \
-		ipc_message_queue_win32.cc \
-		mutex.cc \
-		mutex_posix.cc \
-		mutex_win32.cc \
-		serialization.cc \
-		stopwatch.cc \
-		stopwatch_posix.cc \
-		stopwatch_win32.cc \
-		string16.cc \
-		string_utils.cc \
-		string_utils_osx.cc \
-		thread.cc \
-		thread_posix.cc \
-		thread_win32.cc \
-		time_utils_win32.cc \
-		$(NULL)
-
-ifeq ($(OS),osx)
-IPC_TEST_CPPSRCS += \
-		common_osx.mm \
-		ipc_message_queue_test_osx.mm \
-		$(NULL)
-endif
-
-IPC_TEST_CSRCS += \
-		ConvertUTF.c \
-		$(NULL)
 
 #-----------------------------------------------------------------------------
 # dummy_module
