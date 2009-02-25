@@ -31,6 +31,7 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/workerpool/location.h"
 #if BROWSER_FF
 #include "gears/workerpool/firefox/pool_threads_manager.h"
 #elif BROWSER_IE || BROWSER_IEMOBILE
@@ -53,6 +54,7 @@ void Dispatcher<GearsWorkerPool>::Init() {
                    &GearsWorkerPool::SetOnmessage);
   RegisterProperty("onerror", &GearsWorkerPool::GetOnerror,
                    &GearsWorkerPool::SetOnerror);
+  RegisterProperty("location", &GearsWorkerPool::GetLocation, NULL);
 #ifdef DEBUG
   RegisterMethod("forceGC", &GearsWorkerPool::ForceGC);
 #endif
@@ -140,6 +142,17 @@ void GearsWorkerPool::SetOnerror(JsCallContext *context) {
 void GearsWorkerPool::GetOnerror(JsCallContext *context) {
   // TODO(nigeltao): implement, a la HttpRequest::GetOnReadyStateChange.
   context->SetException(STRING16(L"Not Implemented"));
+}
+
+void GearsWorkerPool::GetLocation(JsCallContext *context) {
+  Initialize();
+  if (!location_) {
+    CreateModule<GearsLocation>(module_environment_.get(), context, &location_);
+    if (!location_) {
+      return;  // CreateModule will set the error message.
+    }
+  }
+  context->SetReturnValue(JSPARAM_MODULE, location_.get());
 }
 
 void GearsWorkerPool::CreateWorker(JsCallContext *context) {
@@ -317,6 +330,9 @@ void GearsWorkerPool::ForceGC(JsCallContext *context) {
 
 void GearsWorkerPool::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
+
+  // Break the reference cycle with the GearsLocation and the ModuleEnvironment.
+  location_.reset(NULL);
 
   if (owns_threads_manager_ && threads_manager_) {
     // Note: the following line can cause us to be deleted

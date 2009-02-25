@@ -41,6 +41,9 @@ var sameOriginWorkerPath = '/testcases/test_worker_same_origin.worker.js';
 // This worker expects to be run out-of-origin, and calls allowCrossOrigin().
 var crossOriginWorkerPath = '/testcases/test_worker_cross_origin.worker.js';
 
+// This worker replies with its workerpool.location information.
+var locationWorkerPath = '/testcases/test_worker_location.worker.js';
+
 // This worker gets served with the wrong content type for cross-origin access
 // since it doesn't end in '.worker.js'. It gets rejected by Gears before even
 // being executed.
@@ -217,4 +220,23 @@ function testCrossOriginWorkerWithCharsetSuffix() {
 
   startAsync();
   wp.sendMessage('cross origin ping', childId);
+}
+
+function testWorkerLocation() {
+  startAsync();
+  var repliesRemaining = 2;
+  var wp = google.gears.factory.create('beta.workerpool');
+  wp.onmessage = function(text, sender, m) {
+    var expectedWorkerOrigin = (m.body.echo == 'current')
+        ? currentOrigin : differentOrigin;
+    assertEqual(currentOrigin, m.body.masterOrigin);
+    assertEqual(expectedWorkerOrigin, m.body.workerOrigin);
+    if (--repliesRemaining == 0) {
+      completeAsync();
+    }
+  };
+  var childId1 = wp.createWorkerFromUrl(currentOrigin   + locationWorkerPath);
+  var childId2 = wp.createWorkerFromUrl(differentOrigin + locationWorkerPath);
+  wp.sendMessage('current', childId1);
+  wp.sendMessage('different', childId2);
 }
