@@ -1791,6 +1791,7 @@ FF3_VPATH	+= \
 		$(NULL)
 
 FF3_CPPSRCS	+= \
+		location.cc \
 		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
@@ -1806,6 +1807,7 @@ IE_VPATH	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
+		location.cc \
 		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \
@@ -1822,6 +1824,7 @@ $(BROWSER)_VPATH	+= \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
+		location.cc \
 		pool_threads_manager.cc \
 		workerpool.cc \
 		workerpool_utils.cc \

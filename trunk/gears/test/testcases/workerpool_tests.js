@@ -200,3 +200,20 @@ function testOnMessageTests() {
                                  '};');
   wp1.sendMessage('PING1', childId);
 }
+
+function testLocation() {
+  // This one cannot run in a worker.
+  if (typeof document == 'undefined') {
+    return;
+  }
+
+  var wp = google.gears.factory.create('beta.workerpool');
+  assertEqual(window.location.hash,     wp.location.hash    );
+  assertEqual(window.location.host,     wp.location.host    );
+  assertEqual(window.location.hostname, wp.location.hostname);
+  assertEqual(window.location.href,     wp.location.href    );
+  assertEqual(window.location.port,     wp.location.port    );
+  assertEqual(window.location.pathname, wp.location.pathname);
+  assertEqual(window.location.protocol, wp.location.protocol);
+  assertEqual(window.location.search,   wp.location.search  );
+}

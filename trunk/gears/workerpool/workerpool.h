@@ -74,6 +74,10 @@ class GearsWorkerPool
   // OUT: function
   void GetOnerror(JsCallContext *context);
 
+  // IN: -
+  // OUT: location
+  void GetLocation(JsCallContext *context);
+
 #ifdef DEBUG
   // IN: -
   // OUT: -
@@ -91,6 +95,7 @@ class GearsWorkerPool
   PoolThreadsManager *threads_manager_;
   bool owns_threads_manager_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
+  scoped_refptr<ModuleImplBaseClass> location_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };
