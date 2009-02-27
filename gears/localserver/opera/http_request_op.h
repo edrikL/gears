@@ -26,12 +26,23 @@
 #ifndef GEARS_LOCALSERVER_OPERA_HTTP_REQUEST_OP_H__
 #define GEARS_LOCALSERVER_OPERA_HTTP_REQUEST_OP_H__
 
-#include "gears/localserver/common/http_request.h"
+#include <string>
+#include <vector>
 
+#include "gears/base/common/security_model.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/localserver/common/http_request.h"
+#include "gears/localserver/common/localserver_db.h"
+#include "third_party/opera/opera_callback_api.h"
 
 class BlobInterface;
+class ByteStore;
+class OPBrowsingContext;
 
-class OPHttpRequest : public HttpRequest {
+class OPHttpRequest
+    : public HttpRequest,
+      public OperaHttpRequestDataProviderInterface,
+      public OperaHttpListenerInterface {
  public:
   OPHttpRequest();
   virtual ~OPHttpRequest();
@@ -84,21 +95,58 @@ class OPHttpRequest : public HttpRequest {
   virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
-  virtual bool Open(const char16 *method, const char16* url, bool async,
+  virtual bool Open(const char16 *method,
+                    const char16 *url,
+                    bool async,
                     BrowsingContext *browsing_context);
-  virtual bool SetRequestHeader(const char16* name, const char16* value);
+  virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send(BlobInterface* blob);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual std::string16 GetResponseCharset();
-  virtual bool GetResponseHeader(const char16* name, std::string16 *header);
+  virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
   // events
-  virtual bool SetListener(HttpListener *listener, bool enable_data_available);
+  virtual bool SetListener(HttpListener *listener,
+                           bool enable_data_availbable);
+
+  // OperaHttpRequestDataProviderInterface interface
+  virtual bool IsAsync() { return async_; }
+  virtual bool GetNextAddedReqHeader(const unsigned short **name,
+                                     const unsigned short **value);
+  virtual const unsigned short *GetUrl();
+  virtual const unsigned short *GetMethod();
+  virtual long GetPostData(unsigned char *buffer, long max_size);
+
+  // OperaHttpListenerInterface interface
+  virtual void OnDataReceived();
+  virtual RedirectStatus OnRedirected(const unsigned short *redirect_url);
+  virtual void OnError(LoadingError err);
+  virtual void OnRequestCreated(OperaUrlDataInterface *data);
+  virtual void OnRequestDestroyed();
 
  private:
+  typedef std::pair<std::string16, std::string16> HeaderEntry;
+
+  bool SendImpl();
+  void SetReadyState(ReadyState state);
   bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }
   bool IsOpen() { return ready_state_ == HttpRequest::OPEN; }
+  bool IsSent() { return ready_state_ == HttpRequest::SENT; }
+  bool IsInteractive() { return ready_state_ == HttpRequest::INTERACTIVE; }
+  bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
+  bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
+  bool IsPostOrPut() { return method_ == L"POST" || method_ == L"PUT"; }
+  void SetComplete();
+
+  RefCount refcount_;
+
+  // The (non-relative) request url
+  std::string16 url_;
+  SecurityOrigin origin_;
+
+  // Whether the request should be performed asynchronously
+  bool async_;
 
   // Whether to bypass caches
   CachingBehavior caching_behavior_;
@@ -109,8 +157,50 @@ class OPHttpRequest : public HttpRequest {
   // Whether to send cookies or not
   CookieBehavior cookie_behavior_;
 
+  // The request method
+  std::string16 method_;
+
+  // The POST data
+  scoped_refptr<BlobInterface> post_data_;
+  std::string post_data_string_;
+  int64 post_data_offset_;
+
+  // Additional request headers we've been asked to send with the request
+  std::vector<HeaderEntry> added_request_headers_;
+  std::vector<HeaderEntry>::const_iterator added_request_headers_iter_;
+
   // Our XmlHttpRequest like ready state, 0 thru 4
   ReadyState ready_state_;
+
+  // Whether this request was aborted
+  bool was_aborted_;
+
+  // Whether or not we have been redirected
+  bool was_redirected_;
+
+  // If we've been redirected, the location of the redirect. If we experience
+  // a chain of redirects, this will be the last in the chain upon completion.
+  std::string16 redirect_url_;
+
+  // Holds a pointer to the active external URL data from Opera.
+  OperaUrlDataInterface *url_data_;
+
+  // Our listener
+  HttpRequest::HttpListener *listener_;
+
+  // We populate this structure with various pieces of response data:
+  // status code, status line, headers, data
+  WebCacheDB::PayloadInfo response_payload_;
+  scoped_refptr<ByteStore> response_body_;
+
+  // The amount of data we've read into the response_payload_.data
+  // Initially the stl vector is allocated to a large size. We keep
+  // track of how much of that allocated space is actually used here.
+  size_t actual_data_size_;
+
+  // Used internally to get the document context in which to
+  // do the HTTP request.
+  scoped_refptr<OPBrowsingContext> browsing_context_;
 };
 
 #endif  // GEARS_LOCALSERVER_OPERA_HTTP_REQUEST_OP_H__
