@@ -40,7 +40,7 @@
 #include "gears/geolocation/wifi_data_provider_common.h"
 
 // The time period, in milliseconds, between successive polls of the WiFi data.
-static const int kPollingInterval = 1000;
+static const int kPollingInterval = 30000;  // 30s
 
 // static
 template<>
