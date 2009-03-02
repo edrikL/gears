@@ -379,6 +379,7 @@ THIRD_PARTY_VPATH	+= \
 		../third_party/skia/src/core \
 		../third_party/skia/src/images \
 		../third_party/skia/src/ports \
+		../third_party/skia/src/xml \
 		$(NULL)
 
 # these cpp files are from skia/src/core
@@ -479,6 +480,12 @@ THIRD_PARTY_CPPSRCS	+= \
 		SkImageEncoder.cpp \
 		SkImageEncoder_Factory.cpp \
 		SkScaledBitmapSampler.cpp \
+		$(NULL)
+
+# these cpp files are from skia/src/xml
+THIRD_PARTY_CPPSRCS	+= \
+		SkParse.cpp \
+		SkParseColor.cpp \
 		$(NULL)
 
 # these cpp files are from skia/src/ports (except skia/src/SkMMapStream.cpp)

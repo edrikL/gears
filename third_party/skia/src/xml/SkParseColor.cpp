@@ -17,7 +17,7 @@
 
 #include "SkParse.h"
 
-#ifdef SK_DEBUG
+#if 0
 #include "SkString.h"
 
     // compress names 6 chars per long (packed 5 bits/char )

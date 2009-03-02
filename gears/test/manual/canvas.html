@@ -11,17 +11,21 @@ canvas.width = 100;
 canvas.height = 80;
 
 var context = canvas.getContext('gears-2d');
-// TODO(nigeltao): Implement context.fillRect.
-
-var blob = canvas.toBlob();
-alert('blob.length = ' + blob.length);
+context.fillStyle = 'silver';
+context.fillRect(15, 25, 30, 30);
+context.rotate(0.3);
+context.fillStyle = '#3F00FF7F';
+context.fillRect(40,  0, 50, 50);
+context.rotate(-0.4);
+context.fillStyle = '#FF0000';
+context.fillRect(20, 20, 15, 15);
 
 var localServer = google.gears.factory.create('beta.localserver');
 localServer.removeStore("test_manual_canvas");
 var store = localServer.createStore("test_manual_canvas");
 
 var capturedUrl = parseInt(Math.random() * 1000) + '.png';
-store.captureBlob(blob, capturedUrl, 'image/png');
+store.captureBlob(canvas.toBlob(), capturedUrl, 'image/png');
 document.getElementById('outputImg').src = capturedUrl;
 
 
