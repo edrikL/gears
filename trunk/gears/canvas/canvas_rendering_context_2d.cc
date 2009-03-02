@@ -27,6 +27,7 @@
 
 #include "gears/base/common/js_runner.h"
 #include "third_party/skia/include/core/SkPorterDuff.h"
+#include "third_party/skia/include/utils/SkParse.h"
 
 DECLARE_DISPATCHER(GearsCanvasRenderingContext2D);
 const std::string
@@ -36,23 +37,27 @@ using canvas::skia_config;
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
     : ModuleImplBaseClass(kModuleName) {
+  fill_style_as_paint_.setAntiAlias(true);
 }
 
-void GearsCanvasRenderingContext2D::InitCanvasField(GearsCanvas *new_canvas) {
-  // Prevent double initialization.
-  assert(canvas_ == NULL);
-  assert(new_canvas != NULL);
-  canvas_ = new_canvas;
-  unload_monitor_.reset(
-      new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
+void GearsCanvasRenderingContext2D::SetCanvas(
+    GearsCanvas *canvas,
+    SkBitmap *bitmap) {
+  assert(gears_canvas_ == NULL || gears_canvas_ == canvas);
+  gears_canvas_ = canvas;
+  skia_canvas_.reset(new SkCanvas(*bitmap));
+  if (unload_monitor_.get() == NULL) {
+    unload_monitor_.reset(
+        new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
+  }
 }
 
 void GearsCanvasRenderingContext2D::ClearReferenceFromGearsCanvas() {
   // The canvas pointer will be null if this object didn't initalize in the
   // first place (that is, if InitBaseFromSibling failed), or after a page
   // unload event.
-  if (canvas_)
-    canvas_->ClearRenderingContextReference();
+  if (gears_canvas_)
+    gears_canvas_->ClearRenderingContextReference();
 }
 
 void GearsCanvasRenderingContext2D::HandleEvent(JsEventType event_type) {
@@ -63,7 +68,7 @@ void GearsCanvasRenderingContext2D::HandleEvent(JsEventType event_type) {
   // clear it in the destructor since at that time we no longer have a pointer
   // to Canvas.
   ClearReferenceFromGearsCanvas();
-  canvas_.reset();
+  gears_canvas_.reset();
 }
 
 GearsCanvasRenderingContext2D::~GearsCanvasRenderingContext2D() {
@@ -162,8 +167,7 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
 // a NaN value must be ignored.
 
 void GearsCanvasRenderingContext2D::GetCanvas(JsCallContext *context) {
-  assert(canvas_ != NULL);
-  context->SetReturnValue(JSPARAM_MODULE, canvas_.get());
+  context->SetReturnValue(JSPARAM_MODULE, gears_canvas_.get());
 }
 
 void GearsCanvasRenderingContext2D::Save(JsCallContext *context) {
@@ -192,9 +196,6 @@ void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
-  // TODO(nigeltao): Remove this after unit testing.
-  context->SetException(STRING16(L"Unimplemented"));
-  return;
   double angle;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &angle },
@@ -207,7 +208,7 @@ void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
   const double kDegreesPerRadian = 180.0/kPi;
   angle *= kDegreesPerRadian;
 
-  canvas_->skia_canvas()->rotate(SkDoubleToScalar(angle));
+  skia_canvas_->rotate(SkDoubleToScalar(angle));
 }
 
 void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
@@ -256,7 +257,7 @@ void GearsCanvasRenderingContext2D::SetTransform(JsCallContext *context) {
 
 void GearsCanvasRenderingContext2D::GetGlobalAlpha(
     JsCallContext *context) {
-  double alpha = canvas_->alpha();
+  double alpha = gears_canvas_->alpha();
   context->SetReturnValue(JSPARAM_DOUBLE, &alpha);
 }
 
@@ -269,12 +270,12 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  canvas_->set_alpha(new_alpha);
+  gears_canvas_->set_alpha(new_alpha);
 }
 
 void GearsCanvasRenderingContext2D::GetGlobalCompositeOperation(
     JsCallContext *context) {
-  std::string16 op = canvas_->composite_operation();
+  std::string16 op = gears_canvas_->composite_operation();
   context->SetReturnValue(JSPARAM_STRING16, &op);
 }
 
@@ -287,7 +288,7 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  if (!canvas_->set_composite_operation(new_composite_op)) {
+  if (!gears_canvas_->set_composite_operation(new_composite_op)) {
     // HTML5 canvas-only composite operation.
     context->SetException(
         STRING16(L"This composite operation is implemented only in HTML5 canvas"
@@ -298,8 +299,7 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
 
 void GearsCanvasRenderingContext2D::GetFillStyle(
     JsCallContext *context) {
-  std::string16 fill_style = canvas_->fill_style();
-  context->SetReturnValue(JSPARAM_STRING16, &fill_style);
+  context->SetReturnValue(JSPARAM_STRING16, &fill_style_as_string_);
 }
 
 // TODO(nigeltao): Generate a better error if given a CanvasGradient or
@@ -316,7 +316,18 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
   if (context->is_exception_set())
     return;
 
-  canvas_->set_fill_style(new_fill_style);
+  std::string new_fill_style_as_utf8;
+  if (!String16ToUTF8(new_fill_style, &new_fill_style_as_utf8)) {
+    return;
+  }
+
+  // SkParse::FindColor re-uses color's existing alpha value, if unspecified
+  // by the string, so we initialize color with alpha=255.
+  SkColor color = 0xFFFFFFFF;
+  if (SkParse::FindColor(new_fill_style_as_utf8.c_str(), &color)) {
+    fill_style_as_paint_.setColor(color);
+    fill_style_as_string_ = new_fill_style;
+  }
 }
 
 void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
@@ -334,17 +345,21 @@ void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
-  int x, y, width, height;
+  double x, y, width, height;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &width },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  SkRect rect;
+  rect.set(SkDoubleToScalar(x), SkDoubleToScalar(y),
+      SkDoubleToScalar(x + width), SkDoubleToScalar(y + height));
+  skia_canvas_->drawRect(rect, fill_style_as_paint_);
 }
 
 void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {

@@ -49,12 +49,6 @@ class GearsCanvasRenderingContext2D
   GearsCanvasRenderingContext2D();
   virtual ~GearsCanvasRenderingContext2D();
 
-  // Initializes the canvas backreference from this object.
-  // This function must be called only once.
-  // This function is not exposed to Javascript and exists only for internal
-  // use.
-  void InitCanvasField(GearsCanvas *canvas);
-
   // Returns a backreference to the canvas this context was created from.
   // IN: -
   // OUT: Canvas
@@ -179,6 +173,10 @@ class GearsCanvasRenderingContext2D
   // OUT: -
   void PutImageData(JsCallContext *context);
 
+  // This function is not exposed to Javascript and exists only for internal
+  // use.
+  void SetCanvas(GearsCanvas *canvas, SkBitmap *bitmap);
+
  private:
   // Calls ClearRenderingContextReference() on canvas_, if canvas_ is not NULL.
   void ClearReferenceFromGearsCanvas();
@@ -186,7 +184,10 @@ class GearsCanvasRenderingContext2D
   // Callback used to handle the 'JSEVENT_UNLOAD' event.
   virtual void HandleEvent(JsEventType event_type);
 
-  scoped_refptr<GearsCanvas> canvas_;
+  scoped_refptr<GearsCanvas> gears_canvas_;
+  scoped_ptr<SkCanvas> skia_canvas_;
+  std::string16 fill_style_as_string_;
+  SkPaint fill_style_as_paint_;
 
   scoped_ptr<JsEventMonitor> unload_monitor_;
 

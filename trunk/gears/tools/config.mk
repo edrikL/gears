@@ -182,7 +182,7 @@ else
 LIBPNG_CFLAGS += -I../third_party/zlib
 endif
 
-SKIA_CFLAGS += -I../third_party/skia/include/core -I../third_party/skia/include/images
+SKIA_CFLAGS += -I../third_party/skia/include/core -I../third_party/skia/include/images -I../third_party/skia/include/utils
 
 ZLIB_CFLAGS += -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)

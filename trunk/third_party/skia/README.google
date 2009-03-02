@@ -58,3 +58,8 @@ Skia/Win32 is usually built with 8-bit TCHARs).
 skia/src/ports/gears_skia_win_fixes.cpp implemented empty stubs for a number
 of functions declared in Skia's .h files but are missing from Skia's Windows
 port (which is presumably a work-in-progress).
+
+
+skia/src/xml/SkParseColor.cpp line 20 disabled (with "#if 0" replacing "#ifdef
+SK_DEBUG") the code to regenerate the packed color-name table, to avoid a
+"CreateTable defined but not used" warning.

@@ -66,7 +66,6 @@ template<>
 void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("load", &GearsCanvas::Load);
   RegisterMethod("toBlob", &GearsCanvas::ToBlob);
-  RegisterMethod("clone", &GearsCanvas::Clone);
   RegisterMethod("crop", &GearsCanvas::Crop);
   RegisterMethod("resize", &GearsCanvas::Resize);
   RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
@@ -93,10 +92,10 @@ void GearsCanvas::Load(JsCallContext *context) {
   
   BlobBackedSkiaInputStream blob_stream(blob.get());
   if (!SkImageDecoder::DecodeStream(&blob_stream,
-                                    skia_bitmap(),
+                                    skia_bitmap_.get(),
                                     skia_config,
                                     SkImageDecoder::kDecodePixels_Mode)) {
-    context->SetException(STRING16(L"Couldn't decode blob."));
+    context->SetException(STRING16(L"Could not decode the Blob as an image."));
   }
 }
 
@@ -127,7 +126,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
 
   // Pixels should have been allocated, either in the contructor,
   // or in SetWidth() and SetHeight().
-  assert(skia_bitmap()->getPixels());
+  assert(skia_bitmap_->getPixels());
 
   // SkBitmap's isOpaque flag tells whether the bitmap has any transparent
   // pixels. If this flag is set, the encoder creates a file without alpha
@@ -161,7 +160,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   // may or may not be transparent. Futher, these other pixels can be cropped
   // away in the future. The only clean way is to set IsOpaque false and not
   // have the encoder strip away the alpha channel while exporting to a blob.
-  skia_bitmap()->setIsOpaque(false);
+  skia_bitmap_->setIsOpaque(false);
 
   BlobBackedSkiaOutputStream output_stream;
   scoped_ptr<SkImageEncoder> encoder(SkImageEncoder::Create(type));
@@ -174,10 +173,10 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
       context->SetException(STRING16(L"quality must be between 0.0 and 1.0"));
       return;
     }
-    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap(),
+    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap_,
         static_cast<int> (quality * 100));
   } else {
-    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap(),
+    encode_succeeded = encoder->encodeStream(&output_stream, *skia_bitmap_,
         SkImageEncoder::kDefaultQuality);
   }
   if (!encode_succeeded) {
@@ -194,29 +193,6 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   }
   gears_blob->Reset(blob.get());
   context->SetReturnValue(JSPARAM_MODULE, gears_blob.get());
-}
-
-void GearsCanvas::Clone(JsCallContext *context) {
-  scoped_refptr<GearsCanvas> clone;
-  if (!CreateModule<GearsCanvas>(module_environment_.get(), context, &clone)) {
-    return;
-    }
-
-  clone->ResetCanvas(width(), height());
-  assert(clone->skia_bitmap()->getPixels());
-  clone->skia_canvas()->drawBitmap(*skia_bitmap_, 0, 0);
-
-  assert(clone->skia_bitmap()->getSize() == skia_bitmap()->getSize());
-  assert(memcmp(clone->skia_bitmap()->getPixels(),
-      skia_bitmap()->getPixels(), skia_bitmap()->getSize()) == 0);
-
-  clone->set_alpha(alpha());
-  clone->set_composite_operation(composite_operation());
-  clone->set_fill_style(fill_style());
-  // TODO(nigeltao): Copy the transformation matrix and generally make sure that
-  // all state is copied.
-
-  context->SetReturnValue(JSPARAM_MODULE, clone.get());
 }
 
 void GearsCanvas::Crop(JsCallContext *context) {
@@ -333,20 +309,21 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   if (rendering_context_ == NULL) {
     if (!CreateModule<GearsCanvasRenderingContext2D>(
         module_environment_.get(), context, &rendering_context_scoped_ptr)) {
+      context->SetException(STRING16(L"Unable to create context"));
       return;
     }
     rendering_context_ = rendering_context_scoped_ptr.get();
-    rendering_context_->InitCanvasField(this);
+    rendering_context_->SetCanvas(this, skia_bitmap_.get());
   }
   context->SetReturnValue(JSPARAM_MODULE, rendering_context_);
 }
 
 int GearsCanvas::width() const {
-  return skia_bitmap()->width();
+  return skia_bitmap_->width();
 }
 
 int GearsCanvas::height() const {
-  return skia_bitmap()->height();
+  return skia_bitmap_->height();
 }
 
 double GearsCanvas::alpha() const {
@@ -375,18 +352,6 @@ bool GearsCanvas::set_composite_operation(std::string16 new_composite_op) {
   return true;
 }
 
-std::string16 GearsCanvas::fill_style() const {
-  return fill_style_;
-}
-
-void GearsCanvas::set_fill_style(std::string16 new_fill_style) {
-  // TODO(nigeltao):
-  // if (new_fill_style is not a valid CSS color)
-  //  return;
-
-  fill_style_ = new_fill_style;
-}
-
 void GearsCanvas::ResetCanvas(int width, int height) {
   // Since we're starting with a clean slate, let's reset the SkBitmap as well.
   // For some reason things don't work otherwise.
@@ -398,19 +363,9 @@ void GearsCanvas::ResetCanvas(int width, int height) {
   // or assertions fire and some operations (like eraseARGB) fail silently.
   skia_bitmap_->allocPixels();
   skia_bitmap_->eraseARGB(0, 0, 0, 0);
-  skia_canvas_.reset(new SkCanvas(*skia_bitmap_));
 
   alpha_ = 1.0;
   composite_operation_ = STRING16(L"source-over");
-  fill_style_ = STRING16(L"#000000");
-}
-
-SkBitmap *GearsCanvas::skia_bitmap() const {
-  return skia_bitmap_.get();
-}
-
-SkCanvas *GearsCanvas::skia_canvas() const {
-  return skia_canvas_.get();
 }
 
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {

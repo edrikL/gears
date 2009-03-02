@@ -65,11 +65,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: Blob
   void ToBlob(JsCallContext *context);
 
-  // Returns a new Canvas object with the same state (width, height, pixels).
-  // IN: -
-  // OUT: Canvas
-  void Clone(JsCallContext *context);
-
   // Crops the canvas to the specified rectangle, in-place.
   // IN: int x, int y, int width, int height
   // OUT: -
@@ -113,10 +108,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   // fail silently without returning an error, as per the HTML5 canvas spec.
   // But if given an argument that HTML5 canvas supports but we don't,
   // the setters (set_composite_operation, to be precise) returns false.
-  // Returns the SkBitmap backing store for this canvas.
-  SkBitmap *skia_bitmap() const;
-  // Returns the SkCanvas object used to draw onto this canvas.
-  SkCanvas *skia_canvas() const;
   int width() const;
   int height() const;
   double alpha() const;
@@ -124,8 +115,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   std::string16 composite_operation() const;
   // Returns false if given a mode HTML5 canvas supports but we don't.
   bool set_composite_operation(std::string16 new_composite_op);
-  std::string16 fill_style() const;
-  void set_fill_style(std::string16 new_fill_style);
 
  private:
   // Resets the Canvas to the specified dimensions and fills it with transparent
@@ -141,13 +130,11 @@ class GearsCanvas : public ModuleImplBaseClass {
   // Cannot embed objects directly due to compilation issues; see comment
   // at top of file.
   scoped_ptr<SkBitmap> skia_bitmap_;
-  scoped_ptr<SkCanvas> skia_canvas_;
 
   // Context state:
-  // TODO(nigeltao): Move this state into SkCanvas?
+  // TODO(nigeltao): Move this state into GearsCanvasRenderingContext2D?
   double alpha_;
   std::string16 composite_operation_;
-  std::string16 fill_style_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
