@@ -29,17 +29,29 @@
 function initDialog() {
   if (!browser.ie_mobile) {
     dom.addEvent(document, "keyup", handleKeyUp);
-  } else {
-    if (!window.pie_dialog.IsSmartPhone()) {
-      var buttonRowElem = dom.getElementById("buttons-wince");
-      if (buttonRowElem) {
-        buttonRowElem.style.display = 'block';
-      }
-    }
   }
+
+  if (browser.wince && browser.opera) {
+    initWinCEButtons();
+  }
+
   if (browser.ie_mobile) {
+    if (!window.pie_dialog.IsSmartPhone()) {
+      initWinCEButtons();
+    }
+
     window.pie_dialog.SetScriptContext(window);
     window.pie_dialog.ResizeDialog();
+  }
+}
+
+/**
+ * Show the WinCE Buttons for IE Mobile and Opera Mobile.
+ */
+function initWinCEButtons() {
+  var buttonRowElem = dom.getElementById("buttons-wince");
+  if (buttonRowElem) {
+    buttonRowElem.style.display = 'block';
   }
 }
 
