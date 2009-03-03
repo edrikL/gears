@@ -193,10 +193,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           </td>
 
 
-m4_ifelse(PRODUCT_BROWSER,~IEMOBILE~,m4_dnl
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~         <!-- 
           We use form input buttons instead of buttons elements as IE Mobile
-          does not support them.
+          does not support them and they take up too much space on Opera Mobile.
           -->
 
           <td width="50%" align="right" valign="middle">
