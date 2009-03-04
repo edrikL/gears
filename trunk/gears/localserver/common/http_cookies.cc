@@ -118,7 +118,7 @@ void ParseCookieNameAndValue(const std::string16 &name_and_value,
     StripWhiteSpace(&start, &len);
     name->assign(start, len);
     size_t value_pos = equal_pos + 1;
-    if (value_pos < name_and_value.length() - 1) {
+    if (value_pos < name_and_value.length()) {
       start = name_and_value.c_str() + value_pos;
       len = name_and_value.length() - value_pos;
       StripWhiteSpace(&start, &len);
