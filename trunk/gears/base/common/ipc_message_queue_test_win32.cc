@@ -183,12 +183,8 @@ void SlaveMessageHandler::TerminateSlave() {
 }
 
 bool InitSlave() {
-  LOG(("Initializing slave process %u\n", ::GetCurrentProcessId()));
-
-  std::vector<IpcProcessId> processes;
-  TestingIpcMessageQueueWin32_GetAllProcesses(&processes);
-
-  g_slave_handler.set_parent_process_id(processes.empty() ? 0 : processes[0]);
+  IpcProcessId pid = ::GetCurrentProcessId();
+  LOG(("Initializing slave process %u\n", pid));
 
   // Create the new ipc message queue for the child process.
   IpcTestMessage::RegisterAsSerializable();
@@ -196,6 +192,12 @@ bool InitSlave() {
   if (!ipc_message_queue) {
     return false;
   }
+
+  std::vector<IpcProcessId> processes;
+  TestingIpcMessageQueueWin32_GetAllProcesses(&processes);
+  assert(!processes.empty());
+  g_slave_handler.set_parent_process_id((processes[0] != pid) ? processes[0]
+                                                              : 0);
   ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_slave_handler);
 
   // Send a hello message to the master process to tell that the child process
@@ -218,7 +220,7 @@ void RunSlave() {
   ATL::CHandle parent_process(
                   ::OpenProcess(SYNCHRONIZE, FALSE,
                                 g_slave_handler.parent_process_id()));
-  while (::WaitForSingleObject(parent_process, 1000) == WAIT_TIMEOUT &&
+  while (::WaitForSingleObject(parent_process, 100) == WAIT_TIMEOUT &&
          !g_slave_handler.done()) {
   }
 
@@ -233,21 +235,11 @@ int SlaveMain() {
   return 0;
 }
 
-#ifdef BROWSER_NONE
-
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
-  return SlaveMain();
-}
-
-#elif BROWSER_IE
-
 // This is the function that run_gears_dll.exe calls
 extern "C" __declspec(dllexport) int __cdecl RunIpcSlave() {
   SlaveMain();
   return 0;
 }
-
-#endif  // BROWSER_NONE
 
 #endif  // USING_CCTESTS
 
