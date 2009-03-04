@@ -58,9 +58,6 @@ static const std::string16 kDefaultMimeType(STRING16(L"text/plain"));
 // Arbitrary redirection limit to prevent network spam if a cycle is
 // accidentally (or deliberately) setup.
 static const int kRedirectLimit = 10;
-// Fake cache entries created by LocalServer will expire after this
-// many milliseconds to prevent any long lasting ill-effects.
-static const int kCacheExpiryMilliseconds = 60000;
 
 // Singleton instance.
 UrlInterceptAndroid *UrlInterceptAndroid::instance_;
@@ -205,7 +202,7 @@ bool UrlInterceptAndroid::Init() {
   // Enable logging in the Java class.
   env->CallStaticVoidMethod(handler_class_.Get(),
                             GetHandlerMethod(HANDLER_METHOD_ENABLE_LOGGING),
-                      
+
                       static_cast<jboolean>(true));
 #endif
   // Register the instance as a handler.
@@ -315,22 +312,6 @@ jobject UrlInterceptAndroid::Service(jobject service_request) {
     std::string16 value(it->c_str() + colon + 1);
     key = StripWhiteSpace(key);
     value = StripWhiteSpace(value);
-    // Remove "Pragma: no-cache" and any "Cache-Control:" lines. We
-    // want to set caching behavior explicitly. In any case, the
-    // browser will refuse to save a no-cache response into its cache.
-    if (MakeLowerString(key) ==
-        MakeLowerString(std::string16(HttpConstants::kPragmaHeader)) &&
-        MakeLowerString(value) ==
-        MakeLowerString(std::string16(HttpConstants::kNoCache))) {
-      LOG(("Skipping Pragma: no-cache header\n"));
-      continue;
-    } else if (
-        MakeLowerString(key) ==
-        MakeLowerString(std::string16(HttpConstants::kCacheControlHeader))) {
-      LOG(("Removing Cache-Control: %s header\n",
-           String16ToUTF8(value).c_str()));
-      continue;
-    }
     LOG(("Header %s: %s\n",
          String16ToUTF8(key).c_str(),
          String16ToUTF8(value).c_str()));
@@ -340,30 +321,6 @@ jobject UrlInterceptAndroid::Service(jobject service_request) {
         JavaString(key).Get(),
         JavaString(value).Get());
   }
-  // Explicitly cache for an arbitrary short time. This prevents any
-  // long lasting ill-effects from caching entries which shouldn't
-  // really be cached.
-  time_t expires_sec = static_cast<time_t>(
-      (GetCurrentTimeMillis() + kCacheExpiryMilliseconds) / 1000);
-  // Convert to GMT relative time.
-  struct tm expires_tm;
-  gmtime_r(&expires_sec, &expires_tm);
-  // Convert to a ASCII string. The output of ANSI C asctime() is
-  // allowed by HTTP/1.1. The output is documented as at most 26
-  // characters according to the manual page.
-  char expires_str[32];
-  asctime_r(&expires_tm, expires_str);
-  // Remove trailing line endings.
-  int len = strlen(expires_str);
-  if (expires_str[len - 1] == '\n') {
-    expires_str[len - 1] = '\0';
-  }
-  LOG(("Set expiry to %s\n", expires_str));
-  env->CallVoidMethod(
-      response,
-      GetServiceResponseMethod(SERVICE_RESPONSE_METHOD_SET_RESPONSE_HEADER),
-      JavaString(HttpConstants::kExpiresHeader).Get(),
-      JavaString(expires_str).Get());
   // Extract the MIME type and encoding from the "Content-Type" header.
   jstring content_type = static_cast<jstring>(
       env->CallObjectMethod(
