@@ -37,7 +37,7 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 
 #include "gears/base/ie/activex_utils.h"
-#include "gears/desktop/file_dialog.h"
+#include "gears/desktop/drag_and_drop_utils_win32.h"
 
 
 // This function overwrites buffer in-place.
@@ -214,7 +214,9 @@ void SetDragCursor(ModuleEnvironment *module_environment,
     *error_out = STRING16(L"The drag-and-drop event is invalid.");
     return;
   }
-  module_environment->drop_target_interceptor_->SetDragCursor(cursor_type);
+  if (module_environment->drop_target_interceptor_) {
+    module_environment->drop_target_interceptor_->SetDragCursor(cursor_type);
+  }
 }
 
 
@@ -236,200 +238,6 @@ bool GetDragData(ModuleEnvironment *module_environment,
           type == DRAG_AND_DROP_EVENT_DROP,
           data_out,
           error_out);
-}
-
-
-STDMETHODIMP DropTargetInterceptor::QueryInterface(REFIID riid, void **object) {
-  if ((riid == IID_IUnknown) || (riid == IID_IDropTarget)) {
-    *object = this;
-    AddRef();
-    return S_OK;
-  } else {
-    return E_NOINTERFACE;
-  }
-}
-
-
-STDMETHODIMP_(ULONG) DropTargetInterceptor::AddRef() {
-  // TODO(nigeltao): Remove this debugging statement (and the corresponding
-  // ones in Release, constructor and destructor).
-  LOG16((L"DropTargetInterceptor::AddRef   %p %ld (+1)\n", this, GetRef()));
-  Ref();
-  return 1;
-}
-
-
-STDMETHODIMP_(ULONG) DropTargetInterceptor::Release() {
-  LOG16((L"DropTargetInterceptor::Release  %p %ld (-1)\n", this, GetRef()));
-  Unref();
-  return 1;
-}
-
-
-STDMETHODIMP DropTargetInterceptor::DragEnter(
-    IDataObject *object, DWORD state, POINTL point, DWORD *effect) {
-  cached_meta_data_is_valid_ = false;
-  cursor_type_ = DRAG_AND_DROP_CURSOR_INVALID;
-  HRESULT hr = original_drop_target_->DragEnter(object, state, point, effect);
-  if (SUCCEEDED(hr)) {
-    if (cursor_type_ == DRAG_AND_DROP_CURSOR_COPY) {
-      *effect = DROPEFFECT_COPY;
-    } else if (cursor_type_ == DRAG_AND_DROP_CURSOR_NONE) {
-      *effect = DROPEFFECT_NONE;
-    }
-  }
-  return hr;
-}
-
-
-STDMETHODIMP DropTargetInterceptor::DragOver(
-    DWORD state, POINTL point, DWORD *effect) {
-  cursor_type_ = DRAG_AND_DROP_CURSOR_INVALID;
-  HRESULT hr = original_drop_target_->DragOver(state, point, effect);
-  if (SUCCEEDED(hr)) {
-    if (cursor_type_ == DRAG_AND_DROP_CURSOR_COPY) {
-      *effect = DROPEFFECT_COPY;
-    } else if (cursor_type_ == DRAG_AND_DROP_CURSOR_NONE) {
-      *effect = DROPEFFECT_NONE;
-    }
-  }
-  return hr;
-}
-
-
-STDMETHODIMP DropTargetInterceptor::DragLeave() {
-  HRESULT hr = original_drop_target_->DragLeave();
-  cached_meta_data_is_valid_ = false;
-  return hr;
-}
-
-
-STDMETHODIMP DropTargetInterceptor::Drop(
-    IDataObject *object, DWORD state, POINTL point, DWORD *effect) {
-  HRESULT hr = original_drop_target_->Drop(object, state, point, effect);
-  cached_meta_data_is_valid_ = false;
-  return hr;
-}
-
-
-FileDragAndDropMetaData &DropTargetInterceptor::GetFileDragAndDropMetaData() {
-  if (!cached_meta_data_is_valid_) {
-    cached_meta_data_.Reset();
-    cached_meta_data_is_valid_ =
-        AddFileDragAndDropData(module_environment_.get(), &cached_meta_data_);
-  }
-  return cached_meta_data_;
-}
-
-
-void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
-  assert(event_type == JSEVENT_UNLOAD);
-  module_environment_->js_runner_->RemoveEventHandler(JSEVENT_UNLOAD, this);
-
-  // Break the ModuleEnvironment <--> DropTargetInterceptor reference cycle.
-  assert(module_environment_->drop_target_interceptor_ == this);
-  module_environment_->drop_target_interceptor_.reset(NULL);
-
-  is_revoked_ = true;
-  // TODO(nigeltao): Should we check if we are still the hwnd's droptarget?
-  RevokeDragDrop(hwnd_);
-  RegisterDragDrop(hwnd_, original_drop_target_);
-  // The following Unref balances the Ref() in the constructor, and may delete
-  // this DropTargetInterceptor instance.
-  Unref();
-}
-
-
-void DropTargetInterceptor::SetDragCursor(DragAndDropCursorType cursor_type) {
-  cursor_type_ = cursor_type;
-}
-
-
-DropTargetInterceptor::DropTargetInterceptor(
-    ModuleEnvironment *module_environment,
-    HWND hwnd,
-    IDropTarget *original_drop_target)
-    : cached_meta_data_is_valid_(false),
-      module_environment_(module_environment),
-      hwnd_(hwnd),
-      original_drop_target_(original_drop_target),
-      cursor_type_(DRAG_AND_DROP_CURSOR_INVALID),
-      is_revoked_(false) {
-  LEAK_COUNTER_INCREMENT(DropTargetInterceptor);
-  LOG16((L"DropTargetInterceptor::ctor     %p\n", this));
-  assert(hwnd_);
-  assert(original_drop_target_);
-  module_environment_->js_runner_->AddEventHandler(JSEVENT_UNLOAD, this);
-  // We maintain a reference to ourselves, for the lifetime of the page (i.e.
-  // until page unload), since the alternative is to be tied to the lifetime
-  // of some script-level object, which may be more fragile (e.g. if that
-  // object is garbage collected during the execution of a DnD event handler).
-  // The Ref() is balanced by an Unref() during HandleEvent(JSEVENT_UNLOAD).
-  Ref();
-  // TODO(nigeltao): Check if the following two calls return something other
-  // than S_OK, and react appropriately.
-  RevokeDragDrop(hwnd_);
-  RegisterDragDrop(hwnd_, this);
-  instances_[hwnd_] = this;
-}
-
-
-DropTargetInterceptor::~DropTargetInterceptor() {
-  LEAK_COUNTER_DECREMENT(DropTargetInterceptor);
-  LOG16((L"DropTargetInterceptor::dtor     %p\n", this));
-  assert(is_revoked_);
-  instances_.erase(hwnd_);
-}
-
-
-static BOOL CALLBACK EnumChildWindowsProc(HWND hwnd, LPARAM param) {
-  WCHAR class_name[100];
-  GetClassName(hwnd, static_cast<LPTSTR>(class_name), 100);
-  if (wcscmp(class_name, L"Internet Explorer_Server")) {
-    return TRUE;
-  }
-
-  DWORD process_id = 0;
-  DWORD thread_id = GetWindowThreadProcessId(hwnd, &process_id);
-
-  if (thread_id == GetCurrentThreadId() &&
-      process_id == GetCurrentProcessId()) {
-    *(reinterpret_cast<HWND*>(param)) = hwnd;
-    return FALSE;
-  } else {
-    return TRUE;
-  }
-}
-
-
-std::map<HWND, DropTargetInterceptor*> DropTargetInterceptor::instances_;
-
-
-DropTargetInterceptor *DropTargetInterceptor::Intercept(
-    ModuleEnvironment *module_environment) {
-  HWND browser_window = 0;
-  HWND child = 0;
-  if (GetBrowserWindow(module_environment, &browser_window)) {
-    EnumChildWindows(browser_window, EnumChildWindowsProc, (LPARAM)&child);
-  }
-  if (!child) {
-    return NULL;
-  }
-
-  std::map<HWND, DropTargetInterceptor*>::iterator i =
-      instances_.find(child);
-  DropTargetInterceptor *interceptor = NULL;
-  if (i != instances_.end()) {
-    interceptor = i->second;
-  } else {
-    IDropTarget *original_drop_target =
-        static_cast<IDropTarget*>(GetProp(child, L"OleDropTargetInterface"));
-    if (original_drop_target) {
-      interceptor = new DropTargetInterceptor(
-          module_environment, child, original_drop_target);
-    }
-  }
-  return interceptor;
 }
 
 
