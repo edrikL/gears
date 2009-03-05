@@ -52,6 +52,12 @@ class DOMUtils {
   // Returns the native window for the browser.
   static nsresult GetNativeWindow(JSContext *context, NativeWindowPtr* window);
 
+#if WIN32
+  // Returns the native window for the tab.
+  static nsresult GetTabNativeWindow(JSContext *context,
+      NativeWindowPtr* window);
+#endif
+
   // Creates a new nsIURI object. The 'url' parameter can be a relative url or
   // an absolute url. Returns true on success
   // This function does NOT require the DOM. It can be used in worker threads.

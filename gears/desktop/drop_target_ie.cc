@@ -38,6 +38,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/desktop/drag_and_drop_utils_ie.h"
+#include "gears/desktop/drag_and_drop_utils_win32.h"
 #include "gears/desktop/file_dialog.h"
 
 

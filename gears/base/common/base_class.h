@@ -94,7 +94,7 @@ struct ModuleEnvironment : public RefCounted {
   CComPtr<IUnknown> iunknown_site_;
 #endif
 
-#if BROWSER_IE && !defined(OS_WINCE)
+#if (BROWSER_IE || BROWSER_FF) && defined(WIN32)
 #ifdef OFFICIAL_BUILD
   // The Drag-and-Drop API has not been finalized for official builds.
 #else

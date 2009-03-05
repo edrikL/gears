@@ -35,6 +35,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIDocShellTreeOwner.h>
 #if BROWSER_FF3
 #include <gecko_internal/nsDOMJSUtils.h>
+#include <gecko_internal/nsPIDOMWindow.h>
 #endif
 #include <gecko_internal/nsIDOM3Node.h>
 #include <gecko_internal/nsIDOMWindowInternal.h>
@@ -163,6 +164,41 @@ nsresult DOMUtils::GetNativeWindow(JSContext *js_context,
 
   return NS_OK;
 }
+
+
+#if WIN32
+nsresult DOMUtils::GetTabNativeWindow(JSContext *js_context,
+                                      NativeWindowPtr* window) {
+  nsIDOMWindowInternal* internal_window = NULL;
+  nsresult nr = GetDOMWindowInternal(js_context, &internal_window);
+  if (NS_FAILED(nr)) { return nr; }
+
+  nsIDOMWindow *dom_window = NULL;
+  CallQueryInterface(internal_window, &dom_window);
+
+#if BROWSER_FF2
+  nsCOMPtr<nsIScriptGlobalObject> doc_shell_source(
+      do_QueryInterface(dom_window));
+#else
+  nsCOMPtr<nsPIDOMWindow> doc_shell_source(do_QueryInterface(dom_window));
+#endif
+
+  if (!doc_shell_source) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIDocShell *ds = doc_shell_source->GetDocShell();
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(ds, &nr));
+  if (NS_FAILED(nr)) { return nr; }
+  nsCOMPtr<nsIWidget> widget;
+  nr = baseWindow->GetMainWidget(getter_AddRefs(widget));
+  if (NS_FAILED(nr)) { return nr; }
+  *window = reinterpret_cast<NativeWindowPtr>(
+      widget->GetNativeData(NS_NATIVE_WINDOW));
+
+  return NS_OK;
+}
+#endif
 
 
 bool DOMUtils::NewResolvedURI(const char16 *base_url,

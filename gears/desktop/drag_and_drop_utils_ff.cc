@@ -35,6 +35,7 @@
 #include <gecko_sdk/include/nsILocalFile.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsXPCOM.h>
+
 #if defined(LINUX) && !defined(OS_MACOSX)
 #include <gtk/gtk.h>
 #endif
@@ -47,6 +48,9 @@
 #include "gears/base/firefox/ns_file_utils.h"
 #include "gears/desktop/file_dialog.h"
 
+#ifdef WIN32
+#include "gears/desktop/drag_and_drop_utils_win32.h"
+#endif
 
 // NOTE(nigeltao): XPConnect is not thread-safe, and this method will not
 // work if called from worker threads. Hence, this function is defined here
@@ -296,7 +300,13 @@ void SetDragCursor(ModuleEnvironment *module_environment,
     return;
   }
 
-  // TODO(nigeltao): Check that this works on all three OSes (Win/Mac/Linux).
+#ifdef WIN32
+  if (module_environment->drop_target_interceptor_) {
+    module_environment->drop_target_interceptor_->SetDragCursor(cursor_type);
+  }
+
+#else
+  // TODO(nigeltao): Check that this works on Mac, not just Linux.
   if (type == DRAG_AND_DROP_EVENT_DRAGENTER ||
       type == DRAG_AND_DROP_EVENT_DRAGOVER) {
     nsCOMPtr<nsIDragService> drag_service =
@@ -325,6 +335,7 @@ void SetDragCursor(ModuleEnvironment *module_environment,
       return;
     }
   }
+#endif
 }
 
 
