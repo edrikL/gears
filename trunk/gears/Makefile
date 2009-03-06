@@ -1387,6 +1387,7 @@ $(BROWSER)_CPPSRCS += \
 		dll_data_wince.cc \
 		drop_target_base.cc \
 		drop_target_registration.cc \
+		meta_data_extraction.cc \
 		shortcut_utils_win32.cc \
 		$(NULL)
 

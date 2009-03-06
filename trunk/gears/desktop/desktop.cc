@@ -43,9 +43,11 @@
 #ifdef BROWSER_WEBKIT
 #include "gears/base/safari/curl_downloader.h"
 #endif
+#include "gears/blob/blob.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/desktop/drop_target_registration.h"
 #include "gears/desktop/file_dialog.h"
+#include "gears/desktop/meta_data_extraction.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -78,6 +80,7 @@ void Dispatcher<GearsDesktop>::Init() {
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
   // TODO(nigeltao): should acceptDrag be renamed finishDrag??
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
+  RegisterMethod("extractMetaData", &GearsDesktop::ExtractMetaData);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
   RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
   RegisterMethod("setDragCursor", &GearsDesktop::SetDragCursor);
@@ -901,6 +904,29 @@ void GearsDesktop::AcceptDrag(JsCallContext *context) {
     context->SetException(error);
     return;
   }
+}
+
+
+void GearsDesktop::ExtractMetaData(JsCallContext *context) {
+  ModuleImplBaseClass *other_module = NULL;
+
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  if (GearsBlob::kModuleName != other_module->get_module_name()) {
+    context->SetException(STRING16(L"First argument must be a Blob."));
+    return;
+  }
+  scoped_refptr<BlobInterface> blob_contents;
+  static_cast<GearsBlob*>(other_module)->GetContents(&blob_contents);
+  assert(blob_contents.get());
+
+  scoped_ptr<JsObject> js_object(module_environment_->js_runner_->NewObject());
+  ::ExtractMetaData(blob_contents.get(), js_object.get());
+  context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
 }
 
 
