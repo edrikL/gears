@@ -29,6 +29,16 @@
 #include "third_party/skia/include/core/SkPorterDuff.h"
 #include "third_party/skia/include/utils/SkParse.h"
 
+#ifndef M_PI
+// MS Visual Studio doesn't seem to #define M_PI, so we do it here.
+#define M_PI 3.14159265358979323846
+#endif
+
+// TODO(nigeltao): For any JavaScript-visible method, we should do sanity
+// checking on the args (e.g. ensure that we're not scaling by 1e100), and
+// also check the return value for overflow (if applicable) and handle that
+// gracefully. I think that WebKit's Skia-backed canvas already does this.
+
 DECLARE_DISPATCHER(GearsCanvasRenderingContext2D);
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
@@ -36,8 +46,14 @@ const std::string
 using canvas::skia_config;
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
-    : ModuleImplBaseClass(kModuleName) {
+    : ModuleImplBaseClass(kModuleName),
+      fill_style_as_string_(STRING16(L"#000000")),
+      stroke_style_as_string_(STRING16(L"#000000")) {
+  clear_style_as_paint_.setAntiAlias(true);
+  clear_style_as_paint_.setPorterDuffXfermode(SkPorterDuff::kClear_Mode);
   fill_style_as_paint_.setAntiAlias(true);
+  stroke_style_as_paint_.setAntiAlias(true);
+  stroke_style_as_paint_.setStyle(SkPaint::kStroke_Style);
 }
 
 void GearsCanvasRenderingContext2D::SetCanvas(
@@ -104,7 +120,9 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
       &GearsCanvasRenderingContext2D::SetGlobalCompositeOperation);
 
   // colors and styles
-  // Missing wrt HTML5: strokeStyle.
+  RegisterProperty("strokeStyle",
+      &GearsCanvasRenderingContext2D::GetStrokeStyle,
+      &GearsCanvasRenderingContext2D::SetStrokeStyle);
   RegisterProperty("fillStyle",
       &GearsCanvasRenderingContext2D::GetFillStyle,
       &GearsCanvasRenderingContext2D::SetFillStyle);
@@ -113,10 +131,18 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
   // Missing wrt HTML5: createPattern.
 
   // line caps/joins
-  // Missing wrt HTML5: lineWidth.
-  // Missing wrt HTML5: lineCap.
-  // Missing wrt HTML5: lineJoin.
-  // Missing wrt HTML5: miterLimit.
+  RegisterProperty("lineWidth",
+      &GearsCanvasRenderingContext2D::GetLineWidth,
+      &GearsCanvasRenderingContext2D::SetLineWidth);
+  RegisterProperty("lineCap",
+      &GearsCanvasRenderingContext2D::GetLineCap,
+      &GearsCanvasRenderingContext2D::SetLineCap);
+  RegisterProperty("lineJoin",
+      &GearsCanvasRenderingContext2D::GetLineJoin,
+      &GearsCanvasRenderingContext2D::SetLineJoin);
+  RegisterProperty("miterLimit",
+      &GearsCanvasRenderingContext2D::GetMiterLimit,
+      &GearsCanvasRenderingContext2D::SetMiterLimit);
 
   // shadows
   // Missing wrt HTML5: shadowOffsetX.
@@ -171,28 +197,30 @@ void GearsCanvasRenderingContext2D::GetCanvas(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::Save(JsCallContext *context) {
-  context->SetException(STRING16(L"Unimplemented"));
+  skia_canvas_->save();
 }
 
 void GearsCanvasRenderingContext2D::Restore(JsCallContext *context) {
-  context->SetException(STRING16(L"Unimplemented"));
+  // SkCanvas silently ignores any restore() calls over and above the number of
+  // save() calls.
+  skia_canvas_->restore();
 }
 
 void GearsCanvasRenderingContext2D::Scale(JsCallContext *context) {
-  double scale_x, scale_y;
+  double sx, sy;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &scale_x },
-    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &scale_y }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sx },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &sy }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  if (context->GetArgumentType(1) == JSPARAM_UNDEFINED) {
+
+  if (context->GetArgumentCount() == 1) {
     // If only one scale argument is supplied, use it for both dimensions.
-    // TODO(nigeltao): Test this.
-    scale_y = scale_x;
+    sy = sx;
   }
-  context->SetException(STRING16(L"Unimplemented"));
+  skia_canvas_->scale(SkDoubleToScalar(sx), SkDoubleToScalar(sy));
 }
 
 void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
@@ -203,56 +231,60 @@ void GearsCanvasRenderingContext2D::Rotate(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  // Convert to degrees.
-  const double kPi = 3.1415926535;
-  const double kDegreesPerRadian = 180.0/kPi;
-  angle *= kDegreesPerRadian;
 
-  skia_canvas_->rotate(SkDoubleToScalar(angle));
+  skia_canvas_->rotate(SkDoubleToScalar(angle * 180.0 / M_PI));
 }
 
 void GearsCanvasRenderingContext2D::Translate(JsCallContext *context) {
-  int x, y;
+  double tx, ty;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &y }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &tx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &ty }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  skia_canvas_->translate(SkDoubleToScalar(tx), SkDoubleToScalar(ty));
+}
+
+void GearsCanvasRenderingContext2D::Transform(
+    JsCallContext *context,
+    bool reset_matrix) {
+  double m11, m12, m21, m22, dx, dy;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  SkMatrix m;
+  m.reset();
+  m.set(0, SkDoubleToScalar(m11));
+  m.set(1, SkDoubleToScalar(m21));
+  m.set(2, SkDoubleToScalar(dx));
+  m.set(3, SkDoubleToScalar(m12));
+  m.set(4, SkDoubleToScalar(m22));
+  m.set(5, SkDoubleToScalar(dy));
+  if (reset_matrix) {
+    skia_canvas_->setMatrix(m);
+  } else {
+    skia_canvas_->concat(m);
+  }
 }
 
 void GearsCanvasRenderingContext2D::Transform(JsCallContext *context) {
-  double m11, m12, m21, m22, dx, dy;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
+  Transform(context, false);
 }
 
 void GearsCanvasRenderingContext2D::SetTransform(JsCallContext *context) {
-  double m11, m12, m21, m22, dx, dy;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m11 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m12 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m21 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &m22 },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
+  Transform(context, true);
 }
 
 void GearsCanvasRenderingContext2D::GetGlobalAlpha(
@@ -297,18 +329,13 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
   }
 }
 
-void GearsCanvasRenderingContext2D::GetFillStyle(
-    JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &fill_style_as_string_);
-}
-
-// TODO(nigeltao): Generate a better error if given a CanvasGradient or
-// CanvasPattern object (from the browser's canvas implementation).
-void GearsCanvasRenderingContext2D::SetFillStyle(
-    JsCallContext *context) {
-  std::string16 new_fill_style;
+void GearsCanvasRenderingContext2D::SetStyle(
+    JsCallContext *context,
+    std::string16 *style_as_string,
+    SkPaint *style_as_paint) {
+  std::string16 new_style_as_string;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_fill_style }
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_style_as_string }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   // TODO(nigeltao): Do not generate error on type mismatch; fail silently
@@ -316,41 +343,163 @@ void GearsCanvasRenderingContext2D::SetFillStyle(
   if (context->is_exception_set())
     return;
 
-  std::string new_fill_style_as_utf8;
-  if (!String16ToUTF8(new_fill_style, &new_fill_style_as_utf8)) {
+  std::string new_style_as_utf8;
+  if (!String16ToUTF8(new_style_as_string, &new_style_as_utf8)) {
     return;
   }
 
   // SkParse::FindColor re-uses color's existing alpha value, if unspecified
   // by the string, so we initialize color with alpha=255.
   SkColor color = 0xFFFFFFFF;
-  if (SkParse::FindColor(new_fill_style_as_utf8.c_str(), &color)) {
-    fill_style_as_paint_.setColor(color);
-    fill_style_as_string_ = new_fill_style;
+  if (SkParse::FindColor(new_style_as_utf8.c_str(), &color)) {
+    style_as_paint->setColor(color);
+    *style_as_string = new_style_as_string;
   }
 }
 
-void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
-  int x, y, width, height;
+void GearsCanvasRenderingContext2D::GetStrokeStyle(JsCallContext *context) {
+  context->SetReturnValue(JSPARAM_STRING16, &stroke_style_as_string_);
+}
+
+void GearsCanvasRenderingContext2D::SetStrokeStyle(JsCallContext *context) {
+  SetStyle(context, &stroke_style_as_string_, &stroke_style_as_paint_);
+}
+
+void GearsCanvasRenderingContext2D::GetFillStyle(JsCallContext *context) {
+  context->SetReturnValue(JSPARAM_STRING16, &fill_style_as_string_);
+}
+
+void GearsCanvasRenderingContext2D::SetFillStyle(JsCallContext *context) {
+  SetStyle(context, &fill_style_as_string_, &fill_style_as_paint_);
+}
+
+void GearsCanvasRenderingContext2D::GetLineWidth(JsCallContext *context) {
+  double line_width = SkScalarToDouble(
+      stroke_style_as_paint_.getStrokeWidth());
+  context->SetReturnValue(JSPARAM_DOUBLE, &line_width);
+}
+
+void GearsCanvasRenderingContext2D::SetLineWidth(JsCallContext *context) {
+  double width;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &width }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  stroke_style_as_paint_.setStrokeWidth(SkDoubleToScalar(width));
 }
 
-void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
-  double x, y, width, height;
+void GearsCanvasRenderingContext2D::GetLineCap(JsCallContext *context) {
+  switch (stroke_style_as_paint_.getStrokeCap()) {
+    case SkPaint::kButt_Cap: {
+      std::string16 result(STRING16(L"butt"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    case SkPaint::kRound_Cap: {
+      std::string16 result(STRING16(L"round"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    case SkPaint::kSquare_Cap: {
+      std::string16 result(STRING16(L"square"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    default:
+      // Do nothing.
+      break;
+  }
+}
+
+void GearsCanvasRenderingContext2D::SetLineCap(JsCallContext *context) {
+  std::string16 s;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &s }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  if (s == STRING16(L"butt")) {
+    stroke_style_as_paint_.setStrokeCap(SkPaint::kButt_Cap);
+  } else if (s == STRING16(L"round")) {
+    stroke_style_as_paint_.setStrokeCap(SkPaint::kRound_Cap);
+  } else if (s == STRING16(L"square")) {
+    stroke_style_as_paint_.setStrokeCap(SkPaint::kSquare_Cap);
+  }
+}
+
+void GearsCanvasRenderingContext2D::GetLineJoin(JsCallContext *context) {
+  switch (stroke_style_as_paint_.getStrokeJoin()) {
+    case SkPaint::kMiter_Join: {
+      std::string16 result(STRING16(L"miter"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    case SkPaint::kRound_Join: {
+      std::string16 result(STRING16(L"round"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    case SkPaint::kBevel_Join: {
+      std::string16 result(STRING16(L"bevel"));
+      context->SetReturnValue(JSPARAM_STRING16, &result);
+      break;
+    }
+    default:
+      // Do nothing.
+      break;
+  }
+}
+
+void GearsCanvasRenderingContext2D::SetLineJoin(JsCallContext *context) {
+  std::string16 s;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &s }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  if (s == STRING16(L"miter")) {
+    stroke_style_as_paint_.setStrokeJoin(SkPaint::kMiter_Join);
+  } else if (s == STRING16(L"round")) {
+    stroke_style_as_paint_.setStrokeJoin(SkPaint::kRound_Join);
+  } else if (s == STRING16(L"bevel")) {
+    stroke_style_as_paint_.setStrokeJoin(SkPaint::kBevel_Join);
+  }
+}
+
+void GearsCanvasRenderingContext2D::GetMiterLimit(JsCallContext *context) {
+  double miter_limit = SkScalarToDouble(
+      stroke_style_as_paint_.getStrokeMiter());
+  context->SetReturnValue(JSPARAM_DOUBLE, &miter_limit);
+}
+
+void GearsCanvasRenderingContext2D::SetMiterLimit(JsCallContext *context) {
+  double miter_limit;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &miter_limit }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  stroke_style_as_paint_.setStrokeMiter(SkDoubleToScalar(miter_limit));
+}
+
+void GearsCanvasRenderingContext2D::PaintRect(
+    JsCallContext *context,
+    SkPaint *paint) {
+  double x, y, w, h;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &width },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &height }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &w },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &h }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
@@ -358,22 +507,20 @@ void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
 
   SkRect rect;
   rect.set(SkDoubleToScalar(x), SkDoubleToScalar(y),
-      SkDoubleToScalar(x + width), SkDoubleToScalar(y + height));
-  skia_canvas_->drawRect(rect, fill_style_as_paint_);
+      SkDoubleToScalar(x + w), SkDoubleToScalar(y + h));
+  skia_canvas_->drawRect(rect, *paint);
+}
+
+void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
+  PaintRect(context, &clear_style_as_paint_);
+}
+
+void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
+  PaintRect(context, &fill_style_as_paint_);
 }
 
 void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
-  int x, y, width, height;
-  JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &x },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &y },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
-  };
-  context->GetArguments(ARRAYSIZE(args), args);
-  if (context->is_exception_set())
-    return;
-  context->SetException(STRING16(L"Unimplemented"));
+  PaintRect(context, &stroke_style_as_paint_);
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
