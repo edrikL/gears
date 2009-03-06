@@ -378,9 +378,14 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   // Get the icons the user specified
   icons->GetPropertyAsString(STRING16(L"16x16"), &shortcut_info.icon16x16.url);
   icons->GetPropertyAsString(STRING16(L"32x32"), &shortcut_info.icon32x32.url);
+#ifdef OS_WINCE
+  // WinCE does not use the 4x48 or 128x128 icons. See CreateIcoFile(). We
+  // ignore URLS for these sizes to avoid unnecessary downloads.
+#else
   icons->GetPropertyAsString(STRING16(L"48x48"), &shortcut_info.icon48x48.url);
   icons->GetPropertyAsString(STRING16(L"128x128"),
                              &shortcut_info.icon128x128.url);
+#endif
 
   // Prepare the shortcut.
   Desktop desktop(EnvPageSecurityOrigin(), EnvPageBrowsingContext());
