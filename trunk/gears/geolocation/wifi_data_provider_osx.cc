@@ -39,8 +39,10 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/geolocation/wifi_data_provider_common.h"
 
-// The time period, in milliseconds, between successive polls of the WiFi data.
-static const int kPollingInterval = 30000;  // 30s
+// The time periods, in milliseconds, between successive polls of the wifi data.
+extern const int kDefaultPollingInterval = 120000;  // 2 mins
+extern const int kNoChangePollingInterval = 300000;  // 5 mins
+extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // static
 template<>
@@ -93,6 +95,7 @@ void OsxWifiDataProvider::Run() {
   }
 
   // Regularly get the access point data.
+  int polling_interval = kDefaultPollingInterval;
   do {
     WifiData new_data;
     GetAccessPointData(&new_data.access_point_data);
@@ -102,11 +105,13 @@ void OsxWifiDataProvider::Run() {
       wifi_data_ = new_data;
       is_first_scan_complete_ = true;
     }
+    polling_interval =
+        UpdatePollingInterval(polling_interval, update_available);
     data_mutex_.Unlock();
     if (update_available) {
       NotifyListeners();
     }
-  } while (!stop_event_.WaitWithTimeout(kPollingInterval));
+  } while (!stop_event_.WaitWithTimeout(polling_interval));
 
   (*WirelessDetach_function_)(wifi_context_);
 
