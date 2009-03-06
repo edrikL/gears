@@ -23,9 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) || defined(OS_MACOSX)
-
 #include "gears/geolocation/wifi_data_provider_common.h"
+
+// These constants are defined for each platfrom in wifi_data_provider_xxx.cc.
+extern const int kDefaultPollingInterval;
+extern const int kNoChangePollingInterval;
+extern const int kTwoNoChangePollingInterval;
+
+#if defined(WIN32) || defined(OS_MACOSX)
 
 #include <assert.h>
 #if defined(WIN32)
@@ -70,3 +75,16 @@ std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
 }
 
 #endif  // WIN32 || OS_MACOSX
+
+int UpdatePollingInterval(int polling_interval, bool scan_results_differ) {
+  if (scan_results_differ) {
+    return kDefaultPollingInterval;
+  }
+  if (polling_interval == kDefaultPollingInterval) {
+    return kNoChangePollingInterval;
+  } else {
+    assert(polling_interval == kNoChangePollingInterval ||
+           polling_interval == kTwoNoChangePollingInterval);
+    return kTwoNoChangePollingInterval;
+  }
+}

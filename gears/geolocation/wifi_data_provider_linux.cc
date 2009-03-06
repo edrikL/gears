@@ -74,9 +74,12 @@
 #include <ctype.h>  // For isxdigit()
 #include <stdio.h>
 #include "gears/base/common/string_utils.h"
+#include "gears/geolocation/wifi_data_provider_common.h"
 
-// The time period, in milliseconds, between successive polls of the WiFi data.
-static const int kPollingInterval = 1000;
+// The time periods, in milliseconds, between successive polls of the wifi data.
+extern const int kDefaultPollingInterval = 10000;  // 10s
+extern const int kNoChangePollingInterval = 120000;  // 2 mins
+extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // Local function
 static bool GetAccessPointData(std::vector<AccessPointData> *access_points);
@@ -110,6 +113,7 @@ bool LinuxWifiDataProvider::GetData(WifiData *data) {
 // Thread implementation
 void LinuxWifiDataProvider::Run() {
   // Regularly get the access point data.
+  int polling_interval = kDefaultPollingInterval;
   do {
     WifiData new_data;
     if (GetAccessPointData(&new_data.access_point_data)) {
@@ -119,12 +123,14 @@ void LinuxWifiDataProvider::Run() {
         wifi_data_ = new_data;
         is_first_scan_complete_ = true;
       }
+      polling_interval =
+          UpdatePollingInterval(polling_interval, update_available);
       data_mutex_.Unlock();
       if (update_available) {
         NotifyListeners();
       }
     }
-  } while (!stop_event_.WaitWithTimeout(kPollingInterval));
+  } while (!stop_event_.WaitWithTimeout(polling_interval));
 }
 
 // Local functions

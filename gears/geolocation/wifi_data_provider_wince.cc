@@ -35,11 +35,14 @@
 #include <windows.h>
 #include <winioctl.h>  // For IOCTL_NDISUIO_QUERY_OID_VALUE
 #include "gears/base/common/string_utils.h"  // For UTF8ToString16()
+#include "gears/geolocation/wifi_data_provider_common.h"
 #include "gears/geolocation/wifi_data_provider_windows_common.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-// The time period, in milliseconds, between successive polls of the wifi data.
-static const int kPollingInterval = 1000;
+// The time periods, in milliseconds, between successive polls of the wifi data.
+extern const int kDefaultPollingInterval = 10000;  // 10s
+extern const int kNoChangePollingInterval = 120000;  // 2 mins
+extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // Local function.
 static bool GetAccessPointData(const HANDLE &ndis_handle,
@@ -88,6 +91,7 @@ void WinceWifiDataProvider::Run() {
   }
 
   // Regularly get the access point data.
+  int polling_interval = kDefaultPollingInterval;
   do {
     WifiData new_data;
     if (GetAccessPointData(ndis_handle, &new_data.access_point_data)) {
@@ -97,12 +101,14 @@ void WinceWifiDataProvider::Run() {
         wifi_data_ = new_data;
         is_first_scan_complete_ = true;
       }
+      polling_interval =
+          UpdatePollingInterval(polling_interval, update_available);
       data_mutex_.Unlock();
       if (update_available) {
         NotifyListeners();
       }
     }
-  } while (!stop_event_.WaitWithTimeout(kPollingInterval));
+  } while (!stop_event_.WaitWithTimeout(polling_interval));
 
   CloseHandle(ndis_handle);
 }

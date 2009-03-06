@@ -66,8 +66,10 @@ static const int kMaximumBufferSize = 2 << 20;  // 2MB
 // Length for generic string buffers passed to Win32 APIs.
 static const int kStringLength = 512;
 
-// The time period, in milliseconds, between successive polls of the wifi data.
-static const int kPollingInterval = 1000;
+// The time periods, in milliseconds, between successive polls of the wifi data.
+extern const int kDefaultPollingInterval = 10000;  // 10s
+extern const int kNoChangePollingInterval = 120000;  // 2 mins
+extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // Local functions
 
@@ -148,6 +150,7 @@ void Win32WifiDataProvider::Run() {
   }
   assert(get_access_point_data_function);
 
+  int polling_interval = kDefaultPollingInterval;
   // Regularly get the access point data.
   do {
     WifiData new_data;
@@ -158,12 +161,14 @@ void Win32WifiDataProvider::Run() {
         wifi_data_ = new_data;
         is_first_scan_complete_ = true;
       }
+      polling_interval =
+          UpdatePollingInterval(polling_interval, update_available);
       data_mutex_.Unlock();
       if (update_available) {
         NotifyListeners();
       }
     }
-  } while (!stop_event_.WaitWithTimeout(kPollingInterval));
+  } while (!stop_event_.WaitWithTimeout(polling_interval));
 
   FreeLibrary(library);
 }

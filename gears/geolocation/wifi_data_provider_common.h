@@ -29,6 +29,11 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/basictypes.h"
 
+// Converts a MAC address stored as an array of uint8 to a string.
 std::string16 MacAddressAsString16(const uint8 mac_as_int[6]);
+
+// Calculates the new polling interval for wiFi scans, given the previous
+// interval and whether the last scan produced new results.
+int UpdatePollingInterval(int polling_interval, bool scan_results_differ);
 
 #endif  // GEARS_GEOLOCATION_WIFI_DATA_PROVIDER_COMMON_H__
