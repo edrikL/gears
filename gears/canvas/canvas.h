@@ -122,6 +122,10 @@ class GearsCanvas : public ModuleImplBaseClass {
   // requires this when the user sets the canvas's width or height.
   void ResetCanvas(int width, int height);
 
+  // We lazily allocate the SkBitmap's pixels. This method ensures that those
+  // pixels have been allocated.
+  void EnsureBitmapPixelsAreAllocated();
+
   // Can't use a scoped_refptr since that will create a reference cycle.
   // Instead, use a plain pointer and clear it when the target is destroyed.
   // Recreate this pointer when accessed again. For this to work, we make
