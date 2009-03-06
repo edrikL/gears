@@ -1,32 +1,76 @@
 <html><head><title>Gears Canvas</title></head>
-<body>
-<h1>Gears Canvas</h1>
-<img id="outputImg" width="100px" height="80px" style="border:1px solid black">
+<body style="background-color:#FFFFCF">
+<p>Gears' canvas:</p>
+<img id="gc" width="100px" height="80px" style="border:1px solid black">
+<hr>
+<p>Browser's native canvas:</p>
+<canvas id="bnc" width="100px" height="80px" style="border:1px solid black">
+  </canvas>
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
 
 
-var canvas = google.gears.factory.create('beta.canvas');
-canvas.width = 100;
-canvas.height = 80;
+function draw(c) {
+  // A canvas' default background is fully-transparent black (i.e., #00000000).
+  // However, IE6 doesn't render transparent PNGs particularly well. In that
+  // case, it looks better to initialize the canvas to fully-opaque white
+  // (i.e., #FFFFFFFF).
+  //c.fillStyle = 'white';
+  //c.fillRect(0, 0, 100, 80);
 
-var context = canvas.getContext('gears-2d');
-context.fillStyle = 'silver';
-context.fillRect(15, 25, 30, 30);
-context.rotate(0.3);
-context.fillStyle = '#3F00FF7F';
-context.fillRect(40,  0, 50, 50);
-context.rotate(-0.4);
-context.fillStyle = '#FF0000';
-context.fillRect(20, 20, 15, 15);
+  c.save();
+  c.scale(1.5, 1.5);
+  c.fillStyle = 'silver';
+  c.fillRect(5, 10, 30, 30);
+  c.restore();
 
-var localServer = google.gears.factory.create('beta.localserver');
-localServer.removeStore("test_manual_canvas");
-var store = localServer.createStore("test_manual_canvas");
+  c.rotate(0.3);
+  c.fillStyle = '#3F00FF7F';
+  c.fillRect(40,  0, 50, 50);
 
-var capturedUrl = parseInt(Math.random() * 1000) + '.png';
-store.captureBlob(canvas.toBlob(), capturedUrl, 'image/png');
-document.getElementById('outputImg').src = capturedUrl;
+  c.rotate(-0.4);
+  c.lineWidth = 4.5;
+  c.lineJoin = 'round';
+  c.strokeStyle = '#FF0000';
+  c.strokeRect(20, 20, 65, 15);
+
+  c.transform(1, 0.3, 0, 0.8, 7, 0);
+  c.clearRect(25, 25, 15, 15);
+}
+
+
+var gearsCanvas = null;
+try {
+  gearsCanvas = google.gears.factory.create('beta.canvas');
+} catch (e) {
+  // Silently ignore any exceptions for those Gears builds that don't have a
+  // canvas implementation.
+}
+if (gearsCanvas) {
+  gearsCanvas.width = 100;
+  gearsCanvas.height = 80;
+
+  draw(gearsCanvas.getContext('gears-2d'));
+
+  var localServer = google.gears.factory.create('beta.localserver');
+  localServer.removeStore("test_manual_canvas");
+  var store = localServer.createStore("test_manual_canvas");
+  var capturedUrl = parseInt(Math.random() * 1000) + '.png';
+  store.captureBlob(gearsCanvas.toBlob(), capturedUrl, 'image/png');
+  document.getElementById('gc').src = capturedUrl;
+}
+
+
+var nativeContext = null;
+try {
+  nativeContext = document.getElementById('bnc').getContext('2d');
+} catch (e) {
+  // Silently ignore any exceptions for those browsers that don't have a
+  // native canvas implementation.
+}
+if (nativeContext) {
+  draw(nativeContext);
+}
 
 
 </script>

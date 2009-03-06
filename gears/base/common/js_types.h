@@ -520,6 +520,7 @@ class JsCallContext {
 
   // Get the type of an argument that was passed in.
   JsParamType GetArgumentType(int i);
+  int GetArgumentCount();
 
   // TODO(nigeltao): Do we really need the coercion parameter? JS type coercion
   // was introduced as part of the Console code, and was to be introduced
@@ -546,7 +547,6 @@ class JsCallContext {
 #endif
 
  private:
-  int GetArgumentCount();
   const JsToken &GetArgument(int index);
 
   JsContextPtr js_context_;

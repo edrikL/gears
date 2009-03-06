@@ -66,13 +66,13 @@ class GearsCanvasRenderingContext2D
 
   // Sets the geometry transformation matrix to scale future drawing operations.
   // If only one scale argument is supplied, we use it for both dimensions.
-  // IN: double x, double y
+  // IN: float x, float y
   // OUT: -
   void Scale(JsCallContext *context);
 
   // Sets the geometry transformation matrix to rotate future drawing
   // operations by the given angle, in radians.
-  // IN: double angle
+  // IN: float angle
   // OUT: -
   void Rotate(JsCallContext *context);
 
@@ -82,29 +82,24 @@ class GearsCanvasRenderingContext2D
   // OUT: -
   void Translate(JsCallContext *context);
 
-  // Multiplies the current geometry transformation matrix by the given
-  // matrix.
+  // Multiplies the current transformation matrix by the given matrix.
   // IN: float m11, float m12, float m21, float m22, float dx, float dy
   // OUT: -
   void Transform(JsCallContext *context);
 
-  // Sets the current geometry transformation matrix to the given matrix.
+  // Sets the current transformation matrix to the given matrix.
   // IN: float m11, float m12, float m21, float m22, float dx, float dy
   // OUT: -
   void SetTransform(JsCallContext *context);
 
-
-  // The following items constitute the state of the context.
-  // They affect future operations on the canvas.
-
   // Returns the current global alpha, which is used for future drawing
   // operations.
   // IN: -
-  // OUT: double
+  // OUT: float
   void GetGlobalAlpha(JsCallContext *context);
 
   // Sets the global alpha, which must be between 0.0 and 1.0.
-  // IN: double
+  // IN: float
   // OUT: -
   void SetGlobalAlpha(JsCallContext *context);
 
@@ -120,26 +115,28 @@ class GearsCanvasRenderingContext2D
   // OUT: -
   void SetGlobalCompositeOperation(JsCallContext *context);
 
-  // Returns the current fill style, which is used for future drawing
-  // operations.
-  // IN: -
-  // OUT: string
+  // Basic getters / setters.
+  void GetStrokeStyle(JsCallContext *context);
+  void SetStrokeStyle(JsCallContext *context);
   void GetFillStyle(JsCallContext *context);
-
-  // Sets the fill style, which must be a valid CSS3 color specification.
-  // IN: string
-  // OUT: -
   void SetFillStyle(JsCallContext *context);
+  void GetLineWidth(JsCallContext *context);
+  void SetLineWidth(JsCallContext *context);
+  void GetLineCap(JsCallContext *context);
+  void SetLineCap(JsCallContext *context);
+  void GetLineJoin(JsCallContext *context);
+  void SetLineJoin(JsCallContext *context);
+  void GetMiterLimit(JsCallContext *context);
+  void SetMiterLimit(JsCallContext *context);
 
   // Rectangle operations.
-  // IN: int x, int y, int width, int height
+  // IN: float x, float y, float width, float height
   // OUT: -
-  // Clears the specified rectangle (sets it to transparent black).
+  // Clears the rectangle (sets it to transparent black).
   void ClearRect(JsCallContext *context);
-  // Fills the specified rectangle by the current fill color.
+  // Fills the rectangle with the current fill style.
   void FillRect(JsCallContext *context);
-  // Strokes the rectangle with a one-pixel think border.
-  // TODO(nigeltao): Define stroke color.
+  // Strokes the rectangle with the current stroke style.
   void StrokeRect(JsCallContext *context);
 
   // Draws a canvas onto this canvas. sx, sy, sw, and sh identify a rectangular
@@ -184,10 +181,26 @@ class GearsCanvasRenderingContext2D
   // Callback used to handle the 'JSEVENT_UNLOAD' event.
   virtual void HandleEvent(JsEventType event_type);
 
+  // Implements ClearRect, FillRect and StrokeRect.
+  void PaintRect(JsCallContext *context, SkPaint *paint);
+
+  // Implements SetFillStyle and SetStrokeStyle.
+  void SetStyle(
+    JsCallContext *context,
+    std::string16 *style_as_string,
+    SkPaint *style_as_paint);
+
+  // Implements Transform and SetTransform.
+  void Transform(JsCallContext *context, bool reset_matrix);
+
   scoped_refptr<GearsCanvas> gears_canvas_;
   scoped_ptr<SkCanvas> skia_canvas_;
-  std::string16 fill_style_as_string_;
+
+  SkPaint clear_style_as_paint_;
   SkPaint fill_style_as_paint_;
+  SkPaint stroke_style_as_paint_;
+  std::string16 fill_style_as_string_;
+  std::string16 stroke_style_as_string_;
 
   scoped_ptr<JsEventMonitor> unload_monitor_;
 
