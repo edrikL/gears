@@ -73,6 +73,13 @@ void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("getContext", &GearsCanvas::GetContext);
 }
 
+void GearsCanvas::EnsureBitmapPixelsAreAllocated() {
+  if (!skia_bitmap_->getPixels()) {
+    skia_bitmap_->allocPixels();
+    skia_bitmap_->eraseARGB(0, 0, 0, 0);
+  }
+}
+
 void GearsCanvas::Load(JsCallContext *context) {
   ModuleImplBaseClass *other_module;
   JsArgument args[] = {
@@ -124,9 +131,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
     return;
   }
 
-  // Pixels should have been allocated, either in the contructor,
-  // or in SetWidth() and SetHeight().
-  assert(skia_bitmap_->getPixels());
+  EnsureBitmapPixelsAreAllocated();
 
   // SkBitmap's isOpaque flag tells whether the bitmap has any transparent
   // pixels. If this flag is set, the encoder creates a file without alpha
@@ -213,6 +218,7 @@ void GearsCanvas::Crop(JsCallContext *context) {
         L"bounds of the bitmap or has negative dimensions"));
     return;
   }
+  EnsureBitmapPixelsAreAllocated();
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, width, height);
   new_bitmap.allocPixels();
@@ -238,6 +244,7 @@ void GearsCanvas::Resize(JsCallContext *context) {
     context->SetException(STRING16(L"Cannot resize to negative dimensions."));
     return;
   }
+  EnsureBitmapPixelsAreAllocated();
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, new_width, new_height);
   new_bitmap.allocPixels();
@@ -312,6 +319,7 @@ void GearsCanvas::GetContext(JsCallContext *context) {
       context->SetException(STRING16(L"Unable to create context"));
       return;
     }
+    EnsureBitmapPixelsAreAllocated();
     rendering_context_ = rendering_context_scoped_ptr.get();
     rendering_context_->SetCanvas(this, skia_bitmap_.get());
   }
@@ -353,16 +361,8 @@ bool GearsCanvas::set_composite_operation(std::string16 new_composite_op) {
 }
 
 void GearsCanvas::ResetCanvas(int width, int height) {
-  // Since we're starting with a clean slate, let's reset the SkBitmap as well.
-  // For some reason things don't work otherwise.
-  // TODO(nigeltao): Figure out why.
   skia_bitmap_.reset(new SkBitmap);
   skia_bitmap_->setConfig(skia_config, width, height);
-
-  // Must allocate pixels before performing any operations,
-  // or assertions fire and some operations (like eraseARGB) fail silently.
-  skia_bitmap_->allocPixels();
-  skia_bitmap_->eraseARGB(0, 0, 0, 0);
 
   alpha_ = 1.0;
   composite_operation_ = STRING16(L"source-over");
