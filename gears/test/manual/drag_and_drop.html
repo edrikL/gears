@@ -99,7 +99,13 @@ function toggleEnabledDisabled() {
           for (i = 0; i < context.files.length; i++) {
             var file = context.files[i];
             s += '<b>' + file.name + '</b> has length <b>' +
-                file.blob.length + '</b><br>';
+                file.blob.length + '</b>';
+            var md = desktop.extractMetaData(file.blob);
+            if (md.imageWidth && md.imageHeight) {
+              s += ' and dimensions <b>' + md.imageWidth + '</b>&times;<b>' +
+                  md.imageHeight + '</b>';
+            }
+            s += '<br>';
           }
         }
         s += 'count: <b>' + context.count + '</b><br>';
