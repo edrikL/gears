@@ -925,7 +925,11 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   // TODO(nigeltao): Should "Files" be case (in)sensitive? Or should it be
   // something like "GearsFiles" or "application/x-gears-files"?
   DragAndDropFlavorType flavor = DRAG_AND_DROP_FLAVOR_INVALID;
-  if (flavor_as_string == STRING16(L"Files")) {
+  if (flavor_as_string == STRING16(L"application/x-gears-files")) {
+    flavor = DRAG_AND_DROP_FLAVOR_FILES;
+  } else if (flavor_as_string == STRING16(L"Files")) {
+    // TODO(nigeltao): Remove "Files" as an option, we should probably just
+    // stick with "application/x-gears-files" for now.
     flavor = DRAG_AND_DROP_FLAVOR_FILES;
   }
   if (flavor == DRAG_AND_DROP_FLAVOR_INVALID) {
