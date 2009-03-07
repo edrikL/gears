@@ -58,7 +58,7 @@ function testRequiredCookie() {
   localServer.removeStore(STORE_NAME, REQUIRED_COOKE);
   var resourceStore = localServer.createStore(STORE_NAME, REQUIRED_COOKE);
 
-  createCookie('a', '1');
+  createTestCookie('a', '1');
   startAsync();
   resourceStore.capture(CAPTURE_URI, function(url, success, id) {
     assert(success, 'Failed to capture');
@@ -80,15 +80,15 @@ function testRequiredCookie() {
       assert(content.startsWith(EXPECTED_CONTENT),
              'Unexpected content in resource');
 
-      createCookie('a', '2');
+      createTestCookie('a', '2');
       assert(!localServer.canServeLocally(RENAME_URI),
              'Should not servable with the wrong cookie');
 
-      createCookie('a', '1');
+      createTestCookie('a', '1');
       assert(localServer.canServeLocally(RENAME_URI),
              'Should be on again');
 
-      eraseCookie('a');
+      eraseTestCookie('a');
       assert(!localServer.canServeLocally(RENAME_URI),
              'Should not be servable with no cookie');
 

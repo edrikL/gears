@@ -446,7 +446,7 @@ function httpPostAsRequest(url, callback) {
 
 // cookie functions courtesy ppk: http://www.quirksmode.org/js/cookies.html
 
-function createCookie(name, value, optDays) {
+function createTestCookie(name, value, optDays) {
   if (optDays) {
     var date = new Date();
     date.setTime(date.getTime()+(optDays*24*60*60*1000));
@@ -456,7 +456,7 @@ function createCookie(name, value, optDays) {
   document.cookie = name+"="+value+expires+"; path=/";
 }
 
-function readCookie(name) {
+function readTestCookie(name) {
   var nameEQ = name + "=";
   var ca = document.cookie.split(';');
   for(var i=0;i < ca.length;i++) {
@@ -467,6 +467,6 @@ function readCookie(name) {
   return null;
 }
 
-function eraseCookie(name) {
-  createCookie(name,"",-1);
+function eraseTestCookie(name) {
+  createTestCookie(name,"",-1);
 }
