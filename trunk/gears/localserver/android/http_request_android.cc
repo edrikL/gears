@@ -439,6 +439,8 @@ bool HttpRequestAndroid::Open(const char16 *method,
   // Context is unused.
   assert(IsMainThread());
   assert(!IsRelativeUrl(url));
+  if (BrowserUtils::IsOfflinePropertyValue())
+    return false;
   if (!IsUninitialized())
     return false;
   LOG(("Open called, %s\n", async ? "asynchronous" : "synchronous"));
@@ -521,6 +523,8 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
   // heavy lifting and blocking operations.  Set post data, which may
   // be empty.
   assert(IsMainThread());
+  if (BrowserUtils::IsOfflinePropertyValue())
+    return false;
   if (!IsOpen()) return false;
   if (IsPostOrPut()) {
     post_blob_.reset(blob ? blob : new EmptyBlob());

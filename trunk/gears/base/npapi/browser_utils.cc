@@ -148,3 +148,15 @@ bool BrowserUtils::IsOnline() {
   // TODO(mpcomplete): implement me.
   return true;
 }
+
+#ifdef OS_ANDROID
+bool BrowserUtils::IsOfflinePropertyValue() {
+  bool isOffline = false;
+  if (NPN_GetValue(NULL, NPNVisOfflineBool, &isOffline) != NPERR_NO_ERROR) {
+    // If we cannot get the property, we will not prevent
+    // any connection attempt...
+    return false;
+  }
+  return isOffline;
+}
+#endif
