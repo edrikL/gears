@@ -72,6 +72,14 @@ class BrowserUtils {
   // Returns true if the browser is not in "offline" mode and there is access
   // to the network.
   static bool IsOnline();
+
+#ifdef OS_ANDROID
+  // While IsOnline is not yet implemented on any NPAPI target, we can
+  // use IsOfflinePropertyValue instead, which takes advantage of the possible
+  // implementation of NPNVisOfflineBool.
+  // This can only be called from the main thread.
+  static bool IsOfflinePropertyValue();
+#endif
 };
 
 #endif  // GEARS_BASE_NPAPI_BROWSER_UTILS_H__
