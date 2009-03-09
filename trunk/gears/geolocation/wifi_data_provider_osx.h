@@ -47,7 +47,7 @@ class OsxWifiDataProvider
   // Thread implementation.
   virtual void Run();
   
-  void GetAccessPointData(std::vector<AccessPointData> *access_points);
+  void GetAccessPointData(WifiData::AccessPointDataSet *access_points);
 
   // Context and function pointers for Apple80211 library.
   WirelessContextPtr wifi_context_;

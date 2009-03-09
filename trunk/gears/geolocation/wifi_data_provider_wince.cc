@@ -46,7 +46,7 @@ extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // Local function.
 static bool GetAccessPointData(const HANDLE &ndis_handle,
-                               std::vector<AccessPointData> *access_points);
+                               WifiData::AccessPointDataSet *access_points);
 
 // static
 template<>
@@ -97,14 +97,13 @@ void WinceWifiDataProvider::Run() {
     if (GetAccessPointData(ndis_handle, &new_data.access_point_data)) {
       bool update_available;
       data_mutex_.Lock();
-      if (update_available = !wifi_data_.Matches(new_data)) {
-        wifi_data_ = new_data;
-        is_first_scan_complete_ = true;
-      }
+      update_available = wifi_data_.DiffersSignificantly(new_data);
+      wifi_data_ = new_data;
+      data_mutex_.Unlock();
       polling_interval =
           UpdatePollingInterval(polling_interval, update_available);
-      data_mutex_.Unlock();
       if (update_available) {
+        is_first_scan_complete_ = true;
         NotifyListeners();
       }
     }
@@ -167,7 +166,7 @@ static bool QueryOid(const HANDLE &ndis_handle,
 // supplied vector. Returns the number of access points found, or -1 on failure.
 static int GetCardAccessPointData(const HANDLE &ndis_handle,
                                   const std::string16 &card_name,
-                                  std::vector<AccessPointData> *access_points) {
+                                  WifiData::AccessPointDataSet *access_points) {
   assert(access_points);
   // Make an OID query to get the list of wifi Basic Service Set (BSS) IDs.
   //
@@ -195,7 +194,7 @@ static int GetCardAccessPointData(const HANDLE &ndis_handle,
 }
 
 static bool GetAccessPointData(const HANDLE &ndis_handle,
-                               std::vector<AccessPointData> *access_points) {
+                               WifiData::AccessPointDataSet *access_points) {
   assert(access_points);
   // Get the list of adapters. First determine the buffer size.
   ULONG buffer_size = 0;

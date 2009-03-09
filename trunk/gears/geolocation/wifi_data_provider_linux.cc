@@ -82,7 +82,7 @@ extern const int kNoChangePollingInterval = 120000;  // 2 mins
 extern const int kTwoNoChangePollingInterval = 600000;  // 10 mins
 
 // Local function
-static bool GetAccessPointData(std::vector<AccessPointData> *access_points);
+static bool GetAccessPointData(WifiData::AccessPointDataSet *access_points);
 
 // static
 template<>
@@ -119,14 +119,13 @@ void LinuxWifiDataProvider::Run() {
     if (GetAccessPointData(&new_data.access_point_data)) {
       bool update_available;
       data_mutex_.Lock();
-      if (update_available = !wifi_data_.Matches(new_data)) {
-        wifi_data_ = new_data;
-        is_first_scan_complete_ = true;
-      }
+      update_available = wifi_data_.DiffersSignificantly(new_data);
+      wifi_data_ = new_data;
+      data_mutex_.Unlock();
       polling_interval =
           UpdatePollingInterval(polling_interval, update_available);
-      data_mutex_.Unlock();
       if (update_available) {
+        is_first_scan_complete_ = true;
         NotifyListeners();
       }
     }
@@ -160,6 +159,8 @@ static void ParseLine(const std::string &line,
                       const std::string &ssid_string,
                       const std::string &signal_strength_string,
                       AccessPointData *access_point_data) {
+  // Currently we get only MAC address, SSID and signal strength.
+  // TODO(steveblock): Work out how to get age, channel and signal-to-noise.
   std::string::size_type index;
   if ((index = line.find(mac_address_string)) != std::string::npos) {
     // MAC address
@@ -219,7 +220,7 @@ bool IssueCommandAndParseResult(const char *command,
                                 const std::string &mac_address_string,
                                 const std::string &ssid_string,
                                 const std::string &signal_strength_string,
-                                std::vector<AccessPointData> *access_points) {
+                                WifiData::AccessPointDataSet *access_points) {
   // Open pipe in read mode.
   FILE *result_pipe = popen(command, "r");
   if (result_pipe == NULL) {
@@ -253,14 +254,14 @@ bool IssueCommandAndParseResult(const char *command,
                      ssid_string,
                      signal_strength_string,
                      &access_point_data);
-    access_points->push_back(access_point_data);
+    access_points->insert(access_point_data);
     start = end;
   }
 
   return !access_points->empty();
 }
 
-static bool GetAccessPointData(std::vector<AccessPointData> *access_points) {
+static bool GetAccessPointData(WifiData::AccessPointDataSet *access_points) {
   return IssueCommandAndParseResult("iwlist scan 2> /dev/null",
                                     "Cell ",
                                     "Address: ",

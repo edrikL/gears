@@ -121,6 +121,12 @@ struct RadioData {
            radio_type == other.radio_type &&
            carrier == other.carrier;
   }
+  // Determines whether a new set of radio data differs significantly from this.
+  bool DiffersSignificantly(const RadioData &other) const {
+    // This is required by MockDeviceDataProviderImpl.
+    // TODO(steveblock): Implement properly.
+    return !Matches(other);
+  }
 
   std::string16 device_id;
   std::vector<CellData> cell_data;
@@ -137,12 +143,6 @@ struct AccessPointData {
         age(kint32min),
         channel(kint32min),
         signal_to_noise(kint32min) {}
-  bool Matches(const AccessPointData &other) const {
-    // Ignore radio_signal_strength, age and signal_to_noise when matching.
-    return mac_address == other.mac_address &&
-           channel == other.channel &&
-           ssid == other.ssid;
-  }
 
   std::string16 mac_address;
   int radio_signal_strength;  // Measured in dBm
@@ -152,25 +152,47 @@ struct AccessPointData {
   std::string16 ssid;   // Network identifier
 };
 
-static bool AccessPointDataMatches(const AccessPointData &data1,
-                                   const AccessPointData &data2) {
-  return data1.Matches(data2);
+// This is to allow AccessPointData to be used in std::set. It must be declared
+// inline to allow it to be used in multiple compilation units without creating
+// multiple definitions.
+template <>
+inline bool std::less<AccessPointData>::operator()(
+    const AccessPointData &data1,
+    const AccessPointData &data2) const {
+  return data1.mac_address < data2.mac_address;
 }
 
 // All data for wifi.
 struct WifiData {
-  bool Matches(const WifiData &other) const {
-    if (access_point_data.size() != other.access_point_data.size()) {
-      return false;
+  // Determines whether a new set of WiFi data differs significantly from this.
+  bool DiffersSignificantly(const WifiData &other) const {
+    // At least 5 or 50% of access points added or removed is significant.
+    static const size_t kMinChangedAccessPoints = 5;
+
+    // Compute size of interesction of old and new sets.
+    size_t num_common = 0;
+    for (AccessPointDataSet::const_iterator iter = access_point_data.begin();
+         iter != access_point_data.end();
+         iter++) {
+      if (other.access_point_data.find(*iter) !=
+          other.access_point_data.end()) {
+        ++num_common;
+      }
     }
-    if (!std::equal(access_point_data.begin(), access_point_data.end(),
-                    other.access_point_data.begin(), AccessPointDataMatches)) {
-      return false;
-    }
-    return true;
+    assert(num_common <= access_point_data.size());
+    assert(num_common <= other.access_point_data.size());
+
+    // Test how many have changed.
+    size_t added_or_removed = std::max(
+        other.access_point_data.size() - num_common,
+        access_point_data.size() - num_common);
+    return added_or_removed >=
+        std::min(kMinChangedAccessPoints, access_point_data.size() / 2);
   }
 
-  std::vector<AccessPointData> access_point_data;
+  // Store access points a set for for quick evaluation of intersection.
+  typedef std::set<AccessPointData> AccessPointDataSet;
+  AccessPointDataSet access_point_data;
 };
 
 template<typename DataType>

@@ -34,6 +34,8 @@
 
 bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
                           AccessPointData *access_point_data) {
+  // Currently we get only MAC address, signal strength and SSID.
+  // TODO(steveblock): Work out how to get age, channel and signal-to-noise.
   assert(access_point_data);
   access_point_data->mac_address = MacAddressAsString16(data.MacAddress);
   access_point_data->radio_signal_strength = data.Rssi;
@@ -41,15 +43,12 @@ bool ConvertToGearsFormat(const NDIS_WLAN_BSSID &data,
   UTF8ToString16(reinterpret_cast<const char*>(data.Ssid.Ssid),
                  data.Ssid.SsidLength,
                  &access_point_data->ssid);
-  // It appears that we can not get the age of the scan. The only way to get
-  // this information would be to perform the scan ourselves, which is not
-  // possible.
   return true;
 }
 
 int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST &bss_id_list,
                          int list_size,
-                         std::vector<AccessPointData> *data) {
+                         WifiData::AccessPointDataSet *data) {
   // Walk through the BSS IDs.
   int found = 0;
   const uint8 *iterator = reinterpret_cast<const uint8*>(&bss_id_list.Bssid[0]);
@@ -65,7 +64,7 @@ int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST &bss_id_list,
     }
     AccessPointData access_point_data;
     if (ConvertToGearsFormat(*bss_id, &access_point_data)) {
-      data->push_back(access_point_data);
+      data->insert(access_point_data);
       ++found;
     }
     // Move to the next BSS ID.

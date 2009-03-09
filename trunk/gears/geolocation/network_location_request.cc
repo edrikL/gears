@@ -506,25 +506,25 @@ static void AddRadioData(const RadioData &radio_data,
 static void AddWifiData(const WifiData &wifi_data, Json::Value *body_object) {
   assert(body_object);
 
+  if (wifi_data.access_point_data.empty()) {
+    return;
+  }
+
   Json::Value wifi_towers;
   assert(wifi_towers.isArray());
-  int num_wifi_towers = static_cast<int>(wifi_data.access_point_data.size());
-  for (int i = 0; i < num_wifi_towers; ++i) {
+  for (WifiData::AccessPointDataSet::const_iterator iter =
+       wifi_data.access_point_data.begin();
+       iter != wifi_data.access_point_data.end();
+       iter++) {
     Json::Value wifi_tower;
     assert(wifi_tower.isObject());
-    AddString("mac_address", wifi_data.access_point_data[i].mac_address,
-              &wifi_tower);
-    AddInteger("signal_strength",
-               wifi_data.access_point_data[i].radio_signal_strength,
-               &wifi_tower);
-    AddInteger("age", wifi_data.access_point_data[i].age, &wifi_tower);
-    AddInteger("channel", wifi_data.access_point_data[i].channel, &wifi_tower);
-    AddInteger("signal_to_noise",
-               wifi_data.access_point_data[i].signal_to_noise, &wifi_tower);
-    AddString("ssid", wifi_data.access_point_data[i].ssid, &wifi_tower);
-    wifi_towers[i] = wifi_tower;
+    AddString("mac_address", iter->mac_address, &wifi_tower);
+    AddInteger("signal_strength", iter->radio_signal_strength, &wifi_tower);
+    AddInteger("age", iter->age, &wifi_tower);
+    AddInteger("channel", iter->channel, &wifi_tower);
+    AddInteger("signal_to_noise", iter->signal_to_noise, &wifi_tower);
+    AddString("ssid", iter->ssid, &wifi_tower);
+    wifi_towers.append(wifi_tower);
   }
-  if (num_wifi_towers > 0) {
-    (*body_object)["wifi_towers"] = wifi_towers;
-  }
+  (*body_object)["wifi_towers"] = wifi_towers;
 }

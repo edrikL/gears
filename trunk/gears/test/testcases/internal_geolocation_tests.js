@@ -331,7 +331,7 @@ function testMockDeviceDataProvider() {
 
     function makeSuccessfulRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: 'good_mac_address'});
+          [{mac_address: 'good_mac_address'}]);
       geolocation.getCurrentPosition(
           successCallback,
           function(error) {
@@ -345,7 +345,7 @@ function testMockDeviceDataProvider() {
 
     function makeUnsuccessfulRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: 'no_location_mac_address'});
+          [{mac_address: 'no_location_mac_address'}]);
       geolocation.getCurrentPosition(
           function(position) {
             assert(false, 'makeUnsuccessfulRequest succeeded: (' +
@@ -357,7 +357,7 @@ function testMockDeviceDataProvider() {
 
     function makeMalformedRequest() {
       internalTests.configureGeolocationWifiDataProviderForTest(
-          {mac_address: '00-00-00-00-00-00'});
+          [{mac_address: '00-00-00-00-00-00'}]);
       internalTests.configureGeolocationRadioDataProviderForTest({cell_id: 88});
       geolocation.getCurrentPosition(
           function(position) {
