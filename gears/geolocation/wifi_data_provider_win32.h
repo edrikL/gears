@@ -50,16 +50,16 @@ class Win32WifiDataProvider
   // Loads the required functions from the DLL.
   void GetWLANFunctions(HINSTANCE wlan_library);
   // Gets wifi data for all visible access points.
-  bool GetAccessPointDataWLAN(std::vector<AccessPointData> *data);
+  bool GetAccessPointDataWLAN(WifiData::AccessPointDataSet *data);
   int GetInterfaceDataWLAN(HANDLE wlan_handle,
                            const GUID &interface_id,
-                           std::vector<AccessPointData> *data);
+                           WifiData::AccessPointDataSet *data);
 
   // NDIS methods.
   bool GetInterfacesNDIS();
-  bool GetAccessPointDataNDIS(std::vector<AccessPointData> *data);
+  bool GetAccessPointDataNDIS(WifiData::AccessPointDataSet *data);
   bool GetInterfaceDataNDIS(HANDLE adapter_handle,
-                            std::vector<AccessPointData> *data);
+                            WifiData::AccessPointDataSet *data);
 
   // Function pointers for WLAN
   WlanOpenHandleFunction WlanOpenHandle_function_;

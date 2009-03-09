@@ -101,14 +101,13 @@ void OsxWifiDataProvider::Run() {
     GetAccessPointData(&new_data.access_point_data);
     bool update_available;
     data_mutex_.Lock();
-    if (update_available = !wifi_data_.Matches(new_data)) {
-      wifi_data_ = new_data;
-      is_first_scan_complete_ = true;
-    }
+    update_available = wifi_data_.DiffersSignificantly(new_data);
+    wifi_data_ = new_data;
+    data_mutex_.Unlock();
     polling_interval =
         UpdatePollingInterval(polling_interval, update_available);
-    data_mutex_.Unlock();
     if (update_available) {
+      is_first_scan_complete_ = true;
       NotifyListeners();
     }
   } while (!stop_event_.WaitWithTimeout(polling_interval));
@@ -119,7 +118,7 @@ void OsxWifiDataProvider::Run() {
 }
 
 void OsxWifiDataProvider::GetAccessPointData(
-    std::vector<AccessPointData> *access_points) {
+    WifiData::AccessPointDataSet *access_points) {
   assert(access_points);
   assert(WirelessScanSplit_function_);
   CFArrayRef managed_access_points = NULL;
@@ -143,6 +142,9 @@ void OsxWifiDataProvider::GetAccessPointData(
         reinterpret_cast<const CFDataRef>(
         CFArrayGetValueAtIndex(managed_access_points, i))));
         
+    // Currently we get only MAC address, signal strength, channel
+    // signal-to-noise and SSID
+    // TODO(steveblock): Work out how to get age.
     AccessPointData access_point_data;
     access_point_data.mac_address =
         MacAddressAsString16(access_point_info->macAddress);

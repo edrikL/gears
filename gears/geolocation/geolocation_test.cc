@@ -120,8 +120,11 @@ class MockDeviceDataProviderImpl
 
   static void SetData(const DataType &new_data) {
     MutexLock lock(&data_mutex_);
+    bool differs = data_.DiffersSignificantly(new_data);
     data_ = new_data;
-    event_.Signal();
+    if (differs) {
+      event_.Signal();
+    }
   }
 
  private:
@@ -312,7 +315,7 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
   access_point_data.channel = 19;
   access_point_data.signal_to_noise = 10;
   access_point_data.ssid = STRING16(L"Test SSID");
-  wifi_data.access_point_data.push_back(access_point_data);
+  wifi_data.access_point_data.insert(access_point_data);
 
   scoped_refptr<BlobInterface> blob;
   if (!NetworkLocationRequest::FormRequestBody(STRING16(L"www.google.com"),
@@ -507,39 +510,50 @@ void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context) {
   assert(context);
 
   // Get the arguments provided from JavaScript. 
-  scoped_ptr<JsObject> object;
+  scoped_ptr<JsArray> js_array;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(object) }
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, as_out_parameter(js_array) }
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) {
     return;
   }
   
-  // Note that we only support providing data for a single access point.
-  AccessPointData access_point_data;
-  // Update the fields of access_point_data, if they have been provided.
-  GetStringPropertyIfDefined(context, object.get(), kMacAddressString,
-                             &access_point_data.mac_address);
-  GetIntegerPropertyIfDefined(context, object.get(), kRadioSignalStrengthString,
-                              &access_point_data.radio_signal_strength);
-  GetIntegerPropertyIfDefined(context, object.get(), kAgeString,
-                              &access_point_data.age);
-  GetIntegerPropertyIfDefined(context, object.get(), kChannelString,
-                              &access_point_data.channel);
-  GetIntegerPropertyIfDefined(context, object.get(), kSignalToNoiseString,
-                              &access_point_data.signal_to_noise);
-  GetStringPropertyIfDefined(context, object.get(), kSsidString,
-                             &access_point_data.ssid);
-
-  // The GetXXXPropertyIfDefined functions set an exception if the property has
-  // the wrong type.
-  if (context->is_exception_set()) {
-    return;
-  }
+  int length = -1;
+  js_array->GetLength(&length);
+  assert(length > -1);
 
   WifiData wifi_data;
-  wifi_data.access_point_data.push_back(access_point_data);
+  for (int i = 0; i < length; ++i) {
+    scoped_ptr<JsObject> object;
+    if (!js_array->GetElementAsObject(i, as_out_parameter(object))) {
+      context->SetException(STRING16(L"Parameter must be array of objects."));
+      return;
+    }
+    AccessPointData access_point_data;
+    // Update the fields of access_point_data, if they have been provided.
+    GetStringPropertyIfDefined(context, object.get(), kMacAddressString,
+                               &access_point_data.mac_address);
+    GetIntegerPropertyIfDefined(context, object.get(),
+                                kRadioSignalStrengthString,
+                                &access_point_data.radio_signal_strength);
+    GetIntegerPropertyIfDefined(context, object.get(), kAgeString,
+                                &access_point_data.age);
+    GetIntegerPropertyIfDefined(context, object.get(), kChannelString,
+                                &access_point_data.channel);
+    GetIntegerPropertyIfDefined(context, object.get(), kSignalToNoiseString,
+                                &access_point_data.signal_to_noise);
+    GetStringPropertyIfDefined(context, object.get(), kSsidString,
+                               &access_point_data.ssid);
+
+    // The GetXXXPropertyIfDefined functions set an exception if the property
+    // has the wrong type.
+    if (context->is_exception_set()) {
+      return;
+    }
+
+    wifi_data.access_point_data.insert(access_point_data);
+  }
 
   MockDeviceDataProviderImpl<WifiData>::SetData(wifi_data);
   WifiDataProvider::SetFactory(MockDeviceDataProviderImpl<WifiData>::Create);
@@ -560,9 +574,9 @@ void GetPositionFromJavaScriptParameter(JsCallContext *context,
     return;
   }
   
-  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"latitude"),
   // The GetXXXPropertyIfDefined functions set an exception if the property has
   // the wrong type.
+  GetDoublePropertyIfDefined(context, object.get(), STRING16(L"latitude"),
                              &position->latitude);
   GetDoublePropertyIfDefined(context, object.get(), STRING16(L"longitude"),
                              &position->longitude);

@@ -168,7 +168,7 @@ class GearsTest : public ModuleImplBaseClass {
   // provider and sets the that the mock provider will provide. Note that
   // we only support data for one access_point. Fields are mac_address,
   // radio_signal_strength, age, channel, signal_to_noise and ssid.
-  // IN: object wifi_data
+  // IN: array of access_point_data objects
   // OUT: nothing
   void ConfigureGeolocationWifiDataProviderForTest(JsCallContext *context);
 

@@ -133,7 +133,7 @@ void Win32WifiDataProvider::Run() {
   // Use the WLAN interface if we're on Vista and if it's available. Otherwise,
   // use NDIS.
   typedef bool (Win32WifiDataProvider::*GetAccessPointDataFunction)(
-      std::vector<AccessPointData> *data);
+      WifiData::AccessPointDataSet *data);
   GetAccessPointDataFunction get_access_point_data_function = NULL;
   if (VistaUtils::IsRunningOnVista() && library) {
     GetWLANFunctions(library);
@@ -157,14 +157,13 @@ void Win32WifiDataProvider::Run() {
     if ((this->*get_access_point_data_function)(&new_data.access_point_data)) {
       bool update_available;
       data_mutex_.Lock();
-      if (update_available = !wifi_data_.Matches(new_data)) {
-        wifi_data_ = new_data;
-        is_first_scan_complete_ = true;
-      }
+      update_available = wifi_data_.DiffersSignificantly(new_data);
+      wifi_data_ = new_data;
+      data_mutex_.Unlock();
       polling_interval =
           UpdatePollingInterval(polling_interval, update_available);
-      data_mutex_.Unlock();
       if (update_available) {
+        is_first_scan_complete_ = true;
         NotifyListeners();
       }
     }
@@ -196,7 +195,7 @@ void Win32WifiDataProvider::GetWLANFunctions(HINSTANCE wlan_library) {
 }
 
 bool Win32WifiDataProvider::GetAccessPointDataWLAN(
-    std::vector<AccessPointData> *data) {
+    WifiData::AccessPointDataSet *data) {
   assert(data);
 
   // Get the handle to the WLAN API.
@@ -245,7 +244,7 @@ bool Win32WifiDataProvider::GetAccessPointDataWLAN(
 int Win32WifiDataProvider::GetInterfaceDataWLAN(
     const HANDLE wlan_handle,
     const GUID &interface_id,
-    std::vector<AccessPointData> *data) {
+    WifiData::AccessPointDataSet *data) {
   assert(data);
   // WlanGetNetworkBssList allocates bss_list.
   WLAN_BSS_LIST *bss_list;
@@ -264,7 +263,7 @@ int Win32WifiDataProvider::GetInterfaceDataWLAN(
     AccessPointData access_point_data;
     if (GetNetworkData(bss_list->wlanBssEntries[i], &access_point_data)) {
       ++found;
-      data->push_back(access_point_data);
+      data->insert(access_point_data);
     }
   }
 
@@ -327,7 +326,7 @@ bool Win32WifiDataProvider::GetInterfacesNDIS() {
 }
 
 bool Win32WifiDataProvider::GetAccessPointDataNDIS(
-    std::vector<AccessPointData> *data) {
+    WifiData::AccessPointDataSet *data) {
   assert(data);
 
   for (int i = 0; i < static_cast<int>(interface_service_names_.size()); ++i) {
@@ -356,7 +355,7 @@ bool Win32WifiDataProvider::GetAccessPointDataNDIS(
 
 bool Win32WifiDataProvider::GetInterfaceDataNDIS(
     HANDLE adapter_handle,
-    std::vector<AccessPointData> *data) {
+    WifiData::AccessPointDataSet *data) {
   assert(data);
 
   BYTE *buffer = reinterpret_cast<BYTE*>(malloc(oid_buffer_size_));
@@ -407,6 +406,7 @@ bool Win32WifiDataProvider::GetInterfaceDataNDIS(
 
 static bool GetNetworkData(const WLAN_BSS_ENTRY &bss_entry,
                            AccessPointData *access_point_data) {
+  // Currently we get only MAC address, signal strength and SSID.
   assert(access_point_data);
   access_point_data->mac_address = MacAddressAsString16(bss_entry.dot11Bssid);
   access_point_data->radio_signal_strength = bss_entry.lRssi;
