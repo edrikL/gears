@@ -152,15 +152,13 @@ struct AccessPointData {
   std::string16 ssid;   // Network identifier
 };
 
-// This is to allow AccessPointData to be used in std::set. It must be declared
-// inline to allow it to be used in multiple compilation units without creating
-// multiple definitions.
-template <>
-inline bool std::less<AccessPointData>::operator()(
-    const AccessPointData &data1,
-    const AccessPointData &data2) const {
-  return data1.mac_address < data2.mac_address;
-}
+// This is to allow AccessPointData to be used in std::set.
+struct AccessPointDataLess : std::less<AccessPointData> {
+  bool operator()(const AccessPointData &data1,
+                  const AccessPointData &data2) const {
+    return data1.mac_address < data2.mac_address;
+  }
+};
 
 // All data for wifi.
 struct WifiData {
@@ -191,7 +189,7 @@ struct WifiData {
   }
 
   // Store access points a set for for quick evaluation of intersection.
-  typedef std::set<AccessPointData> AccessPointDataSet;
+  typedef std::set<AccessPointData, AccessPointDataLess> AccessPointDataSet;
   AccessPointDataSet access_point_data;
 };
 

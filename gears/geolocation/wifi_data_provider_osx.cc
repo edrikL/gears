@@ -161,7 +161,7 @@ void OsxWifiDataProvider::GetAccessPointData(
       access_point_data.ssid = ssid;
     }
 
-    access_points->push_back(access_point_data);
+    access_points->insert(access_point_data);
   }
 }
 
