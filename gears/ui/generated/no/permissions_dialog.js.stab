@@ -6,18 +6,6 @@
 <string id="string-cancel">Avbryt</string>
 <string id="string-never-allow-link">Avvis alltid dette nettstedet</string>
 <string id="string-never-allow-link-wince">Avvis alltid</string>
-<string id="string-description">
-  Gears er en nettleserutvidelse med åpen kildekode som lar nettprogrammer fungere i frakoblet modus ved hjelp av følgende JavaScript API-er:
-</string>
-<string id="string-localserver-desc">
-  Lagre og bruk programressurser lokalt
-</string>
-<string id="string-database-desc">
-  Lagre data lokalt i en fullt søkbar relasjonsdatabase
-</string>
-<string id="string-workerpool-desc">
-  Kjør asynkront JavaScript for å forbedre programmets respons
-</string>
 <string id="string-query-data">
   Nettstedet nedenfor ønsker å bruke Gears til å lagre informasjon om datamaskinen.
 </string>

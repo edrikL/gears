@@ -6,18 +6,6 @@
 <string id="string-cancel">ବାତିଲ୍</string>
 <string id="string-never-allow-link">କେବେ ମଧ୍ୟ ଏହି ସାଇଟ୍‌କୁ ଅନୁମତି କରନ୍ତୁ ନାହିଁ</string>
 <string id="string-never-allow-link-wince">ଏହାକୁ କେବେ ମଧ୍ୟ ଅନୁମତି କରନ୍ତୁ ନାହିଁ</string>
-<string id="string-description">
-  Gears ଏକ ଖୋଲା ଉତ୍ସ ବ୍ରାଉଜର୍ ବିସ୍ତାର , ଯାହା ଅଫଲାଇନ୍ କାର୍ଯ୍ୟକ୍ଷମତା ପ୍ରଦାନ କରିବାକୁ ନିମ୍ନ JavaScript APIs ବ୍ୟବହାର କରି ୱେବ୍ ଅନୁପ୍ରୟୋଗ ସକ୍ଷମ କରେ
-</string>
-<string id="string-localserver-desc">
-  ଅନୁପ୍ରୟୋଗ ଉତ୍ସଗୁଡିକୁ ସ୍ଥାନୀୟ ଭାବରେ ଗଚ୍ଛିତ ଏବଂ ପରିବେଷିତ କରନ୍ତୁ
-</string>
-<string id="string-database-desc">
-  ପୂର୍ଣ୍ଣ-ସନ୍ଧାନ ଯୋଗ୍ୟ ସମ୍ପର୍କିତ ଡାଟାବେସ୍‌‌ରେ ଡାଟା ସ୍ଥାନୀୟ ଭାବରେ ଗଚ୍ଛିତ କରନ୍ତୁ
-</string>
-<string id="string-workerpool-desc">
-  ଅନୁପ୍ରୟୋଗ ଶୀଘ୍ର ପ୍ରତିକ୍ରିୟା କରିବାକୁ ଏକ ଏସିଂକ୍ରୋନିୟସ୍ JavaScript ଚଲାନ୍ତୁ
-</string>
 <string id="string-query-data">
   Gears ବ୍ୟବହାର କରି ନିମ୍ନ ୱେବସାଇଟ୍ ଆପଣଙ୍କ କମ୍ପ୍ୟୁଟରରେ ସୂଚନା ଗଚ୍ଛିତ କରିବାକୁ ଚାହୁଁଛି |
 </string>

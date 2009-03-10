@@ -6,18 +6,6 @@
 <string id="string-cancel">రద్దు చెయ్యి</string>
 <string id="string-never-allow-link">ఈ సైట్‌ను ఎప్పుడూ అనుమతించవద్దు</string>
 <string id="string-never-allow-link-wince">దీనిని ఎప్పుడూ అనుమతించవద్దు</string>
-<string id="string-description">
-  Gears అనేది ఒక ఓపెన్ సోర్స్ బ్రౌజర్ ఎక్స్ టెన్షన్. ఇది ఈ క్రింది JavaScript API లని ఉపయోగించి వెబ్ అప్లికేషన్ల కోసం ఆఫ్లైన్ ఉపయోగాన్ని ఎనేబుల్ చేస్తుంది:
-</string>
-<string id="string-localserver-desc">
-  అప్లికేషన్ రిసోర్సులను స్థానికంగా నిల్వ చేసి, అందించు
-</string>
-<string id="string-database-desc">
-  డేటాను స్థానికంగా శోధించదగిన సంబంధిత డేటాబేస్‌లో నిల్వ చెయ్యండి
-</string>
-<string id="string-workerpool-desc">
-  అప్లికేషన్ ప్రతిస్పందనా స్వభావాన్ని పెంచడానికి అసమకాలీకరించిన జావాస్క్రిప్ట్‌ను రన్ చెయ్యండి
-</string>
 <string id="string-query-data">
   Gears ఉపయోగించి ఈ క్రింది నున్న వెబ్సైట్ మీ  కంప్యుటర్లో సమాచారాన్ని నిల్వ చెయ్యలనుకుంటుంది.
 </string>

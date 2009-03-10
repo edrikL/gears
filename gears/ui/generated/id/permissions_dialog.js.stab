@@ -6,18 +6,6 @@
 <string id="string-cancel">Batalkan</string>
 <string id="string-never-allow-link">Jangan pernah izinkan situs ini</string>
 <string id="string-never-allow-link-wince">Jangan pernah mengizinkannya</string>
-<string id="string-description">
-  Gears adalah ekstensi browser open source yang memungkinkan aplikasi web untuk menyediakan fungsionalitas offline dengan menggunakan JavaScript API:
-</string>
-<string id="string-localserver-desc">
-  Menyimpan dan menggunakan sumber daya aplikasi secara lokal
-</string>
-<string id="string-database-desc">
-  Menyimpan data secara lokal pada basis data relasional yang dapat cari
-</string>
-<string id="string-workerpool-desc">
-  Menjalankan JavaScript asinkron untuk meningkatkan respons aplikasi
-</string>
 <string id="string-query-data">
   Website berikut ingin menyimpan informasi di komputer Anda dengan menggunakan Gears.
 </string>

@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Internet Explorer కోసం Gears యొక్క ఒక క్రొత్త వెర్షన్ అందుబాటులో ఉంది. ఇన్‌స్టాలేషన్ కోసం Internet Explorer పునఃప్రారంభం కావాల్సిన అవసరం ఉంది. ఇప్పుడు మీరు దీన్ని ఇన్‌స్టాల్  చెయ్యదలిచారా?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears – ఇన్‌స్టాల్ అవుతోంది</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Gears యొక్క క్రొత్త వెర్షన్ ఇన్‌స్టాలేషన్ విఫలమైంది. Gears తర్వాత మళ్ళీ ప్రయత్నిస్తుంది.</string>
+<string id="IDS_REBOOT_MESSAGE">Gears సరిగ్గా పనిచెయ్యాలంటే, మీరు ఈ ఇన్‌స్టాలేషన్ పూర్తయిన తర్వాత ఒకసారి మీ పరికరాన్ని పునఃప్రారంభించాలి.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Internet Explorerను ప్రారంభించడంలో Gears విఫలమైంది. దయచేసి దీన్ని మాన్యువల్‌గా ప్రారంభించండి.</string>
+
+
+

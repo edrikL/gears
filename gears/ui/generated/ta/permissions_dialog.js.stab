@@ -6,18 +6,6 @@
 <string id="string-cancel">ரத்துசெய்</string>
 <string id="string-never-allow-link">இந்த தளத்தை எப்போதும் அனுமதிக்காதே</string>
 <string id="string-never-allow-link-wince">எப்போதும் அனுமதிக்காதே</string>
-<string id="string-description">
-  Gears ஒரு ஓப்பன் சோர்ஸ் உலாவி விரிவாக்கல், பின்வரும் JavaScript APIகளைப் பயன்படுத்தி ஆஃப்லைனில் வலை பயன்பாடுகளை அணுக உதவுகிறது:
-</string>
-<string id="string-localserver-desc">
-  பயன்பாட்டின் ஆதாரங்களை உங்கள் கணினியில் சேமிக்கவும் மற்றும் வழங்கவும்
-</string>
-<string id="string-database-desc">
-  தரவுகளை உங்கள் கணினியிலேயே, முழுமையாகத் தேடப்படக்கூடிய, ரிலேஷனல் டேடாபேஸில் சேமிக்கவும்
-</string>
-<string id="string-workerpool-desc">
-  பயன்பாட்டின் செயல்திறனை மேம்படுத்த ஒத்திசையாத JavaScript ஐ இயக்கவும்.
-</string>
 <string id="string-query-data">
   கீழே உள்ள வலைத்தளம் Gears ஐப் பயன்படுத்தி உங்கள் கணினியில் தகவலைச் சேமிக்க நினைக்கிறது.
 </string>

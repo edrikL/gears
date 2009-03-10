@@ -6,18 +6,6 @@
 <string id="string-cancel">Atcelt</string>
 <string id="string-never-allow-link">Nekad neļaut piekļūt šai vietnei</string>
 <string id="string-never-allow-link-wince">Nekad to neatļaut</string>
-<string id="string-description">
-  Gears ir atklāta pirmkoda pārlūkprogramma, ar kuru tīmekļa lietojumprogrammas nodrošina funkcionalitāti bezsaistē, izmantojot šādas JavaScript API:
-</string>
-<string id="string-localserver-desc">
-  Lietojumprogrammu resursu saglabāšana un apkalpošana lokāli
-</string>
-<string id="string-database-desc">
-  Datu glabāšana lokāli pilnībā pārmeklējamā relāciju datu bāzē
-</string>
-<string id="string-workerpool-desc">
-  Palaidiet asinhrono JavaScript, lai uzlabotu lietojumprogrammas atbildēšanas iespējas
-</string>
 <string id="string-query-data">
   Tālāk minētā vietne vēlas saglabāt informāciju par jūsu datoru, lietojot Gears.
 </string>
@@ -28,6 +16,6 @@
   Izlasiet vietnes konfidencialitātes politiku, lai redzētu, kā tiks izmantota jūsu atrašanās vieta.
 </string>
 <string id="string-trust-site">
-  Es uzticos šai vietnei. Atļaujiet tai lietot Gears.
+  Es uzticos šai vietnei. Atļaut tai lietot Gears.
 </string>
 <string id="string-trust-site-accesskey">t</string>

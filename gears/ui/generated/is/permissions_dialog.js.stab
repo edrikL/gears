@@ -6,18 +6,6 @@
 <string id="string-cancel">Hætta við</string>
 <string id="string-never-allow-link">Aldrei leyfa þetta svæði</string>
 <string id="string-never-allow-link-wince">Aldrei leyfa það</string>
-<string id="string-description">
-  Gears er vafraviðbót með opnum kóða sem gerir vefforritum kleift að vinna án nettengingar með eftirfarandi JavaScript forritaskilum:
-</string>
-<string id="string-localserver-desc">
-  Geyma og vinna staðbundið með tilföng fyrir forrit
-</string>
-<string id="string-database-desc">
-  Geyma gögn staðbundið í töflugagnagrunni sem hægt er að leita í
-</string>
-<string id="string-workerpool-desc">
-  Keyra ósamstillt JavaScript til að bæta svörun forrits
-</string>
 <string id="string-query-data">
   Vefsvæðið hér fyrir neðan vill fá aðgang að upplýsingum um tölvuna þína með því að nota Gears.
 </string>
@@ -25,7 +13,7 @@
   Vefsvæðið hér fyrir neðan vill fá aðgang að upplýsingum um staðsetninguna þína með því að nota Gears.
 </string>
 <string id="string-location-privacy-statement">
-  Lestu persónuverndarstefnu svæðisins til þess að sjá hvernig staðsetningin þín verður notuð.
+  Lestu persónuverndarstefnu svæðisins til þess að sjá hvernig upplýsingar um staðsetningu verða notaðar.
 </string>
 <string id="string-trust-site">
   Ég treysti þessu vefsvæði. Það má nota Gears.

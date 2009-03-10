@@ -6,18 +6,6 @@
 <string id="string-cancel">Ikansela</string>
 <string id="string-never-allow-link">Huwag kailanman payagan ang site na ito</string>
 <string id="string-never-allow-link-wince">Huwag kailanman ito papayagan</string>
-<string id="string-description">
-  Ang mga Gear ay isang open source browser extension na pinagana ng mga web application ng offline na pagpapaandar gamit ang sumusunod na Mga JavaScript API:
-</string>
-<string id="string-localserver-desc">
-  Mag-imbak at maghatid nang lokal ng mga mapagkukunan ng application
-</string>
-<string id="string-database-desc">
-  I-imbak ang data nang lokal sa isang ganap na mahahanapan na relational database
-</string>
-<string id="string-workerpool-desc">
-  Magpatakbo ng hindi magkakasabay na JavaScript upang mapagbuti ang kakayahang tumugon ng application
-</string>
 <string id="string-query-data">
   Nais lagyan ng impormasyon ang website sa ibaba sa iyong computer gamit ang Mga Gear.
 </string>

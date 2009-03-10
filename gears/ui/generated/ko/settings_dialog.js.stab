@@ -1,7 +1,7 @@
 <string id="string-cancel">취소</string>
-<string id="string-cancel-accesskey">C</string>
+<string id="string-cancel-accesskey">취소</string>
 <string id="string-apply">적용</string>
-<string id="string-apply-accesskey">A</string>
+<string id="string-apply-accesskey">허용</string>
 <string id="string-nosites">사이트가 없습니다.</string>
 <string id="string-allowed">허용</string>
 <string id="string-denied">거부됨</string>

@@ -6,26 +6,14 @@
 <string id="string-cancel">Annuler</string>
 <string id="string-never-allow-link">Ne jamais autoriser ce site</string>
 <string id="string-never-allow-link-wince">Ne jamais l'autoriser</string>
-<string id="string-description">
-  Google Gears est une extension open source de navigateur qui permet aux applications Web de fournir des services hors ligne, grâce aux API JavaScript suivantes :
-</string>
-<string id="string-localserver-desc">
-  Stocker et distribuer localement des ressources de l'application
-</string>
-<string id="string-database-desc">
-  Enregistrer des données localement dans une base de données relationnelle avec une fonction de recherche
-</string>
-<string id="string-workerpool-desc">
-  Exécuter JavaScript asynchrone pour améliorer le temps de réponse de l'application
-</string>
 <string id="string-query-data">
   Le site Web ci-dessous souhaite stocker des informations sur votre ordinateur à l'aide de Google Gears.
 </string>
 <string id="string-query-location">
-  Le site Web ci-dessous souhaite accéder aux informations sur votre emplacement à l'aide de Google Gears.
+  Le site Web ci-dessous souhaite accéder à vos données géographiques à l'aide de Google Gears.
 </string>
 <string id="string-location-privacy-statement">
-  Lisez la politique de confidentialité du site pour savoir comment votre emplacement va être utilisé.
+  Lisez la politique de confidentialité du site pour savoir comment vos données géographiques seront utilisées.
 </string>
 <string id="string-trust-site">
   J'ai confiance en ce site. L'autoriser à utiliser Google Gears.

@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Налице е нова версия на Gears за Internet Explorer. Инсталацията изисква Internet Explorer да бъде рестартиран. Искате ли да инсталирате новата версия сега?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - инсталиране</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Инсталацията на новата версия на Gears не бе успешна. Gears ще направи повторен опит по-късно.</string>
+<string id="IDS_REBOOT_MESSAGE">За да може Gears да функционира правилно, трябва да рестартирате устройството си, след като инсталацията завърши.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears не успя да стартира Internet Explorer. Моля, стартирайте го ръчно.</string>
+
+
+

@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Phiên bản Gears mới dành cho Internet Explorer hiện đã có. Quá trình cài đặt yêu cầu Internet Explorer phải khởi động lại. Bạn có muốn cài đặt phiên bản mới bây giờ không?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - Đang cài đặt</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Cài đặt phiên bản Gears mới không thành công. Gears sẽ thử lại sau.</string>
+<string id="IDS_REBOOT_MESSAGE">Để Gears hoạt động chính xác, bạn phải khởi động lại thiết bị của mình khi quá trình cài đặt này hoàn tất.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears không thể khởi động Internet Explorer. Hãy khởi động theo cách thủ công.</string>
+
+
+

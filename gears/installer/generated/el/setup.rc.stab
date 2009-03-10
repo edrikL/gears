@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Μια νέα έκδοση του Gears για τον Internet Explorer είναι διαθέσιμη. Η εγκατάσταση απαιτεί την επανεκκίνηση του Internet Explorer. Θέλετε να το εγκαταστήσετε τώρα;</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - Εγκατάσταση</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Η εγκατάσταση της νέας έκδοσης του Gears έχει αποτύχει. Το Gears θα προσπαθήσει ξανά αργότερα.</string>
+<string id="IDS_REBOOT_MESSAGE">Για να λειτουργήσει σωστά το Gears, πρέπει να γίνει επανεκκίνηση του υπολογιστή σας όταν ολοκληρωθεί η εγκατάσταση.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Το Gears δεν κατάφερε να ανοίξει τον Internet Explorer. Ανοίξτε τον μη αυτόματα.</string>
+
+
+

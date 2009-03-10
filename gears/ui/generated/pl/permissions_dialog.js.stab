@@ -6,18 +6,6 @@
 <string id="string-cancel">Anuluj</string>
 <string id="string-never-allow-link">Nigdy nie zezwalaj na tę witrynę</string>
 <string id="string-never-allow-link-wince">Nigdy nie zezwalaj</string>
-<string id="string-description">
-  Wtyczka Gears to rozszerzenie przeglądarki typu open source, które umożliwia aplikacjom internetowym funkcjonowanie w trybie offline przy użyciu następujących interfejsów API języka JavaScript:
-</string>
-<string id="string-localserver-desc">
-  Przechowuj zasoby aplikacji i obsługuj je lokalnie
-</string>
-<string id="string-database-desc">
-  Przechowuj dane lokalnie w relacyjnej bazie danych z możliwością pełnego przeszukiwania
-</string>
-<string id="string-workerpool-desc">
-  Uruchom asynchroniczny skrypt JavaScript, aby usprawnić działanie aplikacji
-</string>
 <string id="string-query-data">
   Poniższa witryna internetowa chce przechowywać informacje na Twoim komputerze za pośrednictwem wtyczki Gears.
 </string>

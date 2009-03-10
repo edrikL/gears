@@ -13,6 +13,6 @@
 <string id="string-never-allow">Tillåt aldrig den här genvägen</string>
 <string id="string-never-allow-wince">Tillåt aldrig</string>
 <string id="string-location-query">Skapa genvägar på följande platser:</string>
-<string id="string-desktop">Skrivbord</string>
-<string id="string-startmenu">Start-meny</string>
+<string id="string-desktop">Skrivbordet</string>
+<string id="string-startmenu">Start-menyn</string>
 <string id="string-quicklaunch">Fältet Snabbstart</string>

@@ -6,18 +6,6 @@
 <string id="string-cancel">Anulaţi</string>
 <string id="string-never-allow-link">Nu permiteţi niciodată acest site</string>
 <string id="string-never-allow-link-wince">Nu permiteţi niciodată</string>
-<string id="string-description">
-  Gears este o extensie de browser cu sursă liberă care permite aplicaţiilor Web să ofere funcţionalitate offline, utilizând următoarele API-uri JavaScript:
-</string>
-<string id="string-localserver-desc">
-  Stocaţi şi livraţi local resurse ale aplicaţiei
-</string>
-<string id="string-database-desc">
-  Stocaţi date local într-o bază de date relaţională în care se pot efectua căutări complete
-</string>
-<string id="string-workerpool-desc">
-  Rulaţi JavaScript asincron, pentru a îmbunătăţi viteza de răspuns a aplicaţiei
-</string>
 <string id="string-query-data">
   Site-ul Web de mai jos doreşte să salveze informaţii pe computerul dvs. utilizând Gears.
 </string>

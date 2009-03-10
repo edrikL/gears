@@ -6,18 +6,6 @@
 <string id="string-cancel">Cancelar</string>
 <string id="string-never-allow-link">Nunca permitir este site</string>
 <string id="string-never-allow-link-wince">Nunca permitir</string>
-<string id="string-description">
-  O Gears é uma extensão de browser de software livre que permite às aplicações Web fornecerem a funcionalidade off-line através da utilização das seguintes APIs de JavaScript:
-</string>
-<string id="string-localserver-desc">
-  Armazenar e servir localmente recursos da aplicação
-</string>
-<string id="string-database-desc">
-  Armazenar dados localmente numa base de dados relacional totalmente pesquisável
-</string>
-<string id="string-workerpool-desc">
-  Executar Javascript assíncrono para melhorar a capacidade de resposta das aplicações
-</string>
 <string id="string-query-data">
   O Web site abaixo deseja armazenar informação no seu computador através do Gears.
 </string>

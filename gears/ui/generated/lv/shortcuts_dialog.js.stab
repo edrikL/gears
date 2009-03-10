@@ -3,10 +3,60 @@
 <string id="string-header-desktop">Šī vietne vēlas izveidot datorā saīsni. Vai vēlaties to atļaut?</string>
 <string id="string-header-wince">Šī vietne jūsu programmu sarakstā gatavojas izveidot īsceļu. Vai atļausit?</string>
 <string id="string-ok">Labi</string>
-<string id="string-ok-accesskey">O</string>
+<string id="string-ok-accesskey">L</string>
 <string id="string-cancel">Atcelt</string>
-<string id="string-cancel-accesskey">C</string>
-<string id="string-yes">Jā</string>
+<string id="string-cancel-accesskey">A</string>
+<string id="string-yes">Jā
+
+
+
+
+
+Atcelt
+
+
+
+
+J
+
+
+
+
+
+
+N
+
+
+
+
+
+
+Lietot
+
+
+
+
+
+L
+
+
+
+
+Nē
+
+
+
+
+
+A
+
+
+
+Labi
+
+
+
+A</string>
 <string id="string-yes-accesskey">Jā</string>
 <string id="string-no">Nē</string>
 <string id="string-no-accesskey">Nē</string>

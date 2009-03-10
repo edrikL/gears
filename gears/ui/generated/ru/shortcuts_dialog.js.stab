@@ -5,11 +5,11 @@
 <string id="string-ok">ОК</string>
 <string id="string-ok-accesskey">O</string>
 <string id="string-cancel">Отмена</string>
-<string id="string-cancel-accesskey">C</string>
+<string id="string-cancel-accesskey">т</string>
 <string id="string-yes">Да</string>
-<string id="string-yes-accesskey">Y</string>
+<string id="string-yes-accesskey">а</string>
 <string id="string-no">Нет</string>
-<string id="string-no-accesskey">N</string>
+<string id="string-no-accesskey">Н</string>
 <string id="string-never-allow">Никогда не разрешать создание этого ярлыка</string>
 <string id="string-never-allow-wince">Никогда</string>
 <string id="string-location-query">Создать ярлыки со следующим размещением:</string>

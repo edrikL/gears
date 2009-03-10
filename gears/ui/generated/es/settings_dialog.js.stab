@@ -3,12 +3,12 @@
 <string id="string-apply">Aplicar</string>
 <string id="string-apply-accesskey">P</string>
 <string id="string-nosites">No hay sitios.</string>
-<string id="string-allowed">Permitido</string>
-<string id="string-denied">Denegado</string>
+<string id="string-allowed">Sí</string>
+<string id="string-denied">No</string>
 <string id="string-local-storage">Almacenamiento local</string>
 <string id="string-location-data">Ubicación</string>
-<string id="string-gears-settings">Configuración Gears</string>
+<string id="string-gears-settings">Configuración de Gears</string>
 <string id="string-permissions-description">La siguiente tabla muestra las autorizaciones que has concedido a cada sitio en el que has intentado usar Gears.</string>
-<string id="string-version">Versión Gears PRODUCT_VERSION</string>
-<string id="string-html-title">Configuración Gears</string>
+<string id="string-version">Versión de Gears PRODUCT_VERSION</string>
+<string id="string-html-title">Configuración de Gears</string>
 <string id="string-remove">Quitar</string>

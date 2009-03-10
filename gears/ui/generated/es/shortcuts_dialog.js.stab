@@ -14,5 +14,5 @@
 <string id="string-never-allow-wince">No permitir nunca</string>
 <string id="string-location-query">Crear accesos directos en las siguientes ubicaciones:</string>
 <string id="string-desktop">Escritorio</string>
-<string id="string-startmenu">Menú Inicio</string>
-<string id="string-quicklaunch">Barra de inicio rápida</string>
+<string id="string-startmenu">Menú “Inicio”</string>
+<string id="string-quicklaunch">Barra de inicio rápido</string>
