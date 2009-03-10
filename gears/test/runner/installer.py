@@ -371,8 +371,8 @@ class ChromiumWin32Installer(BaseWin32Installer):
   """
 
   CHROMIUM_PROFILE_PATH = r'Chromium\User Data\Default\Plugin Data'
-  GEARS_DBG_PATH = r'src\gears\Hammer\dbg\obj\gears\win32-i386-dbg\npapi'
-  GEARS_OPT_PATH = r'src\gears\Hammer\opt\obj\gears\win32-i386-dbg\npapi'
+  GEARS_DBG_PATH = r'src\gears\bin-dbg\win32-i386\npapi'
+  GEARS_OPT_PATH = r'src\gears\bin-opt\win32-i386\npapi'
   CHROMIUM_BIN_PATH = r'src\chrome'
 
   def __init__(self, mode='Debug'):
