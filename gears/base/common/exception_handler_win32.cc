@@ -199,6 +199,7 @@ bool ExceptionManager::ReportAndContinue() {
     return false;
   }
 
+#ifdef DEBUG
   // Pass parameters to WriteMinidump so the reported call stack ends here,
   // instead of including all frames down to where the dump file gets written.
   //
@@ -219,4 +220,10 @@ bool ExceptionManager::ReportAndContinue() {
     // We have nothing more to do, so just continue normally.
   }
   return retval;
+#else
+  // Disabled for opt builds to reduce spamming the crash reporting system
+  // with these reports which can interfere with reporting of real crashes
+  // due to throttling.
+  return false;
+#endif
 }
