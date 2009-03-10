@@ -24,12 +24,14 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
+#include <time.h>
 
 #include "gears/httprequest/httprequest.h"
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
@@ -79,6 +81,120 @@ static const char16* kDisallowedMethods[] = {
       STRING16(L"CONNECT"),
       STRING16(L"TRACE"),
       STRING16(L"TRACK") };
+
+static const char *kDebugLogEnvVarName = "GEARS_HTTPREQUEST_LOGFILE";
+static const char *kDebugBodyEnvVarName = "GEARS_HTTPREQUEST_LOG_BODY";
+
+
+class HttpRequestLog {
+ public:
+  static void LogStart(HttpRequest *request) {
+    http_request_log_.LogStartInternal(request);
+  }
+  static void LogResponse(HttpRequest *request) {
+    http_request_log_.LogResponseInternal(request);
+  }
+
+ private:
+  HttpRequestLog() : logfile_(NULL), initialized_(false), log_body_(false) {}
+
+  ~HttpRequestLog() {
+    if (logfile_) {
+      fclose(logfile_);
+    }
+  }
+
+  void Initialize() {
+    if (!initialized_) {
+      const char *filename = getenv(kDebugLogEnvVarName);
+      if (filename) {
+        logfile_ = fopen(filename, "a");
+      }
+      log_body_ = (getenv(kDebugBodyEnvVarName) != NULL);
+      initialized_ = true;
+    }
+  }
+
+  void LogStartInternal(HttpRequest *request) {
+    MutexLock lock(&mutex_);
+    Initialize();
+
+    if (logfile_) {
+      return;
+    }
+
+    time_t now;
+    time(&now);
+    std::string now_str(ctime(&now));
+    now_str.replace(now_str.rfind('\n'), 1, "");
+
+    std::string16 log_message = STRING16(L"HttpRequestStart:");
+
+    std::string16 initial_url;
+    if (request->GetInitialUrl(&initial_url)) {
+      log_message += STRING16(L" InitialUrl=");
+      log_message += initial_url;
+    }
+
+    fwprintf(logfile_, STRING16(L"%S %s\n"), now_str.c_str(),
+             log_message.c_str());
+  }
+
+  void LogResponseInternal(HttpRequest *request) {
+    MutexLock lock(&mutex_);
+    Initialize();
+
+    if (!logfile_) {
+      return;
+    }
+
+    time_t now;
+    time(&now);
+    std::string now_str(ctime(&now));
+    now_str.replace(now_str.rfind('\n'), 1, "");
+
+    std::string16 log_message = STRING16(L"HttpRequestResponse:");
+    int status;
+    if (request->GetStatus(&status)) {
+      log_message += STRING16(L" Status=");
+      log_message += IntegerToString16(status);
+    }
+
+    std::string16 final_url;
+    if (request->GetFinalUrl(&final_url)) {
+      log_message += STRING16(L" FinalUrl=");
+      log_message += final_url;
+    }
+
+    std::string16 AllResponseHeaders;
+    if (request->GetAllResponseHeaders(&AllResponseHeaders)) {
+      log_message += STRING16(L" Headers=");
+      log_message += AllResponseHeaders;
+    }
+
+    fwprintf(logfile_, STRING16(L"%S %s\n"), now_str.c_str(),
+             log_message.c_str());
+    if (log_body_) {
+      scoped_refptr<BlobInterface> blob;
+      if (request->GetResponseBody(&blob)) {
+        std::string16 text;
+        if (BlobToString16(blob.get(), request->GetResponseCharset(),
+                           &text)) {
+          fwprintf(logfile_, STRING16(L"%S ResponseBody:\n%s\n"),
+                   now_str.c_str(), text.c_str());
+        }
+      }
+    }
+  }
+
+  FILE *logfile_;
+  bool initialized_;
+  bool log_body_;
+  Mutex mutex_;
+
+  static HttpRequestLog http_request_log_;
+};
+HttpRequestLog HttpRequestLog::http_request_log_;
 
 static bool IsValidHeader(const std::string16 &header) {
   if (!IsValidHttpToken(header)) {
@@ -312,6 +428,9 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     }
     static_cast<GearsBlob*>(post_data_module)->GetContents(&blob);
   }
+
+  HttpRequestLog::LogStart(request_.get());
+
   bool ok = request_->Send(blob.get());
 
   if (!ok) {
@@ -703,6 +822,8 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
     if (upload_.get()) {
       upload_->ResetOnProgressHandler();
     }
+
+    HttpRequestLog::LogResponse(request_.get());
   }
   JsRootedCallback *handler = is_complete
       ? onreadystatechangehandler_.release()
