@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Szinkron</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">A Szinkron új verziója elérhető az Internet Explorer programhoz. Telepítéséhez az Internet Explorert újra kell indítani. Telepíti most az új verziót?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Szinkron - telepítés</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Nem sikerült a Szinkron új verziójának telepítése. A program később újabb kísérletet tesz.</string>
+<string id="IDS_REBOOT_MESSAGE">A Szinkron megfelelő működéséhez a telepítés után újra kell indítania az eszközt.</string>
+<string id="IDS_START_FAILURE_MESSAGE">A Szinkron nem tudta elindítani az Internet Explorert. Indítsa el manuálisan.</string>
+
+
+

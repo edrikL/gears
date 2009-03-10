@@ -6,18 +6,6 @@
 <string id="string-cancel">إلغاء</string>
 <string id="string-never-allow-link">عدم السماح لهذا الموقع مطلقًا</string>
 <string id="string-never-allow-link-wince">عدم السماح بـ Gears مطلقًا</string>
-<string id="string-description">
-  Gears هو ملحق متصفح مفتوح المصدر يتيح لتطبيقات الويب إمكانية القيام بوظائفها في حالة عدم الاتصال باستخدام واجهات برمجة التطبيقات (API) التالية المعدة باستخدام جافا سكريبت:
-</string>
-<string id="string-localserver-desc">
-  تخزين موارد التطبيقات وإتاحتها محليًا
-</string>
-<string id="string-database-desc">
-  تخزين البيانات محليًا في قاعدة بيانات ارتباطية قابلة للبحث بشكل كامل
-</string>
-<string id="string-workerpool-desc">
-  تشغيل جافا سكريبت غير متزامنة لتحسين سرعة استجابة التطبيقات
-</string>
 <string id="string-query-data">
   يرغب موقع الويب أدناه في تخزين معلومات على موقعك باستخدام Gears.
 </string>

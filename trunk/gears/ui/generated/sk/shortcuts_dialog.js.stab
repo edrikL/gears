@@ -3,11 +3,11 @@
 <string id="string-header-desktop">Táto webová lokalita chce vytvoriť odkaz v počítači. Chcete to povoliť?</string>
 <string id="string-header-wince">Táto webová lokalita chce vytvoriť odkaz v zozname programov. Chcete to povoliť?</string>
 <string id="string-ok">OK</string>
-<string id="string-ok-accesskey">K</string>
+<string id="string-ok-accesskey">O</string>
 <string id="string-cancel">Zrušiť</string>
-<string id="string-cancel-accesskey">R</string>
+<string id="string-cancel-accesskey">Z</string>
 <string id="string-yes">Áno</string>
-<string id="string-yes-accesskey">O</string>
+<string id="string-yes-accesskey">A</string>
 <string id="string-no">Nie</string>
 <string id="string-no-accesskey">N</string>
 <string id="string-never-allow">Nikdy nepovoliť tento odkaz</string>

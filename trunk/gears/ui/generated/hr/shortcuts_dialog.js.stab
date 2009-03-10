@@ -3,9 +3,9 @@
 <string id="string-header-desktop">Ova web-lokacija želi stvoriti prečac na Vašem računalu. Dopuštate li taj postupak?</string>
 <string id="string-header-wince">Ova web-lokacija želi stvoriti prečac na Vašem popisu programa. Dopuštate li taj postupak?</string>
 <string id="string-ok">U redu</string>
-<string id="string-ok-accesskey">K</string>
+<string id="string-ok-accesskey">U</string>
 <string id="string-cancel">Odustani</string>
-<string id="string-cancel-accesskey">C</string>
+<string id="string-cancel-accesskey">O</string>
 <string id="string-yes">Da</string>
 <string id="string-yes-accesskey">D</string>
 <string id="string-no">Ne</string>

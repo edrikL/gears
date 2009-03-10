@@ -6,18 +6,6 @@
 <string id="string-cancel">İptal</string>
 <string id="string-never-allow-link">Bu siteye asla izin verme</string>
 <string id="string-never-allow-link-wince">Asla izin verme</string>
-<string id="string-description">
-  Gears, web uygulamalarının aşağıdaki JavaScript API'larını kullanarak çevrimdışı çalışmasına olanak tanıyan açık kaynaklı bir tarayıcı uzantısıdır:
-</string>
-<string id="string-localserver-desc">
-  Uygulama kaynaklarını yerel olarak saklar ve sunar
-</string>
-<string id="string-database-desc">
-  Verileri tamamen aratılabilir ilişkisel veritabanında yerel olarak sakla
-</string>
-<string id="string-workerpool-desc">
-  Uygulamanın daha iyi yanıt vermesi için asenkron olarak Javascript yürütür
-</string>
 <string id="string-query-data">
   Aşağıdaki web sitesi Gears'ı kullanarak bilgisayarınızda bilgi depolamak istiyor.
 </string>

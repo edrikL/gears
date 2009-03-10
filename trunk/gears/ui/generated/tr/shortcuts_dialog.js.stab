@@ -5,14 +5,14 @@
 <string id="string-ok">Tamam</string>
 <string id="string-ok-accesskey">T</string>
 <string id="string-cancel">İptal</string>
-<string id="string-cancel-accesskey">a</string>
+<string id="string-cancel-accesskey">İ</string>
 <string id="string-yes">Evet</string>
 <string id="string-yes-accesskey">E</string>
 <string id="string-no">Hayır</string>
 <string id="string-no-accesskey">H</string>
 <string id="string-never-allow">Bu kısayola asla izin verme</string>
 <string id="string-never-allow-wince">Asla izin verme</string>
-<string id="string-location-query">Kısayolları aşağıdaki konumlarda oluştur:</string>
+<string id="string-location-query">Aşağıdaki konumlarda kısayol oluştur:</string>
 <string id="string-desktop">Masaüstü</string>
 <string id="string-startmenu">Başlat menüsü</string>
 <string id="string-quicklaunch">Hızlı başlat çubuğu</string>

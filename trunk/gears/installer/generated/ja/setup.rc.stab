@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Internet Explorer 版 Gears の新しいバージョンをご利用いただけます。インストールするには Internet Explorer を再起動する必要があります。今すぐインストールしますか？</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - インストール中</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Gears の新しいバージョンのインストールに失敗しました。後で再試行します。</string>
+<string id="IDS_REBOOT_MESSAGE">Gears を正しく機能させるには、インストール完了後にデバイスを再起動してください。</string>
+<string id="IDS_START_FAILURE_MESSAGE">Internet Explorer を起動できませんでした。手動で起動してください。</string>
+
+
+

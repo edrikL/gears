@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Doplnok Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">K dispozícii je nová verzia doplnku Gears pre program Internet Explorer. Inštalácia vyžaduje reštartovanie programu Internet Explorer. Chcete tento doplnok nainštalovať teraz?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Doplnok Gears – Inštalácia</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Inštalácia novej verzie doplnku Gears zlyhala. Doplnok Gears sa pokúsi zopakovať operáciu neskôr.</string>
+<string id="IDS_REBOOT_MESSAGE">Aby mohol doplnok Gears správne fungovať, po dokončení tejto inštalácie musíte reštartovať svoje zariadenie.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Doplnku Gears sa nepodarilo spustiť program Internet Explorer. Spustite ho manuálne.</string>
+
+
+

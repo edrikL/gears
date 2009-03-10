@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Internet Explorer के लिए Gears का एक नया संस्करण उपलब्ध है. स्थापना के लिए आवश्यक है कि Internet Explorer को पुन: आरंभ किया जाए. क्या आप अभी स्थापित करना चाहेंगे?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - स्थापित हो रहा है</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Gears के नए संस्करण की स्थापना विफल रही. Gears बाद में फिर से प्रयास करेगा.</string>
+<string id="IDS_REBOOT_MESSAGE">Gears  सही से काम करे, इसके लिए इस स्थापना के पूर्ण होने पर आपको अपने डिवाइस को पुन: आरंभ करना होगा.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears Internet Explorer प्रारंभ करने में विफल रहा. कृपया उसे मैन्युअल रूप से प्रारंभ करें.</string>
+
+
+

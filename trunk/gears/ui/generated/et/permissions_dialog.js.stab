@@ -6,18 +6,6 @@
 <string id="string-cancel">Tühista</string>
 <string id="string-never-allow-link">Ära luba seda saiti kunagi</string>
 <string id="string-never-allow-link-wince">Ära luba seda kunagi</string>
-<string id="string-description">
-  Gears on avatud lähtekoodiga brauserilaiendus, mis võimaldab veebirakendustel võrguühenduseta töötada, kasutades järgmisi JavaScripti rakendusliideseid:
-</string>
-<string id="string-localserver-desc">
-  Salvestage ja kasutage rakenduse vahendeid lokaalselt
-</string>
-<string id="string-database-desc">
-  Salvestage andmed lokaalselt otsingu täisfunktsiooniga relatsioonandmebaasi
-</string>
-<string id="string-workerpool-desc">
-  Käivita asünkroonne JavaScript, et rakenduse töö kiirust parandada
-</string>
 <string id="string-query-data">
   Alljärgnev veebisait soovib Gearsi kasutades salvestada teavet teie arvutisse.
 </string>

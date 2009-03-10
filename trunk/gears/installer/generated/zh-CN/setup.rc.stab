@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">现有适用于 Internet Explorer 的新版 Gears 可供使用。本安装需要重新启动 Internet Explorer。是否要立即安装？</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - 正在安装</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">新版的 Gears 安装失败，Gears 会稍后再试。</string>
+<string id="IDS_REBOOT_MESSAGE">为了确保 Gears 能正常运行，您必须在安装完成后重新启动您的设备。</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears 无法启动 Internet Explorer，请手动启动它。</string>
+
+
+

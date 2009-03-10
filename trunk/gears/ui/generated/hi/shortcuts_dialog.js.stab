@@ -3,13 +3,13 @@
 <string id="string-header-desktop">यह वेबसाइट आपके कंप्यूटर पर एक शॉर्टकट बनाना चाहती है. क्या आप इसकी अनुमति देना चाहते हैं?</string>
 <string id="string-header-wince">यह वेबसाइट आपके प्रोग्रामों की सूची में शॉर्टकट बनाना चाहती है. क्या आप इसकी अनुमति देना चाहते हैं?</string>
 <string id="string-ok">ठीक</string>
-<string id="string-ok-accesskey">ठीक</string>
+<string id="string-ok-accesskey">ठ</string>
 <string id="string-cancel">रद्द करें</string>
-<string id="string-cancel-accesskey">रद्द करें</string>
+<string id="string-cancel-accesskey">र</string>
 <string id="string-yes">हाँ</string>
-<string id="string-yes-accesskey">हाँ</string>
+<string id="string-yes-accesskey">ह</string>
 <string id="string-no">नहीं</string>
-<string id="string-no-accesskey">नहीं</string>
+<string id="string-no-accesskey">न</string>
 <string id="string-never-allow">इस शॉर्टकट को कभी अनुमति न दें</string>
 <string id="string-never-allow-wince">कभी अनुमति न दें</string>
 <string id="string-location-query">निम्न स्थानों पर शॉर्टकट बनाएँ:</string>

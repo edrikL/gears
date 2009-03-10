@@ -3,9 +3,9 @@
 <string id="string-header-desktop">Ši svetainė sukurs šaukinį jūsų kompiuteryje. Ar leisti?</string>
 <string id="string-header-wince">Ši svetainė sukurs šaukinį programų sąraše. Ar leisti?</string>
 <string id="string-ok">Gerai</string>
-<string id="string-ok-accesskey">O</string>
+<string id="string-ok-accesskey">G</string>
 <string id="string-cancel">Atšaukti</string>
-<string id="string-cancel-accesskey">C</string>
+<string id="string-cancel-accesskey">A</string>
 <string id="string-yes">Taip</string>
 <string id="string-yes-accesskey">T</string>
 <string id="string-no">Ne</string>

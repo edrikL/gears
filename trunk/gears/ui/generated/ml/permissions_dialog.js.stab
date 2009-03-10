@@ -6,18 +6,6 @@
 <string id="string-cancel">റദ്ദാക്കൂ</string>
 <string id="string-never-allow-link">ഈ സൈറ്റിനെ ഒരിക്കലും അനുവദിക്കരുത്</string>
 <string id="string-never-allow-link-wince">ഇതൊരിക്കലും അനുവദിക്കരുത്</string>
-<string id="string-description">
-  Gears ഒരു തുറന്ന ഉറവിട ബ്രൌസര്‍ എക്സ്റ്റന്ഷനാണ്, അത്  JavaScript APIs ഉപയോഗിച്ച് വെബ് അപ്ളിക്കേഷന് ഓഫ്ലൈന് ക്രിയാത്മകത നല്കുന്നു:
-</string>
-<string id="string-localserver-desc">
-  അപ്ലിക്കേഷന്‍ വിഭവങ്ങള്‍ പ്രാദേശികമായി സംഭരിച്ച് പ്രയോജനപ്പെടുത്തൂ
-</string>
-<string id="string-database-desc">
-  പൂര്‍ണമായും തിരയാവുന്ന ആനുപാതികമായ ഡാറ്റാബേസില്‍ ഡാറ്റ സംഭരിക്കുക
-</string>
-<string id="string-workerpool-desc">
-  അപ്ലിക്കേഷന്‍ പ്രതികരണം അഭിവൃദ്ധിപ്പെടുത്താന്‍ ഏകകാലികമല്ലാത്ത ജാവാസ്ക്രിപ്റ്റ് പ്രവര്‍ത്തിപ്പിക്കുക
-</string>
 <string id="string-query-data">
   താഴെക്കാണുന്ന വെബ്സൈറ്റ് നിങ്ങളുടെ കമ്പ്യൂട്ടറില് വിവരങ്ങള് Gears ഉപയോഗിച്ച് ശേഖരിക്കാനാഗ്രഹിക്കുന്നു.
 </string>

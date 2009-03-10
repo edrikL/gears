@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Доступна новая версия Gears для браузера Internet Explorer. Для установки требуется перезапустить Internet Explorer. Установить новую версию сейчас?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears – Установка</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Не удалось установить новую версию Gears. Gears попробует установить ее позже.</string>
+<string id="IDS_REBOOT_MESSAGE">Чтобы программа Gears работала без ошибок, после ее установки необходимо перезапустить устройство.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears не удалось запустить браузер Internet Explorer. Пожалуйста, запустите его вручную.</string>
+
+
+

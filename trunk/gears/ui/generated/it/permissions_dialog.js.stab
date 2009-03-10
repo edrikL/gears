@@ -1,23 +1,11 @@
 <string id="string-html-title">Avviso di protezione di Google Gears</string>
 <string id="string-allow">Consenti</string>
-<string id="string-allow-accesskey">A</string>
+<string id="string-allow-accesskey">C</string>
 <string id="string-deny">Nega</string>
 <string id="string-deny-accesskey">D</string>
 <string id="string-cancel">Annulla</string>
 <string id="string-never-allow-link">Non consentire mai l'accesso a questo sito</string>
 <string id="string-never-allow-link-wince">Non consentirlo mai</string>
-<string id="string-description">
-  Google Gears è un'estensione browser open source che permette alle applicazioni Web di fornire funzionalità offline tramite le seguenti API JavaScript:
-</string>
-<string id="string-localserver-desc">
-  Memorizzare e fornire localmente le risorse dell'applicazione
-</string>
-<string id="string-database-desc">
-  Memorizzare i dati localmente in un database relazionale dotato di ricerca integrata
-</string>
-<string id="string-workerpool-desc">
-  Eseguire codice JavaScript in modo asincrono per migliorare la velocità di risposta dell'applicazione
-</string>
 <string id="string-query-data">
   Il sito Web riportato di seguito vuole memorizzare le informazioni relative al computer che utilizza Google Gears.
 </string>

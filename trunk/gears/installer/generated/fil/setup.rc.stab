@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">May magagamit na bagong bersyon ng Gears para sa Internet Explorer. Ang pag-install ay nangngailangan ng pag-restart ng Internet Explorer. Gusto mo bang i-install ito ngayon?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears - Nag-iinstall</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Bigo ang pag-install ng bagong bersyon ng Gears. Susubukank ulit ng Gears mamaya.</string>
+<string id="IDS_REBOOT_MESSAGE">Upang gumana nang maayos ang Gears, kailangan mong i-restart ang iyong aparato sa sandaling makumpleto ang pag-install na ito.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Nabigong mapaandar ng Gears ang Internet Explorer. Mangyaring paandarin ito nang mano-mano.</string>
+
+
+

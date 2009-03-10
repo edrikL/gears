@@ -1,0 +1,9 @@
+<string id="IDS_UPGRADE_AVAILABLE_DIALOG_TITLE">Gears</string>
+<string id="IDS_UPGRADE_AVAILABLE_MESSAGE">Dostupna je nova verzija programa Gears za Internet Explorer. Za instalaciju je potrebno ponovo pokrenuti Internet Explorer. Želite li sada izvršiti instalaciju?</string>
+<string id="IDS_INSTALLING_DIALOG_TITLE">Gears – Instalacija</string>
+<string id="IDS_INSTALL_FAILURE_MESSAGE">Instalacija nove verzije programa Gears nije uspjela. Gears će ponovo pokušati kasnije.</string>
+<string id="IDS_REBOOT_MESSAGE">Da bi program Gears ispravno funkcionirao, nakon dovršetka instalacije morate ponovo pokrenuti svoj uređaj.</string>
+<string id="IDS_START_FAILURE_MESSAGE">Gears nije uspio pokrenuti Internet Explorer. Pokrenite ga ručno.</string>
+
+
+

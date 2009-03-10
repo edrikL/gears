@@ -6,18 +6,6 @@
 <string id="string-cancel">ರದ್ದುಮಾಡು</string>
 <string id="string-never-allow-link">ಈ ಸೈಟನ್ನು ಎಂದಿಗೂ ಅನುಮತಿಸಬೇಡಿ</string>
 <string id="string-never-allow-link-wince">ಅದನ್ನು ಎಂದಿಗೂ ಅನುಮತಿಸಬೇಡಿ</string>
-<string id="string-description">
-  Gears ಒಂದು ಓಪನ್ ಸೋರ್ಸ್ ಬ್ರೌಸರ್ ವಿಸ್ತರಣೆಯಾಗಿದ್ದು, ಅದು ವೆಬ್ ಅಪ್ಲಿಕೇಶನ್ ಗಳಿಗೆ ಈ ಕೆಳಗಿನ JavaScript API ಗಳನ್ನು ಬಳಸಿ ಆಫ್ಲೈನ್ ಫಂಕ್ಷನಾಲಿಟಿಯನ್ನು ನೀಡಲು ಸಾಧ್ಯವಾಗಿಸುತ್ತದೆ.
-</string>
-<string id="string-localserver-desc">
-  ಸ್ಥಳೀಯವಾಗಿ ಅಪ್ಲಿಕೇಶನ್ ಮೂಲಗಳನ್ನು ಸಂಗ್ರಹಿಸಿ ಮತ್ತು ಒದಗಿಸಿ
-</string>
-<string id="string-database-desc">
-  ಪೂರ್ಣವಾಗಿ ಹುಡುಕಬಹುದಾದ ಸಾಂಬಂಧಿಕ ಡೇಟಾಬೇಸ್‌ನಲ್ಲಿ ಸ್ಥಳೀಯವಾಗಿ ಡೇಟಾವನ್ನು ಸಂಗ್ರಹಿಸಿ
-</string>
-<string id="string-workerpool-desc">
-  ಅಪ್ಲಿಕೇಶನ್ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಉತ್ತಮಪಡಿಸಲು ಏಸಿಂಕ್ರೋನಸ್ ಜಾವಾಸ್ಕ್ರಿಪ್ಟ್ ಚಲಿಸಿ
-</string>
 <string id="string-query-data">
   ಈ ಕೆಳಗಿನ ವೆಬ್ ಸೈಟ್ Gears ಬಳಸಿ ನಿಮ್ಮ ಕಂಪ್ಯೂಟರಿನಲ್ಲಿ ಮಾಹಿತಿಯನ್ನು ಇರಿಸಲು ಬಯಸುತ್ತಿದೆ.
 </string>
