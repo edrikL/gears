@@ -439,7 +439,10 @@ bool HttpRequestAndroid::Open(const char16 *method,
   // Context is unused.
   assert(IsMainThread());
   assert(!IsRelativeUrl(url));
-  if (BrowserUtils::IsOfflinePropertyValue())
+  // If we are bypassing caches, we can safely check that we are
+  // offline or not now, and fail early without waiting for a timeout.
+  if ((caching_behavior_ == BYPASS_ALL_CACHES) &&
+       BrowserUtils::IsOfflinePropertyValue())
     return false;
   if (!IsUninitialized())
     return false;
@@ -523,7 +526,10 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
   // heavy lifting and blocking operations.  Set post data, which may
   // be empty.
   assert(IsMainThread());
-  if (BrowserUtils::IsOfflinePropertyValue())
+  // If we are bypassing caches, we can safely check that we are
+  // offline or not now, and fail early without waiting for a timeout.
+  if ((caching_behavior_ == BYPASS_ALL_CACHES) &&
+       BrowserUtils::IsOfflinePropertyValue())
     return false;
   if (!IsOpen()) return false;
   if (IsPostOrPut()) {
