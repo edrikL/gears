@@ -93,7 +93,7 @@ class HttpRequestLog {
   }
   static void LogResponse(HttpRequest *request) {
   }
-}
+};
 #else
 class HttpRequestLog {
  public:
