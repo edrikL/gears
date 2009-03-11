@@ -25,10 +25,6 @@
 
 #include "gears/geolocation/wifi_data_provider_common.h"
 
-// These constants are defined for each platfrom in wifi_data_provider_xxx.cc.
-extern const int kDefaultPollingInterval;
-extern const int kNoChangePollingInterval;
-extern const int kTwoNoChangePollingInterval;
 
 #if defined(WIN32) || defined(OS_MACOSX)
 
@@ -76,6 +72,13 @@ std::string16 MacAddressAsString16(const uint8 mac_as_int[6]) {
 
 #endif  // WIN32 || OS_MACOSX
 
+#if defined(WIN32) || defined(OS_MACOSX) || defined(LINUX)
+
+// These constants are defined for each platfrom in wifi_data_provider_xxx.cc.
+extern const int kDefaultPollingInterval;
+extern const int kNoChangePollingInterval;
+extern const int kTwoNoChangePollingInterval;
+
 int UpdatePollingInterval(int polling_interval, bool scan_results_differ) {
   if (scan_results_differ) {
     return kDefaultPollingInterval;
@@ -88,3 +91,5 @@ int UpdatePollingInterval(int polling_interval, bool scan_results_differ) {
     return kTwoNoChangePollingInterval;
   }
 }
+
+#endif  // WIN32 || OS_MACOSX || LINUX
