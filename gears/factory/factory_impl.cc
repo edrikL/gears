@@ -38,6 +38,7 @@
 #include "gears/blob/fail_blob.h"
 #include "gears/blob/blob.h"
 #endif  // DEBUG
+#include "gears/blob/blob_builder_module.h"
 #include "gears/database/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/factory_utils.h"
@@ -53,7 +54,6 @@
 // The Canvas, Console, Database2 and Image APIs have not
 // been finalized for official builds.
 #else
-#include "gears/blob/blob_builder_module.h"
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
 #ifdef OS_WINCE
