@@ -85,7 +85,16 @@ static const char16* kDisallowedMethods[] = {
 static const char *kDebugLogEnvVarName = "GEARS_HTTPREQUEST_LOGFILE";
 static const char *kDebugBodyEnvVarName = "GEARS_HTTPREQUEST_LOG_BODY";
 
-
+#ifdef OS_WINCE
+// Not implemented on WinCE
+class HttpRequestLog {
+ public:
+  static void LogStart(HttpRequest *request) {
+  }
+  static void LogResponse(HttpRequest *request) {
+  }
+}
+#else
 class HttpRequestLog {
  public:
   static void LogStart(HttpRequest *request) {
@@ -119,7 +128,7 @@ class HttpRequestLog {
     MutexLock lock(&mutex_);
     Initialize();
 
-    if (logfile_) {
+    if (!logfile_) {
       return;
     }
 
@@ -128,16 +137,16 @@ class HttpRequestLog {
     std::string now_str(ctime(&now));
     now_str.replace(now_str.rfind('\n'), 1, "");
 
-    std::string16 log_message = STRING16(L"HttpRequestStart:");
+    std::string16 log_message = STRING16(L"Start:");
 
     std::string16 initial_url;
     if (request->GetInitialUrl(&initial_url)) {
-      log_message += STRING16(L" InitialUrl=");
+      log_message += STRING16(L"    Url=");
       log_message += initial_url;
     }
 
-    fwprintf(logfile_, STRING16(L"%S %s\n"), now_str.c_str(),
-             log_message.c_str());
+    fprintf(logfile_, "%s %s\n", now_str.c_str(),
+            String16ToUTF8(log_message).c_str());
   }
 
   void LogResponseInternal(HttpRequest *request) {
@@ -153,35 +162,43 @@ class HttpRequestLog {
     std::string now_str(ctime(&now));
     now_str.replace(now_str.rfind('\n'), 1, "");
 
-    std::string16 log_message = STRING16(L"HttpRequestResponse:");
-    int status;
-    if (request->GetStatus(&status)) {
-      log_message += STRING16(L" Status=");
-      log_message += IntegerToString16(status);
+    std::string16 log_message = STRING16(L"Response:");
+
+    std::string16 initial_url;
+    if (request->GetInitialUrl(&initial_url)) {
+      log_message += STRING16(L" Url=");
+      log_message += initial_url;
     }
 
     std::string16 final_url;
-    if (request->GetFinalUrl(&final_url)) {
-      log_message += STRING16(L" FinalUrl=");
+    if (request->GetFinalUrl(&final_url) &&
+        initial_url != final_url) {
+      log_message += STRING16(L"\nFinalUrl=");
       log_message += final_url;
     }
 
-    std::string16 AllResponseHeaders;
-    if (request->GetAllResponseHeaders(&AllResponseHeaders)) {
-      log_message += STRING16(L" Headers=");
-      log_message += AllResponseHeaders;
+    int status;
+    if (request->GetStatus(&status)) {
+      log_message += STRING16(L"\nStatus=");
+      log_message += IntegerToString16(status);
     }
 
-    fwprintf(logfile_, STRING16(L"%S %s\n"), now_str.c_str(),
-             log_message.c_str());
+    std::string16 all_response_headers;
+    if (request->GetAllResponseHeaders(&all_response_headers)) {
+      log_message += STRING16(L"\nHeaders=\n");
+      log_message += all_response_headers;
+    }
+
+    fprintf(logfile_, "%s %s\n", now_str.c_str(),
+            String16ToUTF8(log_message).c_str());
     if (log_body_) {
       scoped_refptr<BlobInterface> blob;
       if (request->GetResponseBody(&blob)) {
         std::string16 text;
         if (BlobToString16(blob.get(), request->GetResponseCharset(),
                            &text)) {
-          fwprintf(logfile_, STRING16(L"%S ResponseBody:\n%s\n"),
-                   now_str.c_str(), text.c_str());
+          fprintf(logfile_, "%s ResponseBody:\n%s\n",
+                  now_str.c_str(), String16ToUTF8(text).c_str());
         }
       }
     }
@@ -195,6 +212,7 @@ class HttpRequestLog {
   static HttpRequestLog http_request_log_;
 };
 HttpRequestLog HttpRequestLog::http_request_log_;
+#endif
 
 static bool IsValidHeader(const std::string16 &header) {
   if (!IsValidHttpToken(header)) {
