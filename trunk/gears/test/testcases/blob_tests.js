@@ -33,3 +33,41 @@ function testFailBlob() {
   assertNotNull(blob, 'Could not create a failblob');
   assert(blob.length == 500);
 }
+
+function testBlobBuilder() {
+  var builder1 = google.gears.factory.create('beta.blobbuilder');
+  assertNotNull(builder1, 'Could not create a blob builder');
+  builder1.append('Hello');
+  builder1.append(' ');
+  builder1.append('World');
+  var blob1 = builder1.getAsBlob();
+  assertEqual(blob1.length, 11);
+
+  var builder2 = google.gears.factory.create('beta.blobbuilder');
+  builder2.append('.');
+  var blob2 = builder2.getAsBlob();
+  assertEqual(blob2.length, 1);
+
+  var builder3 = google.gears.factory.create('beta.blobbuilder');
+  var blob3 = builder3.getAsBlob();
+  assertEqual(blob3.length, 0);
+
+  var builder4 = google.gears.factory.create('beta.blobbuilder');
+  builder4.append(blob1);
+  builder4.append(blob2);
+  builder4.append(blob3);
+  var blob4 = builder4.getAsBlob();
+  assertEqual(blob4.length, blob1.length + blob2.length + blob3.length);
+
+  if (isDebug) {
+    var builder5 = google.gears.factory.create('beta.blobbuilder');
+    builder5.append('Hello World.');
+    assert(builder5.getAsBlob().hasSameContentsAs(blob4));
+  }
+
+  // TODO(michaeln): a builder.reset() method may be nice?
+  var builder6 = google.gears.factory.create('beta.blobbuilder');
+  builder6.append('\uCF8F');  // 3 bytes in utf8
+  builder6.append('\u00A2');  // 2 bytes in utf8
+  assert(builder6.getAsBlob().length, 3 + 2);
+}

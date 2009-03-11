@@ -201,13 +201,13 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(module_environment_.get(),
                                   context, &object);
-#ifdef OFFICIAL_BUILD
-  // The BlobBuilder, Canvas, Console, Database2 and Image APIs have not
-  // been finalized for official builds.
-#else
   } else if (module_name == STRING16(L"beta.blobbuilder")) {
     CreateModule<GearsBlobBuilder>(module_environment_.get(),
                                    context, &object);
+#ifdef OFFICIAL_BUILD
+  // The Canvas, Console, Database2 and Image APIs have not
+  // been finalized for official builds.
+#else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
     CreateModule<GearsDatabase2Manager>(module_environment_.get(),
                                    context, &object);
