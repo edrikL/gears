@@ -131,15 +131,13 @@ void AndroidWifiDataProvider::NewWifiDataAvailable(WifiData* new_wifi_data) {
   assert(new_wifi_data);
   bool is_update_available = false;
   data_mutex_.Lock();
-  if (!wifi_data_.Matches(*new_wifi_data)) {
-    wifi_data_ = *new_wifi_data;
-    is_update_available = true;
-    is_first_scan_complete_ = true;
-  }
+  is_update_available = wifi_data_.DiffersSignificantly(*new_wifi_data);
+  wifi_data_ = *new_wifi_data;
   // Avoid holding the mutex locked while notifying observers.
   data_mutex_.Unlock();
 
   if (is_update_available) {
+    is_first_scan_complete_ = true;
     NotifyListeners();
   }
 
@@ -272,7 +270,7 @@ static bool InitFromJava(jobject wifi_data, WifiData* new_wifi_data_out) {
     // Convert it to an AccessPointData.
     AccessPointData data;
     if (InitFromJavaScanResult(scan_result, &data)) {
-      new_wifi_data_out->access_point_data.push_back(data);
+      new_wifi_data_out->access_point_data.insert(data);
     }
     JniGetEnv()->DeleteLocalRef(scan_result);
   }
