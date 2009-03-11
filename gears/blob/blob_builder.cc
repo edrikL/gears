@@ -28,10 +28,6 @@
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/join_blob.h"
 
-namespace {
-const int64 kMaxBufferSize = 1024 * 1024; // 1MB
-}
-
 BlobBuilder::BlobBuilder() : byte_store_(new ByteStore) {
 }
 
@@ -91,7 +87,7 @@ int64 BlobBuilder::Length() const {
   return length;
 }
 
-void  BlobBuilder::Reset() {
+void BlobBuilder::Reset() {
   byte_store_->Finalize();
   byte_store_.reset(new ByteStore);
   blob_list_.clear();
