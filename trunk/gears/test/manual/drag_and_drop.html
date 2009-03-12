@@ -103,7 +103,7 @@ function handleDrop(event) {
   var s = 'Got <b>drop</b>: ' + dropCount +
       ' times, most recent sequence number is ' +  eventCount + '<hr/>';
   var data = desktop.getDragData(event, 'application/x-gears-files');
-  var files = data.files;
+  var files = data && data.files;
   if (files) {
     for (i = 0; i < files.length; i++) {
       var file = files[i];
