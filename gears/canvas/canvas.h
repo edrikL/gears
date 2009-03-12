@@ -108,13 +108,15 @@ class GearsCanvas : public ModuleImplBaseClass {
   // fail silently without returning an error, as per the HTML5 canvas spec.
   // But if given an argument that HTML5 canvas supports but we don't,
   // the setters (set_composite_operation, to be precise) returns false.
-  int width() const;
-  int height() const;
   double alpha() const;
   void set_alpha(double new_alpha);
   std::string16 composite_operation() const;
   // Returns false if given a mode HTML5 canvas supports but we don't.
   bool set_composite_operation(std::string16 new_composite_op);
+
+  int GetWidth() const;
+  int GetHeight() const;
+  const SkBitmap &GetSkBitmap();
 
  private:
   // Resets the Canvas to the specified dimensions and fills it with transparent

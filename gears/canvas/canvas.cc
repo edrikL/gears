@@ -249,12 +249,14 @@ void GearsCanvas::Resize(JsCallContext *context) {
   new_bitmap.setConfig(skia_config, new_width, new_height);
   new_bitmap.allocPixels();
 
-  if (width() != 0 && height() != 0) {
+  int old_width = GetWidth();
+  int old_height = GetHeight();
+  if (old_width != 0 && old_height != 0) {
     SkCanvas new_canvas(new_bitmap);
     SkScalar x_scale = SkDoubleToScalar(
-        static_cast<double>(new_width) / width());
+        static_cast<double>(new_width) / old_width);
     SkScalar y_scale = SkDoubleToScalar(
-        static_cast<double>(new_height) / height());
+        static_cast<double>(new_height) / old_height);
     if (!new_canvas.scale(x_scale, y_scale)) {
       context->SetException(STRING16(L"Could not resize the image."));
       return;
@@ -267,12 +269,12 @@ void GearsCanvas::Resize(JsCallContext *context) {
 }
 
 void GearsCanvas::GetWidth(JsCallContext *context) {
-  int its_width = width();
+  int its_width = GetWidth();
   context->SetReturnValue(JSPARAM_INT, &its_width);
 }
 
 void GearsCanvas::GetHeight(JsCallContext *context) {
-  int its_height = height();
+  int its_height = GetHeight();
   context->SetReturnValue(JSPARAM_INT, &its_height);
 }
 
@@ -284,7 +286,7 @@ void GearsCanvas::SetWidth(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  ResetCanvas(new_width, height());
+  ResetCanvas(new_width, GetHeight());
 }
 
 void GearsCanvas::SetHeight(JsCallContext *context) {
@@ -295,7 +297,7 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  ResetCanvas(width(), new_height);
+  ResetCanvas(GetWidth(), new_height);
 }
 
 void GearsCanvas::GetContext(JsCallContext *context) {
@@ -326,12 +328,17 @@ void GearsCanvas::GetContext(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_MODULE, rendering_context_);
 }
 
-int GearsCanvas::width() const {
+int GearsCanvas::GetWidth() const {
   return skia_bitmap_->width();
 }
 
-int GearsCanvas::height() const {
+int GearsCanvas::GetHeight() const {
   return skia_bitmap_->height();
+}
+
+const SkBitmap &GearsCanvas::GetSkBitmap() {
+  EnsureBitmapPixelsAreAllocated();
+  return *(skia_bitmap_.get());
 }
 
 double GearsCanvas::alpha() const {
@@ -361,6 +368,8 @@ bool GearsCanvas::set_composite_operation(std::string16 new_composite_op) {
 }
 
 void GearsCanvas::ResetCanvas(int width, int height) {
+  // TODO(nigeltao): poke the gears_canvas_rendering_context_2d to notify it
+  // that its underlying bitmap has been deleted.
   skia_bitmap_.reset(new SkBitmap);
   skia_bitmap_->setConfig(skia_config, width, height);
 
@@ -371,7 +380,7 @@ void GearsCanvas::ResetCanvas(int width, int height) {
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {
   return rect.fLeft <= rect.fRight && rect.fTop <= rect.fBottom &&
       rect.fLeft >= 0 && rect.fTop >= 0 &&
-      rect.fRight <= width() && rect.fBottom <= height();
+      rect.fRight <= GetWidth() && rect.fBottom <= GetHeight();
 }
 
 // Skia's SkPorterDuff values are all non-negative.
