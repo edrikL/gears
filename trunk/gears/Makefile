@@ -1052,6 +1052,7 @@ CHROME_VPATH	+= \
 
 CHROME_CPPSRCS	+= \
 		js_runner_cr.cc \
+		message_queue_cr.cc \
 		module_cr.cc \
 		paths_cr.cc \
 		$(NULL)
@@ -1077,7 +1078,6 @@ ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
 		detect_version_collision_win32.cc \
 		ie_version.cc \
-		message_queue_cr.cc \
 		$(NULL)
 # TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
@@ -2343,6 +2343,7 @@ FF2_CPPSRCS += $(FF3_CPPSRCS)
 
 
 # Chrome-specific hackery. Chrome is built with BROWSER=NPAPI and OS=win32.
+# We use this guard to avoid clobbering NPAPI_XXX for other builds.
 ifeq ($(BROWSER),NPAPI)
 ifeq ($(OS),win32)
 
@@ -2361,11 +2362,7 @@ NPAPI_CPPSRCS := $(subst settings_dialog.cc,,$(NPAPI_CPPSRCS))
 endif
 endif
 
-
 # Opera Mobile specific. Opera Mobile is built with BROWSER=OPERA and OS=wince.
-ifeq ($(BROWSER),OPERA)
-ifeq ($(OS),wince)
-
 # Opera uses the NPAPI base plus some Opera specific things.
 OPERA_CPPSRCS += $(NPAPI_CPPSRCS)
 OPERA_CPPFLAGS += $(NPAPI_CPPFLAGS)
@@ -2376,13 +2373,8 @@ OPERA_IDLSRCS += $(NPAPI_IDLSRCS)
 OPERA_HTML_M4SRCS += $(NPAPI_HTML_M4SRCS)
 OPERA_LIBS += $(NPAPI_LIBS)
 # OPERA_LINK_EXTRAS is set independently of NPAPI_LINK_EXTRAS
-endif
-endif
 
 # IE Mobile specific. IE Mobile is built with BROWSER=IEMOBILE and OS=wince.
-ifeq ($(BROWSER),IEMOBILE)
-ifeq ($(OS),wince)
-
 IEMOBILE_CPPSRCS += $(IE_CPPSRCS)
 IEMOBILE_CPPFLAGS += $(IE_CPPFLAGS)
 IEMOBILE_VPATH += $(IE_VPATH)
@@ -2392,8 +2384,6 @@ IEMOBILE_IDLSRCS += $(IE_IDLSRCS)
 IEMOBILE_HTML_M4SRCS += $(IE_HTML_M4SRCS)
 IEMOBILE_LIBS += $(IE_LIBS)
 # IEMOBILE_LINK_EXTRAS is set independently of IE_LINK_EXTRAS
-endif
-endif
 
 #-----------------------------------------------------------------------------
 # On Android, remove all Java sources if we're not using a runtime
