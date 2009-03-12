@@ -895,6 +895,7 @@ FF3_DLLFLAGS =
 IE_DLLFLAGS = /DEF:tools/mscom.def
 
 CHROME_DLLFLAGS = /DEF:base/chrome/module.def
+OPERA_DLLFLAGS = /DEF:base/npapi/module.def
 
 # Set the preferred base address.  This value was chosen because (a) it's near
 # the top of the valid address range, and (b) it doesn't conflict with other
@@ -923,14 +924,13 @@ FF3_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr
 ifeq ($(OS),win32)
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 else # wince
-IE_LIBS = $(WINCE_LIBS) coredll.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib htmlview.lib imaging.lib aygshell.lib 
+IE_LIBS = $(WINCE_LIBS) coredll.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib htmlview.lib imaging.lib aygshell.lib
 endif
 ifeq ($(OS),wince)
-# We don't want to use these NPAPI libraries on WinCE
+NPAPI_LIBS = $(WINCE_LIBS)
 else #wince
 NPAPI_LIBS = delayimp.lib /DELAYLOAD:"comdlg32.dll" comdlg32.lib
 endif
-OPERA_LIBS = $(WINCE_LIBS)
 
 # Other tools specific to win32/wince builds.
 RC = rc
