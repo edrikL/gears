@@ -23,9 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <algorithm>
+#include <cmath>
+
 #include "gears/canvas/canvas_rendering_context_2d.h"
 
 #include "gears/base/common/js_runner.h"
+#include "third_party/skia/include/core/SkColorPriv.h"
 #include "third_party/skia/include/core/SkPorterDuff.h"
 #include "third_party/skia/include/utils/SkParse.h"
 
@@ -40,8 +44,11 @@
 // gracefully. I think that WebKit's Skia-backed canvas already does this.
 
 DECLARE_DISPATCHER(GearsCanvasRenderingContext2D);
+
 const std::string
     GearsCanvasRenderingContext2D::kModuleName("GearsCanvasRenderingContext2D");
+
+const int GearsCanvasRenderingContext2D::kMaxImageDataSize(1024);
 
 using canvas::skia_config;
 
@@ -666,46 +673,200 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // TODO(nigeltao): Are the colors premultiplied? If so, unpremultiply them.
 }
 
+static U8CPU InvScaleByte(U8CPU component, uint32_t scale)
+{
+  assert(component == static_cast<uint8_t>(component));
+  return (component * scale + 0x8000) >> 16;
+}
+
+// TODO(nigeltao): Submit Unpremultiply (and InvScaleByte) into upstream Skia.
+static SkColor Unpremultiply(SkPMColor pm) {
+  if (pm == 0) {
+    return 0;
+  }
+  uint32_t a = SkGetPackedA32(pm);
+  uint32_t scale = (255 << 16) / a;
+  return SkColorSetARGB(a,
+                        InvScaleByte(SkGetPackedR32(pm), scale),
+                        InvScaleByte(SkGetPackedG32(pm), scale),
+                        InvScaleByte(SkGetPackedB32(pm), scale));
+}
+
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
-  int width, height;
+  double sw, sh;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &width },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &height }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sw },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sh }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  int w = static_cast<int>(fabs(sw));
+  int h = static_cast<int>(fabs(sh));
+  if (w <= 0 || h <= 0) {
+    context->SetException(STRING16(L"INDEX_SIZE_ERR"));
+    return;
+  }
+  if (w > kMaxImageDataSize || h > kMaxImageDataSize) {
+    context->SetException(
+        STRING16(L"CreateImageData called for too large an image slice."));
+    return;
+  }
+
+  scoped_ptr<JsArray> data(module_environment_->js_runner_->NewArray());
+  for (int i = (w * h * 4) - 1; i >= 0; i--) {
+    data->SetElementInt(i, 0);
+  }
+
+  scoped_ptr<JsObject> result(module_environment_->js_runner_->NewObject());
+  result->SetPropertyInt(STRING16(L"width"), w);
+  result->SetPropertyInt(STRING16(L"height"), h);
+  result->SetPropertyArray(STRING16(L"data"), data.get());
+  context->SetReturnValue(JSPARAM_OBJECT, result.get());
 }
 
 void GearsCanvasRenderingContext2D::GetImageData(JsCallContext *context) {
-  int sx, sy, sw, sh;
+  double sx, sy, sw, sh;
   JsArgument args[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &sx },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &sy },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &sw },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &sh }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sy },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sw },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &sh }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  int x = static_cast<int>(std::min(sx, sx + sw));
+  int y = static_cast<int>(std::min(sy, sy + sh));
+  int w = static_cast<int>(std::max(sx, sx + sw)) - x;
+  int h = static_cast<int>(std::max(sy, sy + sh)) - y;
+  if (w <= 0 || h <= 0) {
+    context->SetException(STRING16(L"INDEX_SIZE_ERR"));
+    return;
+  }
+  if (w > kMaxImageDataSize || h > kMaxImageDataSize) {
+    context->SetException(
+        STRING16(L"GetImageData called for too large an image slice."));
+    return;
+  }
+  const SkBitmap &bitmap = gears_canvas_->GetSkBitmap();
+  assert(bitmap.config() == SkBitmap::kARGB_8888_Config);
+  SkAutoLockPixels bitmap_lock(bitmap);
+  if (x < 0 || y < 0 ||
+      x + w > bitmap.width() ||
+      y + h > bitmap.height()) {
+    // The HTML5 spec says to extend with transparent black, outside the canvas,
+    // but for now we'll match Mozilla and throw an exception. In the future,
+    // we could change behavior to match the spec, but we will have to be
+    // careful with the raw pointer arithmetic below.
+    context->SetException(
+        STRING16(L"GetImageData called for an out-of-bounds image slice."));
+    return;
+  }
+
+  scoped_ptr<JsArray> data(module_environment_->js_runner_->NewArray());
+  // Provide a hint to the JS engine as to the eventual length of this array.
+  data->SetElementUndefined(w * h * 4 - 1);
+
+  int data_index = 0;
+  for (int j = 0; j < h; j++) {
+    uint32_t* source = bitmap.getAddr32(x, y + j);
+    for (int i = 0; i < w; i++) {
+      SkColor color = Unpremultiply(source[i]);
+      data->SetElementInt(data_index++, SkColorGetR(color));
+      data->SetElementInt(data_index++, SkColorGetG(color));
+      data->SetElementInt(data_index++, SkColorGetB(color));
+      data->SetElementInt(data_index++, SkColorGetA(color));
+    }
+  }
+
+  scoped_ptr<JsObject> result(module_environment_->js_runner_->NewObject());
+  result->SetPropertyInt(STRING16(L"width"), w);
+  result->SetPropertyInt(STRING16(L"height"), h);
+  result->SetPropertyArray(STRING16(L"data"), data.get());
+  context->SetReturnValue(JSPARAM_OBJECT, result.get());
 }
 
 void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
   scoped_ptr<JsObject> image_data;
-  int dx, dy, dirty_x, dirty_y, dirty_width, dirty_height;
+  double dx, dy, dirty_x, dirty_y, dirty_width, dirty_height;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(image_data) },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &dx },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &dy },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_x },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_y },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_width },
-    { JSPARAM_OPTIONAL, JSPARAM_INT, &dirty_height }
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dx },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &dy },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &dirty_x },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &dirty_y },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &dirty_width },
+    { JSPARAM_OPTIONAL, JSPARAM_DOUBLE, &dirty_height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set())
     return;
-  context->SetException(STRING16(L"Unimplemented"));
+
+  int x = static_cast<int>(dx);
+  int y = static_cast<int>(dy);
+  int w, h;
+  scoped_ptr<JsArray> a;
+  int a_length;
+  if (!image_data->GetPropertyAsInt(STRING16(L"width"), &w) ||
+      !image_data->GetPropertyAsInt(STRING16(L"height"), &h) ||
+      !image_data->GetPropertyAsArray(STRING16(L"data"), as_out_parameter(a)) ||
+      !a->GetLength(&a_length)||
+      w * h * 4 != a_length) {
+    context->SetException(
+        STRING16(L"PutImageData dimensions do not match."));
+    return;
+  }
+  if (w <= 0 || h <= 0) {
+    context->SetException(STRING16(L"INDEX_SIZE_ERR"));
+    return;
+  }
+  if (w > kMaxImageDataSize || h > kMaxImageDataSize) {
+    context->SetException(
+        STRING16(L"PutImageData called for too large an image slice."));
+    return;
+  }
+  const SkBitmap &bitmap = gears_canvas_->GetSkBitmap();
+  assert(bitmap.config() == SkBitmap::kARGB_8888_Config);
+  SkAutoLockPixels bitmap_lock(bitmap);
+  if (x < 0 || y < 0 ||
+      x + w > bitmap.width() ||
+      y + h > bitmap.height()) {
+    // The HTML5 spec says to silently ignore put-pixel calls outside the
+    // canvas, but for now we'll throw an exception, like our GetImageData.
+    context->SetException(
+        STRING16(L"PutImageData called for an out-of-bounds image slice."));
+    return;
+  }
+
+  // TODO(nigeltao): Handle dirty_x, dirty_y, dirty_width, dirty_height as
+  // per the HTML5 spec.
+
+  int data_index = 0;
+  for (int j = 0; j < h; j++) {
+    uint32_t* source = bitmap.getAddr32(x, y + j);
+    for (int i = 0; i < w; i++) {
+      int pixel_r = 0;
+      int pixel_g = 0;
+      int pixel_b = 0;
+      int pixel_a = 0;
+      // The HTML5 spec says that if GetElementAsInt fails (e.g. if the
+      // element's value is undefined), treat is as zero.
+      a->GetElementAsInt(data_index++, &pixel_r);
+      a->GetElementAsInt(data_index++, &pixel_g);
+      a->GetElementAsInt(data_index++, &pixel_b);
+      a->GetElementAsInt(data_index++, &pixel_a);
+      pixel_r = std::max(0, std::min(255, pixel_r));
+      pixel_g = std::max(0, std::min(255, pixel_g));
+      pixel_b = std::max(0, std::min(255, pixel_b));
+      pixel_a = std::max(0, std::min(255, pixel_a));
+      source[i] = SkPreMultiplyARGB(
+          static_cast<U8CPU>(pixel_a),
+          static_cast<U8CPU>(pixel_r),
+          static_cast<U8CPU>(pixel_g),
+          static_cast<U8CPU>(pixel_b));
+    }
+  }
 }

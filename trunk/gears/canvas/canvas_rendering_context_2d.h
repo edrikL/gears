@@ -46,6 +46,10 @@ class GearsCanvasRenderingContext2D
  public:
   static const std::string kModuleName;
 
+  // {Create,Get,Put}ImageData won't return or accept any ImageData that is
+  // wider than kMaxImageDataSize, or taller than kMaxImageDataSize.
+  static const int kMaxImageDataSize;
+
   GearsCanvasRenderingContext2D();
   virtual ~GearsCanvasRenderingContext2D();
 
