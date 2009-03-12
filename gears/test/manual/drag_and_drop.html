@@ -1,6 +1,7 @@
 <html><head><title>Gears Drag and Drop</title></head>
 <body>
-<div id="dropZone" style="background-color:yellow; width:20em; height:15em">
+<div id="dropZone" style=
+    "background-color:yellow; width:20em; height:15em; border:1px solid white;">
 <ol>
 <li>Drag some files from the desktop.</li>
 <li>Drop them on this DIV.</li>
@@ -8,7 +9,6 @@
 <li>Profit!</li>
 </ol>
 <button onclick="toggleEnabledDisabled()">Toggle Enabled / Disabled</button>
-<div id="enabledDisabled" style="color:red; font-weight:bold">&nbsp;</div>
 <div id="eventOutput">&nbsp;</div>
 <div id="rejectOutput">&nbsp;</div>
 </div>
@@ -23,6 +23,11 @@
 
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
+var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
+var isNpapi = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
+
 var dragEnterCount = 0;
 var dragOverCount = 0;
 var dragLeaveCount = 0;
@@ -31,7 +36,7 @@ var eventCount = 0;
 
 var dropZone = document.getElementById('dropZone');
 var desktop = google.gears.factory.create('beta.desktop');
-var dropTargetRegistration = null;
+var dropTargetEnabled = false;
 
 function updateEventOutput(event) {
   if (!event) {
@@ -43,82 +48,131 @@ function updateEventOutput(event) {
       'shiftKey: <b>' + event.shiftKey + '</b>';
 }
 
-function willReject(context) {
-  var result = context.event.clientX >= 200;
-  var html = result ? 'Drop <b>REJECTED</b>.' : 'Drop <b>OK</b>.';
-  html += '<br>' + context.count + ' files, ' +
-      context.totalBytes + ' bytes.';
-  document.getElementById('rejectOutput').innerHTML = html;
-  return result;
-}
-
-function toggleEnabledDisabled() {
-  if (dropTargetRegistration) {
-    document.getElementById('enabledDisabled').innerHTML =
-        'Drag and Drop is disabled.';
-    dropTargetRegistration.unregisterDropTarget();
-    dropTargetRegistration = null;
-  } else {
-    document.getElementById('enabledDisabled').innerHTML = '&nbsp;';
-    dropTargetRegistration = desktop.registerDropTarget(dropZone, {
-      'debug': true,
-      'ondragenter': function(context) {
-        dragEnterCount++;
-        eventCount++;
-        updateEventOutput(context.event);
-        document.getElementById('dragEnterOutput').innerHTML =
-            'Got <b>dragenter</b>: ' + dragEnterCount +
-                ' times, most recent sequence number is ' + eventCount;
-        return willReject(context);
-      },
-      'ondragover': function(context) {
-        dragOverCount++;
-        eventCount++;
-        updateEventOutput(context.event);
-        document.getElementById('dragOverOutput').innerHTML =
-            'Got <b>dragover</b>: ' + dragOverCount +
-                ' times, most recent sequence number is ' +  eventCount;
-        return willReject(context);
-      },
-      'ondragleave': function(context) {
-        dragLeaveCount++;
-        eventCount++;
-        updateEventOutput(context.event);
-        document.getElementById('dragLeaveOutput').innerHTML =
-            'Got <b>dragleave</b>: ' + dragLeaveCount +
-                ' times, most recent sequence number is ' +  eventCount;
-        document.getElementById('rejectOutput').innerHTML = '&nbsp;';
-      },
-      'ondrop': function(context) {
-        dropCount++;
-        eventCount++;
-        updateEventOutput(context.event);
-        var s = 'Got <b>drop</b>: ' + dropCount +
-            ' times, most recent sequence number is ' +  eventCount + '<hr/>';
-        if (context.files) {
-          for (i = 0; i < context.files.length; i++) {
-            var file = context.files[i];
-            s += '<b>' + file.name + '</b> has length <b>' +
-                file.blob.length + '</b>';
-            var md = desktop.extractMetaData(file.blob);
-            if (md.imageWidth && md.imageHeight) {
-              s += ' and dimensions <b>' + md.imageWidth + '</b>&times;<b>' +
-                  md.imageHeight + '</b>';
-            }
-            s += '<br>';
-          }
-        }
-        s += 'count: <b>' + context.count + '</b><br>';
-        s += 'totalBytes: <b>' + context.totalBytes + '</b><br>';
-        s += 'mimeTypes: <b>' + context.mimeTypes + '</b><br>';
-        s += 'extensions: <b>' + context.extensions + '</b><br>';
-        document.getElementById('dropOutput').innerHTML = s;
-        document.getElementById('rejectOutput').innerHTML = '&nbsp;';
-      }
-    });
+function finishDrag(event, isDrop) {
+  var reject = event.clientX >= 200;
+  desktop.setDragCursor(event, reject ? 'none': 'copy');
+  if (!isDrop) {
+    document.getElementById('rejectOutput').innerHTML =
+        reject ? 'Drop <b>REJECTED</b>.' : 'Drop <b>OK</b>.';
+  }
+  if (isFirefox) {
+    if (reject || isDrop) {
+      event.stopPropagation();
+    }
+  } else if (isIE || isSafari || isNpapi) {
+    if (!reject && !isDrop) {
+      event.returnValue = false;
+    }
   }
 }
+
+function handleDragEnter(event) {
+  dragEnterCount++;
+  eventCount++;
+  updateEventOutput(event);
+  document.getElementById('dragEnterOutput').innerHTML =
+      'Got <b>dragenter</b>: ' + dragEnterCount +
+      ' times, most recent sequence number is ' + eventCount;
+  finishDrag(event, false);
+}
+
+function handleDragOver(event) {
+  dragOverCount++;
+  eventCount++;
+  updateEventOutput(event);
+  document.getElementById('dragOverOutput').innerHTML =
+      'Got <b>dragover</b>: ' + dragOverCount +
+      ' times, most recent sequence number is ' +  eventCount;
+  finishDrag(event, false);
+}
+
+function handleDragLeave(event) {
+  dragLeaveCount++;
+  eventCount++;
+  updateEventOutput(event);
+  document.getElementById('dragLeaveOutput').innerHTML =
+      'Got <b>dragleave</b>: ' + dragLeaveCount +
+      ' times, most recent sequence number is ' +  eventCount;
+  document.getElementById('rejectOutput').innerHTML = '&nbsp;';
+}
+
+function handleDrop(event) {
+  dropCount++;
+  eventCount++;
+  updateEventOutput(event);
+  var s = 'Got <b>drop</b>: ' + dropCount +
+      ' times, most recent sequence number is ' +  eventCount + '<hr/>';
+  var data = desktop.getDragData(event, 'application/x-gears-files');
+  var files = data.files;
+  if (files) {
+    for (i = 0; i < files.length; i++) {
+      var file = files[i];
+      s += '<b>' + file.name + '</b> has length <b>' +
+          file.blob.length + '</b>';
+      var md = desktop.extractMetaData(file.blob);
+      if (md.imageWidth && md.imageHeight) {
+        s += ' and dimensions <b>' + md.imageWidth + '</b>&times;<b>' +
+            md.imageHeight + '</b>';
+      }
+      s += '<br>';
+    }
+    s += 'files.length: <b>' + files.length + '</b>, ';
+    s += 'totalBytes: <b>' + data.totalBytes + '</b>, ';
+    s += 'extensions: <b>' + data.extensions + '</b><br>';
+  }
+  document.getElementById('dropOutput').innerHTML = s;
+  document.getElementById('rejectOutput').innerHTML = '&nbsp;';
+  finishDrag(event, true);
+}
+
+// For a discussion of various browsers' event models, see
+// http://developer.apple.com/internet/webcontent/eventmodels.html and
+// http://en.wikipedia.org/wiki/DOM_Events
+// Note that Firefox uses different event names than IE, WebKit, and HTML5.
+// Specifically, dragexit instead of dragleave, and dragdrop for drop.
+function toggleEnabledDisabled() {
+  if (dropTargetEnabled) {
+    dropZone.style.borderColor = 'white';
+    if (isFirefox) {
+      dropZone.removeEventListener('dragenter', handleDragEnter, false);
+      dropZone.removeEventListener('dragover',  handleDragOver,  false);
+      dropZone.removeEventListener('dragexit',  handleDragLeave, false);
+      dropZone.removeEventListener('dragdrop',  handleDrop,      false);
+    } else if (isIE) {
+      dropZone.detachEvent('ondragenter', handleDragEnter);
+      dropZone.detachEvent('ondragover',  handleDragOver );
+      dropZone.detachEvent('ondragleave', handleDragLeave);
+      dropZone.detachEvent('ondrop',      handleDrop     );
+    } else if (isSafari || isNpapi) {
+      dropZone.removeEventListener('dragenter', handleDragEnter, false);
+      dropZone.removeEventListener('dragover',  handleDragOver,  false);
+      dropZone.removeEventListener('dragleave', handleDragLeave, false);
+      dropZone.removeEventListener('drop',      handleDrop,      false);
+    }
+  } else {
+    dropZone.style.borderColor = 'red';
+    if (isFirefox) {
+      dropZone.addEventListener('dragenter', handleDragEnter, false);
+      dropZone.addEventListener('dragover',  handleDragOver,  false);
+      dropZone.addEventListener('dragexit',  handleDragLeave, false);
+      dropZone.addEventListener('dragdrop',  handleDrop,      false);
+    } else if (isIE) {
+      dropZone.attachEvent('ondragenter', handleDragEnter);
+      dropZone.attachEvent('ondragover',  handleDragOver );
+      dropZone.attachEvent('ondragleave', handleDragLeave);
+      dropZone.attachEvent('ondrop',      handleDrop     );
+    } else if (isSafari || isNpapi) {
+      dropZone.addEventListener('dragenter', handleDragEnter, false);
+      dropZone.addEventListener('dragover',  handleDragOver,  false);
+      dropZone.addEventListener('dragleave', handleDragLeave, false);
+      dropZone.addEventListener('drop',      handleDrop,      false);
+    }
+  }
+  dropTargetEnabled = !dropTargetEnabled;
+}
+
 toggleEnabledDisabled();
+
 </script>
 </body>
 </html>
