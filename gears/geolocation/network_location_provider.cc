@@ -34,7 +34,88 @@
 // before sending the request.
 static const int kDataCompleteWaitPeriod = 1000 * 2;  // 2 seconds
 
+// The maximum size of the cache of positions for previously requested device
+// data.
+static const size_t kMaximumCacheSize = 10;
 
+
+// The PositionCache handles caching and retrieving a position returned by a
+// network location provider. It is not thread safe. It's methods are called on
+// multiple threads by NetworkLocationProvider, but the timing is such that
+// thread safety is not required.
+class PositionCache {
+ public:
+  // Caches the current position response for the current set of cell ID and
+  // WiFi data. Returns true on success, false otherwise.
+  bool CachePosition(const RadioData &radio_data,
+                     const WifiData &wifi_data,
+                     const Position &position) {
+    // Check that we can generate a valid key for the device data.
+    std::string16 key;
+    if (!MakeKey(radio_data, wifi_data, &key)) {
+      return false;
+    }
+    // If the cache is full, remove the oldest entry.
+    if (cache_.size() == kMaximumCacheSize) {
+      assert(cache_times_.size() == kMaximumCacheSize);
+      CacheTimesMap::iterator oldest_entry = cache_times_.begin();
+      assert(oldest_entry != cache_times_.end());
+      cache_.erase(oldest_entry->second);
+      cache_times_.erase(oldest_entry);
+    }
+    // Insert the position into the cache.
+    std::pair<CacheMap::iterator, bool> result =
+        cache_.insert(std::make_pair(key, position));
+    assert(result.second);
+    cache_times_[position.timestamp] = result.first;
+    assert(cache_.size() == cache_times_.size());
+    return true;
+  }
+
+  // Searches for a cached position response for the current set of cell ID and
+  // WiFi data. Returns the cached position if available, NULL otherwise.
+  const Position *FindPosition(const RadioData &radio_data,
+                               const WifiData &wifi_data) {
+    std::string16 key;
+    if (!MakeKey(radio_data, wifi_data, &key)) {
+      return NULL;
+    }
+    CacheMap::const_iterator iter = cache_.find(key);
+    return iter == cache_.end() ? NULL : &iter->second;
+  }
+
+  // Makes the key for the map of cached positions, using a set of
+  // device data. Returns true if a good key was generated, false otherwise.
+  static bool MakeKey(const RadioData& /*radio_data*/,
+                      const WifiData &wifi_data,
+                      std::string16 *key) {
+    // Currently we use only the WiFi data, and base the key only on the MAC
+    // addresses.
+    // TODO(steveblock): Make use of radio_data.
+    key->clear();
+    for (WifiData::AccessPointDataSet::const_iterator iter =
+         wifi_data.access_point_data.begin();
+         iter != wifi_data.access_point_data.begin();
+         iter++) {
+      key->append(STRING16(L"|") + iter->mac_address + STRING16(L"|"));
+    }
+    // If the key is the empty string, return false, as we don't want to cache a
+    // position for such a set of device data.
+    return !key->empty();
+  }
+
+private:
+  // The cache of positions. This is stored using two maps. One map is keyed on
+  // a string that represents a set of device data, the other is keyed on the
+  // timestamp of the position.
+  typedef std::map<std::string16, Position> CacheMap;
+  CacheMap cache_;
+  typedef std::map<int64, CacheMap::iterator> CacheTimesMap;
+  CacheTimesMap cache_times_;
+};
+
+
+// NetworkLocationProvider factory function
 LocationProviderBase *NewNetworkLocationProvider(
     BrowsingContext *browsing_context,
     const std::string16 &url,
@@ -45,6 +126,7 @@ LocationProviderBase *NewNetworkLocationProvider(
 }
 
 
+// NetworkLocationProvider
 NetworkLocationProvider::NetworkLocationProvider(
     BrowsingContext *browsing_context,
     const std::string16 &url,
@@ -70,6 +152,9 @@ NetworkLocationProvider::NetworkLocationProvider(
   wifi_data_provider_ = WifiDataProvider::Register(this);
 
   AccessTokenManager::GetInstance()->Register(url_);
+
+  // Create the position cache.
+  position_cache_.reset(new PositionCache());
 
   // Start the worker thread
   if (!Start()) {
@@ -187,9 +272,13 @@ void NetworkLocationProvider::LocationResponseAvailable(
     const Position &position,
     bool server_error,
     const std::string16 &access_token) {
-  // Cache the position
+  // Record the position and update our cache.
   position_mutex_.Lock();
   position_ = position;
+  if (position_.IsGoodFix()) {
+    MutexLock lock(&data_mutex_);
+    position_cache_->CachePosition(radio_data_, wifi_data_, position_);
+  }
   position_mutex_.Unlock();
 
   // Record access_token if it's set.
@@ -350,11 +439,6 @@ void NetworkLocationProvider::Run() {
 // Other methods
 
 bool NetworkLocationProvider::MakeRequest() {
-  // Reset flags
-  is_new_data_available_ = false;
-  is_last_request_complete_ = false;
-  is_new_listener_waiting_ = false;
-
   // If we have new listeners waiting for an address, request_address_
   // must be true.
   assert(new_listeners_requiring_address_.empty() || request_address_);
@@ -375,7 +459,31 @@ bool NetworkLocationProvider::MakeRequest() {
 
   std::string16 access_token;
   AccessTokenManager::GetInstance()->GetToken(url_, &access_token);
+
+  // Reset flags
+  is_new_data_available_ = false;
+  is_new_listener_waiting_ = false;
+
+  data_mutex_.Lock();
+  const Position *cached_position =
+      position_cache_->FindPosition(radio_data_, wifi_data_);
+  data_mutex_.Unlock();
+  if (cached_position) {
+    assert(cached_position->IsGoodFix());
+    // Record the position and update its timestamp.
+    position_mutex_.Lock();
+    position_ = *cached_position;
+    position_.timestamp = timestamp_;
+    position_mutex_.Unlock();
+
+    // Let listeners know that we now have a position available.
+    UpdateListeners();
+    return true;
+  }
+
   assert(request_);
+  is_last_request_complete_ = false;
+  MutexLock data_lock(&data_mutex_);
   return request_->MakeRequest(access_token,
                                radio_data_,
                                wifi_data_,
