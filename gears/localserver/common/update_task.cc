@@ -62,8 +62,7 @@ std::string16 UpdateTask::GetNotificationTopic(ManagedResourceStore *store) {
   std::string16 topic(STRING16(L"localserver:updatetask:event-"));
   topic += store->GetSecurityOrigin().url();
   topic += STRING16(L"-");
-  topic += IntegerToString16(static_cast<int>(store->GetServerID()));
-  // TODO(michaeln): Integer64ToString or hiword/loword yuck
+  topic += Integer64ToString16(store->GetServerID());
   return topic;
 }
 

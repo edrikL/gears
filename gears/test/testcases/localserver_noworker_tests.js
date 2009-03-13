@@ -1,7 +1,6 @@
 var localServer = google.gears.factory.create('beta.localserver');
 
 function testCaptureLongUrl() {
-
   var storeName = 'maximalUserSuppliedStoreNameWhichCanGetVeryLongAsYouSeeaaaaaaaaa';
   var invalidStoreName = 'invalidResourceStoreNameWhichIsMuchLongerThanShouldBeAllowedByAnySelfRespectingComputerProgram';
   
@@ -47,7 +46,6 @@ function testCaptureLongUrl() {
   });
 }
 
-
 function testRequiredCookie() {
   var STORE_NAME = 'RequiredCookieTestStore';
   var REQUIRED_COOKE = 'a=1';
@@ -91,6 +89,53 @@ function testRequiredCookie() {
       eraseTestCookie('a');
       assert(!localServer.canServeLocally(RENAME_URI),
              'Should not be servable with no cookie');
+
+      localServer.removeStore(STORE_NAME, REQUIRED_COOKE);
+
+      completeAsync();
+    });
+  });
+}
+
+function testRequiredCookieNONE() {
+  var STORE_NAME = 'RequiredCookieTestStore';
+  var REQUIRED_COOKE = 'a=;NONE;';
+  var CAPTURE_URI = '/testcases/test_file_1024.txt';
+  var RENAME_URI = '/testcases/renamed_not_on_server_no_cookie.txt';
+  var EXPECTED_CONTENT = '1111111111111111111111111111111111111111111111';
+
+  localServer.removeStore(STORE_NAME, REQUIRED_COOKE);
+  var resourceStore = localServer.createStore(STORE_NAME, REQUIRED_COOKE);
+
+  eraseTestCookie('a');
+  startAsync();
+  resourceStore.capture(CAPTURE_URI, function(url, success, id) {
+    assert(success, 'Failed to capture');
+    assert(resourceStore.isCaptured(CAPTURE_URI),
+           'Original should have been captured');
+
+    // Rename it to something not on the server
+    resourceStore.rename(CAPTURE_URI, RENAME_URI);
+    assert(resourceStore.isCaptured(RENAME_URI),
+           'Renamed item should be captured');
+    assert(!resourceStore.isCaptured(CAPTURE_URI),
+           'Original should not be captured after rename');
+    assert(localServer.canServeLocally(RENAME_URI),
+           'Should be servable with no cookie');
+
+    httpGet(RENAME_URI, function(content) {
+      assert(content,
+             'Should be http fetchable with no cookie');
+      assert(content.startsWith(EXPECTED_CONTENT),
+             'Unexpected content in resource');
+
+      createTestCookie('a', '1');
+      assert(!localServer.canServeLocally(RENAME_URI),
+             'Should not servable with a cookie');
+
+      eraseTestCookie('a');
+      assert(localServer.canServeLocally(RENAME_URI),
+             'Should be servable with no cookie (2)');
 
       localServer.removeStore(STORE_NAME, REQUIRED_COOKE);
 

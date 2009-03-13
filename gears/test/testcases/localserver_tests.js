@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+﻿// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -561,4 +561,80 @@ function testManagedResourceStoreInvalidContentLength() {
   }
 
   managedStore.checkForUpdate();
+}
+
+function testMatchAndIgnoreQuery() {
+  startAsync();
+  updateManagedStore(
+      "/testcases/manifest-matchquery.txt",
+      function(managedStore) {
+        assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
+                    'updateStatus should be OK');
+
+        // Urls that should be served locally and the expected content
+        var testPositiveUrls = [
+          ['/testcases/ignore_query?any', 'ignore'],
+          ['/testcases/ignore_query', 'ignore'],
+          ['/testcases/match_empty?this_is_like=ignore_query', 'ignore' ],
+          ['/testcases/match_empty', 'ignore' ],
+          ['/testcases/match_all?foo=bar&baz=any', 'match'],
+          ['/testcases/match_all?baz&foo=bar', 'match'],
+          ['/testcases/match_some?foo=bar', 'match' ],
+          ['/testcases/match_some?foo=foo', 'match' ],
+          ['/testcases/match_some?baz=any', 'match' ],
+          ['/testcases/match_some?baz', 'match' ],
+          ['/testcases/match_none?none&bar=foo', 'match' ],
+          ['/testcases/match_all_some_none?baz=any&foo=bar&one', 'match' ],
+          ['/testcases/match_all_some_none?foo=bar&baz&or=another', 'match' ],
+          ['/testcases/match_all?foo=bar&missing_baz', 'ignore' ],
+          ['/testcases/match_all', 'ignore' ],
+          ['/testcases/match_all_some_none?prefer_exact', '1' ],
+          ['/testcases/ignore_query?prefer_exact', '1' ]
+        ];
+
+        // Urls that should not be served locally
+        var testNegativeUrls = [
+          '/testcases/match_some?foo2',
+          '/testcases/match_some',
+          '/testcases/match_none?foo=bar',
+          '/testcases/match_none?foo=foo',
+          '/testcases/match_none?baz=any',
+          '/testcases/match_none?baz',
+          '/testcases/match_all_some_none?baz&foo=bar&notsome',
+          '/testcases/match_all_some_none?foo=notall&baz&one',
+          '/testcases/match_all_some_none?foo=bar&baz&one&bypass=yes'
+        ];
+
+        for (var i = 0; i < testPositiveUrls.length; i++) {
+          var url = testPositiveUrls[i][0];
+          assert(localServer.canServeLocally(url),
+                 'Should be able to serve "%s" locally'.subs(url));
+        }
+
+        for (var i = 0; i < testNegativeUrls.length; i++) {
+          var url = testNegativeUrls[i];
+          assert(!localServer.canServeLocally(url),
+                 'Should not be able to serve "%s" locally'.subs(url));
+        }
+
+        var httpGetCount = 0;
+
+        fetchNextUrl();
+
+        function fetchNextUrl() {
+          var i = httpGetCount;
+          var nextUrl = testPositiveUrls[i][0];
+          var expectedContent = testPositiveUrls[i][1];
+          httpGet(nextUrl, function(content) {
+            httpGetCount++;
+            assertEqual(expectedContent, content,
+                        'Incorrect content for url "%s"'.subs(nextUrl));
+            if (httpGetCount == testPositiveUrls.length) {
+              timer.setTimeout(completeAsync, 0);
+            } else {
+              timer.setTimeout(fetchNextUrl, 0);
+            }
+          });
+        }
+      });
 }

@@ -26,6 +26,7 @@
 #ifndef GEARS_BASE_COMMON_URL_UTILS_H__
 #define GEARS_BASE_COMMON_URL_UTILS_H__
 
+#include <map>
 #include <vector>
 
 #include "gears/base/common/string16.h" // for string16
@@ -92,9 +93,16 @@ enum EscapeUrlFlags {
 };
 std::string EscapeUrl(const std::string &source, unsigned int flags);
 
-// ----------------------------------------------------------------------
 // Converts a UTF8 path to a percent encoded "file:///" URL.
-// ----------------------------------------------------------------------
 std::string UTF8PathToUrl(const std::string &path, bool directory);
+
+// Parses the query string portion of a url into multimap. The input string
+// should not begin with a leading '?' character. The input string is assumed
+// to be properly url escaped. The multimap is populated with unescaped strings,
+// the map key being the query parameter name, and the map value being the query
+// parameter value.
+// TODO(michaeln): consider using StringFragments or url_parse::Components here?
+typedef std::multimap<std::string16, std::string16> QueryArgumentsMap;
+void ParseUrlQuery(const char16 *query_string, QueryArgumentsMap *arguments);
 
 #endif // GEARS_BASE_COMMON_URL_UTILS_H__

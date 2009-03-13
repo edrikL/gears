@@ -1,0 +1,27 @@
+﻿{
+  "betaManifestVersion": 2,
+  "version": "1",
+  "entries": [
+    {"url": "ignore_query", "src": "ignore_query.txt", "ignoreQuery": true },
+    {"url": "match_empty", "src": "ignore_query.txt", "matchQuery": {} },
+    {"url": "match_all", "src": "ignore_query.txt", "ignoreQuery": true },
+
+    {"url": "match_all", "src": "match_query.txt",
+     "matchQuery": { "hasAll": "baz&foo=bar" } },
+
+    {"url": "match_some", "src": "match_query.txt",
+     "matchQuery": { "hasSome": "baz&foo=bar&foo=foo" } },
+
+    {"url": "match_none", "src": "match_query.txt",
+     "matchQuery": { "hasNone": "baz&foo=bar&foo=foo" } },
+
+    {"url": "match_all_some_none", "src": "match_query.txt",
+     "matchQuery": {
+        "hasAll": "baz&foo=bar",
+        "hasSome": "one&or=another",
+        "hasNone": "none&shall=pass&bypass" } },
+
+    {"url": "match_all_some_none?prefer_exact", "src": "test_file_1.txt" },
+    {"url": "ignore_query?prefer_exact", "src": "test_file_1.txt" }
+  ]
+}

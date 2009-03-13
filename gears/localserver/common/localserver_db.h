@@ -131,11 +131,16 @@ class WebCacheDB : SQLTransactionListener {
     std::string16 src;
     std::string16 redirect;
     bool ignore_query;
+    bool match_query;  // if true, the match fields should be respected
+    std::string16 match_all;
+    std::string16 match_some;
+    std::string16 match_none;
     int64 payload_id;
 
     EntryInfo() : id(kUnknownID),
                   version_id(kUnknownID),
                   ignore_query(false),
+                  match_query(false),
                   payload_id(kUnknownID) {}
   };
 
@@ -358,20 +363,11 @@ class WebCacheDB : SQLTransactionListener {
   bool Init();
 
   // Helpers used by our public Service and CanService methods
+  class ServiceQuery;
   bool ServiceImpl(const char16 *url,
                    BrowsingContext *browsing_context,
                    PayloadInfo *payload,
                    bool payload_head_only);
-
-  bool DoServiceQuery(const char16 *url,
-                      bool exact_match,
-                      BrowsingContext *context,
-                      const char16 *requested_url,
-                      bool *loaded_cookie_map,
-                      bool *loaded_cookie_map_ok,
-                      CookieMap *cookie_map,
-                      std::string16 *possible_session_redirect,
-                      int64 *payload_id_out);
 
   bool ServiceInspectorUrl(const char16 *url,
                            const SecurityOrigin &origin,
@@ -406,6 +402,7 @@ class WebCacheDB : SQLTransactionListener {
 
   bool UpgradeFrom10To11();
   bool UpgradeFrom11To12();
+  bool UpgradeFrom12To13();
 
   bool ExecuteSqlCommandsInTransaction(const char *commands[], int count);
   bool ExecuteSqlCommands(const char *commands[], int count);

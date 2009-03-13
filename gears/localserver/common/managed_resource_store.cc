@@ -186,6 +186,12 @@ bool ManagedResourceStore::AddManifestAsDownloadingVersion(Manifest *manifest,
     entry.src = iter->src;
     entry.redirect = iter->redirect;
     entry.ignore_query = iter->ignore_query;
+    entry.match_query = iter->match_query;
+    if (entry.match_query) {
+      entry.match_all = iter->match_all;
+      entry.match_some = iter->match_some;
+      entry.match_none = iter->match_none;
+    }
 
     // If the entry has a redirect, synthesize a 302 response and store
     // that as the payload for this entry. The redirect is expected to
