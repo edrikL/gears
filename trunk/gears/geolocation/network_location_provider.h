@@ -34,9 +34,6 @@
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/network_location_request.h"
 
-// PositionCache is an implementation detail of NetworkLocationProvider.
-class PositionCache;
-
 class NetworkLocationProvider
     : public LocationProviderBase,
       public RadioDataProvider::ListenerInterface,
@@ -129,9 +126,6 @@ class NetworkLocationProvider
   int64 earliest_next_request_time_;
 
   BrowsingContext *browsing_context_;
-
-  // The cache of positions.
-  scoped_ptr<PositionCache> position_cache_;
 
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
