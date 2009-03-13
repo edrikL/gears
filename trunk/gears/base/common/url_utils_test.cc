@@ -30,11 +30,13 @@
 
 static bool TestUrlUTF8FileToUrl();
 static bool TestUrlResolve();
+static bool TestParseUrlQuery();
 
 bool TestUrlUtils(std::string16 *error) {
   bool ok = true;
   ok &= TestUrlResolve();
   ok &= TestUrlUTF8FileToUrl();
+  ok &= TestParseUrlQuery();
   if (ok) {
     LOG(("TestUrlUtilsAll - passed\n"));
   } else {
@@ -159,12 +161,6 @@ static bool TestUrlResolve() {
       STRING16(L"http://server/directory/foo#bar"),
       STRING16(L"http://server/directory/foo")
     },
-#if defined(BROWSER_IE) || defined(BROWSER_IEMOBILE)
-    // TODO(playmobil): escape URLs on IE6.
-    // Behavior for this case is inconsistent between IE6 and IE7.
-    // IE6 doesn't escape the URL and return 'http://server/a b/c d'.
-    // IE7 behaves the same as Firefox.
-#else
     {  // Check that we escape base and url.
       STRING16(L"http://server/a b/"),
       STRING16(L"c d"),
@@ -180,20 +176,11 @@ static bool TestUrlResolve() {
       STRING16(L"http://server/a b/c%20 d/"),
       STRING16(L"http://server/a%20b/c%20%20d/")
     },
-#endif
-
-#if defined(BROWSER_IE) || defined(BROWSER_IEMOBILE)
-    // TODO(playmobil): make IE7 Resolve&Normalize handle user:pass in URL.
-    // Behavior for this case is inconsistent between IE6 and IE7.
-    // IE6 handles http://user:pass@domain without issues.
-    // IE7 fails on such URLs.
-#else
     {  // Lowercase scheme & host but don't touch path.
       STRING16(L"HTTp://fOo:bAbA@SErver:8080/"),
       STRING16(L"fOo.hTml?a=bB"),
       STRING16(L"http://fOo:bAbA@server:8080/fOo.hTml?a=bB")
-     },
-#endif
+    },
     {  // Lowercase scheme & host but don't touch path.
       STRING16(L"HTTp://SErver:8080/"),
       STRING16(L"fOo.hTml?a=bB"),
@@ -320,5 +307,123 @@ static bool TestUrlUTF8FileToUrl() {
   }
 
   LOG(("TestUrlUTF8FileToUrl - passed\n"));
+  return true;
+}
+
+static bool TestParseUrlQuery() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+  LOG(("TestParseUrlQuery failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
+  QueryArgumentsMap args;
+  QueryArgumentsMap::const_iterator found;
+
+  ParseUrlQuery(STRING16(L"aaa&b"), &args);
+  TEST_ASSERT(args.size() == 2);
+  found = args.find(STRING16(L"aaa"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+  found = args.find(STRING16(L"b"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L""), &args);
+  TEST_ASSERT(args.size() == 0);
+
+  ParseUrlQuery(STRING16(L"keyonly="), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"keyonly"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"=invisible"), &args);
+  TEST_ASSERT(args.size() == 0);
+
+  ParseUrlQuery(STRING16(L"a=1&bb=22&c&dd"), &args);
+  TEST_ASSERT(args.size() == 4);
+  found = args.find(STRING16(L"a"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"1"));
+  found = args.find(STRING16(L"bb"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"22"));
+  found = args.find(STRING16(L"c"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+  found = args.find(STRING16(L"dd"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"=invisible&a"), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"a"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"key=="), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"key"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"="));
+
+  ParseUrlQuery(STRING16(L"key=&"), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"key"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"key1=&key2"), &args);
+  TEST_ASSERT(args.size() == 2);
+  found = args.find(STRING16(L"key1"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+  found = args.find(STRING16(L"key2"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"key&="), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"key"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second.empty());
+
+  ParseUrlQuery(STRING16(L"key=x&&"), &args);
+  TEST_ASSERT(args.size() == 1);
+  found = args.find(STRING16(L"key"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"x"));
+
+  ParseUrlQuery(STRING16(L"key1=x&&key2=y"), &args);
+  TEST_ASSERT(args.size() == 2);
+  found = args.find(STRING16(L"key1"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"x"));
+  found = args.find(STRING16(L"key2"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"y"));
+
+  ParseUrlQuery(STRING16(L"key=x&key=y&key"), &args);
+  TEST_ASSERT(args.size() == 3);
+  found = args.find(STRING16(L"key"));
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->second == STRING16(L"x"));
+  ++found;
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->first == STRING16(L"key"));
+  TEST_ASSERT(found->second == STRING16(L"y"));
+  ++found;
+  TEST_ASSERT(found != args.end());
+  TEST_ASSERT(found->first == STRING16(L"key"));
+  TEST_ASSERT(found->second.empty());
+
+  // TODO(michaeln): Some test cases with escaped inputs if and when we
+  // have a use case the depends on that.
+
+  LOG(("TestParseUrlQuery passed\n"));
   return true;
 }

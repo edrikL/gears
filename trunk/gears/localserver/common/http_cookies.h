@@ -112,7 +112,15 @@ class CookieMap : public std::map<std::string16, std::string16> {
   // "foo=bar" --> a cookie name "foo" must have the value "bar"
   // "foo" | "foo=" --> "foo" must be present but have an empty value
   // "foo=;NONE;" --> the collection must not contain a cookie for "foo"
-  bool HasLocalServerRequiredCookie(const std::string16 &required_cookie);
+  bool HasLocalServerRequiredCookie(const std::string16 &required_cookie) {
+    std::string16 name, value;
+    return HasLocalServerRequiredCookie(required_cookie, &name, &value);
+  }
+
+  // Variant that returns the name and value specified in 'required_cookie'
+  // in addition to performing the test.
+  bool HasLocalServerRequiredCookie(const std::string16 &required_cookie,
+                                    std::string16 *name, std::string16 *value);
 };
 
 #ifdef USING_CCTESTS

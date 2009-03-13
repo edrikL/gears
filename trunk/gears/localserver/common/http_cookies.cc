@@ -84,17 +84,18 @@ bool CookieMap::HasSpecificCookie(const std::string16 &cookie_name,
 }
 
 bool CookieMap::HasLocalServerRequiredCookie(
-                    const std::string16 &required_cookie) {
+                    const std::string16 &required_cookie,
+                    std::string16 *name, std::string16 *value) {
+  assert(name && value);
   if (required_cookie.empty())
     return true;
 
-  std::string16 name, value;
-  ParseCookieNameAndValue(required_cookie, &name, &value);
-  if (name.empty())
+  ParseCookieNameAndValue(required_cookie, name, value);
+  if (name->empty())
     return false;
 
-  return (value == kNegatedRequiredCookieValue)
-                       ? !HasCookie(name) : HasSpecificCookie(name, value);
+  return (*value == kNegatedRequiredCookieValue)
+                       ? !HasCookie(*name) : HasSpecificCookie(*name, *value);
 }
 
 void ParseCookieNameAndValue(const std::string16 &name_and_value,

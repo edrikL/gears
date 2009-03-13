@@ -454,6 +454,21 @@ inline int Tokenize(const StringT &str,
   return tokens->size();
 }
 
+// Performs a case-sensitive comparison of char* or char16* strings.
+template<class CharT>
+inline int StringCompare(const CharT *lhs, const CharT *rhs) {
+  assert(lhs && rhs);
+  int ret = 0;
+  while (!(ret = static_cast<int>(*lhs) - static_cast<int>(*rhs)) && *rhs) {
+    ++lhs;
+    ++rhs;
+  }
+  if (ret < 0)
+    ret = -1;
+  else if (ret > 0)
+    ret = 1;
+  return ret;
+}
 
 // Performs a case-insensitive comparison of char* or char16* strings.
 template<class CharT>
@@ -465,9 +480,9 @@ inline int StringCompareIgnoreCase(const CharT *lhs, const CharT *rhs) {
     ++rhs;
   }
   if (ret < 0)
-    ret = -1 ;
+    ret = -1;
   else if (ret > 0)
-    ret = 1 ;
+    ret = 1;
   return ret;
 }
 

@@ -747,12 +747,21 @@ bool TestHttpCookies(BrowsingContext *context, std::string16 *error) {
   const std::string16 kName(STRING16(L"name"));
   const std::string16 kNameEq(STRING16(L"name="));
   const std::string16 kNameEqSp(STRING16(L"name= "));
+  ParseCookieNameAndValue(kName, &name, &value);
+  TEST_ASSERT(name == kName);
+  TEST_ASSERT(value.empty());
   ParseCookieNameAndValue(kNameEq, &name, &value);
   TEST_ASSERT(name == kName);
   TEST_ASSERT(value.empty());
   ParseCookieNameAndValue(kNameEqSp, &name, &value);
   TEST_ASSERT(name == kName);
   TEST_ASSERT(value.empty());
+  ParseCookieNameAndValue(STRING16(L"a=1"), &name, &value);
+  TEST_ASSERT(name == STRING16(L"a"));
+  TEST_ASSERT(value == STRING16(L"1"));
+  ParseCookieNameAndValue(STRING16(L"=value"), &name, &value);
+  TEST_ASSERT(name.empty());
+  TEST_ASSERT(value == STRING16(L"value"));
 
   const std::string16 kValue(STRING16(L"value"));
   const std::string16 kName2(STRING16(L"name 2"));
@@ -798,14 +807,16 @@ bool TestManifest(std::string16 *error) {
   const std::string16 expected_redirect(
                  STRING16(L"http://cc_tests.other_origin/redirectUrl"));
   const char16 *json16 = STRING16(
-    L"{ 'betaManifestVersion': 1, \n"
+    L"{ 'betaManifestVersion': 2, \n"
     L"  'version': 'expected_version', \n"
     L"  'redirectUrl': 'http://cc_tests.other_origin/redirectUrl', \n"
     L"  'entries': [ \n"
     L"       { 'url': 'test_url', 'src': 'test_src' }, \n"
     L"       { 'url': 'test_url2' }, \n"
     L"       { 'url': 'test_url3', 'ignoreQuery': true}, \n"
-    L"       { 'url': 'test_redirect_url', 'redirect': 'test_url3?blah' } \n"
+    L"       { 'url': 'test_redirect_url', 'redirect': 'test_url3?blah' }, \n"
+    L"       { 'url': 'test_match_query', \n"
+    L"         'matchQuery': { 'hasAll': 'foo=bar&keyonly', 'hasSome': '' } } \n"
     L"     ] \n"
     L"}");
 
@@ -819,13 +830,14 @@ bool TestManifest(std::string16 *error) {
   TEST_ASSERT(manifest.IsValid());
   TEST_ASSERT(expected_version == manifest.GetVersion());
   TEST_ASSERT(expected_redirect == manifest.GetRedirectUrl());
-  TEST_ASSERT(manifest.GetEntries()->size() == 4);
+  TEST_ASSERT(manifest.GetEntries()->size() == 5);
 
   const Manifest::Entry *entry1 = &manifest.GetEntries()->at(0);
   TEST_ASSERT(entry1->url == STRING16(L"http://cc_tests/test_url"));
   TEST_ASSERT(entry1->src == STRING16(L"http://cc_tests/test_src"));
   TEST_ASSERT(entry1->redirect.empty());
   TEST_ASSERT(!entry1->ignore_query);
+  TEST_ASSERT(!entry1->match_query);
 
   const Manifest::Entry *entry2 = &manifest.GetEntries()->at(1);
   TEST_ASSERT(entry2->url == STRING16(L"http://cc_tests/test_url2"));
@@ -843,6 +855,12 @@ bool TestManifest(std::string16 *error) {
   TEST_ASSERT(entry4->src.empty());
   TEST_ASSERT(entry4->redirect == STRING16(L"http://cc_tests/test_url3?blah"));
 
+  const Manifest::Entry *entry5 = &manifest.GetEntries()->at(4);
+  TEST_ASSERT(entry5->url == STRING16(L"http://cc_tests/test_match_query"));
+  TEST_ASSERT(entry5->match_query);
+  TEST_ASSERT(entry5->match_all == STRING16(L"foo=bar&keyonly"));
+  TEST_ASSERT(entry5->match_some.empty());
+  TEST_ASSERT(entry5->match_none.empty());
 
   const char *json_not_an_object = "\"A string, but we need an object\"";
   Manifest manifest_should_not_parse;
@@ -1037,10 +1055,10 @@ bool TestLocalServerDB(BrowsingContext *context, std::string16 *error) {
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestWebCacheDB - failed (%d)\n", __LINE__)); \
+    LOG(("TestLocalServerDB - failed (%d)\n", __LINE__)); \
     SetFakeCookieString(NULL, NULL); \
     assert(error); \
-    *error += STRING16(L"TestWebCacheDB - failed. "); \
+    *error += STRING16(L"TestLocalServerDB - failed. "); \
     return false; \
   } \
 }
@@ -1063,7 +1081,7 @@ bool TestLocalServerDB(BrowsingContext *context, std::string16 *error) {
     db->DeleteServer(existing_server.id);
   }
 
-  // insert a server
+  // insert a managed resource store with a required cookie
   WebCacheDB::ServerInfo server;
   server.server_type = WebCacheDB::MANAGED_RESOURCE_STORE;
   server.security_origin_url = security_origin.url();
@@ -1123,7 +1141,7 @@ bool TestLocalServerDB(BrowsingContext *context, std::string16 *error) {
   // we shouldn't be able to service a request for testurl
   TEST_ASSERT(!db->CanService(testurl, context));
 
-  // now make the ready version current
+  // now make version2 the current version
   TEST_ASSERT(db->UpdateVersion(version2.id, WebCacheDB::VERSION_CURRENT));
 
   // we should still not be able to service a request for testurl as there

@@ -40,8 +40,12 @@ class Manifest {
     std::string16 src;
     std::string16 redirect;
     bool ignore_query;
+    bool match_query;
+    std::string16 match_all;
+    std::string16 match_some;
+    std::string16 match_none;
 
-    Entry() : ignore_query(false) {}
+    Entry() : ignore_query(false), match_query(false) {}
   };
 
   Manifest() : is_valid_(false) {}
@@ -73,6 +77,7 @@ class Manifest {
   const char16 *GetErrorMessage() { return error_message_.c_str(); }
 
  private:
+  bool CanonicalizeMatchString(std::string16 *match);
   bool ResolveRelativeUrls();
   bool ResolveRelativeUrl(const char16 *base,
                           std::string16 *url,

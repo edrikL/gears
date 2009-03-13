@@ -149,21 +149,21 @@ bool ParseDataUrl(const std::string16& url, std::string16* mime_type,
 }
 
 
-template <class str>
-str UnescapeURLImpl(const str& escaped_text, bool replace_plus) {
+template <class StringT>
+StringT UnescapeURLImpl(const StringT& escaped_text, bool replace_plus) {
   if (escaped_text.length() < 3 && !replace_plus)
     return escaped_text;  // Can't possibly have an escaped char
 
   // The output of the unescaping is always smaller than the input, so we can
   // reserve the input size to make sure we have enough buffer and don't have
   // to allocate in the loop below.
-  str result;
+  StringT result;
   result.reserve(escaped_text.length());
 
   for (size_t i = 0, max = escaped_text.size(); i < max; ++i) {
     if (escaped_text[i] == '%' && i + 2 < max) {
-      const typename str::value_type most_sig_digit(escaped_text[i + 1]);
-      const typename str::value_type least_sig_digit(escaped_text[i + 2]);
+      const typename StringT::value_type most_sig_digit(escaped_text[i + 1]);
+      const typename StringT::value_type least_sig_digit(escaped_text[i + 2]);
       if (IsHex(most_sig_digit) && IsHex(least_sig_digit)) {
         result.push_back((HexToInt(most_sig_digit) * 16) +
                          HexToInt(least_sig_digit));
@@ -337,4 +337,29 @@ bool ResolveAndNormalize(const char16 *base, const char16 *url,
   }
 
   return true;
+}
+
+void ParseUrlQuery(const char16 *query_string, QueryArgumentsMap *arguments) {
+  assert(query_string && arguments);
+  assert(query_string[0] != '?');
+  arguments->clear();
+  url_parse::Component key, value;
+  url_parse::Component query(
+      0, static_cast<int>(std::char_traits<char16>::length(query_string)));
+  while (url_parse::ExtractQueryKeyValue(query_string, &query, &key, &value)) {
+    if (key.is_nonempty()) {
+      std::string16  key_str(UnescapeURLImpl(std::string16(query_string,
+                                                           key.begin,
+                                                           key.len),
+                                             true));
+      std::string16 value_str;
+      if (value.is_nonempty()) {
+        value_str = UnescapeURLImpl(std::string16(query_string,
+                                                  value.begin,
+                                                  value.len),
+                                    true);
+      }
+      arguments->insert(QueryArgumentsMap::value_type(key_str, value_str));
+    }
+  }
 }
