@@ -152,8 +152,7 @@ struct AccessPointData {
   std::string16 ssid;   // Network identifier
 };
 
-// This is to allow AccessPointData to be used in std::set. We order
-// lexicographically by MAC address.
+// This is to allow AccessPointData to be used in std::set.
 struct AccessPointDataLess : std::less<AccessPointData> {
   bool operator()(const AccessPointData &data1,
                   const AccessPointData &data2) const {
@@ -189,8 +188,7 @@ struct WifiData {
         std::min(kMinChangedAccessPoints, access_point_data.size() / 2);
   }
 
-  // Store access points as a set, sorted by MAC address. This allows quick
-  // comparison of sets for detecting changes and for caching.
+  // Store access points a set for for quick evaluation of intersection.
   typedef std::set<AccessPointData, AccessPointDataLess> AccessPointDataSet;
   AccessPointDataSet access_point_data;
 };
