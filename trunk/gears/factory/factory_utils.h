@@ -28,6 +28,7 @@
 
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 
 class SecurityOrigin;
 
@@ -43,6 +44,15 @@ extern const char16 *kPermissionExceptionString;
 
 // Appends information about the Gears build to the string provided.
 void AppendBuildInfo(std::string16 *s);
+
+// Appends a short string identifying the hosting browser. This the same value
+// incorporated into the 'buildinfo' string.
+void AppendShortBrowserLabel(std::string16 *s);
+inline void AppendShortBrowserLabel(std::string *s) {
+  std::string16 s16;
+  AppendShortBrowserLabel(&s16);
+  s->append(String16ToUTF8(s16));
+}
 
 // Sets a usage-tracking bit once per instantiation of Gears module. On
 // machines that have the Google Update Service available, this bit is

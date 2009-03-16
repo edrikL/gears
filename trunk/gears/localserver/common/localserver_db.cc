@@ -25,6 +25,9 @@
 
 #include "gears/localserver/common/localserver_db.h"
 
+#include <stdlib.h>
+#include <time.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -43,6 +46,7 @@
 #ifdef BROWSER_IEMOBILE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
+#include "gears/factory/factory_utils.h"
 #include "gears/inspector/inspector_resources.h"
 #include "gears/localserver/common/blob_store.h"
 #ifdef USE_FILE_STORE
@@ -221,6 +225,77 @@ static const char16 *kCurrentBrowser = STRING16(L"npapi");
 // Used to serialize transactions on the localserver.db file
 static Mutex global_transaction_mutex;
 
+
+//------------------------------------------------------------------------------
+// ServiceLog developer utility to log cache hits
+//------------------------------------------------------------------------------
+#ifdef OS_WINCE
+// Not implemented on WinCE
+class ServiceLog {
+ public:
+  static void Initialize() {}
+  static void LogHit(const char16 *url, const PayloadInfo *payload) {}
+};
+#else
+class ServiceLog {
+ public:
+  static void Initialize() {
+    instance_.InitializeInternal();
+  }
+  static void LogHit(const char16 *url, int status_code) {
+    instance_.LogHitInternal(url, status_code);
+  }
+
+ private:
+  ServiceLog() : logfile_(NULL), initialized_(false) {}
+
+  ~ServiceLog() {
+    if (logfile_) {
+      fclose(logfile_);
+    }
+  }
+
+  void InitializeInternal() {
+    MutexLock lock(&mutex_);
+    if (!initialized_) {
+      // Retrieve a browser specific env variable that enables this logging
+      std::string var_name("GEARS_LOCALSERVER_LOGFILE_");
+      AppendShortBrowserLabel(&var_name);
+      const char *filename = getenv(var_name.c_str());
+      if (filename && filename[0]) {
+        // Uniqueify the filename by appending the 16 bits worth of ticks
+        std::string filename(filename);
+        filename += IntegerToString(static_cast<int>(GetTicks() & 0x0000ffff));
+        if (File::CreateNewFile(UTF8ToString16(filename).c_str())) {
+          logfile_ = fopen(filename.c_str(), "a");
+        }
+      }
+      initialized_ = true;
+    }
+  }
+
+  void LogHitInternal(const char16 *url, int status_code) {
+    if (!logfile_) {
+      return;
+    }
+    MutexLock lock(&mutex_);
+    time_t now;
+    time(&now);
+    std::string now_str(ctime(&now));
+    now_str.replace(now_str.rfind('\n'), 1, "");
+    fprintf(logfile_, "%s %d %s\n", now_str.c_str(), status_code,
+                                    String16ToUTF8(url).c_str());
+  }
+
+  FILE *logfile_;
+  bool initialized_;
+  Mutex mutex_;
+  static ServiceLog instance_;
+};
+ServiceLog ServiceLog::instance_;
+#endif
+
+
 //------------------------------------------------------------------------------
 // constructor
 //------------------------------------------------------------------------------
@@ -239,6 +314,8 @@ WebCacheDB::WebCacheDB()
 // Init
 //------------------------------------------------------------------------------
 bool WebCacheDB::Init() {
+  ServiceLog::Initialize();
+
   // Initialize the database
   if (!db_.Open(kFilename)) {
     return false;
@@ -682,7 +759,11 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
   assert(url);
   assert(payload);
 
-  return ServiceImpl(url, context, payload, head_only);
+  bool ok = ServiceImpl(url, context, payload, head_only);
+  if (ok && !head_only) {
+    ServiceLog::LogHit(url, payload->status_code);
+  }
+  return ok;
 }
 
 
