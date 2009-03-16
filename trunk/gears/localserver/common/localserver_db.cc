@@ -234,7 +234,7 @@ static Mutex global_transaction_mutex;
 class ServiceLog {
  public:
   static void Initialize() {}
-  static void LogHit(const char16 *url, const PayloadInfo *payload) {}
+  static void LogHit(const char16 *url, int status_code) {}
 };
 #else
 class ServiceLog {
