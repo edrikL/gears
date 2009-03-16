@@ -30,14 +30,17 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_utils.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/factory/factory_utils.h"
 #include "gears/httprequest/httprequest_upload.h"
 
 // Error messages.
@@ -82,8 +85,8 @@ static const char16* kDisallowedMethods[] = {
       STRING16(L"TRACE"),
       STRING16(L"TRACK") };
 
-static const char *kDebugLogEnvVarName = "GEARS_HTTPREQUEST_LOGFILE";
-static const char *kDebugBodyEnvVarName = "GEARS_HTTPREQUEST_LOG_BODY";
+static const char *kDebugLogEnvVarName = "GEARS_HTTPREQUEST_LOGFILE_";
+static const char *kDebugBodyEnvVarName = "GEARS_HTTPREQUEST_LOG_BODY_";
 
 #ifdef OS_WINCE
 // Not implemented on WinCE
@@ -115,11 +118,23 @@ class HttpRequestLog {
 
   void Initialize() {
     if (!initialized_) {
-      const char *filename = getenv(kDebugLogEnvVarName);
-      if (filename) {
-        logfile_ = fopen(filename, "a");
+      // Retrieve a browser specific env variable that enables this logging
+      std::string var_name(kDebugLogEnvVarName);
+      AppendShortBrowserLabel(&var_name);
+      const char *filename = getenv(var_name.c_str());
+      if (filename && filename[0]) {
+        // Uniqueify the filename by appending the 16 bits worth of ticks
+        std::string filename(filename);
+        filename += IntegerToString(static_cast<int>(GetTicks() & 0x0000ffff));
+        if (File::CreateNewFile(UTF8ToString16(filename).c_str())) {
+          logfile_ = fopen(filename.c_str(), "a");
+          if (logfile_) {
+            var_name = kDebugBodyEnvVarName;
+            AppendShortBrowserLabel(&var_name);
+            log_body_ = (getenv(var_name.c_str()) != NULL);
+          }
+        }
       }
-      log_body_ = (getenv(kDebugBodyEnvVarName) != NULL);
       initialized_ = true;
     }
   }
