@@ -106,22 +106,26 @@ void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(L";unknown_os"));
 #endif
 
+  s->append(STRING16(L";"));
+  AppendShortBrowserLabel(s);
+}
 
+void AppendShortBrowserLabel(std::string16 *s) {
 #if BROWSER_IE
-  s->append(STRING16(L";ie"));
+  s->append(STRING16(L"ie"));
 #elif BROWSER_IEMOBILE
-  s->append(STRING16(L";ie_mobile"));
+  s->append(STRING16(L"ie_mobile"));
 #elif BROWSER_FF
-  s->append(STRING16(L";firefox"));
+  s->append(STRING16(L"firefox"));
 #elif BROWSER_SAFARI
-  s->append(STRING16(L";safari"));
+  s->append(STRING16(L"safari"));
 #elif BROWSER_OPERA
   // This must come before the test for BROWSER_NPAPI
-  s->append(STRING16(L";opera"));
+  s->append(STRING16(L"opera"));
 #elif BROWSER_NPAPI
-  s->append(STRING16(L";npapi"));
+  s->append(STRING16(L"npapi"));
 #else
-  s->append(STRING16(L";unknown_browser"));
+  s->append(STRING16(L"unknown_browser"));
 #endif
 }
 
