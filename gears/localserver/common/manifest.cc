@@ -181,8 +181,8 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
 
   // Verify the data format is a version we know about
   int format_version = JsonUtils::GetInteger(root, kManifestVersionField);
-  if (format_version != kManifestFormatVersion1 &&
-      format_version != kManifestFormatVersion2) {
+  if ((format_version != kManifestFormatVersion1) &&
+      (format_version != kManifestFormatVersion2)) {
     error_message_ = STRING16(L"Invalid '"
                               L_MANIFEST_VERSION_FIELD
                               L"' attribute");
