@@ -238,7 +238,8 @@ class BaseWin32Installer(BaseInstaller):
     """Override to handle win32 shell limitations."""
     if not os.path.isabs(path):
       path = os.path.join(os.getcwd(), path)
-    self._deleteFolderWin32(path)
+    if os.path.exists(path):
+      self._deleteFolderWin32(path)
 
   def _deleteFolderWin32(self, full_path):
     """A function like shutil.rmtree using win32api.
