@@ -797,7 +797,7 @@ bool WebCacheDB::Service(const char16 *url, BrowsingContext *context,
 
 class QueryMatcher {
  public:
-  QueryMatcher::QueryMatcher(const char16 *requested_query)
+  QueryMatcher(const char16 *requested_query)
     : query(requested_query), parsed(false) {}
 
   // Test the matchQuery.hasAll attribute. An empty value in the match string
