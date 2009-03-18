@@ -197,7 +197,6 @@ HttpRequestAndroid::HttpRequestAndroid()
       total_bytes_to_send_(0),
       asynchronous_(true),
       was_aborted_(false),
-      was_aborted_mutex_(),
       response_body_(NULL),
       post_blob_(NULL),
       was_redirected_(false),
@@ -238,10 +237,6 @@ void HttpRequestAndroid::Ref() {
 }
 
 void HttpRequestAndroid::Unref() {
-  // It is dangerous to decrement the reference count on a background
-  // thread, as this may invoke the destructor. Destruction is only
-  // safe if performed on the main thread.
-  assert(IsMainThread());
   // Atomically decrement reference count, self-deleting if zero.
   if (ref_count_.Unref()) {
     LOG(("Dec ref_count_ to 0, deleting, called by %p\n",
@@ -313,17 +308,21 @@ bool HttpRequestAndroid::GetReadyState(ReadyState *state) {
 }
 
 void HttpRequestAndroid::SetReadyState(ReadyState new_state) {
-  // Only called by the main thread.
-  assert(IsMainThread());
-  LOG(("SetReadyState %d vs %d\n",
+  if (IsMainThread()) {
+    LOG(("SetReadyState %d vs %d\n",
        static_cast<int>(new_state),
        static_cast<int>(ready_state_)));
-  if (new_state > ready_state_) {
-    ready_state_ = new_state;
-    if (http_listener_) {
-      // Call the listener to inform them our state increased.
-      http_listener_->ReadyStateChanged(this);
+    if (new_state > ready_state_) {
+      ready_state_ = new_state;
+      if (http_listener_) {
+        // Call the listener to inform them our state increased.
+        http_listener_->ReadyStateChanged(this);
+      }
     }
+  } else {
+    AsyncRouter::GetInstance()->CallAsync(
+        main_thread_id_,
+        new SetReadyStateFunctor(this, new_state));
   }
 }
 
@@ -395,7 +394,7 @@ bool HttpRequestAndroid::GetStatusLineNoCheck(std::string16 *status_line) {
   jobject ret = JniGetEnv()->CallObjectMethod(
       java_object_.Get(),
       GetMethod(JAVA_METHOD_GET_RESPONSE_LINE));
-  if (status_line != NULL) {
+  if (ret != NULL) {
     *status_line = JavaString(static_cast<jstring>(ret)).ToString16();
     return true;
   } else {
@@ -577,7 +576,10 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
 }
 
 void HttpRequestAndroid::SwitchToMainThreadState(State state) {
-  assert(IsChildThread());
+  // If we are aborted, the only state we can go on
+  // the main thread is STATE_MAIN_COMPLETE.
+  if (was_aborted_ && state != STATE_MAIN_COMPLETE)
+    return;
   LOG(("Transferring to main thread with state %s\n", GetStateName(state)));
   // The state_ member will change when this message is received on
   // the main thread. This ensures state_ only changes under the
@@ -592,13 +594,8 @@ void HttpRequestAndroid::SwitchToMainThreadState(State state) {
 // The function below is only called by the state machine so the call
 // to SetState is valid.
 void HttpRequestAndroid::SwitchToChildThreadState(State state) {
-  assert(IsMainThread());
   LOG(("Transferring to child thread with state %s\n", GetStateName(state)));
-  // Set the new state_ before farming out work to the child.
-  SetState(state);
-  // Also send the new state_ to the child as a double-check. We can't
-  // change state_ until the child explicitly hands control back to
-  // the main thread.
+  // Send the new state_ to the child.
   AsyncRouter::GetInstance()->CallAsync(
       child_thread_.GetThreadId(),
       new HttpThreadFunctor(this,
@@ -606,220 +603,234 @@ void HttpRequestAndroid::SwitchToChildThreadState(State state) {
                             state));
 }
 
-void HttpRequestAndroid::SetState(State state) {
-  assert(IsMainThread());
-  if (was_aborted_ && state_ == STATE_MAIN_IDLE) {
-    // We don't need to do anything here.
-    return;
+bool HttpRequestAndroid::SetState(State state) {
+  if (IsMainThread()) {
+    if (was_aborted_) {
+      return false;
+    }
+  } else {
+    assert(IsChildThread());
+    // If the was_aborted_ flag is set, we ignore any request
+    // to change states other than STATE_CHILD_ABORT
+    // Functors running on the main thread are not able
+    // to change the state if was_aborted_ is set.
+    if (was_aborted_ && (state != STATE_CHILD_ABORT)) {
+      return false;
+    }
   }
   // Set the new state.
   state_ = state;
+  return true;
 }
 
 void HttpRequestAndroid::HandleStateMachine() {
-  // Loop the state machine until the current thread is no longer in
-  // control.
-  // Note that state transitions happen only in the following circumstances
-  // that denote the 'normal operation' of an HTTP request:
+  // The following state transitions can happen:
   // MAIN_IDLE->MAIN_REQUEST in HttpRequestAndroid::Send()
-  // MAIN_REQUEST->MAIN_PARSE_HEADERS directly in HandleStateMachine()
-  // MAIN_PARSE_HEADERS->CHILD_CONNECT_TO_REMOTE via async functor
-  // CHILD_CONNECT_TO_REMOTE->MAIN_CONNECTED in via async functor
-  // MAIN_CONNECTED->CHILD_POST via async functor
-  // CHILD_POST->MAIN_PARSE_HEADERS via async functor
-  // MAIN_CONNECTED->MAIN_PARSE_HEADERS directly in HandleStateMachine()
-  // MAIN_PARSE_HEADERS->CHILD_RECEIVE via async functor
-  // MAIN_PARSE_HEADERS->MAIN_REQUEST directly in HandleStateMachine()
-  // CHILD_RECEIVE->MAIN_RECEIVED via async functor
-  // CHILD_RECEIVE->MAIN_COMPLETE via async functor
-  // MAIN_RECEIVED->MAIN_COMPLETE directly in HandleStateMachine()
+  // MAIN_REQUEST->CHILD_CONNECT_TO_REMOTE
+  // MAIN_REQUEST->CHILD_PARSE_HEADERS
+  // CHILD_CONNECT_TO_REMOTE->CHILD_CONNECTED
+  // CHILD_CONNECTED->CHILD_POST
+  // CHILD_POST->CHILD_PARSE_HEADERS
+  // CHILD_CONNECTED->CHILD_PARSE_HEADERS
+  // CHILD_PARSE_HEADERS->CHILD_RECEIVE
+  // CHILD_PARSE_HEADERS->MAIN_REQUEST (redirection)
+  // CHILD_RECEIVE->MAIN_RECEIVED
+  // MAIN_RECEIVED->MAIN_COMPLETE
+  // MAIN_COMPLETE->MAIN_IDLE
+  //
+  // Note that every Child state can also transition to CHILD_ABORT
+  // in case of error, and that CHILD_ABORT can only
+  // transition to MAIN_COMPLETE:
+  // CHILD_ABORT->MAIN_COMPLETE
 
   // Aside from the 'normal operation', we can receive at any point
-  // an 'Abort()'. If that happens, we need to guarantee that
-  // 1. If the request is already complete, Abort() noops.
-  // 2. The background thread exits before Abort() returns.
-  // 3. The state is reset to MAIN_COMPLETE and then MAIN_IDLE
-  // 4. Any queued functors that are processed after abort need
-  // to be ignored since they would cause an invalid transition
-  // from MAIN_IDLE to some random state.
+  // an 'Abort()' from the main thread.
+  // If that happens, we simply set the was_aborted_ flag to true
+  // (it is only set in Abort(), and only from the main thread), call
+  // the interrupt() method, and then ask the child to transition to
+  // CHILD_ABORT.
+  // After this call to Abort(), the HttpRequest object could be dereferenced
+  // by the javascript, so the child thread holds a reference to it as well
+  // to prevent its destruction. This reference is unref() in MAIN_COMPLETE.
+  //
+  // When was_aborted_ is set to true, no further state transitions are
+  // authorised from the main thread, and the only child thread transition
+  // accepted is to CHILD_ABORT and MAIN_COMPLETE.
 
-  for (;;) {
-    State local_state;
-    {
-      MutexLock locker(&was_aborted_mutex_);
-      local_state = state_;
-    }
-    LOG(("Running %s thread in state %s\n",
-         IsMainThread() ? "main" : "child",
-         GetStateName(local_state)));
+  LOG(("Running %s thread in state %s\n",
+       IsMainThread() ? "main" : "child",
+       GetStateName(state_)));
 
-    switch (local_state) {
-      case STATE_MAIN_IDLE:
-        assert(IsMainThread());
-        // Exit the state machine loop.
-        return;
+  switch (state_) {
+    case STATE_MAIN_IDLE:
+      assert(IsMainThread());
+      // Exit the state machine.
+      break;
 
-      case STATE_MAIN_REQUEST:
-        assert(IsMainThread());
-        // Try using local sources. Remember whether this was local so
-        // that we don't needlessly save the result back into a local
-        // cache.
-        served_locally_ = ServeLocally();
-        if (served_locally_) {
-          // Completely served locally. We can skip a few stages in
-          // the state machine and continue on the main thread.
-          SetState(STATE_MAIN_PARSE_HEADERS);
-        } else {
-          // Cache miss. We need to do a blocking operation on the
-          // network, performed on the child thread.
-          SwitchToChildThreadState(STATE_CHILD_CONNECT_TO_REMOTE);
-          return;
-        }
-        break;
-
-      case STATE_CHILD_CONNECT_TO_REMOTE:
-        assert(IsChildThread());
-        // Connect to the remote site. This will block.
-        if (ConnectToRemote()) {
-          // Success, continue the state machine normally.
-          SwitchToMainThreadState(STATE_MAIN_CONNECTED);
-        } else {
-          // Failed. End the state machine.
-          SwitchToMainThreadState(STATE_MAIN_COMPLETE);
-        }
-        return;
-
-      case STATE_MAIN_CONNECTED:
-        assert(IsMainThread());
-        // Increment ready state visible by observers to SENT.
-        SetReadyState(SENT);
-        // Child thread successfully connected to the remote site. If
-        // there is POST data, send it now, otherwise skip straight.
-        if (method_ == HttpConstants::kHttpPOST) {
-          // Switch progress events to updating the upload position.
-          listener_in_post_ = true;
-          SwitchToChildThreadState(STATE_CHILD_POST);
-          return;
-        } else {
-          SetState(STATE_MAIN_PARSE_HEADERS);
-        }
-        break;
-
-      case STATE_CHILD_POST:
-        assert(IsChildThread());
-        if (SendPostData()) {
-          // POST completed successfully, parse headers.
-          SwitchToMainThreadState(STATE_MAIN_PARSE_HEADERS);
-        } else {
-          // POST failed, stop.
-          SwitchToMainThreadState(STATE_MAIN_COMPLETE);
-        }
-        return;
-
-      case STATE_MAIN_PARSE_HEADERS:
-        assert(IsMainThread());
-        // Switch progress events to updating the download position.
-        listener_in_post_ = false;
-        if (ParseHeaders()) {
-          // Test for redirect.
-          std::string16 redirect_url = GetRedirect();
-          if (redirect_url.empty()) {
-            // No redirect.
-            // Increment ready state visible by observers to INTERACTIVE.
-            SetReadyState(INTERACTIVE);
-            // Perform the blocking data read operation on the child
-            // thread.
-            SwitchToChildThreadState(STATE_CHILD_RECEIVE);
-            return;
-          } else if (redirect_count_ < kRedirectLimit) {
-            // Redirected.
-            LOG(("Following redirect\n"));
-            was_redirected_ = true;
-            current_url_ = redirect_url;
-            if (method_ == HttpConstants::kHttpPOST) {
-              // Redirected POST requests should turn into GET.
-              LOG(("Turning redirected POST into a GET\n"));
-              method_ = HttpConstants::kHttpGET;
-            }
-            // Issue another open() and post a message to the child
-            // thread to carry on again.
-            if (JniGetEnv()->CallBooleanMethod(
-                    java_object_.Get(),
-                    GetMethod(JAVA_METHOD_OPEN),
-                    JavaString(method_).Get(),
-                    JavaString(current_url_).Get())) {
-              // Start the state machine from the beginning again.
-              SetState(STATE_MAIN_REQUEST);
-            } else {
-              LOG(("Couldn't open after redirected URL\n"));
-              SetState(STATE_MAIN_COMPLETE);
-            }
-          } else {
-            // It's a trap! Don't redirect any more, just stop.
-            LOG(("Exceeded redirect limit (%d)\n", kRedirectLimit));
-            // Just go to completion state.
-            SetState(STATE_MAIN_COMPLETE);
-          }
-        } else {
-          // Failed to parse headers.
-          SetState(STATE_MAIN_COMPLETE);
-        }
-        break;
-
-      case STATE_CHILD_RECEIVE:
-        assert(IsChildThread());
-        if (Receive()) {
-          // Received all data correctly.
-          SwitchToMainThreadState(STATE_MAIN_RECEIVED);
-        } else {
-          // Error in data receive. Stop.
-          SwitchToMainThreadState(STATE_MAIN_COMPLETE);
-        }
-        return;
-
-      case STATE_MAIN_RECEIVED: {
-        assert(IsMainThread());
-        // Done, insert into cache if policy allows.
-        if (served_locally_) {
-          // Prevent re-saving something that either came out of cache
-          // anyway, or came from LocalServer and we don't want to cache.
-          LOG(("Was served locally, not inserting into cache\n"));
-        } else {
-          if (caching_behavior_ == USE_ALL_CACHES) {
-            LOG(("Inserting payload into cache\n"));
-            if (!InsertIntoCache()) {
-              // Not fatal if this doesn't work.
-              LOG(("Couldn't insert result into cache\n"));
-            }
-          }
-        }
-        // Successful completion!
-        SetState(STATE_MAIN_COMPLETE);
-        break;
+    case STATE_MAIN_REQUEST:
+      assert(IsMainThread());
+      // Try using local sources. Remember whether this was local so
+      // that we don't needlessly save the result back into a local
+      // cache.
+      served_locally_ = ServeLocally();
+      if (served_locally_) {
+        // Completely served locally. We can skip a few stages in
+        // the state machine and continue on the main thread.
+        SwitchToChildThreadState(STATE_CHILD_PARSE_HEADERS);
+      } else {
+        // Cache miss. We need to do a blocking operation on the
+        // network, performed on the child thread.
+        SwitchToChildThreadState(STATE_CHILD_CONNECT_TO_REMOTE);
       }
+      break;
 
-      case STATE_MAIN_COMPLETE:
-        if (IsChildThread()) {
-          // Looks like we've been aborted before we branched here.
-          assert(was_aborted_);
-          return;
+    case STATE_CHILD_CONNECT_TO_REMOTE:
+      assert(IsChildThread());
+      // Connect to the remote site. This will block.
+      if (ConnectToRemote()) {
+        // Success, continue the state machine normally.
+        SwitchToChildThreadState(STATE_CHILD_CONNECTED);
+      } else {
+        // Failed. End the state machine.
+        SwitchToChildThreadState(STATE_CHILD_ABORT);
+      }
+      break;
+
+    case STATE_CHILD_CONNECTED:
+      assert(IsChildThread());
+      // Increment ready state visible by observers to SENT.
+      SetReadyState(SENT);
+      // Child thread successfully connected to the remote site. If
+      // there is POST data, send it now, otherwise skip straight.
+      if (method_ == HttpConstants::kHttpPOST) {
+        // Switch progress events to updating the upload position.
+        listener_in_post_ = true;
+        SwitchToChildThreadState(STATE_CHILD_POST);
+      } else {
+        SwitchToChildThreadState(STATE_CHILD_PARSE_HEADERS);
+      }
+      break;
+
+    case STATE_CHILD_POST:
+      assert(IsChildThread());
+      if (SendPostData()) {
+        // POST completed successfully, parse headers.
+        SwitchToChildThreadState(STATE_CHILD_PARSE_HEADERS);
+      } else {
+        // POST failed, stop.
+        SwitchToChildThreadState(STATE_CHILD_ABORT);
+      }
+      break;
+
+    case STATE_CHILD_PARSE_HEADERS:
+      assert(IsChildThread());
+      // Switch progress events to updating the download position.
+      listener_in_post_ = false;
+      if (ParseHeaders()) {
+        // Test for redirect.
+        std::string16 redirect_url = GetRedirect();
+        if (redirect_url.empty()) {
+          // No redirect.
+          // Increment ready state visible by observers to INTERACTIVE.
+          SetReadyState(INTERACTIVE);
+          // Perform the blocking data read operation on the child
+          // thread.
+          SwitchToChildThreadState(STATE_CHILD_RECEIVE);
+        } else if (redirect_count_ < kRedirectLimit) {
+          // Redirected.
+          LOG(("Following redirect\n"));
+          was_redirected_ = true;
+          current_url_ = redirect_url;
+          if (method_ == HttpConstants::kHttpPOST) {
+            // Redirected POST requests should turn into GET.
+            LOG(("Turning redirected POST into a GET\n"));
+            method_ = HttpConstants::kHttpGET;
+          }
+          // Issue another open() and post a message to the child
+          // thread to carry on again.
+          if (JniGetEnv()->CallBooleanMethod(
+                  java_object_.Get(),
+                  GetMethod(JAVA_METHOD_OPEN),
+                  JavaString(method_).Get(),
+                  JavaString(current_url_).Get())) {
+            // Start the state machine from the beginning again.
+            SwitchToMainThreadState(STATE_MAIN_REQUEST);
+          } else {
+            LOG(("Couldn't open after redirected URL\n"));
+            SwitchToChildThreadState(STATE_CHILD_ABORT);
+          }
+        } else {
+          // It's a trap! Don't redirect any more, just stop.
+          LOG(("Exceeded redirect limit (%d)\n", kRedirectLimit));
+          // Just go to completion state.
+          SwitchToChildThreadState(STATE_CHILD_ABORT);
         }
+      } else {
+        // Failed to parse headers.
+        SwitchToChildThreadState(STATE_CHILD_ABORT);
+      }
+      break;
 
-        // Shut down the child thread now, otherwise we have to wait
-        // until the last unreference, which may be a long time if it
-        // is held by a JavaScript HttpRequest instance.
-        StopChild();
-        // Exit the state machine.
-        SetState(STATE_MAIN_IDLE);
-        // Increment ready state visible by observers to COMPLETE.
-        SetReadyState(COMPLETE);
-        break;
+    case STATE_CHILD_RECEIVE:
+      assert(IsChildThread());
+      if (Receive()) {
+        // Received all data correctly.
+        SwitchToMainThreadState(STATE_MAIN_RECEIVED);
+      } else {
+        // Error in data receive. Stop.
+        SwitchToChildThreadState(STATE_CHILD_ABORT);
+      }
+      break;
 
-      default:
-        LOG(("Unknown state %d\n", state_));
-        assert(false);
-        return;
+    case STATE_CHILD_ABORT:
+      assert(IsChildThread());
+      SwitchToMainThreadState(STATE_MAIN_COMPLETE);
+      break;
+
+    case STATE_MAIN_RECEIVED: {
+      assert(IsMainThread());
+      // Done, insert into cache if policy allows.
+      if (served_locally_) {
+        // Prevent re-saving something that either came out of cache
+        // anyway, or came from LocalServer and we don't want to cache.
+        LOG(("Was served locally, not inserting into cache\n"));
+      } else {
+        if (caching_behavior_ == USE_ALL_CACHES) {
+          LOG(("Inserting payload into cache\n"));
+          if (!InsertIntoCache()) {
+            // Not fatal if this doesn't work.
+            LOG(("Couldn't insert result into cache\n"));
+          }
+        }
+      }
+      // Successful completion!
+      SwitchToMainThreadState(STATE_MAIN_COMPLETE);
+      break;
     }
+
+    case STATE_MAIN_COMPLETE:
+      assert(IsMainThread());
+      // Note that we hold a reference to the HttpRequest instance
+      // in the child thread -- as else the instance could be
+      // garbage-collected before we finish the child thread, as
+      // we are not anymore synchronously waiting for the child
+      // thread to end...
+      // Calling StopChild() will Unref() ourself, hence the
+      // Ref()/Unref() calls here.
+      Ref();
+      StopChild();
+
+      SwitchToMainThreadState(STATE_MAIN_IDLE);
+      // Increment ready state visible by observers to COMPLETE.
+      SetReadyState(COMPLETE);
+
+      Unref();
+      break;
+
+    default:
+      LOG(("Unknown state %d\n", state_));
+      assert(false);
+      return;
   }
 }
 
@@ -1356,7 +1367,6 @@ bool HttpRequestAndroid::GetResponseHeaderNoCheck(const char16* name,
                                                   std::string16 *value) {
   // Get a single response header. This is implemented on the Java
   // side.
-  assert(IsMainThread());
   assert(name);
   assert(value);
   JavaLocalFrame frame;
@@ -1385,25 +1395,13 @@ bool HttpRequestAndroid::GetResponseHeaderNoCheck(const char16* name,
 bool HttpRequestAndroid::Abort() {
   LOG(("Aborting\n"));
   assert(IsMainThread());
-  was_aborted_mutex_.Lock();
   was_aborted_ = true;
   if (state_ != STATE_MAIN_IDLE) {
-    // Signal the child thread that it should stop any long term
-    // blocking operations, e.g receiving or sending bulk data.
     LOG(("Calling interrupt()\n"));
     JniGetEnv()->CallVoidMethod(java_object_.Get(),
                                 GetMethod(JAVA_METHOD_INTERRUPT));
-    SetState(STATE_MAIN_COMPLETE);
-    // Unlock before handling the state machine.
-    // If we do not unlock, the Join() in StopChild()
-    // will halt this thread waiting for the child
-    // to exit. But the child may be waiting already
-    // on was_aborted_mutex_ in HttpThreadFunctor::Run(),
-    // which would cause a nasty deadlock.
-    was_aborted_mutex_.Unlock();
-    HandleStateMachine();
-  } else {
-    was_aborted_mutex_.Unlock();
+    // We simply switch the child to the STATE_CHILD_ABORT state.
+    SwitchToChildThreadState(STATE_CHILD_ABORT);
   }
   LOG(("Abort complete\n"));
   return true;
@@ -1485,10 +1483,11 @@ const char *HttpRequestAndroid::GetStateName(State state) {
     "Main thread idle",
     "Main thread request",
     "Child thread connect to remote",
-    "Main thread connected",
+    "Child thread connected",
     "Child thread POST",
-    "Main thread parse headers",
+    "Child thread parse headers",
     "Child thread receive data",
+    "Child thread aborted",
     "Main thread received all data",
     "Main thread complete"
   };
