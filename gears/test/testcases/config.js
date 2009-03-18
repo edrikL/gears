@@ -57,12 +57,10 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 var TEST_TIMEOUT_SECONDS = 6 * 60 * 1000;
 var suites = [];
 
-if (isDebug) {
-  var blobSuite = new TestSuite('Blob');
-  blobSuite.addFile('../testcases/blob_tests.js',
-      {useWorker: true, useIFrame: true});
-  suites.push(blobSuite);
-}
+var blobSuite = new TestSuite('Blob');
+blobSuite.addFile('../testcases/blob_tests.js',
+    {useWorker: true, useIFrame: true});
+suites.push(blobSuite);
 
 // The Canvas API is temporarily disabled whilst we switch the Skia dependency
 // from being a pre-built binary static library to being built from source.
