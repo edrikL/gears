@@ -141,9 +141,17 @@ class HttpRequestAndroid : public HttpRequest,
   // Worker thread which performs blocking network I/O operations.
   class HttpThread : public Thread {
    public:
-    HttpThread(HttpRequestAndroid *instance) : instance_(instance) { }
+    HttpThread(HttpRequestAndroid *instance) : instance_(instance) {
+      // We need to keep a reference to the instance as we want
+      // to be sure that the instance is alive while we are running.
+      instance_->Ref();
+    }
    protected:
-    virtual void Run() { instance_->ThreadRun(); LOG(("Child exiting."));}
+    virtual void Run() {
+      instance_->ThreadRun();
+      instance_->Unref();
+      LOG(("Child exiting."));
+    }
    private:
     HttpRequestAndroid *instance_;
   };
@@ -158,10 +166,11 @@ class HttpRequestAndroid : public HttpRequest,
     STATE_MAIN_IDLE = 0,                // Initialization or exit state.
     STATE_MAIN_REQUEST,                 // Entered on Send().
     STATE_CHILD_CONNECT_TO_REMOTE,      // Connect to remote site.
-    STATE_MAIN_CONNECTED,               // Child thread finished connecting.
+    STATE_CHILD_CONNECTED,              // Child thread finished connecting.
     STATE_CHILD_POST,                   // Child thread sending POST data.
-    STATE_MAIN_PARSE_HEADERS,           // Parsing headers.
+    STATE_CHILD_PARSE_HEADERS,          // Parsing headers.
     STATE_CHILD_RECEIVE,                // Child thread receiving data.
+    STATE_CHILD_ABORT,                  // Child thread needs to abort
     STATE_MAIN_RECEIVED,                // Child thread finished data phase.
     STATE_MAIN_COMPLETE,                // All data received, clean up.
     STATE_COUNT                         // Count of states.
@@ -171,6 +180,21 @@ class HttpRequestAndroid : public HttpRequest,
   // Ensure that the enumeration matches the array of strings.
   static const char *GetStateName(State State);
 #endif
+
+  // Functor calling SetReadyState() on the main thread.
+  class SetReadyStateFunctor : public AsyncFunctor {
+   public:
+    SetReadyStateFunctor(HttpRequestAndroid *instance,
+                         ReadyState state)
+        : instance_(instance),
+          state_(state) {}
+    virtual void Run() {
+      instance_->SetReadyState(state_);
+    }
+   private:
+    HttpRequestAndroid *instance_;
+    ReadyState state_;
+  };
 
   // Functor which executes a message on either the main or child
   // thread, on behalf of the other.
@@ -199,35 +223,19 @@ class HttpRequestAndroid : public HttpRequest,
       switch (target_) {
         case TARGET_THREAD_MAIN:
           // If we are already aborted, any state transition set via a
-          // functor comes too late so we ignore it. Transitions out
-          // IDLE are only made directly on the main thread in Send().
-          if (!instance_->was_aborted_) {
-            // Set the state now that we're in the main thread.
-            instance_->state_ = new_state_;
+          // functor comes too late so we ignore it. Transitions to
+          // STATE_MAIN_IDLE are only made directly on the main thread in
+          // STATE_MAIN_COMPLETE.
+          if (instance_->SetState(new_state_)) {
             instance_->HandleStateMachine();
-          } else {
-            assert(instance_->state_ == STATE_MAIN_IDLE);
           }
           // Now potentially delete the instance, if this functor
           // invoked final processing.
           instance_->Unref();
           break;
         case TARGET_THREAD_CHILD:
-          // Lock the mutex before looking at was_aborted_;
-          instance_->was_aborted_mutex_.Lock();
-          if (!instance_->was_aborted_) {
-            // The main thread should have set the state before
-            // switching to the child thread's control.
-            assert(instance_->state_ == new_state_);
-            instance_->was_aborted_mutex_.Unlock();
-            // Avoid holding a mutex while in the state machine.
-            // This thread never changes the state directly. Instead
-            // it will queue a state-changing-functor onto the main
-            // thread. That will run and get ignored if the was_aborted_
-            // flag was meanwhile set to true (see above).
+          if (instance_->SetState(new_state_)) {
             instance_->HandleStateMachine();
-          } else {
-            instance_->was_aborted_mutex_.Unlock();
           }
           break;
       }
@@ -331,10 +339,8 @@ class HttpRequestAndroid : public HttpRequest,
   static bool IsMainThread();
   // Returns whether the currently executing thread is the child thread.
   bool IsChildThread() const;
-  // A helper function which sets the state_ member and also checks
-  // that this is only performed by the main thread. The child thread
-  // is not allowed to modify state_.
-  void SetState(State state);
+  // A helper function which sets the state_ member.
+  bool SetState(State state);
 
   // Method IDs. Must match the order in java_methods_.
   enum JavaMethod {
@@ -415,10 +421,6 @@ class HttpRequestAndroid : public HttpRequest,
   // True if Abort() was used on this instance at any point, false
   // otherwise.
   bool was_aborted_;
-  // This mutex protects both was_aborted_ and state_, since
-  // the latter is written from the main thread and read
-  // concurrently from the child thread.
-  Mutex was_aborted_mutex_;
   // The response body for a completed request. This is a ByteStore so
   // it can be easily wrapped in a BlobInterface.
   scoped_refptr<ByteStore> response_body_;
