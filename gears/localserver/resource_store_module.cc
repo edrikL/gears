@@ -452,11 +452,35 @@ void GearsResourceStore::GetAsBlob(JsCallContext *context) {
   }
 
   ResourceStore::Item item;
+  scoped_refptr<BlobInterface> blob;
+#ifdef USE_FILE_STORE
+  // TODO(michaeln): This is not quite right, but its better than allocating
+  // huge amounts of memory. Provided the store/item are not removed so long
+  // as the returned blob is around, this is fine and good. Otherwise some
+  // issues...
+  // * By the time we are creating the file blob, the file may have been
+  //   deleted if some other thread/process had removed this entry or store
+  //   between the calls to GetItemInfo() and new FileBlob()
+  // * Removing the entry while the GearsBlob instance is out there is
+  //   problematic, the system will want to delete the underlying file and
+  //   depending on the OS may or may not succeed at that. Subsequent use
+  //   of the outstanding GearsBlob may or may not work depending.
+  if (!store_.GetItemInfo(full_url.c_str(), &item)) {
+    context->SetException(STRING16(L"Failed to get blob."));
+    return;
+  }
+  if (!item.payload.cached_filepath.empty())
+    blob.reset(new FileBlob(item.payload.cached_filepath));
+  else
+    blob.reset(new EmptyBlob());
+#else
   if (!store_.GetItem(full_url.c_str(), &item)) {
     context->SetException(STRING16(L"Failed to get blob."));
     return;
   }
   assert(item.payload.data.get());
+  blob.reset(new BufferBlob(item.payload.data.get());
+#endif
 
   scoped_refptr<GearsBlob> blob_object;
   if (!CreateModule<GearsBlob>(module_environment_.get(),
@@ -464,7 +488,7 @@ void GearsResourceStore::GetAsBlob(JsCallContext *context) {
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
-  blob_object->Reset(new BufferBlob(item.payload.data.get()));
+  blob_object->Reset(blob.get());
   context->SetReturnValue(JSPARAM_MODULE, blob_object.get());
 }
 
