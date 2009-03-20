@@ -107,7 +107,7 @@ function testCanvasStateInitially() {
   loadBlob('blank-300x150.png', function(blankBlob) {
     var canvas = google.gears.factory.create('beta.canvas');
     verifyCanvasState(canvas);
-    assertBlobProbablyEqual(blankBlob, canvas.toBlob());
+    assertBlobProbablyEqual(blankBlob, canvas.encode());
     completeAsync();
   });
 }
@@ -130,7 +130,7 @@ function testCanvasStateAfterChangingDimensions() {
   loadBlobs(filenames, function(blobs) {
     var canvas = google.gears.factory.create('beta.canvas');
     var originalBlob = blobs[originalFilename];
-    canvas.load(originalBlob);
+    canvas.decode(originalBlob);
     assertEqual(313, canvas.width);
     assertEqual(234, canvas.height);
 
@@ -138,14 +138,14 @@ function testCanvasStateAfterChangingDimensions() {
     setContextProperties(canvas);
     canvas.height = 120;
     verifyCanvasState(canvas);
-    assertBlobProbablyEqual(blobs['blank-313x120.png'], canvas.toBlob());
+    assertBlobProbablyEqual(blobs['blank-313x120.png'], canvas.encode());
 
     // Test that changing the width resets the canvas.
-    canvas.load(originalBlob);
+    canvas.decode(originalBlob);
     setContextProperties(canvas);
     canvas.width = 240;
     verifyCanvasState(canvas);
-    assertBlobProbablyEqual(blobs['blank-240x234.png'], canvas.toBlob());
+    assertBlobProbablyEqual(blobs['blank-240x234.png'], canvas.encode());
 
     completeAsync();
   });
@@ -161,27 +161,27 @@ function testCanvasStateAfterDimensionsSelfAssignment() {
   loadBlobs(filenames, function(blobs) {
     var canvas = google.gears.factory.create('beta.canvas');
     var originalBlob = blobs[originalFilename];
-    canvas.load(originalBlob);
+    canvas.decode(originalBlob);
 
     // Make sure the original file has the right dimensions.
     assertEqual(313, canvas.width);
     assertEqual(234, canvas.height);
 
     // The canvas is not blank.
-    assertNotEqual(canvas.toBlob().length, blobs['blank-313x234.png'].length);
+    assertNotEqual(canvas.encode().length, blobs['blank-313x234.png'].length);
 
     // Setting width to current width must blank the canvas:
     setContextProperties(canvas);
     canvas.width = canvas.width;
     verifyCanvasState(canvas);
-    assertBlobProbablyEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    assertBlobProbablyEqual(canvas.encode(), blobs['blank-313x234.png']);
 
     // Test the same for height:
-    canvas.load(originalBlob);
+    canvas.decode(originalBlob);
     setContextProperties(canvas);
     canvas.height = canvas.height;
     verifyCanvasState(canvas);
-    assertBlobProbablyEqual(canvas.toBlob(), blobs['blank-313x234.png']);
+    assertBlobProbablyEqual(canvas.encode(), blobs['blank-313x234.png']);
 
     completeAsync();
   });
@@ -192,16 +192,16 @@ function runLoadAndExportTest(blobs) {
   for (var i = 0; i < formats.length; ++i) {
     var format = formats[i];
     var canvas = google.gears.factory.create('beta.canvas');
-    canvas.load(blobs['sample-original.' + format]);
+    canvas.decode(blobs['sample-original.' + format]);
 
-    var pngBlob = canvas.toBlob('image/png');
+    var pngBlob = canvas.encode('image/png');
 
     // The default format is png.
-    assertBlobProbablyEqual(canvas.toBlob(), pngBlob,
+    assertBlobProbablyEqual(canvas.encode(), pngBlob,
         'The default export format is not png.');
 
-    var jpegBlob = canvas.toBlob('image/jpeg');
-    var jpegLowBlob = canvas.toBlob('image/jpeg', { quality: 0.02 });
+    var jpegBlob = canvas.encode('image/jpeg');
+    var jpegLowBlob = canvas.encode('image/jpeg', { quality: 0.02 });
 
     // Now compare the exported versions with golden files.
     // The golden files have been manually checked for format and size.
@@ -238,7 +238,7 @@ function testLoadUnsupportedFormat() {
   startAsync();
   loadBlob('sample.txt', function(blob) {
     assertError(function() {
-      canvas.load(blob);
+      canvas.decode(blob);
     });
     completeAsync();
   });
@@ -247,7 +247,7 @@ function testLoadUnsupportedFormat() {
 function testExportToUnsupportedFormat() {
   var canvas = google.gears.factory.create('beta.canvas');
   assertError(function() {
-    canvas.toBlob('image/gif');
+    canvas.encode('image/gif');
   });
 }
 
@@ -255,11 +255,11 @@ function runCloneTest(blob, dummyBlob) {
   // Create a canvas and set various properties on it and on its context.
   var originalCanvas = google.gears.factory.create('beta.canvas');
   var originalCtx = originalCanvas.getContext('gears-2d');
-  originalCanvas.load(blob);
+  originalCanvas.decode(blob);
 
   var originalWidth = originalCanvas.width;
   var originalHeight = originalCanvas.height;
-  var originalBlob = originalCanvas.toBlob();
+  var originalBlob = originalCanvas.encode();
 
   var alpha = 0.5;
   var compositeOperation = 'copy';
@@ -276,7 +276,7 @@ function runCloneTest(blob, dummyBlob) {
 
   assertEqual(originalWidth, clonedCanvas.width);
   assertEqual(originalHeight, clonedCanvas.height);
-  assertBlobProbablyEqual(originalBlob, clonedCanvas.toBlob());
+  assertBlobProbablyEqual(originalBlob, clonedCanvas.encode());
 
   assertEqual(originalCtx.globalAlpha, cloneCtx.globalAlpha);
   assertEqual(originalCtx.globalCompositeOperation,
@@ -290,7 +290,7 @@ function runCloneTest(blob, dummyBlob) {
   function checkOriginal() {
     assertEqual(originalWidth, originalCanvas.width);
     assertEqual(originalHeight, originalCanvas.height);
-    assertBlobProbablyEqual(originalBlob, originalCanvas.toBlob());
+    assertBlobProbablyEqual(originalBlob, originalCanvas.encode());
     assertEqual(alpha, originalCtx.globalAlpha);
     assertEqual(compositeOperation, originalCtx.globalCompositeOperation);
     assertEqual(fillStyle, originalCtx.fillStyle);
@@ -308,7 +308,7 @@ function runCloneTest(blob, dummyBlob) {
 
   // Load a random image into the clone and check that the original isn't
   // affected. We don't care what the dummy is, just that it's a valid image.
-  clonedCanvas.load(dummyBlob);
+  clonedCanvas.decode(dummyBlob);
   checkOriginal();
 }
 
@@ -328,14 +328,14 @@ function testCrop() {
   var goldenFilename = 'sample-jpeg-cropped-40-40-100-100.png';
   loadBlobs(['sample-original.jpeg', goldenFilename], function(blobs) {
     var canvas = google.gears.factory.create('beta.canvas');
-    canvas.load(blobs['sample-original.jpeg']);
+    canvas.decode(blobs['sample-original.jpeg']);
     canvas.crop(40, 40, 100, 100);
-    var exportedBlob = canvas.toBlob();
+    var exportedBlob = canvas.encode();
 
     var goldenBlob = blobs[goldenFilename];
     // Ensure that the golden file is what we think it is.
     var goldenCanvas = google.gears.factory.create('beta.canvas');
-    goldenCanvas.load(goldenBlob);
+    goldenCanvas.decode(goldenBlob);
     assertEqual(100, goldenCanvas.width);
     assertEqual(100, goldenCanvas.height);
 
@@ -348,7 +348,7 @@ function testCropToZeroSize() {
   startAsync();
   loadBlob('sample-original.png', function(blob) {
     var canvas = google.gears.factory.create('beta.canvas');
-    canvas.load(blob);
+    canvas.decode(blob);
     canvas.crop(40, 40, 0, 0);
     assertEqual(0, canvas.width);
     assertEqual(0, canvas.height);
@@ -360,12 +360,12 @@ function testCropNoop() {
   startAsync();
   loadBlob('sample-original.jpeg', function(blob) {
     var canvas = google.gears.factory.create('beta.canvas');
-    canvas.load(blob);
-    var originalBlob = canvas.toBlob();
+    canvas.decode(blob);
+    var originalBlob = canvas.encode();
     var originalWidth = canvas.width;
     var originalHeight = canvas.height;
     canvas.crop(0, 0, canvas.width, canvas.height);
-    assertBlobProbablyEqual(originalBlob, canvas.toBlob());
+    assertBlobProbablyEqual(originalBlob, canvas.encode());
     assertEqual(originalWidth, canvas.width);
     assertEqual(originalHeight, canvas.height);
     completeAsync();
@@ -378,14 +378,14 @@ function testResize() {
   startAsync();
   loadBlobs([originalFilename , resizedFilename], function(blobs) {
     var canvas = google.gears.factory.create('beta.canvas');
-    canvas.load(blobs[originalFilename]);
+    canvas.decode(blobs[originalFilename]);
 
     var newWidth = 400;
     var newHeight = 40;
     canvas.resize(newWidth, newHeight);
     assertEqual(newWidth, canvas.width);
     assertEqual(newHeight, canvas.height);
-    assertBlobProbablyEqual(blobs[resizedFilename], canvas.toBlob());
+    assertBlobProbablyEqual(blobs[resizedFilename], canvas.encode());
     completeAsync();
   });
 }
@@ -415,8 +415,8 @@ function testDraw2ImageClone() {
   var dest = 'sample-jpeg-cropped-40-40-100-100.png';
   loadBlobs([src, dest], function(blobs) {
     var srcCanvas = google.gears.factory.create('beta.canvas');
-    srcCanvas.load(blobs[src]);
-    var srcCanvasBeforeDrawBlob = srcCanvas.toBlob();
+    srcCanvas.decode(blobs[src]);
+    var srcCanvasBeforeDrawBlob = srcCanvas.encode();
 
     var destCanvas = google.gears.factory.create('beta.canvas');
     destCanvas.width = srcCanvas.width;
@@ -425,10 +425,10 @@ function testDraw2ImageClone() {
     ctx.drawImage(srcCanvas, 0, 0);
 
     // The source should not have been affected.
-    assertBlobProbablyEqual(srcCanvasBeforeDrawBlob, srcCanvas.toBlob());
+    assertBlobProbablyEqual(srcCanvasBeforeDrawBlob, srcCanvas.encode());
 
     // Both canvii must be the same.
-    assertBlobProbablyEqual(srcCanvas.toBlob(), destCanvas.toBlob());
+    assertBlobProbablyEqual(srcCanvas.encode(), destCanvas.encode());
 
     completeAsync();
   });
@@ -437,8 +437,8 @@ function testDraw2ImageClone() {
 function runDrawImage2SmallerAndBiggerTest(srcFilename, goldenFilename, blobs,
     isSrcBigger, offsetX, offsetY) {
   var srcCanvas = google.gears.factory.create('beta.canvas');
-  srcCanvas.load(blobs[srcFilename]);
-  var srcCanvasBlobBeforeDraw = srcCanvas.toBlob();
+  srcCanvas.decode(blobs[srcFilename]);
+  var srcCanvasBlobBeforeDraw = srcCanvas.encode();
 
   var destCanvas = google.gears.factory.create('beta.canvas');
   if (isSrcBigger) {
@@ -456,13 +456,13 @@ function runDrawImage2SmallerAndBiggerTest(srcFilename, goldenFilename, blobs,
   destCtx.drawImage(srcCanvas, offsetX, offsetY);
 
   // The source should not have been affected.
-  assertBlobProbablyEqual(srcCanvasBlobBeforeDraw, srcCanvas.toBlob());
+  assertBlobProbablyEqual(srcCanvasBlobBeforeDraw, srcCanvas.encode());
 
   // The destination's dimensions should remain untouched.
   assertEqual(destCanvasOriginalWidth, destCanvas.width);
   assertEqual(destCanvasOriginalHeight, destCanvas.height);
 
-  assertBlobProbablyEqual(blobs[goldenFilename], destCanvas.toBlob());
+  assertBlobProbablyEqual(blobs[goldenFilename], destCanvas.encode());
 }
 
 // Use the two-argument drawImage() (which does not resize the image while
@@ -497,7 +497,7 @@ function testDrawImage2ToBadOffset() {
   startAsync();
   loadBlob('sample-original.png', function(inputBlob) {
     var srcCanvas = google.gears.factory.create('beta.canvas');
-    srcCanvas.load(inputBlob);
+    srcCanvas.decode(inputBlob);
 
     var destCanvas = google.gears.factory.create('beta.canvas');
     var ctx = destCanvas.getContext('gears-2d');
@@ -539,10 +539,10 @@ function testDrawImage2WithAlpha(){
   var goldenFile = 'sample-drawImageWithAlpha-result.png';
   loadBlobs([srcFile, destFile, goldenFile], function(blobs) {
     var srcCanvas = google.gears.factory.create('beta.canvas');
-    srcCanvas.load(blobs[srcFile]);
+    srcCanvas.decode(blobs[srcFile]);
 
     var destCanvas = google.gears.factory.create('beta.canvas');
-    destCanvas.load(blobs[destFile]);
+    destCanvas.decode(blobs[destFile]);
     destCanvas.resize(srcCanvas.width, srcCanvas.height);
     var ctx = destCanvas.getContext('gears-2d');
 
@@ -550,7 +550,7 @@ function testDrawImage2WithAlpha(){
 
     ctx.drawImage(srcCanvas, 0, 0);
 
-    assertBlobProbablyEqual(blobs[goldenFile], destCanvas.toBlob());
+    assertBlobProbablyEqual(blobs[goldenFile], destCanvas.encode());
     completeAsync();
   });
 }
@@ -560,21 +560,21 @@ function testDrawImage2WithAlphaZeroIsNoop() {
   startAsync();
   loadBlob('sample-original.png', function(inputBlob) {
     var srcCanvas = google.gears.factory.create('beta.canvas');
-    srcCanvas.load(inputBlob);
+    srcCanvas.decode(inputBlob);
 
     var destCanvas = google.gears.factory.create('beta.canvas');
     // Make the destCanvas big enough to hold the image in the srcCanvas.
     destCanvas.width = 400;
     destCanvas.height = 400;
     var ctx = destCanvas.getContext('gears-2d');
-    var destSnapshot = destCanvas.toBlob();
+    var destSnapshot = destCanvas.encode();
 
     ctx.globalAlpha = 0;
 
     // Should be a noop.
     ctx.drawImage(srcCanvas, 3, 9);
 
-    assertBlobProbablyEqual(destSnapshot, destCanvas.toBlob());
+    assertBlobProbablyEqual(destSnapshot, destCanvas.encode());
     completeAsync();
     });
 }
@@ -587,7 +587,7 @@ function testRotateZeroIsNoop() {
   startAsync();
   loadBlob('sample-original.png', function(blob) {
     var srcCanvas = google.gears.factory.create('beta.canvas');
-    srcCanvas.load(blob);
+    srcCanvas.decode(blob);
 
     var destCanvas = google.gears.factory.create('beta.canvas');
     destCanvas.resize(srcCanvas.width, destCanvas.height);
@@ -596,7 +596,7 @@ function testRotateZeroIsNoop() {
     ctx.rotate(0);
     ctx.drawImage(srcCanvas, 0, 0);
 
-    assertBlobProbablyEqual(srcCanvas.toBlob(), destCanvas.toBlob());
+    assertBlobProbablyEqual(srcCanvas.encode(), destCanvas.encode());
   });
 }
 

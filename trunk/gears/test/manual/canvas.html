@@ -62,7 +62,7 @@ if (gearsCanvas) {
   localServer.removeStore("test_manual_canvas");
   store = localServer.createStore("test_manual_canvas");
   var capturedUrl = 'g' + parseInt(Math.random() * 1000) + '.png';
-  store.captureBlob(gearsCanvas.toBlob(), capturedUrl, 'image/png');
+  store.captureBlob(gearsCanvas.encode(), capturedUrl, 'image/png');
   document.getElementById('gc').src = capturedUrl;
 }
 
@@ -122,7 +122,7 @@ if (gearsCanvas && nativeContext && diffCanvas) {
   diffContext.putImageData(diffImageData, 0, 0);
 
   var capturedUrl = 'd' + parseInt(Math.random() * 1000) + '.png';
-  store.captureBlob(diffCanvas.toBlob(), capturedUrl, 'image/png');
+  store.captureBlob(diffCanvas.encode(), capturedUrl, 'image/png');
   document.getElementById('dc').src = capturedUrl;
 }
 
