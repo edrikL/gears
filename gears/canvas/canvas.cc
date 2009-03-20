@@ -64,13 +64,13 @@ void GearsCanvas::ClearRenderingContextReference() {
 
 template<>
 void Dispatcher<GearsCanvas>::Init() {
-  RegisterMethod("load", &GearsCanvas::Load);
-  RegisterMethod("toBlob", &GearsCanvas::ToBlob);
   RegisterMethod("crop", &GearsCanvas::Crop);
-  RegisterMethod("resize", &GearsCanvas::Resize);
-  RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
-  RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
+  RegisterMethod("decode", &GearsCanvas::Decode);
+  RegisterMethod("encode", &GearsCanvas::Encode);
   RegisterMethod("getContext", &GearsCanvas::GetContext);
+  RegisterMethod("resize", &GearsCanvas::Resize);
+  RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
+  RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
 }
 
 void GearsCanvas::EnsureBitmapPixelsAreAllocated() {
@@ -80,7 +80,7 @@ void GearsCanvas::EnsureBitmapPixelsAreAllocated() {
   }
 }
 
-void GearsCanvas::Load(JsCallContext *context) {
+void GearsCanvas::Decode(JsCallContext *context) {
   ModuleImplBaseClass *other_module;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_MODULE, &other_module },
@@ -106,7 +106,7 @@ void GearsCanvas::Load(JsCallContext *context) {
   }
 }
 
-void GearsCanvas::ToBlob(JsCallContext *context) {
+void GearsCanvas::Encode(JsCallContext *context) {
   std::string16 mime_type;
   scoped_ptr<JsObject> attributes;
   JsArgument args[] = {
@@ -137,7 +137,7 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   // pixels. If this flag is set, the encoder creates a file without alpha
   // channel. We don't want this to happen, for several reasons:
   //   1. Consider:
-  //        canvas.load(jpegBlob);
+  //        canvas.decode(jpegBlob);
   //        canvas.crop(0, 0, canvas.width, canvas.height);
   //      The original SkBitmap has isOpaque set to true (jpegs have no
   //      transparent pixels), but the new SkBitmap created during crop() has
@@ -145,10 +145,10 @@ void GearsCanvas::ToBlob(JsCallContext *context) {
   //   2. A similar situation occurs with clone()...
   //   3. ... and with drawImage().
   //   4. Consider:
-  //        canvas.load(blob);
+  //        canvas.decode(blob);
   //        canvas.width = 100;
   //        do some drawing on the canvas
-  //        var outputBlob = canvas.toBlob();
+  //        var outputBlob = canvas.encode();
   //
   //      When the image is loaded, the isOpaque flag is updated, and is not
   //      modified again anywhere. As a result, exported blobs will have an

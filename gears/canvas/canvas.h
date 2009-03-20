@@ -54,16 +54,18 @@ class GearsCanvas : public ModuleImplBaseClass {
   // dangling pointer. The rendering context will be recreated when needed.
   void ClearRenderingContextReference();
 
-  // Loads an image from a supplied blob.
-  // IN: Blob blob.
+  // Loads an image (given as a blob) into this canvas, overwriting any
+  // existing canvas contents. The canvas' width and height will be set to
+  // the natural width and height of the image.
+  // IN: Blob blob
   // OUT: -
-  void Load(JsCallContext *context);
+  void Decode(JsCallContext *context);
 
-  // Exports the contents of this canvas into a blob. This is a one-time
+  // Exports the contents of this canvas to a blob. This is a one-time
   // operation; updates to the canvas don't reflect in the blob.
   // IN: optional String mimeType, optional Object attributes
   // OUT: Blob
-  void ToBlob(JsCallContext *context);
+  void Encode(JsCallContext *context);
 
   // Crops the canvas to the specified rectangle, in-place.
   // IN: int x, int y, int width, int height
