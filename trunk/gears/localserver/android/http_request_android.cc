@@ -576,10 +576,6 @@ bool HttpRequestAndroid::Send(BlobInterface* blob) {
 }
 
 void HttpRequestAndroid::SwitchToMainThreadState(State state) {
-  // If we are aborted, the only state we can go on
-  // the main thread is STATE_MAIN_COMPLETE.
-  if (was_aborted_ && state != STATE_MAIN_COMPLETE)
-    return;
   LOG(("Transferring to main thread with state %s\n", GetStateName(state)));
   // The state_ member will change when this message is received on
   // the main thread. This ensures state_ only changes under the
@@ -604,19 +600,20 @@ void HttpRequestAndroid::SwitchToChildThreadState(State state) {
 }
 
 bool HttpRequestAndroid::SetState(State state) {
-  if (IsMainThread()) {
-    if (was_aborted_) {
+  if (was_aborted_) {
+    // If Abort() got called, we only accept transitions to states
+    // after the CHILD_ABORT state
+    // (in addition of course to CHILD_ABORT itself) :
+    // - STATE_MAIN_COMPLETE
+    // - STATE_MAIN_IDLE
+    if ((state != STATE_CHILD_ABORT) &&
+        (state != STATE_MAIN_COMPLETE) &&
+        (state != STATE_MAIN_IDLE)) {
       return false;
     }
-  } else {
-    assert(IsChildThread());
-    // If the was_aborted_ flag is set, we ignore any request
-    // to change states other than STATE_CHILD_ABORT
-    // Functors running on the main thread are not able
-    // to change the state if was_aborted_ is set.
-    if (was_aborted_ && (state != STATE_CHILD_ABORT)) {
-      return false;
-    }
+  }
+  if (state_ == state) {
+    return false;
   }
   // Set the new state.
   state_ = state;
