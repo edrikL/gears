@@ -35,6 +35,7 @@
 #import "gears/desktop/file_dialog.h"
 
 static FileDragAndDropMetaData *g_file_drag_and_drop_meta_data = NULL;
+static NSInteger g_last_seen_dragging_sequence_number = 0;
 static bool g_is_in_a_drag_operation = false;
 static bool g_is_in_a_drop_operation = false;
 // The next two variables are for when the page's JavaScript explicitly
@@ -111,6 +112,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 }
 
 @interface WebView (GearsSwizzledMethods)
+- (void)updateFromDraggingInfo:(id <NSDraggingInfo>)draggingInfo;
 - (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo;
 - (NSDragOperation)swizzledDraggingUpdated:(id <NSDraggingInfo>)draggingInfo;
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo;
@@ -119,11 +121,16 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 
 @implementation WebView (GearsSwizzledMethods)
 
-- (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo {
+- (void)updateFromDraggingInfo:(id <NSDraggingInfo>)draggingInfo {
+  NSInteger seqno = [draggingInfo draggingSequenceNumber];
+  if (g_last_seen_dragging_sequence_number == seqno) {
+    return;
+  }
+  g_last_seen_dragging_sequence_number = seqno;
   if (!g_file_drag_and_drop_meta_data) {
     g_file_drag_and_drop_meta_data = new FileDragAndDropMetaData;
   }
-  assert(g_file_drag_and_drop_meta_data->IsEmpty());
+  g_file_drag_and_drop_meta_data->Reset();
 
   // In Safari, arbitrary web pages can put on the pasteboard during an ondrag
   // event, simply by calling window.event.dataTransfer.setData('URL',
@@ -156,7 +163,10 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
     }
     g_file_drag_and_drop_meta_data->SetFilenames(filenames);
   }
+}
 
+- (NSDragOperation)swizzledDraggingEntered:(id <NSDraggingInfo>)draggingInfo {
+  [self updateFromDraggingInfo:draggingInfo];
   g_is_in_a_drag_operation = true;
   g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingEntered:draggingInfo];
@@ -165,6 +175,7 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 }
 
 - (NSDragOperation)swizzledDraggingUpdated:(id <NSDraggingInfo>)draggingInfo {
+  [self updateFromDraggingInfo:draggingInfo];
   g_is_in_a_drag_operation = true;
   g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingUpdated:draggingInfo];
@@ -173,18 +184,18 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
 }
 
 - (NSDragOperation)swizzledDraggingExited:(id <NSDraggingInfo>)draggingInfo {
+  [self updateFromDraggingInfo:draggingInfo];
   g_is_in_a_drag_operation = true;
   g_drag_operation_has_been_set = false;
   NSDragOperation result = [self swizzledDraggingExited:draggingInfo];
-  g_file_drag_and_drop_meta_data->Reset();
   g_is_in_a_drag_operation = false;
   return g_drag_operation_has_been_set ? g_drag_operation : result;
 }
 
 - (BOOL)swizzledPerformDragOperation:(id <NSDraggingInfo>)draggingInfo {
+  [self updateFromDraggingInfo:draggingInfo];
   g_is_in_a_drop_operation = true;
   BOOL result = [self swizzledPerformDragOperation:draggingInfo];
-  g_file_drag_and_drop_meta_data->Reset();
   g_is_in_a_drop_operation = false;
   return result;
 }
