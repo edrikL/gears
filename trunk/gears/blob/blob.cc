@@ -34,6 +34,7 @@ void Dispatcher<GearsBlob>::Init() {
 #ifdef DEBUG
   RegisterMethod("hasSameContentsAs", &GearsBlob::HasSameContentsAs);
 #endif
+  RegisterMethod("getBytes", &GearsBlob::GetBytes);
   RegisterMethod("slice", &GearsBlob::Slice);
   RegisterProperty("length", &GearsBlob::GetLength, NULL);
 }
@@ -87,6 +88,72 @@ void GearsBlob::HasSameContentsAs(JsCallContext *context) {
 }
 #endif
 
+bool GearsBlob::ReadOffsetAndLengthArgs(
+    JsCallContext *context,
+    int64 *offset,
+    int64 *length,
+    bool offset_is_optional) {
+  JsArgument argv[] = {
+    { offset_is_optional ? JSPARAM_OPTIONAL : JSPARAM_REQUIRED,
+                        JSPARAM_INT64, offset },
+    { JSPARAM_OPTIONAL, JSPARAM_INT64, length },
+  };
+  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
+    assert(context->is_exception_set());
+    return false;
+  }
+
+  if (offset_is_optional && !argv[0].was_specified) {
+    *offset = 0;
+  } else if (*offset < 0) {
+    context->SetException(STRING16(L"Offset must be a non-negative integer."));
+    return false;
+  }
+  if (!argv[1].was_specified) {
+    int64 blob_size = contents_->Length();
+    if (blob_size < 0) {
+      context->SetException(STRING16(L"Cannot determine blob size."));
+      return false;
+    }
+    *length = (blob_size > *offset) ? blob_size - *offset : 0;
+  }
+  if (length < 0) {
+    context->SetException(STRING16(L"Length must be a non-negative integer."));
+    return false;
+  }
+  return true;
+}
+
+void GearsBlob::GetBytes(JsCallContext *context) {
+  int64 offset = 0;
+  int64 length = 0;
+  if (!ReadOffsetAndLengthArgs(context, &offset, &length, true)) {
+    return;
+  }
+  static const int kMaximumReasonableLength = 1024;
+  if (length > kMaximumReasonableLength) {
+    context->SetException(STRING16(L"Length must be at most 1024."));
+    return;
+  }
+  int len = static_cast<int>(length);
+
+  uint8 byte_array[kMaximumReasonableLength];
+  if (length != contents_->Read(byte_array, offset, length)) {
+    context->SetException(STRING16(L"Read error during getBytes."));
+    return;
+  }
+
+  scoped_refptr<GearsBlob> ref_adder(this);
+  scoped_ptr<JsArray> js_array(module_environment_->js_runner_->NewArray());
+  // Provide a hint to the JS engine as to the eventual length of this array.
+  js_array->SetElementUndefined(len - 1);
+
+  for (int i = 0; i < len; i++) {
+    js_array->SetElementInt(i, byte_array[i]);
+  }
+  context->SetReturnValue(JSPARAM_ARRAY, js_array.get());
+}
+
 void GearsBlob::GetLength(JsCallContext *context) {
   // A GearsBlob should never be let out in the JS world unless it has been
   // Initialize()d with valid contents_.
@@ -103,25 +170,7 @@ void GearsBlob::GetLength(JsCallContext *context) {
 void GearsBlob::Slice(JsCallContext *context) {
   int64 offset = 0;
   int64 length = 0;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT64, &offset },
-    { JSPARAM_OPTIONAL, JSPARAM_INT64, &length },
-  };
-  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
-    assert(context->is_exception_set());
-    return;
-  }
-
-  if (offset < 0) {
-    context->SetException(STRING16(L"Offset must be a non-negative integer."));
-    return;
-  }
-  if (!argv[1].was_specified) {
-    int64 blob_size = contents_->Length();
-    length = (blob_size > offset) ? blob_size - offset : 0;
-  }
-  if (length < 0) {
-    context->SetException(STRING16(L"Length must be a non-negative integer."));
+  if (!ReadOffsetAndLengthArgs(context, &offset, &length, false)) {
     return;
   }
 

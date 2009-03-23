@@ -39,6 +39,10 @@ class GearsBlob : public ModuleImplBaseClass {
       : ModuleImplBaseClass(kModuleName),
         contents_(new EmptyBlob()) {}
 
+  // IN: int64 index, optional int64 length
+  // OUT: array of int
+  void GetBytes(JsCallContext *context);
+
   // IN: nothing
   // OUT: int64
   void GetLength(JsCallContext *context);
@@ -66,6 +70,12 @@ class GearsBlob : public ModuleImplBaseClass {
 
  private:
   scoped_refptr<BlobInterface> contents_;
+
+  bool ReadOffsetAndLengthArgs(
+      JsCallContext *context,
+      int64 *offset,
+      int64 *length,
+      bool offset_is_optional);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };
