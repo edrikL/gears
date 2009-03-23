@@ -211,7 +211,7 @@ class HttpRequestAndroid : public HttpRequest,
         : instance_(instance),
           target_(target),
           new_state_(state) {
-      if (target == TARGET_THREAD_MAIN) {
+      if (target_ == TARGET_THREAD_MAIN) {
         // Avoid a potential race in the order of sending this message
         // and running the main thread message loop. This defers any
         // deletion that may occur on the main thread until after this
@@ -220,24 +220,13 @@ class HttpRequestAndroid : public HttpRequest,
       }
     }
     virtual void Run() {
-      switch (target_) {
-        case TARGET_THREAD_MAIN:
-          // If we are already aborted, any state transition set via a
-          // functor comes too late so we ignore it. Transitions to
-          // STATE_MAIN_IDLE are only made directly on the main thread in
-          // STATE_MAIN_COMPLETE.
-          if (instance_->SetState(new_state_)) {
-            instance_->HandleStateMachine();
-          }
-          // Now potentially delete the instance, if this functor
-          // invoked final processing.
-          instance_->Unref();
-          break;
-        case TARGET_THREAD_CHILD:
-          if (instance_->SetState(new_state_)) {
-            instance_->HandleStateMachine();
-          }
-          break;
+      if (instance_->SetState(new_state_)) {
+        instance_->HandleStateMachine();
+      }
+      if (target_ == TARGET_THREAD_MAIN) {
+        // Now potentially delete the instance, if this functor
+        // invoked final processing.
+        instance_->Unref();
       }
     }
 
