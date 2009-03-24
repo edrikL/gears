@@ -1,0 +1,99 @@
+digraph G {
+
+ /*
+  This diagram shows the state machine of
+  the HttpRequest implementation on Android.
+  States are in oval
+  Functionss are boxed
+  "chunks" of code (not necessary functions) are dashed
+  Direct transitions (in the same thread) are in black,
+  while interthreads transitions are in blue.
+  Red transitions are just here to highlight the switch
+  to the Abort state.
+  Bolded ovals (START/EXIT/ABORT) are not really states,
+  just start/end points.
+ */
+
+  rankdir = LR;
+  concentrate=false;
+
+  {
+    rank = min;
+    START [style="bold"];
+    ABORT [style="bold"];
+    EXIT [style="bold"];
+  }
+
+  ServeLocally [shape="box", style="solid"];
+
+  { 
+    rank = same;
+    Child_CONNECT_TO_REMOTE; 
+    Child_PARSE_HEADERS;
+    Child_CONNECTED;
+    Child_POST;
+    Child_RECEIVE;
+    Redirection [shape="box", style="dashed"];
+    ParseHeaders [shape="box", style="solid"];
+    ConnectToRemote [shape="box", style="solid"];
+    SendPostData [shape="box", style="solid"];
+    Receive [shape="box", style="solid"];
+  }
+
+  {
+    rank = same;
+    Child_ABORT;
+    Interrupt;
+  }
+
+  {
+    rank = max;
+    Main_RECEIVED;
+    Main_COMPLETE;
+    Main_IDLE;
+    InsertIntoCache [shape="box", style="solid"];
+    SaveCacheResult [shape="box", style="solid"];
+    StopChild [shape="box", style="solid"];
+  }
+  
+/*
+  {
+    SetReadyState [shape="box"];
+    START -> SetReadyState [label="OPEN(1)"];
+    Child_CONNECTED -> SetReadyState [color="blue", label="SENT(2)"];
+    ParseHeaders -> SetReadyState [color="blue", label="INTERACTIVE(3)"];
+    Main_COMPLETE -> SetReadyState [label="COMPLETE(4)"];
+  }
+*/
+
+  ABORT -> Child_ABORT [label="was_aborted_", color="blue"];
+
+  Main_IDLE -> EXIT;
+  START -> Main_REQUEST;
+  Main_REQUEST -> ServeLocally;
+  ServeLocally -> Child_CONNECT_TO_REMOTE [color="blue", label="CACHE MISS"];
+  ServeLocally -> Child_PARSE_HEADERS [color="blue"];
+  Child_CONNECT_TO_REMOTE -> ConnectToRemote;
+  ConnectToRemote -> Child_CONNECTED;
+  ConnectToRemote -> Child_ABORT [style="solid", label="FAILED", color=red];
+  Child_CONNECTED -> Child_POST [label="POST"];
+  Child_CONNECTED -> Child_PARSE_HEADERS;
+  Child_POST -> SendPostData;
+  SendPostData -> Child_PARSE_HEADERS [label="POST"];
+  SendPostData -> Child_ABORT [style="solid", label="POST FAILED", color=red];
+  Child_PARSE_HEADERS -> ParseHeaders;
+  Child_PARSE_HEADERS -> Child_ABORT [style="solid", label="FAILED PARSE HEADERS", color=red];
+  Redirection -> Child_RECEIVE [label="NO REDIRECT"];
+  ParseHeaders -> Redirection;
+  Redirection -> Main_REQUEST [color="blue", label="REDIRECT"];
+  Redirection -> Child_ABORT [style="solid", label="CANNOT OPEN AFTER REDIRECT", color=red];
+  Child_RECEIVE -> Receive;
+  Receive -> Main_RECEIVED [color="blue"];
+  Receive -> Child_ABORT [style="solid", "ERROR", color=red]; 
+  Child_ABORT -> Interrupt;
+  Interrupt -> Main_COMPLETE [color="blue"];
+  Main_RECEIVED -> InsertIntoCache -> SaveCacheResult;
+  SaveCacheResult -> Main_COMPLETE;
+  Main_RECEIVED -> Main_COMPLETE;
+  Main_COMPLETE -> StopChild -> Main_IDLE;
+}
