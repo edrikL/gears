@@ -142,6 +142,9 @@ JavaClass::Method HttpRequestAndroid::java_methods_[JAVA_METHOD_COUNT] = {
     "getAllResponseHeaders",
     "()Ljava/lang/String;" },
   { JavaClass::kNonStatic,
+    "abort",
+    "()V" },
+  { JavaClass::kNonStatic,
     "interrupt",
     "()V" },
 };
@@ -781,6 +784,8 @@ void HttpRequestAndroid::HandleStateMachine() {
 
     case STATE_CHILD_ABORT:
       assert(IsChildThread());
+      JniGetEnv()->CallVoidMethod(java_object_.Get(),
+                                GetMethod(JAVA_METHOD_INTERRUPT));
       SwitchToMainThreadState(STATE_MAIN_COMPLETE);
       break;
 
@@ -1394,9 +1399,9 @@ bool HttpRequestAndroid::Abort() {
   assert(IsMainThread());
   was_aborted_ = true;
   if (state_ != STATE_MAIN_IDLE) {
-    LOG(("Calling interrupt()\n"));
+    LOG(("Calling abort()\n"));
     JniGetEnv()->CallVoidMethod(java_object_.Get(),
-                                GetMethod(JAVA_METHOD_INTERRUPT));
+                                GetMethod(JAVA_METHOD_ABORT));
     // We simply switch the child to the STATE_CHILD_ABORT state.
     SwitchToChildThreadState(STATE_CHILD_ABORT);
   }
