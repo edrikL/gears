@@ -614,7 +614,22 @@ bool HttpRequestAndroid::SetState(State state) {
         (state != STATE_MAIN_IDLE)) {
       return false;
     }
+
+    // The state can be idle if the abort comes
+    // after we already processed MAIN_COMPLETE.
+    if (state_ == STATE_MAIN_IDLE) {
+      return false;
+    }
+
+    // If we are already in STATE_MAIN_COMPLETE,
+    // we only allow a transition to STATE_MAIN_IDLE
+    if (state_ == STATE_MAIN_COMPLETE) {
+      if (state != STATE_MAIN_IDLE) {
+        return false;
+      }
+    }
   }
+
   if (state_ == state) {
     return false;
   }
