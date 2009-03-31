@@ -1962,6 +1962,8 @@ JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token)
   LEAK_COUNTER_INCREMENT(JsRootedToken);
 #if BROWSER_FF
   if (JSVAL_IS_GCTHING(token_)) {
+    if (JS_GetOptions(context_) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+      static_cast<nsISupports*>(JS_GetContextPrivate(context_))->AddRef();
     JS_BeginRequest(context_);
     JS_AddRoot(context_, &token_);
     JS_EndRequest(context_);
@@ -1980,6 +1982,8 @@ JsRootedToken::~JsRootedToken() {
     JS_BeginRequest(context_);
     JS_RemoveRoot(context_, &token_);
     JS_EndRequest(context_);
+    if (JS_GetOptions(context_) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+      static_cast<nsISupports*>(JS_GetContextPrivate(context_))->Release();
   }
 #elif BROWSER_IE || BROWSER_IEMOBILE
   if (token_.vt == VT_DISPATCH) {
