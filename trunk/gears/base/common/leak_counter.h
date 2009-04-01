@@ -40,6 +40,7 @@
 // When adding new LeakCounterTypes, please keep them in alphabetical order,
 // and also update the leak_counter_names array in leak_counter.cc.
 enum LeakCounterType {
+  LEAK_COUNTER_TYPE_CanvasRenderingElementIE,
   LEAK_COUNTER_TYPE_DocumentJsRunner,
   LEAK_COUNTER_TYPE_DropTarget,
   LEAK_COUNTER_TYPE_DropTargetInterceptor,

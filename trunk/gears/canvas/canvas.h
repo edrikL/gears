@@ -38,6 +38,9 @@ class SkBitmap;
 class SkCanvas;
 struct SkIRect;
 
+#if BROWSER_IE
+class CanvasRenderingElementIE;
+#endif
 class GearsCanvasRenderingContext2D;
 
 // Extension of a subset of HTML5 canvas for photo manipulation.
@@ -89,6 +92,16 @@ class GearsCanvas : public ModuleImplBaseClass {
   // IN: String contextId
   // OUT: CanvasRenderingContext2D
   void GetContext(JsCallContext *context);
+
+  // Returns a DOM element peer that renders this Gears canvas onto the screen.
+  // IN: -
+  // OUT: DomElement
+  void GetRenderingElement(JsCallContext *context);
+
+  // Invalidates the DOM element peer, and therefore repaints the Gears canvas.
+  // IN: -
+  // OUT: -
+  void InvalidateRenderingElement(JsCallContext *context);
 
 
   // The following are not exported to Javascript.
@@ -143,6 +156,13 @@ class GearsCanvas : public ModuleImplBaseClass {
   // TODO(nigeltao): Move this state into GearsCanvasRenderingContext2D?
   double alpha_;
   std::string16 composite_operation_;
+
+#if BROWSER_IE
+  // Ideally, this should be a CComPtr<CanvasRenderingElementIE>, but doing
+  // that causes inscrutable C++ template errors. Instead, we manually AddRef
+  // and Release this COM object.
+  CanvasRenderingElementIE *rendering_element_;
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };

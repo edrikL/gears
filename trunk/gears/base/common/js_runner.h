@@ -101,6 +101,13 @@ class JsRunnerInterface {
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
 
+#if BROWSER_FF
+  virtual bool EvalFuncWithModuleArg(
+      const std::string16 &script,
+      ModuleImplBaseClass *module,
+      jsval *return_value) = 0;
+#endif
+
   // Creates a new object in the JavaScript engine. The caller takes ownership
   // of the returned value.
   virtual JsObject *NewObject(// TODO(zork): Remove this when we find the error.

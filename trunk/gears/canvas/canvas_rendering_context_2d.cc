@@ -673,25 +673,6 @@ void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
   // TODO(nigeltao): Are the colors premultiplied? If so, unpremultiply them.
 }
 
-static U8CPU InvScaleByte(U8CPU component, uint32_t scale)
-{
-  assert(component == static_cast<uint8_t>(component));
-  return (component * scale + 0x8000) >> 16;
-}
-
-// TODO(nigeltao): Submit Unpremultiply (and InvScaleByte) into upstream Skia.
-static SkColor Unpremultiply(SkPMColor pm) {
-  if (pm == 0) {
-    return 0;
-  }
-  uint32_t a = SkGetPackedA32(pm);
-  uint32_t scale = (255 << 16) / a;
-  return SkColorSetARGB(a,
-                        InvScaleByte(SkGetPackedR32(pm), scale),
-                        InvScaleByte(SkGetPackedG32(pm), scale),
-                        InvScaleByte(SkGetPackedB32(pm), scale));
-}
-
 void GearsCanvasRenderingContext2D::CreateImageData(JsCallContext *context) {
   double sw, sh;
   JsArgument args[] = {
@@ -772,13 +753,40 @@ void GearsCanvasRenderingContext2D::GetImageData(JsCallContext *context) {
 
   int data_index = 0;
   for (int j = 0; j < h; j++) {
-    uint32_t* source = bitmap.getAddr32(x, y + j);
+    uint8 *source = reinterpret_cast<uint8*>(bitmap.getAddr32(x, y + j));
     for (int i = 0; i < w; i++) {
-      SkColor color = Unpremultiply(source[i]);
-      data->SetElementInt(data_index++, SkColorGetR(color));
-      data->SetElementInt(data_index++, SkColorGetG(color));
-      data->SetElementInt(data_index++, SkColorGetB(color));
-      data->SetElementInt(data_index++, SkColorGetA(color));
+      uint8 r, g, b, a;
+      // This unpacking code presumes that we are little-endian.
+      if (SK_R32_SHIFT == 0 && SK_G32_SHIFT == 8 && SK_B32_SHIFT == 16) {
+        r = *source++;
+        g = *source++;
+        b = *source++;
+        a = *source++;
+      } else if (SK_R32_SHIFT == 16 && SK_G32_SHIFT == 8 && SK_B32_SHIFT == 0) {
+        b = *source++;
+        g = *source++;
+        r = *source++;
+        a = *source++;
+      } else {
+        assert(false);
+        context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+        return;
+      }
+
+      // Unpremultiply.
+      if (a == 0) {
+        r = g = b = 0;
+      } else {
+        uint32 scale = (255 << 16) / a;
+        r = (static_cast<uint32>(r) * scale + (1 << 15)) >> 16;
+        g = (static_cast<uint32>(g) * scale + (1 << 15)) >> 16;
+        b = (static_cast<uint32>(b) * scale + (1 << 15)) >> 16;
+      }
+
+      data->SetElementInt(data_index++, r);
+      data->SetElementInt(data_index++, g);
+      data->SetElementInt(data_index++, b);
+      data->SetElementInt(data_index++, a);
     }
   }
 
@@ -858,10 +866,17 @@ void GearsCanvasRenderingContext2D::PutImageData(JsCallContext *context) {
       a->GetElementAsInt(data_index++, &pixel_g);
       a->GetElementAsInt(data_index++, &pixel_b);
       a->GetElementAsInt(data_index++, &pixel_a);
+      // TODO(nigeltao): Do we need to perform the min/max for compliance? If
+      // not, it would clearly be *much* faster to just AND each pixel_x value
+      // with 0xFF.
       pixel_r = std::max(0, std::min(255, pixel_r));
       pixel_g = std::max(0, std::min(255, pixel_g));
       pixel_b = std::max(0, std::min(255, pixel_b));
       pixel_a = std::max(0, std::min(255, pixel_a));
+      // SkPreMultiplyARGB calls SkPackARGB32, which picks up the SK_R32_SHIFT
+      // macros defined in SkUserConfig.h, and hence this code below works
+      // either way, if we pack BGRA (as on Win32, same as GDI+) or RGBA
+      // (Skia's default, which we use on non-Win32 platforms).
       source[i] = SkPreMultiplyARGB(
           static_cast<U8CPU>(pixel_a),
           static_cast<U8CPU>(pixel_r),

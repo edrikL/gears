@@ -6,9 +6,10 @@ as directed by the instructions at
 plus the following changes:
 
 
-skia/include/core/SkUserConfig.h lines 20-42 were added to set Gears-specific
+skia/include/core/SkUserConfig.h lines 20-52 were added to set Gears-specific
 build configuration options, based on Chromium's Skia/Win32 edits visible at
 http://src.chromium.org/viewvc/chrome/trunk/src/skia/include/corecg/SkUserConfig.h
+as well as adding the SkBitmap BGRA byte ordering.
 
 
 skia/src/core/SkCanvas.cpp line 282 (fOnce = false) was added to avoid a
