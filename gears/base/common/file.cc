@@ -176,10 +176,10 @@ bool File::ReadFileToVector(const char16 *full_filepath,
     return false;
   }
   int64 size = file->Size();
-  if (size > data->max_size()) {
+  if (size < 0 || static_cast<size_t>(size) > data->max_size()) {
     return false;
   }
-  data->resize(static_cast<unsigned int>(size));
+  data->resize(static_cast<size_t>(size));
   if (size > 0) {
     int64 read = file->Read(&(*data)[0], size);
     if (read != size) {

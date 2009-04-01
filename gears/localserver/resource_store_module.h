@@ -140,7 +140,7 @@ class GearsResourceStore
   // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else
   // AsyncTask::Listener
-  virtual void HandleEvent(int code, int param, AsyncTask *source);
+  virtual void HandleAsyncTaskEvent(int code, int param, AsyncTask *source);
 #endif
   void OnCaptureUrlComplete(int index, bool success);
   void OnCaptureTaskComplete();

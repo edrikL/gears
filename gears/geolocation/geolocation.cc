@@ -1077,7 +1077,7 @@ bool GearsGeolocation::MakeSuccessCallback(FixRequestInfo *fix_info,
   }
   fix_info->last_position = position;
   fix_info->last_success_callback_time = GetCurrentTimeMillis();
-  JsParamToSend argv[] = { JSPARAM_OBJECT, position_object.get() };
+  JsParamToSend argv[] = { { JSPARAM_OBJECT, position_object.get() } };
 
   // InvokeCallback returns false if the callback enounters an error. Once we've
   // made the callback, we can't rely on any of the fix request data, because it
@@ -1114,7 +1114,7 @@ bool GearsGeolocation::MakeErrorCallback(FixRequestInfo *fix_info,
     assert(false);
     return false;
   }
-  JsParamToSend argv[] = { JSPARAM_OBJECT, position_error_object.get() };
+  JsParamToSend argv[] = { { JSPARAM_OBJECT, position_error_object.get() } };
 
   // InvokeCallback returns false if the callback enounters an error. Once we've
   // made the callback, we can't rely on any of the fix request data, because it

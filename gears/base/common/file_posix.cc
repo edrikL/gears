@@ -143,7 +143,8 @@ int64 File::Read(uint8* destination, int64 max_bytes) const {
   }
 
   // Read its contents into memory.
-  if (max_bytes > std::numeric_limits<size_t>::max()) {  // fread limit
+  if (static_cast<uint64>(max_bytes) >
+          std::numeric_limits<size_t>::max()) {  // fread limit
     max_bytes = std::numeric_limits<size_t>::max();
   }
   size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
@@ -215,7 +216,7 @@ int64 File::Write(const uint8 *source, int64 length) {
     return kReadWriteFailure;
   }
   // can't write more data than fwrite can handle
-  assert(length <= std::numeric_limits<size_t>::max());
+  assert(static_cast<uint64>(length) <= std::numeric_limits<size_t>::max());
 
   size_t bytes_written = fwrite(source, 1, length, handle_);
   if (ferror(handle_)) {

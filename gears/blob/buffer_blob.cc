@@ -38,7 +38,10 @@ BufferBlob::BufferBlob(const void *source, int64 num_bytes)
   // The current implementation of BufferBlob stores data in a vector.
   // A vector has an upper bound for how much data it can hold.
   // Make sure we haven't gone beyond this limit.
-  assert(num_bytes <= buffer_.max_size());
+  // TODO(nigeltao): We should probably have a tighter upper bound than
+  // kint32max.
+  assert(0 <= num_bytes && num_bytes <= kint32max);
+  assert(static_cast<unsigned int>(kint32max) <= buffer_.max_size());
 }
 
 int64 BufferBlob::Read(uint8 *destination, int64 offset,
@@ -46,14 +49,16 @@ int64 BufferBlob::Read(uint8 *destination, int64 offset,
   if (offset < 0 || max_bytes < 0) {
     return -1;
   }
-  if (offset >= buffer_.size() || max_bytes == 0) {
+  int64 buffer_size = static_cast<int64>(buffer_.size());
+  assert(0 <= buffer_size && buffer_size <= kint32max);
+  int64 available = buffer_size - offset;
+  if (available <= 0 || max_bytes == 0) {
     return 0;
   }
-  int64 available = buffer_.size() - offset;
+  assert(available <= kint32max);
   int64 num_bytes = std::min(available, max_bytes);
-  if (num_bytes > std::numeric_limits<size_t>::max()) {
-    num_bytes = static_cast<int64>(std::numeric_limits<size_t>::max());
-  }
+  assert(0 <= num_bytes && num_bytes <= kint32max);
+  assert(static_cast<size_t>(num_bytes) <= std::numeric_limits<size_t>::max());
   memcpy(destination, &(buffer_[static_cast<size_type>(offset)]),
          static_cast<size_t>(num_bytes));
   return num_bytes;
@@ -64,37 +69,41 @@ int64 BufferBlob::ReadDirect(Reader *reader, int64 offset,
   if (offset < 0 || max_bytes < 0) {
     return -1;
   }
-  if (offset >= buffer_.size() || max_bytes == 0) {
+  int64 buffer_size = static_cast<int64>(buffer_.size());
+  assert(0 <= buffer_size && buffer_size <= kint32max);
+  int64 available = buffer_size - offset;
+  if (available <= 0 || max_bytes == 0) {
     return 0;
   }
-  if (buffer_.size() - offset < max_bytes) {
-    max_bytes = buffer_.size() - offset;
-  }
+  int64 num_bytes = std::min(available, max_bytes);
   int64 total_bytes_read(0);
   size_type pos(static_cast<size_type>(offset));
-  while (max_bytes > 0) {
-    int64 bytes_read = reader->ReadFromBuffer(&buffer_[pos], max_bytes);
+  while (num_bytes > 0) {
+    int64 bytes_read = reader->ReadFromBuffer(&buffer_[pos], num_bytes);
     assert(bytes_read >= 0);
     if (bytes_read == 0) break;
-    assert(bytes_read <= max_bytes);
+    assert(bytes_read <= num_bytes);
     total_bytes_read += bytes_read;
     pos += static_cast<size_type>(bytes_read);
-    max_bytes -= bytes_read;
+    num_bytes -= bytes_read;
   }
   return total_bytes_read;
 }
 
 int64 BufferBlob::Length() const {
-  return buffer_.size();
+  int64 buffer_size = static_cast<int64>(buffer_.size());
+  assert(0 <= buffer_size && buffer_size <= kint32max);
+  return buffer_size;
 }
 
 bool BufferBlob::GetDataElements(std::vector<DataElement> *elements) const {
   assert(elements && elements->empty());
   if (!buffer_.empty()) {
-    assert(buffer_.size() <= static_cast<int>(kint32max));
+    int64 buffer_size = static_cast<int64>(buffer_.size());
+    assert(0 <= buffer_size && buffer_size <= kint32max);
     elements->push_back(DataElement());
     elements->back().SetToBytes(&buffer_[0], 
-                                static_cast<int>(buffer_.size()));
+                                static_cast<int>(buffer_size));
   }
   return true;
 }

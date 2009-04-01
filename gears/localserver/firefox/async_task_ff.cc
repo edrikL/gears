@@ -143,7 +143,7 @@ void AsyncTask::Abort() {
   if (params_) {
     // An http request is in progress that we must terminate.
     // We can only terminate HTTP requests from the UI thread.
-    CallAsync(GetUiThread(), kAbortHttpGetMessageCode, NULL);
+    CallAsync(GetUiThread(), kAbortHttpGetMessageCode, 0);
   }
 }
 
@@ -202,7 +202,7 @@ void AsyncTask::ThreadEntry(void *task) {
 void AsyncTask::NotifyListener(int code, int param) {
   assert(IsTaskThread());
   if (listener_) {
-    CallAsync(listener_thread_id_, code, reinterpret_cast<void*>(param));
+    CallAsync(listener_thread_id_, code, param);
   }
 }
 
@@ -212,7 +212,7 @@ void AsyncTask::NotifyListener(int code, int param) {
 void AsyncTask::OnListenerEvent(int msg_code, int msg_param) {
   assert(IsListenerThread());
   if (listener_) {
-    listener_->HandleEvent(msg_code, msg_param, this);
+    listener_->HandleAsyncTaskEvent(msg_code, msg_param, this);
   }
 }
 
@@ -367,7 +367,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   params_ = &params;
 
   // Send a message to the UI thread to initiate the get
-  CallAsync(GetUiThread(), kStartHttpGetMessageCode, NULL);
+  CallAsync(GetUiThread(), kStartHttpGetMessageCode, 0);
 
   // Wait for completion
   PR_Wait(lock_, PR_INTERVAL_NO_TIMEOUT);
@@ -527,7 +527,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
 // OnAsyncCall - Called when a message sent via CallAsync is delivered to us
 // on the target thread of control.
 //------------------------------------------------------------------------------
-void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
+void AsyncTask::OnAsyncCall(int msg_code, int msg_param) {
   switch (msg_code) {
     case kStartHttpGetMessageCode:
       assert(IsUiThread());
@@ -542,7 +542,7 @@ void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
       break;
     default:
       assert(IsListenerThread());
-      OnListenerEvent(msg_code, reinterpret_cast<int>(msg_param));
+      OnListenerEvent(msg_code, msg_param);
       break;
   }
 }
@@ -552,7 +552,7 @@ void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
 //------------------------------------------------------------------------------
 class AsyncTask::AsyncCallEvent : public AsyncFunctor {
 public:
-  AsyncCallEvent(AsyncTask *task, int code, void *param)
+  AsyncCallEvent(AsyncTask *task, int code, int param)
       : task(task), msg_code(code), msg_param(param) {
     task->Ref();
   }
@@ -570,7 +570,7 @@ private:
   // Ref()/Unref() members public.
   AsyncTask *task;
   int msg_code;
-  void *msg_param;
+  int msg_param;
 };
 
 //------------------------------------------------------------------------------
@@ -578,7 +578,7 @@ private:
 // be delivered to this AsyncTask instance on that thread via OnAsyncCall.
 //------------------------------------------------------------------------------
 nsresult AsyncTask::CallAsync(ThreadId thread_id,
-                              int msg_code, void *msg_param) {
+                              int msg_code, int msg_param) {
 
   AsyncRouter::GetInstance()->CallAsync(
       thread_id,

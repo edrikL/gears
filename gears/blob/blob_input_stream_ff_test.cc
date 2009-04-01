@@ -61,9 +61,6 @@ int consumer_fail = 0;
 // Size of the buffer used by ReadSegments.
 const int rs_buffer_size(1024 * 1024);
 
-// Some data we can use to initialize our blobs.
-std::vector<uint8>* data(0);
-
 // Amount of data that we create (8 MB).
 const std::vector<uint8>::size_type data_size(1024 * 1024 * 8);
 

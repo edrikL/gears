@@ -79,9 +79,13 @@ m4_ifelse(PRODUCT_OS,^|win32|^,^|m4_dnl
 |^,PRODUCT_OS,^|wince|^,^|m4_dnl
     <!-- WE DON'T CURRENTLY BUILD FOR WINCE FIREFOX. -->
 |^,PRODUCT_OS,^|linux|^,^|m4_dnl
+m4_ifelse(PRODUCT_ARCH,^|x86_64|^,^|m4_dnl
+    <em:targetPlatform>Linux_x86_64-gcc3</em:targetPlatform>
+|^,^|m4_dnl // PRODUCT_ARCH else...
     <em:targetPlatform>Linux_x86-gcc3</em:targetPlatform>
     <!-- Ubuntu Edgy Eft requires "linux-gnu" for the OS_TARGET prefix. -->
     <em:targetPlatform>linux-gnu_x86-gcc3</em:targetPlatform>
+|^)m4_dnl // PRODUCT_ARCH end
 |^,PRODUCT_OS,^|osx|^,^|m4_dnl
     <em:targetPlatform>Darwin</em:targetPlatform>
 |^)

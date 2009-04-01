@@ -34,9 +34,5 @@ const char16* const kLocalStrings[] = {
 };
   
 std::string16 GetLocalString(I18NStringKey key) {
-  if ((key < 0) || (static_cast<unsigned>(key) > ARRAYSIZE(kLocalStrings))) {
-    assert(false);
-    return STRING16(L"");
-  }
   return kLocalStrings[key];
 }

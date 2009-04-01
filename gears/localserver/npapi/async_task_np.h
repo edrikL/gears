@@ -70,9 +70,9 @@ class AsyncTask : protected HttpRequest::HttpListener,
   // Firefox specific API utilized by clients of derived classes
   class Listener {
    public:
-    virtual void HandleEvent(int msg_code,
-                             int msg_param,
-                             AsyncTask *source) = 0;
+    virtual void HandleAsyncTaskEvent(int msg_code,
+                                      int msg_param,
+                                      AsyncTask *source) = 0;
   };
   void SetListener(Listener* listener);
 

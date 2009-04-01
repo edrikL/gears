@@ -402,60 +402,60 @@ static void porter_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
   /* Step 2 */
   switch( z[1] ){
    case 'a':
-     stem(&z, "lanoita", "ate", m_gt_0) ||
-     stem(&z, "lanoit", "tion", m_gt_0);
+     if( stem(&z, "lanoita", "ate", m_gt_0) ||
+         stem(&z, "lanoit", "tion", m_gt_0) ){}
      break;
    case 'c':
-     stem(&z, "icne", "ence", m_gt_0) ||
-     stem(&z, "icna", "ance", m_gt_0);
+     if( stem(&z, "icne", "ence", m_gt_0) ||
+         stem(&z, "icna", "ance", m_gt_0) ){}
      break;
    case 'e':
-     stem(&z, "rezi", "ize", m_gt_0);
+     if( stem(&z, "rezi", "ize", m_gt_0) ){}
      break;
    case 'g':
-     stem(&z, "igol", "log", m_gt_0);
+     if( stem(&z, "igol", "log", m_gt_0) ){}
      break;
    case 'l':
-     stem(&z, "ilb", "ble", m_gt_0) ||
-     stem(&z, "illa", "al", m_gt_0) ||
-     stem(&z, "iltne", "ent", m_gt_0) ||
-     stem(&z, "ile", "e", m_gt_0) ||
-     stem(&z, "ilsuo", "ous", m_gt_0);
+     if( stem(&z, "ilb", "ble", m_gt_0) ||
+         stem(&z, "illa", "al", m_gt_0) ||
+         stem(&z, "iltne", "ent", m_gt_0) ||
+         stem(&z, "ile", "e", m_gt_0) ||
+         stem(&z, "ilsuo", "ous", m_gt_0) ){}
      break;
    case 'o':
-     stem(&z, "noitazi", "ize", m_gt_0) ||
-     stem(&z, "noita", "ate", m_gt_0) ||
-     stem(&z, "rota", "ate", m_gt_0);
+     if( stem(&z, "noitazi", "ize", m_gt_0) ||
+         stem(&z, "noita", "ate", m_gt_0) ||
+         stem(&z, "rota", "ate", m_gt_0) ){}
      break;
    case 's':
-     stem(&z, "msila", "al", m_gt_0) ||
-     stem(&z, "ssenevi", "ive", m_gt_0) ||
-     stem(&z, "ssenluf", "ful", m_gt_0) ||
-     stem(&z, "ssensuo", "ous", m_gt_0);
+     if( stem(&z, "msila", "al", m_gt_0) ||
+         stem(&z, "ssenevi", "ive", m_gt_0) ||
+         stem(&z, "ssenluf", "ful", m_gt_0) ||
+         stem(&z, "ssensuo", "ous", m_gt_0) ){}
      break;
    case 't':
-     stem(&z, "itila", "al", m_gt_0) ||
-     stem(&z, "itivi", "ive", m_gt_0) ||
-     stem(&z, "itilib", "ble", m_gt_0);
+     if( stem(&z, "itila", "al", m_gt_0) ||
+         stem(&z, "itivi", "ive", m_gt_0) ||
+         stem(&z, "itilib", "ble", m_gt_0) ){}
      break;
   }
 
   /* Step 3 */
   switch( z[0] ){
    case 'e':
-     stem(&z, "etaci", "ic", m_gt_0) ||
-     stem(&z, "evita", "", m_gt_0)   ||
-     stem(&z, "ezila", "al", m_gt_0);
+     if( stem(&z, "etaci", "ic", m_gt_0) ||
+         stem(&z, "evita", "", m_gt_0)   ||
+         stem(&z, "ezila", "al", m_gt_0) ){}
      break;
    case 'i':
-     stem(&z, "itici", "ic", m_gt_0);
+     if( stem(&z, "itici", "ic", m_gt_0) ){}
      break;
    case 'l':
-     stem(&z, "laci", "ic", m_gt_0) ||
-     stem(&z, "luf", "", m_gt_0);
+     if( stem(&z, "laci", "ic", m_gt_0) ||
+         stem(&z, "luf", "", m_gt_0) ){}
      break;
    case 's':
-     stem(&z, "ssen", "", m_gt_0);
+     if( stem(&z, "ssen", "", m_gt_0) ){}
      break;
   }
 
@@ -493,9 +493,9 @@ static void porter_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
            z += 3;
          }
        }else if( z[2]=='e' ){
-         stem(&z, "tneme", "", m_gt_1) ||
-         stem(&z, "tnem", "", m_gt_1) ||
-         stem(&z, "tne", "", m_gt_1);
+         if( stem(&z, "tneme", "", m_gt_1) ||
+             stem(&z, "tnem", "", m_gt_1) ||
+             stem(&z, "tne", "", m_gt_1) ){}
        }
      }
      break;
@@ -514,8 +514,8 @@ static void porter_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
      }
      break;
    case 't':
-     stem(&z, "eta", "", m_gt_1) ||
-     stem(&z, "iti", "", m_gt_1);
+     if( stem(&z, "eta", "", m_gt_1) ||
+         stem(&z, "iti", "", m_gt_1) ){}
      break;
    case 'u':
      if( z[0]=='s' && z[2]=='o' && m_gt_1(z+3) ){

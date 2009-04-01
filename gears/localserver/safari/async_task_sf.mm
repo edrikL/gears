@@ -430,5 +430,6 @@ void AsyncTask::OnAsyncCall(CFMachPortRef port, void *mach_msg, CFIndex size,
   }
 
   if (asyncTask->listener_)
-    asyncTask->listener_->HandleEvent(msg->code, msg->param, asyncTask);
+    asyncTask->listener_->HandleAsyncTaskEvent(
+        msg->code, msg->param, asyncTask);
 }
