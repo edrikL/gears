@@ -36,6 +36,10 @@
 #include "third_party/skia/include/images/SkImageDecoder.h"
 #include "third_party/skia/include/images/SkImageEncoder.h"
 
+#if BROWSER_IE
+#include "gears/canvas/canvas_rendering_element_ie.h"
+#endif
+
 namespace canvas {
 const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
 }
@@ -47,7 +51,10 @@ const std::string GearsCanvas::kModuleName("GearsCanvas");
 
 GearsCanvas::GearsCanvas()
     : ModuleImplBaseClass(kModuleName),
-    rendering_context_(NULL) {
+      rendering_context_(NULL) {
+#if BROWSER_IE
+  rendering_element_ = NULL;
+#endif
   // Initial dimensions as per the HTML5 canvas spec.
   ResetCanvas(300, 150);
 }
@@ -56,6 +63,14 @@ GearsCanvas::~GearsCanvas() {
   // The rendering context is destroyed first, since it has a scoped_refptr to
   // this object. See comment near bottom of canvas.h.
   assert(rendering_context_ == NULL);
+#if BROWSER_IE
+  if (rendering_element_ != NULL) {
+    rendering_element_->OnGearsCanvasDestroyed();
+    // This Release is balanced by an AddRef in GetRenderingElement.
+    rendering_element_->Release();
+    rendering_element_ = NULL;
+  }
+#endif
 }
 
 void GearsCanvas::ClearRenderingContextReference() {
@@ -71,6 +86,18 @@ void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("resize", &GearsCanvas::Resize);
   RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
   RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
+  // TODO(nigeltao): We need to decide which one of the (off-screen)
+  // GearsCanvas and the (on-screen) rendering DOM element is the definitive
+  // one, in terms of width and height. Does modifying the WxH of one
+  // necessitate keeping the other one in sync?
+  RegisterMethod("getRenderingElement", &GearsCanvas::GetRenderingElement);
+  // TODO(nigeltao): Should we even have this method? Should invalidation
+  // instead be automatic (like the Gecko and WebKit canvas implementations,
+  // which are invalidated after every drawing operation) rather than explicit?
+  // The answer probably depends on whether we can make rendering sufficiently
+  // fast on all Browser x OS combinations.
+  RegisterMethod("invalidateRenderingElement",
+      &GearsCanvas::InvalidateRenderingElement);
 }
 
 void GearsCanvas::EnsureBitmapPixelsAreAllocated() {
@@ -326,6 +353,106 @@ void GearsCanvas::GetContext(JsCallContext *context) {
     rendering_context_->SetCanvas(this, skia_bitmap_.get());
   }
   context->SetReturnValue(JSPARAM_MODULE, rendering_context_);
+}
+
+void GearsCanvas::GetRenderingElement(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"getRenderingElement is not supported in workers."));
+    return;
+  }
+
+#if BROWSER_FF
+  JsToken retval = JSVAL_NULL;
+  // In the script below, g is the Gears canvas.
+  module_environment_->js_runner_->EvalFuncWithModuleArg(
+      STRING16(L"function(g){"
+          L"if(!g.renderingElement)"
+            L"g.renderingElement=document.createElement('canvas');"
+          L"return g.renderingElement;}"),
+      this,
+      &retval);
+  if (retval == JSVAL_NULL) {
+    context->SetException(STRING16(L"Error in getRenderingElement."));
+    return;
+  }
+  context->SetReturnValue(JSPARAM_TOKEN, &retval);
+#elif BROWSER_IE
+  if (!rendering_element_) {
+    CComObject<CanvasRenderingElementIE> *rendering_element;
+    if (FAILED(CComObject<CanvasRenderingElementIE>::CreateInstance(
+            &rendering_element))) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+      return;
+    }
+    rendering_element_ = rendering_element;
+    if (!rendering_element_) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+      return;
+    }
+    // This AddRef is balanced by a Release in the GearsCanvas destructor.
+    rendering_element_->AddRef();
+    rendering_element_->SetGearsCanvas(this);
+  }
+  IHTMLElement *element = rendering_element_->GetHtmlElement();
+  if (!element) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+  CComVariant result(element);
+  context->SetReturnValue(JSPARAM_TOKEN, &result);
+#else
+  context->SetException(STRING16(L"Unimplemented"));
+#endif
+}
+
+void GearsCanvas::InvalidateRenderingElement(JsCallContext *context) {
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"invalidateRenderingElement is not supported in workers."));
+    return;
+  }
+  // Currently, this method takes no args, although it could conceivably take
+  // an (optional) x,y,w,h rectangle to invalidate.
+
+#if BROWSER_FF
+  JsToken retval = JSVAL_NULL;
+  module_environment_->js_runner_->EvalFuncWithModuleArg(
+      // In the script below, g is the Gears canvas, gc is the Gears canvas'
+      // 2d-context, and nc is the native canvas' 2d-context. The 256 is
+      // just a number that is not more than the getImageData upper bound,
+      // GearsCanvasRenderingContext2D::kMaxImageDataSize.
+      // This script uses getImageData/putImageData to move the pixels from
+      // the off-screen Gears canvas to the on-screen native canvas, in sets
+      // of 256 x 256 slices. This probably isn't the fastest way to paint a
+      // Gears canvas onto the screen (as opposed to some low-level XPCOM
+      // incantations), and we're not even caching the eval'ed function, but
+      // it is simple and it works, and we can optimize the implementation
+      // later, if necessary.
+      STRING16(L"function(g){"
+          L"if(!g.renderingElement)"
+            L"return;"
+          L"var gc=g.getContext('gears-2d');"
+          L"var nc=g.renderingElement.getContext('2d');"
+          L"for(var y=0;y<g.height;y+=256){"
+            L"for(var x=0;x<g.width;x+=256){"
+              L"var w=Math.min(256,g.width-x);"
+              L"var h=Math.min(256,g.height-y);"
+              L"nc.putImageData(gc.getImageData(x,y,w,h),x,y);"
+          L"}}}"),
+      this,
+      &retval);
+  if (retval == JSVAL_NULL) {
+    context->SetException(STRING16(L"Error in invalidateRenderingElement."));
+    return;
+  }
+#elif BROWSER_IE
+  if (rendering_element_) {
+    rendering_element_->InvalidateRenderingElement();
+  }
+#else
+  context->SetException(STRING16(L"Unimplemented"));
+#endif
 }
 
 int GearsCanvas::GetWidth() const {

@@ -484,6 +484,10 @@ class JsRunner : public JsRunnerBase {
   bool Start(const std::string16 &full_script);
   bool Stop();
   virtual bool Eval(const std::string16 &full_script, jsval *return_value);
+  virtual bool EvalFuncWithModuleArg(
+      const std::string16 &script,
+      ModuleImplBaseClass *module,
+      jsval *return_value);
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
   }
@@ -726,6 +730,15 @@ bool JsRunner::Eval(const std::string16 &script, jsval *return_value) {
   return true;
 }
 
+bool JsRunner::EvalFuncWithModuleArg(
+    const std::string16 &script,
+    ModuleImplBaseClass *module,
+    jsval *return_value) {
+  // This method is unimplemented simply because it is unused.
+  assert(false);
+  return false;
+}
+
 bool JsRunner::InvokeCallbackSpecialized(
                    const JsRootedCallback *callback, int argc, jsval *argv,
                    JsRootedToken **optional_alloc_retval) {
@@ -799,6 +812,11 @@ class DocumentJsRunner : public JsRunnerBase {
     return false;
   }
   virtual bool Eval(const std::string16 &full_script, jsval *return_value);
+  virtual bool EvalFuncWithModuleArg(
+      const std::string16 &script,
+      ModuleImplBaseClass *module,
+      jsval *return_value);
+
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv,
                                  JsRootedToken **optional_alloc_retval);
@@ -900,6 +918,27 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   if (!js_ok) { return false; }
   return true;
 }
+
+
+bool DocumentJsRunner::EvalFuncWithModuleArg(
+    const std::string16 &script,
+    ModuleImplBaseClass *module,
+    jsval *return_value) {
+  JSObject *object = JS_GetGlobalObject(js_engine_context_);
+  if (!object) { return false; }
+
+  // First eval the script to get the function...
+  jsval f_as_jsval;
+  if (!Eval(script, &f_as_jsval)) { return false; }
+
+  // ...and then call the function with the module as the argument.
+  scoped_array<jsval> argv(new jsval[1]);
+  argv[0] = module->GetWrapperToken();
+  return JS_CallFunction(js_engine_context_, object,
+                         JS_ValueToFunction(js_engine_context_, f_as_jsval),
+                         1, argv.get(), return_value);
+}
+
 
 bool DocumentJsRunner::ListenForUnloadEvent() {
   unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,

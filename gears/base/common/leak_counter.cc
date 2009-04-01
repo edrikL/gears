@@ -40,6 +40,7 @@
 static AtomicWord leak_counter_counters[MAX_LEAK_COUNTER_TYPE];
 
 static const char16 *leak_counter_names[] = {
+  STRING16(L"CanvasRenderingElementIE"),
   STRING16(L"DocumentJsRunner"),
   STRING16(L"DropTarget"),
   STRING16(L"DropTargetInterceptor"),

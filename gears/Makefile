@@ -1332,6 +1332,10 @@ $(BROWSER)_CPPSRCS += \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
 
+IE_CPPSRCS += \
+		canvas_rendering_element_ie.cc \
+		$(NULL)
+
 endif  # not android
 endif  # not wince
 endif  # OFFICIAL_BUILD

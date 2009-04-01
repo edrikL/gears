@@ -2090,6 +2090,9 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_UNDEFINED:
       *token = JSVAL_VOID;
       break;
+    case JSPARAM_TOKEN:
+      *token = *(static_cast<const JsToken*>(param.value_ptr));
+      break;
     default:
       assert(false);
   }
@@ -2213,6 +2216,10 @@ bool ConvertJsParamToToken(const JsParamToSend &param,
       // Setting *token = VT_EMPTY doesn't seem to work.
       token->Clear();
       break;
+    case JSPARAM_TOKEN: {
+      *token = *static_cast<const VARIANT *>(param.value_ptr);
+      break;
+    }
     default:
       assert(false);
   }

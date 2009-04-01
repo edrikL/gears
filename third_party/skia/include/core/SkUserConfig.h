@@ -38,6 +38,16 @@ typedef unsigned int uint32_t;
   #define SK_RESTRICT
 #endif
 
+// Make SkBitmap's ARGB byte ordering the same as GDI+'s PixelFormat32bppARGB.
+// For example, on little-endian systems, bytes at addresses 3,2,1,0 (mod 4)
+// map to ARGB -- B is the least significant byte, so SK_B32_SHIFT is zero.
+// Skia's default (in SkColorPriv.h) is different, namely ABGR (i.e.
+// SK_R32_SHIFT is 0, SK_G32_SHIFT is 8, SK_B32_SHIFT is 16).
+#define SK_R32_SHIFT 16
+#define SK_G32_SHIFT 8
+#define SK_B32_SHIFT 0
+#define SK_A32_SHIFT 24
+
 #endif  // WIN32
 // END Gears changes
 

@@ -1,7 +1,7 @@
 <html><head><title>Gears Canvas</title></head>
 <body style="background-color:#FFFFCF">
 <p>Gears' canvas:</p>
-<img id="gc" width="100px" height="80px" style="border:1px solid black">
+<div id="gc"></div>
 <hr>
 <p>Browser's native canvas:</p>
 <canvas id="bnc" width="100px" height="80px" style="border:1px solid black">
@@ -11,6 +11,9 @@
 <img id="dc" width="100px" height="80px" style="border:1px solid black">
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
+
+
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 
 
 function draw(c) {
@@ -42,9 +45,6 @@ function draw(c) {
 }
 
 
-var store = null;
-
-
 var gearsCanvas = null;
 try {
   gearsCanvas = google.gears.factory.create('beta.canvas');
@@ -58,12 +58,28 @@ if (gearsCanvas) {
 
   draw(gearsCanvas.getContext('gears-2d'));
 
-  var localServer = google.gears.factory.create('beta.localserver');
-  localServer.removeStore("test_manual_canvas");
-  store = localServer.createStore("test_manual_canvas");
-  var capturedUrl = 'g' + parseInt(Math.random() * 1000) + '.png';
-  store.captureBlob(gearsCanvas.encode(), capturedUrl, 'image/png');
-  document.getElementById('gc').src = capturedUrl;
+  try {
+    var renderingElement = gearsCanvas.getRenderingElement();
+    renderingElement.style.borderWidth = '1px';
+    renderingElement.style.borderStyle = 'solid';
+    renderingElement.style.borderColor = 'black';
+
+    if (isIE) {
+      // The +2 is because IE's CSS engine appears to treat the 1px border
+      // differently from Gecko and WebKit.
+      renderingElement.style.width = gearsCanvas.width + 2;
+      renderingElement.style.height = gearsCanvas.height + 2;
+    } else {
+      renderingElement.width = gearsCanvas.width;
+      renderingElement.height = gearsCanvas.height;
+    }
+
+    document.getElementById('gc').appendChild(renderingElement);
+    gearsCanvas.invalidateRenderingElement();
+  } catch (e) {
+    // Silently ignore any exceptions -- getRenderingElement isn't implemented
+    // on all platforms yet.
+  }
 }
 
 
@@ -121,6 +137,9 @@ if (gearsCanvas && nativeContext && diffCanvas) {
 
   diffContext.putImageData(diffImageData, 0, 0);
 
+  var localServer = google.gears.factory.create('beta.localserver');
+  localServer.removeStore("test_manual_canvas");
+  var store = localServer.createStore("test_manual_canvas");
   var capturedUrl = 'd' + parseInt(Math.random() * 1000) + '.png';
   store.captureBlob(diffCanvas.encode(), capturedUrl, 'image/png');
   document.getElementById('dc').src = capturedUrl;
