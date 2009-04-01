@@ -399,7 +399,6 @@ void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
   JsArgument argv[] = {
     {JSPARAM_REQUIRED, JSPARAM_FUNCTION, as_out_parameter(function)},
   };
-  assert(&argv);
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 

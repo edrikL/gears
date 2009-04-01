@@ -118,7 +118,16 @@ else
 ifeq ($(OS),symbian)
   # Don't set a value here; Symbian builds for two ARCHs by default.
 else
+ifeq ($(OS),linux)
+  ARCH = $(shell gcc -dumpmachine | grep --only-matching x86_64)
+ifeq ($(ARCH),)
+  # Linux-only -- default to i386 if we're not explicitly x86_64.
   ARCH = i386
+endif
+else
+  # On Win32, we build i386.
+  ARCH = i386
+endif
 endif
 endif
 endif
@@ -550,9 +559,15 @@ EXEFLAGS = $(SHARED_LINKFLAGS)
 
 GECKO_SDK = $(GECKO_BASE)/linux
 
+ifeq ($(ARCH), x86_64)
+GECKO_SDK_LIB = $(GECKO_SDK)/gecko_sdk/lib64
+else
+GECKO_SDK_LIB = $(GECKO_SDK)/gecko_sdk/lib
+endif
+
 # Keep these in sync:
-FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s
-FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s
+FF2_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
+FF3_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
 # Append differences here:
 # Although the 1.9 SDK contains libnspr4, it is better to link against libxul,
 # which in turn depends on libnspr4. In Ubuntu 8.04, libnspr4 was not listed in

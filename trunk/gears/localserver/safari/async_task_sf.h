@@ -54,9 +54,9 @@ class AsyncTask {
   // Sets where notification messages will be sent.
   class Listener {
    public:
-    virtual void HandleEvent(int msg_code,
-                             int msg_param,
-                             AsyncTask *source) = 0;
+    virtual void HandleAsyncTaskEvent(int msg_code,
+                                      int msg_param,
+                                      AsyncTask *source) = 0;
   };
   void SetListener(Listener *listener);
 

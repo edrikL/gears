@@ -194,7 +194,8 @@ static void PngBlobReadFunction(
     png_structp png_ptr, png_bytep data, png_size_t length) {
   PngBlobReadContext *context =
       reinterpret_cast<PngBlobReadContext*>(png_get_io_ptr(png_ptr));
-  if (length != context->blob->Read(data, context->offset, length)) {
+  int64 read = context->blob->Read(data, context->offset, length);
+  if (read < 0 || length != static_cast<uint64>(read)) {
     png_error(png_ptr, "Incomplete read from Blob");
   }
   context->offset += length;

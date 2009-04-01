@@ -241,7 +241,7 @@ void AsyncTask::HandleAsync(int code, int param) {
   default:
     assert(IsListenerThread());
     if (listener_) {
-      listener_->HandleEvent(code, param, this);
+      listener_->HandleAsyncTaskEvent(code, param, this);
     }
     break;
   }

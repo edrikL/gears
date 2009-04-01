@@ -478,7 +478,7 @@ bool JsContextWrapper::AddFunctionToPrototype(
   //
   // We must use PRIVATE_TO_JSVAL (only works on pointers!) to prevent the
   // garbage collector from touching any private data stored in JS 'slots'.
-  assert(0 == (0x01 & reinterpret_cast<int>(function_data.get())));
+  assert(0 == (0x01 & reinterpret_cast<size_t>(function_data.get())));
   jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.get());
   function_wrappers_.push_back(function_data.release());
   assert(!JSVAL_IS_GCTHING(pointer_jsval));

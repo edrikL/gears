@@ -208,8 +208,18 @@ VPATH += $($(BROWSER)_VPATH) $(COMMON_VPATH) $(BREAKPAD_VPATH) $(THIRD_PARTY_VPA
 #-----------------------------------------------------------------------------
 # OUTPUT FILENAMES
 
-# no ARCH in INSTALLER_BASE_NAME because we created merged installers
+ifeq ($(OS),linux)
+# On Linux, we distinguish between the 64-bit and default (32-bit) installers.
+ifeq ($(ARCH),x86_64)
+INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(ARCH)-$(MODE)-$(VERSION)
+else
 INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(MODE)-$(VERSION)
+endif
+else
+# On OSes other than Linux, there is no ARCH in INSTALLER_BASE_NAME because
+# we created merged installers.
+INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(MODE)-$(VERSION)
+endif
 
 # Rules for per-OS installers need to reference MODULE variables, but BROWSER
 #   is not defined.  So explicitly define all module vars, instead of using:
@@ -293,9 +303,13 @@ else
 	$(MAKE) genheaders BROWSER=NONE
 	$(MAKE) modules    BROWSER=NONE
 
+  ifeq ($(ARCH),i386)
+	# We don't build for 64-bit Firefox2 (but we do build for 32-bit Firefox2
+	# and 64-bit Firefox3).
 	$(MAKE) prereqs    BROWSER=FF2
 	$(MAKE) genheaders BROWSER=FF2
 	$(MAKE) modules    BROWSER=FF2
+  endif
 
 	$(MAKE) prereqs    BROWSER=FF3
 	$(MAKE) genheaders BROWSER=FF3
@@ -1192,7 +1206,9 @@ endif
 	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+ifeq ($(ARCH),i386)
 	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)_ff2$(DLL_SUFFIX)
+endif
 ifeq ($(OS),osx)
 	cp $(OSX_LAUNCHURL_EXE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/
 else # not OSX

@@ -58,9 +58,9 @@ class AsyncTask : protected HttpRequest::HttpListener,
   // Firefox specific API utilized by clients of derived classes
   class Listener {
    public:
-    virtual void HandleEvent(int msg_code,
-                             int msg_param,
-                             AsyncTask *source) = 0;
+    virtual void HandleAsyncTaskEvent(int msg_code,
+                                      int msg_param,
+                                      AsyncTask *source) = 0;
   };
   void SetListener(Listener* listener);
 
@@ -164,11 +164,11 @@ class AsyncTask : protected HttpRequest::HttpListener,
   // worker thread methods
 
   static void ThreadEntry(void *self);
-  nsresult CallAsync(ThreadId thread_id, int msg_code, void *msg_param);
+  nsresult CallAsync(ThreadId thread_id, int msg_code, int msg_param);
 
   // listener and main thread methods
 
-  void OnAsyncCall(int msg_code, void *msg_param);
+  void OnAsyncCall(int msg_code, int msg_param);
   void OnAbortHttpGet();
   bool OnStartHttpGet();
   void OnListenerEvent(int msg_code, int msg_param);

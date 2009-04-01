@@ -187,7 +187,11 @@ bool BlobToVector(BlobInterface *blob, std::vector<uint8> *vector_out) {
   int64 blob_length(blob->Length());
   assert(blob_length >= 0);
   assert(vector_out);
+#if defined(__x86_64__)
+  assert(static_cast<size_t>(blob_length) <= vector_out->max_size());
+#else
   assert(blob_length <= static_cast<int64>(vector_out->max_size()));
+#endif
   if (blob_length == 0) {
     vector_out->clear();
     return true;

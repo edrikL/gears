@@ -816,13 +816,13 @@ bool GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 }
 
 //------------------------------------------------------------------------------
-// HandleEvent
+// HandleAsyncTaskEvent
 //------------------------------------------------------------------------------
 #if BROWSER_IE || BROWSER_IEMOBILE
   // On IE, AsyncTask uses a GearsResourceStoreMessageHwnd instead.
 #else
-void GearsResourceStore::HandleEvent(int code, int param,
-                                     AsyncTask *source) {
+void GearsResourceStore::HandleAsyncTaskEvent(int code, int param,
+                                              AsyncTask *source) {
   if (source && (source == capture_task_.get())) {
     if (code == CaptureTask::CAPTURE_TASK_COMPLETE) {
       OnCaptureTaskComplete();

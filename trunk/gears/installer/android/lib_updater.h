@@ -65,7 +65,9 @@ class LibUpdater : public Thread,
   virtual ~LibUpdater();
 
   // AsyncTask
-  virtual void HandleEvent(int msg_code, int msg_param, AsyncTask *source);
+  virtual void HandleAsyncTaskEvent(
+      int msg_code, int msg_param, AsyncTask *source);
+
  private:
   LibUpdater();
 

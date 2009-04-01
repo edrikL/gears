@@ -103,9 +103,9 @@ LibUpdater::~LibUpdater() {
 }
 
 // AsyncTask
-void LibUpdater::HandleEvent(int msg_code,
-                             int msg_param,
-                             AsyncTask *source) {
+void LibUpdater::HandleAsyncTaskEvent(int msg_code,
+                                      int msg_param,
+                                      AsyncTask *source) {
   if (source) {
     bool success = static_cast<bool>(msg_param);
     if (source == version_check_task_.get()) {

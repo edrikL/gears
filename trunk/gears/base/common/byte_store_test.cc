@@ -198,7 +198,7 @@ bool TestByteStore(std::string16 *error) {
   // Pick a size larger than data to write, but small enough to stay in buffer.
   int64 len = byte_store->AddDataDirect(&writer, 1024 * 1024);
   ok &= writer.Test(len);
-  TEST_ASSERT(len == large_data.size());
+  TEST_ASSERT(len == static_cast<int64>(large_data.size()));
   TEST_ASSERT(len == byte_store->Length());
   memset(large_buffer.get(), 0, large_data.size());
   TEST_ASSERT(len == byte_store->Read(large_buffer.get(), 0,
@@ -213,7 +213,7 @@ bool TestByteStore(std::string16 *error) {
   memset(large_buffer.get(), 0, large_data.size());
   len = byte_store->ReadDirect(&reader, 0, large_data.size() * 2);
   ok &= reader.Test(len);
-  TEST_ASSERT(len == large_data.size());
+  TEST_ASSERT(len == static_cast<int64>(large_data.size()));
   TEST_ASSERT(len == byte_store->Length());
   TEST_ASSERT(0 == memcmp(large_buffer.get(), large_data.data(),
                           static_cast<size_t>(len)));

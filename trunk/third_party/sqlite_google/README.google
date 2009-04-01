@@ -82,8 +82,9 @@ Scott Hess <shess@google.com>, December 11, 2007
 
 --------------------------------------------
 
-As of September 12, 2008, these are our changes from sqlite_vendor:
+As of March 27, 2009, these are our changes from sqlite_vendor:
 
+ - GCC 4.1 compiler warning fixes to ext/fts?/fts?_porter.c.
  - renamed src/mutex.c to sqlite_mutex.c, mutex.o already existed in
    the Gears build system.
  - fts2.c disables fts2_tokenizer().

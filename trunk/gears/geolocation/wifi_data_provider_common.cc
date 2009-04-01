@@ -25,10 +25,10 @@
 
 #include "gears/geolocation/wifi_data_provider_common.h"
 
+#include <assert.h>
 
 #if defined(WIN32) || defined(OS_MACOSX)
 
-#include <assert.h>
 #if defined(WIN32)
 #include <windows.h>
 #elif defined(OS_MACOSX)

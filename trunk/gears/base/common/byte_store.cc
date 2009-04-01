@@ -344,8 +344,8 @@ int64 ByteStore::ReadDirect(Reader *reader,
 
   // Create a temporary buffer and call Read()
   int64 buffer_size(std::min(max_length, kMaxBufferSize));
-  if (read_buffer_.Size() < static_cast<size_t>(buffer_size)) {
-    read_buffer_.Resize(static_cast<size_t>(buffer_size));
+  if (read_buffer_.Size() < static_cast<MemoryBuffer::size_type>(buffer_size)) {
+    read_buffer_.Resize(static_cast<MemoryBuffer::size_type>(buffer_size));
   }
   int64 total_bytes_read(0);
   while (max_length > 0) {

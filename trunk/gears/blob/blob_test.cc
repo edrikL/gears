@@ -299,7 +299,7 @@ static bool TestJoinBlob(std::string16 *error) {
   builder.CreateBlob(&blob);
   builder.Reset();
   TEST_ASSERT(blob1.get() == blob.get());  // should return the single blob
-  TEST_ASSERT(blob->Length() == strlen(data1));
+  TEST_ASSERT(static_cast<size_t>(blob->Length()) == strlen(data1));
   TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
 
@@ -342,7 +342,7 @@ static bool TestJoinBlob(std::string16 *error) {
   builder.AddBlob(new EmptyBlob);
   builder.CreateBlob(&blob);
   builder.Reset();
-  TEST_ASSERT(blob->Length() == strlen(data1));
+  TEST_ASSERT(static_cast<size_t>(blob->Length()) == strlen(data1));
   TEST_ASSERT(3 == blob->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(0 == memcmp(buffer, data1, strlen(data1)));
   data_elements.clear();

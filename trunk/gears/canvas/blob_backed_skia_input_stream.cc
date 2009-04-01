@@ -43,12 +43,20 @@ BlobBackedSkiaInputStream::~BlobBackedSkiaInputStream() {
 size_t BlobBackedSkiaInputStream::read(void* buffer, size_t size) {
   if (buffer == NULL && size == 0) {
     // Must return total length of stream.
-    return checked_cast<size_t>(blob_->Length());
+    int64 length = blob_->Length();
+    if (length < 0) {
+      return 0;
+    }
+    return checked_cast<size_t>(static_cast<uint64>(length));
   }
   if (buffer == NULL) {
     // Must skip over `size` bytes. 
     // Don't go past the end.
-    size = std::min(size, checked_cast<size_t>(blob_->Length() - blob_offset_));
+    int64 remaining = blob_->Length() - blob_offset_;
+    if (remaining < 0) {
+      return 0;
+    }
+    size = std::min(size, checked_cast<size_t>(static_cast<uint64>(remaining)));
     blob_offset_ += size;
     return size;
   }
@@ -57,7 +65,7 @@ size_t BlobBackedSkiaInputStream::read(void* buffer, size_t size) {
   if (bytes_read < 0)
     return 0;
   blob_offset_ += bytes_read;
-  return checked_cast<size_t>(bytes_read);
+  return checked_cast<size_t>(static_cast<uint64>(bytes_read));
 }
 
 bool BlobBackedSkiaInputStream::rewind() {
