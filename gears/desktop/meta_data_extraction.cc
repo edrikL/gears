@@ -63,10 +63,11 @@ static void JpegBlobErrorExit(j_common_ptr c) {
 }
 
 
+static const size_t kJpegBlobReadContextBufferSize = 1024;
 struct JpegBlobReadContext {
   BlobInterface *blob;
   int64 offset;
-  uint8 buffer[1024];
+  uint8 buffer[kJpegBlobReadContextBufferSize];
 };
 
 
@@ -81,12 +82,13 @@ static void JpegBlobInitSource(j_decompress_ptr jd) {
 static boolean JpegBlobFillInputBuffer(j_decompress_ptr jd) {
   JpegBlobReadContext *context =
       reinterpret_cast<JpegBlobReadContext*>(jd->client_data);
-  int bytes_read = static_cast<int>(
-      context->blob->Read(context->buffer, context->offset, 1024));
+  int bytes_read = static_cast<int>(context->blob->Read(
+      context->buffer, context->offset, kJpegBlobReadContextBufferSize));
   if (bytes_read <= 0) {
     return FALSE;
   }
-  assert(bytes_read >= 0 && bytes_read <= 1024);
+  assert(bytes_read >= 0 &&
+         bytes_read <= static_cast<int>(kJpegBlobReadContextBufferSize));
   context->offset += bytes_read;
   jd->src->next_input_byte = context->buffer;
   jd->src->bytes_in_buffer = bytes_read;
@@ -100,11 +102,15 @@ static void JpegBlobSkipInputData(j_decompress_ptr jd, long num_bytes) {
   }
   JpegBlobReadContext *context =
       reinterpret_cast<JpegBlobReadContext*>(jd->client_data);
-  if (static_cast<unsigned int>(num_bytes) < jd->src->bytes_in_buffer) {
+  assert(jd->src->bytes_in_buffer >= 0 &&
+         jd->src->bytes_in_buffer <= kJpegBlobReadContextBufferSize);
+  int extra_bytes_needed =
+      num_bytes - static_cast<int>(jd->src->bytes_in_buffer);
+  if (extra_bytes_needed < 0) {
     jd->src->next_input_byte += num_bytes;
     jd->src->bytes_in_buffer -= num_bytes;
   } else {
-    context->offset += num_bytes;
+    context->offset += extra_bytes_needed;
     jd->src->next_input_byte = context->buffer;
     jd->src->bytes_in_buffer = 0;
   }
