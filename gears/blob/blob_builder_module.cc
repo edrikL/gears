@@ -50,45 +50,112 @@ GearsBlobBuilder::~GearsBlobBuilder() {
 }
 
 
+bool GearsBlobBuilder::Append(
+    BlobBuilder *builder,
+    const JsToken &token,
+    JsContextPtr js_context,
+    AbstractJsTokenVector *array_stack) {
+  int type = JsTokenGetType(token, js_context);
+  if (type == JSPARAM_INT) {
+    int token_as_int;
+    if (!JsTokenToInt_NoCoerce(token, js_context, &token_as_int)) {
+      return false;
+    }
+    uint8 byte = static_cast<uint8>(token_as_int);
+    builder->AddData(&byte, 1);
+    return true;
+
+  } else if (type == JSPARAM_STRING16) {
+    std::string16 token_as_string;
+    if (!JsTokenToString_NoCoerce(token, js_context, &token_as_string)) {
+      return false;
+    }
+    builder->AddString(token_as_string);
+    return true;
+
+  } else if (type == JSPARAM_OBJECT || type == JSPARAM_MODULE) {
+    ModuleImplBaseClass *token_as_module = NULL;
+    if (!JsTokenToModule(module_environment_->js_runner_,
+            js_context, token, &token_as_module) ||
+        GearsBlob::kModuleName != token_as_module->get_module_name()) {
+      return false;
+    }
+    scoped_refptr<BlobInterface> blob_interface;
+    static_cast<GearsBlob*>(token_as_module)->GetContents(&blob_interface);
+    builder->AddBlob(blob_interface.get());
+    return true;
+
+  } else if (type == JSPARAM_ARRAY) {
+    scoped_ptr<JsArray> token_as_array;
+    int array_length;
+    if (!JsTokenToArray_NoCoerce(
+            token, js_context, as_out_parameter(token_as_array)) ||
+        !token_as_array.get() ||
+        !token_as_array->GetLength(&array_length)) {
+      return false;
+    }
+    scoped_ptr<AbstractJsTokenVector> scoped_array_stack;
+    if (array_stack == NULL) {
+      scoped_array_stack.reset(new AbstractJsTokenVector);
+      array_stack = scoped_array_stack.get();
+    } else {
+      AbstractJsToken abstract_js_token = JsTokenPtrToAbstractJsToken(
+          const_cast<JsToken*>(&token));
+      for (AbstractJsTokenVector::iterator iter = array_stack->begin();
+           iter != array_stack->end();
+           ++iter) {
+        if (module_environment_->js_runner_->
+                AbstractJsTokensAreEqual(abstract_js_token, *iter)) {
+          return false;
+        }
+      }
+    }
+    array_stack->push_back(JsTokenPtrToAbstractJsToken(
+        const_cast<JsToken*>(&token)));
+    for (int i = 0; i < array_length; i++) {
+      JsScopedToken array_element;
+      if (!token_as_array->GetElement(i, &array_element) ||
+          !Append(builder, array_element, js_context, array_stack)) {
+        return false;
+      }
+    }
+    array_stack->pop_back();
+    return true;
+
+  }
+  return false;
+}
+
+
 void GearsBlobBuilder::Append(JsCallContext *context) {
-  int appendee_type = context->GetArgumentType(0);
-
-  std::string16 appendee_as_string;
-  ModuleImplBaseClass *appendee_as_module = NULL;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_UNKNOWN, NULL },
-  };
-  if (appendee_type == JSPARAM_STRING16) {
-    argv[0].type = JSPARAM_STRING16;
-    argv[0].value_ptr = &appendee_as_string;
-  } else {
-    // We set argv[0].type to ask for a JSPARAM_MODULE. If the first argument
-    // was neither a string nor a Gears module, then the context->GetArguments
-    // call a few lines down will fail.
-    argv[0].type = JSPARAM_MODULE;
-    argv[0].value_ptr = &appendee_as_module;
-  }
-
-  if (!context->GetArguments(ARRAYSIZE(argv), argv)) {
-    assert(context->is_exception_set());
+  int argc = context->GetArgumentCount();
+  if (argc != 1) {
+    context->SetException(STRING16(argc > 1
+        ? L"Too many parameters."
+        : L"Required argument 1 is missing."));
     return;
   }
-
-  if (appendee_type == JSPARAM_STRING16) {
-    builder_->AddString(appendee_as_string);
-    return;
+  const JsToken &token = context->GetArgument(0);
+  JsContextPtr js_context = context->js_context();
+  bool token_is_array = JsTokenGetType(token, js_context) == JSPARAM_ARRAY;
+  scoped_ptr<BlobBuilder> intermediate_builder;
+  BlobBuilder *builder = builder_.get();
+  if (token_is_array) {
+    // We create an intermediate_builder because we want Append to be atomic --
+    // when appending an array of things, either all or none will be appended.
+    intermediate_builder.reset(new BlobBuilder());
+    builder = intermediate_builder.get();
   }
-
-  if (appendee_as_module &&
-      GearsBlob::kModuleName != appendee_as_module->get_module_name()) {
+  if (!Append(builder, token, js_context, NULL)) {
     context->SetException(
-        STRING16(L"First parameter must be a Blob or a string."));
+        STRING16(L"Parameter must be an int, string, Blob or array of such."));
     return;
   }
-
-  scoped_refptr<BlobInterface> blob_interface;
-  static_cast<GearsBlob*>(appendee_as_module)->GetContents(&blob_interface);
-  builder_->AddBlob(blob_interface.get());
+  if (token_is_array) {
+    scoped_refptr<BlobInterface> intermediate_blob;
+    intermediate_builder->CreateBlob(&intermediate_blob);
+    builder_->AddBlob(intermediate_blob.get());
+  }
 }
 
 

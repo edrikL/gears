@@ -106,3 +106,86 @@ function testBlobBuilder() {
     assert(bytes6a[i] == bytes6b[i]);
   }
 }
+
+function testBlobBuilderAppendIntStringBlobArray() {
+  // The integer values below map to ASCII characters like so:
+  // A=65, B=66, C=67, D=68, E=69, F=70, G=71, H=72, I=73, J=74, ...,
+  // W=87, X=88, Y=89, Z=90. Note that the second blob ends with 250,
+  // which is outside the range of ASCII (i.e. it is not a valid UTF-8 string
+  // and therefore not equivalent to any builder.append(string) call).
+  var builderAbcd = google.gears.factory.create('beta.blobbuilder');
+  builderAbcd.append('AB');
+  builderAbcd.append(67);
+  builderAbcd.append(68 + 2560);
+  var blobAbcd = builderAbcd.getAsBlob();
+  var bytesAbcd = blobAbcd.getBytes();
+  assertEqual(4, blobAbcd.length);
+  assertEqual(65, bytesAbcd[0]);
+  assertEqual(66, bytesAbcd[1]);
+  assertEqual(67, bytesAbcd[2]);
+  assertEqual(68, bytesAbcd[3]);
+
+  var builder = google.gears.factory.create('beta.blobbuilder');
+  builder.append('W');
+  builder.append('X');
+  builder.append([
+    89,
+    'Z',
+    blobAbcd,
+    [bytesAbcd, 69, 'FG', 72]
+  ]);
+  builder.append('I');
+  builder.append(250);
+  var blob = builder.getAsBlob();
+  var bytes = blob.getBytes();
+  assertEqual(18, blob.length);
+
+  assertEqual(87, bytes[0]);
+  assertEqual(88, bytes[1]);
+  assertEqual(89, bytes[2]);
+  assertEqual(90, bytes[3]);
+  assertEqual(65, bytes[4]);
+  assertEqual(66, bytes[5]);
+  assertEqual(67, bytes[6]);
+  assertEqual(68, bytes[7]);
+  assertEqual(65, bytes[8]);
+  assertEqual(66, bytes[9]);
+  assertEqual(67, bytes[10]);
+  assertEqual(68, bytes[11]);
+  assertEqual(69, bytes[12]);
+  assertEqual(70, bytes[13]);
+  assertEqual(71, bytes[14]);
+  assertEqual(72, bytes[15]);
+  assertEqual(73, bytes[16]);
+  assertEqual(250, bytes[17]);
+}
+
+function testBlobBuilderAppendRecursiveArray() {
+  var a = [1, 2];
+  var b = [3, 4, a];
+  a.push(b);
+  var builder = google.gears.factory.create('beta.blobbuilder');
+  assertError(function() {
+    // The next line should not infinite-loop.
+    builder.append(a);
+  });
+}
+
+function testBlobBuilderAppendInvalidArrayIsAtomic() {
+  var a = [1, 2, true];
+  var b = [3, 4, a];
+  var builder = google.gears.factory.create('beta.blobbuilder');
+  builder.append(101);
+  assertError(function() {
+    // We expect an exception because booleans aren't appendable.
+    builder.append(b);
+  });
+  builder.append(102);
+
+  var blob = builder.getAsBlob();
+  var bytes = blob.getBytes();
+  assertEqual(2, blob.length);
+  assertEqual(101, blob.getBytes()[0]);
+  assertEqual(102, blob.getBytes()[1]);
+}
+

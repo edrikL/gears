@@ -38,7 +38,7 @@ class GearsBlobBuilder : public ModuleImplBaseClass {
   GearsBlobBuilder();
   ~GearsBlobBuilder();
 
-  // IN: string|GearsBlob appendee
+  // IN: int|string|GearsBlob|array appendee
   // OUT: -
   void Append(JsCallContext *context);
 
@@ -48,6 +48,12 @@ class GearsBlobBuilder : public ModuleImplBaseClass {
 
  private:
   scoped_ptr<BlobBuilder> builder_;
+
+  bool Append(
+      BlobBuilder *builder,
+      const JsToken &token,
+      JsContextPtr js_context,
+      AbstractJsTokenVector *array_stack);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlobBuilder);
 };
