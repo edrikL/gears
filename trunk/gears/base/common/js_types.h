@@ -546,9 +546,9 @@ class JsCallContext {
   JsRunnerInterface *js_runner() { return js_runner_; }
 #endif
 
- private:
   const JsToken &GetArgument(int index);
 
+ private:
   JsContextPtr js_context_;
   bool is_exception_set_;
   bool is_return_value_set_;
