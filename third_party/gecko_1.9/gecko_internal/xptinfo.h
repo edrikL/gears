@@ -218,7 +218,28 @@ public:
     // works correctly and is safe enough.
     // See http://bugzilla.mozilla.org/show_bug.cgi?id=49641
     const nsXPTCMiniVariant* GetValue() const
-        {return (nsXPTCMiniVariant*) &value;}
+// BEGIN ADDITION BY GEARS
+//        {return (nsXPTCMiniVariant*) &value;}
+        {return (nsXPTCMiniVariant*) reinterpret_cast<const void*>(&value);}
+// NOTE(nigeltao): I am not sure what the (Mozilla) comment above means when
+// it says that "a reinterpret_cast won't do the trick here". Note that the
+// above bug was filed in the year 2000, and presumably C++ compilers have
+// changed since then. The line above (the one-liner return statement that
+// has a C-style cast) causes a "warning: type-punning to incomplete type might
+// break strict-aliasing rules" compile warning with GCC 4.2, and we compile
+// Gears with -Wall -Werror. To avoid the error, we do an explicit
+// reinterpret_cast to void*, which is presumably equivalent to the "plain C
+// cast" mentioned by the original (Mozilla) comment above.
+// Note that if we copy the definition of the struct nsXPTCMiniVariant from
+// xptcall.h to here, so that it is no longer an incomplete type, then we don't
+// get the warning. Instead, though, we get an "error: redefinition of 'struct
+// nsXPTCMiniVariant'", because it is then, in some places, defined twice.
+// Besides, we (Gears) probably don't use this class, in all likelihood --
+// this file (xptinfo.h) is #include'd by XPConnect code, and is needed simply
+// for Gears code to compile (e.g. to determine the size of some structs), but
+// XPTFooBar is not directly invoked by Gears. Instead, Gears uses prebuilt
+// binaries of the Mozilla libraries.
+// END ADDITION BY GEARS
 private:
     nsXPTConstant();    // no implementation
 // NO DATA - this a flyweight wrapper
