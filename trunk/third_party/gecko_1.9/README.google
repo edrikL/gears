@@ -46,4 +46,6 @@ vs2005 project settings that embeds a manifest for Microsoft.VC80.CRT, and they
 try to load msvcr80.dll in runtime. Added a DLL and manifests to make it work
 on a machine without VS2005 runtime installed.
 
+Note: gecko_internal/xptinfo.h was also modified (grep for "ADDITION BY GEARS")
+in order to avoid a compile error on GCC 4.2 -Wall -Werror.
 
