@@ -43,8 +43,8 @@ function assertErrorEqual(expectedCode, expectedMessage, error) {
               'Error message has incorrect value.');
 }
 
-// Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
-// Geolocation.WatchPosition.
+// Tests the parsing of the options passed to Geolocation.getCurrentPosition and
+// Geolocation.watchPosition.
 function testParseOptions() {
   if (isUsingCCTests) {
     var dummyFunction = function() {};
@@ -772,7 +772,7 @@ function PopulateCacheAndMakeRequest(waitTime, successCallback, errorCallback,
 function testCachedPositionWithinMaximumAge() {
   if (isUsingCCTests) {
     // Test that a request with a non-zero maximumAge immediately calls the
-    // success callback with the cached position if we have a suitable one.
+    // success callback with the cached position when we have a suitable one.
     startAsync();
     PopulateCacheAndMakeRequest(
         0,  // Wait for less than maximumAge.
@@ -790,7 +790,7 @@ function testCachedPositionWithinMaximumAge() {
 function testCachedPositionOutsideMaximumAgeNoProviders() {
   if (isUsingCCTests) {
     // Test that a request with a non-zero maximumAge and no location providers
-    // immediately calls the error callback if we don't have a suitable cached
+    // immediately calls the error callback when we don't have a suitable cached
     // position.
     startAsync();
     PopulateCacheAndMakeRequest(
@@ -809,8 +809,8 @@ function testCachedPositionOutsideMaximumAgeNoProviders() {
 function testCachedPositionOutsideMaximumAge() {
   if (isUsingCCTests) {
     // Test that a request with a non-zero maximumAge and location providers
-    // does not immediately call the error callback if we don't have a suitable
-    // cached position.
+    // does not immediately call the error callback when we don't have a
+    // suitable cached position.
     // We use a non-existant URL for the network location provider to force an
     // error and check that the error is due to the failure of the network
     // location provider, not the lack of a cached position.
@@ -827,3 +827,43 @@ function testCachedPositionOutsideMaximumAge() {
         {maximumAge: 1, gearsLocationProviderUrls: ['non_existant_url']});
   }
 }
+
+function testCachedPositionWithinMaximumAgeZeroTimeout() {
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge immediately calls the
+    // success callback with the cached position when we have a suitable one,
+    // even when timeout is zero.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        0,  // Wait for less than maximumAge.
+        function(position) {
+          delete position.timestamp;
+          assertObjectEqual(positionToCache, position,
+                            'Position incorrect in TestMaximumAge.');
+          completeAsync();
+        },
+        null,
+        {maximumAge: 1000, timeout: 0});
+  }
+}
+
+function testCachedPositionOutsideMaximumAgeZeroTimeout() {
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge and zero timeout
+    // immediately calls the error callback with a timeout error when we don't
+    // have a suitable cached position.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        20,  // Wait for longer than maximumAge.
+        function() {},
+        function(error) {
+          assertErrorEqual(error.TIMEOUT,
+                           'A position fix was not obtained within the ' +
+                           'specified time limit.',
+                           error);
+          completeAsync();
+        },
+        {maximumAge: 1, timeout: 0});
+  }
+}
+
