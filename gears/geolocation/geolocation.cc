@@ -493,8 +493,10 @@ void GearsGeolocation::HandleEvent(JsEventType event_type) {
 
 bool GearsGeolocation::IsCachedPositionSuitable(int maximum_age) {
   ASSERT_SINGLE_THREAD();
-  assert(maximum_age != 0);
 
+  if(maximum_age == 0) {
+    return false;
+  }
   if (!last_position_.IsGoodFix()) {
     return false;
   }
@@ -609,62 +611,52 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   }
   info->repeats = repeats;
 
-  // This is purely an optimisation.
-  bool is_useful_to_add_location_providers = true;
-  // If the fix request is a one-shot request and will call back immediately,
-  // there's no point in adding any providers.
-  if (!info->repeats &&
-      info->maximum_age != 0 &&
-      IsCachedPositionSuitable(info->maximum_age)) {
-    is_useful_to_add_location_providers = false;
-  }
-
-  // Add the location providers.
-  if (is_useful_to_add_location_providers) {
+  // Add the location providers. Note that we can't determine whether any
+  // providers were specified in the request without actually adding them to the
+  // request, and hence starting them. This is because ...
+  // - Network provider URLs my be invalid
+  // - The platform may not support GPS
+  // - The mock provided may not be enabled
+  // If timeout is zero, the providers will later be removed, but we have to add
+  // them here so that we can test for the exception below. However, we can
+  // optimise for the case when maximumAge is non-zero.
+  if (!(info->timeout == 0 && info->maximum_age != 0)) {
     AddProvidersToRequest(urls, info.get());
+  }
 
-    // If this is a non-repeating request, hint to all providers that new data
-    // is required ASAP.
-    if (!info->repeats) {
-      for (ProviderVector::iterator iter = info->providers.begin();
-           iter != info->providers.end();
-           ++iter) {
-        (*iter)->UpdatePosition();
-      }
+  // If this is a non-repeating request, hint to all providers that new data
+  // is required ASAP.
+  if (!info->repeats) {
+    for (ProviderVector::iterator iter = info->providers.begin();
+         iter != info->providers.end();
+         ++iter) {
+      (*iter)->UpdatePosition();
     }
   }
 
-  // Check whether we need to call back immediately.
-  bool should_call_back_immediately = false;
+  // If this fix has maximumAge zero and no providers, throw an exception and
+  // quit.
+  if (info->maximum_age == 0 && info->providers.empty()) {
+    context->SetException(STRING16(L"Fix request has no location providers."));
+    return;
+  }
+
+  // See whether we need to call back immediately with a cached position.
   Position position_to_call_back;
-  if (info->maximum_age == 0) {
-    // If this fix has no providers, throw an exception and quit.
-    if (info->providers.empty()) {
-      context->SetException(
-          STRING16(L"Fix request has no location providers."));
-      return;
-    }
-  } else {
-    // Non-zero maximumAge
-    if (info->providers.empty()) {
-      should_call_back_immediately = true;
-      if (IsCachedPositionSuitable(info->maximum_age)) {
-        position_to_call_back = last_position_;
-      } else {
-        position_to_call_back.error_code =
-            Position::ERROR_CODE_POSITION_UNAVAILABLE;
-        position_to_call_back.error_message =
-            STRING16(L"No suitable cached position available.");
-      }
-    } else {
-      if (IsCachedPositionSuitable(info->maximum_age)) {
-        should_call_back_immediately = true;
-        position_to_call_back = last_position_;
-      }
-    }
+  if (IsCachedPositionSuitable(info->maximum_age)) {
+    position_to_call_back = last_position_;
   }
-  assert(is_useful_to_add_location_providers || should_call_back_immediately);
-  
+
+  // See whether we need to call back immediately with a cached position error.
+  if (info->providers.empty() &&
+      info->timeout != 0 &&
+      !IsCachedPositionSuitable(info->maximum_age)) {
+    position_to_call_back.error_code =
+        Position::ERROR_CODE_POSITION_UNAVAILABLE;
+    position_to_call_back.error_message =
+        STRING16(L"No suitable cached position available.");
+  }
+
   // Record this fix. This updates the map of providers for this fix request
   // and provides a fix request ID. The map takes ownership of the info
   // structure on success.
@@ -676,9 +668,17 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   }
   assert(fix_request_id != 0);
 
-  // Invoke the callback. We use a message to do so asynchronously.
-  if (should_call_back_immediately) {
-    assert(position_to_call_back.IsInitialized());
+  // A timeout of zero is a special case which means that we never use the
+  // providers to obtain a position fix. In this case, we can and must cancel
+  // them.
+  if (info->timeout == 0) {
+    RemoveAllProviders(fix_request_id);
+  }
+
+  // Invoke the callback for the cached position or error. We use a message to
+  // do so asynchronously. This must be done before we start the timeout timer.
+  // Note that the callback handler cancels any active providers.
+  if (position_to_call_back.IsInitialized()) {
     assert(!info->success_callback_timer.get());
 
     info->pending_position = position_to_call_back;
@@ -688,10 +688,9 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
         new FixRequestIdNotificationData(this, fix_request_id)));
   }
 
-  // If we have providers, start the timeout timer for this fix request.
-  if (!info->providers.empty()) {
-    StartTimeoutTimer(fix_request_id);
-  }
+  // Start the timeout timer for this fix request. Note that this handles all
+  // timeouts, include immediate timeout callbacks when timeout is zero.
+  StartTimeoutTimer(fix_request_id);
 
   // Set the return value if this fix repeats.
   if (info->repeats) {
@@ -1480,16 +1479,22 @@ bool GearsGeolocation::RecordNewFixRequest(FixRequestInfo *fix_request,
 void GearsGeolocation::RemoveFixRequest(int fix_request_id) {
   ASSERT_SINGLE_THREAD();
 
-  FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
+  RemoveAllProviders(fix_request_id);
   fix_requests_.erase(fix_request_id);
+}
+
+void GearsGeolocation::RemoveAllProviders(int fix_request_id) {
+  ASSERT_SINGLE_THREAD();
+
+  FixRequestInfo *fix_request = GetFixRequest(fix_request_id);
 
   // For each location provider used by this request, update the provider's
   // list of fix requests in the map.
   ProviderVector *member_providers = &fix_request->providers;
-  for (ProviderVector::iterator iter = member_providers->begin();
-       iter != member_providers->end();
-       ++iter) {
-    LocationProviderBase *provider = *iter;
+  while (!member_providers->empty()) {
+    LocationProviderBase *provider = member_providers->back();
+    member_providers->pop_back();
+    assert(provider);
 
     // Check that we have an entry in the map for this provider.
     ProviderMap::iterator provider_iter = providers_.find(provider);
@@ -1500,7 +1505,7 @@ void GearsGeolocation::RemoveFixRequest(int fix_request_id) {
     IdList::iterator id_iterator =
         std::find(ids->begin(), ids->end(), fix_request_id);
 
-    // If we can't find this request the list, something has gone wrong.
+    // If we can't find this request in the list, something has gone wrong.
     assert(id_iterator != ids->end());
 
     // Remove this fix request from the list of fix requests for this provider.

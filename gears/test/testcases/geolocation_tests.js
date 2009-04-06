@@ -148,7 +148,8 @@ function testArguments() {
 }
 
 function testNoProviders() {
-  // A request with no providers should assert unless maximumAge is non-zero.
+  // A request with no providers should throw an exception if maximumAge is
+  // zero.
   assertError(
       function() {
         geolocation.getCurrentPosition(
@@ -157,23 +158,42 @@ function testNoProviders() {
             {gearsLocationProviderUrls: []});
       },
       'Fix request has no location providers.',
-      'Calling getCurrentPosition() should fail if no location providers are ' +
-      'specified unless maximumAge is non-zero.');
+      'Calling getCurrentPosition() should throw an exception if no location ' +
+      'providers are specified when maximumAge is zero.');
   geolocation.getCurrentPosition(
       dummyFunction,
       dummyFunction,
       {maximumAge: 1, gearsLocationProviderUrls: []});
 }
 
-// TODO(steveblock): Fix and uncomment this test.
-// Test is flakey when run in worker after CL 10410384.
-//function testZeroTimeout() {
-//  // A request with a zero timeout should call the error callback immediately.
-//  function errorCallback(error) {
-//    assertEqual(error.TIMEOUT, error.code,
-//                'Error callback should be called with code TIMEOUT.');
-//    completeAsync();
-//  }
-//  startAsync();
-//  geolocation.getCurrentPosition(dummyFunction, errorCallback, {timeout: 0});
-//}
+function testNoProvidersZeroTimout() {
+  // A request with no providers should throw an exception if maximumAge is
+  // zero, even when timeout is zero.
+  assertError(
+      function() {
+        geolocation.getCurrentPosition(
+            dummyFunction,
+            dummyFunction,
+            {gearsLocationProviderUrls: [], timeout: 0});
+      },
+      'Fix request has no location providers.',
+      'Calling getCurrentPosition() should throw an exception if no location ' +
+      'providers are specified when maximumAge is zero and timeout is zero.');
+  geolocation.getCurrentPosition(
+      dummyFunction,
+      dummyFunction,
+      {maximumAge: 1, gearsLocationProviderUrls: [], timeout: 0});
+}
+
+function testZeroTimeout() {
+  // A request with a zero timeout should call the error callback immediately
+  // when maximumAge is zero.
+  function errorCallback(error) {
+    assertEqual(error.TIMEOUT, error.code,
+                'Error callback should be called with code TIMEOUT.');
+    completeAsync();
+  }
+  startAsync();
+  geolocation.getCurrentPosition(dummyFunction, errorCallback, {timeout: 0});
+}
+

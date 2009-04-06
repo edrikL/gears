@@ -346,6 +346,10 @@ class GearsGeolocation
   // object.
   void RemoveFixRequest(int fix_request_id);
 
+  // Removes all providers from a fix request. Cancels any pending requests to
+  // the location providers.
+  void RemoveAllProviders(int fix_request_id);
+
   // Deletes a fix request and decrements our ref count.
   void DeleteFixRequest(FixRequestInfo *fix_request);
   void RemoveAndDeleteFixRequest(int fix_request_id);
