@@ -143,6 +143,19 @@ class GearsCanvasRenderingContext2D
   // Strokes the rectangle with the current stroke style.
   void StrokeRect(JsCallContext *context);
 
+  // Path operations.
+  void BeginPath(JsCallContext *context);
+  void ClosePath(JsCallContext *context);
+  void MoveTo(JsCallContext *context);
+  void LineTo(JsCallContext *context);
+  void QuadraticCurveTo(JsCallContext *context);
+  void BezierCurveTo(JsCallContext *context);
+  void ArcTo(JsCallContext *context);
+  void Rect(JsCallContext *context);
+  void Arc(JsCallContext *context);
+  void Fill(JsCallContext *context);
+  void Stroke(JsCallContext *context);
+
   // Draws a canvas onto this canvas. sx, sy, sw, and sh identify a rectangular
   // subset of the source canvas, and dx, dy, dw, dh identify the target area
   // in the destination canvas (this canvas) into which pixels from the source
@@ -205,6 +218,8 @@ class GearsCanvasRenderingContext2D
   SkPaint stroke_style_as_paint_;
   std::string16 fill_style_as_string_;
   std::string16 stroke_style_as_string_;
+
+  SkPath path_;
 
   scoped_ptr<JsEventMonitor> unload_monitor_;
 
