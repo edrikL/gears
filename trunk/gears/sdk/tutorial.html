@@ -56,8 +56,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h1>1. Edit the sample manifest file </h1>
 <h3>Save this <a href="tutorials/tutorial_manifest.json">tutorial manifest file</a> to your computer. </h3>
 <ul>
-  <li>Rename it &quot;manifest.json&quot;. </li>
-  <li>Open your <strong>manifest.json</strong> in an editor.</li>
+  <li>Open your <strong>tutorial_manifest.json</strong> in an editor.</li>
 </ul>
 <h3>Edit the version value </h3>
 <p>The manifest file contains a series of attribute-value pairs. </p>
@@ -90,7 +89,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <a href="gears_init.js">gears_init.js</a> - provides access to Gears. </p>
 <p><strong><em>Special note:</em></strong> To keep this tutorial simple, the go_offline.html file is provided  to act as the user interface.</p>
 <p>You are not limited to using the provided file; you can  integrate the functionality provided in the go_offline.js JavaScript file into your application in other ways. </p>
-<p>Keep in mind that  the user will need to:</p>
+<p>Note that go_offline.html expects gears_init.js to be in the parent directory. If you have downloaded all files to the same location, you will need to edit go_offline.html accordingly.</p>
+<p>Keep in mind that the user will need to:</p>
 <ul>
   <li>Install Gears</li>
   <li>Allow your website to use Gears (a permissions dialog appears automatically) </li>
@@ -102,8 +102,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <li>go_offline.html</li>
   <li>go_offline.js</li>
   <li>gears_init.js</li>
-  <li>manifest.json</li>
-  <li>All the files listed in your manifest.json file.</li>
+  <li>tutorial_manifest.json</li>
+  <li>All the files listed in your tutorial_manifest.json file.</li>
 </ul>
 <p><strong>Important:</strong> Be sure all the files listed in the manifest file are available and accessible as listed. </p>
 <h1>4. Test: capture the files locally </h1>
@@ -132,8 +132,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <ul>
   <li>Make sure you have installed Gears. </li>
   <li>All the URLs in the manifest file must be correct, and reachable from the directory that the manifest resides in. The manifest file and the URLs it references must be located in the same domain.  </li>
-  <li>Check  that there aren't any typos or extraneous files listed in the manifest.</li>
-  <li>The  code in <strong>go_offline.js</strong> expects that the manifest file is named &quot;manifest.json&quot; and that it resides in the same directory. Update the manifest.json references in go_offline.js as needed. </li>
+  <li>Check that there aren't any typos or extraneous files listed in the manifest.</li>
+  <li>Make sure that go_offline.html includes gears_init.js from the correct location.</li>
   <li>Use a JavaScript debugger to see any errors that may be returned from the Gears API calls. </li>
   </ul>
 <h1>6. Publish it to your users</h1>
