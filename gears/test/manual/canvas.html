@@ -42,6 +42,18 @@ function draw(c) {
 
   c.transform(1, 0.3, 0, 0.8, 7, 0);
   c.clearRect(25, 25, 15, 15);
+
+  c.fillStyle = '#BFBFFF';
+  c.strokeStyle = 'black';
+  c.lineWidth = 2.0;
+  c.moveTo(5, 5);
+  c.lineTo(25, 5);
+  c.lineTo(90, 50);
+  c.quadraticCurveTo(60, 60, 50, 30);
+  c.bezierCurveTo(40, 60, 30, 15, 5, 15);
+  c.closePath();
+  c.stroke();
+  c.fill();
 }
 
 

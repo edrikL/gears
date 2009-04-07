@@ -163,17 +163,19 @@ void Dispatcher<GearsCanvasRenderingContext2D>::Init() {
   RegisterMethod("strokeRect", &GearsCanvasRenderingContext2D::StrokeRect);
 
   // path API
-  // Missing wrt HTML5: beginPath.
-  // Missing wrt HTML5: closePath.
-  // Missing wrt HTML5: moveTo.
-  // Missing wrt HTML5: lineTo.
-  // Missing wrt HTML5: quadraticCurveTo.
-  // Missing wrt HTML5: bezierCurveTo.
-  // Missing wrt HTML5: arcTo.
-  // Missing wrt HTML5: rect.
-  // Missing wrt HTML5: arc.
-  // Missing wrt HTML5: fill.
-  // Missing wrt HTML5: stroke.
+  RegisterMethod("beginPath", &GearsCanvasRenderingContext2D::BeginPath);
+  RegisterMethod("closePath", &GearsCanvasRenderingContext2D::ClosePath);
+  RegisterMethod("moveTo", &GearsCanvasRenderingContext2D::MoveTo);
+  RegisterMethod("lineTo", &GearsCanvasRenderingContext2D::LineTo);
+  RegisterMethod("quadraticCurveTo",
+      &GearsCanvasRenderingContext2D::QuadraticCurveTo);
+  RegisterMethod("bezierCurveTo",
+      &GearsCanvasRenderingContext2D::BezierCurveTo);
+  RegisterMethod("arcTo", &GearsCanvasRenderingContext2D::ArcTo);
+  RegisterMethod("rect", &GearsCanvasRenderingContext2D::Rect);
+  RegisterMethod("arc", &GearsCanvasRenderingContext2D::Arc);
+  RegisterMethod("fill", &GearsCanvasRenderingContext2D::Fill);
+  RegisterMethod("stroke", &GearsCanvasRenderingContext2D::Stroke);
   // Missing wrt HTML5: clip.
   // Missing wrt HTML5: isPointInPath.
 
@@ -528,6 +530,169 @@ void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
 
 void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
   PaintRect(context, &stroke_style_as_paint_);
+}
+
+void GearsCanvasRenderingContext2D::BeginPath(JsCallContext *context) {
+  path_.reset();
+}
+
+void GearsCanvasRenderingContext2D::ClosePath(JsCallContext *context) {
+  path_.close();
+}
+
+void GearsCanvasRenderingContext2D::MoveTo(JsCallContext *context) {
+  double x, y;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  path_.moveTo(SkDoubleToScalar(x), SkDoubleToScalar(y));
+}
+
+void GearsCanvasRenderingContext2D::LineTo(JsCallContext *context) {
+  double x, y;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  path_.lineTo(SkDoubleToScalar(x), SkDoubleToScalar(y));
+}
+
+void GearsCanvasRenderingContext2D::QuadraticCurveTo(JsCallContext *context) {
+  double x1, y1, x2, y2;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x2 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y2 }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  path_.quadTo(SkDoubleToScalar(x1), SkDoubleToScalar(y1),
+      SkDoubleToScalar(x2), SkDoubleToScalar(y2));
+}
+
+void GearsCanvasRenderingContext2D::BezierCurveTo(JsCallContext *context) {
+  double x1, y1, x2, y2, x3, y3;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x2 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y2 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x3 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y3 }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  path_.cubicTo(SkDoubleToScalar(x1), SkDoubleToScalar(y1),
+      SkDoubleToScalar(x2), SkDoubleToScalar(y2),
+      SkDoubleToScalar(x3), SkDoubleToScalar(y3));
+}
+
+void GearsCanvasRenderingContext2D::ArcTo(JsCallContext *context) {
+  double x1, y1, x2, y2, r;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y1 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x2 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y2 },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &r }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+  if (r < 0) {
+    context->SetException(STRING16(L"Negative radius."));
+    return;
+  }
+
+  path_.arcTo(SkDoubleToScalar(x1), SkDoubleToScalar(y1),
+      SkDoubleToScalar(x2), SkDoubleToScalar(y2), SkDoubleToScalar(r));
+}
+
+void GearsCanvasRenderingContext2D::Rect(JsCallContext *context) {
+  double x, y, w, h;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &w },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &h }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+
+  path_.addRect(SkDoubleToScalar(x), SkDoubleToScalar(y),
+      SkDoubleToScalar(x + w), SkDoubleToScalar(y + h));
+}
+
+void GearsCanvasRenderingContext2D::Arc(JsCallContext *context) {
+  // This method's implementation follows the one in WebKit, specifically
+  // Path::addArc in http://trac.webkit.org/browser/trunk/
+  //     WebCore/platform/graphics/skia/PathSkia.cpp
+  double x, y, r, start_angle, end_angle;
+  bool anticlockwise;
+  JsArgument args[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &x },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &y },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &r },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &start_angle },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &end_angle },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &anticlockwise }
+  };
+  context->GetArguments(ARRAYSIZE(args), args);
+  if (context->is_exception_set())
+    return;
+  if (r < 0) {
+    context->SetException(STRING16(L"Negative radius."));
+    return;
+  }
+
+  SkScalar cx = SkDoubleToScalar(x);
+  SkScalar cy = SkDoubleToScalar(y);
+  SkScalar radius = SkDoubleToScalar(r);
+  SkRect oval;
+  oval.set(cx - radius, cy - radius, cx + radius, cy + radius);
+
+  double sweep = end_angle - start_angle;
+  if (sweep >= 2 * M_PI || sweep <= -2 * M_PI) {
+    path_.addOval(oval);
+  } else {
+    SkScalar start_degrees = SkDoubleToScalar(start_angle * 180 / M_PI);
+    SkScalar sweep_degrees = SkDoubleToScalar(sweep * 180 / M_PI);
+    // Counterclockwise arcs should be drawn with negative sweeps, while
+    // clockwise arcs should be drawn with positive sweeps. Check to see
+    // if the situation is reversed and correct it by adding or subtracting
+    // a full circle
+    // TODO(nigeltao): is one in/decrement of 360 enough? What if sweep_degrees
+    // started off greater than 360?
+    if (anticlockwise && sweep_degrees > 0) {
+      sweep_degrees -= SkIntToScalar(360);
+    } else if (!anticlockwise && sweep_degrees < 0) {
+      sweep_degrees += SkIntToScalar(360);
+    }
+    path_.arcTo(oval, start_degrees, sweep_degrees, false);
+  }
+}
+
+void GearsCanvasRenderingContext2D::Fill(JsCallContext *context) {
+  skia_canvas_->drawPath(path_, fill_style_as_paint_);
+}
+
+void GearsCanvasRenderingContext2D::Stroke(JsCallContext *context) {
+  skia_canvas_->drawPath(path_, stroke_style_as_paint_);
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
