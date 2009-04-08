@@ -43,8 +43,11 @@ STDMETHODIMP ToolsMenuItem::QueryContextMenu(HMENU hmenu,
 
   // On WinCE, LoadString does not support multiple languages, so we can't load
   // IDS_REGISTRY_MENU_TEXT.
+  // Note that the menu item must be present in tools_menu_item.rgs, but the
+  // string used there ('Gears Settings') is arbitrary and is not used for
+  // display.
   InsertMenu(hmenu, index_menu, MF_BYPOSITION, command_first_,
-      L"Gears Settings");  // [naming]
+      L"Gears");  // [naming]
 
   return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 1);
 }
@@ -60,8 +63,8 @@ STDMETHODIMP ToolsMenuItem::GetCommandString(UINT id_cmd,
   switch (flags) {
     case GCS_VERB:
     case GCS_HELPTEXT: {
-      strncpy(command_name, "Gears Settings",  // [naming]
-        command_name_len);
+      strncpy(command_name, "Gears",  // [naming]
+          command_name_len);
     } break;
     case GCS_VALIDATE:
       break;
