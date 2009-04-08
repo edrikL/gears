@@ -54,7 +54,7 @@ OPERA_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/opera
 SF_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/safari
 
 OSX_LAUNCHURL_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/launch_url_with_browser
-RUN_GEARS_DLL_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/run_gears_dll
+RUN_GEARS_DLL_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/run_gears_dll
 SF_INSTALLER_PLUGIN_OUTDIR = $(OUTDIR)/$(OS)-$(ARCH)/installer_plugin
 VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 
@@ -157,6 +157,14 @@ DEPS = \
 	$(RUN_GEARS_DLL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
+
+RGS_FILES = \
+  $($(BROWSER)_OUTDIR)/genfiles/bho.rgs \
+  $($(BROWSER)_OUTDIR)/genfiles/factory_ie.rgs \
+  $($(BROWSER)_OUTDIR)/genfiles/html_dialog_bridge_iemobile.rgs \
+  $($(BROWSER)_OUTDIR)/genfiles/module.rgs \
+  $($(BROWSER)_OUTDIR)/genfiles/tools_menu_item.rgs \
+  $(NULL)
 
 $(BROWSER)_GEN_HEADERS = \
 	$(patsubst %.idl,$($(BROWSER)_OUTDIR)/genfiles/%.h,$($(BROWSER)_IDLSRCS))
@@ -777,10 +785,12 @@ endif # android
 
 # RESOURCE TARGETS
 
-$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+# Strictly, only module.res depends on the .rgs files.
+$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES) $(RGS_FILES)
 	$(RC) $(RCFLAGS) /DBROWSER_IE=1 $<
 
-$(IEMOBILE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+# Strictly, only module.res depends on the .rgs files.
+$(IEMOBILE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES) $(RGS_FILES)
 	$(RC) $(RCFLAGS) /DBROWSER_IEMOBILE=1 $<
 
 $(FF2_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
