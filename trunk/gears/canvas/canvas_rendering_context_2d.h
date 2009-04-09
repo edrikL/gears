@@ -201,11 +201,14 @@ class GearsCanvasRenderingContext2D
   // Implements ClearRect, FillRect and StrokeRect.
   void PaintRect(JsCallContext *context, SkPaint *paint);
 
+  void SetPaintColorWithPremultiplication(SkPaint *paint, const SkColor color);
+
   // Implements SetFillStyle and SetStrokeStyle.
   void SetStyle(
     JsCallContext *context,
-    std::string16 *style_as_string,
-    SkPaint *style_as_paint);
+    SkPaint *style_as_paint,
+    SkColor *color_before_premultiplication,
+    std::string16 *style_as_string);
 
   // Implements Transform and SetTransform.
   void Transform(JsCallContext *context, bool reset_matrix);
@@ -213,12 +216,18 @@ class GearsCanvasRenderingContext2D
   scoped_refptr<GearsCanvas> gears_canvas_;
   scoped_ptr<SkCanvas> skia_canvas_;
 
+  // TODO(nigeltao): Introduce a class to capture the {SkPaint, SkColor,
+  // std::string16} for both the fill and the stroke.
   SkPaint clear_style_as_paint_;
   SkPaint fill_style_as_paint_;
   SkPaint stroke_style_as_paint_;
+  SkColor fill_color_before_premultiplication_;
+  SkColor stroke_color_before_premultiplication_;
   std::string16 fill_style_as_string_;
   std::string16 stroke_style_as_string_;
-
+  double global_alpha_as_double_;
+  int global_alpha_as_int_;
+  std::string16 global_composite_operation_as_string_;
   SkPath path_;
 
   scoped_ptr<JsEventMonitor> unload_monitor_;

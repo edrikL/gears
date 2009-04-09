@@ -43,9 +43,6 @@ class CanvasRenderingElementIE;
 #endif
 class GearsCanvasRenderingContext2D;
 
-// Extension of a subset of HTML5 canvas for photo manipulation.
-// See http://code.google.com/p/google-gears/wiki/CanvasAPI for more detailed
-// documentation.
 class GearsCanvas : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
@@ -53,10 +50,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   GearsCanvas();
   virtual ~GearsCanvas();
   
-  // Clears the plain pointer to GearsCanvasRenderingContext2D, to prevent a
-  // dangling pointer. The rendering context will be recreated when needed.
-  void ClearRenderingContextReference();
-
   // Loads an image (given as a blob) into this canvas, overwriting any
   // existing canvas contents. The canvas' width and height will be set to
   // the natural width and height of the image.
@@ -70,19 +63,18 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: Blob
   void Encode(JsCallContext *context);
 
-  // Crops the canvas to the specified rectangle, in-place.
+  // Crops the canvas, in-place.
   // IN: int x, int y, int width, int height
   // OUT: -
   void Crop(JsCallContext *context);
 
-  // Resizes the canvas to the supplied dimensions, in-place.
+  // Resizes the canvas (scaling its contents), in-place.
   // IN: int width, int height
   // OUT: -
   void Resize(JsCallContext *context);
 
   // Accessors for the state of the canvas. Setting any of these causes the
-  // canvas to be reset to transparent black pixels and its context to be
-  // reset (to alpha=1, geometry transformation matrix=identity matrix, etc).
+  // canvas to be reset to transparent black, and invalidates any contexts.
   void GetWidth(JsCallContext *context);
   void GetHeight(JsCallContext *context);
   void SetWidth(JsCallContext *context);
@@ -106,28 +98,13 @@ class GearsCanvas : public ModuleImplBaseClass {
 
   // The following are not exported to Javascript.
 
+  // Clears the plain pointer to GearsCanvasRenderingContext2D, to prevent a
+  // dangling pointer. The rendering context will be recreated when needed.
+  void ClearRenderingContextReference();
+
   // Returns true if the rectangle is contained completely within the bounds
   // of this bitmap, and has non-negative width and height.
   bool IsRectValid(const SkIRect &rect);
-  
-  // Parses a composite operation string (as per HTML5 canvas) and returns
-  // one of the two following values or a Skia PorterDuff enum
-  // (represented as an int since we can't include any Skia headers here due to
-  // compilation issues; see comment at top of file).
-  static const int COMPOSITE_MODE_HTML5_CANVAS_ONLY;
-  static const int COMPOSITE_MODE_UNKNOWN;
-  static int ParseCompositeOperationString(std::string16 mode);
-
-  // Accessor functions.
-  // If given an argument that HTML5 canvas doesn't support, the setters below
-  // fail silently without returning an error, as per the HTML5 canvas spec.
-  // But if given an argument that HTML5 canvas supports but we don't,
-  // the setters (set_composite_operation, to be precise) returns false.
-  double alpha() const;
-  void set_alpha(double new_alpha);
-  std::string16 composite_operation() const;
-  // Returns false if given a mode HTML5 canvas supports but we don't.
-  bool set_composite_operation(std::string16 new_composite_op);
 
   int GetWidth() const;
   int GetHeight() const;
@@ -151,11 +128,6 @@ class GearsCanvas : public ModuleImplBaseClass {
   // Cannot embed objects directly due to compilation issues; see comment
   // at top of file.
   scoped_ptr<SkBitmap> skia_bitmap_;
-
-  // Context state:
-  // TODO(nigeltao): Move this state into GearsCanvasRenderingContext2D?
-  double alpha_;
-  std::string16 composite_operation_;
 
 #if BROWSER_IE
   // Ideally, this should be a CComPtr<CanvasRenderingElementIE>, but doing
