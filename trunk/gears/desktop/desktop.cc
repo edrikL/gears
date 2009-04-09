@@ -45,7 +45,7 @@
 #endif
 #include "gears/blob/blob.h"
 #include "gears/blob/blob_interface.h"
-#include "gears/desktop/drop_target_registration.h"
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 #include "gears/desktop/meta_data_extraction.h"
 #include "gears/localserver/common/http_constants.h"
@@ -62,8 +62,6 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 #elif BROWSER_WEBKIT
 #include "gears/desktop/drag_and_drop_utils_sf.h"
-#elif BROWSER_CHROME && WIN32
-#include "gears/desktop/drag_and_drop_utils_common.h"
 #endif
 #endif
 
@@ -82,7 +80,6 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
   RegisterMethod("extractMetaData", &GearsDesktop::ExtractMetaData);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
-  RegisterMethod("registerDropTarget", &GearsDesktop::RegisterDropTarget);
   RegisterMethod("setDragCursor", &GearsDesktop::SetDragCursor);
 #endif
 #endif  // OFFICIAL_BUILD
@@ -1038,41 +1035,6 @@ void GearsDesktop::SetDragCursor(JsCallContext *context) {
     context->SetException(error);
     return;
   }
-}
-
-
-void GearsDesktop::RegisterDropTarget(JsCallContext *context) {
-  if (EnvIsWorker()) {
-    context->SetException(
-        STRING16(L"registerDropTarget is not supported in workers."));
-    return;
-  }
-
-  JsDomElement dom_element;
-  scoped_ptr<JsObject> drag_drop_options;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOM_ELEMENT, &dom_element },
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, as_out_parameter(drag_drop_options) },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-
-  scoped_refptr<GearsDropTargetRegistration> registration;
-  if (!CreateModule<GearsDropTargetRegistration>(module_environment_.get(),
-                                                 context, &registration)) {
-    return;
-  }
-
-  std::string16 error;
-  scoped_refptr<DropTarget> drop_target(DropTarget::CreateDropTarget(
-      module_environment_.get(), dom_element, drag_drop_options.get(), &error));
-  if (!drop_target.get()) {
-    context->SetException(error);
-    return;
-  }
-
-  registration->SetDropTarget(drop_target.get());
-  context->SetReturnValue(JSPARAM_MODULE, registration.get());
 }
 #endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 #endif  // OFFICIAL_BUILD

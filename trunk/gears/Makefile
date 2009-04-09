@@ -1389,8 +1389,6 @@ $(BROWSER)_CPPSRCS += \
 		desktop_osx.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
-		drop_target_base.cc \
-		drop_target_registration.cc \
 		meta_data_extraction.cc \
 		shortcut_utils_win32.cc \
 		$(NULL)
@@ -1416,7 +1414,6 @@ $(BROWSER)_CPPSRCS += \
 
 FF3_CPPSRCS += \
 		drag_and_drop_utils_ff.cc \
-		drop_target_ff.cc \
 		$(NULL)
 ifeq ($(OS),win32)
 FF3_CPPSRCS += \
@@ -1427,16 +1424,10 @@ endif
 IE_CPPSRCS += \
 		drag_and_drop_utils_ie.cc \
 		drag_and_drop_utils_win32.cc \
-		drop_target_ie.cc \
 		$(NULL)
 
 SF_CPPSRCS += \
 		drag_and_drop_utils_sf.mm \
-		drop_target_sf.cc \
-		$(NULL)
-
-CHROME_CPPSRCS += \
-		drop_target_cr.cc \
 		$(NULL)
 
 endif # not OFFICIAL_BUILD
