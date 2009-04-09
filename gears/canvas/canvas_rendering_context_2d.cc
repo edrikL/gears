@@ -320,7 +320,8 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
 
   if (new_alpha >= 0.0 && new_alpha <= 1.0) {
     global_alpha_as_double_ = new_alpha;
-    global_alpha_as_int_ = roundf(global_alpha_as_double_ * 255);
+    global_alpha_as_int_ = static_cast<int>(
+        floor(0.5 + (global_alpha_as_double_ * 255)));
     SetPaintColorWithPremultiplication(
         &fill_style_as_paint_, fill_color_before_premultiplication_);
     SetPaintColorWithPremultiplication(
