@@ -32,7 +32,6 @@
 #include "gears/canvas/canvas_rendering_context_2d.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkRect.h"
-#include "third_party/skia/include/core/SkStream.h"
 #include "third_party/skia/include/images/SkImageDecoder.h"
 #include "third_party/skia/include/images/SkImageEncoder.h"
 
@@ -152,8 +151,7 @@ void GearsCanvas::Encode(JsCallContext *context) {
       STRING16(L"image/jpeg")) == 0) {
     type = SkImageEncoder::kJPEG_Type;
   } else {
-    // TODO(nigeltao): Support BMP. Create it manually?
-    // Skia doesn't support BMP encoding.
+    // TODO(nigeltao): Should we support BMP?
     context->SetException(STRING16(L"Unsupported MIME type."));
     return;
   }
@@ -468,40 +466,11 @@ const SkBitmap &GearsCanvas::GetSkBitmap() {
   return *(skia_bitmap_.get());
 }
 
-double GearsCanvas::alpha() const {
-  return alpha_;
-}
-
-void GearsCanvas::set_alpha(double new_alpha) {
-  if (new_alpha >= 0.0 && new_alpha <= 1.0)
-    alpha_ = new_alpha;
-}
-
-std::string16 GearsCanvas::composite_operation() const {
-  // Make sure it's a supported mode (neither a HTML5 canvas-only mode like
-  // 'source-atop' nor some gibberish like 'foobar'). An invalid value should
-  // not have been assigned to this variable in the first place.
-  assert(ParseCompositeOperationString(composite_operation_) >= 0);
-  return composite_operation_;
-}
-
-bool GearsCanvas::set_composite_operation(std::string16 new_composite_op) {
-  int op_value = ParseCompositeOperationString(new_composite_op);
-  if (op_value == COMPOSITE_MODE_HTML5_CANVAS_ONLY)
-    return false;
-  if (op_value != COMPOSITE_MODE_UNKNOWN)
-    composite_operation_ = new_composite_op;
-  return true;
-}
-
 void GearsCanvas::ResetCanvas(int width, int height) {
   // TODO(nigeltao): poke the gears_canvas_rendering_context_2d to notify it
   // that its underlying bitmap has been deleted.
   skia_bitmap_.reset(new SkBitmap);
   skia_bitmap_->setConfig(skia_config, width, height);
-
-  alpha_ = 1.0;
-  composite_operation_ = STRING16(L"source-over");
 }
 
 bool GearsCanvas::IsRectValid(const SkIRect &rect) {
@@ -510,24 +479,3 @@ bool GearsCanvas::IsRectValid(const SkIRect &rect) {
       rect.fRight <= GetWidth() && rect.fBottom <= GetHeight();
 }
 
-// Skia's SkPorterDuff values are all non-negative.
-const int GearsCanvas::COMPOSITE_MODE_HTML5_CANVAS_ONLY = -1;
-const int GearsCanvas::COMPOSITE_MODE_UNKNOWN = -2;
-
-int GearsCanvas::ParseCompositeOperationString(std::string16 op) {
-  if (op == STRING16(L"source-atop") ||
-      op == STRING16(L"source-in") ||
-      op == STRING16(L"source-out") ||
-      op == STRING16(L"destination-atop") ||
-      op == STRING16(L"destination-in") ||
-      op == STRING16(L"destination-atop") ||
-      op == STRING16(L"lighter") ||
-      op == STRING16(L"xor")) {
-    return COMPOSITE_MODE_HTML5_CANVAS_ONLY;
-  }
-  if (op == STRING16(L"source-over"))
-    return SkPorterDuff::kSrcOver_Mode;
-  if (op == STRING16(L"copy"))
-    return SkPorterDuff::kSrc_Mode;
-  return COMPOSITE_MODE_UNKNOWN;
-}

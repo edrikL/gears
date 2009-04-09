@@ -32,7 +32,11 @@ function draw(c) {
 
   c.rotate(0.3);
   c.fillStyle = '#3F00FF7F';
-  c.fillRect(40,  0, 50, 50);
+  c.globalCompositeOperation = 'source-atop';
+  c.fillRect(40, 0, 50, 50);
+  c.globalCompositeOperation = 'source-over';
+
+  c.globalAlpha = 0.75;
 
   c.rotate(-0.4);
   c.lineWidth = 4.5;
