@@ -173,10 +173,7 @@ class GearsDesktop : public ModuleImplBaseClass {
 #if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
 // The Drag-and-Drop API has not been finalized for official builds.
 #else
-  // TODO(nigeltao): decide on exactly one model for the DnD API:
-  // * The "Web-app calls Gears" model (GetDragData and SetDragCursor), or
-  // * The "Gears calls Web-app" model (RegisterDropTarget).
-  // Another thing to decide is which of AcceptDrag and SetDragCursor to
+  // TODO(nigeltao): decide which of AcceptDrag and SetDragCursor to
   // keep and which to cull, since they essentially do the same thing (except
   // that AcceptDrag takes responsibility for calling event.cancelBubble(true),
   // event.returnValue=false, event.dataTransfer.dropEffect="copy", whereas
@@ -198,10 +195,6 @@ class GearsDesktop : public ModuleImplBaseClass {
   // IN: Event event, string cursor
   // OUT: -
   void SetDragCursor(JsCallContext *context);
-
-  // IN: DomElement div, object options
-  // OUT: -
-  void RegisterDropTarget(JsCallContext *context);
 #endif
 
  private:

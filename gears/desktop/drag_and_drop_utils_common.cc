@@ -25,6 +25,8 @@
 
 #include "gears/desktop/drag_and_drop_utils_common.h"
 
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/mime_detect.h"
@@ -129,3 +131,6 @@ bool FileDragAndDropMetaData::ToJsObject(
   }
   return true;
 }
+
+#endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
+
