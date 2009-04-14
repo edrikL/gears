@@ -154,7 +154,7 @@ struct AccessPointData {
 
 // This is to allow AccessPointData to be used in std::set. We order
 // lexicographically by MAC address.
-struct AccessPointDataLess : std::less<AccessPointData> {
+struct AccessPointDataLess : public std::less<AccessPointData> {
   bool operator()(const AccessPointData &data1,
                   const AccessPointData &data2) const {
     return data1.mac_address < data2.mac_address;
