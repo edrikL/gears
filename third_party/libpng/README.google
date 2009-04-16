@@ -25,3 +25,6 @@ and png_calculate_crc (line 216).
 In pngrutil.c
 An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_crc_error (line 181).
 
+In pngwio.c
+A "BEGIN GEARS MODIFICATION"-delimited block of code replaces fileno with
+_fileno on WIN32, since the former is deprecated, according to Visual Studio.
