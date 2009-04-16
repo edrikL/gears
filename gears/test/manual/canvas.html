@@ -31,7 +31,9 @@ function draw(c) {
   c.restore();
 
   c.rotate(0.3);
-  c.fillStyle = '#3F00FF7F';
+  // The two fillStyles below should be equivalent.
+  //c.fillStyle = '#407F00FF';
+  c.fillStyle = 'rgba(127,0,255,0.25)';
   c.globalCompositeOperation = 'source-atop';
   c.fillRect(40, 0, 50, 50);
   c.globalCompositeOperation = 'source-over';

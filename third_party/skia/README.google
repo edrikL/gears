@@ -63,4 +63,7 @@ port (which is presumably a work-in-progress).
 
 skia/src/xml/SkParseColor.cpp line 20 disabled (with "#if 0" replacing "#ifdef
 SK_DEBUG") the code to regenerate the packed color-name table, to avoid a
-"CreateTable defined but not used" warning.
+"CreateTable defined but not used" warning. Also, added (starting at line 462,
+the block delimited by BEGIN GEARS MODIFICATION) the ParseRGBAOrHSLA function,
+and the code in SkParse::FindColor that calls it, and the unit tests in
+SkParse::TestColor.
