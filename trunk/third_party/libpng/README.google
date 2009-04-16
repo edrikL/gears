@@ -1,19 +1,27 @@
+This is libpng from http://www.libpng.org/pub/png/libpng.html, updated to
+version 1.2.35 on 2009-04-15.
+
+
+Local Modifications:
+
 Our custom configuration options are defined in pngusr.h. This was previously
 called mozpngconf.h, which was copied from Mozilla and modified by Apple (hence
 the webkit_* names).
 
-Updated to 1.2.33
-
-http://www.libpng.org/pub/png/libpng.html
-
-Local Modifications:
-Our custom configuration options are defined in pngusr.h.
-We also added the support for GEARS_PNG_NO_READ_VERIFY_CRC.
+pngusr.h was further customized as follows:
 Turned off the PNG_NO_SEQUENTIAL_READ_SUPPORTED define as the existing Skia
 library relies on APIs which are disabled when this constant is defined.
 Consolidated parts of the original pnguser.h file with the updated version.
-The Mangling of libpng functions to webkit_XXX has been turned off for Gears
+The mangling of libpng functions to webkit_XXX has been turned off for Gears
 as these APIs are needed for the Skia library to link correctly.
 The PNG write macros are enabled only when the CHROME_PNG_WRITE_SUPPORT define
 is enabled.
+
+
+In png.c
+An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_reset_crc (line 201)
+and png_calculate_crc (line 216).
+
+In pngrutil.c
+An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_crc_error (line 181).
 
