@@ -459,6 +459,69 @@ static inline unsigned nib2byte(unsigned n)
     return (n << 4) | n;
 }
 
+// BEGIN GEARS MODIFICATION
+// TODO(nigeltao): Get this code upstream into Skia trunk. When that happens,
+// we should also delete the commented out count_separators function above, and
+// the (also commented out) code that calls it below (in SkParse::FindColor).
+static bool is_a_z(char value, char lc_target) {
+    SkASSERT(lc_target >= 'a' && lc_target <= 'z');
+    return (value | 32) == lc_target;
+} 
+
+static const char* ParseRGBAOrHSLA(const char* value, SkColor* colorPtr) {
+    bool isRgb = is_a_z(value[0], 'r') &&
+                 is_a_z(value[1], 'g') &&
+                 is_a_z(value[2], 'b');
+    bool isHsl = is_a_z(value[0], 'h') &&
+                 is_a_z(value[1], 's') &&
+                 is_a_z(value[2], 'l');
+    if (!isRgb && !isHsl)
+        return NULL;
+    value += 3;
+    bool hasAlpha = value[0] == 'a' || value[0] == 'A';
+    if (hasAlpha)
+        value += 1;
+    while (*value == ' ')
+        value++;
+    if (*value != '(')
+        return NULL;
+    value += 1;
+    SkScalar args[4];
+    value = SkParse::FindScalars(value, args, hasAlpha ? 4 : 3);
+    if (value == NULL)
+        return NULL;
+    while (*value == ' ')
+        value++;
+    if (*value != ')')
+        return NULL;
+    value += 1;
+
+    int a = 255;
+    if (hasAlpha) {
+        a = SkPin32(SkScalarRound(args[3] * 255), 0, 255);
+    }
+    if (isRgb) {
+        // The r, g and b components are in the range [0-255], but the alpha
+        // component is in the range [0.0-1.0].
+        // Furthermore (and strictly speaking), the CSS spec (and also WebKit's
+        // CSSParser::parseColorParameters in WebCore/css/CSSParser.cpp) also
+        // lets r, g and b be specified in terms of percentages (e.g.
+        // "rgb(100%,50%,0)" is equivalent to "rgb(255,128,0)", but we ignore
+        // this case for now, since it isn't that common, and it would make
+        // this function a little more complicated than just calling
+        // SkParse::FindScalars.
+        int r = SkPin32(SkScalarRound(args[0]), 0, 255);
+        int g = SkPin32(SkScalarRound(args[1]), 0, 255);
+        int b = SkPin32(SkScalarRound(args[2]), 0, 255);
+        *colorPtr = SkColorSetARGB(a, r, g, b);
+    } else {
+        SkASSERT(isHsl);
+        *colorPtr = SkHSVToColor(a, args);
+    }
+    return value;
+}
+// END GEARS MODIFICATION
+
 const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
     unsigned int oldAlpha = SkColorGetA(*colorPtr);
     if (value[0] == '#') {
@@ -496,8 +559,11 @@ const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
 //      *colorPtr = SkColorSetARGB(SkScalarRound(array[0]), SkScalarRound(array[1]), 
 //          SkScalarRound(array[2]), SkScalarRound(array[3]));
 //      return end;
-    } else
-        return FindNamedColor(value, strlen(value), colorPtr);
+    } else {
+        const char* rgbaColor = ParseRGBAOrHSLA(value, colorPtr);
+        return rgbaColor ? rgbaColor
+                         : FindNamedColor(value, strlen(value), colorPtr);
+    }
 }
 
 #ifdef SK_SUPPORT_UNITTEST
@@ -541,6 +607,30 @@ void SkParse::TestColor() {
     result = SK_ColorBLACK;
 //  SkASSERT(FindColor("71,162,253", &result));
 //  SkASSERT(result == ((0xFF << 24) | (71 << 16) | (162 << 8) | (253 << 0)));
+
+    SkASSERT(FindColor("rgb(100,50,0)", &result));
+    SkASSERT(result == 0xff643200);
+    SkASSERT(FindColor("rgb(  1,  2,  3  )", &result));
+    SkASSERT(result == 0xff010203);
+    SkASSERT(FindColor("RGBA(0,255,0,0.5)", &result));
+    SkASSERT(result == 0x8000ff00);
+    SkASSERT(FindColor("rgba(300,-17,1.1,999)", &result));
+    SkASSERT(result == 0xffff0001);
+
+    SkASSERT(FindColor("hsl(0, 1, 1)", &result));
+    SkASSERT(result == 0xffff0000);
+    SkASSERT(FindColor("hsl(180, 1, 0.75)", &result));
+    SkASSERT(result == 0xff00c0c0);
+    SkASSERT(FindColor("hsl(180, 0.5, 0.5)", &result));
+    SkASSERT(result == 0xff3f8080);
+    SkASSERT(FindColor("HslA(120, 1.0, 0.5, 0.25)", &result));
+    SkASSERT(result == 0x40008000);
+    SkASSERT(FindColor("HSL(180, 1.2, -33)", &result));
+    SkASSERT(result == 0xff000000);
+
+    SkASSERT(FindColor("rgb(10\0,50,0)", &result) == NULL);
+    SkASSERT(FindColor("rgba(100,50,0)", &result) == NULL);
+    SkASSERT(FindColor("roygbiv(1,2,3,4,5,6,7)", &result) == NULL);
 }
 #endif
 
