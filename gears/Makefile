@@ -211,50 +211,6 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# third_party/libgd
-
-ifeq ($(USING_LIBGD),1)
-ifneq ($(OFFICIAL_BUILD),1)
-ifneq ($(OS),wince)
-THIRD_PARTY_VPATH	+= \
-		../third_party/libgd \
-		$(NULL)
-
-LIBGD_CSRCS	+= \
-		gd.c \
-		gdfx.c \
-		gd_security.c \
-		gd_gd.c \
-		gd_gd2.c \
-		gd_io.c \
-		gd_io_dp.c \
-		gd_gif_in.c \
-		gd_gif_out.c \
-		gd_io_file.c \
-		gd_io_ss.c \
-		gd_jpeg.c \
-		gd_png.c \
-		gd_ss.c \
-		gd_topal.c \
-		gd_wbmp.c \
-		gdcache.c \
-		gdfontg.c \
-		gdfontl.c \
-		gdfontmb.c \
-		gdfonts.c \
-		gdfontt.c \
-		gdft.c \
-		gdhelpers.c \
-		gdkanji.c \
-		gdtables.c \
-		gdxpm.c \
-		wbmp.c \
-		$(NULL)
-endif # not wince
-endif # not OFFICIAL_BUILD
-endif # USING_LIBGD
-
-#-----------------------------------------------------------------------------
 # third_party/libjpeg
 
 ifeq ($(USING_LIBJPEG),1)
@@ -2102,25 +2058,6 @@ COMMON_GEN_CPPSRCS += \
 		icon_32x32.png.from_bin.cc \
 		$(NULL)
 
-endif # not OFFICIAL_BUILD
-
-#-----------------------------------------------------------------------------
-# image
-
-ifneq ($(OFFICIAL_BUILD),1)
-ifneq ($(OS),wince)
-ifneq ($(OS),android)
-$(BROWSER)_VPATH += \
-		image \
-		$(NULL)
-
-$(BROWSER)_CPPSRCS += \
-		backing_image.cc \
-		image.cc \
-		image_loader.cc \
-		$(NULL)
-endif # not android
-endif # not wince
 endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------

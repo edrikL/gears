@@ -41,9 +41,6 @@ endif
 ifeq ($(USING_ICU),)
   USING_ICU = 1
 endif
-ifeq ($(USING_LIBGD),)
-  USING_LIBGD = 1
-endif
 ifeq ($(USING_LIBJPEG),)
   USING_LIBJPEG = 1
 endif
@@ -270,13 +267,6 @@ SQLITE_CFLAGS += -DSQLITE_CORE \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
   -DSQLITE_GEARS_DISABLE_SHELL_ICU \
   -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
-
-LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
-
-ifeq ($(USING_LIBGD),1)
-# libGD assumes it is in the include path
-CPPFLAGS += -I../third_party/libgd
-endif
 
 GTEST_CPPFLAGS += -I../third_party/gtest/include -I../third_party/gtest
 
@@ -518,7 +508,6 @@ MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 ECHO=@echo
 
 CPPFLAGS += -DLINUX
-LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
@@ -611,8 +600,6 @@ endif
 # Needed for the Safari package installer.
 M4FLAGS += -DGEARS_ENABLER_PATH='$(PWD)/$(SF_INPUTMANAGER_BUNDLE)' -DGEARS_PLUGIN_PATH="$(PWD)/$(SF_PLUGIN_PROXY_BUNDLE)"
 M4FLAGS += -DGEARS_INSTALLER_OUT_DIR='$(PWD)/$(INSTALLERS_OUTDIR)/Safari'
-
-LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 
 # JS_THREADSAFE *MUST* be kept in sync wuith $(BROWSER)_CPPFLAGS.
 MOZJS_CFLAGS += -DJS_THREADSAFE
@@ -815,15 +802,6 @@ CPPFLAGS += -D_WIN32_WCE=0x501 \
             -D_CE_CRT_ALLOW_WIN_MINMAX \
             $(CPPFLAGS_$(MODE))
 endif
-
-LIBGD_CFLAGS += -DBGDWIN32
-
-# Disable some warnings when building third-party code, so we can enable /WX.
-# Examples:
-#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
-#   warning C4018: signed/unsigned mismatch in comparison
-#   warning C4003: not enough actual parameters for macro
-LIBGD_CFLAGS += /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
 
 SQLITE_CFLAGS += /wd4018 /wd4244
 ifeq ($(OS),wince)
