@@ -273,6 +273,7 @@ void GearsCanvas::Resize(JsCallContext *context) {
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, new_width, new_height);
   new_bitmap.allocPixels();
+  new_bitmap.eraseARGB(0, 0, 0, 0);
 
   int old_width = GetWidth();
   int old_height = GetHeight();
@@ -287,8 +288,6 @@ void GearsCanvas::Resize(JsCallContext *context) {
       return;
     }
     new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
-  } else {
-    new_bitmap.eraseARGB(0, 0, 0, 0);
   }
   new_bitmap.swap(*skia_bitmap_);
 }
