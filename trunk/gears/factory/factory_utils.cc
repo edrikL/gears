@@ -188,7 +188,6 @@ bool RequiresLocalDataPermissionType(const std::string16 &module_name) {
          module_name == STRING16(L"beta.console") ||
          module_name == STRING16(L"beta.database") ||
          module_name == STRING16(L"beta.databasemanager") ||
-         module_name == STRING16(L"beta.imageloader") ||
          module_name == STRING16(L"beta.localserver") ||
          module_name == STRING16(L"beta.test") ||
          module_name == STRING16(L"beta.workerpool");
