@@ -192,6 +192,14 @@ class GearsCanvasRenderingContext2D
   void SetCanvas(GearsCanvas *canvas, SkBitmap *bitmap);
 
  private:
+  struct Style {
+    SkColor color_;  // This color is before premultiplication.
+    std::string16 string_;
+    SkPaint paint_;
+
+    Style();
+  };
+
   // Calls ClearRenderingContextReference() on canvas_, if canvas_ is not NULL.
   void ClearReferenceFromGearsCanvas();
 
@@ -201,14 +209,11 @@ class GearsCanvasRenderingContext2D
   // Implements ClearRect, FillRect and StrokeRect.
   void PaintRect(JsCallContext *context, SkPaint *paint);
 
-  void SetPaintColorWithPremultiplication(SkPaint *paint, const SkColor color);
+  // Sets a Style's paint_ to be its color_ multiplied by the global_alpha.
+  void PremultiplyColor(Style *style);
 
   // Implements SetFillStyle and SetStrokeStyle.
-  void SetStyle(
-    JsCallContext *context,
-    SkPaint *style_as_paint,
-    SkColor *color_before_premultiplication,
-    std::string16 *style_as_string);
+  void SetStyle(JsCallContext *context, Style *style);
 
   // Implements Transform and SetTransform.
   void Transform(JsCallContext *context, bool reset_matrix);
@@ -219,12 +224,8 @@ class GearsCanvasRenderingContext2D
   // TODO(nigeltao): Introduce a class to capture the {SkPaint, SkColor,
   // std::string16} for both the fill and the stroke.
   SkPaint clear_style_as_paint_;
-  SkPaint fill_style_as_paint_;
-  SkPaint stroke_style_as_paint_;
-  SkColor fill_color_before_premultiplication_;
-  SkColor stroke_color_before_premultiplication_;
-  std::string16 fill_style_as_string_;
-  std::string16 stroke_style_as_string_;
+  Style fill_style_;
+  Style stroke_style_;
   double global_alpha_as_double_;
   int global_alpha_as_int_;
   std::string16 global_composite_operation_as_string_;
