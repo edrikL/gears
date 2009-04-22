@@ -54,20 +54,20 @@ using canvas::skia_config;
 
 GearsCanvasRenderingContext2D::GearsCanvasRenderingContext2D()
     : ModuleImplBaseClass(kModuleName),
-      fill_color_before_premultiplication_(SK_ColorBLACK),
-      stroke_color_before_premultiplication_(SK_ColorBLACK),
-      fill_style_as_string_(STRING16(L"#000000")),
-      stroke_style_as_string_(STRING16(L"#000000")),
       global_alpha_as_double_(1.0),
       global_alpha_as_int_(255),
       global_composite_operation_as_string_(STRING16(L"source-over")) {
   clear_style_as_paint_.setAntiAlias(true);
   clear_style_as_paint_.setPorterDuffXfermode(SkPorterDuff::kClear_Mode);
-  fill_style_as_paint_.setAntiAlias(true);
-  stroke_style_as_paint_.setAntiAlias(true);
-  stroke_style_as_paint_.setStyle(SkPaint::kStroke_Style);
+  stroke_style_.paint_.setStyle(SkPaint::kStroke_Style);
+}
+
+GearsCanvasRenderingContext2D::Style::Style()
+    : color_(SK_ColorBLACK),
+      string_(STRING16(L"#000000")) {
   // TODO(nigeltao): Do the SkPaint's default values (e.g. line width, miter
   // limit) match the default values given by the HTML5 spec?
+  paint_.setAntiAlias(true);
 }
 
 void GearsCanvasRenderingContext2D::SetCanvas(
@@ -322,10 +322,8 @@ void GearsCanvasRenderingContext2D::SetGlobalAlpha(
     global_alpha_as_double_ = new_alpha;
     global_alpha_as_int_ = static_cast<int>(
         floor(0.5 + (global_alpha_as_double_ * 255)));
-    SetPaintColorWithPremultiplication(
-        &fill_style_as_paint_, fill_color_before_premultiplication_);
-    SetPaintColorWithPremultiplication(
-        &stroke_style_as_paint_, stroke_color_before_premultiplication_);
+    PremultiplyColor(&fill_style_);
+    PremultiplyColor(&stroke_style_);
   }
 }
 
@@ -376,27 +374,23 @@ void GearsCanvasRenderingContext2D::SetGlobalCompositeOperation(
 
   if (mode != SkPorterDuff::kModeCount) {
     global_composite_operation_as_string_ = new_composite_op;
-    fill_style_as_paint_.setPorterDuffXfermode(mode);
-    stroke_style_as_paint_.setPorterDuffXfermode(mode);
+    fill_style_.paint_.setPorterDuffXfermode(mode);
+    stroke_style_.paint_.setPorterDuffXfermode(mode);
   }
 }
 
-void GearsCanvasRenderingContext2D::SetPaintColorWithPremultiplication(
-    SkPaint *paint,
-    const SkColor color) {
+void GearsCanvasRenderingContext2D::PremultiplyColor(Style *style) {
   if (global_alpha_as_int_ == 255) {
-    paint->setColor(color);
+    style->paint_.setColor(style->color_);
   } else {
-    int a = SkAlphaMul(SkColorGetA(color), global_alpha_as_int_);
-    paint->setColor((color & 0x00FFFFFF) | (a << 24));
+    int a = SkAlphaMul(SkColorGetA(style->color_), global_alpha_as_int_);
+    style->paint_.setColor((style->color_ & 0x00FFFFFF) | (a << 24));
   }
 }
 
 void GearsCanvasRenderingContext2D::SetStyle(
     JsCallContext *context,
-    SkPaint *style_as_paint,
-    SkColor *color_before_premultiplication,
-    std::string16 *style_as_string) {
+    Style *style) {
   std::string16 new_style_as_string;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_style_as_string }
@@ -416,37 +410,30 @@ void GearsCanvasRenderingContext2D::SetStyle(
   // by the string, so we initialize color with alpha=255.
   SkColor color = 0xFFFFFFFF;
   if (SkParse::FindColor(new_style_as_utf8.c_str(), &color)) {
-    *color_before_premultiplication = color;
-    SetPaintColorWithPremultiplication(style_as_paint, color);
-    *style_as_string = new_style_as_string;
+    style->color_ = color;
+    style->string_ = new_style_as_string;
+    PremultiplyColor(style);
   }
 }
 
 void GearsCanvasRenderingContext2D::GetStrokeStyle(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &stroke_style_as_string_);
+  context->SetReturnValue(JSPARAM_STRING16, &stroke_style_.string_);
 }
 
 void GearsCanvasRenderingContext2D::SetStrokeStyle(JsCallContext *context) {
-  SetStyle(context,
-           &stroke_style_as_paint_,
-           &stroke_color_before_premultiplication_,
-           &stroke_style_as_string_);
+  SetStyle(context, &stroke_style_);
 }
 
 void GearsCanvasRenderingContext2D::GetFillStyle(JsCallContext *context) {
-  context->SetReturnValue(JSPARAM_STRING16, &fill_style_as_string_);
+  context->SetReturnValue(JSPARAM_STRING16, &fill_style_.string_);
 }
 
 void GearsCanvasRenderingContext2D::SetFillStyle(JsCallContext *context) {
-  SetStyle(context,
-           &fill_style_as_paint_,
-           &fill_color_before_premultiplication_,
-           &fill_style_as_string_);
+  SetStyle(context, &fill_style_);
 }
 
 void GearsCanvasRenderingContext2D::GetLineWidth(JsCallContext *context) {
-  double line_width = SkScalarToDouble(
-      stroke_style_as_paint_.getStrokeWidth());
+  double line_width = SkScalarToDouble(stroke_style_.paint_.getStrokeWidth());
   context->SetReturnValue(JSPARAM_DOUBLE, &line_width);
 }
 
@@ -459,11 +446,11 @@ void GearsCanvasRenderingContext2D::SetLineWidth(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  stroke_style_as_paint_.setStrokeWidth(SkDoubleToScalar(width));
+  stroke_style_.paint_.setStrokeWidth(SkDoubleToScalar(width));
 }
 
 void GearsCanvasRenderingContext2D::GetLineCap(JsCallContext *context) {
-  switch (stroke_style_as_paint_.getStrokeCap()) {
+  switch (stroke_style_.paint_.getStrokeCap()) {
     case SkPaint::kButt_Cap: {
       std::string16 result(STRING16(L"butt"));
       context->SetReturnValue(JSPARAM_STRING16, &result);
@@ -495,16 +482,16 @@ void GearsCanvasRenderingContext2D::SetLineCap(JsCallContext *context) {
     return;
 
   if (s == STRING16(L"butt")) {
-    stroke_style_as_paint_.setStrokeCap(SkPaint::kButt_Cap);
+    stroke_style_.paint_.setStrokeCap(SkPaint::kButt_Cap);
   } else if (s == STRING16(L"round")) {
-    stroke_style_as_paint_.setStrokeCap(SkPaint::kRound_Cap);
+    stroke_style_.paint_.setStrokeCap(SkPaint::kRound_Cap);
   } else if (s == STRING16(L"square")) {
-    stroke_style_as_paint_.setStrokeCap(SkPaint::kSquare_Cap);
+    stroke_style_.paint_.setStrokeCap(SkPaint::kSquare_Cap);
   }
 }
 
 void GearsCanvasRenderingContext2D::GetLineJoin(JsCallContext *context) {
-  switch (stroke_style_as_paint_.getStrokeJoin()) {
+  switch (stroke_style_.paint_.getStrokeJoin()) {
     case SkPaint::kMiter_Join: {
       std::string16 result(STRING16(L"miter"));
       context->SetReturnValue(JSPARAM_STRING16, &result);
@@ -536,17 +523,16 @@ void GearsCanvasRenderingContext2D::SetLineJoin(JsCallContext *context) {
     return;
 
   if (s == STRING16(L"miter")) {
-    stroke_style_as_paint_.setStrokeJoin(SkPaint::kMiter_Join);
+    stroke_style_.paint_.setStrokeJoin(SkPaint::kMiter_Join);
   } else if (s == STRING16(L"round")) {
-    stroke_style_as_paint_.setStrokeJoin(SkPaint::kRound_Join);
+    stroke_style_.paint_.setStrokeJoin(SkPaint::kRound_Join);
   } else if (s == STRING16(L"bevel")) {
-    stroke_style_as_paint_.setStrokeJoin(SkPaint::kBevel_Join);
+    stroke_style_.paint_.setStrokeJoin(SkPaint::kBevel_Join);
   }
 }
 
 void GearsCanvasRenderingContext2D::GetMiterLimit(JsCallContext *context) {
-  double miter_limit = SkScalarToDouble(
-      stroke_style_as_paint_.getStrokeMiter());
+  double miter_limit = SkScalarToDouble(stroke_style_.paint_.getStrokeMiter());
   context->SetReturnValue(JSPARAM_DOUBLE, &miter_limit);
 }
 
@@ -559,7 +545,7 @@ void GearsCanvasRenderingContext2D::SetMiterLimit(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  stroke_style_as_paint_.setStrokeMiter(SkDoubleToScalar(miter_limit));
+  stroke_style_.paint_.setStrokeMiter(SkDoubleToScalar(miter_limit));
 }
 
 void GearsCanvasRenderingContext2D::PaintRect(
@@ -587,11 +573,11 @@ void GearsCanvasRenderingContext2D::ClearRect(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::FillRect(JsCallContext *context) {
-  PaintRect(context, &fill_style_as_paint_);
+  PaintRect(context, &fill_style_.paint_);
 }
 
 void GearsCanvasRenderingContext2D::StrokeRect(JsCallContext *context) {
-  PaintRect(context, &stroke_style_as_paint_);
+  PaintRect(context, &stroke_style_.paint_);
 }
 
 void GearsCanvasRenderingContext2D::BeginPath(JsCallContext *context) {
@@ -750,11 +736,11 @@ void GearsCanvasRenderingContext2D::Arc(JsCallContext *context) {
 }
 
 void GearsCanvasRenderingContext2D::Fill(JsCallContext *context) {
-  skia_canvas_->drawPath(path_, fill_style_as_paint_);
+  skia_canvas_->drawPath(path_, fill_style_.paint_);
 }
 
 void GearsCanvasRenderingContext2D::Stroke(JsCallContext *context) {
-  skia_canvas_->drawPath(path_, stroke_style_as_paint_);
+  skia_canvas_->drawPath(path_, stroke_style_.paint_);
 }
 
 void GearsCanvasRenderingContext2D::DrawImage(JsCallContext *context) {
