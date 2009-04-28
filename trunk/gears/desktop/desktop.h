@@ -33,6 +33,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
+#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/localserver/common/http_request.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
@@ -170,9 +171,7 @@ class GearsDesktop : public ModuleImplBaseClass {
   // OUT: void
   void OpenFiles(JsCallContext *context);
 
-#if defined(OFFICIAL_BUILD) || defined(OS_ANDROID)
-// The Drag-and-Drop API has not been finalized for official builds.
-#else
+#if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
   // TODO(nigeltao): decide which of AcceptDrag and SetDragCursor to
   // keep and which to cull, since they essentially do the same thing (except
   // that AcceptDrag takes responsibility for calling event.cancelBubble(true),

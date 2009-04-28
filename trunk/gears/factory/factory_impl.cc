@@ -50,19 +50,22 @@
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
+#if defined(OS_WINCE) || defined(OS_ANDROID)
+// The Canvas API is unimplemented on WinCE and Android.
+#else
+#include "gears/canvas/canvas.h"
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
+
 #ifdef OFFICIAL_BUILD
-// The Canvas, Console and Database2 APIs have not
-// been finalized for official builds.
+// The Console and Database2 APIs have not been finalized for official builds.
 #else
 #include "gears/database2/manager.h"
 #include "gears/dummy/dummy_module.h"
-#ifdef OS_WINCE
-// Furthermore, Canvas and Console are unimplemented for all
-// browsers on WinCE.
+#if defined(OS_WINCE) || defined(OS_ANDROID)
+// The Console API is unimplemented on WinCE and Android.
 #else
-#include "gears/canvas/canvas.h"
 #include "gears/console/console.h"
-#endif  // OS_WINCE
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
 #endif  // OFFICIAL_BUILD
 
 #ifdef WIN32
@@ -203,9 +206,15 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.blobbuilder")) {
     CreateModule<GearsBlobBuilder>(module_environment_.get(),
                                    context, &object);
+#if defined(OS_WINCE) || defined(OS_ANDROID)
+  // The Canvas API is unimplemented on WinCE and Android.
+#else
+  } else if (module_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
+
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console and Database2 APIs have not
-  // been finalized for official builds.
+  // The Console and Database2 APIs have not been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.databasemanager")) {
     CreateModule<GearsDatabase2Manager>(module_environment_.get(),
@@ -213,14 +222,11 @@ void GearsFactoryImpl::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.dummymodule")) {
     CreateModule<GearsDummyModule>(module_environment_.get(), context, &object);
 #if defined(OS_WINCE) || defined(OS_ANDROID)
-  // Furthermore, Canvas and Console are unimplemented for all
-  // browsers on WinCE and Android.
+  // Furthermore, the Console API is unimplemented on WinCE and Android.
 #else
-  } else if (module_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(module_environment_.get(), context, &object);
   } else if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(module_environment_.get(), context, &object);
-#endif  // OS_WINCE
+#endif  // defined(OS_WINCE) || defined(OS_ANDROID)
 #endif  // OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS

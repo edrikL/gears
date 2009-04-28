@@ -45,7 +45,6 @@
 #endif
 #include "gears/blob/blob.h"
 #include "gears/blob/blob_interface.h"
-#include "gears/desktop/drag_and_drop_utils_common.h"
 #include "gears/desktop/file_dialog.h"
 #include "gears/desktop/meta_data_extraction.h"
 #include "gears/localserver/common/http_constants.h"
@@ -72,9 +71,6 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
   RegisterMethod("openFiles", &GearsDesktop::OpenFiles);
 
-#ifdef OFFICIAL_BUILD
-  // The Drag-and-Drop API has not been finalized for official builds.
-#else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
   // TODO(nigeltao): should acceptDrag be renamed finishDrag??
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
@@ -82,7 +78,6 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
   RegisterMethod("setDragCursor", &GearsDesktop::SetDragCursor);
 #endif
-#endif  // OFFICIAL_BUILD
 }
 
 
@@ -871,9 +866,6 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   return true;
 }
 
-#ifdef OFFICIAL_BUILD
-// The Drag-and-Drop API has not been finalized for official builds.
-#else
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 void GearsDesktop::AcceptDrag(JsCallContext *context) {
   if (EnvIsWorker()) {
@@ -1037,4 +1029,3 @@ void GearsDesktop::SetDragCursor(JsCallContext *context) {
   }
 }
 #endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
-#endif  // OFFICIAL_BUILD

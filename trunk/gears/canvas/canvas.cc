@@ -29,15 +29,20 @@
 #include "gears/blob/blob.h"
 #include "gears/canvas/blob_backed_skia_input_stream.h"
 #include "gears/canvas/blob_backed_skia_output_stream.h"
-#include "gears/canvas/canvas_rendering_context_2d.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkRect.h"
 #include "third_party/skia/include/images/SkImageDecoder.h"
 #include "third_party/skia/include/images/SkImageEncoder.h"
 
+#if defined(OFFICIAL_BUILD)
+// Canvas 2D graphics (getContext) and on-screen rendering (getRenderingElement,
+// invalidateRenderingElement) methods are not yet part of the official build.
+#else
+#include "gears/canvas/canvas_rendering_context_2d.h"
 #if BROWSER_IE
 #include "gears/canvas/canvas_rendering_element_ie.h"
 #endif
+#endif  // defined(OFFICIAL_BUILD)
 
 namespace canvas {
 const SkBitmap::Config skia_config = SkBitmap::kARGB_8888_Config;
@@ -48,6 +53,18 @@ using canvas::skia_config;
 DECLARE_DISPATCHER(GearsCanvas);
 const std::string GearsCanvas::kModuleName("GearsCanvas");
 
+#if defined(OFFICIAL_BUILD)
+// Canvas 2D graphics (rendering_context_) and on-screen rendering
+// (rendering_element_) fields are not yet part of the official build.
+GearsCanvas::GearsCanvas()
+    : ModuleImplBaseClass(kModuleName) {
+  // Initial dimensions as per the HTML5 canvas spec.
+  ResetCanvas(300, 150);
+}
+
+GearsCanvas::~GearsCanvas() {
+}
+#else
 GearsCanvas::GearsCanvas()
     : ModuleImplBaseClass(kModuleName),
       rendering_context_(NULL) {
@@ -75,16 +92,21 @@ GearsCanvas::~GearsCanvas() {
 void GearsCanvas::ClearRenderingContextReference() {
   rendering_context_ = NULL;
 }
+#endif  // defined(OFFICIAL_BUILD)
 
 template<>
 void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("crop", &GearsCanvas::Crop);
   RegisterMethod("decode", &GearsCanvas::Decode);
   RegisterMethod("encode", &GearsCanvas::Encode);
-  RegisterMethod("getContext", &GearsCanvas::GetContext);
   RegisterMethod("resize", &GearsCanvas::Resize);
   RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
   RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
+#if defined(OFFICIAL_BUILD)
+// Canvas 2D graphics (getContext) and on-screen rendering (getRenderingElement,
+// invalidateRenderingElement) methods are not yet part of the official build.
+#else
+  RegisterMethod("getContext", &GearsCanvas::GetContext);
   // TODO(nigeltao): We need to decide which one of the (off-screen)
   // GearsCanvas and the (on-screen) rendering DOM element is the definitive
   // one, in terms of width and height. Does modifying the WxH of one
@@ -97,6 +119,7 @@ void Dispatcher<GearsCanvas>::Init() {
   // fast on all Browser x OS combinations.
   RegisterMethod("invalidateRenderingElement",
       &GearsCanvas::InvalidateRenderingElement);
+#endif  // defined(OFFICIAL_BUILD)
 }
 
 void GearsCanvas::EnsureBitmapPixelsAreAllocated() {
@@ -324,6 +347,10 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
   ResetCanvas(GetWidth(), new_height);
 }
 
+#if defined(OFFICIAL_BUILD)
+// Canvas 2D graphics (getContext) and on-screen rendering (getRenderingElement,
+// invalidateRenderingElement) methods are not yet part of the official build.
+#else
 void GearsCanvas::GetContext(JsCallContext *context) {
   std::string16 context_id;
   JsArgument args[] = {
@@ -451,6 +478,7 @@ void GearsCanvas::InvalidateRenderingElement(JsCallContext *context) {
   context->SetException(STRING16(L"Unimplemented"));
 #endif
 }
+#endif  // defined(OFFICIAL_BUILD)
 
 int GearsCanvas::GetWidth() const {
   return skia_bitmap_->width();

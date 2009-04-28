@@ -34,21 +34,13 @@
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
-#ifdef OFFICIAL_BUILD
-  // The Drag-and-Drop API has not been finalized for official builds.
-#else
 #if defined(WIN32)
 #include "gears/desktop/drag_and_drop_utils_win32.h"
-#endif
 #endif
 
 #elif BROWSER_IE && !defined(OS_WINCE)
 #include "gears/base/ie/activex_utils.h"
-#ifdef OFFICIAL_BUILD
-  // The Drag-and-Drop API has not been finalized for official builds.
-#else
 #include "gears/desktop/drag_and_drop_utils_win32.h"
-#endif
 
 #elif BROWSER_IEMOBILE
 #include "gears/base/ie/activex_utils.h"
@@ -81,13 +73,9 @@ ModuleEnvironment::ModuleEnvironment(SecurityOrigin security_origin,
 #endif
 
 #if (BROWSER_IE || BROWSER_FF) && defined(WIN32)
-#ifdef OFFICIAL_BUILD
-  // The Drag-and-Drop API has not been finalized for official builds.
-#else
   if (!is_worker) {
     drop_target_interceptor_.reset(DropTargetInterceptor::Intercept(this));
   }
-#endif
 #endif
   js_runner_->OnModuleEnvironmentAttach();
 }

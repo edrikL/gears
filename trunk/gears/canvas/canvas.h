@@ -26,8 +26,6 @@
 #ifndef GEARS_CANVAS_CANVAS_H__
 #define GEARS_CANVAS_CANVAS_H__
 
-#if !defined(OFFICIAL_BUILD)
-
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/scoped_refptr.h"
@@ -38,10 +36,14 @@ class SkBitmap;
 class SkCanvas;
 struct SkIRect;
 
+#if !defined(OFFICIAL_BUILD)
+// The Canvas rendering API (i.e. 2D context, on-screen DOM element) is not
+// yet enabled in official builds.
 #if BROWSER_IE
 class CanvasRenderingElementIE;
 #endif
 class GearsCanvasRenderingContext2D;
+#endif  // !defined(OFFICIAL_BUILD)
 
 class GearsCanvas : public ModuleImplBaseClass {
  public:
@@ -80,6 +82,7 @@ class GearsCanvas : public ModuleImplBaseClass {
   void SetWidth(JsCallContext *context);
   void SetHeight(JsCallContext *context);
 
+#if !defined(OFFICIAL_BUILD)
   // Returns a context object to draw onto the canvas.
   // IN: String contextId
   // OUT: CanvasRenderingContext2D
@@ -94,13 +97,16 @@ class GearsCanvas : public ModuleImplBaseClass {
   // IN: -
   // OUT: -
   void InvalidateRenderingElement(JsCallContext *context);
+#endif  // !defined(OFFICIAL_BUILD)
 
 
   // The following are not exported to Javascript.
 
+#if !defined(OFFICIAL_BUILD)
   // Clears the plain pointer to GearsCanvasRenderingContext2D, to prevent a
   // dangling pointer. The rendering context will be recreated when needed.
   void ClearRenderingContextReference();
+#endif  // !defined(OFFICIAL_BUILD)
 
   // Returns true if the rectangle is contained completely within the bounds
   // of this bitmap, and has non-negative width and height.
@@ -120,14 +126,16 @@ class GearsCanvas : public ModuleImplBaseClass {
   // pixels have been allocated.
   void EnsureBitmapPixelsAreAllocated();
 
+  // Cannot embed objects directly due to compilation issues; see comment
+  // at top of file.
+  scoped_ptr<SkBitmap> skia_bitmap_;
+
+#if !defined(OFFICIAL_BUILD)
   // Can't use a scoped_refptr since that will create a reference cycle.
   // Instead, use a plain pointer and clear it when the target is destroyed.
   // Recreate this pointer when accessed again. For this to work, we make
   // the Context stateless.
   GearsCanvasRenderingContext2D *rendering_context_;
-  // Cannot embed objects directly due to compilation issues; see comment
-  // at top of file.
-  scoped_ptr<SkBitmap> skia_bitmap_;
 
 #if BROWSER_IE
   // Ideally, this should be a CComPtr<CanvasRenderingElementIE>, but doing
@@ -135,9 +143,9 @@ class GearsCanvas : public ModuleImplBaseClass {
   // and Release this COM object.
   CanvasRenderingElementIE *rendering_element_;
 #endif
+#endif  // !defined(OFFICIAL_BUILD)
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsCanvas);
 };
 
-#endif  // !defined(OFFICIAL_BUILD)
 #endif  // GEARS_CANVAS_CANVAS_H__

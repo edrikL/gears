@@ -214,7 +214,6 @@ THIRD_PARTY_CPPSRCS	+= \
 # third_party/libjpeg
 
 ifeq ($(USING_LIBJPEG),1)
-ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		../third_party/libjpeg \
@@ -269,7 +268,6 @@ THIRD_PARTY_CSRCS	+= \
 		jmemnobs.c \
 		$(NULL)
 endif # not wince
-endif # not OFFICIAL_BUILD
 endif # USING_LIBJPEG
 
 #-----------------------------------------------------------------------------
@@ -297,10 +295,6 @@ THIRD_PARTY_CSRCS	+= \
 		pngrtran.c \
 		pngrutil.c \
 		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-  # The following files are not yet needed; exclude them to save size.
-else
 # Writing PNGs
 THIRD_PARTY_CSRCS	+= \
 		pngwio.c \
@@ -308,7 +302,6 @@ THIRD_PARTY_CSRCS	+= \
 		pngwtran.c \
 		pngwutil.c \
 		$(NULL)
-endif
 endif # USING_LIBPNG
 
 #-----------------------------------------------------------------------------
@@ -326,9 +319,6 @@ THIRD_PARTY_CPPSRCS	+= \
 # third_party/skia
 
 ifeq ($(USING_SKIA),1)
-ifeq ($(OFFICIAL_BUILD),1)
-# The Canvas API is not yet enabled in official builds.
-else
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
 THIRD_PARTY_VPATH	+= \
@@ -474,7 +464,6 @@ endif
 
 endif # not android
 endif # not wince
-endif # OFFICIAL_BUILD
 endif # USING_SKIA
 
 #-----------------------------------------------------------------------------
@@ -728,10 +717,6 @@ THIRD_PARTY_CSRCS	+= \
 		inffast.c \
 		inftrees.c \
 		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-  # The following files are not yet needed; exclude them to save size.
-else
 # Other Algorithms
 THIRD_PARTY_CSRCS	+= \
 		compress.c \
@@ -744,7 +729,6 @@ THIRD_PARTY_CSRCS	+= \
 		gzio.c \
 		trees.c \
 		$(NULL)
-endif
 endif # USING_ZLIB
 
 #-----------------------------------------------------------------------------
@@ -1271,9 +1255,6 @@ endif
 #-----------------------------------------------------------------------------
 # canvas
 
-ifeq ($(OFFICIAL_BUILD),1)
-# The Canvas API is not yet enabled in official builds.
-else
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
 
@@ -1285,16 +1266,23 @@ $(BROWSER)_CPPSRCS += \
 		blob_backed_skia_input_stream.cc \
 		blob_backed_skia_output_stream.cc \
 		canvas.cc \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+# The Canvas rendering API (i.e. 2D context, on-screen DOM element) is not
+# yet enabled in official builds.
+else
+$(BROWSER)_CPPSRCS += \
 		canvas_rendering_context_2d.cc \
 		$(NULL)
 
 IE_CPPSRCS += \
 		canvas_rendering_element_ie.cc \
 		$(NULL)
+endif  # OFFICIAL_BUILD
 
 endif  # not android
 endif  # not wince
-endif  # OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # database
@@ -1345,6 +1333,7 @@ $(BROWSER)_CPPSRCS += \
 		desktop_osx.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
+		drag_and_drop_utils_common.cc \
 		meta_data_extraction.cc \
 		shortcut_utils_win32.cc \
 		$(NULL)
@@ -1359,13 +1348,6 @@ $(BROWSER)_CPPSRCS += \
 
 CHROME_CPPSRCS	+= \
 		desktop_cr.cc \
-		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-# The Drag-and-Drop API has not been finalized for official builds.
-else
-$(BROWSER)_CPPSRCS += \
-		drag_and_drop_utils_common.cc \
 		$(NULL)
 
 FF3_CPPSRCS += \
@@ -1386,7 +1368,6 @@ SF_CPPSRCS += \
 		drag_and_drop_utils_sf.mm \
 		$(NULL)
 
-endif # not OFFICIAL_BUILD
 endif # not android
 
 NPAPI_JAVASRCS	+= \
