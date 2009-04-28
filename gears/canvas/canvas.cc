@@ -53,13 +53,43 @@ using canvas::skia_config;
 DECLARE_DISPATCHER(GearsCanvas);
 const std::string GearsCanvas::kModuleName("GearsCanvas");
 
+// 16384 pixels wide * 16384 pixels high * 4 bytes per pixel requires
+// 1GB of memory. Asking for that much will probably just cause an out-of-
+// memory condition, but also 1GB (which is 0x40000000 bytes) is less than
+// the number of bytes that causes overflow for 32-bit signed ints. On the
+// other hand, 16384 pixels is large enough (by about 20%) to accomodate the
+// height of A0-sized paper (1189mm, or 46.8 inches) at 300 dpi.
+const int GearsCanvas::kMaxSideLength(16384);
+
+const int GearsCanvas::kDefaultWidth(300);
+const int GearsCanvas::kDefaultHeight(150);
+
+static void ValidateWidthAndHeight(int w, int h, JsCallContext *context) {
+  if (w <= 0) {
+    context->SetException(STRING16(L"Invalid (non-positive) width."));
+    return;
+  }
+  if (w > GearsCanvas::kMaxSideLength) {
+    context->SetException(STRING16(L"Invalid width (it is too large)."));
+    return;
+  }
+  if (h <= 0) {
+    context->SetException(STRING16(L"Invalid (non-positive) height."));
+    return;
+  }
+  if (h > GearsCanvas::kMaxSideLength) {
+    context->SetException(STRING16(L"Invalid height (it is too large)."));
+    return;
+  }
+}
+
 #if defined(OFFICIAL_BUILD)
 // Canvas 2D graphics (rendering_context_) and on-screen rendering
 // (rendering_element_) fields are not yet part of the official build.
 GearsCanvas::GearsCanvas()
     : ModuleImplBaseClass(kModuleName) {
   // Initial dimensions as per the HTML5 canvas spec.
-  ResetCanvas(300, 150);
+  ResetCanvas(kDefaultWidth, kDefaultHeight);
 }
 
 GearsCanvas::~GearsCanvas() {
@@ -72,7 +102,7 @@ GearsCanvas::GearsCanvas()
   rendering_element_ = NULL;
 #endif
   // Initial dimensions as per the HTML5 canvas spec.
-  ResetCanvas(300, 150);
+  ResetCanvas(kDefaultWidth, kDefaultHeight);
 }
 
 GearsCanvas::~GearsCanvas() {
@@ -145,8 +175,21 @@ void GearsCanvas::Decode(JsCallContext *context) {
   scoped_refptr<BlobInterface> blob;
   static_cast<GearsBlob*>(other_module)->GetContents(&blob);
   assert(blob.get());
-  
+
   BlobBackedSkiaInputStream blob_stream(blob.get());
+  if (!SkImageDecoder::DecodeStream(&blob_stream,
+                                    skia_bitmap_.get(),
+                                    skia_config,
+                                    SkImageDecoder::kDecodeBounds_Mode)) {
+    context->SetException(STRING16(L"Could not decode the Blob as an image."));
+  }
+  ValidateWidthAndHeight(
+      skia_bitmap_->width(), skia_bitmap_->height(), context);
+  if (context->is_exception_set()) {
+    ResetCanvas(kDefaultWidth, kDefaultHeight);
+    return;
+  }
+  blob_stream.rewind();
   if (!SkImageDecoder::DecodeStream(&blob_stream,
                                     skia_bitmap_.get(),
                                     skia_config,
@@ -257,10 +300,11 @@ void GearsCanvas::Crop(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
+  ValidateWidthAndHeight(width, height, context);
   if (context->is_exception_set())
     return;
   
-  SkIRect src_rect = { x, y, x + width, y + height};
+  SkIRect src_rect = { x, y, x + width, y + height };
   if (!IsRectValid(src_rect)) {
     context->SetException(STRING16(L"Rectangle to crop stretches beyond the "
         L"bounds of the bitmap or has negative dimensions"));
@@ -286,12 +330,10 @@ void GearsCanvas::Resize(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
+  ValidateWidthAndHeight(new_width, new_height, context);
   if (context->is_exception_set())
     return;
-  if (new_width < 0 || new_height < 0) {
-    context->SetException(STRING16(L"Cannot resize to negative dimensions."));
-    return;
-  }
+
   EnsureBitmapPixelsAreAllocated();
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, new_width, new_height);
@@ -331,6 +373,7 @@ void GearsCanvas::SetWidth(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_width }
   };
   context->GetArguments(ARRAYSIZE(args), args);
+  ValidateWidthAndHeight(new_width, GetHeight(), context);
   if (context->is_exception_set())
     return;
   ResetCanvas(new_width, GetHeight());
@@ -342,6 +385,7 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
+  ValidateWidthAndHeight(GetWidth(), new_height, context);
   if (context->is_exception_set())
     return;
   ResetCanvas(GetWidth(), new_height);
@@ -494,6 +538,8 @@ const SkBitmap &GearsCanvas::GetSkBitmap() {
 }
 
 void GearsCanvas::ResetCanvas(int width, int height) {
+  assert(width > 0 && width <= kMaxSideLength &&
+         height > 0 && height <= kMaxSideLength);
   // TODO(nigeltao): poke the gears_canvas_rendering_context_2d to notify it
   // that its underlying bitmap has been deleted.
   skia_bitmap_.reset(new SkBitmap);
@@ -505,4 +551,3 @@ bool GearsCanvas::IsRectValid(const SkIRect &rect) {
       rect.fLeft >= 0 && rect.fTop >= 0 &&
       rect.fRight <= GetWidth() && rect.fBottom <= GetHeight();
 }
-
