@@ -49,6 +49,13 @@ class GearsCanvas : public ModuleImplBaseClass {
  public:
   static const std::string kModuleName;
 
+  // The maximum width, and maximum height, for a valid GearsCanvas.
+  static const int kMaxSideLength;
+
+  // Default canvas dimensions, as per the HTML5 specification.
+  static const int kDefaultWidth;
+  static const int kDefaultHeight;
+
   GearsCanvas();
   virtual ~GearsCanvas();
   
