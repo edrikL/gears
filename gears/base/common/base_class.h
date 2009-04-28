@@ -95,11 +95,7 @@ struct ModuleEnvironment : public RefCounted {
 #endif
 
 #if (BROWSER_IE || BROWSER_FF) && defined(WIN32)
-#ifdef OFFICIAL_BUILD
-  // The Drag-and-Drop API has not been finalized for official builds.
-#else
   scoped_refptr<DropTargetInterceptor> drop_target_interceptor_;
-#endif
 #endif
 
   bool is_worker_;

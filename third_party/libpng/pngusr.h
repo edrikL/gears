@@ -111,10 +111,6 @@
 #define PNG_NO_MNG_FEATURES
 
 
-#ifdef OFFICIAL_BUILD
-#define PNG_NO_READ_PACK
-#endif
-
 // Gears addition: disables verifying the embedded CRCs when reading.
 // (Zlib adds a static 8KB table, plus additional code, for CRC support.)
 #define GEARS_PNG_NO_READ_VERIFY_CRC
@@ -123,15 +119,11 @@
 // Write flags
 //
 
-#ifdef OFFICIAL_BUILD
-#define PNG_NO_WRITE_SUPPORTED
-#else
 #ifdef CHROME_PNG_WRITE_SUPPORT
 #define PNG_NO_WRITE_BACKGROUND
 #define PNG_NO_WRITE_DITHER
 #define PNG_NO_WRITE_INVERT
 #define PNG_NO_WRITE_SHIFT
-#define PNG_NO_WRITE_PACK
 #define PNG_NO_WRITE_PACKSWAP
 #define PNG_NO_WRITE_FILLER
 #define PNG_NO_WRITE_SWAP_ALPHA
@@ -155,7 +147,6 @@
 #define PNG_NO_WRITE_OPT_PLTE
 #else
 #define PNG_NO_WRITE_SUPPORTED
-#endif 
 #endif 
 
 //#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
