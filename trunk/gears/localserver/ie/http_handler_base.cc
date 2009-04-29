@@ -40,6 +40,7 @@
 Mutex HttpHandlerBase::global_mutex_;
 static bool bypass_cache = false;
 static int started_count = 0;
+static const std::string16 kMimeImagePrefix(L"image/");
 
 // static
 int HttpHandlerBase::GetStartedCount() {
@@ -382,13 +383,19 @@ HRESULT HttpHandlerBase::StartImpl(LPCWSTR url,
   payload_.GetHeader(HttpConstants::kContentTypeHeader, &mimetype);
   if (!mimetype.empty()) {
 #ifdef USE_HTTP_HANDLER_APP
-    // TODO(andreip): if RAWMIMETYPE works for wince, we don't need this ifdef
-    const int kMimeBindStatusCode = BINDSTATUS_MIMETYPEAVAILABLE;
-#else
-    const int kMimeBindStatusCode = BINDSTATUS_RAWMIMETYPE;
-#endif
-    hr = CallReportProgress(kMimeBindStatusCode, mimetype.c_str());
+    // TODO(andreip): if the below works for wince, we don't need this ifdef
+    hr = CallReportProgress(BINDSTATUS_MIMETYPEAVAILABLE, mimetype.c_str());
     if (FAILED(hr)) return hr;
+#else
+    if (!StartsWith(mimetype, kMimeImagePrefix)) {
+      // We're careful to not report image/png when in fact the resource is gif
+      // data as this can cause IE's image handling to get very wedged.
+      hr = CallReportProgress(BINDSTATUS_MIMETYPEAVAILABLE, mimetype.c_str());
+      if (FAILED(hr)) return hr;
+    }
+    hr = CallReportProgress(BINDSTATUS_RAWMIMETYPE, mimetype.c_str());
+    if (FAILED(hr)) return hr;
+#endif
   }
 
   // The cached_filepath is not provided for head requests
