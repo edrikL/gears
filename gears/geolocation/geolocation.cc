@@ -641,16 +641,12 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
     return;
   }
 
-  // See whether we need to call back immediately with a cached position.
+  // See whether we need to call back immediately with a cached position or a
+  // cached position error.
   Position position_to_call_back;
   if (IsCachedPositionSuitable(info->maximum_age)) {
     position_to_call_back = last_position_;
-  }
-
-  // See whether we need to call back immediately with a cached position error.
-  if (info->providers.empty() &&
-      info->timeout != 0 &&
-      !IsCachedPositionSuitable(info->maximum_age)) {
+  } else if (info->providers.empty() && info->timeout != 0) {
     position_to_call_back.error_code =
         Position::ERROR_CODE_POSITION_UNAVAILABLE;
     position_to_call_back.error_message =
@@ -676,8 +672,8 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   }
 
   // Invoke the callback for the cached position or error. We use a message to
-  // do so asynchronously. This must be done before we start the timeout timer.
-  // Note that the callback handler cancels any active providers.
+  // do so asynchronously. Note that the callback handler cancels any active
+  // providers.
   if (position_to_call_back.IsInitialized()) {
     assert(!info->success_callback_timer.get());
 
@@ -688,9 +684,15 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
         new FixRequestIdNotificationData(this, fix_request_id)));
   }
 
-  // Start the timeout timer for this fix request. Note that this handles all
-  // timeouts, include immediate timeout callbacks when timeout is zero.
-  StartTimeoutTimer(fix_request_id);
+  // Start the timeout timer for this fix request. If the timeout is zero and we
+  // have a cached position or cached position error, we want to callback with
+  // the cached position, not the timeout. However, there is a potential race
+  // condition between this callback and the timer callback because callbacks
+  // are invoked asynchronously and there are no guarantees on ordering. So in
+  // this case, we do not start the timeout timer.
+  if (!(info->timeout == 0 && position_to_call_back.IsInitialized())) {
+    StartTimeoutTimer(fix_request_id);
+  }
 
   // Set the return value if this fix repeats.
   if (info->repeats) {
