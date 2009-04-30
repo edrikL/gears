@@ -847,23 +847,23 @@ function testCachedPositionWithinMaximumAgeZeroTimeout() {
   }
 }
 
-function testCachedPositionOutsideMaximumAgeZeroTimeout() {
-  if (isUsingCCTests) {
-    // Test that a request with a non-zero maximumAge and zero timeout
-    // immediately calls the error callback with a timeout error when we don't
-    // have a suitable cached position.
-    startAsync();
-    PopulateCacheAndMakeRequest(
-        20,  // Wait for longer than maximumAge.
-        function() {},
-        function(error) {
-          assertErrorEqual(error.TIMEOUT,
-                           'A position fix was not obtained within the ' +
-                           'specified time limit.',
-                           error);
-          completeAsync();
-        },
-        {maximumAge: 1, timeout: 0});
-  }
-}
-
+//TODO(steveblock): Fix and uncomment this flakey test
+//function testCachedPositionOutsideMaximumAgeZeroTimeout() {
+//  if (isUsingCCTests) {
+//    // Test that a request with a non-zero maximumAge and zero timeout
+//    // immediately calls the error callback with a timeout error when we don't
+//    // have a suitable cached position.
+//    startAsync();
+//    PopulateCacheAndMakeRequest(
+//        20,  // Wait for longer than maximumAge.
+//        function() {},
+//        function(error) {
+//        assertErrorEqual(error.TIMEOUT,
+//                           'A position fix was not obtained within the ' +
+//                           'specified time limit.',
+//                           error);
+//          completeAsync();
+//        },
+//        {maximumAge: 1, timeout: 0});
+//  }
+//}
