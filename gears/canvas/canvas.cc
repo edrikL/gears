@@ -64,23 +64,24 @@ const int GearsCanvas::kMaxSideLength(16384);
 const int GearsCanvas::kDefaultWidth(300);
 const int GearsCanvas::kDefaultHeight(150);
 
-static void ValidateWidthAndHeight(int w, int h, JsCallContext *context) {
+static bool ValidateWidthAndHeight(int w, int h, JsCallContext *context) {
   if (w <= 0) {
     context->SetException(STRING16(L"Invalid (non-positive) width."));
-    return;
+    return false;
   }
   if (w > GearsCanvas::kMaxSideLength) {
     context->SetException(STRING16(L"Invalid width (it is too large)."));
-    return;
+    return false;
   }
   if (h <= 0) {
     context->SetException(STRING16(L"Invalid (non-positive) height."));
-    return;
+    return false;
   }
   if (h > GearsCanvas::kMaxSideLength) {
     context->SetException(STRING16(L"Invalid height (it is too large)."));
-    return;
+    return false;
   }
+  return true;
 }
 
 #if defined(OFFICIAL_BUILD)
@@ -183,9 +184,9 @@ void GearsCanvas::Decode(JsCallContext *context) {
                                     SkImageDecoder::kDecodeBounds_Mode)) {
     context->SetException(STRING16(L"Could not decode the Blob as an image."));
   }
-  ValidateWidthAndHeight(
-      skia_bitmap_->width(), skia_bitmap_->height(), context);
-  if (context->is_exception_set()) {
+  if (context->is_exception_set() ||
+      !ValidateWidthAndHeight(
+          skia_bitmap_->width(), skia_bitmap_->height(), context)) {
     ResetCanvas(kDefaultWidth, kDefaultHeight);
     return;
   }
@@ -300,8 +301,8 @@ void GearsCanvas::Crop(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  ValidateWidthAndHeight(width, height, context);
-  if (context->is_exception_set())
+  if (context->is_exception_set() ||
+      !ValidateWidthAndHeight(width, height, context))
     return;
   
   SkIRect src_rect = { x, y, x + width, y + height };
@@ -325,14 +326,26 @@ void GearsCanvas::Crop(JsCallContext *context) {
 
 void GearsCanvas::Resize(JsCallContext *context) {
   int new_width, new_height;
+  std::string16 filter;
+  bool filter_is_nearest = false;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_width },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &new_height }
+    { JSPARAM_REQUIRED, JSPARAM_INT, &new_height },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &filter }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  ValidateWidthAndHeight(new_width, new_height, context);
-  if (context->is_exception_set())
+  if (context->is_exception_set() ||
+      !ValidateWidthAndHeight(new_width, new_height, context))
     return;
+  if (context->GetArgumentCount() == 3) {
+    if (filter == STRING16(L"nearest")) {
+      filter_is_nearest = true;
+    } else if (filter != STRING16(L"bilinear")) {
+      context->SetException(
+          STRING16(L"Filter must be 'bilinear' or 'nearest'."));
+      return;
+    }
+  }
 
   EnsureBitmapPixelsAreAllocated();
   SkBitmap new_bitmap;
@@ -352,7 +365,14 @@ void GearsCanvas::Resize(JsCallContext *context) {
       context->SetException(STRING16(L"Could not resize the image."));
       return;
     }
-    new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
+    if (filter_is_nearest) {
+      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
+    } else {
+      SkPaint paint;
+      paint.setFilterBitmap(true);
+      new_canvas.drawBitmap(
+          *skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0), &paint);
+    }
   }
   new_bitmap.swap(*skia_bitmap_);
 }
@@ -373,8 +393,8 @@ void GearsCanvas::SetWidth(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_width }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  ValidateWidthAndHeight(new_width, GetHeight(), context);
-  if (context->is_exception_set())
+  if (context->is_exception_set() ||
+      !ValidateWidthAndHeight(new_width, GetHeight(), context))
     return;
   ResetCanvas(new_width, GetHeight());
 }
@@ -385,8 +405,8 @@ void GearsCanvas::SetHeight(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_height }
   };
   context->GetArguments(ARRAYSIZE(args), args);
-  ValidateWidthAndHeight(GetWidth(), new_height, context);
-  if (context->is_exception_set())
+  if (context->is_exception_set() ||
+      !ValidateWidthAndHeight(GetWidth(), new_height, context))
     return;
   ResetCanvas(GetWidth(), new_height);
 }

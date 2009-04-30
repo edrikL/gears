@@ -77,8 +77,9 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: -
   void Crop(JsCallContext *context);
 
-  // Resizes the canvas (scaling its contents), in-place.
-  // IN: int width, int height
+  // Resizes the canvas (scaling its contents), in-place. The filter (either
+  // "bilinear" or "nearest") defaults to "bilinear" if unspecified.
+  // IN: int width, int height, optional String filter
   // OUT: -
   void Resize(JsCallContext *context);
 
