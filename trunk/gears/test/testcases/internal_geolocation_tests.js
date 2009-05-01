@@ -50,7 +50,7 @@ function testParseOptions() {
     var dummyFunction = function() {};
 
     // Intialise to default values.
-    var defaultLocationProviderUrl = 'http://www.google.com/loc/json'
+    var defaultLocationProviderUrl = 'https://www.google.com/loc/json'
     var correctOptions = {
       enableHighAccuracy: false,
       maximumAge: 0,
