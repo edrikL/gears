@@ -131,7 +131,7 @@ HttpHandlerPatch *HttpHandlerPatch::Find(
 // our cache occurs and intervenes to satisfy the request from our cache.
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE ReplacementSink :
-  public CComObjectRootEx<CComSingleThreadModel>,
+  public CComObjectRootEx<CComMultiThreadModel>,
   public IInternetProtocolSink {
  public:
   BEGIN_COM_MAP(ReplacementSink)
