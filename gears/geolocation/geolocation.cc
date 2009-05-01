@@ -50,7 +50,7 @@
 #include "gears/geolocation/geolocation_db.h"
 
 static const char16 *kDefaultLocationProviderUrl =
-    STRING16(L"http://www.google.com/loc/json");
+    STRING16(L"https://www.google.com/loc/json");
 
 // API options constants.
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
