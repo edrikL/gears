@@ -45,11 +45,11 @@ enum DragAndDropCursorType {
 };
 
 enum DragAndDropEventType {
+  DRAG_AND_DROP_EVENT_INVALID = 0,  // To match the equivalent in Chrome.
   DRAG_AND_DROP_EVENT_DRAGENTER,
   DRAG_AND_DROP_EVENT_DRAGOVER,
   DRAG_AND_DROP_EVENT_DRAGLEAVE,
-  DRAG_AND_DROP_EVENT_DROP,
-  DRAG_AND_DROP_EVENT_INVALID
+  DRAG_AND_DROP_EVENT_DROP
 };
 
 enum DragAndDropFlavorType {
