@@ -1368,6 +1368,10 @@ SF_CPPSRCS += \
 		drag_and_drop_utils_sf.mm \
 		$(NULL)
 
+CHROME_CPPSRCS += \
+		drag_and_drop_utils_cr.cc \
+		$(NULL)
+
 endif # not android
 
 NPAPI_JAVASRCS	+= \

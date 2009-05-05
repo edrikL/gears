@@ -61,6 +61,8 @@
 #include "gears/desktop/drag_and_drop_utils_ie.h"
 #elif BROWSER_WEBKIT
 #include "gears/desktop/drag_and_drop_utils_sf.h"
+#elif BROWSER_CHROME && WIN32
+#include "gears/desktop/drag_and_drop_utils_cr.h"
 #endif
 #endif
 
@@ -72,7 +74,7 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("openFiles", &GearsDesktop::OpenFiles);
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
-  // TODO(nigeltao): should acceptDrag be renamed finishDrag??
+  // TODO(nigeltao): submit CL 10876520, which removes acceptDrag.
   RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
   RegisterMethod("extractMetaData", &GearsDesktop::ExtractMetaData);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
@@ -965,17 +967,10 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
     return;
   }
 
-#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
   bool data_available = ::GetDragData(module_environment_.get(),
                                       event_as_js_object.get(),
                                       result.get(),
                                       &error);
-#else
-  // TODO(nigeltao): implement on Chromium.
-  bool data_available = false;
-  error = STRING16(L"getDragData is not supported for this platform.");
-#endif
-
   if (!error.empty()) {
     context->SetException(error);
   } else if (data_available) {
@@ -1004,7 +999,6 @@ void GearsDesktop::SetDragCursor(JsCallContext *context) {
 
   DragAndDropCursorType cursor_type = DRAG_AND_DROP_CURSOR_INVALID;
   std::string16 error;
-#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
   if (cursor == STRING16(L"copy")) {
     cursor_type = DRAG_AND_DROP_CURSOR_COPY;
   } else if (cursor == STRING16(L"none")) {
@@ -1018,10 +1012,6 @@ void GearsDesktop::SetDragCursor(JsCallContext *context) {
                     cursor_type,
                     &error);
   }
-#else
-  // TODO(nigeltao): implement on Chromium.
-  error = STRING16(L"setDragCursor is not supported for this platform.");
-#endif
 
   if (!error.empty()) {
     context->SetException(error);
