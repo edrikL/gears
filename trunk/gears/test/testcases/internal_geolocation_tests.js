@@ -708,16 +708,26 @@ function PopulateCachedPosition(geolocation, successFunction) {
   var intermediatePositionToCache = {
     latitude: -80.0,
     longitude: 0.0,
-    accuracy: 1.0
+    accuracy: 1.0,
+    coords: {
+      latitude: -80.0,
+      longitude: 0.0,
+      accuracy: 1.0
+    }
   };
   function SetIntermediatePosition() {
     internalTests.configureGeolocationMockLocationProviderForTest(
         intermediatePositionToCache);
     geolocation.getCurrentPosition(
         function() {
-          assert(geolocation.lastPosition.timestamp >=
-                 startTime - TIMING_DISCREPANCY,
-              'Last position too old in SetIntermediatePosition');
+          var lastPosition = geolocation.lastPosition;
+          assert(lastPosition.timestamp >= startTime - TIMING_DISCREPANCY,
+                 'Last position too old in SetIntermediatePosition (' +
+                 Number(lastPosition.timestamp - startTime) + 'ms).');
+          delete lastPosition.timestamp;
+          assertObjectEqual(
+              intermediatePositionToCache, lastPosition,
+              'Last position incorrect in SetIntermediatePosition.');
           SetPosition();
         },
         null,
@@ -730,11 +740,12 @@ function PopulateCachedPosition(geolocation, successFunction) {
         function() {
           var lastPosition = geolocation.lastPosition;
           assert(lastPosition.timestamp >= startTime - TIMING_DISCREPANCY,
-                 'Last position too old in PopulateCachedPosition.');
+                 'Last position too old in SetPosition (' +
+                 Number(lastPosition.timestamp - startTime) + 'ms).');
           delete lastPosition.timestamp;
           assertObjectEqual(
               positionToCache, lastPosition,
-              'Last position incorrect in PopulateCachedPosition.');
+              'Last position incorrect in SetPosition.');
           internalTests.removeGeolocationMockLocationProvider();
           successFunction();
         },
@@ -787,6 +798,14 @@ function testCachedPositionWithinMaximumAge() {
   }
 }
 
+// Used where we want to test the case where a cached position exists but is
+// outside the specified maximum age. We use a maximum age of 1ms and wait for
+// exceedMaximumAgeWaitTime after populating the cache to make sure the cached
+// position is too old. Experiment showed that the JavaScript setTimeout()
+// function is not precise in its timing, so a value of at least 100ms is
+// required here to avoid flakiness.
+var exceedMaximumAgeWaitTime = 100;
+
 function testCachedPositionOutsideMaximumAgeNoProviders() {
   if (isUsingCCTests) {
     // Test that a request with a non-zero maximumAge and no location providers
@@ -794,8 +813,8 @@ function testCachedPositionOutsideMaximumAgeNoProviders() {
     // position.
     startAsync();
     PopulateCacheAndMakeRequest(
-        20,  // Wait for longer than maximumAge.
-        function() {},
+        exceedMaximumAgeWaitTime,  // Wait for longer than maximumAge.
+        function() {assert(false, 'Unexpected success callback.');},
         function(error) {
           assertErrorEqual(error.POSITION_UNAVAILABLE,
                            'No suitable cached position available.',
@@ -816,8 +835,8 @@ function testCachedPositionOutsideMaximumAge() {
     // location provider, not the lack of a cached position.
     startAsync();
     PopulateCacheAndMakeRequest(
-        20,  // Wait for longer than maximumAge.
-        function() {},
+        exceedMaximumAgeWaitTime,  // Wait for longer than maximumAge.
+        function() {assert(false, 'Unexpected success callback.');},
         function(error) {
           assert(error.message.search('returned error code 404.') != -1);
           error.message = null;
@@ -847,23 +866,22 @@ function testCachedPositionWithinMaximumAgeZeroTimeout() {
   }
 }
 
-//TODO(steveblock): Fix and uncomment this flakey test
-//function testCachedPositionOutsideMaximumAgeZeroTimeout() {
-//  if (isUsingCCTests) {
-//    // Test that a request with a non-zero maximumAge and zero timeout
-//    // immediately calls the error callback with a timeout error when we don't
-//    // have a suitable cached position.
-//    startAsync();
-//    PopulateCacheAndMakeRequest(
-//        20,  // Wait for longer than maximumAge.
-//        function() {},
-//        function(error) {
-//        assertErrorEqual(error.TIMEOUT,
-//                           'A position fix was not obtained within the ' +
-//                           'specified time limit.',
-//                           error);
-//          completeAsync();
-//        },
-//        {maximumAge: 1, timeout: 0});
-//  }
-//}
+function testCachedPositionOutsideMaximumAgeZeroTimeout() {
+  if (isUsingCCTests) {
+    // Test that a request with a non-zero maximumAge and zero timeout
+    // immediately calls the error callback with a timeout error when we don't
+    // have a suitable cached position.
+    startAsync();
+    PopulateCacheAndMakeRequest(
+        exceedMaximumAgeWaitTime,  // Wait for longer than maximumAge.
+        function() {assert(false, 'Unexpected success callback.');},
+        function(error) {
+          assertErrorEqual(error.TIMEOUT,
+                           'A position fix was not obtained within the ' +
+                           'specified time limit.',
+                           error);
+          completeAsync();
+        },
+        {maximumAge: 1, timeout: 0});
+  }
+}
