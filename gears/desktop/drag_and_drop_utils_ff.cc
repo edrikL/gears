@@ -264,26 +264,6 @@ DragAndDropEventType GetDragAndDropEventType(
 }
 
 
-void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event_as_js_object,
-                bool acceptance,
-                std::string16 *error_out) {
-  DragAndDropCursorType cursor_type = acceptance
-      ? DRAG_AND_DROP_CURSOR_COPY
-      : DRAG_AND_DROP_CURSOR_NONE;
-  SetDragCursor(module_environment, event_as_js_object, cursor_type, error_out);
-  if (!error_out->empty()) {
-    return;
-  }
-  nsCOMPtr<nsIDOMEvent> dom_event;
-  DragAndDropEventType type = GetDragAndDropEventType(
-      module_environment, event_as_js_object, &dom_event);
-  if (type == DRAG_AND_DROP_EVENT_DROP) {
-    dom_event->StopPropagation();
-  }
-}
-
-
 void SetDragCursor(ModuleEnvironment *module_environment,
                    JsObject *event_as_js_object,
                    DragAndDropCursorType cursor_type,

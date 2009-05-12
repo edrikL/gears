@@ -24,7 +24,7 @@ drop has a potential security hole).</div>
 var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
 var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
-var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
+var isNpapi = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
 
 var isInManualDispatch = false;
 
@@ -76,7 +76,16 @@ function handler(isDrop, isDragEnterOrDragOver) {
       }
       document.getElementById('dropOutput').innerHTML = s;
     }
-    desktop.acceptDrag(evt, true);
+    desktop.setDragCursor(evt, 'copy');
+    if (isFirefox) {
+      if (isDrop) {
+        evt.stopPropagation();
+      }
+    } else if (isIE || isSafari || isNpapi) {
+      if (!isDrop) {
+        evt.returnValue = false;
+      }
+    }
   };
 }
 
@@ -89,7 +98,7 @@ if (isFirefox) {
   document.addEventListener('dragover',  handler(false, true),  false);
   document.addEventListener('dragexit',  handler(false, false), false);
   document.addEventListener('dragdrop',  handler(true,  false), false);
-} else if (isSafari) {
+} else if (isSafari || isNpapi) {
   document.addEventListener('dragenter', handler(false, true),  false);
   document.addEventListener('dragover',  handler(false, true),  false);
   document.addEventListener('dragleave', handler(false, false), false);
