@@ -173,33 +173,6 @@ DragAndDropEventType GetWindowEvent(ModuleEnvironment *module_environment,
 }
 
 
-void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event,
-                bool acceptance,
-                std::string16 *error_out) {
-  DragAndDropCursorType cursor_type = acceptance
-      ? DRAG_AND_DROP_CURSOR_COPY
-      : DRAG_AND_DROP_CURSOR_NONE;
-  SetDragCursor(module_environment, event, cursor_type, error_out);
-  if (!error_out->empty()) {
-    return;
-  }
-  CComPtr<IHTMLEventObj> window_event;
-  DragAndDropEventType type = GetWindowEvent(module_environment, window_event);
-  if (type != DRAG_AND_DROP_EVENT_DROP) {
-    CComQIPtr<IHTMLEventObj2> window_event2(window_event);
-    CComPtr<IHTMLDataTransfer> data_transfer;
-    if (!window_event2 ||
-        FAILED(window_event->put_returnValue(CComVariant(false))) ||
-        FAILED(window_event->put_cancelBubble(VARIANT_TRUE)) ||
-        FAILED(window_event2->get_dataTransfer(&data_transfer)) ||
-        FAILED(data_transfer->put_dropEffect(acceptance ? L"copy" : L"none"))) {
-      *error_out = GET_INTERNAL_ERROR_MESSAGE();
-      return;
-    }
-  }
-}
-
 void SetDragCursor(ModuleEnvironment *module_environment,
                    JsObject *event,
                    DragAndDropCursorType cursor_type,

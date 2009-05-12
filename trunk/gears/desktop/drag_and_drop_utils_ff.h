@@ -40,11 +40,6 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
                             JsObject *data_out,
                             std::string16 *error_out);
 
-void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event,
-                bool acceptance,
-                std::string16 *error_out);
-
 bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event,
                  JsObject *data_out,

@@ -39,7 +39,7 @@ static NSInteger g_last_seen_dragging_sequence_number = 0;
 static bool g_is_in_a_drag_operation = false;
 static bool g_is_in_a_drop_operation = false;
 // The next two variables are for when the page's JavaScript explicitly
-// accepts or rejects the drag, via desktop.acceptDrag(..., bool).
+// sets the drop effect (i.e. cursor), via desktop.setDropEffect(..., bool).
 // In either case, g_drag_operation_has_been_set becomes true, and
 // g_drag_operation takes NSDragOperationCopy or NSDragOperationNone.
 static bool g_drag_operation_has_been_set = false;
@@ -227,19 +227,6 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
   return g_file_drag_and_drop_meta_data->ToJsObject(
       module_environment, IsInADropOperation(), data_out, error_out);
 };
-
-void AcceptDrag(ModuleEnvironment *module_environment,
-                JsObject *event,
-                bool acceptance,
-                std::string16 *error_out) {
-  DragAndDropCursorType cursor_type = acceptance
-      ? DRAG_AND_DROP_CURSOR_COPY
-      : DRAG_AND_DROP_CURSOR_NONE;
-  SetDragCursor(module_environment, event, cursor_type, error_out);
-  if (error_out->empty()) {
-    event->SetPropertyBool(STRING16(L"returnValue"), false);
-  }
-}
 
 bool GetDragData(ModuleEnvironment *module_environment,
                  JsObject *event_as_js_object,

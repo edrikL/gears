@@ -74,11 +74,11 @@ void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("openFiles", &GearsDesktop::OpenFiles);
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
-  // TODO(nigeltao): submit CL 10876520, which removes acceptDrag.
-  RegisterMethod("acceptDrag", &GearsDesktop::AcceptDrag);
   RegisterMethod("extractMetaData", &GearsDesktop::ExtractMetaData);
   RegisterMethod("getDragData", &GearsDesktop::GetDragData);
+  // TODO(nigeltao): Decide on exactly one of setDragCursor and SetDropEffect.
   RegisterMethod("setDragCursor", &GearsDesktop::SetDragCursor);
+  RegisterMethod("setDropEffect", &GearsDesktop::SetDragCursor);
 #endif
 }
 
@@ -869,40 +869,6 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
 }
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
-void GearsDesktop::AcceptDrag(JsCallContext *context) {
-  if (EnvIsWorker()) {
-    context->SetException(
-        STRING16(L"acceptDrag is not supported in workers."));
-    return;
-  }
-
-  scoped_ptr<JsObject> event_as_js_object;
-  bool acceptance;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &event_as_js_object },
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &acceptance },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-
-  std::string16 error;
-#if BROWSER_FF || BROWSER_IE || BROWSER_WEBKIT
-  ::AcceptDrag(module_environment_.get(),
-               event_as_js_object.get(),
-               acceptance,
-               &error);
-#else
-  // TODO(nigeltao): implement on Chromium.
-  error = STRING16(L"acceptDrag is not supported for this platform.");
-#endif
-
-  if (!error.empty()) {
-    context->SetException(error);
-    return;
-  }
-}
-
-
 void GearsDesktop::ExtractMetaData(JsCallContext *context) {
   ModuleImplBaseClass *other_module = NULL;
 
