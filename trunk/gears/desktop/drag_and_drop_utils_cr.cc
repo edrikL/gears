@@ -50,7 +50,7 @@ class DragSession {
  public:
   DragSession(NPP npp, JsObject *event)
       : identity_(0), event_id_(0), type_(NULL), data_(NULL) {
-    event_ = NPVARIANT_TO_OBJECT(event->token());
+    event_ = event ? NPVARIANT_TO_OBJECT(event->token()) : NULL;
     context_ = CP::GetBrowsingContext(npp);
   }
 
@@ -322,7 +322,7 @@ void SetDragCursor(ModuleEnvironment *module_environment, JsObject *event,
   DragSession drag(runner->GetContext(), event);
   if (!drag.SetDropEffect(cursor)) {
     if (drag.BrowserSupportsDragDrop()) {
-      *error = STRING16(L"The drag-n-drop event is invalid.");
+      *error = STRING16(L"The drag-and-drop event is invalid.");
     }
   }
 }
@@ -334,7 +334,7 @@ bool GetDragData(ModuleEnvironment *module_environment, JsObject *event,
   DragSession drag(runner->GetContext(), event);
   if (!drag.GetDragType()) {
     if (drag.BrowserSupportsDragDrop()) {
-      *error = STRING16(L"The drag-n-drop event is invalid.");
+      *error = STRING16(L"The drag-and-drop event is invalid.");
     }
     return false;
   }
@@ -377,13 +377,6 @@ bool GetDragData(ModuleEnvironment *module_environment, JsObject *event,
           g_files, module_environment, array.get(), error)) {
     assert(!error->empty());
     return true;
-  }
-
-  scoped_ptr<JsObject> file;  // Add the per-file mimeType.
-  for (size_t i = 0; i < g_mimes.size(); ++i) {
-    array->GetElementAsObject(i, as_out_parameter(file));
-    file->SetPropertyString(STRING16(L"mimeType"), g_mimes[i]);
-    file.reset();
   }
 
   static const std::string16 kFiles(STRING16(L"files"));
