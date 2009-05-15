@@ -67,7 +67,7 @@ class FileDragAndDropMetaData {
   void Reset();
   void SetFilenames(std::vector<std::string16> &filenames);
   bool ToJsObject(ModuleEnvironment *module_environment,
-                  bool is_in_a_drop,
+                  bool is_in_a_drop_event,
                   JsObject *object_out,
                   std::string16 *error_out);
 
