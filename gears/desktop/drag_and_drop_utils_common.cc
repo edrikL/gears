@@ -33,18 +33,15 @@
 #include "gears/desktop/file_dialog.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-static bool AppendStringsToJsArray(const std::set<std::string16> &strings,
-                                   JsArray *array) {
-  int length = 0;
-  if (!array || !array->GetLength(&length)) {
-    return false;
-  }
-  for (std::set<std::string16>::const_iterator i = strings.begin();
-       i != strings.end(); ++i) {
-    if (!array->SetElementString(length++, *i)) {
+static bool ToJsArray(std::set<std::string16> const &s, JsArray *array) {
+  if (!array) return false;
+
+  std::set<std::string16>::const_iterator it = s.begin();
+  for (int index = 0; it != s.end(); ++it) {
+    if (!it->empty() && !array->SetElementString(index++, *it))
       return false;
-    }
   }
+
   return true;
 }
 
@@ -63,25 +60,15 @@ void FileDragAndDropMetaData::Reset() {
   total_bytes_ = 0;
 }
 
-void FileDragAndDropMetaData::SetFilenames(
-      std::vector<std::string16> &filenames) {
+void FileDragAndDropMetaData::SetFilenames(std::vector<std::string16> &names) {
   assert(IsEmpty());
-  filenames_.swap(filenames);
+
+  filenames_.swap(names);
   for (std::vector<std::string16>::iterator i = filenames_.begin();
        i != filenames_.end(); ++i) {
-    std::string16 &filename = *i;
-    // TODO(nigeltao): Should we also keep an array of per-file MIME types,
-    // not just the overall set of MIME types? If so, the mimeType should
-    // probably be a property of the file JavaScript object (i.e. the thing
-    // with a name and blob property), not a separate array to the files array.
+    const std::string16 &filename = *i;
     mime_types_.insert(DetectMimeTypeOfFile(filename));
-    // TODO(nigeltao): Decide whether we should insert ".txt" or "txt" -
-    // that is, does the file extension include the dot at the start.
-    // We should do whatever desktop.openFiles does.
-    std::string16 extension(File::GetFileExtension(filename.c_str()));
-    if (!extension.empty()) {
-      extensions_.insert(extension);
-    }
+    extensions_.insert(File::GetFileExtension(filename.c_str()));
     int64 bytes = File::GetFileSize(filename.c_str());
     if (bytes != File::kInvalidSize) {
       total_bytes_ += bytes;
@@ -89,47 +76,52 @@ void FileDragAndDropMetaData::SetFilenames(
   }
 }
 
-bool FileDragAndDropMetaData::ToJsObject(
-    ModuleEnvironment *module_environment,
-    bool is_in_a_drop,
-    JsObject *object_out,
-    std::string16 *error_out) {
-  if (filenames_.empty()) {
+bool FileDragAndDropMetaData::ToJsObject(ModuleEnvironment *module_environment,
+                                         bool is_in_a_drop_event,
+                                         JsObject *object_out,
+                                         std::string16 *error_out) {
+  JsRunnerInterface *runner = module_environment->js_runner_;
+  if (IsEmpty())
+    return false;
+
+  static const std::string16 kCount(STRING16(L"count"));
+  if (!object_out->SetPropertyInt(kCount, filenames_.size()))
+    return false;
+
+  static const std::string16 kBytes(STRING16(L"totalBytes"));
+  double total_bytes = static_cast<double>(total_bytes_);
+  if (!object_out->SetPropertyDouble(kBytes, total_bytes))
+    return false;
+
+  static const std::string16 kExtensions(STRING16(L"extensions"));
+  scoped_ptr<JsArray> extensions_array(runner->NewArray());
+  if (!ToJsArray(extensions_, extensions_array.get()))
+    return false;
+  if (!object_out->SetPropertyArray(kExtensions, extensions_array.get()))
+    return false;
+
+  static const std::string16 kMimes(STRING16(L"mimeTypes"));
+  scoped_ptr<JsArray> mime_array(runner->NewArray());
+  if (!ToJsArray(mime_types_, mime_array.get()))
+    return false;
+  if (!object_out->SetPropertyArray(kMimes, mime_array.get()))
+    return false;
+
+  if (!is_in_a_drop_event)
+    return true;
+
+  scoped_ptr<JsArray> file_array(runner->NewArray());
+  if (!file_array.get())
+    return false;
+
+  if (!FileDialog::FilesToJsObjectArray(
+          filenames_, module_environment, file_array.get(), error_out)) {
+    assert(!error_out->empty());
     return false;
   }
 
-  // TODO(nigeltao): Error checking. We should return empty (or 0) instead of
-  // partial results, in case of failure.
-
-  object_out->SetPropertyInt(STRING16(L"count"), filenames_.size());
-  object_out->SetPropertyDouble(
-      STRING16(L"totalBytes"),
-      static_cast<double>(total_bytes_));
-
-  scoped_ptr<JsArray> extensions_array(
-      module_environment->js_runner_->NewArray());
-  AppendStringsToJsArray(extensions_, extensions_array.get());
-  object_out->SetPropertyArray(STRING16(L"extensions"), extensions_array.get());
-
-  scoped_ptr<JsArray> mime_types_array(
-      module_environment->js_runner_->NewArray());
-  AppendStringsToJsArray(mime_types_, mime_types_array.get());
-  object_out->SetPropertyArray(STRING16(L"mimeTypes"), mime_types_array.get());
-
-  if (is_in_a_drop) {
-    scoped_ptr<JsArray> file_array(
-        module_environment->js_runner_->NewArray());
-    if (!FileDialog::FilesToJsObjectArray(
-            filenames_,
-            module_environment,
-            file_array.get(),
-            error_out)) {
-      assert(!error_out->empty());
-      return false;
-    }
-    object_out->SetPropertyArray(STRING16(L"files"), file_array.get());
-  }
-  return true;
+  static const std::string16 kFiles(STRING16(L"files"));
+  return object_out->SetPropertyArray(kFiles, file_array.get());
 }
 
 #endif  // GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
