@@ -35,31 +35,90 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/desktop/drag_and_drop_utils_win32.h"
 
-
-// This function overwrites buffer in-place.
-static HRESULT ResolveShortcut(TCHAR *buffer) {
-  static CComPtr<IShellLink> link;
-  if (!link && FAILED(link.CoCreateInstance(CLSID_ShellLink))) {
-    return E_FAIL;
+class FileAttributes {
+ public:
+   explicit FileAttributes(WCHAR *path) {  // Assume a MAX_PATH sized array
+    ResolvePath(path);
   }
 
-  CComQIPtr<IPersistFile> file(link);
-  if (!file) return E_FAIL;
+  bool Found() const {
+    if (find_handle_ != INVALID_HANDLE_VALUE)
+      return attributes_ & SFGAO_CANCOPY;
+    return false;
+  }
 
-  // Open the shortcut file, load its content.
-  HRESULT hr = file->Load(buffer, STGM_READ);
-  if (FAILED(hr)) return hr;
+  bool IsDirectory() const {
+    return !!(file_find_data_.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+  }
 
-  // Resolve the target of the shortcut.
-  hr = link->Resolve(NULL, SLR_NO_UI);
-  if (FAILED(hr)) return hr;
+  ~FileAttributes() {
+    ::FindClose(find_handle_);
+  }
 
-  // Read the target path.
-  hr = link->GetPath(buffer, MAX_PATH, 0, SLGP_UNCPRIORITY);
-  if (FAILED(hr)) return hr;
+ private:
+  void ResolvePath(WCHAR *path) {
+    LOG16((L"%s\n", path));
 
-  return S_OK;
-}
+    find_handle_ = ::FindFirstFile(path, &file_find_data_);
+    attributes_ = 0;
+
+    if (find_handle_ != INVALID_HANDLE_VALUE) {
+      if (ResolveAttributes(path)) {
+        ResolveLinks(path);
+      } else {
+        ::FindClose(find_handle_);
+        find_handle_ = INVALID_HANDLE_VALUE;
+        attributes_ = 0;
+      }
+    }
+  }
+
+  DWORD ResolveAttributes(const WCHAR *path) {
+    SHFILEINFO info;
+    if (::SHGetFileInfo(path, 0, &info, sizeof(info), SHGFI_ATTRIBUTES))
+      return (attributes_ = info.dwAttributes) & SFGAO_FILESYSTEM;
+    return attributes_ = 0;
+  }
+
+  void ResolveLinks(WCHAR *path) {
+    if (attributes_ & SFGAO_LINK) {
+      if (FAILED(ResolveShortcut(path, path))) {
+        LOG16((L" link resolve failed\n"));
+      } else {
+        ::FindClose(find_handle_);
+        ResolvePath(path);
+      }
+    }
+  }
+
+  static HRESULT ResolveShortcut(const WCHAR *shortcut, WCHAR *target) {
+    LOG16((L" resolving %s\n", shortcut));
+
+    static CComPtr<IShellLink> link;
+    if (!link && FAILED(link.CoCreateInstance(CLSID_ShellLink)))
+      return E_FAIL;
+
+    static CComQIPtr<IPersistFile> file(link);
+    if (!file) return E_FAIL;
+
+    // Open the shortcut file, load its content.
+    HRESULT hr = file->Load(shortcut, STGM_READ);
+    if (FAILED(hr)) return hr;
+
+    // Get the shortcut target path.
+    hr = link->GetPath(target, MAX_PATH, 0, SLGP_UNCPRIORITY);
+    if (FAILED(hr)) return hr;
+
+    return S_OK;
+  }
+
+ private:
+  WIN32_FIND_DATA file_find_data_;
+  HANDLE find_handle_;
+  DWORD attributes_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(FileAttributes);
+};
 
 
 HRESULT GetHtmlDataTransfer(
@@ -111,26 +170,29 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     }
 
     UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
-    WCHAR buffer[MAX_PATH];
     for (UINT i = 0; i < num_files; ++i) {
-      DragQueryFile(hdrop, i, buffer, MAX_PATH);
-      SHFILEINFO sh_file_info;
-      if (!SHGetFileInfo(buffer, 0, &sh_file_info, sizeof(sh_file_info),
-                         SHGFI_ATTRIBUTES) ||
-          !(sh_file_info.dwAttributes & SFGAO_FILESYSTEM) ||
-          (sh_file_info.dwAttributes & SFGAO_FOLDER)) {
-        continue;
+      WCHAR path[MAX_PATH];
+      if (!DragQueryFile(hdrop, i, path, MAX_PATH)) {
+        GlobalUnlock(stg_medium.hGlobal);
+        ReleaseStgMedium(&stg_medium);
+        return false;
       }
-      if ((sh_file_info.dwAttributes & SFGAO_LINK) &&
-          FAILED(ResolveShortcut(buffer))) {
-        continue;
+
+      FileAttributes file(path);
+      if (!file.Found() || file.IsDirectory()) {
+        GlobalUnlock(stg_medium.hGlobal);
+        ReleaseStgMedium(&stg_medium);
+        return false;
       }
-      filenames.push_back(std::string16(buffer));
+
+      LOG16((L" found %s\n", path));
+      filenames.push_back(path);
     }
 
     GlobalUnlock(stg_medium.hGlobal);
     ReleaseStgMedium(&stg_medium);
   }
+
   meta_data_out->SetFilenames(filenames);
   return true;
 }
@@ -201,6 +263,7 @@ bool GetDragData(ModuleEnvironment *module_environment,
   }
 
   FileDragAndDropMetaData meta_data;
+  // NOTE(noel): appears to be re-reading the files on each event.
   return AddFileDragAndDropData(module_environment, &meta_data) &&
       meta_data.ToJsObject(
           module_environment,
