@@ -172,17 +172,6 @@ class GearsDesktop : public ModuleImplBaseClass {
   void OpenFiles(JsCallContext *context);
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
-  // TODO(nigeltao): decide which of AcceptDrag and SetDragCursor to
-  // keep and which to cull, since they essentially do the same thing (except
-  // that AcceptDrag takes responsibility for calling event.cancelBubble(true),
-  // event.returnValue=false, event.dataTransfer.dropEffect="copy", whereas
-  // the SetDragCursor model only does the latter of those three, and puts
-  // the onus for the first two on the web-app (rather than Gears)).
-
-  // IN: Event event, bool acceptance
-  // OUT: -
-  void AcceptDrag(JsCallContext *context);
-
   // IN: GearsBlob blob
   // OUT: object metadata
   void ExtractMetaData(JsCallContext *context);
