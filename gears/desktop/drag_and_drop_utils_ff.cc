@@ -350,14 +350,6 @@ bool GetDragData(ModuleEnvironment *module_environment,
     return false;
   }
 
-  // TODO(nigeltao): cache the filenames (and their MIME types, extensions,
-  // etcetera), to avoid hitting the file system on every DnD event.
-  // This probably requires being able to reliably distinguish when a
-  // drag session ends and a new one begins, which might not be trivial if
-  // you get the same nsIDragSession pointer (since it's just the singleton
-  // DragService that's been QueryInterface'd) for two separate sessions.
-  // Note that, on Linux, we do cache, due to g_file_drag_and_drop_meta_data,
-  // but this doesn't apply for Firefox/Windows and Firefox/Mac.
   return AddFileDragAndDropData(module_environment,
                                 drag_session.get(),
                                 type,
@@ -445,6 +437,8 @@ static gboolean on_selection(GtkWidget *widget,
     nsString filename;
     nr = file->GetPath(filename);
     if (NS_FAILED(nr)) { success = false; break; }
+    // TODO(nigeltao): check if the file is actually readable (as opposed to,
+    // for example, a directory).
     filenames.push_back(std::string16(filename.get()));
   }
 
@@ -560,6 +554,20 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
       error_out);
 #else
 
+#if defined(WIN32)
+  // On Windows, we do a similar thing -- the DropTargetInterceptor has the
+  // FileDragAndDropMetaData object.
+  if (module_environment->drop_target_interceptor_->
+          GetCachedMetaDataIsValid()) {
+    return module_environment->drop_target_interceptor_->
+        GetFileDragAndDropMetaData().ToJsObject(
+            module_environment,
+            type == DRAG_AND_DROP_EVENT_DROP,
+            data_out,
+            error_out);
+  }
+#endif
+
   PRUint32 num_drop_items;
   nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
   if (NS_FAILED(nr) || num_drop_items <= 0) { return false; }
@@ -586,6 +594,7 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 
     PRBool bool_result = false;
     if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
+      // TODO(nigeltao): Perhaps "return false" is better than "continue".
       continue;
     }
 
@@ -608,12 +617,20 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 
     filenames.push_back(std::string16(filename.get()));
   }
+
+#if defined(WIN32)
+  FileDragAndDropMetaData &file_drag_and_drop_meta_data =
+      module_environment->drop_target_interceptor_->
+          GetFileDragAndDropMetaData();
+  module_environment->drop_target_interceptor_->SetCachedMetaDataIsValid(true);
+#else
   FileDragAndDropMetaData file_drag_and_drop_meta_data;
+#endif
   file_drag_and_drop_meta_data.SetFilenames(filenames);
   return file_drag_and_drop_meta_data.ToJsObject(
-      module_environment,
-      type == DRAG_AND_DROP_EVENT_DROP,
-      data_out,
-      error_out);
+          module_environment,
+          type == DRAG_AND_DROP_EVENT_DROP,
+          data_out,
+          error_out);
 #endif
 }

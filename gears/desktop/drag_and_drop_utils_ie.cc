@@ -262,10 +262,8 @@ bool GetDragData(ModuleEnvironment *module_environment,
     return false;
   }
 
-  FileDragAndDropMetaData meta_data;
-  // NOTE(noel): appears to be re-reading the files on each event.
-  return AddFileDragAndDropData(module_environment, &meta_data) &&
-      meta_data.ToJsObject(
+  return module_environment->drop_target_interceptor_->
+      GetFileDragAndDropMetaData().ToJsObject(
           module_environment,
           type == DRAG_AND_DROP_EVENT_DROP,
           data_out,
