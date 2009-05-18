@@ -122,13 +122,13 @@ class DragSession {
   DISALLOW_EVIL_CONSTRUCTORS(DragSession);
 };
 
-// FileAttributes TODO(noel) maybe refactor drag_and_drop_utils(win32,ie).
+// FileAttributes
 
 class FileAttributes {
  public:
   explicit FileAttributes(const std::string16 &path) {
     if (!::lstrcpyn(path_, path.c_str(), MAX_PATH))
-      path_[0] = static_cast<WCHAR>(0);  // assumption: path_[MAX_PATH]
+      path_[0] = static_cast<WCHAR>(0);  // Fail: path exceeds MAX_PATH
     ResolvePath(path_);
   }
 
