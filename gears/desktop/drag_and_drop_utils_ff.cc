@@ -596,16 +596,6 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 
     has_files = true;
 
-    PRBool bool_result = false;
-    if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
-      filenames.clear();
-      break;
-    }
-    if (NS_FAILED(file->IsSpecial(&bool_result)) || bool_result) {
-      filenames.clear();
-      break;
-    }
-
     nsCOMPtr<nsILocalFile> local_file =
         do_CreateInstance("@mozilla.org/file/local;1", &nr);
     if (NS_FAILED(nr)) { filenames.clear(); break; }
@@ -616,12 +606,24 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 
     nr = NS_ERROR_FAILURE;
     nsString filename;
+    PRBool bool_result = false;
     if (NS_SUCCEEDED(file->IsSymlink(&bool_result)) && bool_result) {
       nr = local_file->GetTarget(filename);
     } else if (NS_SUCCEEDED(file->IsFile(&bool_result)) && bool_result) {
       nr = local_file->GetPath(filename);
     }
     if (NS_FAILED(nr)) { filenames.clear(); break; }
+
+    bool_result = false;
+    if (NS_FAILED(local_file->IsDirectory(&bool_result)) || bool_result) {
+      filenames.clear();
+      break;
+    }
+    bool_result = false;
+    if (NS_FAILED(local_file->IsSpecial(&bool_result)) || bool_result) {
+      filenames.clear();
+      break;
+    }
 
     filenames.push_back(std::string16(filename.get()));
   }

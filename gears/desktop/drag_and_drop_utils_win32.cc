@@ -116,9 +116,6 @@ FileDragAndDropMetaData &DropTargetInterceptor::GetFileDragAndDropMetaData() {
   if (!cached_meta_data_is_valid_) {
     cached_meta_data_.Reset();
 #if BROWSER_IE
-    // TODO(nigeltao): If AddFileDragAndDropData returns false (e.g. the user
-    // is dragging Text or a URL), then we will be scanning the files on every
-    // event. We should fix that.
     cached_meta_data_is_valid_ =
         AddFileDragAndDropData(module_environment_.get(), &cached_meta_data_);
 #else
