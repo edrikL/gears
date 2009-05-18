@@ -77,6 +77,12 @@ class FileDragAndDropMetaData {
   std::set<std::string16> mime_types_;
   int64 total_bytes_;
 
+  // Setting has_files to true means that the clipboard had files on it,
+  // whether or not those files were readable (e.g. they weren't directories).
+  // If they weren't readable, then has_files_ will be true but filenames_
+  // will be empty.
+  bool has_files_;
+
   DISALLOW_EVIL_CONSTRUCTORS(FileDragAndDropMetaData);
 };
 

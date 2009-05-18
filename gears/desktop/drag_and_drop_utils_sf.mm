@@ -148,11 +148,12 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
   BOOL is_drag_from_another_application =
       ([draggingInfo draggingSource] == nil);
 
-  BOOL success = YES;
+  BOOL has_files = NO;
   if (is_drag_from_another_application) {
     std::vector<std::string16> filenames;
     NSPasteboard *pboard = [draggingInfo draggingPasteboard];
     if ([[pboard types] containsObject:NSFilenamesPboardType]) {
+      has_files = YES;
       NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
       NSEnumerator *enumerator = [files objectEnumerator];
       NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -163,13 +164,13 @@ bool MethodSwizzle(Class klass, SEL old_selector, SEL new_selector) {
         BOOL isDir;
         if ([fileManager fileExistsAtPath:ns_string isDirectory:&isDir] &&
             isDir) {
-          success = NO;
+          filenames.clear();
           break;
         }
         filenames.push_back(std_string);
       }
     }
-    if (success) {
+    if (has_files) {
       g_file_drag_and_drop_meta_data->SetFilenames(filenames);
     }
   }

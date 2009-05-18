@@ -422,7 +422,6 @@ static gboolean on_selection(GtkWidget *widget,
 
   // Convert from file:// URLs to an actual filename (which also involves
   // decoding %20s into spaces, for example).
-  bool success = true;
   std::vector<std::string16> filenames;
   for (std::vector<std::string>::iterator i = filenames_as_ascii_urls.begin();
        i != filenames_as_ascii_urls.end(); ++i) {
@@ -433,23 +432,21 @@ static gboolean on_selection(GtkWidget *widget,
     nsCOMPtr<nsIFile> file;
     nsresult nr = NSFileUtils::GetFileFromURLSpec(
         filename_nsstring, getter_AddRefs(file));
-    if (NS_FAILED(nr)) { success = false; break; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
     nsString filename;
     nr = file->GetPath(filename);
-    if (NS_FAILED(nr)) { success = false; break; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
 
     PRBool bool_result;
     nr = file->IsDirectory(&bool_result);
-    if (NS_FAILED(nr) || bool_result) { success = false; break; }
+    if (NS_FAILED(nr) || bool_result) { filenames.clear(); break; }
     nr = file->IsSpecial(&bool_result);
-    if (NS_FAILED(nr) || bool_result) { success = false; break; }
+    if (NS_FAILED(nr) || bool_result) { filenames.clear(); break; }
     filenames.push_back(std::string16(filename.get()));
   }
 
   assert(g_file_drag_and_drop_meta_data->IsEmpty());
-  if (success) {
-    g_file_drag_and_drop_meta_data->SetFilenames(filenames);
-  }
+  g_file_drag_and_drop_meta_data->SetFilenames(filenames);
   return TRUE;
 }
 
@@ -576,11 +573,12 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
   nsresult nr = drag_session->GetNumDropItems(&num_drop_items);
   if (NS_FAILED(nr) || num_drop_items <= 0) { return false; }
 
+  bool has_files = false;
   std::vector<std::string16> filenames;
   for (int i = 0; i < static_cast<int>(num_drop_items); i++) {
     nsCOMPtr<nsITransferable> transferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &nr);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
     transferable->AddDataFlavor(kFileMime);
     drag_session->GetData(transferable, i);
 
@@ -588,29 +586,33 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     PRUint32 data_len;
     nr = transferable->GetTransferData(
         kFileMime, getter_AddRefs(data), &data_len);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
 
     nsCOMPtr<nsIFile> file(do_QueryInterface(data));
-    if (!file) { return false; }
+    if (!file) { filenames.clear(); break;; }
     nsString path;
     nr = file->GetPath(path);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
+
+    has_files = true;
 
     PRBool bool_result = false;
     if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
-      return false;
+      filenames.clear();
+      break;
     }
     if (NS_FAILED(file->IsSpecial(&bool_result)) || bool_result) {
-      return false;
+      filenames.clear();
+      break;
     }
 
     nsCOMPtr<nsILocalFile> local_file =
         do_CreateInstance("@mozilla.org/file/local;1", &nr);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
     nr = local_file->SetFollowLinks(PR_TRUE);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
     nr = local_file->InitWithPath(path);
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
 
     nr = NS_ERROR_FAILURE;
     nsString filename;
@@ -619,7 +621,7 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     } else if (NS_SUCCEEDED(file->IsFile(&bool_result)) && bool_result) {
       nr = local_file->GetPath(filename);
     }
-    if (NS_FAILED(nr)) { return false; }
+    if (NS_FAILED(nr)) { filenames.clear(); break; }
 
     filenames.push_back(std::string16(filename.get()));
   }
@@ -632,7 +634,9 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 #else
   FileDragAndDropMetaData file_drag_and_drop_meta_data;
 #endif
-  file_drag_and_drop_meta_data.SetFilenames(filenames);
+  if (has_files) {
+    file_drag_and_drop_meta_data.SetFilenames(filenames);
+  }
   return file_drag_and_drop_meta_data.ToJsObject(
           module_environment,
           type == DRAG_AND_DROP_EVENT_DROP,

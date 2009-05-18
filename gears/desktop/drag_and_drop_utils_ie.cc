@@ -157,6 +157,7 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
       IID_IDataObject, &data_object);
   if (FAILED(hr)) return false;
 
+  bool has_files = false;
   std::vector<std::string16> filenames;
   FORMATETC desired_format_etc =
     { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -170,19 +171,18 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     }
 
     UINT num_files = DragQueryFile(hdrop, -1, 0, 0);
+    has_files = num_files > 0;
     for (UINT i = 0; i < num_files; ++i) {
       WCHAR path[MAX_PATH];
       if (!DragQueryFile(hdrop, i, path, MAX_PATH)) {
-        GlobalUnlock(stg_medium.hGlobal);
-        ReleaseStgMedium(&stg_medium);
-        return false;
+        filenames.clear();
+        break;
       }
 
       FileAttributes file(path);
       if (!file.Found() || file.IsDirectory()) {
-        GlobalUnlock(stg_medium.hGlobal);
-        ReleaseStgMedium(&stg_medium);
-        return false;
+        filenames.clear();
+        break;
       }
 
       LOG16((L" found %s\n", path));
@@ -193,7 +193,9 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     ReleaseStgMedium(&stg_medium);
   }
 
-  meta_data_out->SetFilenames(filenames);
+  if (has_files) {
+    meta_data_out->SetFilenames(filenames);
+  }
   return true;
 }
 
