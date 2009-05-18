@@ -437,8 +437,12 @@ static gboolean on_selection(GtkWidget *widget,
     nsString filename;
     nr = file->GetPath(filename);
     if (NS_FAILED(nr)) { success = false; break; }
-    // TODO(nigeltao): check if the file is actually readable (as opposed to,
-    // for example, a directory).
+
+    PRBool bool_result;
+    nr = file->IsDirectory(&bool_result);
+    if (NS_FAILED(nr) || bool_result) { success = false; break; }
+    nr = file->IsSpecial(&bool_result);
+    if (NS_FAILED(nr) || bool_result) { success = false; break; }
     filenames.push_back(std::string16(filename.get()));
   }
 
@@ -594,8 +598,10 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 
     PRBool bool_result = false;
     if (NS_FAILED(file->IsDirectory(&bool_result)) || bool_result) {
-      // TODO(nigeltao): Perhaps "return false" is better than "continue".
-      continue;
+      return false;
+    }
+    if (NS_FAILED(file->IsSpecial(&bool_result)) || bool_result) {
+      return false;
     }
 
     nsCOMPtr<nsILocalFile> local_file =
