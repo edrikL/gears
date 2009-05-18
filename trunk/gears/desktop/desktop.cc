@@ -908,19 +908,9 @@ void GearsDesktop::GetDragData(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
-  // Currently, we only support one flavor: "Files". In the future, we may
-  // support others, such as "Text" or "URL".
-  // TODO(nigeltao): Should "Files" be case (in)sensitive? Or should it be
-  // something like "GearsFiles" or "application/x-gears-files"?
-  DragAndDropFlavorType flavor = DRAG_AND_DROP_FLAVOR_INVALID;
-  if (flavor_as_string == STRING16(L"application/x-gears-files")) {
-    flavor = DRAG_AND_DROP_FLAVOR_FILES;
-  } else if (flavor_as_string == STRING16(L"Files")) {
-    // TODO(nigeltao): Remove "Files" as an option, we should probably just
-    // stick with "application/x-gears-files" for now.
-    flavor = DRAG_AND_DROP_FLAVOR_FILES;
-  }
-  if (flavor == DRAG_AND_DROP_FLAVOR_INVALID) {
+  // Currently, we only support one flavor: "application/x-gears-files". In the
+  // future, we may support others, such as "Text" or "URL".
+  if (flavor_as_string != STRING16(L"application/x-gears-files")) {
     context->SetException(STRING16(L"Unsupported flavor type."));
     return;
   }
