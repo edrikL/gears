@@ -66,19 +66,18 @@ class DropTargetInterceptor
   STDMETHODIMP Drop(
       IDataObject *object, DWORD state, POINTL point, DWORD *effect);
 
-#if BROWSER_IE
   FileDragAndDropMetaData &GetFileDragAndDropMetaData();
-#endif
 
   virtual void HandleEvent(JsEventType event_type);
   void SetDragCursor(DragAndDropCursorType cursor_type);
 
+  bool GetCachedMetaDataIsValid();
+  void SetCachedMetaDataIsValid(bool valid);
+
  private:
   static std::map<HWND, DropTargetInterceptor*> instances_;
 
-#if BROWSER_IE
   FileDragAndDropMetaData cached_meta_data_;
-#endif
   bool cached_meta_data_is_valid_;
 
   scoped_refptr<ModuleEnvironment> module_environment_;

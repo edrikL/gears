@@ -112,19 +112,28 @@ STDMETHODIMP DropTargetInterceptor::Drop(
 }
 
 
-#if BROWSER_IE
 FileDragAndDropMetaData &DropTargetInterceptor::GetFileDragAndDropMetaData() {
-  // TODO(nigeltao): It would probably make sense to move Firefox to also use
-  // this mechanism (and hence scan the files only once per drag into the
-  // browser).
   if (!cached_meta_data_is_valid_) {
     cached_meta_data_.Reset();
+#if BROWSER_IE
+    // TODO(nigeltao): If AddFileDragAndDropData returns false (e.g. the user
+    // is dragging Text or a URL), then we will be scanning the files on every
+    // event. We should fix that.
     cached_meta_data_is_valid_ =
         AddFileDragAndDropData(module_environment_.get(), &cached_meta_data_);
+#else
+    // On Firefox, we let the AddFileDragAndDropData function in
+    // drag_and_drop_utils_ff.cc do the work, (and manually get/set
+    // cached_meta_data_is_valid_) since it needs the nsIDragSession pointer
+    // to get the filenames. This isn't ideal -- it breaks encapsulation by
+    // exposing the cached_meta_data_is_valid_ member variable.
+    // TODO(nigeltao): Perhaps a better design is to add a void* parameter to
+    // this function (and to AddFileDragAndDropData) that was NULL on IE and
+    // the nsIDragSession on Firefox.
+#endif
   }
   return cached_meta_data_;
 }
-#endif
 
 
 void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
@@ -149,6 +158,16 @@ void DropTargetInterceptor::HandleEvent(JsEventType event_type) {
 
 void DropTargetInterceptor::SetDragCursor(DragAndDropCursorType cursor_type) {
   cursor_type_ = cursor_type;
+}
+
+
+bool DropTargetInterceptor::GetCachedMetaDataIsValid() {
+  return cached_meta_data_is_valid_;
+}
+
+
+void DropTargetInterceptor::SetCachedMetaDataIsValid(bool valid) {
+  cached_meta_data_is_valid_= valid;
 }
 
 
