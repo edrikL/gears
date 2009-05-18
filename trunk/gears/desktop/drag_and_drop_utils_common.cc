@@ -58,11 +58,13 @@ void FileDragAndDropMetaData::Reset() {
   extensions_.clear();
   mime_types_.clear();
   total_bytes_ = 0;
+  has_files_ = false;
 }
 
 void FileDragAndDropMetaData::SetFilenames(std::vector<std::string16> &names) {
   assert(IsEmpty());
 
+  has_files_ = true;
   filenames_.swap(names);
   for (std::vector<std::string16>::iterator i = filenames_.begin();
        i != filenames_.end(); ++i) {
@@ -81,7 +83,7 @@ bool FileDragAndDropMetaData::ToJsObject(ModuleEnvironment *module_environment,
                                          JsObject *object_out,
                                          std::string16 *error_out) {
   JsRunnerInterface *runner = module_environment->js_runner_;
-  if (IsEmpty())
+  if (!has_files_)
     return false;
 
   static const std::string16 kCount(STRING16(L"count"));
