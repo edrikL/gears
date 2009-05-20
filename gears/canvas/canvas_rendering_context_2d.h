@@ -221,8 +221,6 @@ class GearsCanvasRenderingContext2D
   scoped_refptr<GearsCanvas> gears_canvas_;
   scoped_ptr<SkCanvas> skia_canvas_;
 
-  // TODO(nigeltao): Introduce a class to capture the {SkPaint, SkColor,
-  // std::string16} for both the fill and the stroke.
   SkPaint clear_style_as_paint_;
   Style fill_style_;
   Style stroke_style_;
