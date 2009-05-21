@@ -96,6 +96,10 @@ function handleDragLeave(event) {
   document.getElementById('rejectOutput').innerHTML = '&nbsp;';
 }
 
+function sanitize(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function handleDrop(event) {
   dropCount++;
   eventCount++;
@@ -107,7 +111,7 @@ function handleDrop(event) {
   if (files) {
     for (i = 0; i < files.length; i++) {
       var file = files[i];
-      s += '<b>' + file.name + '</b> has length <b>' +
+      s += '<b>' + sanitize(file.name) + '</b> has length <b>' +
           file.blob.length + '</b>';
       var md = desktop.extractMetaData(file.blob);
       if (md.imageWidth && md.imageHeight) {
@@ -118,7 +122,7 @@ function handleDrop(event) {
     }
     s += 'files.length: <b>' + files.length + '</b>, ';
     s += 'totalBytes: <b>' + data.totalBytes + '</b>, ';
-    s += 'extensions: <b>' + data.extensions + '</b><br>';
+    s += 'extensions: <b>' + sanitize('' + data.extensions) + '</b><br>';
   }
   document.getElementById('dropOutput').innerHTML = s;
   document.getElementById('rejectOutput').innerHTML = '&nbsp;';
