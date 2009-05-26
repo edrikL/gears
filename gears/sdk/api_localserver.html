@@ -405,7 +405,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
 
 
   <p> An application can have many <code>ManagedResourceStores</code>.</p>
-  <p>The ManagedResourceStores class requires a <em>manifest file</em> to define the URLs to store. The <a href="#manifest_file">manifest file</a> is described in detail, below. </p>
+  <p>The ManagedResourceStores class requires a <em>manifest file</em> to define the URLs to store, and the rules to determine which resource to return for a requested URL. The <a href="#manifest_file">manifest file</a> is described in detail, below. </p>
 
   <h3>Attributes</h3>
   <table>
@@ -1096,7 +1096,7 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
   <p>&nbsp;</p>
   <a name="manifest_file" id="manifest_file"></a>
   <h2>Manifest File  </h2>
-  <p>A manifest file lists all of the URLs to be captured by a ManagedResourceStore. It also contains the version  for the manifest file format, the version  of the contents of the manifest, and an optional redirection URL. </p>
+  <p>A manifest file lists all of the URLs to be captured by a ManagedResourceStore, and the rules to determine which resource to return for a requested URL. It also contains the version  for the manifest file format, the version  of the contents of the manifest, and an optional redirection URL. </p>
   <p> Using the ManagedResourceStore requires that you create a manifest file.</p>
   <p>The manifest file and all the URLs listed in it must follow the &quot;same-origin policy&quot;, which means that all the URLs must originate from the same URI scheme, host, and port. See <a href="security.html">Gears and Security</a> for more information. </p>
   <p>An application can have any number of manifest files and ManagedResourceStores. You specify which manifest file to use when you create an instance of ManagedResourceStore.</p>
@@ -1135,7 +1135,7 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
       </tr>
       <tr class="odd">
         <td width="186"><code>&quot;betaManifestVersion&quot;</code></td>
-        <td width="208"><code>1</code></td>
+        <td width="208"><code>1</code> or <code>2</code></td>
         <td width="336" >Required. Represents the version of the manifest file format itself. The manifest file is recognized only if this attribute and value appear and are correct. </td>
       </tr>
       <tr class="odd">
@@ -1160,6 +1160,7 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
       </tr>
     </table>
     <p>&nbsp;</p>
+
     <p>The <code>&quot;entries&quot;</code> attribute in the manifest file is an array of URL resources,  in  JavaScript object format. The resource objects'  attribute-value pairs are described below.</p>
     <table>
       <tr class="odd">
@@ -1179,30 +1180,86 @@ href="api_httprequest.html">HttpRequest</a></code> module.</p>
         <td class="odd">URL<strong></td>
         <td class="odd">Optional.
         If <code>&quot;src&quot;</code> is present, the given URL is fetched and
-        served when <code>&quot;url&quot;</code> is requested locally.<br />
-        <br />
-        The<code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
-      exclusive.</td>
+        served when <code>&quot;url&quot;</code> is requested locally.
+        <ul>
+        <li><code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
+        </ul>
+        exclusive options.</td>
       </tr>
       <tr class="odd">
         <td><code>&quot;redirect&quot;</code></td>
         <td class="" >URL</td>
         <td class="" >Optional. If  <code>&quot;redirect&quot;</code> is present, the
         local server responds with a 302 redirect to the given URL when <code>&quot;url&quot;</code> is
-         requested locally.<br />
-         <br />
-         The<code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
-      exclusive.</td>
+         requested locally.
+        <ul>
+        <li><code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
+        exclusive options.</td>
+        </ul>
       </tr>
       <tr class="odd">
         <td><code>&quot;ignoreQuery&quot;</code></td>
         <td width="179">boolean (default is <code>false</code>) </td>
-        <td width="365">Optional. If the value is <code>true</code> the query string in the request URL is ignored when matching against this entry's URL.<br />
-          <br/>
-        For example, a request for <code>formHandler.html?name=value</code> can match the entries for the full URL including the query, or just the <code>formHandler.html</code> portion of the URL. <br />
-        <br/>
-        Note: An entry with an exact URL match takes precedence over a match found by ignoring the query string. </td>
+        <td width="365">Optional. If the value is <code>true</code> the query string in the request URL is ignored when matching against this entry's URL.
+        <ul>
+        <li><code>&quot;ignoreQuery&quot;</code> and <code>&quot;matchQuery&quot;</code> are mutually exlusive options.
+        <li>Ex. a request for <code>formHandler.html?name=value</code> can match the entries for the full URL including the query, or just the <code>formHandler.html</code> portion of the URL.
+        <li>An entry with an exact URL match takes precedence over a match found by ignoring the query string.
+        </ul>
       </tr>
+      <tr class="odd">
+        <td><code>&quot;matchQuery&quot;</code></td>
+        <td width="179">object</td>
+        <td width="365">Optional. A set of conditions to apply to the query
+        arguments of the requested URL. All of the conditions must be met to
+        return the resource associated with this <code>&quot;entry&quot;</code>.
+        <ul>
+        <li><code>&quot;ignoreQuery&quot;</code> and <code>&quot;matchQuery&quot;</code> are mutually exlusive options.
+        <li>Introduced in <code>&quot;betaManifestVersion&quot;: 2</code>. To use this attribute, you must specify version 2.
+        <li>An entry with an exact URL match takes precedence over a match found according to the matchQuery rules.
+        </ul>
+      </tr>
+    </table>
+    <p>&nbsp;</p>
+
+    <p>The <code>&quot;matchQuery&quot;</code> attribute of an <code>&quot;entry&quot;</code> defines a set of
+    conditions to apply to the query arguments of the requested URL. The resource associated with the entry will
+    only be returned if all of the conditions are met.
+    <ul>
+    <li>Each of the match strings is a query string fragment, of the
+    form <code>named=value&nameonly</code>, containing any number of named and
+    nameonly arguments seperated by the <code>&</code> character. 
+    <li>The order or arguments in the match string and requested URL does not matter.
+    <li>A <code>nameonly</code> argument in the match string matches <code>nameonly</code>
+    and <code>nameonly=anyvalue</code> in the requested URL.
+    <li>An empy <code>&quot;matchQuery&quot;: {}</code> object is functionally equivalent
+    to <code>&quot;ignoreQuery&quot;: true</code>
+    <li>The match strings are limited to characters that do not require escaping, the <code>+</code>
+    character is also excluded.
+    </ul></p>
+    <table>
+      <tr class="odd">
+        <th width="186"><div align="center" >Attribute</div></th>
+        <th width="179"><div align="center" >Value</div></th>
+        <th><div align="center" >Notes</div></th>
+      </tr>
+      <tr class="odd">
+        <td width="186"><code>&quot;hasAll&quot;</code></td>
+        <td width="179">string</td>
+        <td>Optional. The requested URL must have all of these arguments. 
+      </tr>
+      <tr class="odd">
+        <td width="186"><code>&quot;hasSome&quot;</code></td>
+        <td width="179">string<strong></td>
+        <td>Optional. The requested URL must have at least one of these arguments.
+        The same 'name', with different values, can be present in the hasSome string more than once.
+      </tr>
+      <tr class="odd">
+        <td width="186"><code>&quot;hasNone&quot;</code></td>
+        <td width="179">string<strong></td>
+        <td>Optional. The requested URL must have none of these arguments.
+        The same 'name', with different values, can be present in the hasNone string more than once.
+     </tr>
     </table>
 
 <!------------------------------------------------------------->
