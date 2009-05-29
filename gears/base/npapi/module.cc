@@ -155,6 +155,12 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
 #ifdef BROWSER_WEBKIT
+  // Disable if we're running the wrong OS version.
+  if (!CheckIsCompatibleOSVersion())
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+#endif
+
+#ifdef BROWSER_WEBKIT
   assert(funcs->size >= sizeof(g_browser_funcs));
   g_browser_funcs = *(GearsNPNetscapeFuncs *)funcs;
 #else

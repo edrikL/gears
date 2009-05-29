@@ -62,6 +62,12 @@
         factory.height = 0;
         factory.type = "application/x-googlegears";
         document.documentElement.appendChild(factory);
+        if(factory && (typeof factory.create == 'undefined')) {
+          // If NP_Initialize() returns an error, factory will still be created.
+          // We need to make sure this case doesn't cause Gears to appear to
+          // have been initialized.
+          factory = null;
+        }
       }
     }
   }

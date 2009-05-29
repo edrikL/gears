@@ -99,6 +99,11 @@ void WebKitNPN_SetException(NPObject* obj, const char *message);
 // Check system version.
 bool IsLeopardOrGreater();
 
+// Is this version of OS X compatible with Gears?
+// Side effects: an error message is printed to the console if the system
+// version isn't compatible.
+bool CheckIsCompatibleOSVersion();
+
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
