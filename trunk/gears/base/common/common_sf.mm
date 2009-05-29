@@ -107,3 +107,13 @@ bool IsLeopardOrGreater() {
   // We only support Leopard >= 10.5.3.
   return SystemVersion() >= 0x1053; // 10.5.3
 }
+
+bool CheckIsCompatibleOSVersion() {
+  // We don't support Snow Leopard  and beyond >= 10.6.
+  if (SystemVersion() >= 0x1060) {
+    NSLog(@"Gears Load Failed: Gears is not is not compatible with Mac OS X "\
+           "versions later than Leopard (10.5).");
+    return false;
+  }
+  return true;
+}
