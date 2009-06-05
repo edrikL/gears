@@ -193,7 +193,7 @@ nsresult DOMUtils::GetTabNativeWindow(JSContext *js_context,
   nsCOMPtr<nsIWidget> widget;
   nr = baseWindow->GetMainWidget(getter_AddRefs(widget));
   if (NS_FAILED(nr)) { return nr; }
-  if (!widget) { return E_FAIL; }
+  if (!widget) { return NS_ERROR_FAILURE; }
   *window = reinterpret_cast<NativeWindowPtr>(
       widget->GetNativeData(NS_NATIVE_WINDOW));
 
