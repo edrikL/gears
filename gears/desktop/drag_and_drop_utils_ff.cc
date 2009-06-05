@@ -556,6 +556,10 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
 #else
 
 #if defined(WIN32)
+  if (!module_environment->drop_target_interceptor_) {
+    return false;
+  }
+
   // On Windows, we do a similar thing -- the DropTargetInterceptor has the
   // FileDragAndDropMetaData object.
   if (module_environment->drop_target_interceptor_->
