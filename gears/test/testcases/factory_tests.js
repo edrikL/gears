@@ -98,3 +98,17 @@ function testGetPermissionMultipleTimes() {
   hasPermission = google.gears.factory.getPermission('', '', '');
   assertEqual(hasPermission, true);
 }
+
+function testInvisibleIframeDoesntCrash() {
+  // This one cannot run in a worker.
+  if (typeof document == 'undefined') {
+    return;
+  }
+
+  // We're simply testing that a display:none styled IFRAME does not crash the
+  // browser (this is http://code.google.com/p/gears/issues/detail?id=881 ).
+  var iframe = document.createElement('iframe');
+  iframe.src = 'run_gears_init.html';
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+}
