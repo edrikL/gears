@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2008, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+  <head>
+    <title>BlobBuilder API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
+
+<body>
+
+<h1>BlobBuilder API</h1>
+
+<div id="pagecontent">
+
+<p>A BlobBuilder is a helper object for creating Blobs.</p>
+
+
+<h3>Contents</h3>
+
+  <ol class="toc">
+  <li><a href="#overview">Overview</a>
+  <li><a href="#blobbuilder_class">BlobBuilder class</a>
+  </ol>
+
+
+
+<h2 id="overview">Overview</h2>
+
+<p>A Blob is an immutable, read-only object, the same as a JavaScript string.
+BlobBuilders are used to generate a Blob with new content. They are to Java's
+StringBuilder as Gears Blobs are to Java's Strings.</p>
+
+
+<h4>Permission</h4>
+
+<p>The BlobBuilder API does not require user permission.</p>
+
+
+<h2 id="blobbuilder_class">BlobBuilder class</h2>
+
+<pre><code>void <b>append</b>(data)
+Blob <b>getAsBlob</b>()
+</code></pre>
+<br>
+
+
+<h3>Methods</h3>
+
+<a name="append"></a>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void append(data)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Appends bytes to the Blob-in-progress.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>data</code> - Either an integer, a string (which will be encoded
+        as UTF-8), a Blob, or an array of appendable data (such as an array
+        of a mix of strings and Blobs). For integer values, only the least
+        significant byte of each integer will be appended.
+    </td>
+  </tr>
+</table>
+
+<a name="getAsBlob"></a>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>Blob getAsBlob()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Bakes the previously appended data into a new, immutable Blob object.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td>A new Blob containing the previously appended data.</td>
+  </tr>
+</table>
+
+
+</div>
+</body>
+</html>

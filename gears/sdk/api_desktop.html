@@ -72,7 +72,10 @@ desktop.openFiles(openFilesCallback);
 
 <pre><code><a href="#Desktop">Desktop class</a>
     void <b>createShortcut</b>(name, url, icons, [description])
-    void <b>openFiles</b>(callback, [options])</code></pre>
+    Object <b>extractMetaData</b>(blob)
+    Object <b>getDragData</b>(event, flavor)
+    void <b>openFiles</b>(callback, [options])
+    void <b>setDropEffect</b>(event, dropEffect)</code></pre>
 
 <pre><code><a href="#OpenFilesCallback">OpenFilesCallback</a>(<a
     href="#File">File</a>[] files)</code></pre>
@@ -157,6 +160,81 @@ desktop.openFiles(openFilesCallback);
 
 <table>
   <tr class="odd">
+    <th colspan="2"><code>extractMetaData(blob)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Calculates metadata (such as MIME type) from a Blob's contents. For
+      example, if the Blob contains image data in a well-known encoding (such
+      as PNG or JPEG), this will return the image's width and height.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>blob</code> - The Blob to examine.
+      <br>
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td class="odd">
+      A JavaScript Object (i.e. a key-value map). Currently, three keys are
+      provided (although all keys are optional -- no key is guaranteed to be
+      present on all Blobs):
+      <ul>
+        <li>&quot;mimeType&quot;, which can have values such as
+          &quot;image/jpeg&quot;, &quot;image/png&quot;, or
+          &quot;application/octet-stream&quot;.
+        <li>&quot;imageWidth&quot;, only defined for Blobs that contain image
+          data, will have an integer value that is the width of that image.
+        <li>&quot;imageHeight&quot; is similar to &quot;imageWidth&quot;.
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>getDragData(event, flavor)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Returns the data that is on the OS's drag-and-drop clipboard. This
+      method is valid to call only during processing of a drag-and-drop event
+      (such as during ondragenter, ondragover, ondragleave or ondrop). This
+      method is analogous to HTML5's DataTransfer.getData method.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>event</code> - The drag-and-drop event. Typically, just pass
+        window.event. On Firefox, pass the event that is given as an argument
+        of the event handler.
+      <br>
+      <code>flavor</code> - The flavor of data requested. Currently, the only
+        supported flavor is &quot;application/x-gears-files&quot;, to get
+        File data.
+      <br>
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td class="odd">
+      A JavaScript Object (i.e. a key-value map). One such key is
+      &quot;count&quot;, which is the number of objects being dragged.
+      Another key, only present during an ondrop event and not other events,
+      is &quot;files&quot;, which will return the actual File objects being
+      drag-and-dropped.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
     <th colspan="2"><code>openFiles(callback, [options])</code></th>
   </tr>
   <tr class="odd">
@@ -193,6 +271,34 @@ desktop.openFiles(openFilesCallback);
       <br><br>
       If the user cancels the dialog without selecting any files, the
       callback is invoked with an empty array.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>setDropEffect(event, dropEffect)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Sets the dropEffect (i.e. the cursor) in response to a drag-and-drop
+      event. This method is valid to call only during processing of a
+      drag-and-drop event (such as during ondragenter, ondragover, ondragleave
+      or ondrop). This method is analogous to HTML5's DataTransfer.dropEffect
+      setter.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>event</code> - The drag-and-drop event. Typically, just pass
+        window.event. On Firefox, pass the event that is given as an argument
+        of the event handler.
+      <br>
+      <code>dropEffect</code> - Either the value &quot;copy&quot;, or
+        &quot;none&quot;.
+      <br>
     </td>
   </tr>
 </table>

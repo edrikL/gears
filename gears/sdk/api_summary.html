@@ -61,7 +61,26 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>Provides a way to reference binary data.</p>
 <pre><code><a href="api_blob.html">Blob class</a>
    readonly attribute int <b>length</b>
+   int[]   <b>getBytes</b>(offset, length)</code></pre>
    Blob    <b>slice</b>(offset, length)</code></pre>
+
+
+<h3>BlobBuilder</h3>
+<p>Provides a way to reference binary data.</p>
+<pre><code><a href="api_blobbuilder.html">BlobBuilder class</a>
+   void    <b>append</b>(data)
+   Blob    <b>getAsBlob</b>()</code></pre>
+
+
+<h3>Canvas</h3>
+<p>Provides a way to perform image manipulation.</p>
+<pre><code><a href="api_canvas.html">Canvas class</a>
+   readwrite attribute int <b>height</b>
+   readwrite attribute int <b>width</b>
+   void    <b>crop</b>(x, y, w, h)
+   void    <b>decode</b>(blob)
+   Blob    <b>encode</b>([mimeType, options])
+   void    <b>resize</b>(w, h, [filter])</code></pre>
 
 
 <h3>Database</h3>
@@ -88,7 +107,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
    void    <b>createShortcut</b>(name, url, icons, [description])
-   void    <b>openFiles</b>(callback, [options])</code></pre>
+   Object  <b>extractMetaData</b>(blob)
+   Object  <b>getDragData</b>(event, flavor)
+   void    <b>openFiles</b>(callback, [options])
+   void    <b>setDropEffect</b>(event, dropEffect)</code></pre>
 
 
 <h3>Geolocation</h3>
