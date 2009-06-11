@@ -40,7 +40,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <div id="pagecontent">
 
 <p>The 'Blob' object is a general-purpose way to reference binary data in
-web applications.
+web applications.</p>
 
 
 <h3>Contents</h3>
@@ -100,7 +100,8 @@ scenario.</p>
 <h2 id="blob_class">Blob class</h2>
 
 <pre><code>readonly attribute int <b>length</b>
-Blob <b>slice</b>(offset, length)
+int[] <b>getBytes</b>([offset, length])
+Blob <b>slice</b>(offset, [length])
 </code></pre>
 <br>
 
@@ -123,10 +124,37 @@ Blob <b>slice</b>(offset, length)
 
 <h3>Methods</h3>
 
+<a name="getBytes"></a>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>int[] getBytes([offset, length])</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Returns the bytes (as integers in the range 0-255) of a slice of the Blob.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>offset</code> - Optional. The position of the first byte to return.
+        The default value is zero.
+      <br/>
+      <code>length</code> - Optional. The number of bytes to return. The
+        default value means to the end of the Blob.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td>An integer array containing the Blob's bytes.</td>
+  </tr>
+</table>
+
 <a name="slice"></a>
 <table>
   <tr class="odd">
-    <th colspan="2"><code>Blob slice(offset, length)</code></th>
+    <th colspan="2"><code>Blob slice(offset, [length])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -139,7 +167,8 @@ Blob <b>slice</b>(offset, length)
     <td class="odd">
       <code>offset</code> - The position of the first byte to extract.
       <br/>
-      <code>length</code> - The number of bytes to extract.
+      <code>length</code> - Optional. The number of bytes to extract. The
+        default value means to the end of the Blob.
     </td>
   </tr>
   <tr class="odd">

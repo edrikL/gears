@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2008, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+  <head>
+    <title>Canvas API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
+
+<body>
+
+<h1>Canvas API</h1>
+
+<div id="pagecontent">
+
+<p>The Canvas module provides an image manipulation API to JavaScript.</p>
+
+
+<h3>Contents</h3>
+
+  <ol class="toc">
+  <li><a href="#overview">Overview</a>
+  <li><a href="#canvas_class">Canvas class</a>
+  </ol>
+
+
+
+<h2 id="overview">Overview</h2>
+
+<p>The Canvas module is a graphics API that is inspired by <a
+href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html">the
+HTML5 canvas</a>, with additional methods to decode from and encode to binary
+formats (such as PNG and JPEG), represented by Blobs.</p>
+
+<p>A Gears Canvas is not yet a complete implementation of the HTML5 canvas
+specification, and there are two significant differences:</p>
+
+<ul>
+<li>A Gears Canvas is off-screen, in that creating a Canvas object doesn't
+directly paint any pixels on the screen. Furthermore, for technical reasons, a
+Gears Canvas is not a DOM Element. On the other hand, you can create a Gears
+Canvas in a Worker.</li>
+<li>A Gears Canvas does not implement <code>getContext</code>, and in particular
+does not provide a 2D context.</li>
+</ul>
+
+
+<h4>Permission</h4>
+
+<p>This API requires user permission.  If you would like to customize the default dialog, you can explicitly call <code>google.gears.factory.getPermission()</code> - <a href="api_factory.html">see how.</a></p>
+
+
+<h2 id="canvas_class">Canvas class</h2>
+
+<pre><code>readwrite attribute int <b>height</b>
+readwrite attribute int <b>width</b>
+void <b>crop</b>(x, y, w, h)
+void <b>decode</b>(blob)
+Blob <b>encode</b>([mimeType, options])
+void <b>resize</b>(w, h, [filter])
+</code></pre>
+<br>
+
+
+<h3>Attributes</h3>
+
+<table>
+  <tr class="odd">
+    <th width="158">Attribute</th>
+    <th width="109">Type</th>
+    <th width="432">Description</th>
+  </tr>
+  <tr class="odd">
+    <td><a name="height"></a><strong>height</strong></td>
+    <td class="odd">readwrite attribute int</td>
+    <td class="odd">The height of the Canvas. The default value is 150.</td>
+  </tr>
+  <tr class="odd">
+    <td><a name="width"></a><strong>width</strong></td>
+    <td class="odd">readwrite attribute int</td>
+    <td class="odd">The width of the Canvas. The default value is 300.</td>
+  </tr>
+</table>
+
+
+<h3>Methods</h3>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void crop(x, y, w, h)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Crops the Canvas. The crop happens &quot;in-place&quot;, as opposed
+      to returning a new Canvas.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>x</code> - The left co-ordinate of the crop rectangle.
+      <br/>
+      <code>y</code> - The top co-ordinate of the crop rectangle.
+      <br/>
+      <code>w</code> - The width of the crop rectangle.
+      <br/>
+      <code>h</code> - The height of the crop rectangle.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void decode(blob)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Loads an image into this Canvas, replacing the Canvas' current dimensions
+      and contents.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>blob</code> - The Blob to decode. The image should be in PNG or
+        JPEG format.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td>A new Blob containing the specified subset.</td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>Blob encode([mimeType, options])</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Saves the Canvas' contents to a binary format, such as PNG or JPEG.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>mimeType</code> - Optional. The image format to encode to. Valid
+        values include &quot;image/png&quot; and &quot;image/jpeg&quot;. The
+        default encoding is PNG.
+      <br/>
+      <code>options</code> - Optional. A JavaScript object (i.e. key-value map)
+        that specifies encoding options. For lossy formats, such as JPEG, one
+        can specify a &quot;quality&quot; key, whose value should be a number
+        between 0.0 and 1.0 inclusive.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td>A new Blob encoding the Canvas' image data.</td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void resize(w, h, [filter])</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Resizes the Canvas. The resize happens &quot;in-place&quot;, as opposed
+      to returning a new Canvas.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>w</code> - The new width.
+      <br/>
+      <code>h</code> - The new height.
+      <br/>
+      <code>filter</code> - Optional. A string specifying the image filter.
+        There are two options: &quot;nearest&quot; for nearest-neighbor
+        filtering, and &quot;bilinear&quot; for bi-linear filtering. The
+        default filter, if unspecified, is &quot;bilinear&quot;.
+    </td>
+  </tr>
+</table>
+
+
+</div>
+</body>
+</html>
