@@ -183,9 +183,23 @@ function testBlobBuilderAppendInvalidArrayIsAtomic() {
   builder.append(102);
 
   var blob = builder.getAsBlob();
-  var bytes = blob.getBytes();
   assertEqual(2, blob.length);
   assertEqual(101, blob.getBytes()[0]);
   assertEqual(102, blob.getBytes()[1]);
 }
 
+function testBlobBuilderCanCallGetAsBlobTwice() {
+  var builder = google.gears.factory.create('beta.blobbuilder');
+  builder.append(101);
+
+  var blob1 = builder.getAsBlob();
+  assertEqual(1, blob1.length);
+  assertEqual(101, blob1.getBytes()[0]);
+
+  builder.append(102);
+
+  var blob2 = builder.getAsBlob();
+  assertEqual(2, blob2.length);
+  assertEqual(101, blob2.getBytes()[0]);
+  assertEqual(102, blob2.getBytes()[1]);
+}
