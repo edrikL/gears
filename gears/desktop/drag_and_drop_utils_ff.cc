@@ -623,11 +623,16 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
       filenames.clear();
       break;
     }
+#if defined(OS_MACOSX)
+    // Mozilla's nsIFile::IsSpecial is not implemented for Mac OS X, and
+    // always fails (returning NS_ERROR_NOT_IMPLEMENTED).
+#else
     bool_result = false;
     if (NS_FAILED(local_file->IsSpecial(&bool_result)) || bool_result) {
       filenames.clear();
       break;
     }
+#endif
 
     filenames.push_back(std::string16(filename.get()));
   }
