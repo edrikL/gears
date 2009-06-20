@@ -134,7 +134,7 @@ def main():
   # Clean up output directory before doing anything else
   clean()
 
-  test_url = 'http://127.0.0.1:8001/tester/gui.html'
+  test_url = 'http://localhost:8001/tester/gui.html'
   reporter = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
   installers = []
