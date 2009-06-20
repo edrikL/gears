@@ -134,7 +134,7 @@ def main():
   # Clean up output directory before doing anything else
   clean()
 
-  test_url = 'http://localhost:8001/tester/gui.html'
+  test_url = 'http://127.0.0.1:8001/tester/gui.html'
   reporter = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
   installers = []
@@ -165,13 +165,14 @@ def main():
       launchers.append(browser_launchers.ChromiumWin32Launcher())
   elif osutils.osIsWin():
     launchers.append(browser_launchers.IExploreWin32Launcher())
-    launchers.append(browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
     launchers.append(browser_launchers.Firefox3Win32Launcher('ff3profile-win'))
     launchers.append(browser_launchers.ChromeWin32Launcher())
     installers.append(installer.ChromeWin32Installer())
     if osutils.osIsVista():
       installers.append(installer.WinVistaInstaller())
     else:
+      launchers.append(
+          browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
       installers.append(installer.WinXpInstaller())
   elif osutils.osIsNix():
     if osutils.osIsMac():
