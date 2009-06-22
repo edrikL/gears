@@ -317,7 +317,7 @@ function testGetLocationFromResponse() {
     error = internalTests.testGeolocationGetLocationFromResponse(
         true,   // HttpPost result
         200,    // status code
-        '{"position": null}',
+        '{"location": null}',
         0,      // timestamp
         dummy_server);
     assertErrorEqual(error.POSITION_UNAVAILABLE, noGoodFixError, error);
