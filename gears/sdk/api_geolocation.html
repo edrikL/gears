@@ -191,10 +191,11 @@ geo.getCurrentPosition(updatePosition, handleError);
     not used and a new position fix is always sought. The method will throw an
     exception if no location providers are used.<br><br>
     If <code>PositionOptions.maximumAge</code> is non-zero, Gears will call the
-    success callback if the cached position is more recent than 
+    success callback if the cached position is more recent than
     <code>PositionOptions.maximumAge</code>. If not, Gears will attempt to
-    obtain a new position fix. The error callabck is called exactly once as soon
-    as a position fix is obtained, or the error callnback is called on failure.
+    obtain a new position fix. The success callback is called exactly once as
+    soon
+    as a position fix is obtained, or the error callback is called on failure.
     If the cached position is not sufficiently recent and no location providers
     are used, the error callback is called.<br><br>
     Whenever Gears attempts to obtain a new position fix, this is subject to
@@ -235,7 +236,7 @@ request, see <code><a href="#positionoptions">PositionOptions</a></code>.</td>
     not used and a new position fix is always sought. The method will throw an
     exception if no location providers are used.<br><br>
     If <code>PositionOptions.maximumAge</code> is non-zero, Gears will call the
-    success callback if the cached position is more recent than 
+    success callback if the cached position is more recent than
     <code>PositionOptions.maximumAge</code>. If any case, Gears will then
     attempt to obtain a new position fix. The success callback function is
     called as soon as a good position is available and whenever the position
@@ -411,7 +412,8 @@ show those that are specified.    </td>
 <tr class="odd">
   <td><strong>maximumAge</strong></td>
   <td class="odd">readwrite int</td>
-  <td class="odd">Optional, specifies the maximum permissible age of a cached
+  <td class="odd">Optional, specifies the maximum permissible age, in
+  milliseconds, of a cached
   position provided by the getCurrentPosition and watchPosition methods. When
   either of these methods is called, if Gears has a cached permission and it is
   more recent than the specified maximum age, the success callback will be
@@ -423,11 +425,12 @@ show those that are specified.    </td>
 <tr class="odd">
   <td><strong>timeout</strong></td>
   <td class="odd">readwrite int</td>
-  <td class="odd">Optional, specifies the maximum time period for which Gears
+  <td class="odd">Optional, specifies the maximum time period, in milliseconds,
+  for which Gears
   should attempt to obtain a position fix. If a position fix can not be obtained
-  within this period, the error callback is invoked with code 3. The value is
-  limited to a non-negative signed 32 bit signed integer. If this value is not
-  set, no time limit is applied.</td>
+  within this period, the error callback is invoked with code TIMEOUT. The value
+  is limited to a non-negative signed 32 bit signed integer. If this value is
+  not set, no time limit is applied.</td>
 </tr>
 <tr class="odd">
   <td><strong>gearsRequestAddress</strong></td>
