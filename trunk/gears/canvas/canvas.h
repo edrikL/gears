@@ -56,6 +56,13 @@ class GearsCanvas : public ModuleImplBaseClass {
   static const int kDefaultWidth;
   static const int kDefaultHeight;
 
+  enum ResizeFilter {
+    FILTER_FASTEST,
+    FILTER_NEAREST,
+    FILTER_BILINEAR,
+    FILTER_NICEST
+  };
+
   GearsCanvas();
   virtual ~GearsCanvas();
   
