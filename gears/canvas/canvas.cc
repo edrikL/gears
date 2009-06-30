@@ -64,6 +64,18 @@ const int GearsCanvas::kMaxSideLength(16384);
 const int GearsCanvas::kDefaultWidth(300);
 const int GearsCanvas::kDefaultHeight(150);
 
+// Highest-quality minification involves allocating an intermediate buffer.
+// Since it involves summing a number of pixel values, it is 32 bits per
+// channel (i.e. 16 bytes per ARGB pixel), even when ARGB is 8 bits per
+// channel (and 4 bytes per pixel).
+// To avoid trying to allocate too large an intermediate buffer, we cap the
+// dimension of the minified bitmap to 1024 pixels per side, which is 1048576
+// pixels overall in the worst case, or 16MB.
+// A more sophisticated algorithm might have lower memory requirements (e.g.
+// allocating a Wx2 buffer rather than a WxH buffer), but such optimization
+// is left for the future.
+static const int kMaxSideLengthForHighestQualityMinification(1024);
+
 static bool ValidateWidthAndHeight(int w, int h, JsCallContext *context) {
   if (w <= 0) {
     context->SetException(STRING16(L"Invalid (non-positive) width."));
@@ -324,25 +336,181 @@ void GearsCanvas::Crop(JsCallContext *context) {
   new_bitmap.swap(*skia_bitmap_);
 }
 
+static inline void accumulate(uint32 *buffer, int x_index, int y_index,
+    int columns, int channels[4], int weight) {
+  if (weight == 0) {
+    return;
+  }
+  uint32 *b = buffer + 4 * ((y_index * columns) + x_index);
+  *b++ += channels[0] * weight;
+  *b++ += channels[1] * weight;
+  *b++ += channels[2] * weight;
+  *b++ += channels[3] * weight;
+}
+
+// As of revision 89, Skia does not implement tri-linear filtering, so we have
+// a custom implementation of high-quality minification. A canvas minification
+// is presumably a one-off operation, and so we do not go through the overhead
+// of building a traditional mipmap pyramid. Instead, the algorithm to minify
+// an ow*oh sized bitmap to a nw*nh sized bitmap goes like this:
+// (1) a nw*nh*4 contiguous buffer of uint32s are allocated, one per channel
+//     per pixel in the new bitmap. This buffer is initialized to all-zero,
+//     and eventually, the buffer will have the weighted sums of the old per-
+//     channel per-pixel values.
+// (2) the old bitmap is iterated over, and each old per-channel per-pixel
+//     value from an old pixel contributes to one or more buffer entries (more
+//     on the actual weighting below).
+// (3) the new bitmap is set, pixel by pixel. Each pixel is constructed from
+//     its four channels, with each channel value being the buffer's value
+//     scaled by the sum of its constituent weights.
+static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
+  int old_width = old_bitmap.width();
+  int old_height = old_bitmap.height();
+  int old_size = old_width * old_height;
+  int new_width = new_bitmap.width();
+  int new_height = new_bitmap.height();
+  int new_size = new_width * new_height;
+  // This algorithm only applies during a minifying resize, not a magnifying
+  // resize, or a mixed resize (e.g. minify along the horizontal axis, and
+  // magnify along the vertical axis).
+  // We also cap the size of the intermediate buffer, via capping the size of
+  // the resultant minified bitmap.
+  if (new_width >= old_width || new_height >= old_height ||
+      new_width > kMaxSideLengthForHighestQualityMinification ||
+      new_height > kMaxSideLengthForHighestQualityMinification) {
+    return false;
+  }
+
+  assert(old_bitmap.readyToDraw());
+  assert(new_bitmap.readyToDraw());
+  SkAutoLockPixels old_bitmap_lock(old_bitmap);
+  SkAutoLockPixels new_bitmap_lock(new_bitmap);
+
+  // This is step (1). As a reminder, buffer is 32-bit per channel, not
+  // 32-bit per pixel. A pixel has four channels: typically (A,R,G,B), but
+  // it could be configured to be (A,B,G,R). To avoid confusion under different
+  // SK_R32_SHIFT / SK_B32_SHIFT values, we shall just call these channels
+  // c0, c1, c2 and c3.
+  uint32 *buffer = new uint32[new_size * 4];
+  if (buffer == NULL) {
+    return false;
+  }
+  memset(buffer, 0, new_size * 4 * sizeof(uint32));
+
+  // This is step (2). The weighting will be illustrated with an example of
+  // minifying a 4*3 image to become a 3*2 image.
+  // Conceptually, consider a 12*6 grid. Each of the 12 old pixels (labelled
+  // a-l) is worth 6 cells each. Each of the 6 new pixels (delimited by
+  // whitespace) are worth 12 cells each. The weights that each old pixel
+  // contributes to each new pixel is:
+  //
+  //      aaab bbcc cddd
+  //      aaab bbcc cddd
+  //      eeef ffgg ghhh
+  //
+  //      eeef ffgg ghhh
+  //      iiij jjkk klll
+  //      iiij jjkk klll
+  //
+  // For example, the middle-bottom pixel in the new bitmap will be 17% f,
+  // 17% g, 33% j, and 33% k. The buffer value for that pixel (for a specific
+  // channel) would be the sum of 2 * f's value, 2 * g's value, 4 * j's value
+  // and 4 * k's value, and at step (3) that buffer value would be divided by
+  // the number of cells per new pixel (i.e. 12 = old_size).
+  //
+  // Note that, since we have restricted the new bitmap to be neither wider nor
+  // higher than the old one, then each old pixel can contribute to at most
+  // four new pixels. Let's call these pixels top-left, top-right, bottom-left
+  // and bottom-right. If an old pixel does not straddle a new pixel boundary
+  // horizontally, then lets say there is only a left and not a right.
+  // Similarly, we favor top over bottom.
+  //
+  // Let qt, qb, ql and qr be such that the number of cells that the old pixel
+  // contributes to the new top-left pixel be (qt * ql), to the new top-right
+  // pixel be (qt * qr), and so on. Note that the two invariants (qt + qr ==
+  // new_height) and (ql + qr == new_width) must always hold.
+  // For example, the "f" old pixel has qt=1, qb=1, ql=1, qr=2.
+  // Similarly, the "j" old pixel has qt=2, qb=0, ql=1, qr=2.
+  for (int y = 0; y < old_height; y++) {
+    uint32_t* old_row = old_bitmap.getAddr32(0, y);
+
+    int new_y = (y * new_height) / old_height;
+    int qt = ((new_y + 1) * old_height) - (y * new_height);
+    if (qt > new_height) {
+      qt = new_height;
+    }
+    int qb = new_height - qt;
+    assert((y != old_height - 1) || (qb == 0));
+
+    for (int x = 0; x < old_width; x++) {
+      int new_x = (x * new_width) / old_width;
+      int ql = ((new_x + 1) * old_width) - (x * new_width);
+      if (ql > new_width) {
+        ql = new_width;
+      }
+      int qr = new_width - ql;
+      assert((x != old_width - 1) || (qr == 0));
+
+      int channels[4];
+      channels[0] = (old_row[x] >> 24) & 0xFF;
+      channels[1] = (old_row[x] >> 16) & 0xFF;
+      channels[2] = (old_row[x] >>  8) & 0xFF;
+      channels[3] = (old_row[x] >>  0) & 0xFF;
+
+      // Now accumulate the old pixels over the (up to four) new pixels. Note
+      // that, although (new_x + 1), (new_y + 1) or both might be out of bounds
+      // of the buffer array, in those cases (i.e. new_x == new_width - 1),
+      // (new_y == new_height - 1) or both, the accumulate call will be a no-op
+      // because (qr == 0), (qb == 0) or both.
+      accumulate(buffer, new_x + 0, new_y + 0, new_width, channels, qt * ql);
+      accumulate(buffer, new_x + 1, new_y + 0, new_width, channels, qt * qr);
+      accumulate(buffer, new_x + 0, new_y + 1, new_width, channels, qb * ql);
+      accumulate(buffer, new_x + 1, new_y + 1, new_width, channels, qb * qr);
+    }
+  }
+
+  // This is step (3).
+  uint32 *b = buffer;
+  int half_old_size = old_size / 2;
+  for (int y = 0; y < new_height; y++) {
+    uint32_t* new_row = new_bitmap.getAddr32(0, y);
+    for (int x = 0; x < new_width; x++) {
+      // We round to nearest, not round down, so we add half_old_size.
+      int c0 = ((*b++) + half_old_size) / old_size;
+      int c1 = ((*b++) + half_old_size) / old_size;
+      int c2 = ((*b++) + half_old_size) / old_size;
+      int c3 = ((*b++) + half_old_size) / old_size;
+      new_row[x] = (((((c0 << 8) | c1) << 8) | c2) << 8) | c3;
+    }
+  }
+
+  delete buffer;
+  return true;
+}
+
 void GearsCanvas::Resize(JsCallContext *context) {
   int new_width, new_height;
-  std::string16 filter;
-  bool filter_is_nearest = false;
+  std::string16 filter_as_string;
+  ResizeFilter filter = FILTER_NICEST;
   JsArgument args[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_width },
     { JSPARAM_REQUIRED, JSPARAM_INT, &new_height },
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &filter }
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &filter_as_string }
   };
   context->GetArguments(ARRAYSIZE(args), args);
   if (context->is_exception_set() ||
       !ValidateWidthAndHeight(new_width, new_height, context))
     return;
   if (context->GetArgumentCount() == 3) {
-    if (filter == STRING16(L"nearest")) {
-      filter_is_nearest = true;
-    } else if (filter != STRING16(L"bilinear")) {
-      context->SetException(
-          STRING16(L"Filter must be 'bilinear' or 'nearest'."));
+    if (filter_as_string == STRING16(L"fastest")) {
+      filter = FILTER_FASTEST;
+    } else if (filter_as_string == STRING16(L"nearest")) {
+      filter = FILTER_NEAREST;
+    } else if (filter_as_string == STRING16(L"bilinear")) {
+      filter = FILTER_BILINEAR;
+    } else if (filter_as_string != STRING16(L"nicest")) {
+      context->SetException(STRING16(
+          L"Filter must be 'nicest', 'bilinear', 'nearest' or 'fastest'."));
       return;
     }
   }
@@ -356,22 +524,26 @@ void GearsCanvas::Resize(JsCallContext *context) {
   int old_width = GetWidth();
   int old_height = GetHeight();
   if (old_width != 0 && old_height != 0) {
-    SkCanvas new_canvas(new_bitmap);
-    SkScalar x_scale = SkDoubleToScalar(
-        static_cast<double>(new_width) / old_width);
-    SkScalar y_scale = SkDoubleToScalar(
-        static_cast<double>(new_height) / old_height);
-    if (!new_canvas.scale(x_scale, y_scale)) {
-      context->SetException(STRING16(L"Could not resize the image."));
-      return;
-    }
-    if (filter_is_nearest) {
-      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
-    } else {
-      SkPaint paint;
-      paint.setFilterBitmap(true);
-      new_canvas.drawBitmap(
-          *skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0), &paint);
+    if (filter != FILTER_NICEST ||
+        !HighestQualityMinify(*skia_bitmap_, new_bitmap)) {
+      SkCanvas new_canvas(new_bitmap);
+      SkScalar x_scale = SkDoubleToScalar(
+          static_cast<double>(new_width) / old_width);
+      SkScalar y_scale = SkDoubleToScalar(
+          static_cast<double>(new_height) / old_height);
+      if (!new_canvas.scale(x_scale, y_scale)) {
+        context->SetException(STRING16(L"Could not resize the image."));
+        return;
+      }
+      if (filter == FILTER_NEAREST || filter == FILTER_FASTEST) {
+        new_canvas.drawBitmap(
+            *skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0));
+      } else {
+        SkPaint paint;
+        paint.setFilterBitmap(true);
+        new_canvas.drawBitmap(
+            *skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0), &paint);
+      }
     }
   }
   new_bitmap.swap(*skia_bitmap_);
