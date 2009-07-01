@@ -144,8 +144,14 @@ DragAndDropEventType GetDragAndDropEventType(
   if (!private_dom_event) { return DRAG_AND_DROP_EVENT_INVALID; }
 
   nsEvent *ns_event;
-  nsresult nr = private_dom_event->GetInternalNSEvent(&ns_event);
+  nsresult nr;
+#if BROWSER_FF31
+  ns_event = private_dom_event->GetInternalNSEvent();
+  if (!ns_event) { return DRAG_AND_DROP_EVENT_INVALID; }
+#else
+  nr = private_dom_event->GetInternalNSEvent(&ns_event);
   if (NS_FAILED(nr)) { return DRAG_AND_DROP_EVENT_INVALID; }
+#endif
 
   if (ns_event->eventStructType != NS_MOUSE_EVENT) {
     return DRAG_AND_DROP_EVENT_INVALID;
