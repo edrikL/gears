@@ -302,18 +302,38 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
     return NS_ERROR_FAILURE;
   }
 
+  nsCString firefox_version;
+  app_info->GetVersion(firefox_version);
+#if defined(BROWSER_FF31)
+  if (strncmp(firefox_version.BeginReading(), "3.5", 3) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+#else
+  if (strncmp(firefox_version.BeginReading(), "3.0", 3) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   // We don't support the early betas of Firefox 3 that many people have
   // installed, so we explicitly disallow those versions here.
   nsCString build_id_string;
   app_info->GetPlatformBuildID(build_id_string);
 
-  // The first FF3 version that we support is RC1. I got its build ID here:
-  // http://wiki.mozilla.org/QA/Firefox3/TestResults/RC1
-  // There are several listed for the various platforms. I use the earliest.
-  int build_id = ParseLeadingInteger(build_id_string.BeginReading(), NULL);
-  if (build_id < 2008051202) {
-    return NS_ERROR_FAILURE;
+  // We need to test the first ten digits of the build ID to determine if it
+  // predates our Firefox 3 support.  If the ID is longer than 10 digits, then
+  // we support this version.
+  const int BUILDID_SIGNIFICANT_DIGITS = 10;
+  const char *build_id_chars = build_id_string.BeginReading();
+  if (strlen(build_id_chars) <= BUILDID_SIGNIFICANT_DIGITS) {
+    // The first FF3 version that we support is RC1. I got its build ID here:
+    // http://wiki.mozilla.org/QA/Firefox3/TestResults/RC1
+    // There are several listed for the various platforms. I use the earliest.
+    int build_id = ParseLeadingInteger(build_id_chars, NULL);
+    if (build_id < 2008051202) {
+      return NS_ERROR_FAILURE;
+    }
   }
+#endif
+
 #endif
 
   return NS_NewGenericModule2(&kModuleInfo, result);

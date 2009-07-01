@@ -2258,6 +2258,14 @@ FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
 FF2_IDLSRCS += $(FF3_IDLSRCS)
 FF2_CPPSRCS += $(FF3_CPPSRCS)
 
+# Add any hard-coded "FF3_" sources to the FF31_ sources.
+
+FF31_VPATH += $(FF3_VPATH)
+FF31_M4SRCS += $(FF3_M4SRCS)
+FF31_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
+FF31_IDLSRCS += $(FF3_IDLSRCS)
+FF31_CPPSRCS += $(FF3_CPPSRCS)
+
 
 # Chrome-specific hackery. Chrome is built with BROWSER=NPAPI and OS=win32.
 # We use this guard to avoid clobbering NPAPI_XXX for other builds.

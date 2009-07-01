@@ -61,6 +61,11 @@
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/module_wrapper.h"
 
+#if BROWSER_FF3
+// JS_DLL_CALLBACK was deprecated in Firefox 3.1
+#define JS_DLL_CALLBACK
+#endif
+
 static const int kGarbageCollectionIntervalMsec = 2000;
 
 // Local helper function.

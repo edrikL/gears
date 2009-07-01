@@ -36,6 +36,11 @@
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npapi_storage.h"
 #include "third_party/spidermonkey/gears_npapi_bindings/mozjs_npruntime.h"
 
+#if BROWSER_FF3
+// JS_DLL_CALLBACK was deprecated in Firefox 3.1
+#define JS_DLL_CALLBACK
+#endif
+
 // Mutex to guard JSCreateContext calls.
 static Mutex engine_creation_mutex;
 

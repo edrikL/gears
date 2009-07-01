@@ -139,7 +139,9 @@ NS_IMETHODIMP GearsFactory::DelegateToFactoryImpl(const char *name,
     }
   }
   if (context.is_exception_set()) {
+#if !(BROWSER_FF31)
     ncc->SetExceptionWasThrown(PR_TRUE);
+#endif
   } else {
     if (!context.is_return_value_set()) {
       // Properties should always either throw an exception, or return a value.

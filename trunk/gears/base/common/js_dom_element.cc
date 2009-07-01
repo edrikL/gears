@@ -60,7 +60,12 @@ JsDomElement::~JsDomElement() {
 // The IIDs for nsIContent in different versions of Firefox/Gecko.
 // TODO(michaeln): Add to this list as new versions show up.
 
-#if BROWSER_FF3
+#if BROWSER_FF31
+// Firefox 3.5
+#define NS_ICONTENT_IID_GECKO191 \
+{ 0x2813b1d9, 0x7fe1, 0x496f, \
+   { 0x85, 0x52, 0xa2, 0xc1, 0xc5, 0x6b, 0x15, 0x40 } }
+#elif BROWSER_FF3
 // Firefox 3.0.x
 #define NS_ICONTENT_IID_GECKO190 \
 { 0x0acd0482, 0x09a2, 0x42fd, \
@@ -77,7 +82,9 @@ JsDomElement::~JsDomElement() {
 #endif  // BROWSER_FF3
 
 static const nsIID kPossibleNsContentIIDs[] = {
-#if BROWSER_FF3
+#if BROWSER_FF31
+  NS_ICONTENT_IID_GECKO191,
+#elif BROWSER_FF3
   NS_ICONTENT_IID_GECKO190,
 #else
   NS_ICONTENT_IID_GECKO180,

@@ -39,10 +39,12 @@ ifdef CMD_LINE_BROWSER
   ifeq ($(OS),win32)
     ifneq ($(BROWSER),FF2)
     ifneq ($(BROWSER),FF3)
+    ifneq ($(BROWSER),FF31)
     ifneq ($(BROWSER),IE)
     ifneq ($(BROWSER),NPAPI)
     ifneq ($(BROWSER),NONE)
-      $(error On Windows, BROWSER can only be one of: FF2 | FF3 | IE | NPAPI | NONE)
+      $(error On Windows, BROWSER can only be one of: FF2 | FF3 | FF31 | IE | NPAPI | NONE)
+    endif
     endif
     endif
     endif
@@ -61,9 +63,11 @@ ifdef CMD_LINE_BROWSER
   ifeq ($(OS),osx)
     ifneq ($(BROWSER),FF2)
     ifneq ($(BROWSER),FF3)
+    ifneq ($(BROWSER),FF31)
     ifneq ($(BROWSER),SF)
     ifneq ($(BROWSER),NONE)
-      $(error On OS X, BROWSER can only be one of: FF2 | FF3 | SF | NONE)
+      $(error On OS X, BROWSER can only be one of: FF2 | FF3 | FF31 | SF | NONE)
+    endif
     endif
     endif
     endif
@@ -72,9 +76,11 @@ ifdef CMD_LINE_BROWSER
   ifeq ($(OS),linux)
     ifneq ($(BROWSER),FF2)
     ifneq ($(BROWSER),FF3)
+    ifneq ($(BROWSER),FF31)
     ifneq ($(BROWSER),NPAPI)
     ifneq ($(BROWSER),NONE)
-      $(error On Linux, BROWSER can only be one of: FF2 | FF3 | NPAPI | NONE)
+      $(error On Linux, BROWSER can only be one of: FF2 | FF3 | FF31 | NPAPI | NONE)
+    endif
     endif
     endif
     endif
