@@ -321,7 +321,7 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
   // We need to test the first ten digits of the build ID to determine if it
   // predates our Firefox 3 support.  If the ID is longer than 10 digits, then
   // we support this version.
-  const int BUILDID_SIGNIFICANT_DIGITS = 10;
+  const size_t BUILDID_SIGNIFICANT_DIGITS = 10;
   const char *build_id_chars = build_id_string.BeginReading();
   if (strlen(build_id_chars) <= BUILDID_SIGNIFICANT_DIGITS) {
     // The first FF3 version that we support is RC1. I got its build ID here:

@@ -57,7 +57,9 @@
    system <stdint.h> is present and useable.  Otherwise, they should
    include "jsstdint.h", which uses values guessed at configuration
    time.  */
-/* #undef JS_HAVE_STDINT_H */
+#if !defined(WIN32)
+#define JS_HAVE_STDINT_H 1
+#endif
 
 /* Define to 1 if the public SpiderMonkey headers may assume that the
    N-byte __intN types are defined by the compiler.  */
