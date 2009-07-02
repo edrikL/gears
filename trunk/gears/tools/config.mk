@@ -739,7 +739,7 @@ FF31_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 # Append differences here:
 FF2_LIBS +=  -lxpcom_core
 FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
-FF31_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
+FF31_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a 
 
 # Iceberg command line tool.
 ICEBERG = /usr/local/bin/freeze
