@@ -189,11 +189,18 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
                   <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
 `~)
-                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff3.dll' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff3.dll" />
+m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+`~,~`m4dnl
+                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff3.pdb' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff3.pdb" />
+`~)
+                  <File Id='ff31_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
 m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
 `~,~`m4dnl
-                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                  <File Id='ff31_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
                 </Component>
