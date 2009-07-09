@@ -182,27 +182,8 @@ m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
                   <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
-                  <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.dll' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.dll" />
-m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
-`~,~`m4dnl
-                  <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
-`~)
-                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff3.dll' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff3.dll" />
-m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
-`~,~`m4dnl
-                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff3.pdb' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff3.pdb" />
-`~)
-                  <File Id='ff31_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
-m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
-`~,~`m4dnl
-                  <File Id='ff31_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
-`~)
+                  <File Id='ff_stub.js' Name='stub.js'
+                    DiskId='1' Source="$(var.OurFFPath)/components/stub.js" />
                 </Component>
               </Directory>
 
@@ -259,6 +240,43 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
                   <File Id='ff_updater.js' Name='updater.js'
                     DiskId='1' Source="$(var.OurFFPath)/lib/updater.js" />
                 </Component>
+
+                <Directory Id='OurFF2Dir' Name='ff2'>
+                  <Component Id='OurFF2DirFiles' Guid='$(var.OurComponentGUID_FF2DirFiles)'>
+                    <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff2/PRODUCT_SHORT_NAME_UQ.dll" />
+  m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+  `~,~`m4dnl
+                    <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff2/PRODUCT_SHORT_NAME_UQ.pdb" />
+  `~)
+                  </Component>
+                </Directory>
+
+                <Directory Id='OurFF30Dir' Name='ff30'>
+                  <Component Id='OurFF30DirFiles' Guid='$(var.OurComponentGUID_FF30DirFiles)'>
+                    <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff30/PRODUCT_SHORT_NAME_UQ.dll" />
+  m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+  `~,~`m4dnl
+                    <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff30/PRODUCT_SHORT_NAME_UQ.pdb" />
+  `~)
+                  </Component>
+                </Directory>
+
+                <Directory Id='OurFF35Dir' Name='ff35'>
+                  <Component Id='OurFF35DirFiles' Guid='$(var.OurComponentGUID_FF35DirFiles)'>
+                    <File Id='ff35_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff35/PRODUCT_SHORT_NAME_UQ.dll" />
+  m4_ifelse(~`OFFICIAL_BUILD`~,~`m4dnl
+  `~,~`m4dnl
+                    <File Id='ff35_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                      Source="$(var.OurFFPath)/lib/ff35/PRODUCT_SHORT_NAME_UQ.pdb" />
+  `~)
+                  </Component>
+                </Directory>
+
               </Directory>
             </Directory>
 
@@ -274,6 +292,9 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
       <ComponentRef Id='OurFFDirFiles' />
       <ComponentRef Id='OurFFComponentsDirFiles' />
       <ComponentRef Id='OurFFLibDirFiles' />
+      <ComponentRef Id='OurFF2DirFiles' />
+      <ComponentRef Id='OurFF30DirFiles' />
+      <ComponentRef Id='OurFF35DirFiles' />
       <ComponentRef Id='OurFFContentDirFiles' />
       <ComponentRef Id='OurSharedVersionedDirFiles' />
 m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl

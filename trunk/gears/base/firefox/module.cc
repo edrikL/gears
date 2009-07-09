@@ -37,7 +37,6 @@
 #include <gecko_sdk/include/nsICategoryManager.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
-#include <gecko_internal/nsIXULAppInfo.h>
 
 #include "gears/base/common/leak_counter.h"
 #include "gears/base/common/message_queue.h"
@@ -280,61 +279,5 @@ static nsModuleInfo const kModuleInfo = {
 NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
                                        nsIFile* location,
                                        nsIModule** result) {
-  // This module is compiled once against Gecko 1.8 (Firefox 1.5 and 2) and
-  // once against Gecko 1.9 (Firefox 3). We need to make sure that we are
-  // only loaded into the environment we were compiled against.
-  nsresult nr;
-  nsCOMPtr<nsIXULAppInfo> app_info =
-      do_GetService("@mozilla.org/xre/app-info;1", &nr);
-  if (NS_FAILED(nr) || !app_info) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCString gecko_version;
-  app_info->GetPlatformVersion(gecko_version);
-
-#if defined(BROWSER_FF2)
-  if (strncmp(gecko_version.BeginReading(), "1.8", 3) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-#elif defined(BROWSER_FF3)
-  if (strncmp(gecko_version.BeginReading(), "1.9", 3) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCString firefox_version;
-  app_info->GetVersion(firefox_version);
-#if defined(BROWSER_FF31)
-  if (strncmp(firefox_version.BeginReading(), "3.5", 3) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-#else
-  if (strncmp(firefox_version.BeginReading(), "3.0", 3) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We don't support the early betas of Firefox 3 that many people have
-  // installed, so we explicitly disallow those versions here.
-  nsCString build_id_string;
-  app_info->GetPlatformBuildID(build_id_string);
-
-  // We need to test the first ten digits of the build ID to determine if it
-  // predates our Firefox 3 support.  If the ID is longer than 10 digits, then
-  // we support this version.
-  const size_t BUILDID_SIGNIFICANT_DIGITS = 10;
-  const char *build_id_chars = build_id_string.BeginReading();
-  if (strlen(build_id_chars) <= BUILDID_SIGNIFICANT_DIGITS) {
-    // The first FF3 version that we support is RC1. I got its build ID here:
-    // http://wiki.mozilla.org/QA/Firefox3/TestResults/RC1
-    // There are several listed for the various platforms. I use the earliest.
-    int build_id = ParseLeadingInteger(build_id_chars, NULL);
-    if (build_id < 2008051202) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-#endif
-
-#endif
-
   return NS_NewGenericModule2(&kModuleInfo, result);
 }
