@@ -691,7 +691,16 @@ void CacheIntercept::Init() {
     return;
   }
 
-  nsresult rv = reg->RegisterFactory(kCacheCID,
+  // NOTE: Here we are overriding the default implementation of
+  // NS_CACHESERVICE_CONTRACTID with our own implementation. A more agressive
+  // design (which we used to use) would override the class id in addition to
+  // the contract id. However doing that would mean that we also need to
+  // implement any private interfaces that other parts of the Mozilla expect.
+  // Overriding only the contract ID means that we hope other people in Firefox
+  // are only accessing the cache service interface by contract ID, never by
+  // class ID.
+  // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=502403
+  nsresult rv = reg->RegisterFactory(kCacheInterceptClassId,
                                      kCacheInterceptClassName,
                                      NS_CACHESERVICE_CONTRACTID,
                                      factory);
