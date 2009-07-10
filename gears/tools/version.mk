@@ -36,7 +36,7 @@
 # http://msdn.microsoft.com/en-us/library/aa370859(VS.85).aspx
 MAJOR = 0
 MINOR = 5
-BUILD = 28
+BUILD = 29
 PATCH = 0
 
 VERSION = $(MAJOR).$(MINOR).$(BUILD).$(PATCH)
