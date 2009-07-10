@@ -693,17 +693,27 @@ void CacheIntercept::Init() {
 
   // NOTE: Here we are overriding the default implementation of
   // NS_CACHESERVICE_CONTRACTID with our own implementation. A more agressive
-  // design (which we used to use) would override the class id in addition to
-  // the contract id. However doing that would mean that we also need to
-  // implement any private interfaces that other parts of the Mozilla expect.
-  // Overriding only the contract ID means that we hope other people in Firefox
-  // are only accessing the cache service interface by contract ID, never by
-  // class ID.
+  // design (which we used to use and was required for FF2) would override the
+  // class id in addition to the contract id. However doing that would mean that
+  // we also need to implement any private interfaces that other parts of the
+  // Mozilla expect. Overriding only the contract ID means that we hope other
+  // people in Firefox are only accessing the cache service interface by
+  // contract ID, never by class ID.
   // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=502403
+#if BROWSER_FF2
+  // We must override the private implementation on Firefox 2
+  nsresult rv = reg->RegisterFactory(kCacheCID,
+                                     kCacheInterceptClassName,
+                                     NS_CACHESERVICE_CONTRACTID,
+                                     factory);
+#else
+  // Overriding just the contract works on Firefox 3 and 3.5
   nsresult rv = reg->RegisterFactory(kCacheInterceptClassId,
                                      kCacheInterceptClassName,
                                      NS_CACHESERVICE_CONTRACTID,
                                      factory);
+#endif
+
   if (NS_FAILED(rv)) {
     LOG(("CacheIntercept: failed to register factory\n"));
   }
