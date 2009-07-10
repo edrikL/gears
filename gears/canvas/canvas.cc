@@ -381,6 +381,17 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
     return false;
   }
 
+  // The implementation of step (2) below has so far only been done for the two
+  // most common configurations: 8-bit indexed color and 32-bit true-color.
+  if (old_bitmap.config() != SkBitmap::kIndex8_Config &&
+      old_bitmap.config() != SkBitmap::kARGB_8888_Config) {
+    return false;
+  }
+  SkColorTable *color_table =
+      (old_bitmap.config() == SkBitmap::kARGB_8888_Config)
+          ? NULL : old_bitmap.getColorTable();
+
+  assert(new_bitmap.config() == SkBitmap::kARGB_8888_Config);
   assert(old_bitmap.readyToDraw());
   assert(new_bitmap.readyToDraw());
   SkAutoLockPixels old_bitmap_lock(old_bitmap);
@@ -432,7 +443,13 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
   // For example, the "f" old pixel has qt=1, qb=1, ql=1, qr=2.
   // Similarly, the "j" old pixel has qt=2, qb=0, ql=1, qr=2.
   for (int y = 0; y < old_height; y++) {
-    uint32_t* old_row = old_bitmap.getAddr32(0, y);
+    uint32_t* old_row32 = NULL;
+    uint8_t* old_row8 = NULL;
+    if (old_bitmap.config() == SkBitmap::kARGB_8888_Config) {
+      old_row32 = old_bitmap.getAddr32(0, y);
+    } else {
+      old_row8 = old_bitmap.getAddr8(0, y);
+    }
 
     int new_y = (y * new_height) / old_height;
     int qt = ((new_y + 1) * old_height) - (y * new_height);
@@ -451,11 +468,13 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
       int qr = new_width - ql;
       assert((x != old_width - 1) || (qr == 0));
 
+      SkPMColor pm_color = (old_bitmap.config() == SkBitmap::kARGB_8888_Config)
+          ? old_row32[x] : (*color_table)[old_row8[x]];
       int channels[4];
-      channels[0] = (old_row[x] >> 24) & 0xFF;
-      channels[1] = (old_row[x] >> 16) & 0xFF;
-      channels[2] = (old_row[x] >>  8) & 0xFF;
-      channels[3] = (old_row[x] >>  0) & 0xFF;
+      channels[0] = (pm_color >> 24) & 0xFF;
+      channels[1] = (pm_color >> 16) & 0xFF;
+      channels[2] = (pm_color >>  8) & 0xFF;
+      channels[3] = (pm_color >>  0) & 0xFF;
 
       // Now accumulate the old pixels over the (up to four) new pixels. Note
       // that, although (new_x + 1), (new_y + 1) or both might be out of bounds
