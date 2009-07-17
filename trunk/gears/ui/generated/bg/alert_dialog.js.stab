@@ -1,0 +1,5 @@
+<string id="string-html-title">Известие от Gears</string>
+<string id="string-close">Затваряне</string>
+<string id="string-incompatibility-error">
+  Gears has detected an incompatibility with another program. Your web applications may not work correctly until you resolve it.<br><br> Visit <a href="http://gears.google.com/support/?ctx=incompatibility" target="_blank"> this Google Support page</a> to learn how to resolve this problem.
+</string>
