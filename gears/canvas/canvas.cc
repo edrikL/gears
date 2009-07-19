@@ -410,10 +410,13 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
 
   // This is step (2). The weighting will be illustrated with an example of
   // minifying a 4*3 image to become a 3*2 image.
-  // Conceptually, consider a 12*6 grid. Each of the 12 old pixels (labelled
-  // a-l) is worth 6 cells each. Each of the 6 new pixels (delimited by
-  // whitespace) are worth 12 cells each. The weights that each old pixel
-  // contributes to each new pixel is:
+  // Conceptually, consider a 12*6 grid. This grid has a width (12) equal to
+  // the product of the old and new widths (4 and 3). Similarly, this grid has
+  // a height (6) equal to the product of the old and new heights (3 and 2).
+  // Each of the 12 old pixels (labelled a-l) is worth 6 (= new_size) cells
+  // each. Each of the 6 new pixels (delimited by whitespace) are worth 12
+  // (= old_size) cells each. The weights that each old pixel contributes to
+  // each new pixel is:
   //
   //      aaab bbcc cddd
   //      aaab bbcc cddd
@@ -442,6 +445,20 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
   // new_height) and (ql + qr == new_width) must always hold.
   // For example, the "f" old pixel has qt=1, qb=1, ql=1, qr=2.
   // Similarly, the "j" old pixel has qt=2, qb=0, ql=1, qr=2.
+  //
+  // As a final point (for step (2)), there are old_size grid cells per new
+  // pixel, and each cell can have a value from 0-255 inclusive. To avoid
+  // 32-bit (signed) integer overflow during the accumulation, if old_size is
+  // larger than 2^23 then we scale the weights by a positive weight_shift.
+  // The magic number 2^23 was chosen because it is (slightly) less than
+  // ((2^31) - 1) / 255), and ((2^31) - 1) is the maximum value of an int32.
+  int weight_shift = 0;
+  int max_weight_divided_by_255 = old_size;
+  while (max_weight_divided_by_255 > (1 << 23)) {
+    max_weight_divided_by_255 >>= 1;
+    weight_shift++;
+  }
+
   for (int y = 0; y < old_height; y++) {
     uint32_t* old_row32 = NULL;
     uint8_t* old_row8 = NULL;
@@ -481,24 +498,28 @@ static bool HighestQualityMinify(SkBitmap &old_bitmap, SkBitmap &new_bitmap) {
       // of the buffer array, in those cases (i.e. new_x == new_width - 1),
       // (new_y == new_height - 1) or both, the accumulate call will be a no-op
       // because (qr == 0), (qb == 0) or both.
-      accumulate(buffer, new_x + 0, new_y + 0, new_width, channels, qt * ql);
-      accumulate(buffer, new_x + 1, new_y + 0, new_width, channels, qt * qr);
-      accumulate(buffer, new_x + 0, new_y + 1, new_width, channels, qb * ql);
-      accumulate(buffer, new_x + 1, new_y + 1, new_width, channels, qb * qr);
+      accumulate(buffer, new_x + 0, new_y + 0, new_width, channels,
+          (qt * ql) >> weight_shift);
+      accumulate(buffer, new_x + 1, new_y + 0, new_width, channels,
+          (qt * qr) >> weight_shift);
+      accumulate(buffer, new_x + 0, new_y + 1, new_width, channels,
+          (qb * ql) >> weight_shift);
+      accumulate(buffer, new_x + 1, new_y + 1, new_width, channels,
+          (qb * qr) >> weight_shift);
     }
   }
 
   // This is step (3).
   uint32 *b = buffer;
-  int half_old_size = old_size / 2;
+  int half = max_weight_divided_by_255 / 2;
   for (int y = 0; y < new_height; y++) {
     uint32_t* new_row = new_bitmap.getAddr32(0, y);
     for (int x = 0; x < new_width; x++) {
-      // We round to nearest, not round down, so we add half_old_size.
-      int c0 = ((*b++) + half_old_size) / old_size;
-      int c1 = ((*b++) + half_old_size) / old_size;
-      int c2 = ((*b++) + half_old_size) / old_size;
-      int c3 = ((*b++) + half_old_size) / old_size;
+      // We round to nearest, not round down, so we first add "half".
+      int c0 = ((*b++) + half) / max_weight_divided_by_255;
+      int c1 = ((*b++) + half) / max_weight_divided_by_255;
+      int c2 = ((*b++) + half) / max_weight_divided_by_255;
+      int c3 = ((*b++) + half) / max_weight_divided_by_255;
       new_row[x] = (((((c0 << 8) | c1) << 8) | c2) << 8) | c3;
     }
   }
