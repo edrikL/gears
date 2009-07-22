@@ -91,12 +91,25 @@ class DragSession {
     return true;
   }
 
+  bool AllowFileDrop() {
+    if (!BrowserSupportsAllowFileDrop())
+      return false;
+    if (browser().allow_file_drop(g_cpid, context_, this->data()))
+      return false;  // Failed.
+    return true;
+  }
+
   ~DragSession() {
     ReleaseTypeAndData();
   }
 
   static bool BrowserSupportsDragDrop() {
     static const CPB_GetDragDataFunc kFunc(browser().get_drag_data);
+    return kFunc != NULL;
+  }
+
+  static bool BrowserSupportsAllowFileDrop() {
+    static const CPB_AllowFileDropFunc kFunc(browser().allow_file_drop);
     return kFunc != NULL;
   }
 
@@ -236,7 +249,7 @@ static bool FindDragFiles(JsRunnerInterface *runner, DragSession *drag) {
 
   // "Say" there's 1 drag file until we know more; extract the files.
   g_drag_files = 1;
-  if (!drag->GetDragData())
+  if (!drag->GetDragData() || !drag->AllowFileDrop())
     return false;
   static const std::string16 kDelimiter(STRING16(L"\b"));
   std::vector<std::string16> files;
