@@ -166,26 +166,24 @@ def main():
   elif osutils.osIsWin():
     launchers.append(browser_launchers.IExploreWin32Launcher())
     launchers.append(browser_launchers.Firefox3Win32Launcher('ff3profile-win'))
+    launchers.append(browser_launchers.Firefox35Win32Launcher(
+        'ff31profile-win'))
     launchers.append(browser_launchers.ChromeWin32Launcher())
     installers.append(installer.ChromeWin32Installer())
     if osutils.osIsVista():
       installers.append(installer.WinVistaInstaller())
     else:
-      launchers.append(
-          browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
       installers.append(installer.WinXpInstaller())
   elif osutils.osIsNix():
     if osutils.osIsMac():
-      launchers.append(browser_launchers.Firefox2MacLauncher('gears-ff2'))
       launchers.append(browser_launchers.Firefox3MacLauncher('gears-ff3'))
-      installers.append(installer.Firefox2MacInstaller('gears-ff2'))
+      launchers.append(browser_launchers.Firefox35MacLauncher('gears-ff35'))
       installers.append(installer.Firefox3MacInstaller('gears-ff3'))
+      installers.append(installer.Firefox35MacInstaller('gears-ff35'))
       launchers.append(browser_launchers.SafariMacLauncher())
       installers.append(installer.SafariMacInstaller(build_type))
     else:
-      launchers.append(browser_launchers.Firefox2LinuxLauncher('gears-ff2'))
       launchers.append(browser_launchers.Firefox3LinuxLauncher('gears-ff3'))
-      installers.append(installer.Firefox2LinuxInstaller('gears-ff2'))
       installers.append(installer.Firefox3LinuxInstaller('gears-ff3'))
 
   # Adding second and third webservers for cross domain tests.
