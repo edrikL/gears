@@ -121,17 +121,17 @@ class Firefox3Win32Launcher(BaseFirefoxWin32Launcher):
     return 'Firefox3Win32'
 
 
-class Firefox31Win32Launcher(BaseFirefoxWin32Launcher):
-  """Launcher for ff3.1 win32."""
+class Firefox35Win32Launcher(BaseFirefoxWin32Launcher):
+  """Launcher for ff3.5 win32."""
 
-  FIREFOX_PATH = 'Mozilla Firefox 3.1 Beta 2\\firefox.exe'
+  FIREFOX_PATH = 'Mozilla Firefox 3.5\\firefox.exe'
 
   def __init__(self, profile, automated=True):
     BaseFirefoxWin32Launcher.__init__(self, profile, self.FIREFOX_PATH,
                                       automated)
 
   def type(self):
-    return 'Firefox31Win32'
+    return 'Firefox35Win32'
 
 
 class IExploreWin32Launcher(BaseWin32Launcher):
@@ -309,17 +309,17 @@ class Firefox3MacLauncher(BaseFirefoxMacLauncher):
     return 'Firefox3Mac'
 
 
-class Firefox31MacLauncher(BaseFirefoxMacLauncher):
-  """Firefox 3.1 launcher for mac."""
+class Firefox35MacLauncher(BaseFirefoxMacLauncher):
+  """Firefox 3.5 launcher for mac."""
 
-  FIREFOX_PATH = '/Applications/Firefox3.1.app/Contents/MacOS/firefox-bin'
+  FIREFOX_PATH = '/Applications/Firefox3.5.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile, automated=True):
     BaseFirefoxMacLauncher.__init__(self, profile, automated,
                                     self.FIREFOX_PATH)
 
   def type(self):
-    return 'Firefox31Mac'
+    return 'Firefox35Mac'
 
 
 class BaseFirefoxLinuxLauncher(BasePosixLauncher):

@@ -543,10 +543,10 @@ class Firefox3MacInstaller(BaseFirefoxMacInstaller):
                                      self.FIREFOX_PATH, 'ff3profile-mac')
 
 
-class Firefox31MacInstaller(BaseFirefoxMacInstaller):
-  """Firefox 3.1 installer for mac."""
+class Firefox35MacInstaller(BaseFirefoxMacInstaller):
+  """Firefox 3.5 installer for mac."""
 
-  FIREFOX_PATH = '/Applications/Firefox3.1.app/Contents/MacOS/firefox-bin'
+  FIREFOX_PATH = '/Applications/Firefox3.5.app/Contents/MacOS/firefox-bin'
 
   def __init__(self, profile_name):
     BaseFirefoxMacInstaller.__init__(self, profile_name,
