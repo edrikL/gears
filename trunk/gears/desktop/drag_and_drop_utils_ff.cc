@@ -122,6 +122,11 @@ static const nsString kDragOverAsString(STRING16(L"dragover"));
 static const nsString kDragExitAsString(STRING16(L"dragexit"));
 static const nsString kDragDropAsString(STRING16(L"dragdrop"));
 
+#if BROWSER_FF31
+// Firefox 3.5 (and above) use the HTML5 event names: "dragleave", "drop".
+static const nsString kDragLeaveAsString(STRING16(L"dragleave"));
+static const nsString kDropAsString(STRING16(L"drop"));
+#endif
 
 // Given a DOMEvent (as a JsObject), return what type of event we are in,
 // also checking that we are in event dispatch (and not, for example, a
@@ -153,9 +158,16 @@ DragAndDropEventType GetDragAndDropEventType(
   if (NS_FAILED(nr)) { return DRAG_AND_DROP_EVENT_INVALID; }
 #endif
 
+#if BROWSER_FF31
+  if (ns_event->eventStructType != NS_DRAG_EVENT) {
+    return DRAG_AND_DROP_EVENT_INVALID;
+  }
+#else
   if (ns_event->eventStructType != NS_MOUSE_EVENT) {
     return DRAG_AND_DROP_EVENT_INVALID;
   }
+#endif
+
   nsMouseEvent *ns_mouse_event = static_cast<nsMouseEvent*>(ns_event);
   if (!ns_mouse_event->widget) { return DRAG_AND_DROP_EVENT_INVALID; }
 
@@ -261,11 +273,20 @@ DragAndDropEventType GetDragAndDropEventType(
     }
 #endif
     return DRAG_AND_DROP_EVENT_DRAGENTER;
+#if BROWSER_FF31
+  } else if (event_type.Equals(kDragLeaveAsString)) {
+    return DRAG_AND_DROP_EVENT_DRAGLEAVE;
+  } else if (event_type.Equals(kDropAsString)) {
+    return DRAG_AND_DROP_EVENT_DROP;
+  }
+#else
   } else if (event_type.Equals(kDragExitAsString)) {
     return DRAG_AND_DROP_EVENT_DRAGLEAVE;
   } else if (event_type.Equals(kDragDropAsString)) {
     return DRAG_AND_DROP_EVENT_DROP;
   }
+#endif
+
   return DRAG_AND_DROP_EVENT_INVALID;
 }
 
