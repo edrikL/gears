@@ -1,4 +1,4 @@
-<html><head><title>Gears Drag and Drop, setData(aFileUrl)</title></head>
+<html><head><title>Gears Drag Drop, setData(aFileUrl)</title></head>
 <body>
 <p>Instructions: drag the image and drop it into the black-bordered square.
 If you get an alert, then something is wrong (i.e. Gears drag and drop has
@@ -17,37 +17,93 @@ Anyway, the fact that an arbitrary web page can put filenames onto the
 pasteboard, during ondrag, may or may not be a WebKit bug. The TODO is for
 me to discuss this upstream, with the WebKit people. -->
 
-<img src="icon_48x48.png" ondragstart="onImgDragStart()"/>
+<img src="icon_48x48.png" ondragstart="onImgDragStart(event)"/>
 
 <div id="dropZone" style="border:1px solid black; width:48px; height:48px">
+</div>
+<div id="dropResult">
 </div>
 
 <script type="text/javascript" src="../../sdk/gears_init.js"></script>
 <script type="text/javascript">
 
-var dropZone = document.getElementById('dropZone');
 var desktop = google.gears.factory.create('beta.desktop');
-desktop.registerDropTarget(dropZone, {
-  'ondragenter': function(context) {
-    return false;
-  },
-  'ondragover': function(context) {
-    return false;
-  },
-  'ondragleave': function(context) {
-  },
-  'ondrop': function(context) {
-    if (context.files && context.files.length > 0) {
-      alert('Gears drag and drop has a potential security hole.');
-    }
-  }
-});
+var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
 
-function onImgDragStart() {
-  var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
-  window.event.dataTransfer.setData('URL', isWin32
-      ? 'file:///C:\\WINDOWS\\notepad.exe'
-      : 'file:///etc/passwd');
+var html5 = true;  // Use HTML5-defined drag event names.
+if (isFirefox && navigator.userAgent.indexOf('Firefox/2.0.') > -1)
+  html5 = false;  // FF2.0 uses "dragexit" and "dragdrop"
+if (isFirefox && navigator.userAgent.indexOf('Firefox/3.0.') > -1)
+  html5 = false;  // FF3.0 uses "dragexit" and "dragdrop"
+
+function stopPropagation(evt) {
+  if (typeof evt.stopPropagation === 'function')
+    evt.stopPropagation();
+  evt.cancelBubble = true;
+}
+
+function preventDefault(evt) {
+  if (typeof evt.preventDefault === 'function')
+    evt.preventDefault();
+  evt.returnValue = false;
+  return false;
+}
+
+function dragEnter(evt) {
+  desktop.setDropEffect(evt, 'copy');
+  return preventDefault(evt);
+}
+
+function dragOver(evt) {
+  desktop.setDropEffect(evt, 'copy');
+  return preventDefault(evt);
+}
+
+function dragDrop(evt) {
+  stopPropagation(evt);
+
+  var data = desktop.getDragData(evt, 'application/x-gears-files');
+  if (!data || !data.files)
+    return;
+
+  if (data.files.length)
+    alert('Gears drag and drop has a potential security hole.');
+
+  var s = '';
+  for (var i = 0; i < data.files.length; ++i) {
+    s += data.files[i].name + ' ';
+  }
+
+  var result = document.getElementById('dropResult');
+  result.innerHTML = s;
+}
+
+var dropZone = document.getElementById('dropZone');
+if (dropZone.attachEvent) {
+  dropZone.attachEvent('ondragenter', dragEnter);
+  dropZone.attachEvent('ondragover', dragOver);
+  dropZone.attachEvent('ondrop', dragDrop);
+} else if (dropZone.addEventListener) {
+  dropZone.addEventListener('dragenter', dragEnter, false);
+  dropZone.addEventListener('dragover', dragOver, false);
+  dropZone.addEventListener(html5 ? 'drop' : 'dragdrop', dragDrop, false);
+}
+
+function dataType() {
+  return isFirefox ? 'text/uri-list' : 'URL';
+}
+
+function fileURL() {
+  return isWin32 ? 'file:///C:\\WINDOWS\\notepad.exe' : 'file:///etc/passwd';
+}
+
+function onImgDragStart(evt) {
+  if (window.event && window.event.dataTransfer) {
+    window.event.dataTransfer.setData(dataType(), fileURL());
+  } else if (evt.dataTransfer) {
+    evt.dataTransfer.setData(dataType(), fileURL());
+  }
 }
 
 </script>
