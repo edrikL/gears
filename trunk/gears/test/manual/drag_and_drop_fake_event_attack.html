@@ -26,10 +26,8 @@ var isNpapi = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
 var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 
 var html5 = true;  // Use HTML5-defined drag event names.
-if (isFirefox && navigator.userAgent.indexOf('Firefox/2.0.') > -1)
-  html5 = false;  // FF2.0 uses "dragexit" and "dragdrop"
-if (isFirefox && navigator.userAgent.indexOf('Firefox/3.0.') > -1)
-  html5 = false;  // FF3.0 uses "dragexit" and "dragdrop"
+if (navigator.userAgent.match(/Firefox\/[2-3]\.0/))
+  html5 = false;  // FF2.0, FF3.0 use "dragexit" and "dragdrop".
 
 var isInManualDispatch = false;
 
