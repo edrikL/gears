@@ -307,7 +307,7 @@ void SetDragCursor(ModuleEnvironment *module_environment,
     return;
   }
 
-#ifdef WIN32
+#if GEARS_DRAG_AND_DROP_USES_INTERCEPTOR
   if (module_environment->drop_target_interceptor_) {
     module_environment->drop_target_interceptor_->SetDragCursor(cursor_type);
   }
@@ -582,7 +582,7 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
       error_out);
 #else
 
-#if defined(WIN32)
+#if GEARS_DRAG_AND_DROP_USES_INTERCEPTOR
   if (!module_environment->drop_target_interceptor_) {
     return false;
   }
@@ -664,7 +664,7 @@ bool AddFileDragAndDropData(ModuleEnvironment *module_environment,
     filenames.push_back(std::string16(filename.get()));
   }
 
-#if defined(WIN32)
+#if GEARS_DRAG_AND_DROP_USES_INTERCEPTOR
   FileDragAndDropMetaData &file_drag_and_drop_meta_data =
       module_environment->drop_target_interceptor_->
           GetFileDragAndDropMetaData();

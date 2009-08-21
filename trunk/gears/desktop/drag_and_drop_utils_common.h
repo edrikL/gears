@@ -34,6 +34,34 @@
 
 #if GEARS_DRAG_AND_DROP_API_IS_SUPPORTED_FOR_THIS_PLATFORM
 
+
+#if defined(WIN32)
+#if BROWSER_IE
+#define GEARS_DRAG_AND_DROP_USES_INTERCEPTOR 1
+#elif BROWSER_FF
+// Whilst GEARS_DRAG_AND_DROP_USES_INTERCEPTOR mostly works for Firefox/Win32,
+// some bugs remain. In particular, if the gears_init.js script is invoked in
+// the HTML HEAD, instead of the HTML BODY, then during the Gears Factory
+// construction, the HWND that we want to intercept doesn't actually exist yet
+// (and is probably generated when the <body> tag is parsed).
+// The interceptor instead latches on to an incorrect HWND (since there are
+// multiple matches to EnumChildWindows, and we're simply using last-one-wins,
+// and we get weird behavior, such as the first drag-and-drop of files onto a
+// web page works, but subsequent ones only yield the first DnD's files.
+//
+// Thus, on Firefox/Windows, we do not use a DropTargetInterceptor. Ideally,
+// we would want to use one, since that would give us cursor control, but
+// until we get the HWND selection 100% correct, especially in the script-in-
+// head-tag case, then we don't use one. For now, of our two imperfect options,
+// we take (1) the inability to call setDragCursor with anything other than
+// 'none' or 'move' ('copy' and 'link' show 'move'), instead of (2) returning
+// the wrong fileset from getDragData.
+//
+//#define GEARS_DRAG_AND_DROP_USES_INTERCEPTOR 1
+#endif
+#endif
+
+
 #include <set>
 #include <vector>
 #include "gears/base/common/js_types.h"
