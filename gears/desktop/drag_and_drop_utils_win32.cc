@@ -260,6 +260,7 @@ std::map<HWND, DropTargetInterceptor*> DropTargetInterceptor::instances_;
 
 DropTargetInterceptor *DropTargetInterceptor::Intercept(
     ModuleEnvironment *module_environment) {
+#if GEARS_DRAG_AND_DROP_USES_INTERCEPTOR
   HWND hwnd_to_intercept = 0;
   EnumChildWindowsProcContext context;
   context.result_ptr = &hwnd_to_intercept;
@@ -303,6 +304,10 @@ DropTargetInterceptor *DropTargetInterceptor::Intercept(
     }
   }
   return interceptor;
+
+#else
+  return NULL;
+#endif  // GEARS_DRAG_AND_DROP_USES_INTERCEPTOR
 }
 
 
