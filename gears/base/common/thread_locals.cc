@@ -161,7 +161,7 @@ void ThreadLocals::DestroyEntries(Entry* entries) {
     }
     entries[i].valid_ = false;
   }
-  delete entries;
+  delete[] entries;
 }
 
 
