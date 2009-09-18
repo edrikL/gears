@@ -143,7 +143,7 @@ m4_ifelse(PRODUCT_OS,~android~,m4_dnl
 ~
       width: 150px;
 ~,~
-      width: 130px;
+      width: 160px;
 ~)
     }
 ~)
