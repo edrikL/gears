@@ -851,7 +851,7 @@ SHARED_LINKFLAGS += \
 	$(SHARED_LINKFLAGS_$(MODE))
 # Flags for security hardening (only available for win32, not wince).
 SHARED_LINKFLAGS += \
-	/DYNAMICBASE /SAFESEH
+	/DYNAMICBASE /SAFESEH /NXCOMPAT
 else
 SHARED_LINKFLAGS += \
 	/MACHINE:THUMB \
