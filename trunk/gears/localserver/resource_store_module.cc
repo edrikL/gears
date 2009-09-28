@@ -778,6 +778,9 @@ bool GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     return true;
   }
 
+  // Guard against being deleted during script callbacks.
+  scoped_refptr<GearsResourceStore> protect(this);
+
   assert(!current_request_.get());
   current_request_.reset(pending_requests_.front());
   pending_requests_.pop_front();
@@ -857,6 +860,8 @@ void GearsResourceStore::OnCaptureTaskComplete() {
 #else
   capture_task_->SetListener(NULL);
 #endif
+  // Guard against being deleted during script callbacks.
+  scoped_refptr<GearsResourceStore> protect(this);
   capture_task_.release()->DeleteWhenDone();
   if (need_to_fire_failed_events_) {
     assert(current_request_.get());
