@@ -143,6 +143,9 @@ void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("decode", &GearsCanvas::Decode);
   RegisterMethod("encode", &GearsCanvas::Encode);
   RegisterMethod("resize", &GearsCanvas::Resize);
+  RegisterMethod("rotateCW", &GearsCanvas::RotateCW);
+  RegisterMethod("rotate180", &GearsCanvas::Rotate180);
+  RegisterMethod("rotateCCW", &GearsCanvas::RotateCCW);
   RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
   RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
 #if defined(OFFICIAL_BUILD)
@@ -585,6 +588,46 @@ void GearsCanvas::Resize(JsCallContext *context) {
             *skia_bitmap_, SkIntToScalar(0), SkIntToScalar(0), &paint);
       }
     }
+  }
+  new_bitmap.swap(*skia_bitmap_);
+}
+
+void GearsCanvas::RotateCW(JsCallContext *context) {
+  Rotate(1);
+}
+
+void GearsCanvas::Rotate180(JsCallContext *context) {
+  Rotate(2);
+}
+
+void GearsCanvas::RotateCCW(JsCallContext *context) {
+  Rotate(3);
+}
+
+void GearsCanvas::Rotate(int clockwiseTurns) {
+  int new_width = clockwiseTurns == 2 ? GetWidth() : GetHeight();
+  int new_height = clockwiseTurns == 2 ? GetHeight() : GetWidth();
+
+  EnsureBitmapPixelsAreAllocated();
+  SkBitmap new_bitmap;
+  new_bitmap.setConfig(skia_config, new_width, new_height);
+  new_bitmap.allocPixels();
+  new_bitmap.eraseARGB(0, 0, 0, 0);
+
+  SkCanvas new_canvas(new_bitmap);
+  switch (clockwiseTurns) {
+    case 1:
+      new_canvas.rotate(SkIntToScalar(90));
+      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(-new_width));
+      break;
+    case 2:
+      new_canvas.rotate(SkIntToScalar(180));
+      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(-new_width), SkIntToScalar(-new_height));
+      break;
+    case 3:
+      new_canvas.rotate(SkIntToScalar(270));
+      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(-new_height), SkIntToScalar(0));
+      break;
   }
   new_bitmap.swap(*skia_bitmap_);
 }
