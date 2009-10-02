@@ -90,6 +90,21 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: -
   void Resize(JsCallContext *context);
 
+  // Rotates the canvas by 90 degrees clockwise, in-place.
+  // IN: -
+  // OUT: -
+  void RotateCW(JsCallContext *context);
+
+  // Rotates the canvas by 180 degrees, in-place.
+  // IN: -
+  // OUT: -
+  void Rotate180(JsCallContext *context);
+
+  // Rotates the canvas by 90 degrees counter-clockwise, in-place.
+  // IN: -
+  // OUT: -
+  void RotateCCW(JsCallContext *context);
+
   // Accessors for the state of the canvas. Setting any of these causes the
   // canvas to be reset to transparent black, and invalidates any contexts.
   void GetWidth(JsCallContext *context);
@@ -136,6 +151,10 @@ class GearsCanvas : public ModuleImplBaseClass {
   // black pixels. All Context state is also destroyed. The HTML5 canvas spec
   // requires this when the user sets the canvas's width or height.
   void ResetCanvas(int width, int height);
+
+  // Rotates the Canvas, in-place, by the specified number of 90-degree
+  // clockwise turns.
+  void Rotate(int clockwiseTurns);
 
   // We lazily allocate the SkBitmap's pixels. This method ensures that those
   // pixels have been allocated.
