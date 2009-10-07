@@ -105,6 +105,16 @@ class GearsCanvas : public ModuleImplBaseClass {
   // OUT: -
   void RotateCCW(JsCallContext *context);
 
+  // Flips the canvas, horizontally, in-place.
+  // IN: -
+  // OUT: -
+  void FlipHorizontal(JsCallContext *context);
+
+  // Flips the canvas, vertically, in-place.
+  // IN: -
+  // OUT: -
+  void FlipVertical(JsCallContext *context);
+
   // Accessors for the state of the canvas. Setting any of these causes the
   // canvas to be reset to transparent black, and invalidates any contexts.
   void GetWidth(JsCallContext *context);
