@@ -146,6 +146,8 @@ void Dispatcher<GearsCanvas>::Init() {
   RegisterMethod("rotateCW", &GearsCanvas::RotateCW);
   RegisterMethod("rotate180", &GearsCanvas::Rotate180);
   RegisterMethod("rotateCCW", &GearsCanvas::RotateCCW);
+  RegisterMethod("flipHorizontal", &GearsCanvas::FlipHorizontal);
+  RegisterMethod("flipVertical", &GearsCanvas::FlipVertical);
   RegisterProperty("height", &GearsCanvas::GetHeight, &GearsCanvas::SetHeight);
   RegisterProperty("width", &GearsCanvas::GetWidth, &GearsCanvas::SetWidth);
 #if defined(OFFICIAL_BUILD)
@@ -612,23 +614,49 @@ void GearsCanvas::Rotate(int clockwiseTurns) {
   SkBitmap new_bitmap;
   new_bitmap.setConfig(skia_config, new_width, new_height);
   new_bitmap.allocPixels();
-  new_bitmap.eraseARGB(0, 0, 0, 0);
 
   SkCanvas new_canvas(new_bitmap);
   switch (clockwiseTurns) {
     case 1:
       new_canvas.rotate(SkIntToScalar(90));
-      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(0), SkIntToScalar(-new_width));
+      new_canvas.drawBitmap(*skia_bitmap_,
+          SkIntToScalar(0), SkIntToScalar(-new_width));
       break;
     case 2:
       new_canvas.rotate(SkIntToScalar(180));
-      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(-new_width), SkIntToScalar(-new_height));
+      new_canvas.drawBitmap(*skia_bitmap_,
+          SkIntToScalar(-new_width), SkIntToScalar(-new_height));
       break;
     case 3:
       new_canvas.rotate(SkIntToScalar(270));
-      new_canvas.drawBitmap(*skia_bitmap_, SkIntToScalar(-new_height), SkIntToScalar(0));
+      new_canvas.drawBitmap(*skia_bitmap_,
+          SkIntToScalar(-new_height), SkIntToScalar(0));
       break;
   }
+  new_bitmap.swap(*skia_bitmap_);
+}
+
+void GearsCanvas::FlipHorizontal(JsCallContext *context) {
+  EnsureBitmapPixelsAreAllocated();
+  SkBitmap new_bitmap;
+  new_bitmap.setConfig(skia_config, GetWidth(), GetHeight());
+  new_bitmap.allocPixels();
+  SkCanvas new_canvas(new_bitmap);
+  new_canvas.scale(SkIntToScalar(-1), SkIntToScalar(1));
+  new_canvas.drawBitmap(*skia_bitmap_,
+      SkIntToScalar(-GetWidth()), SkIntToScalar(0));
+  new_bitmap.swap(*skia_bitmap_);
+}
+
+void GearsCanvas::FlipVertical(JsCallContext *context) {
+  EnsureBitmapPixelsAreAllocated();
+  SkBitmap new_bitmap;
+  new_bitmap.setConfig(skia_config, GetWidth(), GetHeight());
+  new_bitmap.allocPixels();
+  SkCanvas new_canvas(new_bitmap);
+  new_canvas.scale(SkIntToScalar(1), SkIntToScalar(-1));
+  new_canvas.drawBitmap(*skia_bitmap_,
+      SkIntToScalar(0), SkIntToScalar(-GetHeight()));
   new_bitmap.swap(*skia_bitmap_);
 }
 
