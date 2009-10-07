@@ -59,6 +59,95 @@ static void JpegBlobErrorExit(j_common_ptr c) {
 }
 
 
+struct MarkerReader {
+  uint8 *data;
+  int offset;
+  int length;
+  bool bigEndian;
+
+  MarkerReader(jpeg_marker_struct *jm);
+  uint8 NextU8();
+  uint16 NextU16();
+  uint32 NextU32();
+};
+
+
+MarkerReader::MarkerReader(jpeg_marker_struct *jm) {
+  data = jm->data;
+  offset = 0;
+  length = jm->data_length;
+  bigEndian = false;
+}
+
+
+uint8 MarkerReader::NextU8() {
+  if (offset >= length) {
+    return 0;
+  }
+  return data[offset++];
+}
+
+
+uint16 MarkerReader::NextU16() {
+  uint8 a = NextU8();
+  uint8 b = NextU8();
+  return bigEndian ? ((a<<8) | b) : ((b<<8) | a);
+}
+
+
+uint32 MarkerReader::NextU32() {
+  uint8 a = NextU8();
+  uint8 b = NextU8();
+  uint8 c = NextU8();
+  uint8 d = NextU8();
+  return bigEndian ? ((a<<24) | (b<<16) | (c<<8) | d)
+      : ((d<<24) | (c<<16) | (b<<8) | a);
+}
+
+
+// Returns 0 if it fails to find an Exif Orientation tag.
+static int ParseExifOrientation(jpeg_marker_struct *jm) {
+  MarkerReader r(jm);
+  // Read "Exif\0\0".
+  if (r.NextU8() != 0x45 || r.NextU8() != 0x78 ||
+      r.NextU8() != 0x69 || r.NextU8() != 0x66 ||
+      r.NextU8() != 0x00 || r.NextU8() != 0x00) {
+    return 0;
+  }
+  // Read "II" (little endian) or "MM" (big endian).
+  uint8 e0 = r.NextU8();
+  uint8 e1 = r.NextU8();
+  if (e0 == 0x49 && e1 == 0x49) {
+    r.bigEndian = false;
+  } else if (e0 == 0x4D && e1 == 0x4D) {
+    r.bigEndian = true;
+  } else {
+    return 0;
+  }
+  // Read the TIFF header, in the previously specified endianness.
+  if (r.NextU16() != 0x002A || r.NextU32() != 0x00000008) {
+    return 0;
+  }
+  int numTags = r.NextU16();
+  for (int i = 0; i < numTags; i++) {
+    int tag = r.NextU16();
+    int type = r.NextU16();
+    int count = r.NextU32();
+
+    // As per the Exif specification (http://www.exif.org/Exif2-2.PDF),
+    // sections 4.6.2 to 4.6.4, tag 0x0112 means Orientation, type 3 means
+    // 16-bit int, and count 1 means that the 16-bit int value is read
+    // in-place, rather than from an offset.
+    if (tag == 0x0112 && type == 0x03 && count == 0x01) {
+      return r.NextU16();
+    } else {
+      r.offset += 4;
+    }
+  }
+  return 0;
+}
+
+
 static const size_t kJpegBlobReadContextBufferSize = 1024;
 struct JpegBlobReadContext {
   BlobInterface *blob;
@@ -140,6 +229,8 @@ static bool ExtractMetaDataJpeg(BlobInterface *blob, JsObject *result) {
   jpeg_decompress_struct jd;
   memset(&jd, 0, sizeof(jd));
   jpeg_create_decompress(&jd);
+  // Exif metadata is marked with JPEG_APP1.
+  jpeg_save_markers(&jd, JPEG_APP0 + 1, 0xFFFF);
   jd.client_data = &context;
 
   JpegBlobErrorMgr jbem;
@@ -166,6 +257,16 @@ static bool ExtractMetaDataJpeg(BlobInterface *blob, JsObject *result) {
       (jd.image_height > kMaxReasonableImageWidthHeight)) {
     jpeg_destroy_decompress(&jd);
     return false;
+  }
+
+  if (jd.marker_list != NULL) {
+    // Valid Exif Orientation values are from 1 to 8 inclusive.
+    int orientation = ParseExifOrientation(jd.marker_list);
+    if (orientation >= 1 && orientation <= 8) {
+      result->SetPropertyInt(
+          std::string16(STRING16(L"exifOrientation")),
+          static_cast<int>(orientation));
+    }
   }
   result->SetPropertyInt(
       std::string16(STRING16(L"imageWidth")),
