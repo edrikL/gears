@@ -111,11 +111,15 @@
   
   std::string16 header16;
   
-  if (payload.GetHeader(HttpConstants::kXGearsSafariCapturedMimeType, 
-      &header16))
+  if (payload.GetHeader(HttpConstants::kXGearsSafariCapturedMimeType,
+      &header16)) {
     *mimeType = [NSString stringWithString16:header16.c_str()];
-  else
+  } else if (payload.GetHeader(HttpConstants::kContentTypeHeader,
+      &header16)) {
+    *mimeType = [NSString stringWithString16:header16.c_str()];
+  } else {
     *mimeType = nil;
+  }
  
   *statusCode = payload.status_code;
   NSMutableDictionary *ret_headers = nil;
