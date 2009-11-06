@@ -221,7 +221,13 @@ bool NetworkLocationRequest::FormRequestBody(
   }
 
   Json::FastWriter writer;
+  // We always use the platform independent 'C' locale when writing the JSON
+  // request, irrespective of the browser's locale. This avoids the need for
+  // the network location provider to determine the locale of the request and
+  // parse the JSON accordingly.
+  char *current_locale = setlocale(LC_NUMERIC, "C");
   std::string body_string = writer.write(body_object);
+  setlocale(LC_NUMERIC, current_locale);
   LOG(("NetworkLocationRequest::FormRequestBody(): Formed body %s.\n",
        body_string.c_str()));
 
@@ -398,10 +404,14 @@ static bool ParseServerResponse(const std::string &response_body,
   LOG(("ParseServerResponse() : Parsing response %s.\n",
        response_body.c_str()));
 
-  // Parse the response, ignoring comments.
+  // Parse the response, ignoring comments. The JSON reposne from the network
+  // location provider should always use the 'C' locale.
   Json::Reader reader;
   Json::Value response_object;
-  if (!reader.parse(response_body, response_object, false)) {
+  char *current_locale = setlocale(LC_NUMERIC, "C");
+  bool res = reader.parse(response_body, response_object, false);
+  setlocale(LC_NUMERIC, current_locale);
+  if (!res) {
     LOG(("ParseServerResponse() : Failed to parse response : %s.\n",
         reader.getFormatedErrorMessages().c_str()));
     return false;
