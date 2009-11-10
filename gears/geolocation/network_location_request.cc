@@ -225,9 +225,17 @@ bool NetworkLocationRequest::FormRequestBody(
   // request, irrespective of the browser's locale. This avoids the need for
   // the network location provider to determine the locale of the request and
   // parse the JSON accordingly.
+#ifdef OS_WINCE
+  // WinCE does not support setlocale.
+#else
   char *current_locale = setlocale(LC_NUMERIC, "C");
+#endif
   std::string body_string = writer.write(body_object);
+#ifdef OS_WINCE
+  // WinCE does not support setlocale.
+#else
   setlocale(LC_NUMERIC, current_locale);
+#endif
   LOG(("NetworkLocationRequest::FormRequestBody(): Formed body %s.\n",
        body_string.c_str()));
 
@@ -408,9 +416,17 @@ static bool ParseServerResponse(const std::string &response_body,
   // location provider should always use the 'C' locale.
   Json::Reader reader;
   Json::Value response_object;
+#ifdef OS_WINCE
+  // WinCE does not support setlocale.
+#else
   char *current_locale = setlocale(LC_NUMERIC, "C");
+#endif
   bool res = reader.parse(response_body, response_object, false);
+#ifdef OS_WINCE
+  // WinCE does not support setlocale.
+#else
   setlocale(LC_NUMERIC, current_locale);
+#endif
   if (!res) {
     LOG(("ParseServerResponse() : Failed to parse response : %s.\n",
         reader.getFormatedErrorMessages().c_str()));
