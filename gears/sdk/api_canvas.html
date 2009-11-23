@@ -83,7 +83,12 @@ readwrite attribute int <b>width</b>
 void <b>crop</b>(x, y, w, h)
 void <b>decode</b>(blob)
 Blob <b>encode</b>([mimeType, options])
+void <b>flipHorizontal</b>()
+void <b>flipVertical</b>()
 void <b>resize</b>(w, h, [filter])
+void <b>rotate180</b>()
+void <b>rotateCCW</b>()
+void <b>rotateCW</b>()
 </code></pre>
 <br>
 
@@ -191,13 +196,39 @@ void <b>resize</b>(w, h, [filter])
 
 <table>
   <tr class="odd">
+    <th colspan="2"><code>void flipHorizontal()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Flips the Canvas horizontally. The transform happens
+      &quot;in-place&quot;, as opposed to returning a new Canvas.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void flipVertical()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Flips the Canvas vertically. The transform happens &quot;in-place&quot;,
+      as opposed to returning a new Canvas.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
     <th colspan="2"><code>void resize(w, h, [filter])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
     <td width="550" class="odd">
-      Resizes the Canvas. The resize happens &quot;in-place&quot;, as opposed
-      to returning a new Canvas.
+      Resizes the Canvas. The transform happens &quot;in-place&quot;, as
+      opposed to returning a new Canvas.
     </td>
   </tr>
   <tr class="odd">
@@ -212,6 +243,45 @@ void <b>resize</b>(w, h, [filter])
         nearest-neighbor filtering, &quot;bilinear&quot; for bi-linear
         filtering, and &quot;nicest&quot; for highest quality filtering.
         The default filter, if unspecified, is &quot;nicest&quot;.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void rotate180()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Rotates the Canvas by 180 degrees. The transform happens
+      &quot;in-place&quot;, as opposed to returning a new Canvas.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void rotateCCW()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Rotates the Canvas counter-clockwise by 90 degrees. The transform happens
+      &quot;in-place&quot;, as opposed to returning a new Canvas.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void rotateCW()</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Rotates the Canvas clockwise by 90 degrees. The transform happens
+      &quot;in-place&quot;, as opposed to returning a new Canvas.
     </td>
   </tr>
 </table>
