@@ -180,7 +180,7 @@ desktop.openFiles(openFilesCallback);
   <tr class="odd">
     <td>Return value:</td>
     <td class="odd">
-      A JavaScript Object (i.e. a key-value map). Currently, three keys are
+      A JavaScript Object (i.e. a key-value map). Currently, four keys are
       provided (although all keys are optional -- no key is guaranteed to be
       present on all Blobs):
       <ul>
@@ -190,6 +190,11 @@ desktop.openFiles(openFilesCallback);
         <li>&quot;imageWidth&quot;, only defined for Blobs that contain image
           data, will have an integer value that is the width of that image.
         <li>&quot;imageHeight&quot; is similar to &quot;imageWidth&quot;.
+        <li>&quot;exifOrientation&quot;, only defined for Blobs that contain
+          JPEG image data that have Exif metadata. The value is an integer
+          between 1 and 8 (inclusive), as per the
+          <a href="http://www.exif.org/Exif2-2.PDF">Exif 2.2 specification</a>
+          (section 4.6.4.A under "Orientation").
       </ul>
     </td>
   </tr>
