@@ -1,5 +1,7 @@
 #summary Provides the geolocation of a device running a Gears-enabled web browser.
 
+----
+
 *This design document is now deprecated.*
 
 The final, released version of the Gears Geolocation API is documented at http://code.google.com/apis/gears/api_geolocation.html.
