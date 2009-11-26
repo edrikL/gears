@@ -1,4 +1,13 @@
+*This design document is now deprecated.*
+
+The final, released version of the Gears Geolocation API is documented at http://code.google.com/apis/gears/api_geolocation.html.
+
+Note that the JSON protocol described here and at http://code.google.com/apis/gears/geolocation_network_protocol.html is published to allow developers to provide their own network location server for use through the Gears API. Google's network location server is only to be used through the Gears API. See section 5.3 of the Gears Terms of Service at http://gears.google.com/tos.html.
+
+----
+
 #summary Provides the geolocation of a device running a Gears-enabled web browser.
+
 
 
 = Summary =
