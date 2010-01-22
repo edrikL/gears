@@ -601,7 +601,7 @@ NS_IMETHODIMP CacheIntercept::CreateSession(const char *client_id,
   return NS_OK;
 }
 
-#if BROWSER_FF3
+#if defined(BROWSER_FF3) && !defined(BROWSER_FF36)
 NS_IMETHODIMP CacheIntercept::CreateTemporaryClientID(
                                   nsCacheStoragePolicy policy,
                                   nsACString &retval) {

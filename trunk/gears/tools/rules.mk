@@ -47,6 +47,7 @@ INSTALLERS_OUTDIR          = $(OUTDIR)/installers
 FF2_OUTDIR                 = $(OUTDIR)/$(OS)-$(ARCH)/ff2
 FF3_OUTDIR                 = $(OUTDIR)/$(OS)-$(ARCH)/ff3
 FF31_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/ff31
+FF36_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/ff36
 IE_OUTDIR                  = $(OUTDIR)/$(OS)-$(ARCH)/ie
 IEMOBILE_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/iemobile
 NONE_OUTDIR                = $(OUTDIR)/$(OS)-$(ARCH)/none
@@ -121,12 +122,12 @@ COMMON_RESOURCES = \
 	ui/common/location_data.png \
 	$(NULL)
 
-FF31_RESOURCES = \
-	$(FF31_OUTDIR)/genfiles/browser-overlay.js \
-	$(FF31_OUTDIR)/genfiles/browser-overlay.xul \
-	$(FF31_OUTDIR)/genfiles/permissions_dialog.html \
-	$(FF31_OUTDIR)/genfiles/settings_dialog.html \
-	$(FF31_OUTDIR)/genfiles/shortcuts_dialog.html \
+FF36_RESOURCES = \
+	$(FF36_OUTDIR)/genfiles/browser-overlay.js \
+	$(FF36_OUTDIR)/genfiles/browser-overlay.xul \
+	$(FF36_OUTDIR)/genfiles/permissions_dialog.html \
+	$(FF36_OUTDIR)/genfiles/settings_dialog.html \
+	$(FF36_OUTDIR)/genfiles/shortcuts_dialog.html \
 	$(NULL)
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
@@ -167,8 +168,8 @@ RGS_FILES = \
 $(BROWSER)_GEN_HEADERS = \
 	$(patsubst %.idl,$($(BROWSER)_OUTDIR)/genfiles/%.h,$($(BROWSER)_IDLSRCS))
 
-FF31_GEN_TYPELIBS = \
-	$(patsubst %.idl,$(FF31_OUTDIR)/genfiles/%.xpt,$(FF31_IDLSRCS))
+FF36_GEN_TYPELIBS = \
+	$(patsubst %.idl,$(FF36_OUTDIR)/genfiles/%.xpt,$(FF36_IDLSRCS))
 
 IE_OBJS += \
 	$(patsubst %.idl,$(IE_OUTDIR)/%_i$(OBJ_SUFFIX),$(IE_IDLSRCS))
@@ -233,6 +234,7 @@ endif
 FF2_MODULE_DLL      = $(FF2_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 FF3_MODULE_DLL      = $(FF3_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 FF31_MODULE_DLL     = $(FF31_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+FF36_MODULE_DLL     = $(FF36_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 IE_MODULE_DLL       = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 IEMOBILE_MODULE_DLL = $(IEMOBILE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 NPAPI_MODULE_DLL    = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
@@ -241,7 +243,7 @@ NPAPI_MODULE_DLL    = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 OPERA_MODULE_DLL    = $(OPERA_OUTDIR)/$(DLL_PREFIX)$(MODULE)op$(DLL_SUFFIX)
 SF_MODULE_DLL       = $(SF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
-FF31_MODULE_TYPELIB     = $(FF31_OUTDIR)/$(MODULE).xpt
+FF36_MODULE_TYPELIB     = $(FF36_OUTDIR)/$(MODULE).xpt
 IEMOBILE_WINCESETUP_DLL = $(IEMOBILE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
 OPERA_WINCESETUP_DLL    = $(OPERA_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
 SF_INPUTMANAGER_EXE     = $(SF_OUTDIR)/$(EXE_PREFIX)GearsEnabler$(EXE_SUFFIX)
@@ -326,6 +328,10 @@ else
 	$(MAKE) genheaders BROWSER=FF31
 	$(MAKE) modules    BROWSER=FF31
 
+	$(MAKE) prereqs    BROWSER=FF36
+	$(MAKE) genheaders BROWSER=FF36
+	$(MAKE) modules    BROWSER=FF36
+
 	$(MAKE) installers
 
   else
@@ -346,6 +352,10 @@ else
 	$(MAKE) prereqs    BROWSER=FF31
 	$(MAKE) genheaders BROWSER=FF31
 	$(MAKE) modules    BROWSER=FF31
+
+	$(MAKE) prereqs    BROWSER=FF36
+	$(MAKE) genheaders BROWSER=FF36
+	$(MAKE) modules    BROWSER=FF36
 
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
@@ -392,6 +402,10 @@ else
 	$(MAKE) prereqs    BROWSER=FF31
 	$(MAKE) genheaders BROWSER=FF31
 	$(MAKE) modules    BROWSER=FF31
+
+	$(MAKE) prereqs    BROWSER=FF36
+	$(MAKE) genheaders BROWSER=FF36
+	$(MAKE) modules    BROWSER=FF36
 
 	$(MAKE) prereqs    BROWSER=SF
 	$(MAKE) genheaders BROWSER=SF
@@ -447,7 +461,11 @@ modules:: $(FF3_MODULE_DLL)
 endif
 
 ifeq ($(BROWSER),FF31)
-modules:: $(FF31_MODULE_DLL) $(FF31_MODULE_TYPELIB)
+modules:: $(FF31_MODULE_DLL)
+endif
+
+ifeq ($(BROWSER),FF36)
+modules:: $(FF36_MODULE_DLL) $(FF36_MODULE_TYPELIB)
 endif
 
 ifeq ($(BROWSER),IE)
@@ -669,6 +687,11 @@ $(FF31_OUTDIR)/genfiles/%.h: %.idl
 $(FF31_OUTDIR)/genfiles/%.xpt: %.idl
 	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF31_OUTDIR)/genfiles/$* $<
 
+$(FF36_OUTDIR)/genfiles/%.h: %.idl
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF36_OUTDIR)/genfiles/$* $<
+$(FF36_OUTDIR)/genfiles/%.xpt: %.idl
+	$(GECKO_BIN)/xpidl -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF36_OUTDIR)/genfiles/$* $<
+
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	midl $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c" $<
 
@@ -816,6 +839,9 @@ $(FF3_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 $(FF31_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_FF3=1 $<
 
+$(FF36_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+	$(RC) $(RCFLAGS) /DBROWSER_FF3=1 $<
+
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
 
@@ -944,7 +970,7 @@ $(BROWSER)_OBJS2 = $(wordlist 101, 999, $($(BROWSER)_OBJS))
 THIRD_PARTY_OBJS1 = $(wordlist 1, 100, $(THIRD_PARTY_OBJS))
 THIRD_PARTY_OBJS2 = $(wordlist 101, 999, $(THIRD_PARTY_OBJS))
 
-# WARNING: Must keep the following three rules (FF2|FF3|FF31_MODULE_DLL) in
+# WARNING: Must keep the following three rules (FF2|FF3|FF31|FF36_MODULE_DLL) in
 # sync!  The only difference should be the rule name.
 $(FF2_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
@@ -992,8 +1018,24 @@ $(FF31_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS)
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
+$(FF36_MODULE_DLL): $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+  ifeq ($(OS),linux)
+        # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(BREAKPAD_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+  else
+	$(ECHO) $($(BROWSER)_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(ECHO) $($(BROWSER)_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(BREAKPAD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(COMMON_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(SQLITE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS1) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(ECHO) $(THIRD_PARTY_OBJS2) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
+  endif
 
-$(FF31_MODULE_TYPELIB): $(FF31_GEN_TYPELIBS)
+$(FF36_MODULE_TYPELIB): $(FF36_GEN_TYPELIBS)
 	$(GECKO_BIN)/xpt_link $@ $^
 
 # Split the list of OBJS to avoid "input line is too long" errors.
@@ -1175,7 +1217,7 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # We can't list the following as dependencies, because no BROWSER is defined
 # for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
 # For $(FFMERGED_INSTALLER_XPI):
-#   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF31_MODULE_DLL) $(FF31_MODULE_TYPELIB) $(FF31_RESOURCES) $(FF31_M4FILES_I18N) $(FF31_OUTDIR)/genfiles/chrome.manifest
+#   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF31_MODULE_DLL) $(FF36_MODULE_DLL) $(FF36_MODULE_TYPELIB) $(FF36_RESOURCES) $(FF36_M4FILES_I18N) $(FF36_OUTDIR)/genfiles/chrome.manifest
 # For $(SF_INSTALLER_PKG):
 #   $(SF_PLUGIN_BUNDLE) $(SF_INPUTMANAGER_BUNDLE)
 # In order to make sure the Installer is always up to date despite these missing
@@ -1232,14 +1274,15 @@ endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
+	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff36
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff35
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff30
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff2
 	cp base/firefox/static_files/components/stub.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp base/firefox/static_files/components/bootstrap.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp base/firefox/static_files/lib/updater.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
-	cp $(FF31_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
-	cp $(FF31_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
+	cp $(FF36_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
+	cp $(FF36_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
 ifneq ($(OS),win32)
     # TODO(playmobil): Inspector should be located in extensions dir on win32.
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector
@@ -1249,11 +1292,12 @@ ifneq ($(OS),win32)
 endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
-	cp $(FF31_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
+	cp $(FF36_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
-	cp -R $(FF31_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
+	cp -R $(FF36_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
-	cp $(FF31_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF36_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF36_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff36/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 	cp $(FF31_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff35/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff30/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 ifneq ($(ARCH),x86_64)
@@ -1266,6 +1310,7 @@ ifeq ($(OS),linux)
 else # not LINUX (and not OSX)
 ifeq ($(MODE),dbg)
 ifdef IS_WIN32_OR_WINCE
+	cp $(FF36_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff36/$(MODULE).pdb
 	cp $(FF31_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff35/$(MODULE).pdb
 	cp $(FF3_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff30/$(MODULE).pdb
 	cp $(FF2_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/ff2/$(MODULE).pdb
