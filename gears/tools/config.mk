@@ -228,7 +228,11 @@ else
 ifeq  ($(BROWSER),FF3)
 GECKO_BASE = ../third_party/gecko_1.9
 else
+ifeq  ($(BROWSER),FF31)
 GECKO_BASE = ../third_party/gecko_1.9.1
+else
+GECKO_BASE = ../third_party/gecko_1.9.2
+endif
 endif
 endif
 GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
@@ -246,12 +250,14 @@ $(BROWSER)_CPPFLAGS += -DJS_THREADSAFE
 FF2_CPPFLAGS += -DBROWSER_FF=1
 FF3_CPPFLAGS += -DBROWSER_FF=1
 FF31_CPPFLAGS += -DBROWSER_FF3=1 -DBROWSER_FF=1
+FF36_CPPFLAGS += -DBROWSER_FF31=1 -DBROWSER_FF3=1 -DBROWSER_FF=1
 
 # FF2/FF3_CPPFLAGS includes several different base paths of GECKO_SDK because
 # different sets of files include SDK/internal files differently.
 FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 FF31_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
+FF36_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS +=
 CHROME_CPPFLAGS += -I../third_party/v8/bindings_local
 
@@ -564,6 +570,7 @@ endif
 FF2_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
 FF3_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
 FF31_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
+FF36_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
 # Append differences here:
 # Although the 1.9 SDK contains libnspr4, it is better to link against libxul,
 # which in turn depends on libnspr4. In Ubuntu 8.04, libnspr4 was not listed in
@@ -571,6 +578,7 @@ FF31_LIBS = -L$(GECKO_SDK_LIB) -lxpcom -lxpcomglue_s
 FF2_LIBS += -lnspr4
 FF3_LIBS += -lxul
 FF31_LIBS += -lxul
+FF36_LIBS += -lxul
 endif
 
 ######################################################################
@@ -736,10 +744,12 @@ OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 FF31_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+FF36_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 # Append differences here:
 FF2_LIBS +=  -lxpcom_core
 FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
-FF31_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a 
+FF31_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a
+FF36_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a
 
 # Iceberg command line tool.
 ICEBERG = /usr/local/bin/freeze
@@ -896,6 +906,7 @@ DLLFLAGS = $(DLLFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 FF2_DLLFLAGS =
 FF3_DLLFLAGS =
 FF31_DLLFLAGS =
+FF36_DLLFLAGS =
 IE_DLLFLAGS = /DEF:tools/mscom.def
 
 CHROME_DLLFLAGS = /DEF:base/chrome/module.def
@@ -926,6 +937,7 @@ WINCE_LIBS = wininet.lib ceshell.lib corelibc.lib cellcore.lib toolhelp.lib iphl
 FF2_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 FF3_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 FF31_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
+FF36_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 ifeq ($(OS),win32)
 IE_LIBS = kernel32.lib user32.lib gdi32.lib gdiplus.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib user32.lib
 else # wince

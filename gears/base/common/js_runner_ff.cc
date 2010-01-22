@@ -48,6 +48,13 @@
 #else
 #include <gecko_internal/nsITimerInternal.h>
 #endif
+#if BROWSER_FF36
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include <gecko_internal/nsPIDOMWindow.h>
+#pragma warning(pop)
+#endif
+
 #include "gears/base/common/js_runner.h"
 
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
@@ -905,6 +912,22 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   if (!stack) { return false; }
 
   stack->Push(js_engine_context_);
+
+#ifdef BROWSER_FF36
+  nsIDOMWindowInternal* internal_window = NULL;
+  nr = DOMUtils::GetDOMWindowInternal(js_engine_context_, &internal_window);
+  if (NS_FAILED(nr))
+    return nr;
+  nsCOMPtr<nsPIDOMWindow> dom_window(do_QueryInterface(internal_window,
+                                                       &nr));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsPIDOMWindow *inner = dom_window->GetCurrentInnerWindow();
+  nsCOMPtr<nsIScriptGlobalObject> sgo_inner(do_QueryInterface(inner, &nr));
+  object = sgo_inner->GetGlobalJSObject();
+  if (!object) { return false; }
+#endif
 
   uintN line_number_start = 0;
   JS_BeginRequest(js_engine_context_);
