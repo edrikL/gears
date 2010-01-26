@@ -1,0 +1,28 @@
+Win32, Linux-i386 and OSX versions of Gecko 1.9.2 rc2 SDK.
+
+The win32 and linux subdirectories were built like this:
+
+1) Download and extract http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.2rc1/.
+2) cp -R idl include sdk/bin sdk/lib <target dir>
+
+This os x directory is more involved because Mozilla doesn't ship universal
+binaries, and relies on some *.dylib files we don't have installed on the
+build machines:
+
+1) Download and extract i386 and ppc packages from same location as above
+2) cp -R idl include sdk/bin <target dir>
+3) tools/universify.sh xulrunner-ppc xulrunner-i386
+4) cp -R universify_output <target dir>/lib
+5) cp bin/regxpcom bin/xpidl bin/xpt_dump bin/xpt_link <target dir>/bin/
+6) copy all the *.dylib files from third_party/gecko_1.9.1/osx/gecko_sdk/bin into <target dir>/bin
+7) Modify xpidl to refer to the local *.dylib files:
+   * otool -L xpidl
+   * for each library: install_name_tool -change <currentpath> @executable_path/<libfilename> xpidl
+
+Finally, the gecko_internal/js-config.h file needed to be tweaked slightly
+to work on mac:
+
++#if !defined(WIN32)
+ #define JS_HAVE_STDINT_H 1
++#endif
+

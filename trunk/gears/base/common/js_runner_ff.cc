@@ -49,10 +49,14 @@
 #include <gecko_internal/nsITimerInternal.h>
 #endif
 #if BROWSER_FF36
+#ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable: 4996)
+#endif
 #include <gecko_internal/nsPIDOMWindow.h>
+#ifdef WIN32
 #pragma warning(pop)
+#endif
 #endif
 
 #include "gears/base/common/js_runner.h"
