@@ -218,7 +218,10 @@ public:
     // works correctly and is safe enough.
     // See http://bugzilla.mozilla.org/show_bug.cgi?id=49641
     const nsXPTCMiniVariant* GetValue() const
-        {return (nsXPTCMiniVariant*) &value;}
+        {
+          const void *value_ptr = &value;
+          return reinterpret_cast<const nsXPTCMiniVariant*>(value_ptr);
+        }
 private:
     nsXPTConstant();    // no implementation
 // NO DATA - this a flyweight wrapper
