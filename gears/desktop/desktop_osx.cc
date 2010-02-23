@@ -126,6 +126,12 @@ static bool CreateShellScript(const std::string16 &script_path,
   // WARNING: Please look at b/1408993 before making any changes to shortcut
   // creation.
   std::string contents("#!/bin/sh\n");
+
+  // Ensure that the helper is executable. Since Firefox 3.6, it seems that
+  // mozilla unpacks extensions and forces their contents to be
+  // not-executable.
+  contents += "chmod u+x \"`dirname \"$0\"`/launch_url_with_browser\"\n";
+
   contents += "\"`dirname \"$0\"`/launch_url_with_browser\" '";
   contents += reinterpret_cast<const char *>(process_path);
   contents += "' \"";
