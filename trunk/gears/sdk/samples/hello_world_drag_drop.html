@@ -1,0 +1,268 @@
+<!--
+Copyright 2010, Google Inc.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+ 
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+ 
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Hello World Drag Drop</title>
+<link rel="stylesheet" type="text/css" href="sample.css">
+</head>
+<body>
+
+<h1>Gears Drag Drop Demo</h1>
+
+<p><b>This page demonstrates basic file drag drop usage.</b>
+<p>Things you can do:
+<ul>
+ <li>Drag one or more files and drop them in the blue box below.
+  <ul>
+   <li>Information about the dragged files is displayed prior to the drop.
+  </ul>
+ <li>Drop a PNG or JPEG image file.
+  <ul>
+   <li>The image should be shown in the drop box.
+  </ul>
+</ul>
+<hr>
+
+<div id="view-source">&nbsp;</div>
+<div id="dropTarget">
+ <img id="image" style="display:none" width="100px" height="100px">
+</div>
+<p id="status">
+
+<!-- ====================================== -->
+<!-- End HTML code.  Begin JavaScript code. -->
+
+<script type="text/javascript" src="../gears_init.js"></script>
+<script type="text/javascript" src="sample.js"></script>
+<script>
+
+var FILES = 'application/x-gears-files';
+var STORE = 'drag-drop-store';
+var captureFiles = null;
+var localServer = null;
+var desktop = null;
+
+window.onload = function() {
+  try { initialize(); } catch (error) { setError(error); }
+};
+
+function initialize() {
+  if (!window.google || !google.gears) {
+    throw 'Gears is not installed';
+  }
+
+  if (!checkProtocol()) {
+    return;  // checkProtocol error.
+  } try {
+    localServer = google.gears.factory.create('beta.localserver');
+  } catch (ex) {
+    throw 'Could not create local server: ' + ex.message;
+  }
+
+  try {
+    localServer.createStore(STORE);
+  } catch (ex) {
+    throw 'Could not create resource store: ' + ex.message;
+  }
+
+  try {
+    desktop = google.gears.factory.create('beta.desktop');
+  } catch (ex) {
+    throw 'Could not create desktop object: ' + ex.message;
+  }
+
+  var elem = getElementById('dropTarget');
+  if (!elem) {
+    throw 'Could not find drop target element';
+  } else {
+    elem.style.border = '2px solid blue';
+  }
+
+  function addEvent(element, type, handler) {
+    if (element.addEventListener) {
+      element.addEventListener(type, handler, false);
+    } else if (element.attachEvent) {
+      element.attachEvent('on' + type, handler);
+    } else {
+      setError(type + ' event listener failed');
+    }
+  }
+
+  var html5 = true;
+  if (navigator.userAgent.match(/Firefox\/[2,3]\.0/))
+    html5 = false;
+
+  addEvent(elem, 'dragenter', dragEnter);
+  addEvent(elem, 'dragover', dragOver);
+  addEvent(elem, html5 ? 'dragleave' : 'dragexit', dragLeave);
+  addEvent(elem, html5 ? 'drop' : 'dragdrop', dragDrop);
+}
+
+function preventDefault(evt) {
+  if (evt.preventDefault)
+    evt.preventDefault();
+  evt.returnValue = false;
+}
+
+var dragEnter = dragOver = function(event) {
+  var evt = event || window.event;
+  clearStatus();
+  addStatus('Event: ' + evt.type);
+
+  try {
+    var files = desktop.getDragData(evt, FILES);
+    var accept = !(!files || files.count === 0);
+    desktop.setDropEffect(evt, accept ? 'copy' : 'none');
+    properties(files);
+  } catch (ex) {
+    addStatus(ex.message, 'error');
+    return;
+  }
+
+  if (!navigator.userAgent.match(/Firefox\/[2,3]\.0/)) {
+    preventDefault(evt);
+  } else if (!accept) {
+    preventDefault(evt);
+  }
+};
+
+var dragLeave = function(event) {
+  var evt = event || window.event;
+  addStatus('Event: ' + evt.type);
+};
+
+var dragDrop = function(event) {
+  var evt = event || window.event;
+  clearStatus();
+  addStatus('Event: ' + evt.type);
+
+  try {
+    var drop = desktop.getDragData(evt, FILES);
+    if (drop && drop.files.length) {
+      addStatus('Files ' + drop.files.length);
+      captureFiles = drop.files;
+      setTimeout("capture();", 10);
+    }
+  } catch (ex) {
+    addStatus(ex.message, 'error');
+  }
+
+  if (/Firefox\//.test(navigator.userAgent)) {
+    evt.stopPropagation();
+  } else if (/MSIE [5,6]/.test(navigator.userAgent)) {
+    evt.dataTransfer.dropEffect = 'none';
+    evt.returnValue = false;
+  }
+};
+
+function properties(object) {
+  for (var p in object) {
+    addStatus(p + ': ' + object[p]);
+  }
+}
+
+function capture() {
+  var store = localServer.openStore(STORE);
+  if (!store) {
+    setError('Could not open resource store');
+    return;
+  }
+
+  var files = captureFiles;
+  if (!files) {
+    setError('Drop files on the blue box');
+    return;
+  }
+
+  // Capture the first JPEG|PNG image file found (if any)
+  // and display it in the drop box.
+
+  var img = getElementById('image');
+  if (!img) {
+    setError('Could not find image element');
+    return;
+  } else {
+    img.style.display = 'none';
+    img.src = '';
+  }
+
+  for (var i = 0; i < files.length; ++i) {
+    var blob = files[i].blob;
+    try {
+      var meta = desktop.extractMetaData(blob);
+    } catch (ex) {
+      addStatus(ex.message, 'error');
+      continue;
+    }
+
+    if ((meta.mimeType != 'image/jpeg') &&
+        (meta.mimeType != 'image/png')) {
+      continue;
+    } try {
+      var captureURL = 'capture/' + files[i].name;
+      store.captureBlob(blob, captureURL);
+      addStatus('Captured ' + files[i].name);
+      // Verify the image capture, and return now.
+      fetch(captureURL);
+      return;
+    } catch (ex) {
+      addStatus(ex.message, 'error');
+    }
+  }
+}
+
+function fetch(url) {
+  var xhr = google.gears.factory.create('beta.httprequest');
+  xhr.open('GET', url);
+  xhr.onreadystatechange = function() { process(xhr, url) };
+  xhr.send();
+}
+
+function process(xhr, url) {
+  if (xhr.readyState != 4) {
+    return;
+  } else if (xhr.status != 200) {
+    addStatus('Could not http request ' + url, 'error');
+  } else {
+    var img = getElementById('image');
+    img.style.display = '';
+    img.src = url;
+  }
+}
+
+window.onunload = function() {
+  if (localServer && localServer.openStore(STORE)) {
+    localServer.removeStore(STORE);
+  }
+};
+</script>
+</body>
+</html>
+
