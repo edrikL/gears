@@ -99,7 +99,7 @@ POST /upload HTTP/1.1
 Host: example.com
 If-Match: "vEpr6barcD"
 Content-Length: 100
-Content-Range: 0-99/100
+Content-Range: bytes 0-99/100
 
 [bytes 0-99]
 }}}
@@ -132,7 +132,7 @@ POST /upload HTTP/1.1
 Host: example.com
 If-Match: "vEpr6barcD"
 Content-Length: 57
-Content-Range: 43-99/100
+Content-Range: bytes 43-99/100
 
 [bytes 43-99]
 }}}
@@ -172,7 +172,7 @@ Client initiates upload:
 POST /upload/eCn14NjNAy HTTP/1.1
 Host: example.com
 Content-Length: 100
-Content-Range: 0-99/100
+Content-Range: bytes 0-99/100
 
 [bytes 0-99]
 }}}
@@ -202,7 +202,7 @@ Client resumes where the server left off:
 POST /upload/eCn14NjNAy HTTP/1.1
 Host: example.com
 Content-Length: 57
-Content-Range: 43-99/100
+Content-Range: bytes 43-99/100
 
 [bytes 43-99]
 }}}
