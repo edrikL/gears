@@ -27,6 +27,7 @@
 
 #include <iterator>
 #include <vector>
+#include <stdlib.h>
 #include "gears/base/common/http_utils.h"
 
 // ----------------------------------------------------------------------

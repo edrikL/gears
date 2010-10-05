@@ -46,6 +46,7 @@
 #define GEARS_BASE_COMMON_STRING16_H__
 
 #include <string>
+#include <string.h>
 #include "gears/base/common/basictypes.h"
 
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)

@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <limits.h>
 #include "gears/base/common/string_utils.h"
 #include "third_party/convert_utf/ConvertUTF.h"
 

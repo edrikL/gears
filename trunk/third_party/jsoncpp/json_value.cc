@@ -1,5 +1,6 @@
 #include "third_party/jsoncpp/value.h"
 #include "third_party/jsoncpp/writer.h"
+#include <string.h>
 #include <utility>
 #include "assert.h"
 #ifdef JSON_USE_CPPTL

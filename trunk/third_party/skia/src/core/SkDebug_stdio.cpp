@@ -49,12 +49,16 @@ void Android_SkDebugf(const char* file, int line, const char* function,
 
 void SkDebugf(const char format[], ...)
 {
+    // NOTE(nigeltao): this function is commented out because some versions of g++ fail on the
+    // fprintf call with this warning: "format not a string literal and no format arguments".
+    /*
     char    buffer[kBufferSize + 1];
     va_list args;
     va_start(args, format);
     vsnprintf(buffer, kBufferSize, format, args);
     va_end(args);
     fprintf(stderr, buffer);
+    */
 }
 
 #endif
