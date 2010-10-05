@@ -216,14 +216,14 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info,
   }
 
   // Resolve the icon urls
-  if (!shortcut_info->icon16x16.url.empty() &&
-      !ResolveUrl(&shortcut_info->icon16x16.url, &error_) ||
-      !shortcut_info->icon32x32.url.empty() &&
-      !ResolveUrl(&shortcut_info->icon32x32.url, &error_) ||
-      !shortcut_info->icon48x48.url.empty() &&
-      !ResolveUrl(&shortcut_info->icon48x48.url, &error_) ||
-      !shortcut_info->icon128x128.url.empty() &&
-      !ResolveUrl(&shortcut_info->icon128x128.url, &error_)) {
+  if ((!shortcut_info->icon16x16.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon16x16.url, &error_)) ||
+      (!shortcut_info->icon32x32.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon32x32.url, &error_)) ||
+      (!shortcut_info->icon48x48.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon48x48.url, &error_)) ||
+      (!shortcut_info->icon128x128.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon128x128.url, &error_))) {
     return false;
   }
 

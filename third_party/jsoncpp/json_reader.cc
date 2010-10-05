@@ -2,6 +2,7 @@
 #include "third_party/jsoncpp/value.h"
 #include <utility>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 #if _MSC_VER >= 1400 // VC++ 8.0

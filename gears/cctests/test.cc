@@ -700,15 +700,15 @@ void GearsTest::TestGetType(JsCallContext *context) {
 
   bool ok = false;
   JsParamType t = context->GetArgumentType(1);
-  if (type == STRING16(L"bool") && t == JSPARAM_BOOL ||
-      type == STRING16(L"int") && t == JSPARAM_INT ||
-      type == STRING16(L"double") && t == JSPARAM_DOUBLE ||
-      type == STRING16(L"string") && t == JSPARAM_STRING16 ||
-      type == STRING16(L"null") && t == JSPARAM_NULL ||
-      type == STRING16(L"undefined") && t == JSPARAM_UNDEFINED ||
-      type == STRING16(L"array") && t == JSPARAM_ARRAY ||
-      type == STRING16(L"function") && t == JSPARAM_FUNCTION ||
-      type == STRING16(L"object") && t == JSPARAM_OBJECT) {
+  if ((type == STRING16(L"bool") && t == JSPARAM_BOOL) ||
+      (type == STRING16(L"int") && t == JSPARAM_INT) ||
+      (type == STRING16(L"double") && t == JSPARAM_DOUBLE) ||
+      (type == STRING16(L"string") && t == JSPARAM_STRING16) ||
+      (type == STRING16(L"null") && t == JSPARAM_NULL) ||
+      (type == STRING16(L"undefined") && t == JSPARAM_UNDEFINED) ||
+      (type == STRING16(L"array") && t == JSPARAM_ARRAY) ||
+      (type == STRING16(L"function") && t == JSPARAM_FUNCTION) ||
+      (type == STRING16(L"object") && t == JSPARAM_OBJECT)) {
     ok = true;
   }
   context->SetReturnValue(JSPARAM_BOOL, &ok);
