@@ -1,5 +1,5 @@
 This is libpng from http://www.libpng.org/pub/png/libpng.html, updated to
-version 1.2.35 on 2009-04-15.
+version 1.2.44 on 2010-10-05.
 
 
 Local Modifications:
@@ -19,11 +19,11 @@ is enabled.
 
 
 In png.c
-An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_reset_crc (line 201)
-and png_calculate_crc (line 216).
+An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_reset_crc (line 213)
+and png_calculate_crc (line 228).
 
 In pngrutil.c
-An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_crc_error (line 181).
+An GEARS_PNG_NO_READ_VERIFY_CRC #ifdef was added to png_crc_error (line 210).
 
 In pngwio.c
 A "BEGIN GEARS MODIFICATION"-delimited block of code replaces fileno with
