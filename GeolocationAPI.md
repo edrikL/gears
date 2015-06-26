@@ -1,0 +1,3 @@
+Since [Google Gears has been shut down](http://gearsblog.blogspot.com/2011/03/stopping-gears.html)  since March 2011, the time has come to also say goodbye to the Geolocation API that powered Google Gears. The Google Gears Geolocation API will stop responding to requests on November 17, 2012.
+
+Note that the JSON protocol described here was originally published to allow developers to provide their own network location server for use through the Gears API. Since Google's network location server was only to be used through the [Google Gears API](https://developers.google.com/gears/), which is no longer available, no developers should be affected by this change.

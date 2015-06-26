@@ -1,0 +1,3 @@
+Please see the following two documents...
+  * http://docs.google.com/Doc?id=dhp488sb_0fxfdz3
+  * http://docs.google.com/View?docid=ddmds8n9_0gjprgx
